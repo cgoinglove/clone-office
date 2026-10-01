@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# build
+.next/
+out/
+dist/
+*.tsbuildinfo
+
+# env files
+.env*
+!.env.example
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# anything private to one person on this repo: a note, a to-do list, a local override
+*.local.*
