@@ -44,6 +44,38 @@ Status: design. Nothing is built yet.
 - **A rule that looks wrong is asked about, not obeyed or worked around.**
 - **The user's data is not clutter.** Databases, sign-ins and workspaces are never deleted to tidy up.
 
+# Layout
+
+```
+app/                 Pages and API routes. globals.css holds every colour token and keyframe.
+components/ui/       Domain-agnostic UI: shadcn in its Base UI style, plus the app's own parts.
+hooks/               Domain-agnostic React hooks.
+lib/                 Domain-agnostic code: utils, theme, tokens.
+features/<name>/     One domain each, when it arrives: <name>.schema.ts (zod), <name>.query.ts,
+                     <name>.action.ts, components/.
+.agents/skills/      Skills for the agent working on this repo (linked from .claude/skills/).
+```
+
+# Running
+
+`pnpm dev` serves on loopback. Next.js here is 16 — read `node_modules/next/dist/docs/` before
+writing Next code; APIs differ from older versions.
+
+# Checks
+
+`pnpm typecheck`, `pnpm lint`, and `pnpm build` for a client/server boundary change.
+
+# Maps
+
+Each area has a map in `.claude/rules/`: what it is for, the files to open first, and what breaks
+there. A change that makes a line of a map wrong rewrites that line in the same commit and moves
+its `checked:` date.
+
+| When you change … | Read |
+|---|---|
+| Shared UI, colours or keys: `components/`, `hooks/`, `app/globals.css` | `.claude/rules/ui.md` |
+| How a screen looks: the maintainer's picks | `.claude/rules/taste.md` |
+
 # References
 
 - `../voice-agent` — Thursday, a local-first voice agent by the same author. Read it for patterns
