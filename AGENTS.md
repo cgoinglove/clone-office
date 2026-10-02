@@ -1,9 +1,12 @@
 # sub-office
 
-An office where everyone's own AI agent comes to work. Each person grows one agent by teaching it;
-what it learns becomes skills. In the office people see what each other's agents can do, take a
-colleague's skill onto their own agent, or ask a colleague's agent to do the work — under the
-colleague's approval, with who pays chosen per request. Nobody has to be a developer.
+A team app where the AI each person already uses comes to the office and hands work to the others'
+AIs. Today a developer's agent finishes a screen, finds the API needs a change, and a person carries
+that message to the backend developer, whose own agent makes the fix, and a person carries the answer
+back. Here the agents ask each other directly: the receiver approves, their agent does the work in
+their own setup, and the asking session resumes when the answer arrives. Billing, skills and
+documents, storage and compute each come in a team and a personal kind. People without an agent of
+their own get the office's built-in bot.
 
 This repository is public. What is committed here is read by strangers. No license has been chosen
 yet; until one is, no rights are granted beyond reading the source.
@@ -12,25 +15,28 @@ Status: design. Nothing is built yet.
 
 # Words
 
-- **Office** — a team on one server: its members, their agents, shared skills, documents and keys,
-  and the office's policy.
-- **Server** — stores and relays: members, skills, documents, requests, the charge ledger, who is
+- **Office** — a team on one server: members, the owners map, shared skills, documents, storage and
+  keys, and the office's policy.
+- **Server** — stores and relays: members, requests, documents, skills, the charge ledger, who is
   online. It runs no agent work.
-- **Member** — one person. Has exactly one bot.
-- **Bot** — a member's agent: name, look, model settings, memory and installed skills. It runs on
-  its member's computer; while that computer is off, the bot is asleep.
-- **Skill** — the unit of what a bot can do: instructions (Agent Skills `SKILL.md`), hardened
-  scripts, and what it needs (sign-ins, keys, model). Visible to its owner, the team or the office.
-- **Take** — installing a colleague's skill, pinned to a version, onto your own bot. It runs on your
-  computer, with your sign-ins, at your cost.
-- **Request** — asking a colleague's bot to do work that needs their context, access or judgement.
-  The receiver's rules and approval apply; the request names who pays: receiver, sender or team.
-- **Session** — one piece of work on a bot's desk. Every task opens a new one and can be resumed;
-  there is no standing main conversation. Continuity is the bot's memory.
-- **Subagent** — a parallel run inside a session, on a model the caller picks. Off by default.
-- **Hardening** — a step the bot keeps repeating at a model's cost becomes a script, so the work gets
-  cheaper the more it is done.
-- **Admin** — sets the office's policy. Admin narrows what a bot may do; it never widens it.
+- **Member** — one person, with one seat and one agent.
+- **Agent** — a member's AI: one they already use (Claude Code, Codex, …) connected through the
+  office's MCP server, or the office's built-in bot. It is the member's address for requests.
+- **Runner** — the office program on a computer, personal or team-owned. It connects out to the
+  server and, when a request arrives, starts or resumes the member's agent in their own setup and
+  project folder. One adapter per kind of agent.
+- **Request** — one agent asking another member's agent for work: what, why, evidence, when it is
+  done, who pays. The receiver approves; the asking session waits and resumes on the reply.
+- **Owners map** — which member owns which area (a repository, an API, testing). Agents route
+  requests by it; with no entry they ask rather than guess.
+- **Session** — one piece of work on an agent's desk. Every task opens a new one and can be resumed;
+  there is no standing main conversation.
+- **Skill** — a unit of what an agent can do: instructions (Agent Skills `SKILL.md`), hardened
+  scripts, and what it needs (sign-ins, keys, model). Personal or team.
+- **Hardening** — a step repeated at a model's cost becomes a script, so the work gets cheaper the
+  more it is done.
+- **Asleep** — the agent of a member whose computer is off. Requests wait for it.
+- **Admin** — sets the office's policy. Admin narrows what an agent may do; it never widens it.
 
 # Rules
 

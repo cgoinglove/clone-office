@@ -1,10 +1,11 @@
 # sub-office
 
-**Everyone's own AI agent, at work in one office.**
+**Bring the AI you already use to the office. Your agents hand work to each other; you approve.**
 
-Each person grows one agent by teaching it in plain words; what it learns becomes skills. In the
-office you see what your colleagues' agents can do — take a skill onto your own agent, or ask their
-agent to do the work, with their approval and with who pays chosen per request. No developer needed.
+Your coding agent finds the API needs a change — instead of you messaging the backend developer, it
+asks their agent. They approve, their agent makes the fix in their own setup, and yours picks up
+where it stopped. Billing, skills and documents, storage and compute each come in a team and a
+personal kind. Teammates without an agent of their own get the office's built-in bot.
 
 Status: design. Nothing to install yet.
 
