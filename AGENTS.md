@@ -12,6 +12,12 @@ Proxies live on the office server, so they are always reachable; the heavy work 
 person's computer, in the harness they already use (Claude Code, Codex, OpenClaw, Hermes, …) or the
 office's built-in worker. Anyone can start from a browser with nothing installed.
 
+It is built for offices that are not technical — a shop, a clinic, a school, an agency — as much as
+for software teams: no developer words on screen, the office's own documents read as they are, and
+the built-in worker as the default. Judgement stays with people; one person's work stays in one
+agent; agents talk to each other only because the judgement, setup and access they need belong to
+someone else.
+
 This repository is public. What is committed here is read by strangers. No license has been chosen
 yet; until one is, no rights are granted beyond reading the source.
 
