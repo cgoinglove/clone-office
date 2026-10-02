@@ -58,7 +58,8 @@ Status: design. Nothing is built yet.
 - **Decision** — a call a person made when their proxy asked. Repeated decisions become delegation
   rules, so a proxy asks less the longer it is used.
 - **Thread** — one piece of work. Every task opens a new one and can be resumed; a request links the
-  asker's thread to the receiver's. There is no standing main conversation.
+  asker's thread to the receiver's. Whether a member also keeps one long conversation with their
+  proxy is decided by measurement; the data model holds both.
 - **Skill** — a unit of what a worker can do: instructions (Agent Skills `SKILL.md`), hardened
   scripts, and what it needs (sign-ins, keys, model). Personal or team.
 - **Hardening** — a step repeated at a model's cost becomes a script, so the work gets cheaper the
