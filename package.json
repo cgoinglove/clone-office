@@ -2,7 +2,7 @@
   "name": "sub-office",
   "version": "0.0.0",
   "private": true,
-  "description": "Every computer is a sub-office: an AI office where each person's bots work on their own machine.",
+  "description": "Everyone's own AI agent, at work in one office.",
   "engines": {
     "node": ">=22.18"
   },

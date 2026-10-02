@@ -1,9 +1,9 @@
 # sub-office
 
-An AI office for a team. Every person brings one computer, and that computer is a sub-office: their
-bots run there, with their own browser, sign-ins and keys, on whichever model they pick. The office
-is the setup around them — people, bots, an admin, shared skills, documents and credentials, a
-reception desk and a CEO bot.
+An office where everyone's own AI agent comes to work. Each person grows one agent by teaching it;
+what it learns becomes skills. In the office people see what each other's agents can do, take a
+colleague's skill onto their own agent, or ask a colleague's agent to do the work — under the
+colleague's approval, with who pays chosen per request. Nobody has to be a developer.
 
 This repository is public. What is committed here is read by strangers. No license has been chosen
 yet; until one is, no rights are granted beyond reading the source.
@@ -12,20 +12,25 @@ Status: design. Nothing is built yet.
 
 # Words
 
-- **Office** — a team and its whole setup: people, bots, admin, shared skills, docs and credentials,
-  reception desk, CEO bot.
-- **Person** — one user with one computer. Their bots run on it.
-- **Bot** — an agent with a name, a role, skills and memory. A person has a main bot and may make
-  and share more.
-- **Session** — one piece of work. Each request opens a new one; it sits on the bot's desk and can
-  be picked up again there.
-- **Request** — one person's bot asking another person's bot for work. The receiver's rules and
-  approvals apply.
-- **Subagent** — a parallel run inside a session: a copy of the bot or another bot, on a model the
-  caller picks. Parallel, not necessarily cheap.
+- **Office** — a team on one server: its members, their agents, shared skills, documents and keys,
+  and the office's policy.
+- **Server** — stores and relays: members, skills, documents, requests, the charge ledger, who is
+  online. It runs no agent work.
+- **Member** — one person. Has exactly one bot.
+- **Bot** — a member's agent: name, look, model settings, memory and installed skills. It runs on
+  its member's computer; while that computer is off, the bot is asleep.
+- **Skill** — the unit of what a bot can do: instructions (Agent Skills `SKILL.md`), hardened
+  scripts, and what it needs (sign-ins, keys, model). Visible to its owner, the team or the office.
+- **Take** — installing a colleague's skill, pinned to a version, onto your own bot. It runs on your
+  computer, with your sign-ins, at your cost.
+- **Request** — asking a colleague's bot to do work that needs their context, access or judgement.
+  The receiver's rules and approval apply; the request names who pays: receiver, sender or team.
+- **Session** — one piece of work on a bot's desk. Every task opens a new one and can be resumed;
+  there is no standing main conversation. Continuity is the bot's memory.
+- **Subagent** — a parallel run inside a session, on a model the caller picks. Off by default.
 - **Hardening** — a step the bot keeps repeating at a model's cost becomes a script, so the work gets
   cheaper the more it is done.
-- **Admin** — sets what the office shares. Admin narrows what a bot may do; it never widens it.
+- **Admin** — sets the office's policy. Admin narrows what a bot may do; it never widens it.
 
 # Rules
 
