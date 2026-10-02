@@ -1,12 +1,13 @@
 # sub-office
 
-A team app where the AI each person already uses comes to the office and hands work to the others'
-AIs. Today a developer's agent finishes a screen, finds the API needs a change, and a person carries
-that message to the backend developer, whose own agent makes the fix, and a person carries the answer
-back. Here the agents ask each other directly: the receiver approves, their agent does the work in
-their own setup, and the asking session resumes when the answer arrives. Billing, skills and
-documents, storage and compute each come in a team and a personal kind. People without an agent of
-their own get the office's built-in bot.
+An office where each person's own grown agent can be asked for work by others, without installing
+anything. A developer grows a development agent, a planner a planning one, a marketer one that runs
+their accounts — each in their own setup, with their own skills and access. Someone who could not
+build that agent does not have to: they ask its owner's agent, which does the work with its owner's
+skills, files and sign-ins, under its owner's approval, and only the result comes back. Agents join as
+they are (OpenClaw, Hermes, Claude Code, Codex, …) or as the office's built-in bot, and an office can
+be a team or a circle of people who know each other. Billing, skills and documents, storage and
+compute each come in a team and a personal kind.
 
 This repository is public. What is committed here is read by strangers. No license has been chosen
 yet; until one is, no rights are granted beyond reading the source.
@@ -20,17 +21,21 @@ Status: design. Nothing is built yet.
 - **Server** — stores and relays: members, requests, documents, skills, the charge ledger, who is
   online. It runs no agent work.
 - **Member** — one person, with one seat and one agent.
-- **Agent** — a member's AI: one they already use (Claude Code, Codex, …) connected through the
-  office's MCP server, or the office's built-in bot. It is the member's address for requests.
+- **Agent** — a member's AI: one they already use (OpenClaw, Hermes, Claude Code, Codex, …) connected
+  through the office's MCP server, or the office's built-in bot. It is the member's address for
+  requests.
 - **Runner** — the office program on a computer, personal or team-owned. It connects out to the
   server and, when a request arrives, starts or resumes the member's agent in their own setup and
   project folder. One adapter per kind of agent.
-- **Request** — one agent asking another member's agent for work: what, why, evidence, when it is
-  done, who pays. The receiver approves; the asking session waits and resumes on the reply.
+- **Flow** — something an agent offers to others, shown on its profile: what it takes as input, who
+  may ask (team, office, people the owner lists) and which asks are approved without the owner.
+- **Request** — one agent asking another member's agent for work, usually through one of its flows:
+  what, why, evidence, when it is done, who pays. The receiver approves; the asking thread waits and
+  resumes on the reply. Nothing is installed on the asker's side.
 - **Owners map** — which member owns which area (a repository, an API, testing). Agents route
   requests by it; with no entry they ask rather than guess.
-- **Session** — one piece of work on an agent's desk. Every task opens a new one and can be resumed;
-  there is no standing main conversation.
+- **Thread** — one piece of work on an agent's desk. Every task opens a new one and can be resumed;
+  a request links the asker's thread to the receiver's. There is no standing main conversation.
 - **Skill** — a unit of what an agent can do: instructions (Agent Skills `SKILL.md`), hardened
   scripts, and what it needs (sign-ins, keys, model). Personal or team.
 - **Hardening** — a step repeated at a model's cost becomes a script, so the work gets cheaper the

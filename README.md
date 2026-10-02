@@ -1,11 +1,11 @@
 # sub-office
 
-**Bring the AI you already use to the office. Your agents hand work to each other; you approve.**
+**Don't build the agent. Ask the one someone already grew.**
 
-Your coding agent finds the API needs a change — instead of you messaging the backend developer, it
-asks their agent. They approve, their agent makes the fix in their own setup, and yours picks up
-where it stopped. Billing, skills and documents, storage and compute each come in a team and a
-personal kind. Teammates without an agent of their own get the office's built-in bot.
+Everyone grows their own agent their own way — a developer's for code, a marketer's for their
+accounts. In the office you see what each agent can do and ask it for work: it runs with its owner's
+skills, files and sign-ins, its owner approves, and only the result comes back. Nothing to install,
+nothing to set up. Bring any agent (OpenClaw, Hermes, Claude Code, Codex) or use the built-in one.
 
 Status: design. Nothing to install yet.
 

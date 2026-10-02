@@ -2,7 +2,7 @@
   "name": "sub-office",
   "version": "0.0.0",
   "private": true,
-  "description": "Bring the AI you already use to the office. Your agents hand work to each other; you approve.",
+  "description": "Don't build the agent. Ask the one someone already grew.",
   "engines": {
     "node": ">=22.18"
   },
