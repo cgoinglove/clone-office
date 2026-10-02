@@ -1,7 +1,9 @@
 # sub-office
 
-An office where every person has a proxy — an agent that stands in for them — and the proxies hand
-work to each other. A person puts themselves into their proxy: name, role, what they own, how they
+A team collaboration tool where every person has a proxy — an agent that stands in for them — and
+the proxies hand work to each other. The bookkeeping of working together (writing tasks down,
+asking for status, handing over, reminding) is the proxies' job; the board fills itself from the
+requests they exchange, and people only make the calls that are theirs. A person puts themselves into their proxy: name, role, what they own, how they
 work, what it may decide alone and what it must ask. When a developer needs a design, their proxy
 asks the designer's proxy; that proxy takes it up with the designer, then has the work done in the
 designer's own setup. When the developer is on leave, the finished design still reaches their proxy,
@@ -50,6 +52,11 @@ Status: design. Nothing is built yet.
   the reply.
 - **Owners map** — which member owns which area; built from the areas on each proxy's identity.
   Proxies route requests by it and ask rather than guess.
+- **Task** — one item on a member's board. A request creates one for the receiver and a waiting item
+  for the sender; proxies move it between states (in, needs a call, doing, waiting, review, on hold,
+  done). People do not edit the board.
+- **Decision** — a call a person made when their proxy asked. Repeated decisions become delegation
+  rules, so a proxy asks less the longer it is used.
 - **Thread** — one piece of work. Every task opens a new one and can be resumed; a request links the
   asker's thread to the receiver's. There is no standing main conversation.
 - **Skill** — a unit of what a worker can do: instructions (Agent Skills `SKILL.md`), hardened
