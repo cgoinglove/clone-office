@@ -2,7 +2,7 @@
   "name": "sub-office",
   "version": "0.0.0",
   "private": true,
-  "description": "Don't build the agent. Ask the one someone already grew.",
+  "description": "Everyone gets a proxy. The proxies hand work to each other.",
   "engines": {
     "node": ">=22.18"
   },

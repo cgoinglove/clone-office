@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "sub-office",
-  description: "Don't build the agent. Ask the one someone already grew.",
+  description: "Everyone gets a proxy. The proxies hand work to each other.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

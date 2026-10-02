@@ -1,13 +1,16 @@
 # sub-office
 
-An office where each person's own grown agent can be asked for work by others, without installing
-anything. A developer grows a development agent, a planner a planning one, a marketer one that runs
-their accounts — each in their own setup, with their own skills and access. Someone who could not
-build that agent does not have to: they ask its owner's agent, which does the work with its owner's
-skills, files and sign-ins, under its owner's approval, and only the result comes back. Agents join as
-they are (OpenClaw, Hermes, Claude Code, Codex, …) or as the office's built-in bot, and an office can
-be a team or a circle of people who know each other. Billing, skills and documents, storage and
-compute each come in a team and a personal kind.
+An office where every person has a proxy — an agent that stands in for them — and the proxies hand
+work to each other. A person puts themselves into their proxy: name, role, what they own, how they
+work, what it may decide alone and what it must ask. When a developer needs a design, their proxy
+asks the designer's proxy; that proxy takes it up with the designer, then has the work done in the
+designer's own setup. When the developer is on leave, the finished design still reaches their proxy,
+which carries their work on within what they delegated. One person running a "designer bot" of
+their own is not this: it lacks the designer's skill, judgement, access and responsibility.
+
+Proxies live on the office server, so they are always reachable; the heavy work runs on each
+person's computer, in the harness they already use (Claude Code, Codex, OpenClaw, Hermes, …) or the
+office's built-in worker. Anyone can start from a browser with nothing installed.
 
 This repository is public. What is committed here is read by strangers. No license has been chosen
 yet; until one is, no rights are granted beyond reading the source.
@@ -16,32 +19,39 @@ Status: design. Nothing is built yet.
 
 # Words
 
-- **Office** — a team on one server: members, the owners map, shared skills, documents, storage and
-  keys, and the office's policy.
-- **Server** — stores and relays: members, requests, documents, skills, the charge ledger, who is
-  online. It runs no agent work.
-- **Member** — one person, with one seat and one agent.
-- **Agent** — a member's AI: one they already use (OpenClaw, Hermes, Claude Code, Codex, …) connected
-  through the office's MCP server, or the office's built-in bot. It is the member's address for
-  requests.
+- **Office** — a team (or a circle of people who know each other) on one server: members, their
+  proxies, the owners map, shared skills, documents, storage and keys, and the office's policy.
+- **Server** — hosts the proxies and stores and relays everything else: members, requests, threads,
+  documents, skills, the charge ledger. It runs no heavy work.
+- **Member** — one person, with one seat and one proxy.
+- **Proxy** — the agent that stands in for a member: identity (name, role, areas owned, hours,
+  voice), what it knows about them, their workflows, and their delegation rules. It talks with other
+  proxies and with its own member, and is always reachable.
+- **Delegation rules** — what a proxy may do alone, must ask its member about, or must never do; set
+  per asker (team, office, listed people) and per status. A proxy never commits its member to a
+  date, a cost or a scope the rules do not cover.
+- **Status** — at work, busy, on leave, computer off. It decides what a proxy handles alone and what
+  waits.
+- **Worker** — what does the heavy work for a member: the harness they already use, connected
+  through a runner, or the office's built-in worker.
 - **Runner** — the office program on a computer, personal or team-owned. It connects out to the
-  server and, when a request arrives, starts or resumes the member's agent in their own setup and
-  project folder. One adapter per kind of agent.
-- **Flow** — something an agent offers to others, shown on its profile: what it takes as input, who
-  may ask (team, office, people the owner lists) and which asks are approved without the owner.
-- **Request** — one agent asking another member's agent for work, usually through one of its flows:
-  what, why, evidence, when it is done, who pays. The receiver approves; the asking thread waits and
-  resumes on the reply. Nothing is installed on the asker's side.
-- **Owners map** — which member owns which area (a repository, an API, testing). Agents route
-  requests by it; with no entry they ask rather than guess.
-- **Thread** — one piece of work on an agent's desk. Every task opens a new one and can be resumed;
-  a request links the asker's thread to the receiver's. There is no standing main conversation.
-- **Skill** — a unit of what an agent can do: instructions (Agent Skills `SKILL.md`), hardened
+  server and starts or resumes the member's worker in their own setup. One adapter per kind of
+  harness.
+- **Flow** — something a proxy offers to others, shown on its profile, with the input it takes.
+- **Request** — one proxy asking another for work: what, why, evidence, when it is done, deadline,
+  who pays. The receiving proxy sorts it and takes it up with its member as its rules say; the result
+  says whether the proxy handled it or the member checked it. The asking thread waits and resumes on
+  the reply.
+- **Owners map** — which member owns which area; built from the areas on each proxy's identity.
+  Proxies route requests by it and ask rather than guess.
+- **Thread** — one piece of work. Every task opens a new one and can be resumed; a request links the
+  asker's thread to the receiver's. There is no standing main conversation.
+- **Skill** — a unit of what a worker can do: instructions (Agent Skills `SKILL.md`), hardened
   scripts, and what it needs (sign-ins, keys, model). Personal or team.
 - **Hardening** — a step repeated at a model's cost becomes a script, so the work gets cheaper the
   more it is done.
-- **Asleep** — the agent of a member whose computer is off. Requests wait for it.
-- **Admin** — sets the office's policy. Admin narrows what an agent may do; it never widens it.
+- **Admin** — sets the office's policy. Admin narrows what a proxy or worker may do; it never widens
+  it.
 
 # Rules
 
