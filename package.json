@@ -19,6 +19,7 @@
   "dependencies": {
     "@ai-sdk/react": "4.0.109",
     "@base-ui/react": "^1.8.0",
+    "@electric-sql/pglite": "^0.5.8",
     "@modelcontextprotocol/sdk": "1.32.0",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",
@@ -32,6 +33,7 @@
     "lucide-react": "^1.49.0",
     "next": "16.3.4",
     "next-intl": "4.14.9",
+    "pg": "^8.23.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "streamdown": "^2.6.0",
@@ -45,6 +47,7 @@
     "@biomejs/biome": "2.5.12",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.3",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "esbuild": "0.28.2",

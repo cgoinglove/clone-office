@@ -75,6 +75,16 @@ For an office, one teammate runs a relay and shares its address and the key it p
 pnpm relay      # http://127.0.0.1:3200 by default; --host and --port to change
 ```
 
+It keeps the office in `./relay-data` (PGlite, Postgres inside the process; nothing to install).
+On a server, run it with Postgres instead, with Docker:
+
+```sh
+POSTGRES_PASSWORD=<letters and digits> docker compose up -d
+docker compose logs relay   # the office key
+```
+
+or point it at a Postgres you have: `DATABASE_URL=postgres://… pnpm relay --host 0.0.0.0`.
+
 Then **Office** on each person's page joins it. To try it alone, run a second mini-me with its own
 folder and port: `SUB_OFFICE_HOME=~/.sub-office-b pnpm dev --port 3001`.
 

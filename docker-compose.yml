@@ -1,0 +1,35 @@
+# A relay for an office, with its own Postgres, on any machine with Docker (a server, an EC2
+# instance, a computer in the office):
+#   POSTGRES_PASSWORD=<letters and digits> docker compose up -d
+#   docker compose logs relay        # the office key, and the addresses to join with
+# RELAY_KEY sets the office key; RELAY_PORT the port people reach it on (3200).
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: relay
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: relay
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U relay -d relay"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile.relay
+    environment:
+      DATABASE_URL: postgres://relay:${POSTGRES_PASSWORD}@postgres:5432/relay
+      RELAY_KEY: ${RELAY_KEY:-}
+    ports:
+      - "${RELAY_PORT:-3200}:3200"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  postgres:

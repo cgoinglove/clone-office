@@ -29,3 +29,6 @@ ds-bundle/
 .design-sync/.cache/
 .design-sync/learnings/
 .design-sync/node_modules
+
+# a relay started from this folder keeps its office here (PGlite)
+/relay-data/

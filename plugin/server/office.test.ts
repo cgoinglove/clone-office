@@ -16,9 +16,25 @@ import { ago, pick } from "./office.ts";
 
 const root = mkdtempSync(join(tmpdir(), "plugin-office-"));
 const children: ChildProcess[] = [];
-after(() => {
-  for (const child of children) child.kill();
-  rmSync(root, { recursive: true, force: true });
+after(async () => {
+  // Each child is let go before its folder is removed: the relay closes its database on the way out.
+  await Promise.all(
+    children.map(
+      (child) =>
+        new Promise<void>((done) => {
+          if (child.exitCode !== null || child.signalCode !== null)
+            return done();
+          child.once("exit", () => done());
+          child.kill();
+        }),
+    ),
+  );
+  rmSync(root, {
+    recursive: true,
+    force: true,
+    maxRetries: 3,
+    retryDelay: 100,
+  });
 });
 
 const member = (id: string, name: string): Member => ({
@@ -60,8 +76,8 @@ function startRelay(): Promise<string> {
       "features/relay/server.ts",
       "--port",
       "0",
-      "--db",
-      join(root, "relay.db"),
+      "--database",
+      join(root, "relay-data"),
       "--key",
       "k",
     ],

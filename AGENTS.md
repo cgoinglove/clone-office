@@ -150,9 +150,17 @@ These words help discussion. They do not mandate separate services, tables or UI
   per-process secret); `rules.ts` turns "from now on" into Claude Code permission rules in
   `settings.json` (`trust.allow`) and the folders kept out into deny rules. Writing files and
   running commands are not given to the mini-me; sending a request to a colleague is asked first.
-- `features/relay/`: the relay a team runs (`pnpm relay`, Node built-ins only: `node:http`,
-  `node:sqlite`). Members join with the office key and then use their own token; a mini-me waits
-  at its inbox (long polling) because it sits on a personal computer out of reach. Shapes follow
+- `features/relay/`: the relay a team runs (`pnpm relay`). It keeps everything in Postgres
+  (`db.ts`): a Postgres URL (`--database` or `DATABASE_URL`) for a relay deployed on a server, or
+  PGlite, the same Postgres inside the process, in a folder (`relay-data` by default) for a relay
+  on one computer; one SQL for both, its versions in `relay.ts` (`MIGRATIONS`). One relay can hold
+  several offices, each with its own key; a member's token is kept only as a hash. News reaches a
+  waiting inbox through LISTEN/NOTIFY, so several relay processes can share one database, and the
+  inbox looks again every two seconds where notifications do not arrive. `handler.ts` is the HTTP
+  side as one handler another host can mount (it also limits wrong office keys from one address);
+  `server.ts` runs it. `Dockerfile.relay` and `docker-compose.yml` run it with Postgres on any
+  machine with Docker. Members join with the office key and then use their own token; a mini-me
+  waits at its inbox (long polling) because it sits on a personal computer out of reach. Shapes follow
   A2A v1.0.0: an AgentCard per member, a Task per request with a contextId, Messages with roles
   user/agent and text parts, A2A's task states. It keeps only cards and requests. Someone without a
   mini-me is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
@@ -253,7 +261,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   and no path of this computer reaches it: the app as a standalone server (`next.config.ts`,
   `SUB_OFFICE_PACKAGE=1`, its own `.next-package/`), the tool server and the relay bundled into
   `dist/*.mjs` (Node does not run TypeScript inside node_modules), the guide, and the launcher;
-  next and react come from npm. It leaves `dist/sub-office-<version>.tgz` and publishes nothing.
+  next, react and the relay's pg and PGlite come from npm. It leaves `dist/sub-office-<version>.tgz` and publishes nothing.
   The launcher (`npx sub-office`) starts the app on 127.0.0.1 from port 4417 and opens `/me`;
   `npx sub-office relay` starts a relay. In the package, `SUB_OFFICE_APP_DIR` tells the app where
   its guide and tool server are (`server/paths.ts` `appDir`, `toolServerPath`).

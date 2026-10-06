@@ -110,6 +110,9 @@ try {
       platform: "node",
       format: "esm",
       target: "node22",
+      // The relay's database packages come from npm with the package: PGlite loads its own files
+      // at run time, and pg-native is a choice pg makes only when asked.
+      external: ["pg", "pg-native", "@electric-sql/pglite"],
       // Packages written as CommonJS still find require.
       banner: {
         js: "import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);",
@@ -130,7 +133,13 @@ try {
         bin: { "sub-office": "bin/sub-office.mjs" },
         engines: { node: ">=22.13" },
         files: ["app", "bin", "dist", "guide"],
-        dependencies: pick(["next", "react", "react-dom"]),
+        dependencies: pick([
+          "next",
+          "react",
+          "react-dom",
+          "pg",
+          "@electric-sql/pglite",
+        ]),
       },
       null,
       2,

@@ -1,0 +1,15 @@
+# The relay alone, for a server: `docker compose up -d` (docker-compose.yml) runs it with Postgres.
+# It needs only its own files and two packages; Node runs the TypeScript as it is.
+FROM node:22-alpine
+WORKDIR /relay
+COPY package.json /tmp/app-package.json
+RUN node -e "const d = require('/tmp/app-package.json').dependencies; require('fs').writeFileSync('package.json', JSON.stringify({ private: true, type: 'module', dependencies: { pg: d.pg, '@electric-sql/pglite': d['@electric-sql/pglite'] } }))" \
+  && npm install --omit=dev --no-audit --no-fund \
+  && rm /tmp/app-package.json \
+  && chown -R node:node /relay
+COPY --chown=node:node features/relay/db.ts features/relay/handler.ts features/relay/page.ts features/relay/relay.ts features/relay/server.ts ./
+USER node
+ENV NODE_ENV=production
+EXPOSE 3200
+# DATABASE_URL picks the Postgres server; without it the office is kept in /relay/relay-data.
+CMD ["node", "server.ts", "--host", "0.0.0.0"]

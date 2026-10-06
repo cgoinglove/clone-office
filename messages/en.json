@@ -31,7 +31,9 @@
     "import-failed": "I couldn't read what you pasted. Try again.",
     "task-failed": "I couldn't finish that. Try again, or ask it another way.",
     "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead.",
-    "flow-failed": "The flow did not finish. Try Run now, or tell your mini-me what to change."
+    "flow-failed": "The flow did not finish. Try Run now, or tell your mini-me what to change.",
+    "too-many-tries": "Too many wrong office keys from here. Try again in a few minutes.",
+    "relay-failed": "The relay ran into a problem. Try again."
   },
   "firstRun": {
     "title": "My mini-me",

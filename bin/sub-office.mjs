@@ -2,7 +2,7 @@
 // sub-office from npm: start the app on this computer, or a relay for a team.
 //
 //   npx sub-office              the app, at http://127.0.0.1:<port>/me, opened in the browser
-//   npx sub-office relay [...]  a relay for an office (--port, --host, --db, --key)
+//   npx sub-office relay [...]  a relay for an office (--port, --host, --database, --key)
 //
 // The app listens on this computer only. Its port is the first free one from 4417, unless
 // --port says otherwise; --no-open leaves the browser alone. When the app is already running on
@@ -38,7 +38,7 @@ if (args[0] === "relay") {
 } else if (args.includes("--help") || args.includes("-h")) {
   console.log(`Usage:
   sub-office [--port <n>] [--no-open]   start the app on this computer
-  sub-office relay [--port <n>] [--host <address>] [--db <file>] [--key <office key>]
+  sub-office relay [--port <n>] [--host <address>] [--database <postgres url | folder>] [--key <office key>]
                                         start a relay for an office`);
 } else {
   await startApp();
