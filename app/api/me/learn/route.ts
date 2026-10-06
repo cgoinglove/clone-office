@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { brainProblem } from "@/features/minime/brain/choice";
 import { keepFlowsRunning } from "@/features/minime/flows/run";
 import {
   catchUpIndex,
@@ -10,7 +11,6 @@ import {
   savedLearn,
   startLearn,
 } from "@/features/minime/learn/job";
-import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 import { personLanguage } from "@/features/minime/server/language";
 import { ndjson } from "@/features/minime/server/ndjson";
@@ -24,8 +24,8 @@ export async function POST(request: Request) {
   const body = Body.safeParse(await request.json().catch(() => ({})));
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
-  if (!hasClaudeCode())
-    return Response.json({ error: "claude-missing" }, { status: 409 });
+  const problem = await brainProblem();
+  if (problem) return Response.json({ error: problem }, { status: 409 });
   const job = startLearn({
     language: await personLanguage(body.data.locale),
   });

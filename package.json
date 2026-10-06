@@ -17,10 +17,14 @@
     "relay": "node features/relay/server.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.72",
+    "@ai-sdk/google": "^4.0.88",
+    "@ai-sdk/openai": "^4.0.84",
     "@ai-sdk/react": "4.0.109",
     "@base-ui/react": "^1.8.0",
     "@electric-sql/pglite": "^0.5.8",
     "@modelcontextprotocol/sdk": "1.32.0",
+    "@openrouter/ai-sdk-provider": "^3.1.0",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",
     "@streamdown/math": "^1.0.2",

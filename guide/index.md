@@ -14,6 +14,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
 | `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's mini-me (also from Claude Code, with the sub-office plugin), answering requests that come in, what goes to the relay and what never does, files between mini-mes |
 | `phone.md` | Talking with the mini-me from Discord, Telegram or Slack on their phone: setting up their own bot, letting their phone in by its code, questions as buttons, what comes to the phone by itself while they are away from the page, when it does not answer |
+| `brain.md` | What the mini-me thinks with: their own Claude Code, or a model with their key (Claude, OpenAI, Gemini, OpenRouter) or on their computer (Ollama, LM Studio); keys, cost, changing it |
 | `connectors.md` | Connectors: the services the mini-me works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
 | `flows.md` | Flows: what the mini-me does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
 | `trouble.md` | Claude Code missing or signed out, learning that takes long, something said that is out of date, reading again |
@@ -21,8 +22,8 @@ language. Name a screen or button the way they see it, and never name a file fro
 Two things hold everywhere:
 
 - **It is theirs and it stays on their computer.** Everything the mini-me keeps is files on this
-  computer. What it reads goes only to their own Claude Code, the AI they already use, to think
-  with (`reading.md`).
+  computer. What it reads goes only to the AI it thinks with, the one they picked under **Brain**
+  (두뇌): their own Claude Code, or a model with their key (`reading.md`, `brain.md`).
 - **It learns while working, not all at once.** The first time, it reads a little and keeps only
   a few lines about how they work. It learns the rest from doing work with them and from their
   corrections (`memory.md`).

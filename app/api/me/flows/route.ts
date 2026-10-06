@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { brainProblem } from "@/features/minime/brain/choice";
 import {
   flowChat,
   keepFlowsRunning,
@@ -7,7 +8,6 @@ import {
 import { nextRun } from "@/features/minime/flows/schedule";
 import { changeFlow, getFlow, listFlows } from "@/features/minime/flows/store";
 import { loadMenu } from "@/features/minime/office/menu";
-import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 
 // The person's flows as their page shows them: each with when it runs (the screen writes it in
@@ -62,8 +62,8 @@ export async function POST(request: Request) {
   if (action === "run") {
     if ((await getFlow(id))?.when.kind === "request")
       return Response.json({ error: "bad-request" }, { status: 400 });
-    if (!hasClaudeCode())
-      return Response.json({ error: "claude-missing" }, { status: 409 });
+    const problem = await brainProblem();
+    if (problem) return Response.json({ error: problem }, { status: 409 });
     // The person pressed it, so they are asked for what it may not do alone yet, on cards in
     // the flow's conversation. It runs on in this server; its answer lands there too.
     const flow = await getFlow(id);

@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { brainProblem } from "@/features/minime/brain/choice";
 import { pendingAsks } from "@/features/minime/gate/gate";
 import { draftCard, draftMenu, draftWays } from "@/features/minime/office/card";
 import {
@@ -37,7 +38,6 @@ import {
   startOffice,
   stopOffice,
 } from "@/features/minime/office/worker";
-import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 import { personLanguage } from "@/features/minime/server/language";
 
@@ -175,8 +175,8 @@ export async function POST(request: Request) {
   try {
     const input = body.data;
     if (input.action === "draft") {
-      if (!hasClaudeCode())
-        return Response.json({ error: "claude-missing" }, { status: 409 });
+      const problem = await brainProblem();
+      if (problem) return Response.json({ error: problem }, { status: 409 });
       const description = await draftCard(await personLanguage(input.locale));
       return description
         ? Response.json({ description })
@@ -192,16 +192,16 @@ export async function POST(request: Request) {
         : Response.json({ error: "no-longer-waiting" }, { status: 410 });
     }
     if (input.action === "draft-ways") {
-      if (!hasClaudeCode())
-        return Response.json({ error: "claude-missing" }, { status: 409 });
+      const problem = await brainProblem();
+      if (problem) return Response.json({ error: problem }, { status: 409 });
       const lines = await draftWays(await personLanguage(input.locale));
       return lines.length
         ? Response.json({ lines })
         : Response.json({ error: "no-draft" }, { status: 502 });
     }
     if (input.action === "draft-menu") {
-      if (!hasClaudeCode())
-        return Response.json({ error: "claude-missing" }, { status: 409 });
+      const problem = await brainProblem();
+      if (problem) return Response.json({ error: problem }, { status: 409 });
       const drafted = cleanMenu(
         await draftMenu(await personLanguage(input.locale)),
       );

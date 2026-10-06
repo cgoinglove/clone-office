@@ -60,6 +60,8 @@ export function languageName(tag: string | undefined): string | undefined {
 /** Failures the screen says in the person's language (messages/*.json, "errors"). */
 const CODES = new Set([
   "claude-missing",
+  "brain-key-missing",
+  "brain-key-wrong",
   "ai-busy",
   "timeout",
   "learn-failed",

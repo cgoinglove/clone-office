@@ -11,7 +11,7 @@
   },
   "errors": {
     "generic": "Something went wrong: {detail}",
-    "claude-missing": "Claude Code isn't installed or signed in on this computer. Set it up, then reopen this page.",
+    "claude-missing": "Claude Code is not installed or signed in on this computer. Set it up, or pick another brain under Brain.",
     "bad-request": "The page sent something the app didn't expect. Reload the page and try again.",
     "forbidden": "Only this app's own page can talk to your mini-me. Open it from the app's address.",
     "busy": "Your mini-me is still working on something else. Try again in a moment.",
@@ -54,7 +54,11 @@
     "connector-signed-out": "The connection ran out. Connect again.",
     "connector-token": "This one takes a personal token.",
     "connector-token-wrong": "That does not look like a token.",
-    "connector-client-wrong": "That is not an OAuth client: give its client ID (and secret), or the JSON file."
+    "connector-client-wrong": "That is not an OAuth client: give its client ID (and secret), or the JSON file.",
+    "brain-key-missing": "Your mini-me needs a key for the model it thinks with: add it under Brain.",
+    "brain-key-wrong": "The service did not accept that key. Check it and paste it again.",
+    "brain-unreachable": "The service could not be reached. Try again in a moment.",
+    "brain-local-unreachable": "Nothing answered at that address. Is Ollama or LM Studio running?"
   },
   "firstRun": {
     "title": "My mini-me",
@@ -484,6 +488,34 @@
     },
     "onRequest": "Followed when such a request comes in",
     "tooLong": "Too long to be kept (a name takes 80 characters, the request 4,000): it would be refused."
+  },
+  "brain": {
+    "title": "Brain",
+    "intro": "What your mini-me thinks with. Your own Claude Code thinks with your Claude subscription, on this computer; or pick a model and give your key for it. Keys stay on this computer.",
+    "claudeCode": "My Claude Code",
+    "claudeCodeNote": "Thinks with your Claude subscription, on this computer.",
+    "claudeMissing": "Claude Code is not installed or signed in on this computer. Pick a model with your key instead, or set up Claude Code and reopen this page.",
+    "api": "A model with my key",
+    "service": "Service",
+    "key": "API key",
+    "keyPlaceholder": "Paste the key",
+    "save": "Save",
+    "keySaved": "Key saved on this computer.",
+    "forgetKey": "Remove the key",
+    "makeKey": "Make a key",
+    "model": "Model",
+    "modelOther": "Or type another model name",
+    "modelLocal": "The model you pulled (e.g. qwen3:8b)",
+    "address": "Address",
+    "localNote": "A model running on this computer with Ollama or LM Studio. Nothing leaves the computer; it can be slower and less able than the services above.",
+    "cost": "The service bills your key for what your mini-me uses.",
+    "use": "Use this",
+    "inUse": "In use",
+    "tier": {
+      "small": "small",
+      "mid": "mid",
+      "large": "large"
+    }
   },
   "messenger": {
     "title": "On your phone",

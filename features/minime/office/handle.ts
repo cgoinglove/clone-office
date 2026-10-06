@@ -120,7 +120,7 @@ export const RETRY_WAITS = [60_000, 180_000];
 
 /** A failure that usually passes by itself: the AI service busy or rate-limited, or a timeout. */
 export function passing(error: string | undefined): boolean {
-  return /\b(529|503|429)\b|overloaded|rate.?limit|timed? ?out|did not finish in time|ECONNRESET|ETIMEDOUT/i.test(
+  return /\b(529|503|429)\b|overloaded|rate.?limit|timed? ?out|did not finish in time|ECONNRESET|ETIMEDOUT|^ai-busy$|^timeout$/i.test(
     error ?? "",
   );
 }

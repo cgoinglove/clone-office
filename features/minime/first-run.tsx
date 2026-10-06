@@ -28,6 +28,7 @@ import { Bot, type Mood } from "@/features/office";
 import { personTag, useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
+import { BrainPanel } from "./brain-panel";
 import { ConnectorsPanel } from "./connectors-panel";
 import { whenText } from "./flows/when-text";
 import { FlowsPanel } from "./flows-panel";
@@ -1256,6 +1257,7 @@ export function FirstRun() {
           onAsk={(text) => void ask(text)}
         />
       )}
+      {stage !== "boot" && <BrainPanel />}
       {stage !== "boot" && <MessengerPanel />}
       {stage !== "boot" && <ConnectorsPanel />}
       {stage !== "boot" && <TrustPanel />}

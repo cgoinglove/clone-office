@@ -28,6 +28,8 @@ import {
   minimeHome,
   toolServerPath,
 } from "../server/paths.ts";
+import { brainChoice } from "./choice.ts";
+import { reportKept, WATCHED } from "./events.ts";
 import { logRun } from "./runlog.ts";
 
 export function memoryDir(): string {
@@ -187,14 +189,8 @@ export interface SessionResult {
   context?: number;
 }
 
-/** Tool calls whose results become events on the screen. */
-const WATCHED = new Set([
-  "mcp__minime__memory",
-  "mcp__minime__skill_manage",
-  "mcp__minime__note_write",
-]);
-
-const ALLOWED_TOOLS = [
+/** The mini-me's own tools it uses alone in every session, whichever brain thinks. */
+export const ALLOWED_TOOLS = [
   "memory",
   "skills_list",
   "skill_view",
@@ -238,6 +234,28 @@ interface StreamEvent {
 /** A command as a shell reads it, its paths quoted (POSIX shells and Windows' alike). */
 const quoted = (path: string) => `"${path.replace(/"/g, '\\"')}"`;
 
+/** What the mini-me's own tool server is told: where its stores are, who it serves, the gate. */
+export function toolServerEnv(
+  actor: "minime" | "review",
+  gate?: SessionGate,
+): Record<string, string> {
+  return {
+    MINIME_MEMORY_DIR: memoryDir(),
+    MINIME_SKILLS_DIR: skillsDir(),
+    MINIME_NOTES_DIR: notesDir(),
+    MINIME_GUIDE_DIR: join(/*turbopackIgnore: true*/ appDir(), "guide"),
+    MINIME_ACTOR: actor,
+    ...(gate
+      ? {
+          MINIME_GATE_URL: gate.url,
+          MINIME_GATE_SECRET: gate.secret,
+          ...(gate.chat ? { MINIME_CHAT_ID: gate.chat } : {}),
+          ...(gate.colleagues ? { MINIME_COLLEAGUES: "1" } : {}),
+        }
+      : {}),
+  };
+}
+
 /** The session's MCP servers: its own tools, and the services the person connected. */
 export function mcpConfig(
   actor: "minime" | "review",
@@ -263,21 +281,7 @@ export function mcpConfig(
         // Node runs the TypeScript server as is (bundled in the package); warnings would only
         // clutter its stderr.
         args: ["--no-warnings", toolServerPath()],
-        env: {
-          MINIME_MEMORY_DIR: memoryDir(),
-          MINIME_SKILLS_DIR: skillsDir(),
-          MINIME_NOTES_DIR: notesDir(),
-          MINIME_GUIDE_DIR: join(/*turbopackIgnore: true*/ appDir(), "guide"),
-          MINIME_ACTOR: actor,
-          ...(gate
-            ? {
-                MINIME_GATE_URL: gate.url,
-                MINIME_GATE_SECRET: gate.secret,
-                ...(gate.chat ? { MINIME_CHAT_ID: gate.chat } : {}),
-                ...(gate.colleagues ? { MINIME_COLLEAGUES: "1" } : {}),
-              }
-            : {}),
-        },
+        env: toolServerEnv(actor, gate),
       },
     },
   });
@@ -286,6 +290,12 @@ export function mcpConfig(
 export async function runSession(
   options: SessionOptions,
 ): Promise<SessionResult> {
+  // A person who picked another brain thinks with it through the app's own loop (loop.ts).
+  const choice = await brainChoice();
+  if (choice.kind === "api") {
+    const { runLoop } = await import("./loop.ts");
+    return runLoop(options, choice);
+  }
   const command = claudeCommand();
   if (!command) return { ok: false, text: "", error: "claude-missing" };
   const home = minimeHome();
@@ -469,58 +479,8 @@ export async function runSession(
           const raw = Array.isArray(part.content)
             ? part.content.map((c: { text?: string }) => c.text ?? "").join("")
             : String(part.content ?? "");
-          let result: {
-            success?: boolean;
-            error?: string;
-            message?: string;
-            skills?: string[];
-            notes?: string[];
-          } = {};
-          try {
-            result = JSON.parse(raw);
-          } catch {
-            result = { success: false, error: raw };
-          }
-          if (input.__tool === "mcp__minime__note_write") {
-            if (result.success)
-              options.onEvent?.({ type: "note", changes: result.notes ?? [] });
-            else
-              options.onEvent?.({
-                type: "memory-refused",
-                error: result.error ?? raw,
-              });
-            continue;
-          }
-          if (input.__tool === "mcp__minime__skill_manage") {
-            if (result.success)
-              options.onEvent?.({
-                type: "skill",
-                changes: result.skills ?? [],
-              });
-            else
-              options.onEvent?.({
-                type: "memory-refused",
-                error: result.error ?? raw,
-              });
-            continue;
-          }
-          if (
-            result.success &&
-            result.message !== "Entry already exists (no duplicate added)."
-          )
-            options.onEvent?.({
-              type: "memory",
-              target: String(input.target ?? ""),
-              action: String(input.action ?? "batch"),
-              content: input.content as string | undefined,
-              oldText: input.old_text as string | undefined,
-              operations: input.operations as never,
-            });
-          else if (!result.success)
-            options.onEvent?.({
-              type: "memory-refused",
-              error: result.error ?? raw,
-            });
+          const { __tool, ...given } = input;
+          reportKept(String(__tool), given, raw, options.onEvent);
         }
       if (event.type === "result") {
         turns = event.num_turns;

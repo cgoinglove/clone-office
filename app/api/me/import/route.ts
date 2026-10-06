@@ -1,6 +1,6 @@
 import * as z from "zod";
+import { brainProblem } from "@/features/minime/brain/choice";
 import { IMPORT_MAX, importMemory } from "@/features/minime/learn/import";
-import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 import { personLanguage } from "@/features/minime/server/language";
 import { errorCode, ndjson } from "@/features/minime/server/ndjson";
@@ -18,8 +18,8 @@ export async function POST(request: Request) {
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
-  if (!hasClaudeCode())
-    return Response.json({ error: "claude-missing" }, { status: 409 });
+  const problem = await brainProblem();
+  if (problem) return Response.json({ error: problem }, { status: 409 });
   const { text, locale } = body.data;
   return ndjson(async (send) => {
     const result = await importMemory({

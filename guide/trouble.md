@@ -1,7 +1,10 @@
 # When something goes wrong
 
-- **"Claude Code isn't installed or signed in"**: the mini-me thinks with their own Claude Code.
-  Install it and sign in once in a terminal, then reopen the **My mini-me** (내 미니미) page.
+- **"Claude Code isn't installed or signed in"**: the mini-me was set to think with their own
+  Claude Code. Install it and sign in once in a terminal, then reopen the **My mini-me** (내 미니미)
+  page; or pick a model with their key under **Brain** (두뇌) instead (`brain.md`).
+- **"The service did not accept that key"** or **"needs a key"**: the key was mistyped, removed or
+  ran out of credit at the service. Make a new one there and paste it under **Brain** (두뇌).
 - **Learning takes long**: with years of AI conversations the first reading can take a minute;
   the page shows what it is doing and roughly how far along it is. It keeps going if they close
   or reload the page, and the page picks it up again when reopened.

@@ -129,7 +129,19 @@ These words help discussion. They do not mandate separate services, tables or UI
   `scripts/`, `assets/`, a usage sidecar and an archive that is never deleted; `curator.ts` sets
   aside long-unused skills weekly; `notes.ts` keeps one page per person, piece of work or topic
   under `notes/`, with an index and log written by code; `mcp-server.ts` serves all of it as
-  tools. `features/minime/brain/`: `session.ts` runs a session on the person's own Claude Code
+  tools. `features/minime/brain/`: what the mini-me thinks with is the person's pick
+  (`choice.ts`, `settings.json` `brain`; keys apart in `brain/keys.json`, 0600, checked by listing
+  the vendor's models for free; `providers.ts` the vendors and suggested models, after Thursday's
+  picker): their own Claude Code, or a model reached directly (Claude, OpenAI, Gemini,
+  OpenRouter, or Ollama/LM Studio on this computer). `runSession` sends the second to `loop.ts`,
+  the app's own loop on the Vercel AI SDK, as Hermes Agent, OpenClaw and Thursday run theirs: the
+  same tool server and connectors over MCP and Claude Code's Read, Glob, Grep and WebFetch
+  (`loop-tools.ts`), with the same names and permission rules, asking through the gate route as
+  the permission prompt does; its conversations in `brain/sessions/<id>.json` so a session goes on
+  or is copied for the review, and a session it never kept answers `session-missing` so a
+  conversation goes on from its own record; a shaped answer is asked for last, without tools.
+  The page's part is `features/minime/brain-panel.tsx` with the route `app/api/me/brain`.
+  `session.ts` runs a session on the person's own Claude Code
   with those tools (the brain is a replaceable process: everything else talks to it only through
   `runSession`); `review.ts` looks back over a finished session and keeps what it taught;
   `runlog.ts` writes one line per session to `logs/runs.jsonl` (purpose, time, context, usage,

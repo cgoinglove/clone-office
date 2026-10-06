@@ -11,7 +11,7 @@
   },
   "errors": {
     "generic": "문제가 생겼어요: {detail}",
-    "claude-missing": "이 컴퓨터에서 Claude Code를 찾지 못했어요. 설치하고 로그인한 뒤 다시 열어 주세요.",
+    "claude-missing": "이 컴퓨터에 Claude Code가 없거나 로그인돼 있지 않아요. 설치하거나, \"두뇌\"에서 다른 모델을 골라 주세요.",
     "bad-request": "화면이 앱이 예상하지 못한 것을 보냈어요. 새로 고친 뒤 다시 해 주세요.",
     "forbidden": "이 앱의 화면만 미니미와 이야기할 수 있어요. 앱의 주소로 열어 주세요.",
     "busy": "미니미가 아직 다른 일을 하고 있어요. 잠시 뒤에 다시 해 주세요.",
@@ -54,7 +54,11 @@
     "connector-signed-out": "연결이 끊겼어요. 다시 연결해 주세요.",
     "connector-token": "이건 개인 토큰으로 연결해요.",
     "connector-token-wrong": "토큰처럼 보이지 않아요.",
-    "connector-client-wrong": "OAuth 클라이언트가 아니에요. 클라이언트 ID(와 보안 비밀)나 JSON 파일을 넣어 주세요."
+    "connector-client-wrong": "OAuth 클라이언트가 아니에요. 클라이언트 ID(와 보안 비밀)나 JSON 파일을 넣어 주세요.",
+    "brain-key-missing": "미니미가 생각할 모델의 키가 필요해요. \"두뇌\"에서 넣어 주세요.",
+    "brain-key-wrong": "서비스가 그 키를 받지 않았어요. 확인하고 다시 붙여 넣어 주세요.",
+    "brain-unreachable": "서비스에 닿지 않았어요. 잠시 뒤 다시 해 주세요.",
+    "brain-local-unreachable": "그 주소에서 아무것도 답하지 않아요. Ollama나 LM Studio가 켜져 있나요?"
   },
   "firstRun": {
     "title": "내 미니미",
@@ -484,6 +488,34 @@
     },
     "onRequest": "그런 부탁이 오면 따라요",
     "tooLong": "너무 길어서 저장할 수 없어요(이름은 80자, 할 일은 4,000자까지). 거절돼요."
+  },
+  "brain": {
+    "title": "두뇌",
+    "intro": "미니미가 무엇으로 생각할지예요. 내 Claude Code는 이 컴퓨터에서 내 Claude 구독으로 생각해요. 아니면 모델을 고르고 그 키를 넣어요. 키는 이 컴퓨터에만 남아요.",
+    "claudeCode": "내 Claude Code",
+    "claudeCodeNote": "이 컴퓨터에서 내 Claude 구독으로 생각해요.",
+    "claudeMissing": "이 컴퓨터에 Claude Code가 없거나 로그인돼 있지 않아요. 대신 내 키로 모델을 고르거나, Claude Code를 설치한 뒤 이 페이지를 다시 열어 주세요.",
+    "api": "내 키로 다른 모델",
+    "service": "서비스",
+    "key": "API 키",
+    "keyPlaceholder": "키 붙여 넣기",
+    "save": "저장",
+    "keySaved": "키가 이 컴퓨터에 저장돼 있어요.",
+    "forgetKey": "키 지우기",
+    "makeKey": "키 만들기",
+    "model": "모델",
+    "modelOther": "또는 다른 모델 이름 직접 입력",
+    "modelLocal": "받아 둔 모델 이름 (예: qwen3:8b)",
+    "address": "주소",
+    "localNote": "이 컴퓨터에서 Ollama나 LM Studio로 돌리는 모델이에요. 아무것도 컴퓨터 밖으로 나가지 않지만, 위의 서비스보다 느리고 덜 똑똑할 수 있어요.",
+    "cost": "미니미가 쓴 만큼 그 서비스가 내 키로 요금을 매겨요.",
+    "use": "이걸로 쓰기",
+    "inUse": "쓰는 중",
+    "tier": {
+      "small": "작음",
+      "mid": "중간",
+      "large": "큼"
+    }
   },
   "messenger": {
     "title": "휴대폰에서",
