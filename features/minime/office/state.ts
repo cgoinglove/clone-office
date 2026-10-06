@@ -47,6 +47,10 @@ export interface Later {
   kind: "question" | "check";
   question: string;
   choices?: string[];
+  /** The question as it was first put to the person, live: an answer to that one still counts. */
+  ask?: string;
+  /** When it went to the person's phone, so it goes once. */
+  phoned?: string;
   /** question: the brain session to go on with. */
   session?: string;
   /** check: the answer about to be sent, a fixed one, what the choices mean, and the state it goes with. */

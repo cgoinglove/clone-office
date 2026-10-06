@@ -69,6 +69,8 @@ export interface CheckLater {
   revised?: string;
   labels: { send: string; revised?: string; hold: string };
   problem?: string;
+  /** The question as it was put to the person while it waited. */
+  ask?: string;
 }
 
 export type CheckOutcome =
@@ -153,13 +155,13 @@ export async function checkBeforeSending(options: {
     labels: choices,
     problem: verdict.problem,
   };
-  const { done } = askPerson(
+  const { id, done } = askPerson(
     options.chat,
     { kind: "question", question, choices: shown.choices },
     timeoutFor(options.chat, await personAway()),
   );
   const answer = await done;
   // Not decided while it waited: kept for the person, and decided when they answer.
-  if (!answer.answered) return { later: shown };
+  if (!answer.answered) return { later: { ...shown, ask: id } };
   return decideCheck(answer.answer, shown);
 }

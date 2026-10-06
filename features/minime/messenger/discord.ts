@@ -38,6 +38,8 @@ export interface Incoming {
   channel: string;
   author: Person;
   text: string;
+  /** The message it replies to, when it is a reply. */
+  replyTo?: string;
 }
 
 /** A button pressed on a message the bot sent, and that message as it was. */
@@ -266,11 +268,17 @@ export class DiscordBot {
       const author = d.author as Record<string, unknown> | undefined;
       // Direct messages from people only: not a server's channels, not bots (itself included).
       if (d.guild_id || !author || author.bot) return;
+      const reference = d.message_reference as
+        | Record<string, unknown>
+        | undefined;
       this.listener.message?.({
         id: String(d.id),
         channel: String(d.channel_id),
         author: person(author),
         text: String(d.content ?? ""),
+        ...(reference?.message_id
+          ? { replyTo: String(reference.message_id) }
+          : {}),
       });
       return;
     }

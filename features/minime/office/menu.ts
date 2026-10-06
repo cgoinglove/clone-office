@@ -5,8 +5,8 @@
 // Code applies the trust level; the brain only says which kind a request is.
 
 import { readFile } from "node:fs/promises";
-import { atomicWrite, withLock } from "../memory/files.ts";
-import { settingsPath } from "../server/exclude.ts";
+import { withLock } from "../memory/files.ts";
+import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 import type { Card } from "./client.ts";
 
@@ -89,10 +89,7 @@ export async function saveMenu(input: unknown): Promise<MenuItem[]> {
   const menu = cleanMenu(input);
   await withLock(minimeHome(), async () => {
     const settings = await readSettings();
-    await atomicWrite(
-      settingsPath(),
-      `${JSON.stringify({ ...settings, menu }, null, 2)}\n`,
-    );
+    await writeSettings(`${JSON.stringify({ ...settings, menu }, null, 2)}\n`);
   });
   return menu;
 }

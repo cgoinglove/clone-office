@@ -4,8 +4,7 @@
 
 import { readFile } from "node:fs/promises";
 import { forgetExcluded } from "../history/indexer.ts";
-import { atomicWrite } from "../memory/files.ts";
-import { loadExcludes, settingsPath } from "./exclude.ts";
+import { loadExcludes, settingsPath, writeSettings } from "./exclude.ts";
 
 /** Save the whole list of what is kept out; the rest of settings.json is kept as it is. */
 export async function saveExcludes(list: string[]): Promise<string[]> {
@@ -16,10 +15,7 @@ export async function saveExcludes(list: string[]): Promise<string[]> {
     // No settings yet.
   }
   const exclude = [...new Set(list.map((p) => p.trim()).filter(Boolean))];
-  await atomicWrite(
-    settingsPath(),
-    JSON.stringify({ ...settings, exclude }, null, 2),
-  );
+  await writeSettings(JSON.stringify({ ...settings, exclude }, null, 2));
   try {
     forgetExcluded(exclude);
   } catch {

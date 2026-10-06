@@ -5,8 +5,13 @@
 // meanwhile is answered once they are in (as Thursday's reach does, features/reach/reach.ts, after
 // Hermes Agent's pairing). What they write goes into one conversation with the mini-me, the same
 // as on the page, where it shows too ("/new" starts another); its questions come as buttons.
-// settings.json "messenger" keeps the bot's token, the person and the conversation; one process
-// per folder talks through the bot.
+// While no page is in view (server/presence.ts), what waits on the person comes to the phone as
+// Thursday's reach brings open work: a question waiting on them (a colleague's request, a
+// conversation left on the page), questions kept for later at the day's moments (batch.ts), and
+// finished work nobody has seen (a flow's answer, a colleague's answer); news in the phone's own
+// conversation comes back to it whoever is watching. Progress never goes: a phone that buzzes for
+// every step gets muted. settings.json "messenger" keeps the bot's token, the person and the
+// conversation; one process per folder talks through the bot.
 
 import { randomInt } from "node:crypto";
 import { readFile, unlink } from "node:fs/promises";
@@ -16,14 +21,16 @@ import { isLocale, type Locale } from "../../../i18n/locales.ts";
 import { loadMessages } from "../../../i18n/messages.ts";
 import type english from "../../../messages/en.json";
 import { changeOf, describe } from "../ask-text.ts";
-import { readChat } from "../chat/store.ts";
+import { dueAt } from "../batch.ts";
+import { type ChatNews, onChatMessage, readChat } from "../chat/store.ts";
 import { runTurn } from "../chat/turn.ts";
 import { answerPerson } from "../gate/answer.ts";
-import { type Ask, pendingAsks } from "../gate/gate.ts";
+import { type Ask, isRequestChat, onAsk, pendingAsks } from "../gate/gate.ts";
 import { atomicWrite, readText, withLock } from "../memory/files.ts";
-import { settingsPath } from "../server/exclude.ts";
+import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { personLanguage } from "../server/language.ts";
 import { minimeHome } from "../server/paths.ts";
+import { watching } from "../server/presence.ts";
 import {
   type Choice,
   DiscordBot,
@@ -32,6 +39,7 @@ import {
   type Person,
   type Press,
 } from "./discord.ts";
+import { type Kept, type OfficeSide, officeSide } from "./office.ts";
 
 /** What the bridge needs of a bot: the Discord one, or a stand-in in tests. */
 export interface Bot {
@@ -43,6 +51,8 @@ export interface Bot {
   send(channel: string, text: string, choices?: Choice[]): Promise<string>;
   typing(channel: string): Promise<void>;
   settle(press: Press, answer: string): Promise<void>;
+  /** The direct-message channel with a user, to write to them first. */
+  dm(user: string): Promise<string>;
 }
 
 interface DiscordSettings {
@@ -84,6 +94,30 @@ const ASK_MS = 60 * 60 * 1000;
 const HELD = 5;
 /** A process holding the bot renews it every minute; one silent for two is replaced. */
 const HOLD_MS = 2 * 60 * 1000;
+/** How often it looks for what waits on the person: a page left, a batch moment come. */
+const LOOK_MS = 15_000;
+/** How long it remembers what went to the phone, and which of its messages asked what. */
+const TOLD_MS = 24 * 60 * 60 * 1000;
+/** How much of a colleague's request the phone is shown over the question about it. */
+const ABOUT_CHARS = 300;
+
+/** A question on the phone that words answer: one from the gate, or one kept for later. */
+interface Waiting {
+  kind: "ask" | "later";
+  id: string;
+  /** It came to the phone on its own, outside the phone's conversation: its answer is confirmed. */
+  pushed: boolean;
+}
+
+/** Finished work nobody has seen yet, for the phone while no page is in view. */
+type Ending =
+  | { kind: "flow"; name: string; text: string; failed: boolean; at: string }
+  | { kind: "office"; text: string };
+
+const clip = (text: string, max: number) => {
+  const flat = text.replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
+};
 
 async function readSettings(): Promise<Record<string, unknown>> {
   try {
@@ -114,8 +148,7 @@ async function saveDiscord(
     const { discord: _old, ...rest } = messenger;
     const next = discord ? { ...rest, discord } : rest;
     const { messenger: _was, ...others } = settings;
-    await atomicWrite(
-      settingsPath(),
+    await writeSettings(
       `${JSON.stringify(Object.keys(next).length ? { ...others, messenger: next } : others, null, 2)}\n`,
     );
   });
@@ -128,8 +161,10 @@ async function words() {
   const locale: Locale = isLocale(base) ? base : "en";
   const messages = (await loadMessages(locale)) as typeof english;
   return {
+    locale,
     t: createTranslator({ locale, messages, namespace: "messenger" }),
     ask: createTranslator({ locale, messages, namespace: "ask" }),
+    chat: createTranslator({ locale, messages, namespace: "chat" }),
     errors: createTranslator({ locale, messages, namespace: "errors" }),
   };
 }
@@ -161,14 +196,36 @@ export class Bridge {
   private queue: Incoming[] = [];
   private busy = false;
   /** A question waiting for the person's own words: what they write next answers it. */
-  private waitingWords?: string;
+  private waitingWords?: Waiting;
+  /** Its messages that ask a question, by message id: a reply to one answers that one. */
+  private asked = new Map<string, Waiting & { at: number }>();
+  /** What already went to the phone (questions by id), so nothing goes twice. */
+  private told = new Map<string, number>();
+  private endings: Ending[] = [];
+  /** Flows running now, by their conversation: the next answer there is theirs. */
+  private flowChats = new Map<string, string>();
+  /** The conversation a message from the phone is being answered in now. */
+  private turnChat?: string;
+  private channel?: { user: string; id: string };
   private holding?: ReturnType<typeof setInterval>;
+  private looker?: ReturnType<typeof setInterval>;
+  private later?: ReturnType<typeof setTimeout>;
+  private looking = false;
+  private lookAgain = false;
+  private unhear: (() => void)[] = [];
+  private office: OfficeSide;
+  private presence: typeof watching;
+  private lookMs: number;
 
   constructor(
     options: {
       makeBot?: (token: string, listener: Listener) => Bot;
       turn?: typeof runTurn;
       gateUrl?: () => string;
+      office?: OfficeSide;
+      presence?: typeof watching;
+      /** How often it looks for what waits on the person. */
+      lookMs?: number;
     } = {},
   ) {
     this.makeBot =
@@ -178,6 +235,9 @@ export class Bridge {
     this.gateUrl =
       options.gateUrl ??
       (() => `http://127.0.0.1:${process.env.PORT || 3000}/api/me/gate`);
+    this.office = options.office ?? officeSide(this.gateUrl);
+    this.presence = options.presence ?? watching;
+    this.lookMs = options.lookMs ?? LOOK_MS;
   }
 
   private holderPath(): string {
@@ -234,6 +294,7 @@ export class Bridge {
     const bot = this.makeBot(settings.token, {
       ready: () => {
         this.state = "on";
+        this.lookSoon(0);
       },
       message: (message) => void this.onMessage(message).catch(report),
       press: (press) => void this.onPress(press).catch(report),
@@ -245,6 +306,14 @@ export class Bridge {
       },
     });
     this.bot = bot;
+    // What waits on the person: a new question, a line in a conversation, and a look every little
+    // while for a page that left or a batch moment that came.
+    this.unhear.push(
+      onAsk(() => this.lookSoon(0)),
+      onChatMessage((news) => this.onNews(news)),
+    );
+    this.looker = setInterval(() => this.lookSoon(0), this.lookMs);
+    this.looker.unref?.();
     bot.start();
   }
 
@@ -254,6 +323,13 @@ export class Bridge {
     this.state = "off";
     clearInterval(this.holding);
     this.holding = undefined;
+    clearInterval(this.looker);
+    this.looker = undefined;
+    clearTimeout(this.later);
+    this.later = undefined;
+    for (const unhear of this.unhear.splice(0)) unhear();
+    this.channel = undefined;
+    this.endings = [];
     void unlink(this.holderPath()).catch(() => {});
   }
 
@@ -335,11 +411,21 @@ export class Bridge {
       return;
     }
     if (!text) return;
-    // A question waits for their own words: this is the answer.
-    if (this.waitingWords) {
-      const id = this.waitingWords;
-      this.waitingWords = undefined;
-      if ((await answerPerson(id, text)).ok) return;
+    // A reply to one of its questions answers that one; else a question waiting for their words.
+    const replied = message.replyTo
+      ? this.asked.get(message.replyTo)
+      : undefined;
+    const waiting = replied ?? this.waitingWords;
+    if (waiting) {
+      if (this.waitingWords?.id === waiting.id) this.waitingWords = undefined;
+      if (await this.answerWith(waiting, text)) {
+        if (waiting.pushed)
+          await this.bot.send(
+            message.channel,
+            (await words()).ask("answered", { answer: text }),
+          );
+        return;
+      }
     }
     if (text === "/new") {
       await saveDiscord((was) => was && { ...was, chat: undefined });
@@ -406,11 +492,14 @@ export class Bridge {
         language: await personLanguage(),
         gateUrl: this.gateUrl(),
         send: (event) => {
+          if (event.type === "chat") this.turnChat = event.id;
           if (event.type === "chat" && event.id !== settings?.chat)
             said.push(saveDiscord((was) => was && { ...was, chat: event.id }));
-          else if (event.type === "ask")
+          else if (event.type === "ask") {
+            // Asked in the phone's own conversation: here already, so it is not sent again.
+            this.told.set(event.id, Date.now());
             said.push(this.ask(message.channel, event.id, event.ask));
-          else if (event.type === "done") {
+          } else if (event.type === "done") {
             // Sent as soon as it is ready; the look back at the conversation comes after.
             clearInterval(typing);
             answered = true;
@@ -434,6 +523,7 @@ export class Bridge {
       if (!answered) said.push(bot.send(message.channel, t("failed")));
     } finally {
       clearInterval(typing);
+      this.turnChat = undefined;
       await Promise.allSettled(said);
     }
   }
@@ -444,8 +534,13 @@ export class Bridge {
     if (last?.text.trim()) await this.bot?.send(channel, last.text);
   }
 
-  /** A question from the gate, as a message with buttons. */
-  private async ask(channel: string, id: string, ask: Ask): Promise<void> {
+  /** A question from the gate, as a message with buttons; `about` says whose it is when it came on its own. */
+  private async ask(
+    channel: string,
+    id: string,
+    ask: Ask,
+    about?: string,
+  ): Promise<void> {
     const { t, ask: tAsk } = await words();
     let text: string;
     let choices: Choice[] = [];
@@ -469,9 +564,49 @@ export class Bridge {
         label: choice,
         value: `ask:${id}:${index}`,
       }));
-      this.waitingWords = id;
     }
-    await this.bot?.send(channel, text, choices);
+    const sent = await this.bot?.send(
+      channel,
+      about ? `${about}\n\n${text}` : text,
+      choices,
+    );
+    if (ask.kind === "question") {
+      const waiting: Waiting = { kind: "ask", id, pushed: about !== undefined };
+      this.waitingWords = waiting;
+      if (sent) this.asked.set(sent, { ...waiting, at: Date.now() });
+    }
+  }
+
+  /** A question kept for later, as a message with its choices as buttons. */
+  private async askKept(
+    channel: string,
+    kept: Kept,
+    about: string,
+  ): Promise<void> {
+    const { t } = await words();
+    const choices: Choice[] = (kept.choices ?? []).map((choice, index) => ({
+      label: choice,
+      value: `later:${kept.id}:${index}`,
+    }));
+    const sent = await this.bot?.send(
+      channel,
+      `${about}\n\n${kept.question}\n\n${choices.length ? t("orReply") : t("replyHere")}`,
+      choices,
+    );
+    const waiting: Waiting = { kind: "later", id: kept.id, pushed: true };
+    this.waitingWords = waiting;
+    if (sent) this.asked.set(sent, { ...waiting, at: Date.now() });
+  }
+
+  /** Their words or choice as the answer to a question; false when it no longer waits. */
+  private async answerWith(waiting: Waiting, given: string): Promise<boolean> {
+    if (waiting.kind === "later") return this.office.answer(waiting.id, given);
+    if ((await answerPerson(waiting.id, given)).ok) return true;
+    // Not answered while it waited, it was kept for later: the same question waits there.
+    const kept = (await this.office.kept().catch(() => [])).find(
+      (one) => one.ask === waiting.id,
+    );
+    return kept ? this.office.answer(kept.id, given) : false;
   }
 
   private async onPress(press: Press): Promise<void> {
@@ -479,11 +614,31 @@ export class Bridge {
     if (!this.bot || !settings?.owner || press.user.id !== settings.owner.id)
       return;
     const [kind, id = "", value = ""] = press.value.split(":");
-    if (kind !== "ask") return;
+    if (kind !== "ask" && kind !== "later") return;
     const { t, ask: tAsk } = await words();
-    const waiting = pendingAsks().find((pending) => pending.id === id);
+    const waiting =
+      kind === "ask"
+        ? pendingAsks().find((pending) => pending.id === id)
+        : undefined;
     if (!waiting) {
-      await this.bot.settle(press, t("gone"));
+      // Kept for later: its choice answers it, and the request goes on.
+      const kept = (await this.office.kept().catch(() => [])).find((one) =>
+        kind === "later" ? one.id === id : one.ask === id,
+      );
+      const given = kept?.choices?.[Number(value)];
+      const ok = Boolean(
+        kept && given && (await this.office.answer(kept.id, given)),
+      );
+      if (
+        ok &&
+        this.waitingWords &&
+        [id, kept?.id].includes(this.waitingWords.id)
+      )
+        this.waitingWords = undefined;
+      await this.bot.settle(
+        press,
+        ok ? tAsk("answered", { answer: given ?? "" }) : t("gone"),
+      );
       return;
     }
     let answer = value;
@@ -500,8 +655,208 @@ export class Bridge {
       outcome = tAsk("answered", { answer });
     }
     await answerPerson(id, answer, always);
-    if (this.waitingWords === id) this.waitingWords = undefined;
+    if (this.waitingWords?.id === id) this.waitingWords = undefined;
     await this.bot.settle(press, outcome);
+  }
+
+  /** A line added to a conversation: news for the phone, or a flow's answer to keep for it. */
+  private onNews(news: ChatNews): void {
+    if (news.role === "flow") {
+      this.flowChats.set(news.chat, news.text);
+      return;
+    }
+    const flow = this.flowChats.get(news.chat);
+    if (
+      flow !== undefined &&
+      (news.role === "minime" || news.role === "error")
+    ) {
+      this.flowChats.delete(news.chat);
+      this.endings.push({
+        kind: "flow",
+        name: flow,
+        text: news.text,
+        failed: news.role === "error",
+        at: news.at,
+      });
+      this.lookSoon(0);
+      return;
+    }
+    if (news.role !== "office" && news.role !== "told") return;
+    void (async () => {
+      const settings = await loadDiscord();
+      // In the phone's own conversation: it comes back there, whoever is watching.
+      if (news.chat === settings?.chat) {
+        const { chat } = await words();
+        await this.say(
+          `${news.role === "office" ? chat("fromColleague") : chat("told")}\n${news.text}`,
+        );
+        return;
+      }
+      // A colleague's answer in a conversation on the page: for the phone if nobody looks there.
+      if (news.role === "office") {
+        this.endings.push({ kind: "office", text: news.text });
+        this.lookSoon(0);
+      }
+    })().catch((error) =>
+      console.error(`messenger: ${(error as Error).message}`),
+    );
+  }
+
+  /** Writes to the person first, in their direct messages. */
+  private async say(
+    text: string,
+    choices?: Choice[],
+  ): Promise<string | undefined> {
+    const channel = await this.dmChannel();
+    return channel ? this.bot?.send(channel, text, choices) : undefined;
+  }
+
+  private async dmChannel(): Promise<string | undefined> {
+    const settings = await loadDiscord();
+    const bot = this.bot;
+    if (!bot || this.state !== "on" || !settings?.owner) return undefined;
+    if (this.channel?.user !== settings.owner.id)
+      this.channel = {
+        user: settings.owner.id,
+        id: await bot.dm(settings.owner.id),
+      };
+    return this.channel.id;
+  }
+
+  private lookSoon(ms: number): void {
+    if (!this.bot) return;
+    clearTimeout(this.later);
+    this.later = setTimeout(() => void this.look(), ms);
+    this.later.unref?.();
+  }
+
+  /** One look at a time; one asked for meanwhile follows it. */
+  private async look(): Promise<void> {
+    if (this.looking) {
+      this.lookAgain = true;
+      return;
+    }
+    this.looking = true;
+    try {
+      do {
+        this.lookAgain = false;
+        await this.lookOnce();
+      } while (this.lookAgain);
+    } catch (error) {
+      console.error(`messenger: ${(error as Error).message}`);
+    } finally {
+      this.looking = false;
+    }
+  }
+
+  /** What waits on the person goes to the phone while no page is in view. */
+  private async lookOnce(): Promise<void> {
+    const now = Date.now();
+    for (const [id, at] of this.told)
+      if (now - at > TOLD_MS) this.told.delete(id);
+    for (const [id, one] of this.asked)
+      if (now - one.at > TOLD_MS) this.asked.delete(id);
+    const seen = this.presence();
+    if (seen.state === "unknown") return this.lookSoon(seen.wait);
+    // The page shows it all: what finished meanwhile was seen there.
+    if (seen.state === "watching") {
+      this.endings = [];
+      return;
+    }
+    const channel = await this.dmChannel();
+    if (!channel) return;
+    const w = await words();
+    // Questions waiting on the person now. A colleague's request waits on someone who said they
+    // are away until the day's next moment; the offer to make a rule waits calmly for the page.
+    const away = await this.office.away().catch(() => false);
+    // What could not be sent stays unsent, and the next look tries again.
+    for (const pending of pendingAsks()) {
+      if (this.told.has(pending.id) || pending.ask.kind === "rule") continue;
+      if (pending.chat && pending.chat === this.turnChat) continue;
+      if (away && isRequestChat(pending.chat)) continue;
+      const about = await this.about(pending.chat, w);
+      // Answered while it was looked into: it no longer waits.
+      if (!pendingAsks().some((still) => still.id === pending.id)) continue;
+      await this.ask(channel, pending.id, pending.ask, about);
+      this.told.set(pending.id, Date.now());
+    }
+    // Questions kept for later, at the day's moments, once each; one that came live already
+    // is not sent again.
+    const kept = (await this.office.kept().catch(() => [])).filter(
+      (one) => !one.phoned && !this.told.has(one.id),
+    );
+    const due: Kept[] = [];
+    for (const one of kept) {
+      if (one.ask && this.told.has(one.ask)) {
+        this.told.set(one.id, Date.now());
+        await this.office.phoned(one.id).catch(() => {});
+      } else if (dueAt(new Date(one.at)).getTime() <= now) due.push(one);
+    }
+    const open: { kept: Kept; about: string }[] = [];
+    for (const one of due) {
+      const request = await this.office.about(one.task).catch(() => undefined);
+      // Closed meanwhile: nothing to answer.
+      if (request && !request.open) {
+        this.told.set(one.id, Date.now());
+        continue;
+      }
+      open.push({
+        kept: one,
+        about: w.t("fromRequest", {
+          name: one.from ?? request?.from ?? w.t("colleague"),
+          request: clip(request?.text ?? "", ABOUT_CHARS),
+        }),
+      });
+    }
+    if (open.length > 1)
+      await this.bot?.send(channel, w.t("waiting", { count: open.length }));
+    for (const { kept: one, about } of open) {
+      await this.askKept(channel, one, about);
+      this.told.set(one.id, Date.now());
+      await this.office.phoned(one.id).catch(() => {});
+    }
+    // Finished work nobody has seen.
+    while (this.endings.length) {
+      await this.bot?.send(channel, this.endingText(this.endings[0], w));
+      this.endings.shift();
+    }
+  }
+
+  /** Whose question it is: who asked what, or the conversation on the page it came from. */
+  private async about(
+    chat: string | undefined,
+    w: Awaited<ReturnType<typeof words>>,
+  ): Promise<string> {
+    if (isRequestChat(chat)) {
+      const task = (chat ?? "").slice("office-request-".length);
+      const request = await this.office.about(task).catch(() => undefined);
+      return w.t("fromRequest", {
+        name: request?.from ?? w.t("colleague"),
+        request: clip(request?.text ?? "", ABOUT_CHARS),
+      });
+    }
+    const title = chat
+      ? (await readChat(chat).catch(() => undefined))?.info.title
+      : undefined;
+    return title ? w.t("inChat", { title }) : w.t("fromPage");
+  }
+
+  private endingText(
+    ending: Ending,
+    w: Awaited<ReturnType<typeof words>>,
+  ): string {
+    if (ending.kind === "office")
+      return `${w.chat("fromColleague")}\n${ending.text}`;
+    const at = new Intl.DateTimeFormat(w.locale, {
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(new Date(ending.at));
+    const text = !ending.failed
+      ? ending.text
+      : w.errors.has(ending.text as never)
+        ? w.errors(ending.text as never)
+        : w.t("failed");
+    return `${w.chat("flowRan", { name: ending.name, at })}\n\n${text}`;
   }
 }
 

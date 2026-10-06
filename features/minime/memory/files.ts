@@ -19,10 +19,11 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function atomicWrite(
   path: string,
   content: string,
+  options: { mode?: number } = {},
 ): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   const temp = `${path}.${process.pid}.${Date.now()}.tmp`;
-  await writeFile(temp, content, "utf8");
+  await writeFile(temp, content, { encoding: "utf8", mode: options.mode });
   await rename(temp, path);
 }
 

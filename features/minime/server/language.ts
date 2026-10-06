@@ -3,8 +3,8 @@
 // uses the last one kept, so the mini-me never guesses which language to ask its person in.
 
 import { readFile } from "node:fs/promises";
-import { atomicWrite, withLock } from "../memory/files.ts";
-import { settingsPath } from "./exclude.ts";
+import { withLock } from "../memory/files.ts";
+import { settingsPath, writeSettings } from "./exclude.ts";
 import { languageName } from "./ndjson.ts";
 import { minimeHome } from "./paths.ts";
 
@@ -28,8 +28,7 @@ export async function personLanguage(
   if (tag !== kept)
     await withLock(minimeHome(), async () => {
       const fresh = await readSettings();
-      await atomicWrite(
-        settingsPath(),
+      await writeSettings(
         `${JSON.stringify({ ...fresh, language: tag }, null, 2)}\n`,
       );
     });

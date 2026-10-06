@@ -15,8 +15,8 @@ import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { connect, createServer } from "node:net";
 import { networkInterfaces } from "node:os";
 import { join } from "node:path";
-import { atomicWrite, withLock } from "../memory/files.ts";
-import { settingsPath } from "../server/exclude.ts";
+import { withLock } from "../memory/files.ts";
+import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome, relayServerPath } from "../server/paths.ts";
 import {
   type Card,
@@ -86,10 +86,7 @@ export async function loadHost(): Promise<Host | undefined> {
 async function saveHost(host: Host): Promise<void> {
   await withLock(minimeHome(), async () => {
     const settings = await readSettings();
-    await atomicWrite(
-      settingsPath(),
-      `${JSON.stringify({ ...settings, host }, null, 2)}\n`,
-    );
+    await writeSettings(`${JSON.stringify({ ...settings, host }, null, 2)}\n`);
   });
 }
 

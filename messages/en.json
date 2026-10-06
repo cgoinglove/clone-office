@@ -478,13 +478,19 @@
     "knock": "Almost there. Your mini-me is asking on your computer whether to let you in. Let yourself in there only if it shows {code}, and it answers what you wrote.",
     "someoneWaiting": "Someone else is already waiting to be let in here. If that is not you, press “Not them” on the computer, then write again.",
     "taken": "This mini-me already talks with someone else.",
-    "in": "You are in. Write here and your mini-me answers.",
-    "inHeld": "You are in. Your mini-me answers what you wrote.",
+    "in": "You are in. Write here and your mini-me answers. While you are away from its page, what needs you comes here too.",
+    "inHeld": "You are in. Your mini-me answers what you wrote. While you are away from its page, what needs you comes here too.",
     "newChat": "A new conversation, then.",
     "busy": "Still on your last message; I'll take this one next.",
     "orReply": "Or reply with your own words.",
     "replyHere": "Reply here with your answer.",
     "gone": "This question no longer waits.",
-    "failed": "Something went wrong. Try again."
+    "failed": "Something went wrong. Try again.",
+    "fromRequest": "{name} asked: “{request}”",
+    "colleague": "A colleague",
+    "inChat": "From your conversation “{title}”:",
+    "fromPage": "Your mini-me asks:",
+    "waiting": "{count, plural, one {# question has} other {# questions have}} waited for you.",
+    "pushNote": "While you are not looking at this page, what needs you comes to Discord: questions about colleagues' requests, your flows' answers, and answers to what you asked. While your status says you are in a meeting, away or off, colleagues' questions wait and come together at 10, 14 and 17."
   }
 }

@@ -26,7 +26,26 @@ them** (내가 아니에요) turns away someone who is not them.
 
 They write as they would on the page. When the mini-me needs something from them (may it read a
 file, which of two options), it asks with buttons; they press one, or answer a question in their
-own words. "/new" starts a new conversation. The app keeps the bot's token on their computer only.
+own words. "/new" starts a new conversation. The app keeps the bot's token on their computer
+only, in a settings file only they can read.
+
+## What comes to the phone by itself
+
+While they are not looking at their mini-me's page (it is closed, hidden, or another window is in
+front for about a minute), what waits on them comes to Discord:
+
+- **A question waiting on them**: about a colleague's request (who asked, what, and the mini-me's
+  question), or one from a conversation they left on the page. They answer with a button or in
+  their own words; when several wait, replying to one answers that one.
+- **Questions kept for later**: ones they did not answer in time come together at 10, 14 and 17
+  o'clock, once each. While their status says they are in a meeting, away or off, colleagues'
+  questions wait for those moments instead of coming at once.
+- **Finished work nobody has seen**: a flow's answer (the morning brief), or a colleague's answer
+  to a request they sent from the page.
+
+An answer to something they asked from the phone comes back to the phone even while the page is
+open. Progress does not come: the phone is not for every step. While the page is in view,
+everything stays there.
 
 ## When it does not answer
 

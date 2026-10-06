@@ -8,10 +8,16 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, sep } from "node:path";
+import { atomicWrite } from "../memory/files.ts";
 import { minimeHome } from "./paths.ts";
 
 export function settingsPath(): string {
   return join(minimeHome(), "settings.json");
+}
+
+/** Writes settings.json for its person's eyes only: it keeps tokens and keys (a bot's, an office's). */
+export async function writeSettings(content: string): Promise<void> {
+  await atomicWrite(settingsPath(), content, { mode: 0o600 });
 }
 
 /** The person's exclude patterns; none when the settings file is missing or unreadable. */

@@ -172,12 +172,15 @@ export function MessengerPanel() {
               </>
             )}
             {status.owner && status.state !== "failed" && (
-              <p>
-                {t("paired", {
-                  bot: status.bot ?? "Discord",
-                  name: status.owner,
-                })}
-              </p>
+              <>
+                <p>
+                  {t("paired", {
+                    bot: status.bot ?? "Discord",
+                    name: status.owner,
+                  })}
+                </p>
+                <p className="text-muted-foreground">{t("pushNote")}</p>
+              </>
             )}
             {asking && (
               <div className="flex flex-wrap items-center gap-2 rounded-lg border border-waiting/40 bg-waiting/5 px-3 py-2">

@@ -35,6 +35,7 @@ import { MessengerPanel } from "./messenger-panel";
 import { OfficePanel } from "./office-panel";
 import { type Routine, routineNow } from "./routine";
 import { savedText } from "./saved-text";
+import { usePresence } from "./use-presence";
 
 const PLAN = ["read", "keep", "skip", "time"] as const;
 
@@ -157,6 +158,8 @@ export function FirstRun() {
   const format = useFormatter();
   const tFlows = useTranslations("flows");
   const locale = useLocale();
+  // While the person looks at this page, what waits on them is shown here, not sent to their phone.
+  usePresence();
   const [lang, setLang] = useState("en");
   // The mini-me's language follows the one picked for the screen, as soon as it is picked.
   useEffect(() => {

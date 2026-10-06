@@ -6,8 +6,8 @@
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, sep } from "node:path";
-import { atomicWrite, withLock } from "../memory/files.ts";
-import { settingsPath } from "../server/exclude.ts";
+import { withLock } from "../memory/files.ts";
+import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 
 /** Tools a mini-me uses alone from the start: searching the web reads, and keeps nothing. */
@@ -38,8 +38,7 @@ export async function addTrust(rule: string): Promise<void> {
     const trust = (settings.trust ?? {}) as { allow?: string[] };
     const allow = new Set(Array.isArray(trust.allow) ? trust.allow : []);
     allow.add(rule);
-    await atomicWrite(
-      settingsPath(),
+    await writeSettings(
       `${JSON.stringify({ ...settings, trust: { ...trust, allow: [...allow] } }, null, 2)}\n`,
     );
   });

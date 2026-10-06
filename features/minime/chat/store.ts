@@ -85,17 +85,40 @@ export async function createChat(
   return { id, title: short, created: at, updated: at, turns: 0 };
 }
 
+/** A line just added to a conversation, heard in this process (the messenger sends some on). */
+export interface ChatNews {
+  chat: string;
+  role: ChatRole;
+  text: string;
+  at: string;
+}
+
+const hearing = globalThis as typeof globalThis & {
+  __minimeChatNews?: Set<(news: ChatNews) => void>;
+};
+
+/** Hear each line added to any conversation; returns a function that stops hearing. */
+export function onChatMessage(listener: (news: ChatNews) => void): () => void {
+  hearing.__minimeChatNews ??= new Set();
+  hearing.__minimeChatNews.add(listener);
+  return () => {
+    hearing.__minimeChatNews?.delete(listener);
+  };
+}
+
 export async function appendMessage(
   id: string,
   role: ChatRole,
   text: string,
 ): Promise<void> {
-  await append(id, {
-    type: "message",
-    role,
-    text,
-    at: new Date().toISOString(),
-  });
+  const at = new Date().toISOString();
+  await append(id, { type: "message", role, text, at });
+  for (const listener of hearing.__minimeChatNews ?? [])
+    try {
+      listener({ chat: id, role, text, at });
+    } catch {
+      // One listener failing never stops the line from being kept.
+    }
 }
 
 export async function setSession(

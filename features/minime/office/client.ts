@@ -9,8 +9,8 @@ import type {
   Task,
   TaskState,
 } from "../../relay/relay.ts";
-import { atomicWrite, withLock } from "../memory/files.ts";
-import { settingsPath } from "../server/exclude.ts";
+import { withLock } from "../memory/files.ts";
+import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 
 export type { Card, InboxEvent, Member, Task, TaskState };
@@ -54,8 +54,7 @@ export async function loadOffice(): Promise<OfficeConfig | undefined> {
 async function saveOffice(office: OfficeConfig | undefined): Promise<void> {
   await withLock(minimeHome(), async () => {
     const { office: _old, ...settings } = await readSettings();
-    await atomicWrite(
-      settingsPath(),
+    await writeSettings(
       `${JSON.stringify(office ? { ...settings, office } : settings, null, 2)}\n`,
     );
   });

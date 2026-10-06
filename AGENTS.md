@@ -260,8 +260,18 @@ These words help discussion. They do not mandate separate services, tables or UI
   is answered once they are let in; then their messages go into one conversation through
   `chat/turn.ts` `runTurn` ("/new" starts another), the gate's questions come as buttons or wait
   for their words (`ask-text.ts` words them as the page's cards do; `gate/answer.ts` answers them
-  for both), and the answer is sent as soon as it is done. `settings.json` `messenger` keeps the
-  token, the person and the conversation; one process per folder holds the bot
+  for both), and the answer is sent as soon as it is done. While no page is in view
+  (`server/presence.ts`: each page in view and in focus says so every 20 seconds through
+  `app/api/me/presence`, `use-presence.ts`; silent for 50, it is gone), what waits on the person
+  goes to the phone, as Thursday's reach brings open work: questions waiting at the gate (a
+  colleague's request says who asked what, through `messenger/office.ts`), questions kept for
+  later at the day's batch moments once each (`phoned` in `office/state.json`; one sent live is
+  answered there still, through the kept question's `ask`), and finished work nobody has seen (a
+  flow's answer, a colleague's answer in a conversation on the page; `chat/store.ts`
+  `onChatMessage`). News in the phone's own conversation goes to it whoever is watching; progress
+  never goes. A reply to one of its questions answers that one. `settings.json` `messenger` keeps
+  the token, the person and the conversation (`settings.json` is written for its person alone,
+  `writeSettings`); one process per folder holds the bot
   (`messenger/holder.json`). It starts when the server does (`instrumentation.ts`) and when the
   page asks; its words come from `messages/` through `i18n/messages.ts`. The page's part is
   `features/minime/messenger-panel.tsx` with the route `app/api/me/messenger`.

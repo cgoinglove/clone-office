@@ -288,13 +288,14 @@ async function answer(options: {
     };
     // The person was asked and has not answered: the question waits for them, and the colleague
     // hears that they will get back to them.
-    const open = [...asked.values()].filter((a) => !a.answered);
+    const open = [...asked].filter(([, a]) => !a.answered);
     if (result.ok && (answer.waiting_on_person || open.length)) {
-      const last = open.at(-1);
+      const [ask, last] = open.at(-1) ?? [];
       await park(office, task, {
         kind: "question",
         question: last?.question ?? answer.note?.trim() ?? userText(task),
         ...(last?.choices?.length ? { choices: last.choices } : {}),
+        ...(ask ? { ask } : {}),
         session: result.sessionId,
         from: from?.name,
         ...(answer.menu ? { menu: answer.menu } : {}),
@@ -361,6 +362,7 @@ async function answer(options: {
         choices: outcome.later.choices,
         ...(outcome.later.revised ? { revised: outcome.later.revised } : {}),
         labels: outcome.later.labels,
+        ...(outcome.later.ask ? { ask: outcome.later.ask } : {}),
         ...sending,
       });
       return;

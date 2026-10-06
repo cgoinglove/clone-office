@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import type { runTurn } from "../chat/turn";
+import type { watching } from "../server/presence";
 import type { Bot } from "./bridge";
 import type { Choice, Listener, Person, Press } from "./discord";
+import type { Kept, OfficeSide } from "./office";
 
 const root = mkdtempSync(join(tmpdir(), "minime-messenger-"));
 const saved = process.env.SUB_OFFICE_HOME;
@@ -53,8 +55,18 @@ class FakeBot implements Bot {
   async settle(press: Press, text: string) {
     this.settled.push({ press, text });
   }
-  write(author: Person, text: string) {
-    this.listener.message?.({ id: "x", channel: "dm1", author, text });
+  // The direct-message channel with the person, the one they write in.
+  async dm() {
+    return "dm1";
+  }
+  write(author: Person, text: string, replyTo?: string) {
+    this.listener.message?.({
+      id: "x",
+      channel: "dm1",
+      author,
+      text,
+      ...(replyTo ? { replyTo } : {}),
+    });
   }
 }
 
@@ -112,6 +124,12 @@ test("the person's own bot: the first to write is let in by the code their phone
   assert.equal((await bridge.status()).bot, "Mini");
   const kept = JSON.parse(readFileSync(join(root, "settings.json"), "utf8"));
   assert.equal(kept.messenger.discord.token, "right-token-right-token");
+  if (process.platform !== "win32")
+    assert.equal(
+      statSync(join(root, "settings.json")).mode & 0o777,
+      0o600,
+      "the token is for its person's eyes only",
+    );
 
   // Whoever writes first is asked about on the computer, with a code sent to their phone; what
   // they write meanwhile waits, and anyone else is told someone is waiting.
@@ -187,4 +205,208 @@ test("the person's own bot: the first to write is let in by the code their phone
   assert.equal((await bridge.status()).configured, false);
   const left = JSON.parse(readFileSync(join(root, "settings.json"), "utf8"));
   assert.equal(left.messenger, undefined, "the token is forgotten");
+});
+
+test("while no page is in view, what waits on the person goes to their phone; news in the phone's conversation always does", async () => {
+  const home = join(root, "push");
+  process.env.SUB_OFFICE_HOME = home;
+  const bots: FakeBot[] = [];
+  let seen: ReturnType<typeof watching> = { state: "watching" };
+  let away = false;
+  const kept: Kept[] = [];
+  const answered: { id: string; given: string }[] = [];
+  const office: OfficeSide = {
+    kept: async () =>
+      kept.filter((one) => !answered.some((a) => a.id === one.id)),
+    phoned: async (id) => {
+      const one = kept.find((k) => k.id === id);
+      if (one) one.phoned = new Date().toISOString();
+    },
+    about: async (task) => ({
+      from: "Ben",
+      text:
+        task === "t1"
+          ? "Can you review my pull request?"
+          : "Which plan do we pick?",
+      open: true,
+    }),
+    answer: async (id, given) => {
+      answered.push({ id, given });
+      return true;
+    },
+    away: async () => away,
+  };
+  const bridge = new bridgeModule.Bridge({
+    makeBot: (token, listener) => {
+      const bot = new FakeBot(token, listener);
+      bots.push(bot);
+      return bot;
+    },
+    turn: async () => {},
+    office,
+    presence: () => seen,
+    lookMs: 30,
+  });
+  await bridge.connect("right-token-right-token");
+  const bot = bots.at(-1) as FakeBot;
+  bot.write(ana, "hi");
+  await until(() => bot.sent.length === 1);
+  await bridge.allow((await bridge.status()).asking?.code ?? "");
+  await until(() => bot.sent.length === 2);
+  const phone = () => bot.sent.slice(2);
+
+  // A question from a conversation on the page waits there while the page is in view.
+  const chat = await store.createChat("Plan the week");
+  const asked = gate.askPerson(chat.id, {
+    kind: "question",
+    question: "Which day?",
+    choices: ["Mon", "Tue"],
+  });
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  assert.equal(phone().length, 0, "nothing goes while the page is in view");
+
+  // The page left: the question it was holding goes to the phone, once, and a press answers it.
+  seen = { state: "away" };
+  await until(() => phone().length === 1);
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  assert.equal(phone().length, 1, "once");
+  const question = phone()[0];
+  assert.match(
+    question.text,
+    /^From your conversation “Plan the week”:\n\nWhich day\?/,
+  );
+  assert.deepEqual(
+    question.choices.map((c) => c.label),
+    ["Mon", "Tue"],
+  );
+  bot.listener.press?.({
+    id: "i1",
+    token: "t1",
+    channel: "dm1",
+    user: ana,
+    value: question.choices[1].value,
+    message: { id: "m3", text: question.text },
+  });
+  assert.deepEqual(await asked.done, { answered: true, answer: "Tue" });
+  await until(() => bot.settled.length === 1);
+  assert.equal(bot.settled[0].text, "Answer: Tue");
+
+  // A question about a colleague's request says who asked what; their words answer it.
+  const live = gate.askPerson("office-request-t1", {
+    kind: "question",
+    question: "Can you do it by Friday?",
+  });
+  await until(() => phone().length === 2);
+  assert.equal(
+    phone()[1].text,
+    "Ben asked: “Can you review my pull request?”\n\nCan you do it by Friday?\n\nReply here with your answer.",
+  );
+  bot.write(ana, "Yes, Friday");
+  assert.deepEqual(await live.done, { answered: true, answer: "Yes, Friday" });
+  await until(() => phone().length === 3);
+  assert.equal(phone()[2].text, "Answer: Yes, Friday");
+
+  // Said they are away: a colleague's question waits for the day's moment.
+  away = true;
+  const later = gate.askPerson("office-request-t2", {
+    kind: "question",
+    question: "Plan A or B?",
+  });
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  assert.equal(phone().length, 3, "not while they are away");
+
+  // Kept for later, they come together at the day's moment: one already sent live is not sent again.
+  const long = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
+  kept.push(
+    {
+      id: "k0",
+      task: "t1",
+      from: "Ben",
+      question: "Can you do it by Friday?",
+      ask: live.id,
+      at: long,
+    },
+    {
+      id: "k1",
+      task: "t2",
+      from: "Ben",
+      question: "Send “Plan A”?",
+      choices: ["Send", "Don't send"],
+      at: long,
+    },
+    { id: "k2", task: "t2", question: "Plan A or B?", ask: later.id, at: long },
+  );
+  await until(() => phone().length === 6);
+  assert.equal(phone()[3].text, "2 questions have waited for you.");
+  assert.match(
+    phone()[4].text,
+    /^Ben asked: “Which plan do we pick\?”\n\nSend “Plan A”\?/,
+  );
+  assert.deepEqual(
+    phone()[4].choices.map((c) => c.value),
+    ["later:k1:0", "later:k1:1"],
+  );
+  assert.match(
+    phone()[5].text,
+    /Plan A or B\?\n\nReply here with your answer\.$/,
+  );
+  assert.ok(
+    kept.find((k) => k.id === "k1")?.phoned,
+    "marked, so a restart does not send it again",
+  );
+  bot.listener.press?.({
+    id: "i2",
+    token: "t2",
+    channel: "dm1",
+    user: ana,
+    value: "later:k1:0",
+    message: { id: "m5", text: phone()[4].text },
+  });
+  await until(() => answered.length === 1);
+  assert.deepEqual(answered[0], { id: "k1", given: "Send" });
+  // A reply to the other one answers that one.
+  bot.write(ana, "B, please", `m${bot.sent.indexOf(phone()[5]) + 1}`);
+  await until(() => answered.length === 2);
+  assert.deepEqual(answered[1], { id: "k2", given: "B, please" });
+  away = false;
+
+  // A flow's answer goes while nobody looks; one that came while the page was in view was seen there.
+  const flowChat = await store.createChat("Morning brief");
+  await store.appendMessage(flowChat.id, "flow", "Morning brief");
+  await store.appendMessage(flowChat.id, "minime", "Three things today.");
+  await until(() =>
+    phone().some((m) => m.text.includes("Three things today.")),
+  );
+  assert.match(
+    phone().at(-1)?.text ?? "",
+    /^Morning brief, on its own \(.+\)\n\nThree things today\.$/,
+  );
+  seen = { state: "watching" };
+  await store.appendMessage(flowChat.id, "flow", "Morning brief");
+  await store.appendMessage(flowChat.id, "minime", "Seen on the page.");
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  assert.ok(!phone().some((m) => m.text.includes("Seen on the page.")));
+
+  // An answer to a request sent from the phone comes back to it, whoever is watching.
+  const phoneChat = await store.createChat("From the phone");
+  await bridge.disconnect();
+  await bridge.connect("right-token-right-token");
+  const again = bots.at(-1) as FakeBot;
+  again.write(ana, "hi");
+  await until(() => again.sent.length === 1);
+  await bridge.allow((await bridge.status()).asking?.code ?? "");
+  const settings = JSON.parse(
+    readFileSync(join(home, "settings.json"), "utf8"),
+  );
+  settings.messenger.discord.chat = phoneChat.id;
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync(join(home, "settings.json"), JSON.stringify(settings));
+  await store.appendMessage(phoneChat.id, "office", "Ben: Merged it.");
+  await until(() => again.sent.some((m) => m.text.includes("Merged it.")));
+  assert.equal(
+    again.sent.find((m) => m.text.includes("Merged it."))?.text,
+    "An answer to your request\nBen: Merged it.",
+  );
+  await bridge.disconnect();
+  process.env.SUB_OFFICE_HOME = root;
 });
