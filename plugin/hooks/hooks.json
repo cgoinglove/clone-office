@@ -1,0 +1,4 @@
+{
+  "description": "Brings answers from colleagues' mini-mes into the conversation that asked, when it is idle",
+  "modules": ["./office.ts"]
+}

@@ -13,7 +13,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "tsx --test \"features/**/*.test.ts\"",
+    "test": "tsx --test \"features/**/*.test.ts\" \"plugin/**/*.test.ts\"",
     "relay": "node features/relay/server.ts"
   },
   "dependencies": {

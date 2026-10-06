@@ -1,0 +1,7 @@
+{
+  "name": "sub-office",
+  "version": "0.1.0",
+  "description": "Ask your colleagues' mini-mes from Claude Code. A quick answer comes back in the reply; a later one comes into the conversation by itself.",
+  "author": { "name": "sub-office" },
+  "keywords": ["team", "mini-me", "office", "a2a"]
+}

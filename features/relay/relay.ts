@@ -245,6 +245,14 @@ export class Relay {
     };
   }
 
+  /** One request, for the member who sent it or was asked; no one else learns it exists. */
+  taskFor(member: string, id: string): Task {
+    const row = this.taskRow(id);
+    if (row.from_member !== member && row.to_member !== member)
+      throw new RelayError(404, "No such request.");
+    return this.task(id);
+  }
+
   /** The member's requests, sent and received, latest first. */
   tasks(member: string, limit = 50): Task[] {
     return (

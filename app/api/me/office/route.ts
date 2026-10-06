@@ -18,7 +18,7 @@ import {
 } from "@/features/minime/office/worker";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
-import { languageName } from "@/features/minime/server/ndjson";
+import { personLanguage } from "@/features/minime/server/language";
 
 // The person's office as their screen sees it: who is there (their cards), the requests sent and
 // received, and the questions about those requests waiting for them. Asking also keeps this
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   startOffice(
     new URL("/api/me/gate", request.url).toString(),
-    languageName(url.searchParams.get("locale") ?? undefined),
+    await personLanguage(url.searchParams.get("locale")),
   );
   try {
     const [{ members: everyone }, { tasks: requests }] = await Promise.all([
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     if (input.action === "draft") {
       if (!hasClaudeCode())
         return Response.json({ error: "claude-missing" }, { status: 409 });
-      const description = await draftCard(languageName(input.locale));
+      const description = await draftCard(await personLanguage(input.locale));
       return description
         ? Response.json({ description })
         : Response.json({ error: "No draft." }, { status: 502 });

@@ -8,7 +8,8 @@ import {
 } from "@/features/minime/learn/job";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
-import { languageName, ndjson } from "@/features/minime/server/ndjson";
+import { personLanguage } from "@/features/minime/server/language";
+import { ndjson } from "@/features/minime/server/ndjson";
 
 const Body = z.object({ locale: z.string().max(35).default("en") });
 
@@ -21,7 +22,9 @@ export async function POST(request: Request) {
     return Response.json({ error: "Bad request." }, { status: 400 });
   if (!hasClaudeCode())
     return Response.json({ error: "claude-missing" }, { status: 409 });
-  const job = startLearn({ language: languageName(body.data.locale) });
+  const job = startLearn({
+    language: await personLanguage(body.data.locale),
+  });
   return Response.json({ id: job.id });
 }
 

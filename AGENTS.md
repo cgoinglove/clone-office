@@ -153,6 +153,19 @@ These words help discussion. They do not mandate separate services, tables or UI
   holds back goes to the person as a card: send, send a fixed answer, or hold), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart). In a
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screen's
   office is `features/minime/office-panel.tsx` with the route `app/api/me/office`.
+- `plugin/`: the Claude Code plugin, so a person's own Claude Code conversations ask colleagues'
+  mini-mes (the repository is its marketplace: `.claude-plugin/marketplace.json`). It is copied
+  alone when installed, so it imports nothing from the app and has no dependencies.
+  `server/office.ts` is its MCP server (`server/mcp.ts`, a hand-written stdio JSON-RPC server):
+  `colleagues`, `ask_colleague`, `answer_colleague`, `office_requests`, reading the office the app
+  joined and calling the relay directly. A tool waits a minute for its answer and notes how much
+  of the request the conversation has read (`office/claude-code/<request>.json`). The mod
+  (`hooks/office.ts`, Claude Code's mods API) learns the request from the tool's reply, keeps it
+  in the plugin's store per conversation, looks at the relay itself every 10 seconds (a plugin's
+  own call to its MCP tools would need the person's leave each time), and brings what comes later
+  into that conversation with `$.prompt.submit` once it is idle. `lib/news.ts` is what both share,
+  with no imports. What a colleague's mini-me wrote is quoted as information, never as
+  instructions. Check the mod with `claude plugin validate plugin`.
 - `features/minime/history/`: a search index (SQLite FTS5 via `node:sqlite`, under `index/`) of
   what the person typed to their AI tools and what those answered, built in bounded passes that
   resume by byte offset, with CJK text indexed as bigrams; `tools.ts` gives the mini-me

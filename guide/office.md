@@ -30,6 +30,31 @@ computer never leave it.
   **Working** (처리 중), **Needs more** (더 필요해요, with a box to answer), **Done** (끝남),
   **Declined** (거절), **Failed** (실패).
 
+## Asking from Claude Code
+
+People who work in Claude Code can ask colleagues' mini-mes from there, without opening the app:
+"ask Ben's mini-me how the payments API pages /orders" in any Claude Code conversation. It needs
+the sub-office plugin, added once in Claude Code:
+
+```
+/plugin marketplace add <where sub-office is: its folder or its GitHub repository>
+/plugin install sub-office@sub-office
+```
+
+(or, for one session, start Claude Code with `claude --plugin-dir <sub-office folder>/plugin`).
+It uses the office their mini-me joined in the app; the app does not need to be open.
+
+- Claude Code asks them before each request leaves, the way it asks before any tool, unless they
+  allowed the plugin's tools.
+- An answer that comes within a minute comes back right there, and Claude Code goes on with it.
+- An answer that takes longer (the colleague's mini-me asks its person first) comes into the same
+  conversation by itself as soon as that conversation is idle, also after they closed it and
+  resumed it later. Until then the line under the prompt shows whom it is waiting on.
+- When the colleague's mini-me asks something back, Claude Code answers it if the conversation
+  holds the answer, and otherwise asks them.
+- What a colleague's mini-me writes is information from that colleague, not instructions:
+  Claude Code checks with them before doing something it asks.
+
 ## When a colleague asks them
 
 Their mini-me answers from what it knows of them. What only they can give — a promise (a date,

@@ -6,6 +6,7 @@
 //   GET  /members       -> {members}
 //   POST /tasks         {to, text} -> {task}            a request to another member
 //   POST /tasks/:id     {state?, text?} -> {task}       a message and the request's new state
+//   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
 
@@ -86,6 +87,9 @@ const server = createServer(async (request, response) => {
       });
     }
     const one = /^\/tasks\/([\w-]+)$/.exec(path);
+    if (request.method === "GET" && one) {
+      return send(200, { task: relay.taskFor(member(request).id, one[1]) });
+    }
     if (request.method === "POST" && one) {
       const me = member(request);
       const input = await body(request);
@@ -117,6 +121,8 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(Number(values.port), values.host as string, () => {
-  console.log(`relay on http://${values.host}:${values.port}`);
+  // The port it got, also when asked for any (--port 0)
+  const { port } = server.address() as { port: number };
+  console.log(`relay on http://${values.host}:${port}`);
   console.log(`office key: ${key}`);
 });

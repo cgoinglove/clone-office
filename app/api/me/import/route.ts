@@ -2,7 +2,8 @@ import * as z from "zod";
 import { IMPORT_MAX, importMemory } from "@/features/minime/learn/import";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
-import { languageName, ndjson } from "@/features/minime/server/ndjson";
+import { personLanguage } from "@/features/minime/server/language";
+import { ndjson } from "@/features/minime/server/ndjson";
 
 const Body = z.object({
   text: z.string().trim().min(1).max(IMPORT_MAX),
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   return ndjson(async (send) => {
     const result = await importMemory({
       text,
-      language: languageName(locale),
+      language: await personLanguage(locale),
       onEvent: (event) => send({ type: "saved", event }),
     });
     send(

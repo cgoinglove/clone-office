@@ -2,7 +2,8 @@ import * as z from "zod";
 import { runTurn } from "@/features/minime/chat/turn";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
-import { languageName, ndjson } from "@/features/minime/server/ndjson";
+import { personLanguage } from "@/features/minime/server/language";
+import { ndjson } from "@/features/minime/server/ndjson";
 
 const Body = z.object({
   text: z.string().trim().min(1).max(8000),
@@ -24,7 +25,6 @@ export async function POST(request: Request) {
     return Response.json({ error: "claude-missing" }, { status: 409 });
   const { text, locale, chat } = body.data;
   const gateUrl = new URL("/api/me/gate", request.url).toString();
-  return ndjson((send) =>
-    runTurn({ text, chat, language: languageName(locale), gateUrl, send }),
-  );
+  const language = await personLanguage(locale);
+  return ndjson((send) => runTurn({ text, chat, language, gateUrl, send }));
 }

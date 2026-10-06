@@ -1,7 +1,8 @@
 import * as z from "zod";
 import { runSession } from "@/features/minime/brain/session";
 import { refuse } from "@/features/minime/server/guard";
-import { languageName, ndjson } from "@/features/minime/server/ndjson";
+import { personLanguage } from "@/features/minime/server/language";
+import { ndjson } from "@/features/minime/server/ndjson";
 
 const Body = z.object({
   line: z.string().min(1).max(2000),
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
   return ndjson(async (send) => {
     const result = await runSession({
       prompt: `This entry is in your memory of your person: "${line}"\nThey corrected it: "${fix}"\n\nReplace that entry with what they said, in their words, as one short line in their language; remove it instead if they only said it is wrong. Then tell them in one short sentence what you changed.`,
-      language: languageName(locale),
+      language: await personLanguage(locale),
       maxTurns: 6,
       purpose: "fix",
       onEvent: (event) =>

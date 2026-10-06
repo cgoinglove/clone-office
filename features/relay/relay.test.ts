@@ -96,3 +96,25 @@ test("a request goes to the one asked, who answers it; then it is closed", async
     /No such request/,
   );
 });
+
+test("a request can be read by the one asking and the one asked, and by no one else", () => {
+  const cy = relay.join({
+    key: "office-key",
+    card: { name: "Cy", description: "" },
+  });
+  const di = relay.join({
+    key: "office-key",
+    card: { name: "Di", description: "" },
+  });
+  const eve = relay.join({
+    key: "office-key",
+    card: { name: "Eve", description: "" },
+  });
+  const task = relay.send(cy.id, di.id, "Can you review the export?");
+  assert.equal(relay.taskFor(cy.id, task.id).id, task.id);
+  assert.equal(
+    relay.taskFor(di.id, task.id).history[0].parts[0].text,
+    "Can you review the export?",
+  );
+  assert.throws(() => relay.taskFor(eve.id, task.id), /No such request/);
+});

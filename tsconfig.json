@@ -34,5 +34,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "dist", "**/*.local.*"]
+  // The plugin's mod is checked by Claude Code against the types of the version that loads it
+  // (`claude plugin validate plugin`), written to plugin/.claude-plugin/types/ at load
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.local.*",
+    "plugin/hooks",
+    "plugin/.claude-plugin"
+  ]
 }
