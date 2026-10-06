@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Onboarding } from "@/features/minime/start/onboarding";
+// The clone's mark is drawn with the office's own styles.
+import "@/features/office/office.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("start");
