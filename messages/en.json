@@ -501,7 +501,8 @@
       "portal": "Open @BotFather",
       "tokenPlaceholder": "The token from @BotFather",
       "step3": "On your phone, open the chat with your bot and press Start. A question with a code appears here.",
-      "addBot": "Open the chat with the bot"
+      "addBot": "Open the chat with the bot",
+      "scan": "Or point your phone's camera at this."
     }
   }
 }

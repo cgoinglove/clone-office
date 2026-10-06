@@ -8,10 +8,12 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import { encode } from "uqr";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { useProblem } from "@/i18n/client";
+import { cn } from "@/lib/utils";
 
 type Service = "discord" | "telegram";
 
@@ -35,6 +37,39 @@ const SERVICES: Record<Service, { name: string; portal: string }> = {
   },
   telegram: { name: "Telegram", portal: "https://t.me/BotFather" },
 };
+
+/** The chat with the bot, big enough for a phone camera to read off the screen (as Thursday's reach guide draws it). */
+function Scan({ link, label }: { link: string; label: string }) {
+  const { size, data } = encode(link);
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="rounded-lg bg-white p-2">
+        <svg
+          viewBox={`0 0 ${size} ${size}`}
+          className="block size-28 text-black"
+          role="img"
+          aria-label={link}
+        >
+          {data.flatMap((row, y) =>
+            row.map((on, x) =>
+              on ? (
+                <rect
+                  key={`${x}-${y}`}
+                  x={x}
+                  y={y}
+                  width={1}
+                  height={1}
+                  fill="currentColor"
+                />
+              ) : null,
+            ),
+          )}
+        </svg>
+      </div>
+      <span className="text-muted-foreground">{label}</span>
+    </div>
+  );
+}
 
 export function MessengerPanel() {
   const t = useTranslations("messenger");
@@ -181,21 +216,28 @@ export function MessengerPanel() {
               <>
                 <p>{t("connected", { bot: status.bot ?? "" })}</p>
                 <ol className="flex list-decimal flex-col gap-2 pl-5" start={3}>
-                  <li className="flex flex-col items-start gap-2">
-                    <span>{t(`${using}.step3`)}</span>
-                    {status.invite && (
-                      <a
-                        href={status.invite}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={buttonVariants({
-                          size: "sm",
-                          variant: "outline",
-                        })}
-                      >
-                        {t(`${using}.addBot`)}
-                      </a>
-                    )}
+                  <li>
+                    {/* A list item that is itself a flex box loses its number. */}
+                    <div className="flex flex-col items-start gap-2">
+                      <span>{t(`${using}.step3`)}</span>
+                      {status.invite && (
+                        <a
+                          href={status.invite}
+                          target="_blank"
+                          rel="noreferrer"
+                          // Merged as Button merges them: the outline's border beats the base's
+                          // transparent one.
+                          className={cn(
+                            buttonVariants({ size: "sm", variant: "outline" }),
+                          )}
+                        >
+                          {t(`${using}.addBot`)}
+                        </a>
+                      )}
+                      {status.invite && using === "telegram" && (
+                        <Scan link={status.invite} label={t("telegram.scan")} />
+                      )}
+                    </div>
                   </li>
                   {using === "discord" && <li>{t("discord.step4")}</li>}
                 </ol>

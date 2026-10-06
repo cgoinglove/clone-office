@@ -501,7 +501,8 @@
       "portal": "@BotFather 열기",
       "tokenPlaceholder": "BotFather가 보낸 토큰",
       "step3": "휴대폰에서 내 봇과의 대화를 열고 시작(Start)을 눌러요. 그러면 여기에 코드가 담긴 질문이 떠요.",
-      "addBot": "봇과의 대화 열기"
+      "addBot": "봇과의 대화 열기",
+      "scan": "또는 휴대폰 카메라로 이 그림을 비춰요."
     }
   }
 }
