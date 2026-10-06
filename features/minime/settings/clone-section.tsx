@@ -25,7 +25,6 @@ import { cn } from "@/lib/utils";
 import type { Learn } from "../home/use-learn";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import { EXPORT_PROMPT } from "../learn/export-prompt";
-import { savedText } from "../saved-text";
 import { stream } from "../stream";
 import { Empty, Group, Groups, Rows } from "./parts";
 
@@ -86,7 +85,10 @@ export function CloneSection({
       await stream(
         "/api/me/fix",
         { line: entry.text, fix: fixed, locale: lang },
-        () => {},
+        (event) => {
+          if (event.type === "error")
+            setProblem(String(event.code ?? event.message));
+        },
       );
     } catch (error) {
       setProblem((error as Error).message);
@@ -295,7 +297,6 @@ function ReadAgain({ learn }: { learn: Learn }) {
   const tRun = useTranslations("firstRun");
   const problemText = useProblem();
   const learning = learn.stage === "learning";
-  const source = `firstRun.source.${learn.progress?.source}`;
   const label = learn.progress
     ? learn.progress.phase === "read" &&
       learn.progress.source &&
@@ -327,7 +328,7 @@ function ReadAgain({ learn }: { learn: Learn }) {
         </Button>
       </div>
       {learning && learn.progress && (
-        <div className="flex flex-col gap-1.5" data-source={source}>
+        <div className="flex flex-col gap-1.5">
           <span className="flex items-center justify-between text-xs">
             <ShinyText text={label} />
             <span className="text-muted-foreground tabular-nums">
@@ -387,8 +388,6 @@ export function BringFromAnotherAi({
     setResult(null);
     try {
       await stream("/api/me/import", { text, locale: lang }, (event) => {
-        if (event.type === "saved")
-          savedText(event.event as Record<string, unknown>);
         if (event.type === "done") {
           const kept = (event.kept as string[]) ?? [];
           setResult(t("import.done", { count: kept.length }));

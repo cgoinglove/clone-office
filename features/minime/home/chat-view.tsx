@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/ui/markdown";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Bot, type Mood } from "@/features/office";
+import { composing } from "@/hooks/use-hotkey";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard } from "../ask-card";
@@ -291,13 +292,15 @@ export function Composer({
           aria-label={placeholder}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
-            if (
-              event.key === "Enter" &&
-              !event.shiftKey &&
-              !event.nativeEvent.isComposing
-            ) {
+            if (composing(event)) return;
+            if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
               send();
+            }
+            // With words in the box, Esc only leaves the box; the panel (and the words) stay.
+            if (event.key === "Escape" && draft.trim()) {
+              event.preventDefault();
+              event.currentTarget.blur();
             }
           }}
           className="field-sizing-content max-h-40 min-h-6 flex-1 resize-none bg-transparent py-1 text-[14.5px] leading-relaxed outline-none placeholder:text-muted-foreground"

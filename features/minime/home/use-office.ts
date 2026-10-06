@@ -231,15 +231,21 @@ export function useOffice(
   // Looked at every few seconds while the page is in view, less often while it is hidden.
   useEffect(() => {
     if (!office?.joined) return;
+    // A look still on its way when the screen goes is not followed by another.
+    let live = true;
     let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
+      if (!live) return;
       timer = setTimeout(
         () => void load().finally(tick),
         document.visibilityState === "visible" ? 5000 : 20_000,
       );
     };
     tick();
-    return () => clearTimeout(timer);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
   }, [office?.joined, load]);
 
   const post = useCallback(

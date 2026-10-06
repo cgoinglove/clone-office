@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot } from "@/features/office";
+import type { BotShape } from "@/features/office/bot-shape";
 import { looksOf } from "@/features/office/room/looks.mjs";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
@@ -240,7 +241,7 @@ function Colleague({
       <div className="flex items-center gap-3">
         <Bot
           size={30}
-          shape={look.shape as never}
+          shape={look.shape as BotShape}
           color={look.color}
           mood={off ? "sleep" : "idle"}
           still

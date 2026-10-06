@@ -48,12 +48,12 @@ export async function modeRules(mode?: Autonomy): Promise<string[]> {
 }
 
 /**
- * The mode's rules for a session of the person's own work; a colleague's request (and the look at
- * an answer before it leaves) starts with none, whatever the mode.
+ * The mode's rules for a session of the person's own work: a conversation with them or one of their
+ * flows. Every other session (a colleague's request, the look at an answer before it leaves, a
+ * reading, a look back) starts with none, whatever the mode.
  */
-export async function ownModeRules(purpose?: string): Promise<string[]> {
-  if (purpose === "request" || purpose === "check" || purpose === "card")
-    return [];
+export async function ownModeRules(purpose = "task"): Promise<string[]> {
+  if (purpose !== "task" && purpose !== "flow") return [];
   return modeRules();
 }
 
