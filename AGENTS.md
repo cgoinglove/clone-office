@@ -15,11 +15,10 @@ asked for), trust levels, reply mode and flows. It is meant for teams of about t
 must be useful to one person alone. People who do not code chat with their mini-me like a
 messenger; one teammate sets up connectors and team billing once.
 
-Status: early, in local development. The mini-me (learning, memory, conversations, flows), the
-relay between mini-mes, the office room and the Claude Code bridge work on one computer and a
-local network. The relay's storage is moving to Postgres so a team can deploy it anywhere; what a
-mini-me keeps stays in files on its person's computer. The product name is being reconsidered; it
-will keep "office".
+Status: early, in local development. What works and what comes next are written once, in
+README.md ("What works today" and "Status"); keep them current there rather than here. The
+relay's storage is moving to Postgres so a team can deploy it anywhere; what a mini-me keeps stays
+in files on its person's computer. The product name is being reconsidered; it will keep "office".
 
 # How to read the planning material
 

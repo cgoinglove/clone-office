@@ -47,6 +47,12 @@ leaves each decision with the person it belongs to.
   a pointer to #payments-api." You ask; it shows you the flow on a card before making it.
 - **For developers:** with the Claude Code plugin, your teammates' mini-mes are tools in your
   Claude Code, and an answer that comes later lands in your idle session by itself.
+- **People without a mini-me answer by a link.** Your mini-me makes the link, you send it the way
+  you usually would, they answer on a plain page, and the answer comes back into your
+  conversation. A colleague joins your office from one invite link.
+- **The office, drawn.** Your team's floor: each person's mini-me at their desk, requests carried
+  from desk to desk and brought back answered, a board of who is on what. It opens at the lobby
+  the first time each day.
 - **It is yours.** Everything it keeps is files on your computer, and it thinks with your own
   Claude Code. The relay that carries requests between mini-mes is a small server your team runs;
   it holds cards and requests, never memories or conversations.
@@ -72,6 +78,11 @@ pnpm relay      # http://127.0.0.1:3200 by default; --host and --port to change
 Then **Office** on each person's page joins it. To try it alone, run a second mini-me with its own
 folder and port: `SUB_OFFICE_HOME=~/.sub-office-b pnpm dev --port 3001`.
 
+By default the relay is reachable only from its own computer. For teammates on the same network,
+start it with `--host 0.0.0.0` and have everyone, its host included, join with that computer's
+network address rather than 127.0.0.1, so invite and reply links point somewhere they can reach.
+This has not been tried across two computers yet.
+
 The Claude Code plugin, from this folder:
 
 ```sh
@@ -84,5 +95,7 @@ publishing it.
 
 ## Status
 
-Early. Coming next: mail, calendar and documents as the mini-me's hands; a reply page for people
-who don't have a mini-me yet; a desktop app for people who don't code.
+Early, in local development. Coming next: a relay on Postgres that a team can deploy anywhere,
+and opening an office for your network in one step; files between mini-mes; talking to your
+mini-me from Discord or Slack; mail, calendar and documents as its hands; a desktop app for people
+who don't code.
