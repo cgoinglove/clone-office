@@ -15,6 +15,7 @@ export interface Preferences {
   batchHours: number[];
   review: boolean;
   lobby: boolean;
+  lightBackground: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -23,6 +24,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   batchHours: [10, 14, 17],
   review: true,
   lobby: true,
+  lightBackground: false,
 };
 
 export function usePreferences() {

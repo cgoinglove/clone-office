@@ -59,7 +59,15 @@ const ProviderId = z.enum(
 const Address = z.string().url().max(300);
 
 const Body = z.discriminatedUnion("action", [
-  z.object({ action: z.literal("claude-code") }),
+  z.object({
+    action: z.literal("claude-code"),
+    // An alias Claude Code knows (haiku, sonnet, opus) or a full model name.
+    model: z
+      .string()
+      .trim()
+      .regex(/^[\w.-]{2,60}$/)
+      .optional(),
+  }),
   z.object({
     action: z.literal("use"),
     provider: ProviderId,
@@ -98,7 +106,10 @@ export async function POST(request: Request) {
       return Response.json({ ok: true });
     }
     if (input.action === "claude-code")
-      await setBrainChoice({ kind: "claude-code" });
+      await setBrainChoice({
+        kind: "claude-code",
+        ...(input.model ? { model: input.model } : {}),
+      });
     else if (input.action === "key") {
       // A vendor's key is checked before it is kept; a model on this computer is asked whether it answers.
       if (input.provider !== "local" && input.key.length < 8)

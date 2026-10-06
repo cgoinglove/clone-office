@@ -131,6 +131,19 @@ export interface Vendor {
 }
 
 /** The vendors as the person picks among them, each with its ways in, the plan first. */
+/** The Claudes a person's own Claude Code can think with, by the aliases it knows. */
+export const CLAUDE_CODE_MODELS: ModelChoice[] = [
+  { id: "haiku", label: "Claude Haiku", tier: "small" },
+  { id: "sonnet", label: "Claude Sonnet", tier: "mid" },
+  { id: "opus", label: "Claude Opus", tier: "large" },
+];
+
+/** A vendor's lighter model, for background work when the person wants it light. */
+export function lighterModel(id: ProviderId, model: string): string {
+  const small = provider(id)?.models.find((one) => one.tier === "small");
+  return small?.id ?? model;
+}
+
 export const VENDORS: Vendor[] = [
   {
     id: "openai",

@@ -19,16 +19,22 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ComponentType, Fragment, useEffect, useRef } from "react";
+import {
+  type ComponentType,
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LogoMark } from "@/features/brand/logo";
 import { cn } from "@/lib/utils";
-import { BrainPanel } from "../brain-panel";
+import { BrainPanel, brainReady } from "../brain-panel";
 import { ConnectorsPanel } from "../connectors-panel";
 import { FlowsPanel } from "../flows-panel";
 import type { Learn } from "../home/use-learn";
-import type { OfficeState, Profile } from "../home/use-office";
+import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import type { Preferences } from "../home/use-preferences";
 import { MessengerPanel } from "../messenger-panel";
 import { CloneSection } from "./clone-section";
@@ -107,6 +113,46 @@ export function SettingsDialog({
   const t = useTranslations("settings");
   const current = SECTIONS.find((entry) => entry.id === section) ?? SECTIONS[0];
   const body = useRef<HTMLDivElement>(null);
+  const open = section !== null;
+  // Quiet marks in the list, as Thursday's: the ember where something wants the person (a brain
+  // that cannot think yet, a question about a request), red where something is broken (the phone's
+  // bot refused), nothing at rest.
+  const [marks, setMarks] = useState<{ brain?: boolean; phone?: boolean }>({});
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    void Promise.all([
+      fetch("/api/me/brain", { headers: HEADERS })
+        .then((r) => r.json())
+        .catch(() => null),
+      fetch("/api/me/messenger", { headers: HEADERS })
+        .then((r) => r.json())
+        .catch(() => null),
+    ]).then(([brain, phone]) => {
+      if (!live) return;
+      setMarks({
+        brain: brain ? !brainReady(brain) || !brain.chosen : false,
+        phone: Boolean(phone?.problem),
+      });
+    });
+    return () => {
+      live = false;
+    };
+  }, [open, section]);
+  // ⌘1–9 go to the first nine sections, as in Thursday's settings.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const at = Number(event.key);
+      if (!Number.isInteger(at) || at < 1 || at > Math.min(9, SECTIONS.length))
+        return;
+      event.preventDefault();
+      onSection(SECTIONS[at - 1].id);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onSection]);
   // A section opens at its top.
   useEffect(() => {
     body.current?.scrollTo({ top: 0 });
@@ -175,8 +221,18 @@ export function SettingsDialog({
                       <span className="truncate text-sm">
                         {t(`sections.${item.id}.label`)}
                       </span>
-                      {item.id === "office" && office.due.length > 0 && (
-                        <span className="ml-auto size-1.5 rounded-full bg-waiting" />
+                      {((item.id === "office" && office.due.length > 0) ||
+                        (item.id === "brain" && marks.brain)) && (
+                        <span
+                          aria-hidden
+                          className="ml-auto size-1.5 rounded-full bg-waiting"
+                        />
+                      )}
+                      {item.id === "phone" && marks.phone && (
+                        <span
+                          aria-hidden
+                          className="ml-auto size-1.5 rounded-full bg-destructive"
+                        />
                       )}
                     </Button>
                   );

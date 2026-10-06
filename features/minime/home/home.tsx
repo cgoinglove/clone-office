@@ -127,6 +127,42 @@ export function Home() {
           ? "working"
           : "idle";
 
+  // What waits on the person shows in the tab's title too, as Thursday's does, so a tab in the
+  // back still says it.
+  const title = t("title");
+  useEffect(() => {
+    document.title = waiting
+      ? `(${waiting}) ${title} · sub-office`
+      : `${title} · sub-office`;
+  }, [waiting, title]);
+
+  // The keys the screen answers: ⌘, opens settings, "/" goes to the box to ask the clone, and Esc
+  // closes the side panel when nothing in it is being typed.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing = Boolean(
+        target?.closest("input, textarea, [contenteditable=true]"),
+      );
+      if ((event.metaKey || event.ctrlKey) && event.key === ",") {
+        event.preventDefault();
+        setSettings((was) => was ?? "clone");
+        return;
+      }
+      if (settings !== null || typing || event.metaKey || event.ctrlKey) return;
+      if (event.key === "/") {
+        event.preventDefault();
+        if (side === "chat") draft.current?.focus();
+        else
+          document
+            .querySelector<HTMLInputElement>(".of-wrap .composer input")
+            ?.focus();
+      } else if (event.key === "Escape" && side) setSide(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [settings, side]);
+
   const joined = office.office?.joined;
   const name = joined ? office.office?.me?.card.name : profile.name;
 

@@ -18,6 +18,7 @@ const Body = z.object({
   batchHours: z.array(z.number().int().min(0).max(23)).max(6).optional(),
   review: z.boolean().optional(),
   lobby: z.boolean().optional(),
+  lightBackground: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {

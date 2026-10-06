@@ -4,7 +4,7 @@
 // on its own (after Claude Code's permission modes), where a new kind of request starts, when the
 // questions it kept for later come, whether it learns after each conversation, and the lobby.
 
-import { BookOpen, Eye, Hand, Zap } from "lucide-react";
+import { BookOpen, Eye, Feather, Hand, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
@@ -146,6 +146,16 @@ export function PreferencesSection({
           body={t("reviewHint")}
           checked={preferences.review}
           onChange={(review) => void onChange({ review })}
+        />
+      </Group>
+
+      <Group title={t("models")}>
+        <Toggle
+          icon={<Feather className="size-4" />}
+          title={t("light")}
+          body={t("lightHint")}
+          checked={preferences.lightBackground}
+          onChange={(lightBackground) => void onChange({ lightBackground })}
         />
       </Group>
 

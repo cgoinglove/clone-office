@@ -13,7 +13,11 @@ import { chatGptAccount } from "./chatgpt.ts";
 import { type ProviderId, provider } from "./providers.ts";
 
 export type BrainChoice =
-  | { kind: "claude-code" }
+  | {
+      kind: "claude-code";
+      /** Which Claude the person's Claude Code thinks with (an alias it knows); Sonnet when unset. */
+      model?: string;
+    }
   | {
       kind: "api";
       provider: ProviderId;
@@ -50,7 +54,7 @@ export async function brainChosen(): Promise<boolean> {
 
 export async function brainChoice(): Promise<BrainChoice> {
   const raw = (await readSettings()).brain as
-    | Partial<Extract<BrainChoice, { kind: "api" }>>
+    | (Partial<Extract<BrainChoice, { kind: "api" }>> & { kind?: string })
     | undefined;
   if (
     raw?.kind === "api" &&
@@ -67,7 +71,12 @@ export async function brainChoice(): Promise<BrainChoice> {
         ? { baseUrl: raw.baseUrl }
         : {}),
     };
-  return { kind: "claude-code" };
+  return {
+    kind: "claude-code",
+    ...(typeof raw?.model === "string" && /^[\w.-]{2,60}$/.test(raw.model)
+      ? { model: raw.model }
+      : {}),
+  };
 }
 
 export async function setBrainChoice(choice: BrainChoice): Promise<void> {

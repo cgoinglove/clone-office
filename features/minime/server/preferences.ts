@@ -27,7 +27,21 @@ export interface Preferences {
   review: boolean;
   /** Open the office at its lobby the first time each day. */
   lobby: boolean;
+  /**
+   * Background work (looking back, summaries, drafts) on the brain's lighter model, which uses
+   * less of a plan or a key; the work done for the person, and every answer that leaves, stay on
+   * the one they picked.
+   */
+  lightBackground: boolean;
 }
+
+/** The work that may go to the lighter model when the person wants it. */
+export const BACKGROUND_PURPOSES = new Set([
+  "review",
+  "summary",
+  "card",
+  "fix",
+]);
 
 export const DEFAULT_PREFERENCES: Preferences = {
   autonomy: "ask",
@@ -35,6 +49,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   batchHours: [10, 14, 17],
   review: true,
   lobby: true,
+  lightBackground: false,
 };
 
 const AUTONOMIES: Autonomy[] = ["ask", "reads", "auto"];
@@ -70,6 +85,10 @@ export function cleanPreferences(input: unknown): Preferences {
       typeof raw.review === "boolean" ? raw.review : DEFAULT_PREFERENCES.review,
     lobby:
       typeof raw.lobby === "boolean" ? raw.lobby : DEFAULT_PREFERENCES.lobby,
+    lightBackground:
+      typeof raw.lightBackground === "boolean"
+        ? raw.lightBackground
+        : DEFAULT_PREFERENCES.lightBackground,
   };
 }
 

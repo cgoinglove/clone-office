@@ -964,7 +964,10 @@
       "reviewHint": "It reads the conversation once more and keeps only what stays true about how you work. Off, it learns only what you tell it to remember.",
       "office": "Office",
       "lobby": "Clock in at the lobby",
-      "lobbyHint": "The first time you open the office each day, it starts at the building's lobby. Off, it opens straight at your desk."
+      "lobbyHint": "The first time you open the office each day, it starts at the building's lobby. Off, it opens straight at your desk.",
+      "models": "Models",
+      "light": "Lighter model for background work",
+      "lightHint": "Looking back after a conversation, summaries and drafts run on your brain's smaller model (Claude Haiku on your Claude subscription), using less of your plan or key. Your conversations, your flows and every answer to colleagues stay on the model you picked."
     }
   }
 }

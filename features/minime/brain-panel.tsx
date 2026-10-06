@@ -24,6 +24,7 @@ import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import {
+  CLAUDE_CODE_MODELS,
   type ProviderId,
   provider as providerOf,
   VENDORS,
@@ -32,7 +33,7 @@ import {
 } from "./brain/providers";
 
 type Choice =
-  | { kind: "claude-code" }
+  | { kind: "claude-code"; model?: string }
   | { kind: "api"; provider: ProviderId; model: string; baseUrl?: string };
 
 export interface BrainState {
@@ -61,7 +62,11 @@ export function brainReady(state: BrainState | null): boolean {
 /** The brain in use, as the person reads it: the vendor and model, or their Claude Code. */
 export function brainLabel(state: BrainState, claudeCode: string): string {
   const { choice } = state;
-  if (choice.kind !== "api") return claudeCode;
+  if (choice.kind !== "api")
+    return `${claudeCode} · ${
+      CLAUDE_CODE_MODELS.find((m) => m.id === (choice.model ?? "sonnet"))
+        ?.label ?? choice.model
+    }`;
   const vendor = providerOf(choice.provider);
   const model =
     state.chatgpt?.models.find((m) => m.id === choice.model)?.label ??
@@ -199,6 +204,13 @@ export function BrainChooser({
         setModel(known ? data.choice.model : "");
         setOther(known ? "" : data.choice.model);
         if (data.choice.baseUrl) setAddress(data.choice.baseUrl);
+      } else if (data.choice.model) {
+        // The Claude their Claude Code thinks with: one of its aliases, or a name typed in.
+        const known = CLAUDE_CODE_MODELS.some(
+          (m) => m.id === (data.choice as { model?: string }).model,
+        );
+        setModel(known ? data.choice.model : "");
+        setOther(known ? "" : data.choice.model);
       }
     }
     return data;
@@ -259,13 +271,15 @@ export function BrainChooser({
   const id = way ? providerOfWay(way) : undefined;
   const entry = id ? providerOf(id) : undefined;
   const models =
-    id === "chatgpt" && state.chatgpt?.models.length
-      ? state.chatgpt.models.map((m) => ({
-          id: m.id,
-          label: m.label,
-          tier: undefined,
-        }))
-      : (entry?.models ?? []);
+    way?.kind === "claude-code"
+      ? CLAUDE_CODE_MODELS
+      : id === "chatgpt" && state.chatgpt?.models.length
+        ? state.chatgpt.models.map((m) => ({
+            id: m.id,
+            label: m.label,
+            tier: undefined,
+          }))
+        : (entry?.models ?? []);
   // The model a way starts on when nothing is picked yet: the vendor's middle one, as Thursday's
   // picker and Hermes Agent's setup suggest one, so "Use this" is one press away.
   const suggested = models.find((m) => m.tier === "mid") ?? models[0];
@@ -294,7 +308,8 @@ export function BrainChooser({
   const isCurrent =
     state.chosen &&
     (way?.kind === "claude-code"
-      ? current.kind === "claude-code"
+      ? current.kind === "claude-code" &&
+        (current.model ?? "sonnet") === chosenModel
       : current.kind === "api" &&
         current.provider === id &&
         current.model === chosenModel);
@@ -514,14 +529,19 @@ export function BrainChooser({
             </div>
           )}
 
-          {way.kind !== "claude-code" && (
+          {(way.kind !== "claude-code" || state.claudeCode) && (
             <fieldset className="flex flex-col gap-1.5">
               <legend className="mb-1.5 font-medium">{t("model")}</legend>
               <div className="flex flex-col overflow-hidden rounded-xl border border-border">
                 {models.map((option) => {
                   const picked =
                     !other.trim() && (model || suggested?.id) === option.id;
-                  const mark = id ? modelMark(option.id, id) : undefined;
+                  const mark =
+                    way.kind === "claude-code"
+                      ? ("claude" as const)
+                      : id
+                        ? modelMark(option.id, id)
+                        : undefined;
                   return (
                     <label
                       key={option.id}
@@ -591,7 +611,7 @@ export function BrainChooser({
             onClick={() =>
               void post(
                 way.kind === "claude-code"
-                  ? { action: "claude-code" }
+                  ? { action: "claude-code", model: chosenModel }
                   : {
                       action: "use",
                       provider: id,

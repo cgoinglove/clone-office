@@ -29,8 +29,10 @@ import {
   minimeHome,
   toolServerPath,
 } from "../server/paths.ts";
+import { BACKGROUND_PURPOSES, readPreferences } from "../server/preferences.ts";
 import { brainChoice } from "./choice.ts";
 import { reportKept, WATCHED } from "./events.ts";
+import { lighterModel } from "./providers.ts";
 import { logRun } from "./runlog.ts";
 
 export function memoryDir(): string {
@@ -289,14 +291,28 @@ export function mcpConfig(
 }
 
 export async function runSession(
-  options: SessionOptions,
+  asked: SessionOptions,
 ): Promise<SessionResult> {
   // A person who picked another brain thinks with it through the app's own loop (loop.ts).
   const choice = await brainChoice();
+  // Background work goes to the brain's lighter model when the person wants it light.
+  const light =
+    (await readPreferences()).lightBackground &&
+    BACKGROUND_PURPOSES.has(asked.purpose ?? "task");
   if (choice.kind === "api") {
     const { runLoop } = await import("./loop.ts");
-    return runLoop(options, choice);
+    return runLoop(
+      asked,
+      light
+        ? { ...choice, model: lighterModel(choice.provider, choice.model) }
+        : choice,
+    );
   }
+  // Their own Claude Code thinks with the Claude they picked (Haiku for light background work).
+  const options: SessionOptions = {
+    ...asked,
+    model: asked.model ?? (light ? "haiku" : choice.model),
+  };
   const command = claudeCommand();
   if (!command) return { ok: false, text: "", error: "claude-missing" };
   const home = minimeHome();
