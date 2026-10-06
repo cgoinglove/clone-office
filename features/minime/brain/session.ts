@@ -19,7 +19,7 @@ import { MemoryStore, type Target } from "../memory/store.ts";
 import { MEMORY_GUIDANCE } from "../memory/tool.ts";
 import { keepAwake } from "../server/awake.ts";
 import { claudeCommand, cleanEnv, defaultModel } from "../server/brain.ts";
-import { minimeHome } from "../server/paths.ts";
+import { appDir, minimeHome, toolServerPath } from "../server/paths.ts";
 import { logRun } from "./runlog.ts";
 
 export function memoryDir(): string {
@@ -218,16 +218,14 @@ function mcpConfig(actor: "minime" | "review", gate?: SessionGate): string {
     mcpServers: {
       minime: {
         command: process.execPath,
-        // Node runs the TypeScript server as is; warnings would only clutter its stderr.
-        args: [
-          "--no-warnings",
-          join(process.cwd(), "features", "minime", "memory", "mcp-server.ts"),
-        ],
+        // Node runs the TypeScript server as is (bundled in the package); warnings would only
+        // clutter its stderr.
+        args: ["--no-warnings", toolServerPath()],
         env: {
           MINIME_MEMORY_DIR: memoryDir(),
           MINIME_SKILLS_DIR: skillsDir(),
           MINIME_NOTES_DIR: notesDir(),
-          MINIME_GUIDE_DIR: join(process.cwd(), "guide"),
+          MINIME_GUIDE_DIR: join(/*turbopackIgnore: true*/ appDir(), "guide"),
           MINIME_ACTOR: actor,
           ...(gate
             ? {

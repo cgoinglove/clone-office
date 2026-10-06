@@ -18,6 +18,31 @@ export function claudeProjectsDir(): string {
   return join(claudeHome(), "projects");
 }
 
+/**
+ * Where the app's own files are (the guide, the mini-me's tool server): the installed package when
+ * it runs from npm, whose launcher says so in SUB_OFFICE_APP_DIR, or this folder in development.
+ */
+export function appDir(): string {
+  return process.env.SUB_OFFICE_APP_DIR ?? process.cwd();
+}
+
+/** The mini-me's tool server: one bundled file in the package, the TypeScript itself in development. */
+export function toolServerPath(): string {
+  return process.env.SUB_OFFICE_APP_DIR
+    ? join(
+        /*turbopackIgnore: true*/ process.env.SUB_OFFICE_APP_DIR,
+        "dist",
+        "mcp-server.mjs",
+      )
+    : join(
+        /*turbopackIgnore: true*/ process.cwd(),
+        "features",
+        "minime",
+        "memory",
+        "mcp-server.ts",
+      );
+}
+
 export function codexHome(): string {
   return process.env.CODEX_HOME ?? join(homedir(), ".codex");
 }

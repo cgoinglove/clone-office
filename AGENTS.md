@@ -109,7 +109,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   what the person's usual AI remembers about them (Claude's memory import: copy a prompt there,
   paste the answer here), shows the memory exactly as saved with each entry correctable or
   removable, lists every file it keeps (`server/stored.ts`), does work with them, and can start
-  over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset}`, which
+  over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping}`, which
   answer only this app's pages; they take the person's language tag and tell the mini-me that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
@@ -216,6 +216,17 @@ These words help discussion. They do not mandate separate services, tables or UI
   `guide/` in the same change.
 - `.claude/rules/ui.md`: map of the current UI. Read it when touching that area.
 - `.claude/rules/taste.md`: working visual directions, not a frozen design specification.
+
+- `bin/sub-office.mjs` and `scripts/pack.mjs`: the npm package. `node scripts/pack.mjs [--working]`
+  builds it in a temporary folder from the repository's own files only (committed, or with
+  `--working` every file git tracks or would track; ignored files never), so nothing private
+  and no path of this computer reaches it: the app as a standalone server (`next.config.ts`,
+  `SUB_OFFICE_PACKAGE=1`, its own `.next-package/`), the tool server and the relay bundled into
+  `dist/*.mjs` (Node does not run TypeScript inside node_modules), the guide, and the launcher;
+  next and react come from npm. It leaves `dist/sub-office-<version>.tgz` and publishes nothing.
+  The launcher (`npx sub-office`) starts the app on 127.0.0.1 from port 4417 and opens `/me`;
+  `npx sub-office relay` starts a relay. In the package, `SUB_OFFICE_APP_DIR` tells the app where
+  its guide and tool server are (`server/paths.ts` `appDir`, `toolServerPath`).
 
 `pnpm dev` serves on loopback. This is Next.js 16; consult the installed Next documentation
 before relying on older APIs. Use typecheck, lint, `pnpm test` and build as appropriate to the change.

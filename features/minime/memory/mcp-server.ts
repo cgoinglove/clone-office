@@ -37,6 +37,7 @@ import {
 } from "../hands/tools.ts";
 import { CONVERSATION_TOOLS, callConversationTool } from "../history/tools.ts";
 import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
+import { appDir } from "../server/paths.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
 import { NOTE_TOOLS, NoteStore } from "./notes.ts";
 import { type Actor, SKILL_TOOLS, SkillStore } from "./skills.ts";
@@ -161,7 +162,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     case GUIDE_TOOL.name: {
       const guide = await readGuide(
-        process.env.MINIME_GUIDE_DIR ?? join(process.cwd(), "guide"),
+        process.env.MINIME_GUIDE_DIR ?? join(appDir(), "guide"),
         typeof args.file === "string" ? args.file : undefined,
       );
       return text(guide, "error" in guide);

@@ -257,7 +257,9 @@ async function commitsSection(
     await run("git", ["config", "--global", "user.email"])
   ).trim();
   const results = await mapLimit(projects.slice(0, 6), 3, async (project) => {
-    const isRepo = await stat(join(project, ".git")).then(
+    const isRepo = await stat(
+      join(/*turbopackIgnore: true*/ project, ".git"),
+    ).then(
       () => true,
       () => false,
     );
