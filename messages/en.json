@@ -29,7 +29,8 @@
     "learn-failed": "I couldn't finish learning this time. Try again.",
     "fix-failed": "I couldn't make that correction. Try again.",
     "import-failed": "I couldn't read what you pasted. Try again.",
-    "task-failed": "I couldn't finish that. Try again, or ask it another way."
+    "task-failed": "I couldn't finish that. Try again, or ask it another way.",
+    "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead."
   },
   "firstRun": {
     "title": "My mini-me",
@@ -83,7 +84,10 @@
     "startOver": "Start over",
     "startOverSure": "Move what I remember into a backup and start from the beginning? Nothing is deleted.",
     "startOverYes": "Start over",
-    "tryNow": "Shall we do one together now?"
+    "tryNow": "Shall we do one together now?",
+    "routineNow": "Around now you usually:",
+    "routineDo": "Do it together",
+    "routineLater": "Not now"
   },
   "memory": {
     "title": "What I remember about you",

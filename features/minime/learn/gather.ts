@@ -164,6 +164,15 @@ interface PromptRow {
 /** What they typed lately, by the folders they worked in most (f5), newest first in each. */
 // What the person said to their mini-me is not material here: each of those conversations is looked
 // back on when it ends (the review).
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+/** A moment in the person's own time, with its weekday, so the times of their habits read true. */
+export function localTime(at: number | string): string {
+  const d = new Date(at);
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${WEEKDAYS[d.getDay()]} ${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`;
+}
+
 export function inputsSection(
   since: number,
   limit: number,
@@ -205,7 +214,7 @@ export function inputsSection(
       let size = 0;
       for (const row of rows) {
         const said = row.text.replace(/\s+/g, " ").trim();
-        const line = `- ${new Date(row.at).toISOString().slice(0, 16).replace("T", " ")} · ${said.length > 280 ? `${said.slice(0, 280)}…` : said}`;
+        const line = `- ${localTime(row.at)} · ${said.length > 280 ? `${said.slice(0, 280)}…` : said}`;
         if (size + line.length > room || used + size + line.length > limit)
           break;
         lines.push(line);

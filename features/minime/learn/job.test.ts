@@ -20,7 +20,7 @@ test("following a job replays what happened, then streams until it ends", () => 
   );
   assert.deepEqual(seen, ["progress"]);
   for (const listener of job.listeners)
-    listener({ type: "done", kept: ["a"], tasks: [], at: "now" });
+    listener({ type: "done", kept: ["a"], tasks: [], routines: [], at: "now" });
   assert.deepEqual(seen, ["progress", "done"]);
   assert.ok(ended);
   assert.equal(job.listeners.size, 0);

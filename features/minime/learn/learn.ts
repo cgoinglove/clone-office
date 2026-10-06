@@ -19,6 +19,7 @@ import {
 import { openHistoryForRead } from "../history/db.ts";
 import { atomicWrite, readText } from "../memory/files.ts";
 import { MemoryStore } from "../memory/store.ts";
+import { cleanRoutines, type Routine } from "../routine.ts";
 import { minimeHome } from "../server/paths.ts";
 import { gather, type Material } from "./gather.ts";
 
@@ -30,7 +31,9 @@ Keep only a few short memory entries that the material shows clearly and that wi
 
 Keep nothing that can change or can be found again on their computer: projects and their status, goals, plans, dates, versions, folders and files, tools, who is doing what. A saved copy of those goes stale and misleads you later; you can always look them up when you need them. Make no notes and no skills now — you will learn those while working with them. When unsure, keep nothing.
 
-Then offer, in \`tasks\`, three things you can do for them right now with what you have — their past AI conversations, which you can search and read, your memory and this app's guide — chosen from what they are actually doing: pulling together what they decided or left open, finding how they handled something before, drafting something the way they write it. When the material shows little of what they do, offer what you can do from what you know of them, such as drafting a message the way they write. Never suggest what needs a browser, their files, a terminal or another app; you cannot use those yet. Each is a short label and why; the label is sent to you as their request when they tap it, so write it as that request.`;
+Then offer, in \`tasks\`, three things you can do for them right now with what you have — their past AI conversations, which you can search and read, your memory, this app's guide, the web, their files when they allow it, and their own Claude Code conversations, which you can ask — chosen from what they are actually doing: pulling together what they decided or left open, finding how they handled something before, drafting something the way they write it. When the material shows little of what they do, offer what you can do from what you know of them, such as drafting a message the way they write. Never suggest changing files, running commands or using another app; you cannot do those on your own. Each is a short label and why; the label is sent to you as their request when they tap it, so write it as that request.
+
+Last, in \`routines\`, at most three things they do at a regular time, read from the times of what they asked (shown in their own time, with the weekday): planning the day on weekday mornings, a report on Friday afternoons. Give each as the request they would send (a label, as for tasks), the days (0 is Sunday, 6 is Saturday), the hour it usually starts, and why. Only when the same kind of request shows up at about the same time at least three times; otherwise give none.`;
 
 export const LEARN_SCHEMA = {
   type: "object",
@@ -50,6 +53,23 @@ export const LEARN_SCHEMA = {
         required: ["label", "why"],
       },
     },
+    routines: {
+      type: "array",
+      maxItems: 3,
+      items: {
+        type: "object",
+        properties: {
+          label: { type: "string" },
+          days: {
+            type: "array",
+            items: { type: "integer", minimum: 0, maximum: 6 },
+          },
+          hour: { type: "integer", minimum: 0, maximum: 23 },
+          why: { type: "string" },
+        },
+        required: ["label", "days", "hour", "why"],
+      },
+    },
   },
   required: ["memory", "tasks"],
 };
@@ -66,6 +86,7 @@ export interface LearnResult {
   /** The entries this learning added to memory. */
   kept: string[];
   tasks: Task[];
+  routines: Routine[];
   sessionId?: string;
 }
 
@@ -76,6 +97,7 @@ interface LearnRecord {
     sessionId?: string;
     kept?: string[];
     tasks?: Task[];
+    routines?: Routine[];
   };
 }
 
@@ -175,6 +197,7 @@ export async function learn(options: {
       material: meta,
       kept: [],
       tasks: [],
+      routines: [],
     };
   // The model's time cannot be known in advance: the estimate rises towards 95% over about a
   // minute and jumps to 100% when it answers.
@@ -208,8 +231,10 @@ export async function learn(options: {
   const structured = (result.structured ?? {}) as {
     memory?: unknown[];
     tasks?: Task[];
+    routines?: unknown;
   };
   const tasks = Array.isArray(structured.tasks) ? structured.tasks : [];
+  const routines = cleanRoutines(structured.routines);
   const kept =
     result.ok && Array.isArray(structured.memory)
       ? await keep(structured.memory, options.onEvent)
@@ -225,6 +250,7 @@ export async function learn(options: {
             sessionId: result.sessionId,
             kept,
             tasks,
+            routines,
           },
         },
         null,
@@ -237,6 +263,7 @@ export async function learn(options: {
     material: meta,
     kept,
     tasks,
+    routines,
     sessionId: result.sessionId,
   };
 }

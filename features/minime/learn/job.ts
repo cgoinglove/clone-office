@@ -7,6 +7,7 @@
 
 import type { SessionEvent } from "../brain/session.ts";
 import { catchUpIndex } from "../history/indexer.ts";
+import type { Routine } from "../routine.ts";
 import { errorCode } from "../server/ndjson.ts";
 import type { SourceReport } from "./gather.ts";
 import {
@@ -25,6 +26,8 @@ export type LearnEvent =
       type: "done";
       kept: string[];
       tasks: Task[];
+      /** Things they do at a regular time, offered around that time. */
+      routines: Routine[];
       at: string;
       /** Conversations with their AI tools since this learning, to offer reading again. */
       fresh?: number;
@@ -80,6 +83,7 @@ export function startLearn(options: {
               type: "done",
               kept: result.kept,
               tasks: result.tasks,
+              routines: result.routines,
               at: new Date().toISOString(),
             }
           : {
@@ -122,6 +126,7 @@ export async function savedLearn(): Promise<LearnEvent | undefined> {
     type: "done",
     kept: last.kept ?? [],
     tasks: last.tasks ?? [],
+    routines: last.routines ?? [],
     at: last.at,
     fresh: freshConversations(Date.parse(last.at)),
   };

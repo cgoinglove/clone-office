@@ -30,6 +30,7 @@ import { AskCard, type GateAsk } from "./ask-card";
 import { LanguageSwitch } from "./language-switch";
 import { EXPORT_PROMPT } from "./learn/export-prompt";
 import { OfficePanel } from "./office-panel";
+import { type Routine, routineNow } from "./routine";
 import { savedText } from "./saved-text";
 
 const PLAN = ["read", "keep", "skip", "time"] as const;
@@ -161,6 +162,9 @@ export function FirstRun() {
   const [memory, setMemory] = useState<Memory | null>(null);
   const [fresh, setFresh] = useState<string[]>([]);
   const [tasks, setTasks] = useState<{ label: string; why: string }[]>([]);
+  const [routines, setRoutines] = useState<Routine[]>([]);
+  // A routine set aside for today, so "Not now" is not asked again until tomorrow.
+  const [setAside, setSetAside] = useState<string | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -299,6 +303,7 @@ export function FirstRun() {
           setFreshOffer(fresh >= 3 && age > 12 * 60 * 60 * 1000 ? fresh : 0);
           setFresh((all) => [...all, ...((event.kept as string[]) ?? [])]);
           setTasks(event.tasks as { label: string; why: string }[]);
+          setRoutines((event.routines as Routine[] | undefined) ?? []);
           void loadMemory();
           setStage("known");
           break;
@@ -577,6 +582,25 @@ export function FirstRun() {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       const count = await openChat(chatId);
       if (count !== undefined && count > known) return;
+    }
+  };
+
+  const today = new Date().toDateString();
+  useEffect(() => {
+    try {
+      setSetAside(localStorage.getItem("minime-routine-set-aside"));
+    } catch {
+      // No storage here: a routine is offered every time.
+    }
+  }, []);
+  const routine = routineNow(routines);
+  const routineKey = routine ? `${routine.label}|${today}` : "";
+  const putAside = () => {
+    setSetAside(routineKey);
+    try {
+      localStorage.setItem("minime-routine-set-aside", routineKey);
+    } catch {
+      // Kept for this page only.
     }
   };
 
@@ -1036,6 +1060,25 @@ export function FirstRun() {
               </Button>
             </div>
           )}
+        </div>
+      )}
+
+      {showMemory && routine && setAside !== routineKey && !busy && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 text-sm">
+          <span className="min-w-0">
+            <span className="text-muted-foreground">
+              {t("firstRun.routineNow")}
+            </span>{" "}
+            <b>{routine.label}</b>
+          </span>
+          <div className="flex shrink-0 gap-2">
+            <Button size="sm" onClick={() => void ask(routine.label)}>
+              {t("firstRun.routineDo")}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={putAside}>
+              {t("firstRun.routineLater")}
+            </Button>
+          </div>
         </div>
       )}
 
