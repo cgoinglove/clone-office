@@ -141,6 +141,23 @@ export function tasks(office: OfficeConfig): Promise<{ tasks: Task[] }> {
   return call(office.relay, "/tasks", { token: office.token });
 }
 
+/**
+ * A request to someone without a mini-me: the relay makes a link whose page they answer on. The
+ * full link is returned to give to the person, who sends it themselves.
+ */
+export async function sendLink(
+  office: OfficeConfig,
+  name: string,
+  text: string,
+): Promise<{ task: Task; url: string }> {
+  const { task, link } = await call<{ task: Task; link: string }>(
+    office.relay,
+    "/links",
+    { token: office.token, body: { name, text } },
+  );
+  return { task, url: new URL(link, office.relay).toString() };
+}
+
 export async function sendRequest(
   office: OfficeConfig,
   to: string,

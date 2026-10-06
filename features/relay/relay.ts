@@ -7,6 +7,10 @@
 // The shapes follow A2A v1.0.0 (a2a-protocol.org): an AgentCard per member, a Task per request
 // with a contextId, Messages with text parts and the roles user (the one asking) and agent (the
 // one asked), and A2A's task states. A full A2A binding can be put in front of this later.
+//
+// Someone without a mini-me can be asked by a link: the request goes to a guest instead of a
+// member, and whoever opens the link answers on a page (page.ts). The link is the only key to it,
+// and it ends after two weeks or once answered.
 
 import { randomBytes, randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
@@ -21,6 +25,9 @@ export type TaskState =
   | "REJECTED";
 
 /** States after which a request takes no more messages. */
+/** How long a link can be answered. */
+export const LINK_DAYS = 14;
+
 export const FINAL: TaskState[] = [
   "COMPLETED",
   "FAILED",
@@ -58,7 +65,15 @@ export interface Task {
   contextId: string;
   status: { state: TaskState; message?: Message; timestamp: string };
   history: Message[];
-  metadata: { from: string; to: string; created: string };
+  metadata: {
+    from: string;
+    to: string;
+    created: string;
+    /** Asked by a link: the name of the one asked. */
+    guest?: string;
+    /** To the one who made it only: the link's path on this relay. */
+    link?: string;
+  };
 }
 
 export interface Member {
@@ -80,6 +95,8 @@ CREATE TABLE IF NOT EXISTS messages (id TEXT PRIMARY KEY, task_id TEXT NOT NULL,
 CREATE TABLE IF NOT EXISTS events (seq INTEGER PRIMARY KEY AUTOINCREMENT, member TEXT NOT NULL, type TEXT NOT NULL, task_id TEXT NOT NULL, at TEXT NOT NULL);
 CREATE INDEX IF NOT EXISTS events_member ON events (member, seq);
 CREATE INDEX IF NOT EXISTS messages_task ON messages (task_id, at);
+CREATE TABLE IF NOT EXISTS links (token TEXT PRIMARY KEY, task_id TEXT NOT NULL, name TEXT NOT NULL, created TEXT NOT NULL, expires TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS links_task ON links (task_id);
 `;
 
 // Node runs this file without a build, so no TypeScript-only syntax such as parameter properties.
@@ -185,6 +202,84 @@ export class Relay {
     return this.task(id);
   }
 
+  /**
+   * A request to someone without a mini-me, by a link: whoever opens it answers on a page. The
+   * token is the link's only key, so it is returned to the one asking and nowhere else.
+   */
+  sendLink(
+    from: string,
+    name: string,
+    text: string,
+    now = new Date(),
+  ): { task: Task; token: string } {
+    const guest = name.trim().slice(0, 80);
+    if (!guest || !text.trim())
+      throw new RelayError(
+        400,
+        "A link needs a name and a request.",
+        "bad-request",
+      );
+    const id = randomUUID();
+    const token = randomBytes(24).toString("base64url");
+    const at = now.toISOString();
+    this.db
+      .prepare(
+        "INSERT INTO tasks (id, context_id, from_member, to_member, state, created, updated) VALUES (?, ?, ?, ?, 'SUBMITTED', ?, ?)",
+      )
+      .run(id, randomUUID(), from, `link:${id.slice(0, 8)}`, at, at);
+    this.db
+      .prepare(
+        "INSERT INTO links (token, task_id, name, created, expires) VALUES (?, ?, ?, ?, ?)",
+      )
+      .run(
+        token,
+        id,
+        guest,
+        at,
+        new Date(now.getTime() + LINK_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+      );
+    this.addMessage(id, "user", from, text, at);
+    return { task: this.taskFor(from, id), token };
+  }
+
+  /** What a link shows: the request, who asked, and whether it can still be answered. */
+  link(
+    token: string,
+    now = new Date(),
+  ): { task: Task; name: string; asker?: Card; open: boolean } {
+    const row = this.db
+      .prepare("SELECT task_id, name, expires FROM links WHERE token = ?")
+      .get(token) as
+      | { task_id: string; name: string; expires: string }
+      | undefined;
+    if (!row) throw new RelayError(404, "No such link.", "not-found");
+    const task = this.task(row.task_id);
+    const asker = this.members().find((m) => m.id === task.metadata.from);
+    return {
+      task,
+      name: row.name,
+      asker: asker?.card,
+      open:
+        !FINAL.includes(task.status.state) && now.toISOString() < row.expires,
+    };
+  }
+
+  /** The answer given on a link's page; the one asking hears of it at their inbox. */
+  answerLink(token: string, text: string, now = new Date()): Task {
+    const { task, name, open } = this.link(token, now);
+    if (!open)
+      throw new RelayError(409, "That link is closed.", "request-closed");
+    if (!text.trim())
+      throw new RelayError(400, "An answer is needed.", "bad-request");
+    const at = now.toISOString();
+    this.addMessage(task.id, "agent", `guest:${name}`, text, at);
+    this.db
+      .prepare("UPDATE tasks SET state = 'COMPLETED', updated = ? WHERE id = ?")
+      .run(at, task.id);
+    this.notify(task.metadata.from, "update", task.id);
+    return this.task(task.id);
+  }
+
   /** A message on a request, and its new state, from either side. */
   update(
     member: string,
@@ -242,6 +337,13 @@ export class Relay {
       }),
     );
     const last = history.at(-1);
+    const guest = row.to_member.startsWith("link:")
+      ? (
+          this.db.prepare("SELECT name FROM links WHERE task_id = ?").get(id) as
+            | { name: string }
+            | undefined
+        )?.name
+      : undefined;
     return {
       id,
       contextId: row.context_id,
@@ -255,8 +357,20 @@ export class Relay {
         from: row.from_member,
         to: row.to_member,
         created: row.created,
+        ...(guest ? { guest } : {}),
       },
     };
+  }
+
+  /** A link request, as the one who made it sees it: with the link's path, to give again. */
+  private withLink(task: Task, member: string): Task {
+    if (task.metadata.from !== member || !task.metadata.guest) return task;
+    const row = this.db
+      .prepare("SELECT token FROM links WHERE task_id = ?")
+      .get(task.id) as { token: string } | undefined;
+    return row
+      ? { ...task, metadata: { ...task.metadata, link: `/r/${row.token}` } }
+      : task;
   }
 
   /** One request, for the member who sent it or was asked; no one else learns it exists. */
@@ -264,7 +378,7 @@ export class Relay {
     const row = this.taskRow(id);
     if (row.from_member !== member && row.to_member !== member)
       throw new RelayError(404, "No such request.", "not-found");
-    return this.task(id);
+    return this.withLink(this.task(id), member);
   }
 
   /** The member's requests, sent and received, latest first. */
@@ -275,7 +389,7 @@ export class Relay {
           "SELECT id FROM tasks WHERE from_member = ? OR to_member = ? ORDER BY updated DESC LIMIT ?",
         )
         .all(member, member, limit) as { id: string }[]
-    ).map((row) => this.task(row.id));
+    ).map((row) => this.withLink(this.task(row.id), member));
   }
 
   /** What concerns the member after `after`, waiting up to `waitMs` for something to come. */

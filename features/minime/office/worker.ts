@@ -190,7 +190,10 @@ function onEvent(
   void loadState().then(({ sent }) => {
     const chat = sent[task.id]?.chat;
     if (!chat) return;
-    const name = cards.get(task.metadata.to)?.name ?? task.metadata.to;
+    const name =
+      cards.get(task.metadata.to)?.name ??
+      task.metadata.guest ??
+      task.metadata.to;
     return appendMessage(
       chat,
       "office",

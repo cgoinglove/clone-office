@@ -49,9 +49,12 @@ export function describe(
     input.pattern ??
     input.path ??
     input.folder ??
-    // Asking a colleague: to whom, and what.
+    // Asking a colleague, or someone by a link: to whom, and what.
     (typeof input.to === "string"
       ? `${input.to}: ${String(input.request ?? "")}`
+      : undefined) ??
+    (typeof input.name === "string" && typeof input.request === "string"
+      ? `${input.name}: ${input.request}`
       : undefined) ??
     // Asking one of the person's Claude Code conversations: which, and what.
     (typeof input.session === "string"

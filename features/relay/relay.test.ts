@@ -137,3 +137,55 @@ test("a card carries how to work with its person, bounded", () => {
   assert.equal(card.howToWork?.length, 11);
   assert.equal(card.howToWork?.[1].length, 240);
 });
+
+test("someone without a mini-me answers by a link; only the one who made it sees the link", async () => {
+  const ben = relay.join({
+    key: "office-key",
+    card: { name: "Ben", description: "" },
+  });
+  const ana = relay.join({
+    key: "office-key",
+    card: { name: "Ana", description: "" },
+  });
+  const benId = relay.memberByToken(ben.token).id;
+  const anaId = relay.memberByToken(ana.token).id;
+  const now = new Date("2026-10-06T12:00:00Z");
+  const { task, token } = relay.sendLink(
+    benId,
+    "Jisoo",
+    "Is 3 pm on Friday all right?",
+    now,
+  );
+  assert.equal(task.metadata.guest, "Jisoo");
+  assert.equal(task.metadata.link, `/r/${token}`);
+  assert.equal(
+    relay.tasks(benId).find((t) => t.id === task.id)?.metadata.link,
+    `/r/${token}`,
+  );
+  assert.throws(() => relay.taskFor(anaId, task.id), /No such request/);
+  const shown = relay.link(token, now);
+  assert.equal(shown.asker?.name, "Ben");
+  assert.equal(shown.open, true);
+  assert.equal(
+    shown.task.metadata.link,
+    undefined,
+    "the page never shows the key itself",
+  );
+  const before = (await relay.inbox(benId, 0, 0)).length;
+  const answered = relay.answerLink(token, "Yes, 3 works.", now);
+  assert.equal(answered.status.state, "COMPLETED");
+  assert.equal(answered.history.at(-1)?.metadata.from, "guest:Jisoo");
+  assert.equal(
+    (await relay.inbox(benId, 0, 0)).length,
+    before + 1,
+    "Ben hears of it",
+  );
+  assert.throws(() => relay.answerLink(token, "again", now), /closed/);
+  // A link ends after two weeks.
+  const late = relay.sendLink(benId, "Min", "Lunch?", now);
+  assert.equal(
+    relay.link(late.token, new Date("2026-10-21T12:00:01Z")).open,
+    false,
+  );
+  assert.throws(() => relay.link("no-such-token-at-all-here"), /No such link/);
+});

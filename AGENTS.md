@@ -152,7 +152,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   `node:sqlite`). Members join with the office key and then use their own token; a mini-me waits
   at its inbox (long polling) because it sits on a personal computer out of reach. Shapes follow
   A2A v1.0.0: an AgentCard per member, a Task per request with a contextId, Messages with roles
-  user/agent and text parts, A2A's task states. It keeps only cards and requests.
+  user/agent and text parts, A2A's task states. It keeps only cards and requests. Someone without a
+  mini-me is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
+  the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,
+  for two weeks or until answered); the answer reaches the asker like any other.
 - `features/minime/office/`: the mini-me's side. `client.ts` (where its relay is and who it is
   there, in `settings.json` under `office`, and the calls), `worker.ts` (one loop per server
   process: waits at the inbox, answers requests that come in, puts answers to sent requests back

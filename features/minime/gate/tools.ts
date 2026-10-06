@@ -24,6 +24,26 @@ export const COLLEAGUES_TOOL = {
   inputSchema: { type: "object", properties: {} },
 };
 
+export const ASK_BY_LINK_TOOL = {
+  name: "ask_by_link",
+  description:
+    "Ask someone who has no mini-me (not in colleagues): make a link to a page where they read the request and answer, for your person to send them by their usual messenger. Use it when your person asks you to ask such a person. Write the request as your person would, short and complete; it is shown to whoever opens the link. Your person is asked before it is made. Give your person the link and say they send it themselves; it works where that person can reach the office's relay. The answer will be put into this conversation.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      name: {
+        type: "string",
+        description: "Who it is for, as your person calls them",
+      },
+      request: {
+        type: "string",
+        description: "What to ask, as your person would",
+      },
+    },
+    required: ["name", "request"],
+  },
+};
+
 export const ASK_COLLEAGUE_TOOL = {
   name: "ask_colleague",
   description:
@@ -149,6 +169,22 @@ export async function callGateTool(
       );
       return {
         result: `Sent to ${(sent as { to?: string })?.to ?? args.to}. The answer will be put into this conversation when it comes.`,
+        isError: false,
+      };
+    }
+    if (name === ASK_BY_LINK_TOOL.name) {
+      const { link } = await post(
+        {
+          action: "link",
+          name: String(args.name ?? ""),
+          text: String(args.request ?? ""),
+          chat: GATE.chat,
+        },
+        "/api/me/office/mcp",
+      );
+      const made = link as { name?: string; url?: string } | undefined;
+      return {
+        result: `The link for ${made?.name ?? args.name}: ${made?.url}\nGive it to your person to send by their usual messenger. Their answer will be put into this conversation.`,
         isError: false,
       };
     }

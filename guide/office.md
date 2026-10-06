@@ -129,6 +129,17 @@ If the app or the computer stops while a request is being answered, the request 
 is picked up again when the app is back; the colleague never gets two answers. When two copies
 of the app run on the same computer, only one of them answers requests.
 
+## Asking someone without a mini-me
+
+When they ask the mini-me to ask someone who has no mini-me, it makes a link (after a card that
+shows who and what): a page where that person reads the request and answers, in their own
+language when the page is written in it. The mini-me gives them the link and they send it
+themselves, by their usual messenger; the answer comes into the conversation it was asked from.
+A link is the only key to its page, and it ends after two weeks or once answered. It works where
+that person can reach the office's relay (a relay on one computer is reachable only there). In
+the office's requests it shows as **(by link)** (링크), with **Copy link** (링크 복사) while it
+is open.
+
 ## What is waiting for them
 
 The mini-me can see where their office work stands, the same as their page shows: questions

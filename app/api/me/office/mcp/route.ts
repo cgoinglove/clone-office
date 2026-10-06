@@ -4,6 +4,7 @@ import {
   loadOffice,
   members,
   problemCode,
+  sendLink,
   sendRequest,
 } from "@/features/minime/office/client";
 import { changeState } from "@/features/minime/office/state";
@@ -14,6 +15,12 @@ const Body = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("send"),
     to: z.string().min(1).max(80),
+    text: z.string().trim().min(1).max(8000),
+    chat: z.string().max(64).optional(),
+  }),
+  z.object({
+    action: z.literal("link"),
+    name: z.string().trim().min(1).max(80),
     text: z.string().trim().min(1).max(8000),
     chat: z.string().max(64).optional(),
   }),
@@ -37,6 +44,16 @@ export async function POST(request: Request) {
     const { members: everyone } = await members(office);
     const others = everyone.filter((m) => m.id !== office.member);
     const input = body.data;
+    if (input.action === "link") {
+      const { task, url } = await sendLink(office, input.name, input.text);
+      if (input.chat) {
+        const chat = input.chat;
+        await changeState((s) => {
+          s.sent[task.id] = { chat };
+        });
+      }
+      return Response.json({ link: { name: input.name, url, id: task.id } });
+    }
     if (input.action === "members")
       return Response.json({
         members: others.map((m) => ({ id: m.id, ...m.card })),

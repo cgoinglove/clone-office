@@ -22,6 +22,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { callFlowTool, FLOW_MANAGE_TOOL, FLOWS_TOOL } from "../flows/tools.ts";
 import {
+  ASK_BY_LINK_TOOL,
   ASK_COLLEAGUE_TOOL,
   ASK_TOOL,
   COLLEAGUES_TOOL,
@@ -109,7 +110,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
               FLOW_MANAGE_TOOL,
             ]
           : []),
-        ...(colleaguesOpen ? [COLLEAGUES_TOOL, ASK_COLLEAGUE_TOOL] : []),
+        ...(colleaguesOpen
+          ? [COLLEAGUES_TOOL, ASK_COLLEAGUE_TOOL, ASK_BY_LINK_TOOL]
+          : []),
       ]
   ).map((tool) => ({
     name: tool.name,
@@ -197,7 +200,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case ASK_TOOL.name:
     case PERMISSION_TOOL.name:
     case COLLEAGUES_TOOL.name:
-    case ASK_COLLEAGUE_TOOL.name: {
+    case ASK_COLLEAGUE_TOOL.name:
+    case ASK_BY_LINK_TOOL.name: {
       const { result, isError } = await callGateTool(request.params.name, args);
       return text(result, isError);
     }

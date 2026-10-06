@@ -124,7 +124,7 @@
     "carrying": "대화가 길어져서, 기억할 것을 먼저 챙기고 앞의 대화를 정리하는 중",
     "carried": "앞의 대화를 정리해 두었어요. 그 정리에서 이어 갈게요.",
     "turns": "{count}번 말함",
-    "fromColleague": "동료 미니미의 답",
+    "fromColleague": "부탁한 것의 답",
     "told": "대신 답했어요",
     "flowRan": "플로우 ‘{name}’ ({at})"
   },
@@ -151,7 +151,8 @@
       "NotebookEdit": "노트북 고치기",
       "Bash": "명령 실행",
       "mcp__minime__work_session": "내 Claude Code 대화에게 일 시키기",
-      "mcp__minime__leave_out_folder": "앞으로 이 폴더는 읽지 않기"
+      "mcp__minime__leave_out_folder": "앞으로 이 폴더는 읽지 않기",
+      "mcp__minime__ask_by_link": "미니미가 없는 사람에게 물을 링크 만들기"
     },
     "ruleTitle": "앞으로 이렇게 할까요?",
     "rule": "‘{menu}’에 대한 제 답을 세 번 그대로 보내셨어요. 앞으로는 제가 답하고 알려 드릴까요?",
@@ -255,7 +256,10 @@
       "skip": "건너뛰기",
       "placeholder": "한 줄, 평소 말하듯이",
       "theirs": "{name} 님과 일하는 법:"
-    }
+    },
+    "byLink": "{name} (링크)",
+    "copyLink": "링크 복사",
+    "copied": "복사했어요"
   },
   "files": {
     "title": "저장된 파일 전체",

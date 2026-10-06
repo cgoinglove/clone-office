@@ -54,7 +54,15 @@ interface Task {
   id: string;
   status: { state: State; timestamp: string };
   history: { role: "user" | "agent"; parts: { text: string }[] }[];
-  metadata: { from: string; to: string; created: string };
+  metadata: {
+    from: string;
+    to: string;
+    created: string;
+    /** Asked by a link: the one asked, who has no mini-me. */
+    guest?: string;
+    /** To the one who made it: the link's path on the relay. */
+    link?: string;
+  };
 }
 
 interface Office {
@@ -132,6 +140,7 @@ export function OfficePanel({
   const [answered, setAnswered] = useState<Record<string, string>>({});
 
   const seen = useRef(new Map<string, string>());
+  const looked = useRef(false);
   const load = useCallback(async () => {
     const data = (await fetch(
       `/api/me/office?locale=${encodeURIComponent(lang)}`,
@@ -141,13 +150,22 @@ export function OfficePanel({
       .catch(() => null)) as Office | null;
     if (!data) return;
     setOffice(data);
-    // A sent request whose state moved since the last look: its answer may be in a conversation.
+    // A request whose state moved since the last look, or one first seen already answered (sent and
+    // answered between two looks): its answer may be in a conversation.
     let news = false;
     for (const task of data.tasks ?? []) {
       const before = seen.current.get(task.id);
       if (before !== undefined && before !== task.status.state) news = true;
+      if (
+        before === undefined &&
+        looked.current &&
+        task.status.state !== "SUBMITTED" &&
+        task.status.state !== "WORKING"
+      )
+        news = true;
       seen.current.set(task.id, task.status.state);
     }
+    looked.current = true;
     if (news) onNews?.();
   }, [lang, onNews]);
 
@@ -326,6 +344,7 @@ export function OfficePanel({
                     key={task.id}
                     task={task}
                     me={office.me?.id ?? ""}
+                    relay={office.relay}
                     names={names}
                     busy={busy}
                     onReply={(text) =>
@@ -1021,20 +1040,30 @@ function Colleague({
 function Request({
   task,
   me,
+  relay,
   names,
   busy,
   onReply,
 }: {
   task: Task;
   me: string;
+  relay?: string;
   names: Map<string, string>;
   busy: boolean;
   onReply: (text: string) => Promise<boolean>;
 }) {
   const [text, setText] = useState("");
+  const [copied, setCopied] = useState(false);
   const t = useTranslations("office");
   const sent = task.metadata.from === me;
   const other = sent ? task.metadata.to : task.metadata.from;
+  const who =
+    names.get(other) ??
+    (task.metadata.guest ? t("byLink", { name: task.metadata.guest }) : other);
+  const link =
+    relay && task.metadata.link
+      ? new URL(task.metadata.link, relay).toString()
+      : undefined;
   const first = task.history[0]?.parts.map((p) => p.text).join(" ") ?? "";
   const answer = [...task.history]
     .reverse()
@@ -1047,9 +1076,7 @@ function Request({
     <li className="flex min-w-0 flex-col gap-1 border-b border-border py-2 last:border-b-0">
       <div className="flex items-center justify-between gap-2">
         <span className="min-w-0 truncate font-medium">
-          {sent
-            ? t("sent", { name: names.get(other) ?? other })
-            : t("received", { name: names.get(other) ?? other })}
+          {sent ? t("sent", { name: who }) : t("received", { name: who })}
         </span>
         <span
           className={cn(
@@ -1068,6 +1095,26 @@ function Request({
       </div>
       <p className="whitespace-pre-wrap text-muted-foreground">{first}</p>
       {answer && <p className="whitespace-pre-wrap">{answer}</p>}
+      {link && moving && (
+        <div className="flex min-w-0 items-center gap-2">
+          <code className="min-w-0 truncate text-xs text-muted-foreground">
+            {link}
+          </code>
+          <Button
+            size="xs"
+            variant="outline"
+            className="shrink-0"
+            onClick={() => {
+              void navigator.clipboard
+                ?.writeText(link)
+                .then(() => setCopied(true))
+                .catch(() => {});
+            }}
+          >
+            {copied ? t("copied") : t("copyLink")}
+          </Button>
+        </div>
+      )}
       {sent && state === "INPUT_REQUIRED" && (
         <form
           className="flex items-end gap-2"

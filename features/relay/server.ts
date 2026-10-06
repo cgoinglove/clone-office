@@ -9,10 +9,14 @@
 //   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
+//   POST /links         {name, text} -> {task, link}    a request to someone without a mini-me
+//   GET  /r/:token      the link's page (HTML): who asks, what, and a box to answer; no token needed
+//   POST /r/:token      the answer, from the page's form
 
 import { randomBytes } from "node:crypto";
 import { createServer, type IncomingMessage } from "node:http";
 import { parseArgs } from "node:util";
+import { missingPage, pageLanguage, replyPage } from "./page.ts";
 import { Relay, RelayError, type TaskState } from "./relay.ts";
 
 const { values } = parseArgs({
@@ -28,9 +32,7 @@ const key =
   values.key ?? process.env.RELAY_KEY ?? randomBytes(9).toString("base64url");
 const relay = new Relay(values.db as string, key);
 
-async function body(
-  request: IncomingMessage,
-): Promise<Record<string, unknown>> {
+async function raw(request: IncomingMessage): Promise<string> {
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of request) {
@@ -39,13 +41,31 @@ async function body(
       throw new RelayError(413, "Too large.", "bad-request");
     chunks.push(chunk as Buffer);
   }
-  if (!chunks.length) return {};
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+async function body(
+  request: IncomingMessage,
+): Promise<Record<string, unknown>> {
+  const text = await raw(request);
+  if (!text) return {};
   try {
-    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    return JSON.parse(text);
   } catch {
     throw new RelayError(400, "Not JSON.", "bad-request");
   }
 }
+
+// The link's page is someone's private request: kept out of caches, frames and search, and its
+// address (the link's key) is never sent on as a referrer.
+const PAGE_HEADERS = {
+  "content-type": "text/html; charset=utf-8",
+  "cache-control": "no-store",
+  "content-security-policy":
+    "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+  "referrer-policy": "no-referrer",
+  "x-content-type-options": "nosniff",
+};
 
 function member(request: IncomingMessage) {
   const auth = request.headers.authorization ?? "";
@@ -60,6 +80,56 @@ const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url ?? "/", "http://relay");
     const path = url.pathname;
+    const page = /^\/r\/([\w-]{20,64})$/.exec(path);
+    if (page && (request.method === "GET" || request.method === "POST")) {
+      const lang = pageLanguage(request.headers["accept-language"]);
+      if (request.method === "POST") {
+        const answer = new URLSearchParams(await raw(request)).get("answer");
+        try {
+          relay.answerLink(page[1], answer ?? "");
+        } catch (error) {
+          // Answered twice, or closed meanwhile: the page says how it stands.
+          if (!(error instanceof RelayError) || error.status === 404)
+            throw error;
+        }
+        response.writeHead(303, {
+          location: path,
+          "cache-control": "no-store",
+        });
+        return response.end();
+      }
+      let shown: ReturnType<typeof relay.link>;
+      try {
+        shown = relay.link(page[1]);
+      } catch {
+        response.writeHead(404, PAGE_HEADERS);
+        return response.end(missingPage(lang));
+      }
+      const { task } = shown;
+      const answer = task.history.filter((m) => m.role === "agent").at(-1);
+      response.writeHead(200, PAGE_HEADERS);
+      return response.end(
+        replyPage({
+          lang,
+          asker: shown.asker?.name ?? "",
+          name: shown.name,
+          request:
+            task.history.find((m) => m.role === "user")?.parts[0]?.text ?? "",
+          state: shown.open ? "open" : answer ? "answered" : "closed",
+          answer: answer?.parts[0]?.text,
+        }),
+      );
+    }
+    if (request.method === "POST" && path === "/links") {
+      const me = member(request);
+      const input = await body(request);
+      const { task, token } = relay.sendLink(
+        me.id,
+        String(input.name ?? ""),
+        String(input.text ?? ""),
+      );
+      return send(200, { task, link: `/r/${token}` });
+    }
     if (request.method === "POST" && path === "/join") {
       const input = await body(request);
       const auth = request.headers.authorization?.replace(/^Bearer\s+/i, "");

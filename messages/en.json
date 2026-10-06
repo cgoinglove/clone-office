@@ -124,7 +124,7 @@
     "carrying": "This conversation is long: keeping what matters first, then summing up what came before",
     "carried": "I summed up what came before and will go on from that.",
     "turns": "{count, plural, one {# message} other {# messages}}",
-    "fromColleague": "From a colleague's mini-me",
+    "fromColleague": "An answer to your request",
     "told": "I answered for you",
     "flowRan": "{name}, on its own ({at})"
   },
@@ -151,7 +151,8 @@
       "NotebookEdit": "Change a notebook",
       "Bash": "Run a command",
       "mcp__minime__work_session": "Have one of your Claude Code conversations do work",
-      "mcp__minime__leave_out_folder": "Leave a folder out from now on"
+      "mcp__minime__leave_out_folder": "Leave a folder out from now on",
+      "mcp__minime__ask_by_link": "Make a link to ask someone without a mini-me"
     },
     "ruleTitle": "Make it a rule?",
     "rule": "You sent my last three answers to “{menu}” as they were. From now on, shall I answer these myself and tell you?",
@@ -255,7 +256,10 @@
       "skip": "Skip",
       "placeholder": "A line, as you would say it",
       "theirs": "How to work with {name}:"
-    }
+    },
+    "byLink": "{name} (by link)",
+    "copyLink": "Copy link",
+    "copied": "Copied"
   },
   "files": {
     "title": "All files I keep",
