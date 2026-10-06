@@ -108,15 +108,43 @@ These words help discussion. They do not mandate separate services, tables or UI
   kind that is stored or sent to colleagues is a code, so each reads it in their own language.
   The clone's language is separate: the one picked, else the browser's, whatever it is.
 - The front door (`app/page.tsx`) sends someone new to the first steps (`app/start`,
-  `features/minime/start/onboarding.tsx`: what a clone is, its brain, the first reading with the
-  folders left out, the team, then `/me`) and everyone else to `/me`; `server/onboarded.ts` says
-  which (`settings.json` `onboarded`, or anything already learned, kept or said).
-- `features/minime/`: making a person's clone at `/me`. `first-run.tsx` is the screen: it says
-  what it will read and keep, learns in the background with progress (`learn/job.ts`), brings
-  what the person's usual AI remembers about them (Claude's memory import: copy a prompt there,
-  paste the answer here), shows the memory exactly as saved with each entry correctable or
-  removable, lists every file it keeps (`server/stored.ts`), does work with them, and can start
-  over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust}`, which
+  `features/minime/start/onboarding.tsx`, after Thursday's first run: what a clone is beside the
+  office playing the app's loop with nobody real in it (`start/demo.ts`, data the office draws as
+  any day), then its brain, the first reading with the folders left out, who they are and their
+  team (`server/profile.ts`, `settings.json` `profile`), and the office's lobby) and everyone else
+  to `/office` (`/me`, the old page, sends there too); `server/onboarded.ts` says which
+  (`settings.json` `onboarded`, or anything already learned, kept or said).
+- The app is one screen around the office (`app/office`, `features/minime/home/`): `home.tsx`
+  lays the office (full screen, its lobby once a day) under a bar (`top-bar.tsx`: the name, the
+  person's status, what waits on them, settings, the clone's face), the office's own box to ask,
+  and a side panel the office makes room for (`setInset`), with the conversation
+  (`chat-view.tsx`, `use-chat.ts`: one conversation's turns as they stream, the gate's cards in
+  place, past conversations) and the office's requests (`requests-view.tsx`, `use-office.ts`:
+  questions waiting, colleagues with Ask and files, requests sent and received); the office's
+  panel about a person and this one close each other (`onPanel`). `use-learn.ts` follows a reading
+  wherever it started. Settings is one dialog (`features/minime/settings/`, after Thursday's):
+  sections grouped and marked (`settings.tsx`; an ember dot where something wants the person, red
+  where something is broken), each laid out with `parts.tsx`: Your clone (`clone-section.tsx`:
+  about them, the memory as saved with each line correctable or removable, reading again,
+  bringing what their usual AI remembers (Claude's memory import), starting over), Preferences
+  (`preferences-section.tsx`, below), Brain, Requests you take (`requests-section.tsx`: the menu,
+  trust levels, the like-me score, ME.md lines), Flows, Connectors, Phone, Permissions
+  (`permissions-section.tsx`: rules taken back, folders left out), Office (`office-section.tsx`:
+  open here, join, invite, people, leave), Files (`server/stored.ts`) and General (language,
+  theme, version). Keys: ⌘, Settings, ⌘1–9 a section, / the box, Esc the panel; the tab's title
+  carries what waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at
+  rest, also `app/icon.svg`) and the services' and AI vendors' marks (`marks.ts`, generated from
+  lobe-icons (MIT) and simple-icons (CC0), drawn by `brand-mark.tsx`).
+- Preferences (`server/preferences.ts`, `settings.json` `preferences`, `app/api/me/preferences`):
+  how much the clone does on its own in the person's own work (`gate/autonomy.ts`: `ask`, `reads`,
+  `auto`, after Claude Code's permission modes; a session starts with the mode's rules
+  (`ownModeRules`) and the gate lets the mode's asks through (`alreadyAllowed` with `own`), never
+  for a colleague's request; files leaving the computer, flows and Claude Code work are always
+  asked), where new kinds of request start, when kept questions come (`batchHours`), learning after
+  each conversation (`review.ts` skips when off), the lobby, background work on the brain's lighter
+  model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), and quiet
+  hours for the phone (`quietFor`). Every default keeps the app as careful as before.
+- `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded}`, which
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
@@ -150,7 +178,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   the permission prompt does; its conversations in `brain/sessions/<id>.json` so a session goes on
   or is copied for the review, and a session it never kept answers `session-missing` so a
   conversation goes on from its own record; a shaped answer is asked for last, without tools.
-  The page's part is `features/minime/brain-panel.tsx` with the route `app/api/me/brain`.
+  The page's part is `features/minime/brain-panel.tsx` (vendor marks, ways, models with one
+  suggested and picked to start with; Claude Code's own Haiku, Sonnet or Opus, kept as the
+  choice's `model`) with the route `app/api/me/brain`.
   `session.ts` runs a session on the person's own Claude Code
   with those tools (the brain is a replaceable process: everything else talks to it only through
   `runSession`); `review.ts` looks back over a finished session and keeps what it taught;
@@ -209,8 +239,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:
   `Relay.joinAs` moves it). `people-pages.ts` is the invite's sign-up page, sign-in and one's own
-  page with the line to run, plain HTML with no scripts; a form from another site is refused, and
-  wrong sign-ins count against the caller's address. `npx sub-office connect <link>`
+  page with the line to run and the people in the office, plain HTML with no scripts and the app's
+  mark; a form from another site is refused (Fetch Metadata first, else the Origin; the pages keep
+  their referrer within the server, so a browser's own form never comes as "null"), and wrong
+  sign-ins count against the caller's address. An office's owners also remove people (their
+  clone's place goes at once, what they asked stays) or clones that joined with the bare key,
+  make others owners, make a new invite link (the office key changes; those in stay) and name the
+  office (`Accounts` `removePerson`, `removeClone`, `makeOwner`, `newInvite`, `renameOffice`),
+  each looked at once on its own page first (`confirmPage`). `npx sub-office connect <link>`
   (`bin/sub-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
   office this computer hosted), and starts the app. `RELAY_PUBLIC_URL` is the address people reach
   a server at behind a proxy.
@@ -235,13 +271,19 @@ These words help discussion. They do not mandate separate services, tables or UI
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role
   `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the clone's own key, so it works in flows too), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind), `files.ts` (files between clones: what goes is checked first, a full path, not in a folder kept out, 25 MB at most, then put at the relay and named on the message; what comes is taken once into `office/files/<request>/` with an index, owner-only, and the request's session may read that folder alone; `ask_colleague` takes `files`, shown on its card (`ask-text.ts` `changeOf`) and asked every time, even when asking colleagues was allowed from now on (the tool server asks again, `seen`); an answer's `files` go only after the person saw them, through the check with `approve`; the page saves one through `app/api/me/office/file`, always as an attachment). In a
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screen's
-  office is `features/minime/office-panel.tsx` with the route `app/api/me/office`.
-- `features/office/room/`: the office floor drawn in the panel, ported from the confirmed design
+  office is the main screen (`features/minime/home/`) and Settings › Office and Requests you take,
+  with the route `app/api/me/office`. The office's work starts with the server (`office/boot.ts`
+  from `instrumentation.ts`: the office open here, and the loop that answers colleagues), and
+  again whenever a page asks about the office.
+- `features/office/room/`: the office floor, the app's main screen, ported from the confirmed design
   (`docs/office-room.local.d/`, v13). Plain ES modules that build SVG as strings: `core.mjs` (the
   clone mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks,
   commons, lift, the departures board, the floor sign), `floor.mjs` (the library plan, walking
   on a grid), `office.mjs` (`createOffice`: sheets, scenes, camera, panel, and the lobby with
-  its lift ride, which the panel opens at once a day). Its performance shape
+  its lift ride, once a day; `setInset` keeps room at the sides for what the page lays over it,
+  `onPanel` and `closePanel` let the page's own panel and the office's take turns), `looks.mjs`
+  (each clone's colour and shape, for lists outside the floor). Full screen (`of-full`) it fills
+  its frame and leaves the top to the page's bar. Its performance shape
   is the point: the board, the still drawing and each mover on separate SVG sheets, copies of what
   stands in front of a mover cut to its outline, merged lines, half-rate frames, stopped off
   screen. `office-room.tsx` is the React box with the screen's words; `room.css` maps the design
@@ -381,7 +423,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   `SUB_OFFICE_PACKAGE=1`, its own `.next-package/`), the tool server and the relay bundled into
   `dist/*.mjs` (Node does not run TypeScript inside node_modules), the guide, and the launcher;
   next, react and the relay's pg and PGlite come from npm. It leaves `dist/sub-office-<version>.tgz` and publishes nothing.
-  The launcher (`npx sub-office`) starts the app on 127.0.0.1 from port 4417 and opens `/me`;
+  The launcher (`npx sub-office`) starts the app on 127.0.0.1 from port 4417 and opens `/`;
   `npx sub-office relay` starts a relay. In the package, `SUB_OFFICE_APP_DIR` tells the app where
   its guide and tool server are (`server/paths.ts` `appDir`, `toolServerPath`).
 

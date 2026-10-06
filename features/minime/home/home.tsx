@@ -24,6 +24,7 @@ import {
   type OfficeControl,
   OfficeRoom,
 } from "@/features/office/room/office-room";
+import { typed, useEscape, windowKey } from "@/hooks/use-hotkey";
 import { personTag } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { type SectionId, SettingsDialog } from "../settings/settings";
@@ -137,31 +138,26 @@ export function Home() {
   }, [waiting, title]);
 
   // The keys the screen answers: ⌘, opens settings, "/" goes to the box to ask the clone, and Esc
-  // closes the side panel when nothing in it is being typed.
+  // closes the side panel (as the last layer that opened, through the window's one Esc).
+  useEscape(side !== null && settings === null, () => setSide(null));
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement | null;
-      const typing = Boolean(
-        target?.closest("input, textarea, [contenteditable=true]"),
-      );
       if ((event.metaKey || event.ctrlKey) && event.key === ",") {
         event.preventDefault();
         setSettings((was) => was ?? "clone");
         return;
       }
-      if (settings !== null || typing || event.metaKey || event.ctrlKey) return;
-      if (event.key === "/") {
-        event.preventDefault();
-        if (side === "chat") draft.current?.focus();
-        else
-          document
-            .querySelector<HTMLInputElement>(".of-wrap .composer input")
-            ?.focus();
-      } else if (event.key === "Escape" && side) setSide(null);
+      if (!windowKey(event) || !typed(event, "/")) return;
+      event.preventDefault();
+      if (side === "chat") draft.current?.focus();
+      else
+        document
+          .querySelector<HTMLInputElement>(".of-wrap .composer input")
+          ?.focus();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [settings, side]);
+  }, [side]);
 
   const joined = office.office?.joined;
   const name = joined ? office.office?.me?.card.name : profile.name;

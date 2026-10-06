@@ -1,5 +1,5 @@
 ---
-checked: 2026-10-02
+checked: 2026-10-07
 paths:
   - "{components,hooks}/**"
   - "app/globals.css"
@@ -25,6 +25,16 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
 - `messages/<language>.json` and `i18n/` — every word a person reads (next-intl, no language in
   the address): `useTranslations` in a component, English as the source and the fallback,
   `useProblem` for an error code, `LanguageSwitch` to pick a language.
+- `features/brand/` — the app's mark (`Logo`, `LogoMark`) and every service's or AI vendor's own
+  mark (`BrandMark`): use these rather than drawing a logo or typing a vendor's name alone.
+- `features/minime/settings/parts.tsx` — how a Settings section is laid out (`Groups`, `Group`,
+  `Rows`, `Empty`); a new section uses them, so every section reads the same.
+
+## The app's screens
+One screen around the office (`app/office`, `features/minime/home/`): the office full screen, a bar
+over its top, the box to ask the clone at its bottom, and a side panel (Chat, Requests). Everything
+else is a section of Settings (`features/minime/settings/settings.tsx`). The first steps are
+`app/start`. A new feature finds its place in one of these, not a page of its own.
 
 ## How it fits
 `components/ui` is shadcn in its Base UI style (`components.json`) plus the app's own parts; add a
