@@ -58,7 +58,9 @@
     "brain-key-missing": "Your clone needs a key for the model it thinks with: add it under Brain.",
     "brain-key-wrong": "The service did not accept that key. Check it and paste it again.",
     "brain-unreachable": "The service could not be reached. Try again in a moment.",
-    "brain-local-unreachable": "Nothing answered at that address. Is Ollama or LM Studio running?"
+    "brain-local-unreachable": "Nothing answered at that address. Is Ollama or LM Studio running?",
+    "brain-chatgpt-signed-out": "Your clone thinks with your ChatGPT plan: sign in again under Brain.",
+    "chatgpt-unreachable": "OpenAI could not be reached. Try again in a moment."
   },
   "start": {
     "title": "Get started",
@@ -84,7 +86,7 @@
     },
     "brain": {
       "title": "What should it think with?",
-      "body": "Your own Claude Code thinks with your Claude subscription. Or pick a model and give your key for it; the key stays on this computer."
+      "body": "It needs an AI to think with: your ChatGPT or Claude subscription, a key for one of these services, or a model running on this computer. Pick one; you can change it any time."
     },
     "learn": {
       "title": "Let it learn how you work",
@@ -552,12 +554,46 @@
   },
   "brain": {
     "title": "Brain",
-    "intro": "What your clone thinks with. Your own Claude Code thinks with your Claude subscription, on this computer; or pick a model and give your key for it. Keys stay on this computer.",
-    "claudeCode": "My Claude Code",
-    "claudeCodeNote": "Thinks with your Claude subscription, on this computer.",
-    "claudeMissing": "Claude Code is not installed or signed in on this computer. Pick a model with your key instead, or set up Claude Code and reopen this page.",
-    "api": "A model with my key",
-    "service": "Service",
+    "intro": "What your clone thinks with: your ChatGPT or Claude subscription, a key for one of these services, or a model running on this computer. Sign-ins and keys stay on this computer.",
+    "local": "On this computer",
+    "found": "On this computer",
+    "inUse": "In use",
+    "use": "Use this",
+    "vendor": {
+      "openai": "Your ChatGPT plan, or an API key",
+      "claude": "Your Claude subscription, or an API key",
+      "gemini": "An API key from Google AI Studio",
+      "openrouter": "One key for models from many makers",
+      "local": "Ollama or LM Studio: free, nothing leaves the computer"
+    },
+    "way": {
+      "sign-in": "My ChatGPT plan",
+      "claude-code": "My Claude subscription",
+      "key": "API key",
+      "local": "Ollama / LM Studio"
+    },
+    "wayNote": {
+      "sign-in": "Sign in with your ChatGPT account; your clone then uses your plan's allowance.",
+      "claude-code": "Through Claude Code on this computer, signed in with your Claude account.",
+      "key": "The service bills your key for what your clone uses.",
+      "local": "A model running on this computer. Nothing leaves it; it can be slower and less able than the services."
+    },
+    "claudeCodeFound": "Claude Code is on this computer.",
+    "claudeMissing": "Claude Code is not on this computer. Install it from claude.com/code and sign in, then reopen this page; or pick another way.",
+    "chatgpt": {
+      "signIn": "Sign in with ChatGPT",
+      "signingIn": "Approve it in the tab that opened…",
+      "signedIn": "Signed in as {email}.",
+      "signedInNoEmail": "Signed in.",
+      "signOut": "Sign out",
+      "done": "ChatGPT is connected. Your clone can think with it now.",
+      "doneAs": "ChatGPT is connected as {email}. Your clone can think with it now.",
+      "declined": "The sign-in did not finish.",
+      "failed": "OpenAI did not accept the sign-in. Try again from your page.",
+      "close": "You can close this tab."
+    },
+    "localRunning": "Running here: {name}.",
+    "localMissing": "Nothing answers yet. Start Ollama (ollama.com) or LM Studio, pull a model, then type its name below.",
     "key": "API key",
     "keyPlaceholder": "Paste the key",
     "save": "Save",
@@ -568,10 +604,6 @@
     "modelOther": "Or type another model name",
     "modelLocal": "The model you pulled (e.g. qwen3:8b)",
     "address": "Address",
-    "localNote": "A model running on this computer with Ollama or LM Studio. Nothing leaves the computer; it can be slower and less able than the services above.",
-    "cost": "The service bills your key for what your clone uses.",
-    "use": "Use this",
-    "inUse": "In use",
     "tier": {
       "small": "small",
       "mid": "mid",

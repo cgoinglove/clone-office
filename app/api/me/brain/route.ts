@@ -1,7 +1,14 @@
 import * as z from "zod";
 import {
+  chatGptAccount,
+  chatGptModels,
+  startSignIn as chatGptSignIn,
+  signOut as chatGptSignOut,
+} from "@/features/minime/brain/chatgpt";
+import {
   BrainError,
   brainChoice,
+  brainChosen,
   checkKey,
   keyedProviders,
   setBrainChoice,
@@ -11,15 +18,38 @@ import { PROVIDERS, provider } from "@/features/minime/brain/providers";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 
-// What the person's mini-me thinks with: their own Claude Code, or a model reached with their key
-// (or on this computer). The keys never come back to the page; it hears only which vendors have one.
+/** Whether a model server answers on this computer at an address, without waiting long. */
+async function answers(address: string): Promise<boolean> {
+  try {
+    return (await fetch(address, { signal: AbortSignal.timeout(400) })).ok;
+  } catch {
+    return false;
+  }
+}
+
+// What the person's clone thinks with, and what this computer offers: Claude Code installed, a
+// ChatGPT plan signed in to (and the models it lists), Ollama or LM Studio running. The keys never
+// come back to the page; it hears only which vendors have one.
 export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
+  const [account, ollama, lmstudio] = await Promise.all([
+    chatGptAccount(),
+    answers("http://127.0.0.1:11434/v1/models"),
+    answers("http://127.0.0.1:1234/v1/models"),
+  ]);
   return Response.json({
     choice: await brainChoice(),
+    chosen: await brainChosen(),
     claudeCode: hasClaudeCode(),
     keyed: await keyedProviders(),
+    chatgpt: account
+      ? {
+          ...account,
+          models: await chatGptModels().catch(() => []),
+        }
+      : null,
+    local: { ollama, lmstudio },
   });
 }
 
@@ -43,6 +73,8 @@ const Body = z.discriminatedUnion("action", [
     baseUrl: Address.optional(),
   }),
   z.object({ action: z.literal("forget-key"), provider: ProviderId }),
+  z.object({ action: z.literal("chatgpt-sign-in") }),
+  z.object({ action: z.literal("chatgpt-sign-out") }),
 ]);
 
 export async function POST(request: Request) {
@@ -53,6 +85,18 @@ export async function POST(request: Request) {
     return Response.json({ error: "bad-request" }, { status: 400 });
   const input = body.data;
   try {
+    if (input.action === "chatgpt-sign-in") {
+      // OpenAI sends the person back to 127.0.0.1 on the port this app answers on.
+      const port =
+        Number(request.headers.get("host")?.split(":").at(-1)) ||
+        Number(new URL(request.url).port) ||
+        80;
+      return Response.json({ authorize: await chatGptSignIn(port) });
+    }
+    if (input.action === "chatgpt-sign-out") {
+      await chatGptSignOut();
+      return Response.json({ ok: true });
+    }
     if (input.action === "claude-code")
       await setBrainChoice({ kind: "claude-code" });
     else if (input.action === "key") {
@@ -65,7 +109,16 @@ export async function POST(request: Request) {
       await setProviderKey(input.provider as never, undefined);
     else {
       const id = input.provider as Parameters<typeof provider>[0];
-      if (id !== "local" && !(await keyedProviders()).includes(id as never))
+      if (id === "chatgpt" && !(await chatGptAccount()))
+        return Response.json(
+          { error: "brain-chatgpt-signed-out" },
+          { status: 400 },
+        );
+      if (
+        id !== "local" &&
+        id !== "chatgpt" &&
+        !(await keyedProviders()).includes(id as never)
+      )
         return Response.json({ error: "brain-key-missing" }, { status: 400 });
       if (id === "local")
         await checkKey(
@@ -81,8 +134,14 @@ export async function POST(request: Request) {
       });
     }
   } catch (error) {
+    const code = (error as { code?: unknown }).code;
     return Response.json(
-      { error: error instanceof BrainError ? error.code : "brain-unreachable" },
+      {
+        error:
+          error instanceof BrainError || typeof code === "string"
+            ? String(code)
+            : "brain-unreachable",
+      },
       { status: 400 },
     );
   }

@@ -249,7 +249,8 @@ export function Onboarding() {
             <BrainChooser onChange={setBrain} />
             <Button
               className="self-start"
-              disabled={!brainReady(brain)}
+              // Picked by the person, never Claude Code by itself.
+              disabled={!brainReady(brain) || !brain?.chosen}
               onClick={() => go("learn")}
             >
               {t("next")}

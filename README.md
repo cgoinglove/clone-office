@@ -33,9 +33,9 @@ leaves each decision with the person it belongs to.
 - **It keeps learning, and only what lasts.** After each conversation it looks back and keeps how
   you decide and talk and what you corrected. Anything that changes (projects, plans, dates,
   files) is looked up when needed, never stored.
-- **It thinks with what you have.** Your own Claude Code with your Claude subscription, or a
-  model with your key (Claude, OpenAI, Gemini, OpenRouter), or one running on your computer
-  (Ollama, LM Studio). Same memory, same cards, whichever you pick.
+- **It thinks with what you have.** Your ChatGPT plan (Sign in with ChatGPT) or your Claude
+  subscription (through your Claude Code), a key for OpenAI, Claude, Gemini or OpenRouter, or a
+  model running on your computer (Ollama, LM Studio). Same memory, same cards, whichever you pick.
 - **It finds things in your past AI conversations.** "What did I decide yesterday?", "How did I
   handle this last time?", across your tools, on your computer.
 - **It asks your Claude Code conversations, and has them do work.** By the names you gave them.

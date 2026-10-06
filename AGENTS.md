@@ -137,8 +137,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   tools. `features/minime/brain/`: what the clone thinks with is the person's pick
   (`choice.ts`, `settings.json` `brain`; keys apart in `brain/keys.json`, 0600, checked by listing
   the vendor's models for free; `providers.ts` the vendors and suggested models, after Thursday's
-  picker): their own Claude Code, or a model reached directly (Claude, OpenAI, Gemini,
-  OpenRouter, or Ollama/LM Studio on this computer). `runSession` sends the second to `loop.ts`,
+  picker; `VENDORS` lists them vendor first with their ways in): their own Claude Code, their
+  ChatGPT plan through OpenAI's Sign in with ChatGPT (`chatgpt.ts`: the first sign-in registers the
+  app for this computer with a host id kept once, the issued client is reused, the callback is
+  `app/auth/callback` on 127.0.0.1 with only the port varying, the ID token is checked against
+  OpenAI's keys, tokens renewed under a lock; requests go to the public Responses API with
+  `store: false`, streamed), or a model reached with a key (Claude, OpenAI, Gemini, OpenRouter, or
+  Ollama/LM Studio on this computer). `runSession` sends the second to `loop.ts`,
   the app's own loop on the Vercel AI SDK, as Hermes Agent, OpenClaw and Thursday run theirs: the
   same tool server and connectors over MCP and Claude Code's Read, Glob, Grep and WebFetch
   (`loop-tools.ts`), with the same names and permission rules, asking through the gate route as

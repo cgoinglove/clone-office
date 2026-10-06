@@ -62,6 +62,7 @@ const CODES = new Set([
   "claude-missing",
   "brain-key-missing",
   "brain-key-wrong",
+  "brain-chatgpt-signed-out",
   "ai-busy",
   "timeout",
   "learn-failed",

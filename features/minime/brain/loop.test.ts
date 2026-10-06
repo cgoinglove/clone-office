@@ -182,13 +182,11 @@ test("what the person has not allowed is refused with nobody to ask, and a folde
 test("a session that ends in a shape is asked for it last, and a session with nobody to ask gets only its keeping tools", async () => {
   const { runLoop } = await import("./loop");
   const model = new MockLanguageModelV4({
-    doStream: [textStep("Thinking it over.")],
-    doGenerate: {
-      content: [{ type: "text", text: JSON.stringify({ reply: "Sure." }) }],
-      finishReason: { unified: "stop", raw: "stop" },
-      usage,
-      warnings: [],
-    },
+    // The shape is asked for last, streamed as everything is.
+    doStream: [
+      textStep("Thinking it over."),
+      textStep(JSON.stringify({ reply: "Sure." })),
+    ],
   });
   const result = await runLoop(
     {

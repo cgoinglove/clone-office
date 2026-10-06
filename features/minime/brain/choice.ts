@@ -9,6 +9,7 @@ import { atomicWrite, readText, withLock } from "../memory/files.ts";
 import { hasClaudeCode } from "../server/brain.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
+import { chatGptAccount } from "./chatgpt.ts";
 import { type ProviderId, provider } from "./providers.ts";
 
 export type BrainChoice =
@@ -40,6 +41,11 @@ async function readSettings(): Promise<Record<string, unknown>> {
   } catch {
     return {};
   }
+}
+
+/** Whether the person picked a brain themselves; until then their Claude Code is used. */
+export async function brainChosen(): Promise<boolean> {
+  return Boolean((await readSettings()).brain);
 }
 
 export async function brainChoice(): Promise<BrainChoice> {
@@ -121,7 +127,8 @@ export async function checkKey(
   baseUrl?: string,
   fetcher: typeof fetch = fetch,
 ): Promise<void> {
-  const ask: Record<ProviderId, () => Promise<Response>> = {
+  if (id === "chatgpt") throw new BrainError("brain-key-wrong");
+  const ask: Record<Exclude<ProviderId, "chatgpt">, () => Promise<Response>> = {
     anthropic: () =>
       fetcher("https://api.anthropic.com/v1/models?limit=1", {
         headers: { "x-api-key": key, "anthropic-version": "2023-06-01" },
@@ -167,10 +174,17 @@ export async function checkKey(
  */
 export async function brainProblem(
   choice?: BrainChoice,
-): Promise<"claude-missing" | "brain-key-missing" | undefined> {
+): Promise<
+  | "claude-missing"
+  | "brain-key-missing"
+  | "brain-chatgpt-signed-out"
+  | undefined
+> {
   const chosen = choice ?? (await brainChoice());
   if (chosen.kind === "claude-code")
     return hasClaudeCode() ? undefined : "claude-missing";
   if (chosen.provider === "local") return undefined;
+  if (chosen.provider === "chatgpt")
+    return (await chatGptAccount()) ? undefined : "brain-chatgpt-signed-out";
   return (await providerKey(chosen.provider)) ? undefined : "brain-key-missing";
 }

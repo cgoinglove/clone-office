@@ -1,10 +1,13 @@
-// The brains a mini-me can think with, as its person picks one (after Thursday's model picker and
-// Hermes Agent's providers): their own Claude Code, run on this computer with their subscription;
-// or a model reached directly, with a key they made at the vendor or one their team set, or a model
-// running on this computer. Names and model ids are the vendors' own, smallest first; a person may
-// type any other model the vendor serves. No imports: the page lists it too.
+// The brains a clone can think with, vendor first, as Thursday, Hermes Agent and OpenClaw offer
+// them: for each vendor, the ways in (a subscription signed in to, an API key, or a model on this
+// computer), then the model. OpenAI by the person's ChatGPT plan (Sign in with ChatGPT) or a key;
+// Claude by their Claude subscription through their own Claude Code, or a key; Gemini and
+// OpenRouter by a key; Ollama or LM Studio on this computer. Names and model ids are the vendors'
+// own, smallest first; a person may type any other model the vendor serves. No imports: the page
+// lists it too.
 
 export type ProviderId =
+  | "chatgpt"
   | "anthropic"
   | "openai"
   | "google"
@@ -22,14 +25,27 @@ export interface Provider {
   id: ProviderId;
   /** The vendor's own name; never translated. */
   name: string;
-  /** Where the person makes a key. A model on this computer needs none. */
+  /** Where the person makes a key. A plan signed in to, or a model on this computer, needs none. */
   keysAt?: string;
+  /** Reached by signing in to the person's plan rather than with a key. */
+  signIn?: true;
   models: ModelChoice[];
   /** Where a model on this computer answers (Ollama's OpenAI-compatible server by default). */
   baseUrl?: string;
 }
 
 export const PROVIDERS: Provider[] = [
+  {
+    id: "chatgpt",
+    name: "ChatGPT",
+    signIn: true,
+    // What the plan offers is listed by OpenAI once signed in; these stand in until then.
+    models: [
+      { id: "gpt-6-luna", label: "GPT 6 Luna", tier: "small" },
+      { id: "gpt-6.1-sol", label: "GPT 6.1 Sol", tier: "mid" },
+      { id: "gpt-6-astra", label: "GPT 6 Astra", tier: "large" },
+    ],
+  },
   {
     id: "anthropic",
     name: "Claude",
@@ -95,3 +111,41 @@ export const PROVIDERS: Provider[] = [
 export function provider(id: string): Provider | undefined {
   return PROVIDERS.find((entry) => entry.id === id);
 }
+
+/** One way into a vendor's models. */
+export type Way =
+  | { kind: "sign-in"; provider: "chatgpt" }
+  | { kind: "claude-code" }
+  | { kind: "key"; provider: ProviderId }
+  | { kind: "local" };
+
+export interface Vendor {
+  id: "openai" | "claude" | "gemini" | "openrouter" | "local";
+  /** The vendor's own name; the one on this computer is named in the person's language. */
+  name?: string;
+  ways: Way[];
+}
+
+/** The vendors as the person picks among them, each with its ways in, the plan first. */
+export const VENDORS: Vendor[] = [
+  {
+    id: "openai",
+    name: "OpenAI",
+    ways: [
+      { kind: "sign-in", provider: "chatgpt" },
+      { kind: "key", provider: "openai" },
+    ],
+  },
+  {
+    id: "claude",
+    name: "Claude",
+    ways: [{ kind: "claude-code" }, { kind: "key", provider: "anthropic" }],
+  },
+  { id: "gemini", name: "Gemini", ways: [{ kind: "key", provider: "google" }] },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    ways: [{ kind: "key", provider: "openrouter" }],
+  },
+  { id: "local", ways: [{ kind: "local" }] },
+];

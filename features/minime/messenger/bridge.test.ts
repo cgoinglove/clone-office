@@ -82,10 +82,15 @@ class FakeBot implements Bot {
 }
 
 // Generous: the whole suite runs at once, and a busy machine is slow, not wrong.
-const until = async (check: () => boolean, ms = 10_000) => {
+const until = async (
+  check: () => boolean,
+  what = String(check),
+  ms = 10_000,
+) => {
   const end = Date.now() + ms;
   while (!check()) {
-    if (Date.now() > end) throw new Error("timed out");
+    // Which wait it was, so a slow run says where it stood.
+    if (Date.now() > end) throw new Error(`timed out waiting for ${what}`);
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
 };

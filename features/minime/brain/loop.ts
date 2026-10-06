@@ -13,7 +13,6 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import {
   APICallError,
-  generateText,
   type JSONValue,
   jsonSchema,
   type LanguageModel,
@@ -32,6 +31,7 @@ import { SkillStore } from "../memory/skills.ts";
 import { keepAwake } from "../server/awake.ts";
 import { cleanEnv } from "../server/brain.ts";
 import { minimeHome, toolServerPath } from "../server/paths.ts";
+import { chatGptAccessToken, OPENAI } from "./chatgpt.ts";
 import { type BrainChoice, providerKey } from "./choice.ts";
 import { reportKept, WATCHED } from "./events.ts";
 import { connectServers, type Guard, loopTools } from "./loop-tools.ts";
@@ -94,6 +94,22 @@ export async function languageModel(choice: ApiChoice): Promise<{
   search?: Record<string, unknown>;
   options: Record<string, Record<string, JSONValue>>;
 }> {
+  if (choice.provider === "chatgpt") {
+    // The person's ChatGPT plan, by the token they signed in with: the public Responses API,
+    // which on a plan keeps nothing (store: false) and takes the instructions as a developer
+    // message rather than a system one.
+    const access = await chatGptAccessToken().catch((error: Error) => {
+      throw new LoopError(
+        (error as { code?: string }).code ?? "brain-chatgpt-signed-out",
+      );
+    });
+    return {
+      model: createOpenAI({ apiKey: access, baseURL: OPENAI.api }).responses(
+        choice.model,
+      ),
+      options: { openai: { store: false, systemMessageMode: "developer" } },
+    };
+  }
   const key = await providerKey(choice.provider);
   if (!key && choice.provider !== "local")
     throw new LoopError("brain-key-missing");
@@ -140,6 +156,8 @@ export async function languageModel(choice: ApiChoice): Promise<{
         }).chat(choice.model),
         options: {},
       };
+    default:
+      throw new LoopError("brain-key-missing");
   }
 }
 
@@ -331,7 +349,8 @@ export async function runLoop(
         content:
           "Now give your final answer as JSON in the shape asked for, from everything above, and nothing else.",
       };
-      const shaped = await generateText({
+      // Streamed, as a ChatGPT plan takes nothing else.
+      const shaped = streamText({
         model,
         instructions: system,
         messages: [...kept, ask],
@@ -341,13 +360,19 @@ export async function runLoop(
         abortSignal: timeout,
         providerOptions,
       });
-      structured = shaped.output;
-      kept = [...kept, ask, ...(shaped.responseMessages as ModelMessage[])];
+      for await (const part of shaped.fullStream)
+        if (part.type === "error") throw part.error;
+      structured = await shaped.output;
+      kept = [
+        ...kept,
+        ask,
+        ...((await shaped.responseMessages) as ModelMessage[]),
+      ];
+      const more = await shaped.totalUsage;
       usage = {
         ...usage,
-        inputTokens: (usage.inputTokens ?? 0) + (shaped.usage.inputTokens ?? 0),
-        outputTokens:
-          (usage.outputTokens ?? 0) + (shaped.usage.outputTokens ?? 0),
+        inputTokens: (usage.inputTokens ?? 0) + (more.inputTokens ?? 0),
+        outputTokens: (usage.outputTokens ?? 0) + (more.outputTokens ?? 0),
       };
     }
     if (options.persist !== false)

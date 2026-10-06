@@ -58,7 +58,9 @@
     "brain-key-missing": "클론이 생각할 모델의 키가 필요해요. \"두뇌\"에서 넣어 주세요.",
     "brain-key-wrong": "서비스가 그 키를 받지 않았어요. 확인하고 다시 붙여 넣어 주세요.",
     "brain-unreachable": "서비스에 닿지 않았어요. 잠시 뒤 다시 해 주세요.",
-    "brain-local-unreachable": "그 주소에서 아무것도 답하지 않아요. Ollama나 LM Studio가 켜져 있나요?"
+    "brain-local-unreachable": "그 주소에서 아무것도 답하지 않아요. Ollama나 LM Studio가 켜져 있나요?",
+    "brain-chatgpt-signed-out": "클론이 내 ChatGPT 요금제로 생각해요. \"두뇌\"에서 다시 로그인해 주세요.",
+    "chatgpt-unreachable": "OpenAI에 닿지 않았어요. 잠시 뒤 다시 해 주세요."
   },
   "start": {
     "title": "시작하기",
@@ -84,7 +86,7 @@
     },
     "brain": {
       "title": "무엇으로 생각할까요?",
-      "body": "내 Claude Code는 내 Claude 구독으로 생각해요. 아니면 모델을 고르고 그 키를 넣어요. 키는 이 컴퓨터에만 남아요."
+      "body": "생각할 AI가 필요해요: 내 ChatGPT나 Claude 구독, 이 서비스들의 키, 또는 이 컴퓨터에서 돌리는 모델. 하나 고르세요. 언제든 바꿀 수 있어요."
     },
     "learn": {
       "title": "나를 배우게 해 주세요",
@@ -552,12 +554,46 @@
   },
   "brain": {
     "title": "두뇌",
-    "intro": "클론이 무엇으로 생각할지예요. 내 Claude Code는 이 컴퓨터에서 내 Claude 구독으로 생각해요. 아니면 모델을 고르고 그 키를 넣어요. 키는 이 컴퓨터에만 남아요.",
-    "claudeCode": "내 Claude Code",
-    "claudeCodeNote": "이 컴퓨터에서 내 Claude 구독으로 생각해요.",
-    "claudeMissing": "이 컴퓨터에 Claude Code가 없거나 로그인돼 있지 않아요. 대신 내 키로 모델을 고르거나, Claude Code를 설치한 뒤 이 페이지를 다시 열어 주세요.",
-    "api": "내 키로 다른 모델",
-    "service": "서비스",
+    "intro": "클론이 무엇으로 생각할지예요: 내 ChatGPT나 Claude 구독, 이 서비스들의 키, 또는 이 컴퓨터에서 돌리는 모델. 로그인과 키는 이 컴퓨터에만 남아요.",
+    "local": "내 컴퓨터의 모델",
+    "found": "이 컴퓨터에 있어요",
+    "inUse": "쓰는 중",
+    "use": "이걸로 쓰기",
+    "vendor": {
+      "openai": "내 ChatGPT 요금제, 또는 API 키",
+      "claude": "내 Claude 구독, 또는 API 키",
+      "gemini": "Google AI Studio에서 만든 API 키",
+      "openrouter": "키 하나로 여러 회사의 모델",
+      "local": "Ollama나 LM Studio: 무료, 컴퓨터 밖으로 아무것도 안 나가요"
+    },
+    "way": {
+      "sign-in": "내 ChatGPT 요금제",
+      "claude-code": "내 Claude 구독",
+      "key": "API 키",
+      "local": "Ollama / LM Studio"
+    },
+    "wayNote": {
+      "sign-in": "ChatGPT 계정으로 로그인하면, 클론이 내 요금제의 사용량으로 생각해요.",
+      "claude-code": "이 컴퓨터의 Claude Code로, 내 Claude 계정에 로그인한 그대로 써요.",
+      "key": "클론이 쓴 만큼 그 서비스가 내 키로 요금을 매겨요.",
+      "local": "이 컴퓨터에서 돌리는 모델이에요. 아무것도 밖으로 나가지 않지만, 서비스보다 느리고 덜 똑똑할 수 있어요."
+    },
+    "claudeCodeFound": "이 컴퓨터에 Claude Code가 있어요.",
+    "claudeMissing": "이 컴퓨터에 Claude Code가 없어요. claude.com/code에서 설치하고 로그인한 뒤 이 페이지를 다시 열거나, 다른 방법을 골라 주세요.",
+    "chatgpt": {
+      "signIn": "ChatGPT로 로그인",
+      "signingIn": "새로 열린 탭에서 허락해 주세요…",
+      "signedIn": "{email}(으)로 로그인돼 있어요.",
+      "signedInNoEmail": "로그인돼 있어요.",
+      "signOut": "로그아웃",
+      "done": "ChatGPT가 연결됐어요. 이제 클론이 그걸로 생각할 수 있어요.",
+      "doneAs": "ChatGPT가 {email}(으)로 연결됐어요. 이제 클론이 그걸로 생각할 수 있어요.",
+      "declined": "로그인이 끝나지 않았어요.",
+      "failed": "OpenAI가 로그인을 받지 않았어요. 내 페이지에서 다시 해 주세요.",
+      "close": "이 탭은 닫아도 돼요."
+    },
+    "localRunning": "여기서 돌고 있어요: {name}.",
+    "localMissing": "아직 아무것도 답하지 않아요. Ollama(ollama.com)나 LM Studio를 켜고 모델을 받은 뒤, 아래에 그 이름을 적어 주세요.",
     "key": "API 키",
     "keyPlaceholder": "키 붙여 넣기",
     "save": "저장",
@@ -568,10 +604,6 @@
     "modelOther": "또는 다른 모델 이름 직접 입력",
     "modelLocal": "받아 둔 모델 이름 (예: qwen3:8b)",
     "address": "주소",
-    "localNote": "이 컴퓨터에서 Ollama나 LM Studio로 돌리는 모델이에요. 아무것도 컴퓨터 밖으로 나가지 않지만, 위의 서비스보다 느리고 덜 똑똑할 수 있어요.",
-    "cost": "클론이 쓴 만큼 그 서비스가 내 키로 요금을 매겨요.",
-    "use": "이걸로 쓰기",
-    "inUse": "쓰는 중",
     "tier": {
       "small": "작음",
       "mid": "중간",
