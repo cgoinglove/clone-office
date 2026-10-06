@@ -1252,6 +1252,7 @@ export function FirstRun() {
       {stage !== "boot" && (
         <FlowsPanel
           onOpenChat={(id) => void openChat(id)}
+          onNews={refreshChat}
           onAsk={(text) => void ask(text)}
         />
       )}

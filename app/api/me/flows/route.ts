@@ -1,5 +1,9 @@
 import * as z from "zod";
-import { keepFlowsRunning, runFlow } from "@/features/minime/flows/run";
+import {
+  flowChat,
+  keepFlowsRunning,
+  runFlow,
+} from "@/features/minime/flows/run";
 import { nextRun } from "@/features/minime/flows/schedule";
 import { changeFlow, getFlow, listFlows } from "@/features/minime/flows/store";
 import { loadMenu } from "@/features/minime/office/menu";
@@ -60,9 +64,14 @@ export async function POST(request: Request) {
       return Response.json({ error: "bad-request" }, { status: 400 });
     if (!hasClaudeCode())
       return Response.json({ error: "claude-missing" }, { status: 409 });
-    // It runs on in this server; its answer lands in the flow's conversation.
-    void runFlow(id).catch(() => {});
-    return Response.json({ started: true });
+    // The person pressed it, so they are asked for what it may not do alone yet, on cards in
+    // the flow's conversation. It runs on in this server; its answer lands there too.
+    const flow = await getFlow(id);
+    const chat = flow ? await flowChat(flow) : undefined;
+    void runFlow(id, {
+      gateUrl: new URL("/api/me/gate", request.url).toString(),
+    }).catch(() => {});
+    return Response.json({ started: true, chat });
   }
   const now = new Date().toISOString();
   await changeFlow(id, (flow) =>

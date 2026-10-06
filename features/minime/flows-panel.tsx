@@ -29,9 +29,12 @@ const SUGGESTIONS = ["morning", "week"] as const;
 
 export function FlowsPanel({
   onOpenChat,
+  onNews,
   onAsk,
 }: {
   onOpenChat: (id: string) => void;
+  /** Something changed in a conversation (a card, an answer): the open one is read again. */
+  onNews: () => void;
   /** Say something to the mini-me in the conversation: a suggested flow is made by asking. */
   onAsk: (text: string) => void;
 }) {
@@ -66,18 +69,35 @@ export function FlowsPanel({
       await load();
       return;
     }
-    // A run takes a little while; its answer lands in the flow's conversation.
+    // A run takes a little while. Its conversation opens, where its questions come as cards (it
+    // asks what it may not do alone yet) and its answer lands.
+    const { chat } = (await response.json().catch(() => ({}))) as {
+      chat?: string;
+    };
+    if (chat) onOpenChat(chat);
     setRunning((all) => new Set(all).add(flow.id));
     const before = flow.last?.at;
     const started = Date.now();
+    let cards = "";
     clearInterval(watching.current);
     watching.current = setInterval(async () => {
       const fresh = await load();
       const done = fresh?.find((f) => f.id === flow.id);
-      if (
+      const finished =
         (done && done.last?.at !== before) ||
-        Date.now() - started > 6 * 60 * 1000
-      ) {
+        Date.now() - started > 16 * 60 * 1000;
+      if (chat) {
+        const waiting = (await fetch(
+          `/api/me/gate?chat=${encodeURIComponent(chat)}`,
+          { headers: HEADERS },
+        )
+          .then((r) => r.json())
+          .catch(() => ({ asks: [] }))) as { asks: { id: string }[] };
+        const now = waiting.asks.map((ask) => ask.id).join(",");
+        if (now !== cards || finished) onNews();
+        cards = now;
+      }
+      if (finished) {
         clearInterval(watching.current);
         setRunning((all) => {
           const next = new Set(all);

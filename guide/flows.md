@@ -24,12 +24,18 @@ decision) is still asked of them first. On the page it shows as **When a colleag
 
 ## What a run does
 
-Each run starts fresh, without the conversation it was made in, and with nobody to ask: the
-mini-me uses only what it may already use on its own (its memory, their past AI conversations,
-its notes, this guide, the web, where their office work stands, and whatever they told it "from
-now on" it need not ask about).
+Each run at its time starts fresh, without the conversation it was made in, and with nobody to
+ask: the mini-me uses only what it may already use on its own (its memory, their past AI
+conversations, its notes, this guide, the web, where their office work stands, and whatever they
+told it "from now on" it need not ask about, such as reading in a connected service).
 Their folders kept out stay out. Anything else it would have to ask about, it says it could not
 do. It learns nothing from a run.
+
+**Run now** (지금 실행) is different: they are there. The flow's conversation opens, and what the
+run may not do alone yet (reading their calendar, say) is asked on a card there, as in any
+conversation. With **Don't ask again for this** (앞으로 이런 건 묻지 않기) on it, the runs at its
+times may do it too. So when a run says it could not do something, running it once with Run now
+and allowing it fixes that.
 
 The answer goes into the flow's own conversation, marked with ⏰ and the time; they can go on
 talking there ("tell me more about the second one").
@@ -37,8 +43,9 @@ talking there ("tell me more about the second one").
 ## Ready-made ones
 
 With no flows yet, **Flows** offers two to start from: **Weekday morning catch-up** (평일 아침
-브리핑: what waits for their answer in the office, what came back from their requests, what they
-left open in their AI conversations since yesterday) and **Friday wrap-up** (금요일 한 주 정리).
+브리핑: today's events when their calendar is connected, what waits for their answer in the
+office, what came back from their requests, what they left open in their AI conversations since
+yesterday) and **Friday wrap-up** (금요일 한 주 정리).
 Either one is asked of the mini-me in the conversation, so they see the card and can change it
 before it is made. When the mini-me offers something they usually do around this time, **Every
 time** (매번 하기) asks it to make that a flow.

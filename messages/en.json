@@ -478,7 +478,7 @@
     "removeYes": "Remove",
     "suggest": {
       "morning": "Weekday morning catch-up",
-      "morningAsk": "Make a flow: every weekday at 9, catch me up in a few lines: what is waiting for my answer in the office, what came back from the requests I sent, and what I left open in my AI conversations since yesterday.",
+      "morningAsk": "Make a flow: every weekday at 9, catch me up in a few lines: today's events if my calendar is connected, what is waiting for my answer in the office, what came back from the requests I sent, and what I left open in my AI conversations since yesterday.",
       "week": "Friday wrap-up",
       "weekAsk": "Make a flow: every Friday at 5 pm, list in a few lines what I finished this week and what is still open, from my AI conversations and my office requests."
     },

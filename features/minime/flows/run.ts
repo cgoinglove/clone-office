@@ -1,5 +1,7 @@
-// Running flows. A run is the mini-me doing the flow's request in a fresh session with nobody to
-// ask: it may use only what the person has already allowed, and their folders stay kept out. Its
+// Running flows. A run at its time is the mini-me doing the flow's request in a fresh session with
+// nobody to ask: it may use only what the person has already allowed, and their folders stay kept
+// out. Run from their page ("Run now"), the person is there: what it may not do alone yet is asked
+// on cards in the flow's conversation, and "from now on" there holds for the runs at its times. Its
 // answer goes into the flow's own conversation, which the person can go on with. Nothing is learned
 // from a run (Hermes Agent runs its scheduled jobs without its memory providers): it was not the
 // person talking. While the app runs, the flows are looked at every minute; a lock makes sure two
@@ -13,6 +15,7 @@ import {
   readChat,
   setSession,
 } from "../chat/store.ts";
+import { gateSecret } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { tryLock } from "../memory/files.ts";
 import { loadExcludes } from "../server/exclude.ts";
@@ -27,7 +30,11 @@ import {
   listFlows,
 } from "./store.ts";
 
-export function flowPrompt(flow: Flow, now = new Date()): string {
+export function flowPrompt(
+  flow: Flow,
+  now = new Date(),
+  present = false,
+): string {
   const time = now.toLocaleString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -40,34 +47,55 @@ export function flowPrompt(flow: Flow, now = new Date()): string {
 
 ${flow.what}
 
-Nobody is there to ask, and this conversation has no earlier part: use what you may (your memory, their past AI conversations, your notes, the guide, the web) and say plainly what you could not do. Your answer is what they will read, in the conversation named after this flow, so give what they asked for and no more, as short as it allows. Keep nothing in your memory from this run.`;
+${
+  present
+    ? "They started this run themselves from their page: what you may not do alone yet is asked on a card, and what they allow from now on holds for this flow's runs at its times too. This conversation has no earlier part."
+    : "Nobody is there to ask, and this conversation has no earlier part. If something you need is refused because they have not let you do it alone yet, name it, and say that running this flow once from Flows on their page lets them allow it."
+} Use what you may (your memory, their past AI conversations, your notes, the guide, the web, the services they connected) and say plainly what you could not do. Your answer is what they will read, in the conversation named after this flow, so give what they asked for and no more, as short as it allows. Keep nothing in your memory from this run.`;
 }
 
-/** Run one flow now; its answer, or what went wrong, goes into its conversation. */
+/** The flow's own conversation, made the first time it is needed. */
+export async function flowChat(flow: Flow): Promise<string> {
+  if (flow.chat && (await readChat(flow.chat))) return flow.chat;
+  const chat = (await createChat(flow.name)).id;
+  await changeFlow(flow.id, (f) => ({ ...f, chat }));
+  return chat;
+}
+
+/**
+ * Run one flow now; its answer, or what went wrong, goes into its conversation. With `gateUrl` the
+ * person started it and is asked, on cards in that conversation, for what it may not do alone yet.
+ */
 export async function runFlow(
   id: string,
-  options: { now?: Date } = {},
+  options: { now?: Date; gateUrl?: string } = {},
 ): Promise<{ ok: boolean; chat?: string }> {
   const flow = await getFlow(id);
   if (!flow) return { ok: false };
   const now = options.now ?? new Date();
-  let chat = flow.chat && (await readChat(flow.chat)) ? flow.chat : undefined;
-  if (!chat) {
-    chat = (await createChat(flow.name)).id;
-    await changeFlow(id, (f) => ({ ...f, chat }));
-  }
+  const chat = await flowChat(flow);
   await appendMessage(chat, "flow", flow.name);
+  const allow = await loadTrust();
+  const deny = denyRules(loadExcludes());
   const result = await runSession({
-    prompt: flowPrompt(flow, now),
+    prompt: flowPrompt(flow, now, Boolean(options.gateUrl)),
     language: await personLanguage(),
     maxTurns: 12,
-    timeoutMs: 5 * 60 * 1000,
+    // Someone may take a while to answer a card; nobody does at its time.
+    timeoutMs: (options.gateUrl ? 15 : 5) * 60 * 1000,
     purpose: "flow",
     connectors: true,
-    standing: {
-      allow: await loadTrust(),
-      deny: denyRules(loadExcludes()),
-    },
+    ...(options.gateUrl
+      ? {
+          gate: {
+            url: options.gateUrl,
+            secret: gateSecret(),
+            chat,
+            allow,
+            deny,
+          },
+        }
+      : { standing: { allow, deny } }),
   });
   const ok = result.ok && Boolean(result.text.trim());
   const error = ok ? undefined : (result.error ?? "flow-failed");
