@@ -52,6 +52,12 @@ row, it asks whether to answer that kind itself and tell them from then on (**Ma
 앞으로 이렇게 할까요?); only their **Yes, from now on** (네, 앞으로 그렇게) changes it, and they can
 set it back on the menu at any time.
 
+**Like you** (나 같다) on the same list is how often, in the last 30 days, they sent the answers
+it showed them first as they were, neither changed nor held back ("Like you: 82%. You sent 14 of
+the 17 answers I showed you first as they were"), and under each kind, how often for that kind.
+It is the plainest sign of how well the mini-me answers like them; a kind that is nearly always
+sent as it was is one they might let it answer alone.
+
 **Draft it for me** (초안 써 줘) has the mini-me suggest kinds from what it knows of them, and
 **Add one** (직접 더하기) adds one by hand; every change is kept and shown on their card at once.
 Colleagues see the kinds they take, never how much is done alone. A request that fits none of

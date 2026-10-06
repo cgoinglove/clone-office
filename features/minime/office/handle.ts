@@ -27,6 +27,7 @@ import {
   tasks,
   updateRequest,
 } from "./client.ts";
+import { recordOutcome } from "./likeme.ts";
 import {
   loadMenu,
   type MenuItem,
@@ -362,6 +363,7 @@ async function finish(
     ? (await loadMenu()).find((m) => m.id === sending.menu)
     : undefined;
   if ("hold" in outcome) {
+    if (sending.approving) await recordOutcome(sending.menu, "held");
     if (sending.approving && item) await countApproval(item, false);
     await updateRequest(office, task.id, {
       state: "REJECTED",
@@ -374,6 +376,11 @@ async function finish(
     text: outcome.send,
   });
   // The person sent it as it was: three in a row, and the mini-me offers to do these alone.
+  if (sending.approving)
+    await recordOutcome(
+      sending.menu,
+      outcome.send === sending.reply ? "as-is" : "changed",
+    );
   if (sending.approving && item)
     await countApproval(item, outcome.send === sending.reply);
   // "Do it and tell me": the person hears what was answered for them, in their conversation.

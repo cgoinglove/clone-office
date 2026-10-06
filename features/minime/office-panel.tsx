@@ -17,6 +17,7 @@ import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
 import { dueAt } from "./batch";
+import type { LikeMe } from "./office/likeme";
 
 type State =
   | "SUBMITTED"
@@ -60,6 +61,8 @@ interface Office {
   me?: { id: string; card: Card };
   /** The person's own menu, with how much their mini-me does alone for each kind. */
   menu?: MenuItem[];
+  /** Of the answers the person saw first lately, how many they sent as they were. */
+  likeMe?: LikeMe;
   members?: { id: string; card: Card; seen: string }[];
   tasks?: Task[];
   asks?: { id: string; chat?: string; ask: GateAsk }[];
@@ -280,6 +283,7 @@ export function OfficePanel({
             />
             <Menu
               menu={office.menu ?? []}
+              likeMe={office.likeMe}
               lang={lang}
               busy={busy}
               onSave={(menu) => post({ action: "menu", menu })}
@@ -548,11 +552,13 @@ function MyCard({
  */
 function Menu({
   menu,
+  likeMe,
   lang,
   busy,
   onSave,
 }: {
   menu: MenuItem[];
+  likeMe?: LikeMe;
   lang: string;
   busy: boolean;
   onSave: (menu: MenuItem[]) => Promise<boolean>;
@@ -597,6 +603,22 @@ function Menu({
       <p className="text-muted-foreground">
         {menu.length ? t("menu.intro") : t("menu.none")}
       </p>
+      {likeMe && likeMe.total > 0 && (
+        <p>
+          {/* Few answers make a percentage say more than it knows. */}
+          {likeMe.total >= 5
+            ? t.rich("menu.likeMe", {
+                percent: Math.round((100 * likeMe.asIs) / likeMe.total),
+                asIs: likeMe.asIs,
+                total: likeMe.total,
+                b: (chunks) => <b className="font-medium">{chunks}</b>,
+              })
+            : t("menu.likeMeFew", {
+                asIs: likeMe.asIs,
+                total: likeMe.total,
+              })}
+        </p>
+      )}
       {menu.length > 0 && (
         <ul className="flex flex-col">
           {menu.map((item, index) => (
@@ -609,6 +631,11 @@ function Menu({
                 {item.description && (
                   <span className="block text-xs text-muted-foreground">
                     {item.description}
+                  </span>
+                )}
+                {item.id && likeMe?.byMenu[item.id] && (
+                  <span className="block text-xs text-muted-foreground tabular-nums">
+                    {t("menu.itemLikeMe", likeMe.byMenu[item.id])}
                   </span>
                 )}
               </span>

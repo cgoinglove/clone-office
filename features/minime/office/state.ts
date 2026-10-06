@@ -24,6 +24,12 @@ export interface OfficeState {
   sent: Record<string, { chat: string }>;
   /** Per menu kind the person sees first: answers they sent as they were, in a row. */
   approvals: Record<string, number>;
+  /** Each answer the person saw first and what they did with it: the like-me score (likeme.ts). */
+  outcomes: {
+    at: string;
+    menu?: string;
+    outcome: "as-is" | "changed" | "held";
+  }[];
   /** Questions about requests that wait for the person, by id; the request goes on when answered. */
   later: Record<string, Later>;
 }
@@ -73,10 +79,18 @@ export async function loadState(): Promise<OfficeState> {
       handled: parsed.handled ?? {},
       sent: parsed.sent ?? {},
       approvals: parsed.approvals ?? {},
+      outcomes: Array.isArray(parsed.outcomes) ? parsed.outcomes : [],
       later: parsed.later ?? {},
     };
   } catch {
-    return { after: 0, handled: {}, sent: {}, approvals: {}, later: {} };
+    return {
+      after: 0,
+      handled: {},
+      sent: {},
+      approvals: {},
+      outcomes: [],
+      later: {},
+    };
   }
 }
 

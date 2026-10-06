@@ -13,12 +13,14 @@ import {
   updateRequest,
 } from "@/features/minime/office/client";
 import { answerLater, laterQuestions } from "@/features/minime/office/handle";
+import { likeMe } from "@/features/minime/office/likeme";
 import {
   cleanMenu,
   loadMenu,
   menuSkills,
   saveMenu,
 } from "@/features/minime/office/menu";
+import { loadState } from "@/features/minime/office/state";
 import {
   officeProblem,
   startOffice,
@@ -37,6 +39,8 @@ export async function GET(request: Request) {
   const office = await loadOffice();
   const menu = await loadMenu();
   if (!office) return Response.json({ joined: false, menu });
+  // Of the answers the person saw first, how many they sent as they were.
+  const like = likeMe((await loadState()).outcomes);
   const url = new URL(request.url);
   startOffice(
     new URL("/api/me/gate", request.url).toString(),
@@ -52,6 +56,7 @@ export async function GET(request: Request) {
       relay: office.relay,
       me: { id: office.member, card: office.card },
       menu,
+      likeMe: like,
       members: everyone,
       tasks: requests,
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
@@ -75,6 +80,7 @@ export async function GET(request: Request) {
       relay: office.relay,
       me: { id: office.member, card: office.card },
       menu,
+      likeMe: like,
       members: [],
       tasks: [],
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),

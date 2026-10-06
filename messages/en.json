@@ -202,6 +202,9 @@
       "intro": "What colleagues' mini-mes can bring you, and how much your mini-me does alone for each. Colleagues see the kinds, never how much it does alone.",
       "none": "Nothing set yet. Once you set what you take, colleagues' mini-mes know what to bring you, and you decide for each kind whether your mini-me answers alone or asks you first.",
       "free": "A request that fits none of these: your mini-me answers it and tells you.",
+      "likeMe": "<b>Like you: {percent}%</b>. In the last 30 days you sent {asIs} of the {total} answers I showed you first as they were.",
+      "likeMeFew": "In the last 30 days you sent {asIs} of the {total, plural, one {# answer} other {# answers}} I showed you first as {total, plural, one {it was} other {they were}}.",
+      "itemLikeMe": "{asIs} of {total} sent as they were",
       "trust": {
         "auto": "On its own",
         "tell": "Tell me",
