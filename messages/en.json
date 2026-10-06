@@ -38,6 +38,7 @@
     "messenger-token-wrong": "Discord did not take that token. Copy it again from the Bot page.",
     "messenger-telegram-token-wrong": "Telegram did not take that token. Copy it again from @BotFather; /token there gives a new one.",
     "messenger-telegram-taken": "Another program reads this bot's messages too (Hermes Agent, for one), so they may not reach your mini-me. Stop it there, or make a new bot for your mini-me.",
+    "messenger-slack-token-wrong": "Slack did not take those tokens. Check the app-level token (xapp-, with connections:write) and the Bot User OAuth Token (xoxb-), and that the app was made from the manifest.",
     "messenger-refused": "Discord stopped the bot. Check it in the Developer Portal and connect again."
   },
   "firstRun": {
@@ -459,7 +460,7 @@
   },
   "messenger": {
     "title": "On your phone",
-    "intro": "Talk with your mini-me from your phone, in Discord or Telegram, as you do here. It answers while this app runs on this computer, and what you say there shows here too.",
+    "intro": "Talk with your mini-me from your phone, in Discord, Telegram or Slack, as you do here. It answers while this app runs on this computer, and what you say there shows here too.",
     "step2": "Paste the token here and connect.",
     "token": "Bot token",
     "connect": "Connect",
@@ -468,7 +469,7 @@
     "asking": "{name} wrote to your bot. Let them in only if their phone shows {code}.",
     "allow": "Let in",
     "decline": "Not them",
-    "paired": "{bot} talks with {name} only. “/new” in {service, select, telegram {Telegram} other {Discord}} starts a new conversation.",
+    "paired": "{bot} talks with {name} only. “/new” in {service, select, telegram {Telegram} slack {Slack} other {Discord}} starts a new conversation.",
     "elsewhere": "Another app on this computer is talking through this bot now.",
     "disconnect": "Disconnect",
     "knock": "Almost there. Your mini-me is asking on your computer whether to let you in. Let yourself in there only if it shows {code}, and it answers what you wrote.",
@@ -487,7 +488,7 @@
     "inChat": "From your conversation “{title}”:",
     "fromPage": "Your mini-me asks:",
     "waiting": "{count, plural, one {# question has} other {# questions have}} waited for you.",
-    "pushNote": "While you are not looking at this page, what needs you comes to {service, select, telegram {Telegram} other {Discord}}: questions about colleagues' requests, your flows' answers, and answers to what you asked. While your status says you are in a meeting, away or off, colleagues' questions wait and come together at 10, 14 and 17.",
+    "pushNote": "While you are not looking at this page, what needs you comes to {service, select, telegram {Telegram} slack {Slack} other {Discord}}: questions about colleagues' requests, your flows' answers, and answers to what you asked. While your status says you are in a meeting, away or off, colleagues' questions wait and come together at 10, 14 and 17.",
     "discord": {
       "step1": "At Discord's Developer Portal, make a New Application. So nobody else can add it to a server, set Install Link to None on its Installation page and turn off Public Bot on its Bot page. There, press Reset Token and copy the token.",
       "portal": "Open the Developer Portal",
@@ -502,6 +503,20 @@
       "tokenPlaceholder": "The token from @BotFather",
       "step3": "On your phone, open the chat with your bot and press Start. A question with a code appears here.",
       "addBot": "Open the chat with the bot",
+      "scan": "Or point your phone's camera at this."
+    },
+    "appToken": "App-level token",
+    "slack": {
+      "step1": "At api.slack.com/apps, choose Create New App, then From a manifest. Pick your workspace and paste this manifest; it asks only for what your mini-me uses.",
+      "portal": "Open api.slack.com/apps",
+      "copyManifest": "Copy the manifest",
+      "copied": "Copied",
+      "step2": "Under Basic Information, App-Level Tokens: generate one with connections:write. It starts with xapp-.",
+      "step3": "Under Install App, install it to your workspace and copy the Bot User OAuth Token. It starts with xoxb-.",
+      "appTokenPlaceholder": "xapp-…",
+      "tokenPlaceholder": "xoxb-…",
+      "step4": "In Slack, open your app under Apps and write in its Messages tab. A question with a code appears here.",
+      "addBot": "Open the app in Slack",
       "scan": "Or point your phone's camera at this."
     }
   }

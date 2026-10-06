@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { pieces, telegramHtml } from "./text";
+import { pieces, slackMrkdwn, telegramHtml } from "./text";
 
 test("a code block cut between two pieces is closed in the first and opened again in the next", () => {
   const code = Array.from({ length: 8 }, (_, n) => `line ${n}`).join("\n");
@@ -46,5 +46,22 @@ test("markdown is drawn in the HTML Telegram takes, and words stay words", () =>
   assert.equal(
     telegramHtml("~~old~~ and __new__"),
     "<s>old</s> and <b>new</b>",
+  );
+});
+
+test("markdown is drawn in Slack's mrkdwn, with &, < and > escaped", () => {
+  assert.equal(
+    slackMrkdwn(
+      "## Plan\n- **Ship** it *today* or _later_\n- see [docs](https://example.com/a?b=1&c=2)",
+    ),
+    "*Plan*\n• *Ship* it _today_ or _later_\n• see <https://example.com/a?b=1&c=2|docs>",
+  );
+  assert.equal(
+    slackMrkdwn("a < b && `c > d` ~~old~~"),
+    "a &lt; b &amp;&amp; `c &gt; d` ~old~",
+  );
+  assert.equal(
+    slackMrkdwn("```js\nif (a < b) **x**\n```"),
+    "```\nif (a &lt; b) **x**\n```",
   );
 });

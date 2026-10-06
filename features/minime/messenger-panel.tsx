@@ -1,10 +1,10 @@
 "use client";
 
-// The person's messenger on their page: their own Discord or Telegram bot, set up once with its
-// token, and the one person it talks with, let in by the code their phone was sent. The service's
-// own pages make the bot (Discord's Developer Portal, Telegram's @BotFather); this panel walks
-// through it in a few steps, the way Thursday's reach guide does, and asks about whoever wrote to
-// the bot first.
+// The person's messenger on their page: their own Discord, Telegram or Slack bot, set up once with
+// its token (Slack's two), and the one person it talks with, let in by the code their phone was
+// sent. The service's own pages make the bot (Discord's Developer Portal, Telegram's @BotFather,
+// a Slack app from the manifest); this panel walks through it in a few steps, the way Thursday's
+// reach guide does, and asks about whoever wrote to the bot first.
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
@@ -14,8 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+import { SLACK_MANIFEST } from "./messenger/manifest";
 
-type Service = "discord" | "telegram";
+type Service = "discord" | "telegram" | "slack";
 
 interface Status {
   configured: boolean;
@@ -36,6 +37,7 @@ const SERVICES: Record<Service, { name: string; portal: string }> = {
     portal: "https://discord.com/developers/applications",
   },
   telegram: { name: "Telegram", portal: "https://t.me/BotFather" },
+  slack: { name: "Slack", portal: "https://api.slack.com/apps" },
 };
 
 /** The chat with the bot, big enough for a phone camera to read off the screen (as Thursday's reach guide draws it). */
@@ -78,6 +80,9 @@ export function MessengerPanel() {
   const [open, setOpen] = useState(false);
   const [token, setToken] = useState("");
   const [service, setService] = useState<Service>("discord");
+  const [appToken, setAppToken] = useState("");
+  // Copying the manifest: done, or not allowed here, when it is shown to select by hand.
+  const [manifest, setManifest] = useState<"copied" | "shown" | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -151,8 +156,15 @@ export function MessengerPanel() {
             className="flex flex-col gap-3"
             onSubmit={(event) => {
               event.preventDefault();
-              void post({ action: "connect", service, token }).then((ok) => {
-                if (ok) setToken("");
+              void post({
+                action: "connect",
+                service,
+                token,
+                ...(service === "slack" ? { appToken } : {}),
+              }).then((ok) => {
+                if (!ok) return;
+                setToken("");
+                setAppToken("");
               });
             }}
           >
@@ -164,10 +176,12 @@ export function MessengerPanel() {
                 setService(next);
                 setError(null);
               }}
-              options={(["discord", "telegram"] as const).map((value) => ({
-                value,
-                label: SERVICES[value].name,
-              }))}
+              options={(["discord", "telegram", "slack"] as const).map(
+                (value) => ({
+                  value,
+                  label: SERVICES[value].name,
+                }),
+              )}
             />
             <ol className="flex list-decimal flex-col gap-2 pl-5">
               <li>
@@ -180,9 +194,54 @@ export function MessengerPanel() {
                 >
                   {t(`${service}.portal`)}
                 </a>
+                {service === "slack" && (
+                  <div className="mt-2 flex flex-col items-start gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard
+                          .writeText(SLACK_MANIFEST)
+                          .then(() => setManifest("copied"))
+                          .catch(() => setManifest("shown"));
+                      }}
+                    >
+                      {manifest === "copied"
+                        ? t("slack.copied")
+                        : t("slack.copyManifest")}
+                    </Button>
+                    {/* Where copying is not allowed, it is shown to select by hand. */}
+                    {manifest === "shown" && (
+                      <pre className="w-full overflow-x-auto rounded-lg border border-border p-3 text-xs select-all">
+                        {SLACK_MANIFEST}
+                      </pre>
+                    )}
+                  </div>
+                )}
               </li>
-              <li>{t("step2")}</li>
+              {service === "slack" ? (
+                <>
+                  <li>{t("slack.step2")}</li>
+                  <li>{t("slack.step3")}</li>
+                </>
+              ) : (
+                <li>{t("step2")}</li>
+              )}
             </ol>
+            {service === "slack" && (
+              <label className="flex flex-col gap-1">
+                <span>{t("appToken")}</span>
+                <Input
+                  type="password"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={appToken}
+                  placeholder={t("slack.appTokenPlaceholder")}
+                  onChange={(event) => setAppToken(event.target.value)}
+                />
+              </label>
+            )}
             <label className="flex flex-col gap-1">
               <span>{t("token")}</span>
               <Input
@@ -197,7 +256,11 @@ export function MessengerPanel() {
             <Button
               type="submit"
               className="self-start"
-              disabled={busy || token.trim().length < 20}
+              disabled={
+                busy ||
+                token.trim().length < 20 ||
+                (service === "slack" && appToken.trim().length < 20)
+              }
               loading={busy}
             >
               {t("connect")}
@@ -215,11 +278,18 @@ export function MessengerPanel() {
             {status.state === "on" && !status.owner && (
               <>
                 <p>{t("connected", { bot: status.bot ?? "" })}</p>
-                <ol className="flex list-decimal flex-col gap-2 pl-5" start={3}>
+                <ol
+                  className="flex list-decimal flex-col gap-2 pl-5"
+                  start={using === "slack" ? 4 : 3}
+                >
                   <li>
                     {/* A list item that is itself a flex box loses its number. */}
                     <div className="flex flex-col items-start gap-2">
-                      <span>{t(`${using}.step3`)}</span>
+                      <span>
+                        {using === "slack"
+                          ? t("slack.step4")
+                          : t(`${using}.step3`)}
+                      </span>
                       {status.invite && (
                         <a
                           href={status.invite}
@@ -234,8 +304,8 @@ export function MessengerPanel() {
                           {t(`${using}.addBot`)}
                         </a>
                       )}
-                      {status.invite && using === "telegram" && (
-                        <Scan link={status.invite} label={t("telegram.scan")} />
+                      {status.invite && using !== "discord" && (
+                        <Scan link={status.invite} label={t(`${using}.scan`)} />
                       )}
                     </div>
                   </li>

@@ -250,16 +250,21 @@ These words help discussion. They do not mandate separate services, tables or UI
   nothing is learned; `tick` every minute while the app runs, under a lock), `tools.ts` (`flows`
   free, `flow_manage` asked first on a card). The page's part is `features/minime/flows-panel.tsx`
   with the route `app/api/me/flows`.
-- `features/minime/messenger/`: the mini-me in the person's messenger, Discord or Telegram, one at
-  a time (after Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot
+- `features/minime/messenger/`: the mini-me in the person's messenger, Discord, Telegram or Slack,
+  one at a time (after Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot
   with no dependencies: the gateway over Node's own WebSocket (direct messages only, no privileged
   intent), resume, heartbeats, the close codes that end it, and the HTTP calls (messages in pieces
   with buttons, typing, a press taken at once and its message settled after, the invite link from
   the application id). `telegram.ts` is the same over Telegram's Bot API: a long poll for updates
   (private chats only; Start's "/start" is only a hello), messages in Telegram's HTML with inline
   buttons and sent again as plain words when Telegram cannot parse the marks, a press answered at
-  once and its message edited after, the t.me link to the chat. `text.ts` cuts text into pieces
-  (a code block cut in two is closed and opened again) and draws markdown as Telegram's HTML.
+  once and its message edited after, the t.me link to the chat. `slack.ts` is Slack in Socket Mode:
+  the app-level token opens a WebSocket for events (every envelope taken at once; a new socket when
+  Slack closes one), the bot token speaks through the Web API (mrkdwn, buttons as blocks, a thread
+  reply as a reply), and `manifest.ts` is the app the page copies, with exactly those scopes; the
+  two tokens are told apart by their xoxb-/xapp- starts. `text.ts` cuts text into pieces (a code
+  block cut in two is closed and opened again) and draws markdown as Telegram's HTML and Slack's
+  mrkdwn.
   `bridge.ts` joins either to the mini-me: whoever writes first is asked about on
   the page with a 4-digit code sent to their phone, one at a time, and what they wrote meanwhile
   is answered once they are let in; then their messages go into one conversation through

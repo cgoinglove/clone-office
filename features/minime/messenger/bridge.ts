@@ -1,6 +1,6 @@
-// The person's mini-me in their messenger: their own Discord or Telegram bot, which they talk to
-// from their phone as they do on its page, while the app runs on their computer. Only its person
-// talks to it.
+// The person's mini-me in their messenger: their own Discord, Telegram or Slack bot, which they
+// talk to from their phone as they do on its page, while the app runs on their computer. Only its
+// person talks to it.
 // Whoever writes first is asked about on the computer, with a code sent to their phone: the person
 // lets in the phone in their hand, not a name anyone could pick; one at a time, and what they wrote
 // meanwhile is answered once they are in (as Thursday's reach does, features/reach/reach.ts, after
@@ -41,11 +41,19 @@ import {
   type Press,
 } from "./discord.ts";
 import { type Kept, type OfficeSide, officeSide } from "./office.ts";
+import { SlackBot } from "./slack.ts";
 import { TelegramBot } from "./telegram.ts";
 
 /** The messengers a person can talk to their mini-me through. */
-export const SERVICES = ["discord", "telegram"] as const;
+export const SERVICES = ["discord", "telegram", "slack"] as const;
 export type Service = (typeof SERVICES)[number];
+
+/** A bot's keys: one token, and for Slack also the app-level one that opens its socket. */
+export interface Account {
+  service: Service;
+  token: string;
+  appToken?: string;
+}
 
 /** What the bridge needs of a bot: Discord's, Telegram's, or a stand-in in tests. */
 export interface Bot {
@@ -54,6 +62,8 @@ export interface Bot {
   start(): void;
   stop(): void;
   whoAmI(): Promise<Person>;
+  /** Checks every key it was given, when that takes more than asking who it is (Slack's two). */
+  check?(): Promise<void>;
   send(channel: string, text: string, choices?: Choice[]): Promise<string>;
   typing(channel: string): Promise<void>;
   settle(press: Press, answer: string): Promise<void>;
@@ -61,9 +71,7 @@ export interface Bot {
   dm(user: string): Promise<string>;
 }
 
-interface MessengerSettings {
-  service: Service;
-  token: string;
+interface MessengerSettings extends Account {
   on: boolean;
   /** The person, once they were let in. */
   owner?: Person;
@@ -183,7 +191,7 @@ function alive(pid: number): boolean {
 }
 
 export class Bridge {
-  private makeBot: (service: Service, token: string, listener: Listener) => Bot;
+  private makeBot: (account: Account, listener: Listener) => Bot;
   private turn: typeof runTurn;
   private gateUrl: () => string;
   private bot?: Bot;
@@ -223,7 +231,7 @@ export class Bridge {
 
   constructor(
     options: {
-      makeBot?: (service: Service, token: string, listener: Listener) => Bot;
+      makeBot?: (account: Account, listener: Listener) => Bot;
       turn?: typeof runTurn;
       gateUrl?: () => string;
       office?: OfficeSide;
@@ -234,10 +242,12 @@ export class Bridge {
   ) {
     this.makeBot =
       options.makeBot ??
-      ((service, token, listener) =>
+      (({ service, token, appToken }, listener) =>
         service === "telegram"
           ? new TelegramBot(token, listener)
-          : new DiscordBot(token, listener));
+          : service === "slack"
+            ? new SlackBot(token, appToken ?? "", listener)
+            : new DiscordBot(token, listener));
     this.turn = options.turn ?? runTurn;
     // The app's own gate, where the mini-me's tool server puts its questions.
     this.gateUrl =
@@ -299,7 +309,7 @@ export class Bridge {
     this.problem = undefined;
     const report = (error: unknown) =>
       console.error(`messenger: ${(error as Error).message}`);
-    const bot = this.makeBot(settings.service, settings.token, {
+    const bot = this.makeBot(settings, {
       ready: () => {
         this.state = "on";
         this.lookSoon(0);
@@ -362,26 +372,43 @@ export class Bridge {
   }
 
   /**
-   * Sets up the bot with its token, checked with its service first. One messenger at a time: a
-   * new token for the same one keeps the person let in; another service starts afresh.
+   * Sets up the bot with its keys, checked with its service first. One messenger at a time: new
+   * keys for the same one keep the person let in; another service starts afresh. Slack's two
+   * tokens are told apart by how they start, whichever box they were pasted in.
    */
-  async connect(service: Service, token: string): Promise<void> {
-    const clean = token.trim();
+  async connect(
+    service: Service,
+    token: string,
+    appToken?: string,
+  ): Promise<void> {
+    const keys = [token.trim(), appToken?.trim() ?? ""];
+    const account: Account =
+      service === "slack"
+        ? {
+            service,
+            token: keys.find((key) => key.startsWith("xoxb-")) ?? keys[0],
+            appToken: keys.find((key) => key.startsWith("xapp-")) ?? keys[1],
+          }
+        : { service, token: keys[0] };
+    const wrong =
+      service === "telegram"
+        ? "messenger-telegram-token-wrong"
+        : service === "slack"
+          ? "messenger-slack-token-wrong"
+          : "messenger-token-wrong";
+    if (service === "slack" && !account.appToken)
+      throw new MessengerError(wrong);
     try {
-      await this.makeBot(service, clean, {}).whoAmI();
+      const bot = this.makeBot(account, {});
+      await (bot.check ? bot.check() : bot.whoAmI());
     } catch {
-      throw new MessengerError(
-        service === "telegram"
-          ? "messenger-telegram-token-wrong"
-          : "messenger-token-wrong",
-      );
+      throw new MessengerError(wrong);
     }
     this.stop();
     this.asking = undefined;
     await saveMessenger((was) => ({
       ...(was?.service === service ? was : {}),
-      service,
-      token: clean,
+      ...account,
       on: true,
     }));
     await this.start();

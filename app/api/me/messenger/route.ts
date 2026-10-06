@@ -19,7 +19,9 @@ const Body = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("connect"),
     service: z.enum(SERVICES),
-    token: z.string().trim().min(20).max(200),
+    token: z.string().trim().min(20).max(300),
+    /** Slack's app-level token, which opens its socket. */
+    appToken: z.string().trim().min(20).max(300).optional(),
   }),
   z.object({ action: z.literal("allow"), code: z.string().max(20) }),
   z.object({ action: z.literal("decline"), code: z.string().max(20) }),
@@ -36,7 +38,7 @@ export async function POST(request: Request) {
   const bridge = messenger();
   try {
     if (input.action === "connect")
-      await bridge.connect(input.service, input.token);
+      await bridge.connect(input.service, input.token, input.appToken);
     else if (input.action === "allow") {
       if (!(await bridge.allow(input.code)))
         return Response.json({ error: "no-longer-waiting" }, { status: 410 });

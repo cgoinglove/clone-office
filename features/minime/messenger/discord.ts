@@ -70,6 +70,7 @@ export interface Listener {
     problem:
       | "messenger-token-wrong"
       | "messenger-telegram-token-wrong"
+      | "messenger-slack-token-wrong"
       | "messenger-refused",
   ): void;
   /** Something keeps it from hearing everything, though it goes on trying; nothing once it clears. */

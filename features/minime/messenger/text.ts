@@ -1,6 +1,6 @@
 // What the mini-me writes is markdown; each messenger takes it in pieces of its own size and draws
-// marks of its own: Discord its markdown as it is, Telegram a few HTML tags (as Thursday's reach
-// draws one text in each service's marks, features/reach/chat-text.ts). A code block cut in two is
+// marks of its own: Discord its markdown as it is, Telegram a few HTML tags, Slack its mrkdwn (as
+// Thursday's reach draws one text in each service's marks, features/reach/chat-text.ts). A code block cut in two is
 // closed and opened again, so neither piece shows the other's code as words.
 
 const FENCE = /^\s*```/;
@@ -124,5 +124,66 @@ export function telegramHtml(markdown: string): string {
     else out.push(marks(line));
   }
   closeCode();
+  return out.join("\n");
+}
+
+const escapeSlack = (text: string) =>
+  text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** Marks inside one line, in Slack's mrkdwn: *bold*, _italic_, ~struck~, <url|link>, `code`. */
+function slackMarks(text: string): string {
+  const kept: string[] = [];
+  const keep = (drawn: string) => {
+    kept.push(drawn);
+    return `${kept.length - 1}`;
+  };
+  let drawn = text
+    .replace(/`([^`]+)`/g, (_, code: string) =>
+      keep(`\`${escapeSlack(code)}\``),
+    )
+    .replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+      (_, words: string, url: string) =>
+        keep(
+          `<${url.replace(/[|>]/g, encodeURIComponent)}|${escapeSlack(words).replace(/[|>]/g, "")}>`,
+        ),
+    );
+  drawn = escapeSlack(drawn)
+    .replace(/(^|[^\w*])\*(?=[^\s*])([^*]*?[^\s*])\*(?![\w*])/g, "$1$2")
+    .replace(/\*\*(?=\S)(.+?)(?<=\S)\*\*/g, "*$1*")
+    .replace(/(^|[^\w])__(?=\S)(.+?)(?<=\S)__(?!\w)/g, "$1*$2*")
+    .replace(/~~(?=\S)(.+?)(?<=\S)~~/g, "~$1~")
+    .replace(//g, "_");
+  return drawn.replace(
+    /(\d+)/g,
+    (_, index: string) => kept[Number(index)] ?? "",
+  );
+}
+
+/**
+ * Markdown in Slack's mrkdwn: headings as bold lines, list marks as bullets, code blocks kept as
+ * they are, and the marks inside a line; &, < and > escaped as Slack asks.
+ */
+export function slackMrkdwn(markdown: string): string {
+  const out: string[] = [];
+  let code = false;
+  for (const line of markdown.split("\n")) {
+    if (FENCE.test(line)) {
+      code = !code;
+      out.push("```");
+      continue;
+    }
+    if (code) {
+      out.push(escapeSlack(line));
+      continue;
+    }
+    const heading = /^\s{0,3}#{1,6}\s+(.*?)\s*#*\s*$/.exec(line);
+    const item = /^(\s*)[-*+]\s+(.*)$/.exec(line);
+    const quote = /^\s*>\s?(.*)$/.exec(line);
+    if (heading) out.push(`*${slackMarks(heading[1])}*`);
+    else if (item) out.push(`${item[1]}• ${slackMarks(item[2])}`);
+    else if (quote) out.push(`>${slackMarks(quote[1])}`);
+    else out.push(slackMarks(line));
+  }
   return out.join("\n");
 }

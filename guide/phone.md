@@ -1,20 +1,31 @@
-# On their phone: the mini-me in Discord or Telegram
+# On their phone: the mini-me in Discord, Telegram or Slack
 
-They can talk with their mini-me from Discord or Telegram on their phone, the same as on its page.
-It answers while the app runs on their computer; what they say there goes into a conversation they
-also see on the page. The words go through Discord or Telegram. One messenger at a time: to change,
+They can talk with their mini-me from Discord, Telegram or Slack on their phone, the same as on its
+page. It answers while the app runs on their computer; what they say there goes into a conversation
+they also see on the page. The words go through that messenger. One messenger at a time: to change,
 they disconnect and set up the other.
 
 ## Setting it up, once
 
-Under **On your phone** (휴대폰에서) on their page they pick Discord or Telegram.
+Under **On your phone** (휴대폰에서) on their page they pick Discord, Telegram or Slack.
 
 With Telegram (no server needed):
 
 1. In Telegram they open @BotFather and send /newbot, give the bot a name and then a username
    that ends in "bot"; BotFather answers with its token, which they copy.
 2. They paste the token and press **Connect** (연결하기).
-3. **Open the chat with the bot** (봇과의 대화 열기), on their phone, and press Start.
+3. **Open the chat with the bot** (봇과의 대화 열기), on their phone (pointing its camera at the
+   picture on the page opens it), and press Start.
+
+With Slack (in a workspace where they may add an app):
+
+1. At api.slack.com/apps: Create New App, From a manifest, their workspace, and the manifest the
+   page copies (**Copy the manifest**, 매니페스트 복사). It asks only for what the mini-me uses:
+   its Messages tab, writing there first, and the person's name.
+2. Basic Information, App-Level Tokens: one with connections:write (it starts with xapp-).
+3. Install App to the workspace, and the Bot User OAuth Token (it starts with xoxb-). Both tokens
+   go on the page, in either box, and **Connect** (연결하기).
+4. In Slack, the app under Apps, and a message in its Messages tab.
 
 With Discord:
 
@@ -61,7 +72,7 @@ everything stays there.
 
 The app has to be running on their computer, which must be awake. If another copy of the app on
 the same computer already talks through the bot, the page says so. If Discord or Telegram stops
-taking the token (it was reset or revoked), they get a new one (Discord's Bot page, or /token at
-@BotFather) and connect again; they stay let in. A Telegram bot is read by one program at a time,
+taking the token (it was reset or revoked), they get a new one (Discord's Bot page, /token at
+@BotFather, or Slack's app pages) and connect again; they stay let in. A Telegram bot is read by one program at a time,
 so the same bot cannot also serve another app (Hermes Agent, for one). **Disconnect**
 (연결 끊기) forgets the token and who the bot talks with.

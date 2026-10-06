@@ -106,7 +106,7 @@ test("the person's own bot: the first to write is let in by the code their phone
     send({ type: "done", chat: id });
   };
   const bridge = new bridgeModule.Bridge({
-    makeBot: (_service, token, listener) => {
+    makeBot: ({ token }, listener) => {
       const bot = new FakeBot(token, listener);
       bots.push(bot);
       return bot;
@@ -238,7 +238,7 @@ test("while no page is in view, what waits on the person goes to their phone; ne
     away: async () => away,
   };
   const bridge = new bridgeModule.Bridge({
-    makeBot: (_service, token, listener) => {
+    makeBot: ({ token }, listener) => {
       const bot = new FakeBot(token, listener);
       bots.push(bot);
       return bot;
@@ -418,7 +418,7 @@ test("Telegram's Start is only a hello; another messenger starts afresh, a new t
   const bots: { service: string; bot: FakeBot }[] = [];
   const turns: string[] = [];
   const bridge = new bridgeModule.Bridge({
-    makeBot: (service, token, listener) => {
+    makeBot: ({ service, token }, listener) => {
       const bot = new FakeBot(token, listener);
       bots.push({ service, bot });
       return bot;
@@ -448,6 +448,43 @@ test("Telegram's Start is only a hello; another messenger starts afresh, a new t
   await bridge.connect("discord", "right-token-right-token");
   assert.equal((await bridge.status()).service, "discord");
   assert.equal((await bridge.status()).owner, undefined);
+  await bridge.disconnect();
+  process.env.SUB_OFFICE_HOME = root;
+});
+
+test("Slack's two tokens are told apart by how they start, and both are needed", async () => {
+  const home = join(root, "slack");
+  process.env.SUB_OFFICE_HOME = home;
+  const made: { service: string; token: string; appToken?: string }[] = [];
+  const bridge = new bridgeModule.Bridge({
+    makeBot: (account, listener) => {
+      made.push(account);
+      return new FakeBot(account.token, listener);
+    },
+    turn: async () => {},
+    presence: () => ({ state: "watching" }),
+  });
+  await assert.rejects(
+    bridge.connect("slack", "xoxb-1234567890-only-the-bot-token"),
+    /messenger-slack-token-wrong/,
+  );
+  // Pasted in each other's boxes.
+  await bridge.connect(
+    "slack",
+    "xapp-1-A1-1234567890-app-level",
+    "xoxb-1234567890-bot-token",
+  );
+  const kept = JSON.parse(readFileSync(join(home, "settings.json"), "utf8"));
+  assert.deepEqual(
+    [kept.messenger.service, kept.messenger.token, kept.messenger.appToken],
+    ["slack", "xoxb-1234567890-bot-token", "xapp-1-A1-1234567890-app-level"],
+  );
+  assert.deepEqual(made.at(-1), {
+    service: "slack",
+    token: "xoxb-1234567890-bot-token",
+    appToken: "xapp-1-A1-1234567890-app-level",
+    on: true,
+  });
   await bridge.disconnect();
   process.env.SUB_OFFICE_HOME = root;
 });
