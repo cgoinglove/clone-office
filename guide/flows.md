@@ -17,12 +17,22 @@ missed and the flow waits for its next time.
 
 Each run starts fresh, without the conversation it was made in, and with nobody to ask: the
 mini-me uses only what it may already use on its own (its memory, their past AI conversations,
-its notes, this guide, the web, and whatever they told it "from now on" it need not ask about).
+its notes, this guide, the web, where their office work stands, and whatever they told it "from
+now on" it need not ask about).
 Their folders kept out stay out. Anything else it would have to ask about, it says it could not
 do. It learns nothing from a run.
 
 The answer goes into the flow's own conversation, marked with ⏰ and the time; they can go on
 talking there ("tell me more about the second one").
+
+## Ready-made ones
+
+With no flows yet, **Flows** offers two to start from: **Weekday morning catch-up** (평일 아침
+브리핑: what waits for their answer in the office, what came back from their requests, what they
+left open in their AI conversations since yesterday) and **Friday wrap-up** (금요일 한 주 정리).
+Either one is asked of the mini-me in the conversation, so they see the card and can change it
+before it is made. When the mini-me offers something they usually do around this time, **Every
+time** (매번 하기) asks it to make that a flow.
 
 ## On their page
 

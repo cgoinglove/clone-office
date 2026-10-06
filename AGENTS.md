@@ -166,7 +166,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   kinds of request the person takes, each with a trust level: auto, tell or ask; the kinds go on
   the card as A2A skills, the trust levels stay in `settings.json`. The brain names a request's
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role
-  `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind). In a
+  `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the mini-me's own key, so it works in flows too), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind). In a
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screen's
   office is `features/minime/office-panel.tsx` with the route `app/api/me/office`.
 - `plugin/`: the Claude Code plugin, so a person's own Claude Code conversations ask colleagues'

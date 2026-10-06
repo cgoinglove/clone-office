@@ -91,7 +91,9 @@
     "tryNow": "Shall we do one together now?",
     "routineNow": "Around now you usually:",
     "routineDo": "Do it together",
-    "routineLater": "Not now"
+    "routineLater": "Not now",
+    "routineFlow": "Every time",
+    "routineFlowAsk": "Make a flow: {label} ({when})."
   },
   "memory": {
     "title": "What I remember about you",
@@ -289,6 +291,12 @@
     "resume": "Resume",
     "remove": "Remove",
     "removeSure": "Remove this flow?",
-    "removeYes": "Remove"
+    "removeYes": "Remove",
+    "suggest": {
+      "morning": "Weekday morning catch-up",
+      "morningAsk": "Make a flow: every weekday at 9, catch me up in a few lines: what is waiting for my answer in the office, what came back from the requests I sent, and what I left open in my AI conversations since yesterday.",
+      "week": "Friday wrap-up",
+      "weekAsk": "Make a flow: every Friday at 5 pm, list in a few lines what I finished this week and what is still open, from my AI conversations and my office requests."
+    }
   }
 }

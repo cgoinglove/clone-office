@@ -192,6 +192,7 @@ const ALLOWED_TOOLS = [
   "conversation_read",
   "guide_read",
   "flows",
+  "office_inbox",
 ].map((tool) => `mcp__minime__${tool}`);
 
 /** The few fields of Claude Code's stream-json events this reads. */

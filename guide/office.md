@@ -119,6 +119,13 @@ If the app or the computer stops while a request is being answered, the request 
 is picked up again when the app is back; the colleague never gets two answers. When two copies
 of the app run on the same computer, only one of them answers requests.
 
+## What is waiting for them
+
+The mini-me can see where their office work stands, the same as their page shows: questions
+kept for them to answer, the requests they sent and what came back, and the requests colleagues
+sent them lately and how each was answered. So "what is waiting for me?" works in a
+conversation, and a morning flow can catch them up (`flows.md`).
+
 ## Status and leaving
 
 Their status (**Working**, **In a meeting**, **Away**, **Off**) shows on their card. **Leave the

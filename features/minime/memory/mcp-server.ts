@@ -37,6 +37,7 @@ import {
   WORK_SESSION_TOOL,
 } from "../hands/tools.ts";
 import { CONVERSATION_TOOLS, callConversationTool } from "../history/tools.ts";
+import { OFFICE_INBOX_TOOL, officeInbox } from "../office/inbox-tool.ts";
 import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
 import { appDir } from "../server/paths.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
@@ -96,6 +97,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         CONVERSATION_TOOLS.read,
         GUIDE_TOOL,
         FLOWS_TOOL,
+        OFFICE_INBOX_TOOL,
         ...(gateOpen
           ? [
               ASK_TOOL,
@@ -177,6 +179,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         request.params.name,
         args,
       );
+      return text(result, isError);
+    }
+    case OFFICE_INBOX_TOOL.name: {
+      const { result, isError } = await officeInbox(args);
       return text(result, isError);
     }
     case FLOWS_TOOL.name:

@@ -28,7 +28,7 @@ import { Bot, type Mood } from "@/features/office";
 import { personTag, useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
-import { FlowsPanel } from "./flows-panel";
+import { FlowsPanel, whenText } from "./flows-panel";
 import { LanguageSwitch } from "./language-switch";
 import { EXPORT_PROMPT } from "./learn/export-prompt";
 import { OfficePanel } from "./office-panel";
@@ -154,6 +154,7 @@ export function FirstRun() {
   const t = useTranslations();
   const problemText = useProblem();
   const format = useFormatter();
+  const tFlows = useTranslations("flows");
   const locale = useLocale();
   const [lang, setLang] = useState("en");
   // The mini-me's language follows the one picked for the screen, as soon as it is picked.
@@ -1166,6 +1167,26 @@ export function FirstRun() {
             <Button size="sm" onClick={() => void ask(routine.label)}>
               {t("firstRun.routineDo")}
             </Button>
+            {/* Every time: the mini-me makes it a flow, after a card. */}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                putAside();
+                void ask(
+                  t("firstRun.routineFlowAsk", {
+                    label: routine.label,
+                    when: whenText(tFlows, format, {
+                      kind: "weekly",
+                      days: routine.days,
+                      time: `${routine.hour}:00`,
+                    }),
+                  }),
+                );
+              }}
+            >
+              {t("firstRun.routineFlow")}
+            </Button>
             <Button size="sm" variant="ghost" onClick={putAside}>
               {t("firstRun.routineLater")}
             </Button>
@@ -1211,7 +1232,10 @@ export function FirstRun() {
         />
       )}
       {stage !== "boot" && (
-        <FlowsPanel onOpenChat={(id) => void openChat(id)} />
+        <FlowsPanel
+          onOpenChat={(id) => void openChat(id)}
+          onAsk={(text) => void ask(text)}
+        />
       )}
       {stage !== "boot" && <StoredFiles />}
       {stage !== "boot" && <LanguageSwitch />}

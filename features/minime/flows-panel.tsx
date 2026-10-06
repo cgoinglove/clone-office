@@ -95,10 +95,15 @@ export function FlowAsk({ input }: { input: Record<string, unknown> }) {
   );
 }
 
+const SUGGESTIONS = ["morning", "week"] as const;
+
 export function FlowsPanel({
   onOpenChat,
+  onAsk,
 }: {
   onOpenChat: (id: string) => void;
+  /** Say something to the mini-me in the conversation: a suggested flow is made by asking. */
+  onAsk: (text: string) => void;
 }) {
   const t = useTranslations("flows");
   const cancel = useTranslations("common")("cancel");
@@ -181,6 +186,20 @@ export function FlowsPanel({
           <p className="text-muted-foreground">
             {flows.length ? t("intro") : t("none")}
           </p>
+          {flows.length === 0 && (
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTIONS.map((kind) => (
+                <Button
+                  key={kind}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onAsk(t(`suggest.${kind}Ask`))}
+                >
+                  {t(`suggest.${kind}`)}
+                </Button>
+              ))}
+            </div>
+          )}
           <ul className="flex flex-col">
             {flows.map((flow) => (
               <li
