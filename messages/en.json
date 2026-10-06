@@ -343,7 +343,6 @@
       },
       "panel": {
         "close": "Close",
-        "yours": "Your mini-me",
         "atDesk": "at the desk",
         "away": "away from the desk",
         "off": "computer off",
@@ -362,6 +361,20 @@
         "menu": "What {name} takes on",
         "earlier": "Requests",
         "nothingYet": "None yet"
+      },
+      "lobby": {
+        "late": "Working late, {name}",
+        "morning": "Good morning, {name}",
+        "afternoon": "Good afternoon, {name}",
+        "evening": "Good evening, {name}",
+        "in": "{in} of {count, plural, one {# colleague is} other {# colleagues are}} in",
+        "alone": "No colleagues here yet",
+        "waiting": "{count, plural, one {# thing is waiting for you} other {# things are waiting for you}}",
+        "clockIn": "Clock in",
+        "enter": "Enter",
+        "foot": "Your mini-me runs on this computer.",
+        "floors": "FLOORS 1–{count}",
+        "yourFloor": "your floor"
       }
     }
   },

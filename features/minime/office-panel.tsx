@@ -98,6 +98,26 @@ function statusText(t: Translate, status: string | undefined): string {
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
 
+// The office opens at its lobby once a day, as a person clocks in: the day it was last done is
+// kept in this browser only. Without storage the lobby is skipped rather than shown every time.
+const CLOCKED_IN = "sub-office.clocked-in";
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+};
+function clockedInToday(): boolean {
+  try {
+    return localStorage.getItem(CLOCKED_IN) === today();
+  } catch {
+    return true;
+  }
+}
+function rememberClockIn(): void {
+  try {
+    localStorage.setItem(CLOCKED_IN, today());
+  } catch {}
+}
+
 export function OfficePanel({
   lang,
   onWaiting,
@@ -272,6 +292,8 @@ export function OfficePanel({
             {open && room && (
               <OfficeRoom
                 data={room}
+                lobby={!clockedInToday()}
+                onClockIn={rememberClockIn}
                 onAnswer={() => {
                   const box = asksBox.current;
                   box?.scrollIntoView({ behavior: "smooth", block: "center" });

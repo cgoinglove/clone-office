@@ -117,9 +117,20 @@ export interface RoomWords {
     gotIt: string;
     thanks: Name;
   };
+  lobby: {
+    /** "Good afternoon, Ada", by the hour. */
+    greeting: (hour: number, name: string) => string;
+    in: (count: number, of: number) => string;
+    alone: string;
+    waiting: Count;
+    clockIn: string;
+    enter: string;
+    foot: string;
+    floors: (count: number) => string;
+    yourFloor: string;
+  };
   panel: {
     close: string;
-    yours: string;
     atDesk: string;
     away: string;
     off: string;
@@ -157,6 +168,10 @@ export function createOffice(
     onAnswer?: () => void;
     /** Hands a request to the viewer's mini-me; the box over the office shows only with it. */
     onAsk?: (text: string) => void;
+    /** Opens at the lobby: the building and a card to clock in, then the lift up. */
+    lobby?: boolean;
+    /** Clocked in at the lobby. */
+    onClockIn?: () => void;
     /** 30 runs the office on every other frame. */
     fps?: 30 | 60;
   },

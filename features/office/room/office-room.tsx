@@ -14,11 +14,16 @@ export type { RoomData, RoomPerson, RoomRequest } from "./office.mjs";
 
 export function OfficeRoom({
   data,
+  lobby = false,
+  onClockIn,
   onAnswer,
   onAsk,
   className,
 }: {
   data: RoomData;
+  /** Opens at the lobby (the building, a card to clock in, the lift up) rather than at the office. */
+  lobby?: boolean;
+  onClockIn?: () => void;
   /** Opens what waits for the viewer, when they tap their mini-me's question. */
   onAnswer?: () => void;
   /** Hands a request to the viewer's mini-me; without it the office has no box to ask in. */
@@ -109,9 +114,29 @@ export function OfficeRoom({
         gotIt: t("room.say.gotIt"),
         thanks: (name) => t("room.say.thanks", { name }),
       },
+      lobby: {
+        greeting: (hour, name) =>
+          t(
+            hour < 5
+              ? "room.lobby.late"
+              : hour < 12
+                ? "room.lobby.morning"
+                : hour < 18
+                  ? "room.lobby.afternoon"
+                  : "room.lobby.evening",
+            { name },
+          ),
+        in: (count, of) => t("room.lobby.in", { in: count, count: of }),
+        alone: t("room.lobby.alone"),
+        waiting: (count) => t("room.lobby.waiting", { count }),
+        clockIn: t("room.lobby.clockIn"),
+        enter: t("room.lobby.enter"),
+        foot: t("room.lobby.foot"),
+        floors: (count) => t("room.lobby.floors", { count }),
+        yourFloor: t("room.lobby.yourFloor"),
+      },
       panel: {
         close: t("room.panel.close"),
-        yours: t("room.panel.yours"),
         atDesk: t("room.panel.atDesk"),
         away: t("room.panel.away"),
         off: t("room.panel.off"),
@@ -138,8 +163,10 @@ export function OfficeRoom({
   const room = useRef<Room | null>(null);
   const latest = useRef(data);
   latest.current = data;
-  const handlers = useRef({ onAnswer, onAsk });
-  handlers.current = { onAnswer, onAsk };
+  const handlers = useRef({ onAnswer, onAsk, onClockIn });
+  handlers.current = { onAnswer, onAsk, onClockIn };
+  // Read once: the office does not go back to the lobby while it is open.
+  const atLobby = useRef(lobby).current;
   const asks = !!onAsk;
 
   useEffect(() => {
@@ -152,6 +179,8 @@ export function OfficeRoom({
         locale,
         onAnswer: () => handlers.current.onAnswer?.(),
         onAsk: asks ? (text) => handlers.current.onAsk?.(text) : undefined,
+        lobby: atLobby,
+        onClockIn: () => handlers.current.onClockIn?.(),
       });
       made.update(latest.current);
       room.current = made;
@@ -161,7 +190,7 @@ export function OfficeRoom({
       made?.destroy();
       room.current = null;
     };
-  }, [words, locale, asks]);
+  }, [words, locale, asks, atLobby]);
 
   useEffect(() => {
     room.current?.update(data);

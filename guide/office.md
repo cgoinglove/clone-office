@@ -147,7 +147,12 @@ is open.
 
 ## The office floor
 
-Opened, **Office** (오피스) shows the office as a floor seen from above: a desk for each member
+The first time each day they open **Office** (오피스), it opens at the lobby: the company's
+building, their floor marked on it, and a card with who is already in and what is waiting for
+them. **Clock in** (출근하기), or Enter, rides the lift up to their floor, where their mini-me steps
+out to its desk. The rest of the day it opens straight at the office.
+
+The office is a floor seen from above: a desk for each member
 with their mini-me at it, their name on the floor in front. Their own mini-me is the black (in
 dark mode, white) one, with a loop drawn round its desk; each colleague's has a colour of its
 own. A colleague whose computer is off is not in: their desk shows **OFF** (꺼짐), and their

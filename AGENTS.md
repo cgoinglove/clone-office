@@ -178,7 +178,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`docs/office-room.local.d/`, v13). Plain ES modules that build SVG as strings: `core.mjs` (the
   mini-me mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks,
   commons, lift, the departures board, the floor sign), `floor.mjs` (the library plan, walking
-  on a grid), `office.mjs` (`createOffice`: sheets, scenes, camera, panel). Its performance shape
+  on a grid), `office.mjs` (`createOffice`: sheets, scenes, camera, panel, and the lobby with
+  its lift ride, which the panel opens at once a day). Its performance shape
   is the point: the board, the still drawing and each mover on separate SVG sheets, copies of what
   stands in front of a mover cut to its outline, merged lines, half-rate frames, stopped off
   screen. `office-room.tsx` is the React box with the screen's words; `room.css` maps the design

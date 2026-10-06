@@ -1490,3 +1490,503 @@
     animation: none !important;
   }
 }
+
+/* the way in: the company's building climbing out of the ground, its street, our floor marked */
+.of-wrap .tw-glass {
+  fill: color-mix(in oklab, var(--paper) 74%, transparent);
+}
+.of-wrap .tw-glass.s {
+  fill: color-mix(in oklab, var(--paper-3) 82%, transparent);
+}
+.of-wrap .tw-lit {
+  fill: var(--ink-08);
+  opacity: 0;
+  animation: room-tw-lit 0.8s steps(3, end) forwards;
+  animation-delay: var(--d);
+}
+@keyframes room-tw-lit {
+  to {
+    opacity: 1;
+  }
+}
+.of-wrap .tw-name {
+  fill: var(--ink-85);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.of-wrap .tw-st {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: room-tw-rise 0.52s cubic-bezier(0.2, 1.35, 0.45, 1) backwards;
+  animation-delay: var(--d);
+}
+@keyframes room-tw-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+}
+.of-wrap .tw-roof {
+  animation: room-tw-drop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
+  animation-delay: var(--d);
+}
+@keyframes room-tw-drop {
+  from {
+    transform: translateY(-160px);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.of-wrap .tw-sign {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: room-tw-sign 0.45s cubic-bezier(0.2, 1.5, 0.4, 1) backwards;
+  animation-delay: calc(var(--d) + 280ms);
+}
+@keyframes room-tw-sign {
+  from {
+    transform: scaleY(0);
+  }
+}
+.of-wrap .tw-gust {
+  fill: none;
+  stroke: var(--ink-30);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-dasharray: 0.35 1;
+  animation: room-tw-gust 0.7s ease-out both;
+  animation-delay: var(--d);
+}
+@keyframes room-tw-gust {
+  from {
+    stroke-dashoffset: 1.2;
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    stroke-dashoffset: -0.4;
+    opacity: 0;
+  }
+}
+.of-wrap .tw-doorlit {
+  fill: color-mix(in oklab, var(--paper) 18%, transparent);
+  transition: fill 0.25s;
+}
+.of-wrap .lobby-art.enter .tw-doorlit {
+  fill: color-mix(in oklab, var(--paper) 85%, transparent);
+}
+.of-wrap .tw-door-t {
+  fill: var(--paper);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+.of-wrap .tw-door {
+  animation: room-k-fade 0.5s ease backwards;
+  animation-delay: var(--d);
+}
+.of-wrap .lb-ground {
+  animation: room-k-fade 0.6s ease 0.25s backwards;
+}
+.of-wrap .lb-trees {
+  animation: room-k-fade 0.6s ease 1.1s backwards;
+}
+.of-wrap .tw-ours {
+  fill: color-mix(in oklab, var(--brand) 7%, transparent);
+  stroke: var(--brand);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.of-wrap .lb-ours {
+  animation: room-k-fade 0.8s ease 2.1s backwards;
+}
+/* colleagues hopping along the pavement and in at the door */
+.of-wrap .cm {
+  opacity: 0;
+  animation: room-cm-walk var(--T) linear var(--d) infinite;
+}
+@keyframes room-cm-walk {
+  0% {
+    transform: translate(var(--x0), var(--y0));
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  82% {
+    transform: translate(var(--x1), var(--y1));
+    opacity: 1;
+  }
+  96% {
+    transform: translate(var(--x2), var(--y2));
+    opacity: 0;
+  }
+  100% {
+    transform: translate(var(--x2), var(--y2));
+    opacity: 0;
+  }
+}
+.of-wrap .cm-hop {
+  animation: room-cm-hop 0.36s ease-in-out infinite;
+}
+@keyframes room-cm-hop {
+  50% {
+    transform: translateY(-26px);
+  }
+}
+.of-wrap .lb-note {
+  animation: room-k-fade 0.6s ease 2.3s backwards;
+}
+.of-wrap .lb-note .hand-l {
+  stroke-dasharray: 1;
+  animation: room-k-line 0.7s ease 2.4s backwards;
+}
+
+/* the card: who you are, who is in, what waits, and Clock in */
+.of-wrap .lobby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 24px clamp(20px, 4.5cqi, 64px);
+  pointer-events: none;
+  z-index: 5;
+}
+.of-wrap .lb-card {
+  pointer-events: auto;
+  cursor: default;
+  width: min(368px, 100%);
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--ink-08),
+    0 24px 64px var(--ink-10);
+  padding: 22px 22px 18px;
+  display: grid;
+  gap: 16px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 0.4s ease,
+    transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1);
+  user-select: text;
+  -webkit-user-select: text;
+}
+.of-wrap .lobby.in .lb-card {
+  opacity: 1;
+  transform: none;
+}
+.of-wrap .lobby.go .lb-card {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.985);
+  transition-duration: 0.22s;
+}
+.of-wrap .lb-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font: 600 14px / 1 var(--font-sans);
+  letter-spacing: -0.01em;
+}
+.of-wrap :is(.lb-brand .mk, .lb-brand .mk svg) {
+  width: 22px;
+  height: 22px;
+  display: inline-block;
+}
+.of-wrap .lb-brand .mk svg {
+  overflow: visible;
+  display: block;
+}
+.of-wrap .lb-brand small {
+  margin-left: auto;
+  font: 500 11px / 1 var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+.of-wrap .lb-card h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.of-wrap .lb-card h2 + p {
+  margin: -10px 0 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.of-wrap .lb-acct {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--ink-05);
+}
+.of-wrap :is(.lb-acct .me, .lb-acct .me svg) {
+  width: 40px;
+  height: 40px;
+  flex: none;
+}
+.of-wrap .lb-acct .me svg {
+  overflow: visible;
+  display: block;
+}
+.of-wrap .lb-acct div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.of-wrap .lb-acct b {
+  font-size: 15px;
+}
+.of-wrap .lb-acct span {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.of-wrap .lb-acct .tick {
+  margin-left: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.of-wrap .lb-acct .tick svg {
+  width: 10px;
+  height: 10px;
+  stroke: var(--paper);
+}
+.of-wrap .lb-facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+  font-size: 13.5px;
+}
+.of-wrap .lb-facts li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.of-wrap .lb-faces {
+  display: flex;
+  flex: none;
+}
+.of-wrap .lb-faces svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  margin-right: -5px;
+}
+.of-wrap .lb-faces svg:last-child {
+  margin-right: 4px;
+}
+.of-wrap .lb-facts .hot {
+  color: var(--waiting);
+}
+.of-wrap .lb-facts .hot i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--waiting);
+  flex: none;
+  margin: 0 7px;
+  box-shadow: 0 0 0 4px var(--waiting-soft);
+}
+.of-wrap .lb-go {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  background: var(--brand);
+  color: var(--brand-foreground);
+  font: 600 15px / 1 var(--font-sans);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.of-wrap .lb-go:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px color-mix(in oklab, var(--brand) 30%, transparent);
+}
+.of-wrap .lb-go:active {
+  transform: translateY(1px);
+}
+.of-wrap .lb-go svg {
+  width: 16px;
+  height: 16px;
+}
+.of-wrap .lb-go kbd {
+  font: 500 11px / 1 var(--font-mono);
+  color: color-mix(in oklab, var(--brand-foreground) 72%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--brand-foreground) 35%, transparent);
+  border-radius: 5px;
+  padding: 3px 5px;
+  margin-left: 2px;
+}
+.of-wrap .lb-foot {
+  margin: -4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+@container (max-width: 760px) {
+  .of-wrap .lobby {
+    align-items: flex-end;
+    justify-content: center;
+    padding: 14px;
+  }
+  .of-wrap .lb-card {
+    padding: 18px 16px 14px;
+    gap: 13px;
+  }
+  .of-wrap .lb-card h2 {
+    font-size: 22px;
+  }
+}
+.of-wrap.at-lobby :is(.hud, .composer, .over, .panel) {
+  display: none !important;
+}
+.of-wrap.at-lobby {
+  cursor: default;
+}
+
+/* the lift ride between the two: doors close over everything, the floors count up, a ding, and they open on our floor */
+.of-wrap .liftx {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+}
+.of-wrap .liftx .door {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50.2%;
+  transition: transform 0.44s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.of-wrap .liftx .door.l {
+  left: 0;
+  transform: translateX(-101%);
+}
+.of-wrap .liftx .door.r {
+  right: 0;
+  transform: translateX(101%);
+}
+.of-wrap .liftx.shut .door {
+  transform: none;
+}
+.of-wrap .liftx.open .door {
+  transition: transform 0.62s cubic-bezier(0.3, 0, 0.2, 1);
+}
+.of-wrap .liftx .lx-head {
+  position: absolute;
+  left: 50%;
+  top: 22px;
+  transform: translate(-50%, -160%);
+  transition: transform 0.32s cubic-bezier(0.3, 1.3, 0.5, 1);
+  background: var(--screen);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.of-wrap .liftx.shut .lx-head {
+  transform: translate(-50%, 0);
+}
+.of-wrap .lx-arr {
+  width: 14px;
+  height: 14px;
+  fill: var(--screen-ink);
+}
+.of-wrap .liftx.ding .lx-arr {
+  animation: room-ding 0.5s steps(2, end) 2;
+}
+@keyframes room-ding {
+  50% {
+    opacity: 0.15;
+  }
+}
+.of-wrap .lx-num {
+  height: 30px;
+  display: block;
+  overflow: visible;
+}
+.of-wrap .lx-num .seg-o {
+  fill: var(--screen-faint);
+}
+.of-wrap .lx-num .seg-l {
+  fill: var(--screen-ink);
+}
+.of-wrap .liftx .lx-ding {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  transform: translate(-50%, -50%);
+  background: var(--brand);
+  box-shadow: 0 0 22px 6px color-mix(in oklab, var(--brand) 40%, transparent);
+  opacity: 0;
+}
+.of-wrap .liftx.ding .lx-ding {
+  height: 70%;
+  opacity: 1;
+  transition:
+    height 0.25s ease-out,
+    opacity 0.2s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .of-wrap
+    :is(
+      .tw-st,
+      .tw-roof,
+      .tw-sign,
+      .tw-gust,
+      .tw-lit,
+      .cm,
+      .cm-hop,
+      .tw-door,
+      .lb-ground,
+      .lb-trees,
+      .lb-ours,
+      .lb-note,
+      .lb-note .hand-l
+    ) {
+    animation: none !important;
+  }
+  .of-wrap .tw-lit {
+    opacity: 1;
+  }
+  .of-wrap .cm {
+    display: none;
+  }
+}
