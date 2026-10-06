@@ -30,7 +30,8 @@
     "fix-failed": "I couldn't make that correction. Try again.",
     "import-failed": "I couldn't read what you pasted. Try again.",
     "task-failed": "I couldn't finish that. Try again, or ask it another way.",
-    "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead."
+    "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead.",
+    "flow-failed": "The flow did not finish. Try Run now, or tell your mini-me what to change."
   },
   "firstRun": {
     "title": "My mini-me",
@@ -122,7 +123,8 @@
     "carried": "I summed up what came before and will go on from that.",
     "turns": "{count, plural, one {# message} other {# messages}}",
     "fromColleague": "From a colleague's mini-me",
-    "told": "I answered for you"
+    "told": "I answered for you",
+    "flowRan": "{name}, on its own ({at})"
   },
   "ask": {
     "needsYou": "Needs you",
@@ -154,7 +156,14 @@
     "ruleYes": "Yes, from now on",
     "ruleNo": "Keep asking me",
     "ruleDone": "Done: I answer these and tell you.",
-    "ruleKept": "I'll keep asking you first."
+    "ruleKept": "I'll keep asking you first.",
+    "flow": {
+      "create": "Make a flow",
+      "update": "Change a flow",
+      "pause": "Pause a flow",
+      "resume": "Resume a flow",
+      "remove": "Remove a flow"
+    }
   },
   "office": {
     "title": "Office",
@@ -253,5 +262,33 @@
       "other": "Other files"
     },
     "empty": "(empty)"
+  },
+  "flows": {
+    "title": "Flows",
+    "intro": "Things your mini-me does on its own at set times. Each one's answers go into a conversation of its own.",
+    "none": "None yet. Tell your mini-me, for example: “Every weekday at 9, sum up what is waiting for me.” It shows you the flow before making it.",
+    "when": {
+      "daily": "Every day at {time}",
+      "weekdays": "Weekdays at {time}",
+      "days": "{days} at {time}",
+      "hours": "{hours, plural, one {Every hour} other {Every # hours}}",
+      "minutes": "Every {minutes} minutes",
+      "once": "Once, {at}",
+      "inMinutes": "Once, in {minutes, plural, one {# minute} other {# minutes}}"
+    },
+    "next": "Next: {at}",
+    "paused": "Paused",
+    "finished": "Done",
+    "running": "Running now…",
+    "lastDone": "Last: {at}",
+    "lastFailed": "Last: {at}, did not finish",
+    "lastMissed": "Missed: {at} (the app was closed)",
+    "runNow": "Run now",
+    "open": "See the answers",
+    "pause": "Pause",
+    "resume": "Resume",
+    "remove": "Remove",
+    "removeSure": "Remove this flow?",
+    "removeYes": "Remove"
   }
 }

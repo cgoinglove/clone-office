@@ -64,6 +64,8 @@ test("the mini-me's tool server starts and lists its tools, the gate's and the h
     "sessions",
     "ask_session",
     "leave_out_folder",
+    "flows",
+    "flow_manage",
   ])
     assert.ok(names.includes(name), `${name} is listed`);
 });

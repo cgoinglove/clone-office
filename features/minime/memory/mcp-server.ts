@@ -20,6 +20,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { callFlowTool, FLOW_MANAGE_TOOL, FLOWS_TOOL } from "../flows/tools.ts";
 import {
   ASK_COLLEAGUE_TOOL,
   ASK_TOOL,
@@ -94,6 +95,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         CONVERSATION_TOOLS.search,
         CONVERSATION_TOOLS.read,
         GUIDE_TOOL,
+        FLOWS_TOOL,
         ...(gateOpen
           ? [
               ASK_TOOL,
@@ -102,6 +104,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
               ASK_SESSION_TOOL,
               WORK_SESSION_TOOL,
               LEAVE_OUT_TOOL,
+              FLOW_MANAGE_TOOL,
             ]
           : []),
         ...(colleaguesOpen ? [COLLEAGUES_TOOL, ASK_COLLEAGUE_TOOL] : []),
@@ -174,6 +177,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         request.params.name,
         args,
       );
+      return text(result, isError);
+    }
+    case FLOWS_TOOL.name:
+    case FLOW_MANAGE_TOOL.name: {
+      const { result, isError } = await callFlowTool(request.params.name, args);
       return text(result, isError);
     }
     case LEAVE_OUT_TOOL.name: {

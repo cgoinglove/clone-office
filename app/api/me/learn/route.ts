@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { keepFlowsRunning } from "@/features/minime/flows/run";
 import {
   catchUpIndex,
   keepIndexFresh,
@@ -40,6 +41,7 @@ export async function GET(request: Request) {
     const job = currentLearn();
     if (!job || job.done) void catchUpIndex({ maxMs: 30_000 }).catch(() => {});
     keepIndexFresh();
+    keepFlowsRunning();
     if (!job) {
       send((await savedLearn()) ?? { type: "idle" });
       return;

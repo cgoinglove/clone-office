@@ -28,6 +28,7 @@ import { Bot, type Mood } from "@/features/office";
 import { personTag, useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
+import { FlowsPanel } from "./flows-panel";
 import { LanguageSwitch } from "./language-switch";
 import { EXPORT_PROMPT } from "./learn/export-prompt";
 import { OfficePanel } from "./office-panel";
@@ -122,6 +123,7 @@ type Turn =
   | { id: number; kind: "note"; text: string }
   | { id: number; kind: "office"; text: string }
   | { id: number; kind: "told"; text: string }
+  | { id: number; kind: "flow"; text: string; at: string }
   | {
       id: number;
       kind: "ask";
@@ -206,7 +208,7 @@ export function FirstRun() {
     if (!response.ok) return;
     const data = (await response.json()) as {
       id: string;
-      messages: { role: string; text: string }[];
+      messages: { role: string; text: string; at: string }[];
     };
     const waiting = (await fetch(
       `/api/me/gate?chat=${encodeURIComponent(id)}`,
@@ -226,6 +228,8 @@ export function FirstRun() {
         if (m.role === "saved") return { id, kind: "saved", text: m.text };
         if (m.role === "office") return { id, kind: "office", text: m.text };
         if (m.role === "told") return { id, kind: "told", text: m.text };
+        if (m.role === "flow")
+          return { id, kind: "flow", text: m.text, at: m.at };
         return { id, kind: "error", text: m.text };
       }),
       ...waiting.asks.map(
@@ -989,6 +993,25 @@ export function FirstRun() {
               </BubbleContent>
             </Bubble>
           );
+        // One of the person's flows ran here on its own; its answer follows.
+        if (turn.kind === "flow")
+          return (
+            <p
+              key={turn.id}
+              className="self-center text-center text-xs text-muted-foreground"
+            >
+              ⏰{" "}
+              {t("chat.flowRan", {
+                name: turn.text,
+                at: format.dateTime(new Date(turn.at), {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                }),
+              })}
+            </p>
+          );
         if (turn.kind === "note")
           return (
             <p
@@ -1186,6 +1209,9 @@ export function FirstRun() {
           onWaiting={setOfficeWaiting}
           onNews={refreshChat}
         />
+      )}
+      {stage !== "boot" && (
+        <FlowsPanel onOpenChat={(id) => void openChat(id)} />
       )}
       {stage !== "boot" && <StoredFiles />}
       {stage !== "boot" && <LanguageSwitch />}

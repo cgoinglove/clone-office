@@ -1,0 +1,69 @@
+import * as z from "zod";
+import { keepFlowsRunning, runFlow } from "@/features/minime/flows/run";
+import { nextRun } from "@/features/minime/flows/schedule";
+import { changeFlow, getFlow, listFlows } from "@/features/minime/flows/store";
+import { hasClaudeCode } from "@/features/minime/server/brain";
+import { refuse } from "@/features/minime/server/guard";
+
+// The person's flows as their page shows them: each with when it runs (the screen writes it in
+// their language), when next, and how its last run went. Flows are made by talking to the mini-me;
+// here they are run now, paused, resumed or removed.
+export async function GET(request: Request) {
+  const refused = refuse(request);
+  if (refused) return refused;
+  keepFlowsRunning();
+  const now = new Date();
+  const flows = (await listFlows()).map((flow) => {
+    const next = flow.paused
+      ? undefined
+      : nextRun(
+          flow.when,
+          flow.seen ? new Date(flow.seen) : now,
+          new Date(flow.created),
+        );
+    return {
+      id: flow.id,
+      name: flow.name,
+      when: flow.when,
+      what: flow.what,
+      paused: Boolean(flow.paused),
+      next: next?.toISOString(),
+      last: flow.last,
+      chat: flow.chat,
+    };
+  });
+  return Response.json({ flows });
+}
+
+const Body = z.object({
+  action: z.enum(["run", "pause", "resume", "remove"]),
+  id: z.string().min(1).max(80),
+});
+
+export async function POST(request: Request) {
+  const refused = refuse(request);
+  if (refused) return refused;
+  const body = Body.safeParse(await request.json().catch(() => ({})));
+  if (!body.success)
+    return Response.json({ error: "bad-request" }, { status: 400 });
+  const { action, id } = body.data;
+  if (!(await getFlow(id)))
+    return Response.json({ error: "not-found" }, { status: 404 });
+  if (action === "run") {
+    if (!hasClaudeCode())
+      return Response.json({ error: "claude-missing" }, { status: 409 });
+    // It runs on in this server; its answer lands in the flow's conversation.
+    void runFlow(id).catch(() => {});
+    return Response.json({ started: true });
+  }
+  const now = new Date().toISOString();
+  await changeFlow(id, (flow) =>
+    action === "remove"
+      ? undefined
+      : action === "pause"
+        ? { ...flow, paused: true }
+        : // Resuming starts from now: nothing missed while paused is made up.
+          { ...flow, paused: false, seen: now },
+  );
+  return Response.json({ ok: true });
+}

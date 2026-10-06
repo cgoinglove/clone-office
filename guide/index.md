@@ -13,6 +13,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 | `memory.md` | What the mini-me keeps about them, what it never keeps, how it learns, bringing what another AI remembers, how they see, correct or remove what it keeps, starting over, where it is kept |
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
 | `office.md` | The office: joining with the relay's address and key, cards, asking a colleague's mini-me (also from Claude Code, with the sub-office plugin), answering requests that come in, what goes to the relay and what never does |
+| `flows.md` | Flows: what the mini-me does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
 | `trouble.md` | Claude Code missing or signed out, learning that takes long, something said that is out of date, reading again |
 
 Two things hold everywhere:
@@ -52,5 +53,8 @@ This is an early version, used on the **My mini-me** (내 미니미) page.
   colleague's request): it works in a copy of that conversation named "<name> · mini-me", which
   they can open later with `/resume`, and every file it changes and every command it runs is
   asked of them first, on a card that shows the change itself.
+
+- Do something on its own at set times, again and again or once later, when they ask for it
+  ("every weekday at 9, sum up what is waiting for me"), after a card (`flows.md`).
 
 Connecting mail and calendars comes later; say so plainly when asked, rather than promising.

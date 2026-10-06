@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { FlowAsk } from "./flows-panel";
 
 export type GateAsk =
   | { kind: "question"; question: string; choices?: string[] }
@@ -30,6 +31,15 @@ export function describe(
   tool: string,
   input: Record<string, unknown>,
 ): string {
+  // A flow: what is done to which one; the card shows the flow itself below.
+  if (tool === "mcp__minime__flow_manage") {
+    const action = ["create", "update", "pause", "resume", "remove"].includes(
+      String(input.action),
+    )
+      ? String(input.action)
+      : "update";
+    return t(`flow.${action}` as Parameters<Translate>[0]);
+  }
   const key = `doing.${tool}` as Parameters<Translate>[0];
   const what = t.has(key) ? t(key) : tool;
   const on =
@@ -137,6 +147,9 @@ export function AskCard({
             <pre className="max-h-60 overflow-auto rounded-lg bg-muted p-3 text-xs whitespace-pre-wrap">
               {changeOf(ask.tool, ask.input)}
             </pre>
+          )}
+          {ask.tool === "mcp__minime__flow_manage" && (
+            <FlowAsk input={ask.input} />
           )}
         </>
       )}

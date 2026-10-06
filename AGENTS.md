@@ -109,7 +109,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   what the person's usual AI remembers about them (Claude's memory import: copy a prompt there,
   paste the answer here), shows the memory exactly as saved with each entry correctable or
   removable, lists every file it keeps (`server/stored.ts`), does work with them, and can start
-  over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping}`, which
+  over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows}`, which
   answer only this app's pages; they take the person's language tag and tell the mini-me that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
@@ -205,6 +205,15 @@ These words help discussion. They do not mandate separate services, tables or UI
   saved by code, and three tasks); `export-prompt.ts` and `import.ts` (what another AI remembers,
   kept the same way, the pasted text stored nowhere); `reset.ts` (start over: what is kept moves
   into `backup/`, never deleted).
+- `features/minime/flows/`: flows, the person's "when this happens, do this" for set times (after
+  Hermes Agent's cronjob tool). `schedule.ts` (weekly days and time, every N minutes from 30, or
+  once; the mini-me writes this shape, the code never reads words; a missed run is made up within
+  half its period, 2 minutes to 2 hours), `store.ts` (one file each under `flows/`), `run.ts` (a run
+  is a fresh session with nobody to ask: `runSession` `standing`, only what the person already
+  allowed; its answer goes into the flow's own conversation as a "flow" line and the answer;
+  nothing is learned; `tick` every minute while the app runs, under a lock), `tools.ts` (`flows`
+  free, `flow_manage` asked first on a card). The page's part is `features/minime/flows-panel.tsx`
+  with the route `app/api/me/flows`.
 - `features/minime/server/sources/lines.ts`: line readers every record reader uses (lines over
   2 MB are skipped, logs can be read from the end); `server/exclude.ts`: folders the person keeps
   out of everything, from `settings.json`; `server/folders.ts`: the folders they worked in lately,

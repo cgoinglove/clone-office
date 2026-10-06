@@ -124,6 +124,11 @@ export interface SessionOptions {
    * the web), and whatever they have not let it do alone is asked on their screen.
    */
   gate?: SessionGate;
+  /**
+   * Work with nobody to ask (a flow): the session may also do what the person has already let it
+   * do alone, and everything else is refused rather than asked.
+   */
+  standing?: { allow: string[]; deny: string[] };
   onEvent?: (event: SessionEvent) => void;
 }
 
@@ -149,7 +154,8 @@ export type SessionPurpose =
   | "summary"
   | "request"
   | "check"
-  | "card";
+  | "card"
+  | "flow";
 
 export interface SessionResult {
   ok: boolean;
@@ -185,6 +191,7 @@ const ALLOWED_TOOLS = [
   "conversation_search",
   "conversation_read",
   "guide_read",
+  "flows",
 ].map((tool) => `mcp__minime__${tool}`);
 
 /** The few fields of Claude Code's stream-json events this reads. */
@@ -258,8 +265,10 @@ export async function runSession(
     options.resume && !options.fork ? options.resume : undefined;
   const newId = options.resume ? undefined : randomUUID();
   const gate = options.gate;
+  const standing = gate ? undefined : options.standing;
   // Without the gate a session keeps its memory and nothing else; with it, it may also read, and
-  // anything not let through by the person's rules is asked through the gate's prompt tool.
+  // anything not let through by the person's rules is asked through the gate's prompt tool. Work
+  // with nobody to ask has the person's rules and nothing more.
   const allowed = [
     ...ALLOWED_TOOLS,
     ...(gate
@@ -271,8 +280,11 @@ export async function runSession(
           ...TRUSTED_FROM_START,
           ...gate.allow,
         ]
-      : []),
+      : standing
+        ? [...TRUSTED_FROM_START, ...standing.allow]
+        : []),
   ];
+  const deny = (gate ?? standing)?.deny ?? [];
   const args = [
     "-p",
     "--output-format",
@@ -286,10 +298,10 @@ export async function runSession(
     mcpConfig(actor, gate),
     "--strict-mcp-config",
     "--tools",
-    gate ? ASKABLE_TOOLS.join(",") : "",
+    gate || standing ? ASKABLE_TOOLS.join(",") : "",
     "--allowedTools",
     allowed.join(","),
-    ...(gate?.deny.length ? ["--disallowedTools", gate.deny.join(",")] : []),
+    ...(deny.length ? ["--disallowedTools", deny.join(",")] : []),
     "--permission-mode",
     gate ? "manual" : "dontAsk",
     ...(gate
