@@ -72,7 +72,8 @@ export async function officeInbox(
     (task) => open.has(task.id) || Date.parse(task.status.timestamp) >= since,
   );
   const shape = (task: Task, other: string) => ({
-    [task.metadata.from === office.member ? "to" : "from"]: name(other),
+    [task.metadata.from === office.member ? "to" : "from"]:
+      task.metadata.guest ?? name(other),
     request: clip(said(task, "user")),
     state: task.status.state,
     answer: clip(said(task, "agent")) || null,

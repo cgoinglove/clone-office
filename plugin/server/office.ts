@@ -364,7 +364,7 @@ async function requests(office: Office, id?: string): Promise<ToolResult> {
         : `${name(message.metadata.from)}${message.role === "agent" ? "'s mini-me" : ""}`;
     return text(
       [
-        `${mine ? `Sent to ${name(task.metadata.to)}` : `From ${name(task.metadata.from)}`} · ${STATES[task.status.state]} · ${ago(task.status.timestamp)}`,
+        `${mine ? `Sent to ${task.metadata.guest ?? name(task.metadata.to)}` : `From ${name(task.metadata.from)}`} · ${STATES[task.status.state]} · ${ago(task.status.timestamp)}`,
         ...task.history.map(
           (message) =>
             `\n${who(message)} (${ago(message.metadata.at)}):\n${firstText(message)}`,
@@ -380,7 +380,7 @@ async function requests(office: Office, id?: string): Promise<ToolResult> {
       .map((task) => {
         const mine = task.metadata.from === office.member;
         const whom = mine
-          ? `to ${name(task.metadata.to)}`
+          ? `to ${task.metadata.guest ?? name(task.metadata.to)}`
           : `from ${name(task.metadata.from)}`;
         const open = FINAL.has(task.status.state) ? "" : " (open)";
         return `- ${whom} · ${STATES[task.status.state]}${open} · "${clip(firstText(task.history[0]), 80)}" · ${ago(task.status.timestamp)} · ${task.id}`;

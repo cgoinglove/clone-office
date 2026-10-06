@@ -22,7 +22,13 @@ export interface Task {
   id: string;
   status: { state: TaskState; timestamp: string };
   history: Message[];
-  metadata: { from: string; to: string; created: string };
+  metadata: {
+    from: string;
+    to: string;
+    created: string;
+    /** Asked by a link: the name of the one asked, who has no mini-me. */
+    guest?: string;
+  };
 }
 
 export interface Member {
