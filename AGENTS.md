@@ -239,7 +239,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   what changed) and `learn.ts` (one session whose structured answer holds a few lasting lines,
   saved by code, and three tasks); `export-prompt.ts` and `import.ts` (what another AI remembers,
   kept the same way, the pasted text stored nowhere); `reset.ts` (start over: what is kept moves
-  into `backup/`, never deleted).
+  into `backup/`, never deleted; when it all came from a reading, with nothing of the person's
+  (no conversation, skill or note, no memory written after the reading), it is cleared instead).
 - `features/minime/flows/`: flows, the person's "when this happens, do this" for set times (after
   Hermes Agent's cronjob tool). `schedule.ts` (weekly days and time, every N minutes from 30, or
   once; the mini-me writes this shape, the code never reads words; a missed run is made up within

@@ -96,7 +96,8 @@
     "routineDo": "같이 하기",
     "routineLater": "나중에",
     "routineFlow": "매번 하기",
-    "routineFlowAsk": "플로우를 만들어 줘: ‘{label}’ ({when})."
+    "routineFlowAsk": "플로우를 만들어 줘: ‘{label}’ ({when}).",
+    "startOverClear": "아직 가르쳐 주신 건 없고, 기록에서 읽은 것만 있어요. 비우고 처음부터 시작할까요? 다시 읽으면 돌아와요."
   },
   "memory": {
     "title": "제가 기억하는 당신",

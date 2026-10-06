@@ -58,8 +58,10 @@ the mini-me still keeps what it learns, and asks them, in theirs.
 - In the conversation they can simply say so: "forget that", "that's no longer true", "from now
   on, always…".
 - **Start over** (처음부터 다시), at the bottom of the page, moves everything it keeps into a backup
-  folder and begins again from the first step. Nothing is deleted, and folders they left out stay
-  left out.
+  folder and begins again from the first step; folders they left out stay left out. When all it
+  keeps came from reading their records (they have not talked with it, taught it or brought
+  anything from another AI yet), there is nothing of theirs to keep, so it clears that instead of
+  making a backup, and says so before they confirm; reading again brings it back.
 - **All files I keep** (저장된 파일 전체), at the bottom of the page, lists every file the mini-me
   keeps on the computer, grouped by kind, and opens each text file in place.
 - The files are theirs to read and edit with any text editor, in the `.sub-office` folder in their

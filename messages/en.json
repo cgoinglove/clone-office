@@ -96,7 +96,8 @@
     "routineDo": "Do it together",
     "routineLater": "Not now",
     "routineFlow": "Every time",
-    "routineFlowAsk": "Make a flow: {label} ({when})."
+    "routineFlowAsk": "Make a flow: {label} ({when}).",
+    "startOverClear": "Nothing you taught me is kept yet, only what I read from your records. Clear it and start from the beginning? Reading again brings it back."
   },
   "memory": {
     "title": "What I remember about you",

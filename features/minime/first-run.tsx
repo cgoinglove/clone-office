@@ -183,7 +183,9 @@ export function FirstRun() {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
   const [importing, setImporting] = useState(false);
-  const [sureOver, setSureOver] = useState(false);
+  // Starting over, once asked: it moves what is kept into a backup, or clears it when it only came
+  // from a reading (nothing of theirs to keep).
+  const [sureOver, setSureOver] = useState<false | "backup" | "clear">(false);
   const [listening, setListening] = useState(false);
   const [officeWaiting, setOfficeWaiting] = useState(0);
   const [cheer, setCheer] = useState(false);
@@ -1080,7 +1082,14 @@ export function FirstRun() {
               size="sm"
               className="text-muted-foreground"
               disabled={busy}
-              onClick={() => setSureOver(true)}
+              onClick={() =>
+                void fetch("/api/me/reset", { headers: HEADERS })
+                  .then((r) => r.json())
+                  .then((data) =>
+                    setSureOver(data?.onlyRead ? "clear" : "backup"),
+                  )
+                  .catch(() => setSureOver("backup"))
+              }
             >
               {t("firstRun.startOver")}
             </Button>
@@ -1138,7 +1147,9 @@ export function FirstRun() {
           {sureOver && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
               <span className="min-w-0 flex-1">
-                {t("firstRun.startOverSure")}
+                {sureOver === "clear"
+                  ? t("firstRun.startOverClear")
+                  : t("firstRun.startOverSure")}
               </span>
               <Button size="sm" onClick={() => void startOver()}>
                 {t("firstRun.startOverYes")}
