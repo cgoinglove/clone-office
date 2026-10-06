@@ -12,7 +12,8 @@ language. Name a screen or button the way they see it, and never name a file fro
 |---|---|
 | `memory.md` | What the mini-me keeps about them, what it never keeps, how it learns, bringing what another AI remembers, how they see, correct or remove what it keeps, starting over, where it is kept |
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
-| `office.md` | The office: joining with the relay's address and key, cards, asking a colleague's mini-me (also from Claude Code, with the sub-office plugin), answering requests that come in, what goes to the relay and what never does |
+| `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's mini-me (also from Claude Code, with the sub-office plugin), answering requests that come in, what goes to the relay and what never does |
+| `phone.md` | Talking with the mini-me from Discord on their phone: setting up their own bot, letting their phone in by its code, questions as buttons, when it does not answer |
 | `flows.md` | Flows: what the mini-me does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
 | `trouble.md` | Claude Code missing or signed out, learning that takes long, something said that is out of date, reading again |
 

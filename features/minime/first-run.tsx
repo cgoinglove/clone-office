@@ -31,6 +31,7 @@ import { AskCard, type GateAsk } from "./ask-card";
 import { FlowsPanel, whenText } from "./flows-panel";
 import { LanguageSwitch } from "./language-switch";
 import { EXPORT_PROMPT } from "./learn/export-prompt";
+import { MessengerPanel } from "./messenger-panel";
 import { OfficePanel } from "./office-panel";
 import { type Routine, routineNow } from "./routine";
 import { savedText } from "./saved-text";
@@ -1248,6 +1249,7 @@ export function FirstRun() {
           onAsk={(text) => void ask(text)}
         />
       )}
+      {stage !== "boot" && <MessengerPanel />}
       {stage !== "boot" && <StoredFiles />}
       {stage !== "boot" && <LanguageSwitch />}
       <div ref={bottom} />

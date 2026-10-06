@@ -34,7 +34,9 @@
     "flow-failed": "The flow did not finish. Try Run now, or tell your mini-me what to change.",
     "too-many-tries": "Too many wrong office keys from here. Try again in a few minutes.",
     "relay-failed": "The relay ran into a problem. Try again.",
-    "relay-port-taken": "Another program is using the office's port on this computer. Close it and try again."
+    "relay-port-taken": "Another program is using the office's port on this computer. Close it and try again.",
+    "messenger-token-wrong": "Discord did not take that token. Copy it again from the Bot page.",
+    "messenger-refused": "Discord stopped the bot. Check it in the Developer Portal and connect again."
   },
   "firstRun": {
     "title": "My mini-me",
@@ -452,5 +454,37 @@
       "weekAsk": "Make a flow: every Friday at 5 pm, list in a few lines what I finished this week and what is still open, from my AI conversations and my office requests."
     },
     "onRequest": "Followed when such a request comes in"
+  },
+  "messenger": {
+    "title": "On your phone",
+    "intro": "Talk with your mini-me from Discord on your phone, as you do here. It answers while this app runs on this computer, and what you say there shows here too.",
+    "step1": "At Discord's Developer Portal, make a New Application. So nobody else can add it to a server, set Install Link to None on its Installation page and turn off Public Bot on its Bot page. There, press Reset Token and copy the token.",
+    "step2": "Paste the token here and connect.",
+    "portal": "Open the Developer Portal",
+    "token": "Bot token",
+    "tokenPlaceholder": "The token from the Bot page",
+    "connect": "Connect",
+    "connecting": "Connecting to Discord…",
+    "connected": "Connected as {bot}.",
+    "step3": "Add the bot to a server of your own: Discord only delivers a message to a bot you share a server with. A private server made for this is fine.",
+    "addBot": "Add the bot to a server",
+    "step4": "Send the bot a direct message, not in the server: on your phone, tap the bot in the server's member list, then Message. A question with a code appears here.",
+    "asking": "{name} wrote to your bot. Let them in only if their phone shows {code}.",
+    "allow": "Let in",
+    "decline": "Not them",
+    "paired": "{bot} talks with {name} only. “/new” in Discord starts a new conversation.",
+    "elsewhere": "Another app on this computer is talking through this bot now.",
+    "disconnect": "Disconnect",
+    "knock": "Almost there. Your mini-me is asking on your computer whether to let you in. Let yourself in there only if it shows {code}, and it answers what you wrote.",
+    "someoneWaiting": "Someone else is already waiting to be let in here. If that is not you, press “Not them” on the computer, then write again.",
+    "taken": "This mini-me already talks with someone else.",
+    "in": "You are in. Write here and your mini-me answers.",
+    "inHeld": "You are in. Your mini-me answers what you wrote.",
+    "newChat": "A new conversation, then.",
+    "busy": "Still on your last message; I'll take this one next.",
+    "orReply": "Or reply with your own words.",
+    "replyHere": "Reply here with your answer.",
+    "gone": "This question no longer waits.",
+    "failed": "Something went wrong. Try again."
   }
 }

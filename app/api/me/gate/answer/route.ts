@@ -1,6 +1,5 @@
 import * as z from "zod";
-import { answerAsk, pendingAsks } from "@/features/minime/gate/gate";
-import { addTrust, ruleFor } from "@/features/minime/gate/rules";
+import { answerPerson } from "@/features/minime/gate/answer";
 import { refuse } from "@/features/minime/server/guard";
 
 const Body = z.object({
@@ -19,14 +18,8 @@ export async function POST(request: Request) {
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
   const { id, answer, always } = body.data;
-  const waiting = pendingAsks().find((ask) => ask.id === id);
-  if (!waiting)
+  const answered = await answerPerson(id, answer, always);
+  if (!answered.ok)
     return Response.json({ error: "no-longer-waiting" }, { status: 410 });
-  let rule: string | undefined;
-  if (always && answer === "allow" && waiting.ask.kind === "permission") {
-    rule = ruleFor(waiting.ask.tool, waiting.ask.input);
-    if (rule) await addTrust(rule);
-  }
-  answerAsk(id, answer, Boolean(rule));
-  return Response.json({ ok: true, ...(rule ? { rule } : {}) });
+  return Response.json(answered);
 }

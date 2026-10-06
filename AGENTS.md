@@ -250,6 +250,21 @@ These words help discussion. They do not mandate separate services, tables or UI
   nothing is learned; `tick` every minute while the app runs, under a lock), `tools.ts` (`flows`
   free, `flow_manage` asked first on a card). The page's part is `features/minime/flows-panel.tsx`
   with the route `app/api/me/flows`.
+- `features/minime/messenger/`: the mini-me in the person's messenger, Discord first (after
+  Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot with no
+  dependencies: the gateway over Node's own WebSocket (direct messages only, no privileged
+  intent), resume, heartbeats, the close codes that end it, and the HTTP calls (messages in pieces
+  with buttons, typing, a press taken at once and its message settled after, the invite link from
+  the application id). `bridge.ts` joins it to the mini-me: whoever writes first is asked about on
+  the page with a 4-digit code sent to their phone, one at a time, and what they wrote meanwhile
+  is answered once they are let in; then their messages go into one conversation through
+  `chat/turn.ts` `runTurn` ("/new" starts another), the gate's questions come as buttons or wait
+  for their words (`ask-text.ts` words them as the page's cards do; `gate/answer.ts` answers them
+  for both), and the answer is sent as soon as it is done. `settings.json` `messenger` keeps the
+  token, the person and the conversation; one process per folder holds the bot
+  (`messenger/holder.json`). It starts when the server does (`instrumentation.ts`) and when the
+  page asks; its words come from `messages/` through `i18n/messages.ts`. The page's part is
+  `features/minime/messenger-panel.tsx` with the route `app/api/me/messenger`.
 - `features/minime/server/sources/lines.ts`: line readers every record reader uses (lines over
   2 MB are skipped, logs can be read from the end); `server/exclude.ts`: folders the person keeps
   out of everything, from `settings.json`; `server/folders.ts`: the folders they worked in lately,

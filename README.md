@@ -43,6 +43,9 @@ leaves each decision with the person it belongs to.
   are away, its questions wait and come to you three times a day.
 - **It tells you how like you it is.** The like-me score: how often you send its answers as they
   were.
+- **From your phone.** Talk with your mini-me from Discord as you do on its page, through a bot of
+  your own that answers only you; its questions come as buttons. Tried against a stand-in for
+  Discord so far, not yet a real bot.
 - **Flows.** "Every weekday at 9, catch me up." "When someone asks about the payments API, end with
   a pointer to #payments-api." You ask; it shows you the flow on a card before making it.
 - **For developers:** with the Claude Code plugin, your teammates' mini-mes are tools in your
@@ -112,6 +115,6 @@ publishing it.
 
 ## Status
 
-Early, in local development. Coming next: files between mini-mes; talking to your mini-me from
-Discord or Slack; mail, calendar and documents as its hands; a desktop app for people who don't
+Early, in local development. Coming next: files between mini-mes; Slack and Telegram as well as
+Discord; mail, calendar and documents as its hands; a desktop app for people who don't
 code.
