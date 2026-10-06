@@ -14,6 +14,15 @@ import {
   updateRequest,
 } from "@/features/minime/office/client";
 import { answerLater, laterQuestions } from "@/features/minime/office/handle";
+import {
+  closeHere,
+  hostProblem,
+  hostsOffice,
+  networkAddress,
+  openHere,
+  publicRelay,
+  resumeHosting,
+} from "@/features/minime/office/host";
 import { likeMe } from "@/features/minime/office/likeme";
 import { writeMe } from "@/features/minime/office/me";
 import {
@@ -34,10 +43,11 @@ import { personLanguage } from "@/features/minime/server/language";
 
 // The person's office as their screen sees it: who is there (their cards), the requests sent and
 // received, and the questions about those requests waiting for them. Asking also keeps this
-// mini-me's office work running in the background.
+// mini-me's office work running in the background, and the office open on this computer if it is.
 export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
+  await resumeHosting();
   const office = await loadOffice();
   const menu = await loadMenu();
   if (!office) return Response.json({ joined: false, menu });
@@ -48,6 +58,11 @@ export async function GET(request: Request) {
     new URL("/api/me/gate", request.url).toString(),
     await personLanguage(url.searchParams.get("locale")),
   );
+  // Links are made on the address others reach; open here, that is this computer's network address.
+  const relay = await publicRelay(office);
+  const here = (await hostsOffice(office))
+    ? { relay, network: Boolean(networkAddress()), problem: hostProblem() }
+    : undefined;
   try {
     const [{ members: everyone }, { tasks: requests }] = await Promise.all([
       members(office),
@@ -55,7 +70,8 @@ export async function GET(request: Request) {
     ]);
     return Response.json({
       joined: true,
-      relay: office.relay,
+      relay,
+      here,
       me: { id: office.member, card: office.card },
       menu,
       likeMe: like,
@@ -79,14 +95,16 @@ export async function GET(request: Request) {
   } catch (error) {
     return Response.json({
       joined: true,
-      relay: office.relay,
+      relay,
+      here,
       me: { id: office.member, card: office.card },
       menu,
       likeMe: like,
       members: [],
       tasks: [],
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
-      problem: problemCode(error),
+      // While the office here is starting, or failed to, that is the problem to show.
+      problem: here?.problem ?? problemCode(error),
     });
   }
 }
@@ -105,6 +123,7 @@ const Body = z.discriminatedUnion("action", [
     key: z.string().min(1).max(200),
     card: Card,
   }),
+  z.object({ action: z.literal("open"), card: Card }),
   z.object({ action: z.literal("card"), card: Card }),
   z.object({
     action: z.literal("send"),
@@ -201,12 +220,13 @@ export async function POST(request: Request) {
       }
       return Response.json({ menu });
     }
-    if (input.action === "join") {
+    if (input.action === "join" || input.action === "open") {
       const menu = await loadMenu();
-      const office = await joinOffice(input.relay, input.key, {
-        ...input.card,
-        skills: menuSkills(menu),
-      });
+      const card = { ...input.card, skills: menuSkills(menu) };
+      const office =
+        input.action === "open"
+          ? await openHere(card)
+          : await joinOffice(input.relay, input.key, card);
       await writeMe(office.card, menu);
       return Response.json({
         joined: true,
@@ -226,7 +246,9 @@ export async function POST(request: Request) {
       return Response.json({ me: { id: next.member, card: next.card } });
     }
     if (input.action === "invite")
-      return Response.json({ url: await inviteLink(office) });
+      return Response.json({
+        url: await inviteLink(office, await publicRelay(office)),
+      });
     if (input.action === "send")
       return Response.json({
         task: await sendRequest(office, input.to, input.text),
@@ -240,6 +262,8 @@ export async function POST(request: Request) {
         task: await updateRequest(office, input.id, { state: "CANCELED" }),
       });
     stopOffice();
+    // Leaving the office open here closes it; what it keeps stays, for opening it again.
+    if (await hostsOffice(office)) await closeHere();
     await leaveOffice();
     return Response.json({ joined: false });
   } catch (error) {

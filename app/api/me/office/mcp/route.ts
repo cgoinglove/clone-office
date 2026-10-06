@@ -7,6 +7,7 @@ import {
   sendLink,
   sendRequest,
 } from "@/features/minime/office/client";
+import { publicRelay } from "@/features/minime/office/host";
 import { changeState } from "@/features/minime/office/state";
 import { refuse } from "@/features/minime/server/guard";
 
@@ -45,7 +46,12 @@ export async function POST(request: Request) {
     const others = everyone.filter((m) => m.id !== office.member);
     const input = body.data;
     if (input.action === "link") {
-      const { task, url } = await sendLink(office, input.name, input.text);
+      const { task, url } = await sendLink(
+        office,
+        input.name,
+        input.text,
+        await publicRelay(office),
+      );
       if (input.chat) {
         const chat = input.chat;
         await changeState((s) => {

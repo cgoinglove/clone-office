@@ -143,27 +143,32 @@ export function tasks(office: OfficeConfig): Promise<{ tasks: Task[] }> {
 
 /**
  * A request to someone without a mini-me: the relay makes a link whose page they answer on. The
- * full link is returned to give to the person, who sends it themselves.
+ * full link is returned to give to the person, who sends it themselves. Links are made on `base`,
+ * the relay's address as others reach it (host.ts `publicRelay`).
  */
 export async function sendLink(
   office: OfficeConfig,
   name: string,
   text: string,
+  base = office.relay,
 ): Promise<{ task: Task; url: string }> {
   const { task, link } = await call<{ task: Task; link: string }>(
     office.relay,
     "/links",
     { token: office.token, body: { name, text } },
   );
-  return { task, url: new URL(link, office.relay).toString() };
+  return { task, url: new URL(link, base).toString() };
 }
 
 /** The office's invite link, naming the one who gives it. */
-export async function inviteLink(office: OfficeConfig): Promise<string> {
+export async function inviteLink(
+  office: OfficeConfig,
+  base = office.relay,
+): Promise<string> {
   const { path } = await call<{ path: string }>(office.relay, "/invite", {
     token: office.token,
   });
-  const url = new URL(path, office.relay);
+  const url = new URL(path, base);
   if (office.card.name) url.searchParams.set("from", office.card.name);
   return url.toString();
 }

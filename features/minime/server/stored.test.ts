@@ -46,10 +46,26 @@ test("every kept file is listed by kind, with text for text files and size for t
 test("a credential in a kept file is shown masked", async () => {
   writeFileSync(
     join(root, "settings.json"),
-    JSON.stringify({ office: { relay: "http://r", token: "abc123" } }),
+    JSON.stringify({
+      office: { relay: "http://r", token: "abc123" },
+      host: { port: 3200, key: "office-key-xyz", on: true },
+    }),
   );
   const files = await storedFiles(root);
   const settings = files.find((f) => f.path === "settings.json");
   assert.ok(settings?.text?.includes("http://r"));
   assert.ok(!settings?.text?.includes("abc123"));
+  assert.ok(!settings?.text?.includes("office-key-xyz"));
+});
+
+test("the office opened on this computer is one entry with its whole size, not its database's files", async () => {
+  mkdirSync(join(root, "relay", "base", "1"), { recursive: true });
+  writeFileSync(join(root, "relay", "PG_VERSION"), "17");
+  writeFileSync(join(root, "relay", "base", "1", "1259"), Buffer.alloc(100));
+  const files = await storedFiles(root);
+  const office = files.filter((f) => f.path.startsWith("relay"));
+  assert.deepEqual(
+    office.map((f) => [f.group, f.path, f.size]),
+    [["office", "relay/", 102]],
+  );
 });

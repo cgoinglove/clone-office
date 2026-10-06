@@ -169,7 +169,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   link, `/i/<office key>?from=<name>` (`GET /invite` gives it to a member): the relay's page says
   how to join, and the join form fills in the relay and key from it (`office/invite.ts`).
 - `features/minime/office/`: the mini-me's side. `client.ts` (where its relay is and who it is
-  there, in `settings.json` under `office`, and the calls), `worker.ts` (one loop per server
+  there, in `settings.json` under `office`, and the calls), `host.ts` (an office opened on this
+  computer: the app starts `features/relay/server.ts` itself, PGlite in `relay/` under the
+  mini-me's folder, listening on the network, and joins it at 127.0.0.1; `settings.json` `host`
+  keeps its port and key so links stay the same, and the person's membership while it is closed;
+  links for others carry this computer's network address, a private IPv4 or else its IPv6
+  (`publicRelay`); the relay stops with the app through its stdin, `RELAY_WITH_PARENT`, and is
+  started again when the page next asks about the office), `worker.ts` (one loop per server
   process: waits at the inbox, answers requests that come in, puts answers to sent requests back
   into their conversations), `handle.ts` (answers a request with the brain from what it knows,
   asking its person through the gate for what only they can give; a busy AI service is retried

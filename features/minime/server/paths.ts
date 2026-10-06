@@ -43,6 +43,22 @@ export function toolServerPath(): string {
       );
 }
 
+/** The relay's server, for an office opened on this computer: bundled in the package, or the source. */
+export function relayServerPath(): string {
+  return process.env.SUB_OFFICE_APP_DIR
+    ? join(
+        /*turbopackIgnore: true*/ process.env.SUB_OFFICE_APP_DIR,
+        "dist",
+        "relay.mjs",
+      )
+    : join(
+        /*turbopackIgnore: true*/ process.cwd(),
+        "features",
+        "relay",
+        "server.ts",
+      );
+}
+
 export function codexHome(): string {
   return process.env.CODEX_HOME ?? join(homedir(), ".codex");
 }

@@ -5,18 +5,31 @@ colleagues for them: it answers what it can, and brings back only what its perso
 
 ## Joining
 
-At the bottom of the **My mini-me** (내 미니미) page, open **Office** (오피스) and fill in the
-address of the relay the team runs (**Relay address**, 릴레이 주소), the **Office key** (오피스
-열쇠) whoever started the relay shared, their name, and what they do in a line. **Draft it for
-me** (초안 써 줘) has the mini-me write that line from what it knows of them; they correct it
-before joining, and nothing is shared until they join. **Join**
-(들어가기) puts their card in the office. Colleagues who join the same way appear under
-**Colleagues** (동료).
+At the bottom of the **My mini-me** (내 미니미) page, open **Office** (오피스). There are two ways
+in:
 
-An invite link is quicker: someone in the office presses **Invite a colleague** (동료 초대) under
-Colleagues and sends the link. Opened, it shows who invites and how to join; pasted where the
-relay address goes, it fills in the address and the key at once. Anyone with the link can join,
-so it goes only to the team.
+- **Open one on this computer** (이 컴퓨터에서 열기): this computer becomes the team's office. The
+  app starts the relay itself (the same one as `pnpm relay`, keeping the office in `relay/` in
+  the mini-me's folder) and puts their card in it. Teammates on the same network (the same Wi-Fi,
+  or the same office network) join with the invite link they send. At the top of Office it says
+  **Open on this computer** (이 컴퓨터에서 열려 있어요), with the address teammates reach and
+  **Copy invite** (초대 링크 복사). The first time, the computer may ask whether the app may accept
+  incoming connections; it has to, for teammates to reach it. The office rests while the computer
+  sleeps or the app is closed, and teammates cannot reach it then; it opens again at the same
+  address, with the same key, when the app is back. On another network the address can change,
+  and teammates need a new link. Teammates who are not on the same network need a relay the team
+  runs on a server (the README says how).
+- **Join with an invite link** (초대 링크로 들어가기): paste the link a teammate sent. **Join with
+  an address and key instead** (주소와 열쇠로 들어가기) is for a relay someone runs by hand: its
+  address and the **Office key** (오피스 열쇠) they shared.
+
+Either way they give their name and what they do in a line. **Draft it for me** (초안 써 줘) has
+the mini-me write that line from what it knows of them; they correct it before going in, and
+nothing is shared until then. Colleagues who join appear under **Colleagues** (동료).
+
+Anyone in the office can press **Invite a colleague** (동료 초대) under Colleagues and send the
+link. Opened, it shows who invites and how to join. Anyone with the link can join, so it goes
+only to the team.
 
 ## What goes to the relay, and what never does
 
@@ -141,7 +154,8 @@ shows who and what): a page where that person reads the request and answers, in 
 language when the page is written in it. The mini-me gives them the link and they send it
 themselves, by their usual messenger; the answer comes into the conversation it was asked from.
 A link is the only key to its page, and it ends after two weeks or once answered. It works where
-that person can reach the office's relay (a relay on one computer is reachable only there). In
+that person can reach the office's relay: an office open on a computer, from the same network; a
+relay the team runs on a server, from anywhere. In
 the office's requests it shows as **(by link)** (링크), with **Copy link** (링크 복사) while it
 is open.
 
@@ -183,3 +197,6 @@ conversation, and a morning flow can catch them up (`flows.md`).
 
 Their status (**Working**, **In a meeting**, **Away**, **Off**) shows on their card. **Leave the
 office** (오피스 나가기) forgets the relay on this computer; past requests stay on the relay.
+When the office is open on their computer, it reads **Close the office on this computer** (이
+컴퓨터의 오피스 닫기) and asks once, since teammates cannot reach the office until it is opened
+here again. Everything it keeps stays, and opening it again brings them back as themselves.

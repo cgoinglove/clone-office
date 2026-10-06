@@ -33,7 +33,8 @@
     "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead.",
     "flow-failed": "The flow did not finish. Try Run now, or tell your mini-me what to change.",
     "too-many-tries": "Too many wrong office keys from here. Try again in a few minutes.",
-    "relay-failed": "The relay ran into a problem. Try again."
+    "relay-failed": "The relay ran into a problem. Try again.",
+    "relay-port-taken": "Another program is using the office's port on this computer. Close it and try again."
   },
   "firstRun": {
     "title": "My mini-me",
@@ -172,7 +173,7 @@
   },
   "office": {
     "title": "Office",
-    "intro": "Where your mini-me and your colleagues' trade requests. Join with the address of the relay your team runs and the office key. Your memory and conversations never go to the relay; only cards and requests do.",
+    "intro": "Where your mini-me and your colleagues' trade requests. Your memory and conversations never go there; only cards and requests do.",
     "relay": "Relay address",
     "key": "Office key",
     "name": "Your name",
@@ -189,7 +190,7 @@
       "off": "Off"
     },
     "colleagues": "Colleagues",
-    "nobody": "No other mini-me yet. Share the office key with a colleague.",
+    "nobody": "No other mini-me yet. Send a colleague the invite link.",
     "ask": "Ask",
     "askPlaceholder": "What to ask {name}'s mini-me",
     "requests": "Requests",
@@ -378,7 +379,23 @@
         "floors": "FLOORS 1–{count}",
         "yourFloor": "your floor"
       }
-    }
+    },
+    "openHere": "Open one on this computer",
+    "joinByLink": "Join with an invite link",
+    "openHereNote": "This computer carries your team's office. Teammates on the same Wi-Fi join with the invite link you send them.",
+    "joinByLinkNote": "Paste the invite link a teammate sent you.",
+    "inviteLink": "Invite link",
+    "inviteLinkPlaceholder": "http://…/i/…",
+    "notInviteLink": "That doesn't look like an invite link.",
+    "open": "Open the office",
+    "byHand": "Join with an address and key instead",
+    "openHereNow": "Open on this computer",
+    "openHereRest": "It rests while this computer sleeps or the app is closed. When it is back, at the same address, requests carry on.",
+    "openHereNoNetwork": "No network found, so only this computer can reach it. Connect to Wi-Fi so teammates can join.",
+    "close": "Close the office on this computer",
+    "closeNote": "Teammates can't reach the office until you open it here again. Everything it keeps stays.",
+    "keepOpen": "Keep it open",
+    "byLinkInstead": "Join with an invite link instead"
   },
   "files": {
     "title": "All files I keep",
@@ -393,7 +410,8 @@
       "settings": "Settings (folders left out, your language, your office)",
       "index": "Conversation search index (rebuilt from the original records)",
       "backup": "Backups (moved there when starting over)",
-      "other": "Other files"
+      "other": "Other files",
+      "office": "The office opened on this computer (its relay's records)"
     },
     "empty": "(empty)"
   },

@@ -4,7 +4,9 @@
 // on a server; without one it keeps it in the folder `relay-data` with PGlite, nothing to install.
 // The office key (--key or RELAY_KEY) is what lets a mini-me join; without one the relay keeps the
 // key its office was made with, and makes one the first time. With --host 0.0.0.0 it is reachable
-// from the network, and it says at which addresses. The routes are in handler.ts.
+// from the network, and it says at which addresses. Started by the app with RELAY_WITH_PARENT=1
+// (and its stdin a pipe the app holds), it stops when the app does, however the app ends. The
+// routes are in handler.ts.
 
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
@@ -70,3 +72,9 @@ async function stop() {
 }
 process.on("SIGINT", () => void stop());
 process.on("SIGTERM", () => void stop());
+// The app that started it is gone once its end of the pipe closes.
+if (process.env.RELAY_WITH_PARENT === "1") {
+  process.stdin.on("end", () => void stop());
+  process.stdin.on("error", () => void stop());
+  process.stdin.resume();
+}

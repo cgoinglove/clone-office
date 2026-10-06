@@ -1,6 +1,7 @@
 // Everything a mini-me keeps on this computer, file by file, so the person can see exactly what is
 // stored and where. Text files (memory, skills, notes, the record of the last reading, settings)
-// come with their text; the search index and anything large come with their size only.
+// come with their text; the search index and anything large come with their size only. The office
+// opened on this computer (`relay/`, a database's own files) is one entry, with its whole size.
 
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
@@ -14,6 +15,7 @@ export type StoredGroup =
   | "logs"
   | "reading"
   | "settings"
+  | "office"
   | "index"
   | "backup"
   | "other";
@@ -26,6 +28,7 @@ export const STORED_GROUPS: StoredGroup[] = [
   "logs",
   "reading",
   "settings",
+  "office",
   "index",
   "backup",
   "other",
@@ -54,19 +57,21 @@ function groupOf(path: string): StoredGroup {
   if (first === "logs") return "logs";
   if (path === "learn.json") return "reading";
   if (path === "settings.json") return "settings";
+  if (first === "relay") return "office";
   if (first === "index") return "index";
   if (first === "backup") return "backup";
   return "other";
 }
 
-/** Credentials kept in a JSON file (the office token) are shown masked: a screen gets shared. */
+/** Credentials kept in a JSON file (the office token and key) are shown masked: a screen gets shared. */
 function masked(name: string, text: string): string {
   if (!name.endsWith(".json")) return text;
   try {
     return JSON.stringify(
       JSON.parse(text),
       (key, value) =>
-        typeof value === "string" && /token|secret|password/i.test(key)
+        typeof value === "string" &&
+        (/token|secret|password/i.test(key) || key === "key")
           ? "••••••"
           : value,
       2,
@@ -74,6 +79,28 @@ function masked(name: string, text: string): string {
   } catch {
     return text;
   }
+}
+
+/** A folder's files together: their size and when the latest changed. */
+async function folderSize(
+  dir: string,
+): Promise<{ size: number; modified: number }> {
+  const total = { size: 0, modified: 0 };
+  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  for (const entry of entries) {
+    const full = join(/*turbopackIgnore: true*/ dir, entry.name);
+    if (entry.isDirectory()) {
+      const inner = await folderSize(full);
+      total.size += inner.size;
+      total.modified = Math.max(total.modified, inner.modified);
+    } else if (entry.isFile()) {
+      const info = await stat(full).catch(() => undefined);
+      if (!info) continue;
+      total.size += info.size;
+      total.modified = Math.max(total.modified, info.mtimeMs);
+    }
+  }
+  return total;
 }
 
 export async function storedFiles(home = minimeHome()): Promise<StoredFile[]> {
@@ -86,6 +113,16 @@ export async function storedFiles(home = minimeHome()): Promise<StoredFile[]> {
       if (out.length >= FILES_MAX) return;
       if (entry.name === ".lock" || entry.name.endsWith(".tmp")) continue;
       const full = join(/*turbopackIgnore: true*/ dir, entry.name);
+      if (entry.isDirectory() && depth === 0 && entry.name === "relay") {
+        const { size, modified } = await folderSize(full);
+        out.push({
+          path: "relay/",
+          group: "office",
+          size,
+          modified: new Date(modified || Date.now()).toISOString(),
+        });
+        continue;
+      }
       if (entry.isDirectory()) {
         await walk(full, depth + 1);
         continue;

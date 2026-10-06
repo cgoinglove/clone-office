@@ -69,7 +69,10 @@ interface Task {
 
 interface Office {
   joined: boolean;
+  /** The relay's address as others reach it, for the links it makes. */
   relay?: string;
+  /** The office is open on this computer: where teammates reach it, and what keeps it from opening. */
+  here?: { relay: string; network: boolean; problem?: string };
   me?: { id: string; card: Card };
   /** The person's own menu, with how much their mini-me does alone for each kind. */
   menu?: MenuItem[];
@@ -255,6 +258,7 @@ export function OfficePanel({
         )}
         {office?.joined && office.me && (
           <>
+            {office.here && <Here here={office.here} />}
             {office.problem && (
               <p className="text-destructive">{problemText(office.problem)}</p>
             )}
@@ -366,15 +370,11 @@ export function OfficePanel({
               </ul>
             </section>
             {error && <p className="text-destructive">{problemText(error)}</p>}
-            <Button
-              size="sm"
-              variant="ghost"
-              className="self-start text-muted-foreground"
-              disabled={busy}
-              onClick={() => void post({ action: "leave" })}
-            >
-              {t("leave")}
-            </Button>
+            <Leave
+              here={Boolean(office.here)}
+              busy={busy}
+              onLeave={() => void post({ action: "leave" })}
+            />
           </>
         )}
         {office && !office.joined && error && (
@@ -385,6 +385,11 @@ export function OfficePanel({
   );
 }
 
+/**
+ * The way into an office: open one on this computer, which teammates on the same network join by
+ * its invite link, or join a teammate's with theirs. The relay's address and key stay folded away
+ * for a relay run by hand.
+ */
 function Join({
   lang,
   busy,
@@ -394,12 +399,17 @@ function Join({
   busy: boolean;
   onJoin: (body: unknown) => Promise<boolean>;
 }) {
+  const [way, setWay] = useState<"here" | "join">("here");
+  const [link, setLink] = useState("");
+  const [byHand, setByHand] = useState(false);
   const [relay, setRelay] = useState("http://127.0.0.1:3200");
   const [key, setKey] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [drafting, setDrafting] = useState(false);
   const t = useTranslations("office");
+  const invite = parseInvite(link);
+  const target = byHand ? { relay, key } : invite;
   // The mini-me drafts the line from what it knows; the person corrects it before joining.
   const draft = async () => {
     setDrafting(true);
@@ -421,32 +431,62 @@ function Join({
       className="flex flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
-        void onJoin({
-          action: "join",
-          relay,
-          key,
-          card: { name, description: role },
-        });
+        const card = { name, description: role };
+        if (way === "here") void onJoin({ action: "open", card });
+        else if (target) void onJoin({ action: "join", ...target, card });
       }}
     >
       <p className="text-muted-foreground">{t("intro")}</p>
-      <label className="flex flex-col gap-1">
-        <span>{t("relay")}</span>
-        <Input
-          value={relay}
-          placeholder={t("relayPlaceholder")}
-          onChange={(e) => {
-            // An invite link fills in both the relay and the key.
-            const invite = parseInvite(e.target.value);
-            setRelay(invite ? invite.relay : e.target.value);
-            if (invite) setKey(invite.key);
-          }}
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span>{t("key")}</span>
-        <Input value={key} onChange={(e) => setKey(e.target.value)} />
-      </label>
+      <Segmented
+        aria-label={t("title")}
+        className="w-full *:flex-1"
+        value={way}
+        onChange={setWay}
+        options={[
+          { value: "here", label: t("openHere") },
+          { value: "join", label: t("joinByLink") },
+        ]}
+      />
+      <p className="text-muted-foreground">
+        {way === "here" ? t("openHereNote") : t("joinByLinkNote")}
+      </p>
+      {way === "join" && !byHand && (
+        <label className="flex flex-col gap-1">
+          <span>{t("inviteLink")}</span>
+          <Input
+            value={link}
+            placeholder={t("inviteLinkPlaceholder")}
+            aria-invalid={Boolean(link.trim()) && !invite}
+            onChange={(e) => setLink(e.target.value)}
+          />
+          {link.trim() && !invite && (
+            <span className="text-xs text-destructive">
+              {t("notInviteLink")}
+            </span>
+          )}
+        </label>
+      )}
+      {way === "join" && byHand && (
+        <>
+          <label className="flex flex-col gap-1">
+            <span>{t("relay")}</span>
+            <Input
+              value={relay}
+              placeholder={t("relayPlaceholder")}
+              onChange={(e) => {
+                // An invite link fills in both the relay and the key.
+                const pasted = parseInvite(e.target.value);
+                setRelay(pasted ? pasted.relay : e.target.value);
+                if (pasted) setKey(pasted.key);
+              }}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>{t("key")}</span>
+            <Input value={key} onChange={(e) => setKey(e.target.value)} />
+          </label>
+        </>
+      )}
       <label className="flex flex-col gap-1">
         <span>{t("name")}</span>
         <Input value={name} onChange={(e) => setName(e.target.value)} />
@@ -472,15 +512,141 @@ function Join({
           </Button>
         </div>
       </label>
-      <Button
-        type="submit"
-        className="self-start"
-        disabled={busy || !relay.trim() || !key.trim() || !name.trim()}
-        loading={busy}
-      >
-        {t("join")}
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          type="submit"
+          disabled={
+            busy ||
+            !name.trim() ||
+            (way === "join" && !(target?.relay.trim() && target.key.trim()))
+          }
+          loading={busy}
+        >
+          {way === "here" ? t("open") : t("join")}
+        </Button>
+        {way === "join" && (
+          <button
+            type="button"
+            className="text-xs text-muted-foreground underline underline-offset-4"
+            onClick={() => setByHand((was) => !was)}
+          >
+            {byHand ? t("byLinkInstead") : t("byHand")}
+          </button>
+        )}
+      </div>
     </form>
+  );
+}
+
+/**
+ * The office open on this computer: the address teammates reach it at, its invite link to copy,
+ * and that it rests while this computer sleeps.
+ */
+function Here({
+  here,
+}: {
+  here: { relay: string; network: boolean; problem?: string };
+}) {
+  const t = useTranslations("office");
+  const problemText = useProblem();
+  const [url, setUrl] = useState<string>();
+  const [copied, setCopied] = useState(false);
+  // Made ahead, so a click copies it at once (some browsers allow copying only right on the click).
+  useEffect(() => {
+    if (here.problem) return;
+    let live = true;
+    void fetch("/api/me/office", {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify({ action: "invite" }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (live && typeof data?.url === "string") setUrl(data.url);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [here.problem]);
+  return (
+    <div className="flex flex-col gap-1 rounded-lg bg-muted p-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          aria-hidden
+          className={cn(
+            "size-2 shrink-0 rounded-full",
+            here.problem ? "bg-muted-foreground" : "bg-brand",
+          )}
+        />
+        <span className="shrink-0 font-medium">{t("openHereNow")}</span>
+        <code className="min-w-0 flex-1 truncate text-xs">
+          {here.relay.replace(/^https?:\/\//, "")}
+        </code>
+        <Button
+          size="xs"
+          className="shrink-0"
+          disabled={!url}
+          onClick={() => {
+            if (!url) return;
+            void navigator.clipboard
+              ?.writeText(url)
+              .then(() => setCopied(true))
+              .catch(() => {});
+          }}
+        >
+          {copied ? t("copied") : t("copyInvite")}
+        </Button>
+      </div>
+      {here.problem ? (
+        <span className="text-xs text-destructive">
+          {problemText(here.problem)}
+        </span>
+      ) : (
+        <span className="text-xs text-muted-foreground">
+          {here.network ? t("openHereRest") : t("openHereNoNetwork")}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** Leaving the office; for the one open here, closing it, which teammates feel, so it asks once. */
+function Leave({
+  here,
+  busy,
+  onLeave,
+}: {
+  here: boolean;
+  busy: boolean;
+  onLeave: () => void;
+}) {
+  const t = useTranslations("office");
+  const [sure, setSure] = useState(false);
+  if (here && sure)
+    return (
+      <div className="flex flex-col gap-2">
+        <span className="text-muted-foreground">{t("closeNote")}</span>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" disabled={busy} onClick={onLeave}>
+            {t("close")}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setSure(false)}>
+            {t("keepOpen")}
+          </Button>
+        </div>
+      </div>
+    );
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      className="self-start text-muted-foreground"
+      disabled={busy}
+      onClick={() => (here ? setSure(true) : onLeave())}
+    >
+      {here ? t("close") : t("leave")}
+    </Button>
   );
 }
 
