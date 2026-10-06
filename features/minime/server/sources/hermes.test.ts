@@ -4,50 +4,55 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { test } from "node:test";
-import { hermesConversations, messageTurns } from "./hermes";
+import { contentText, hermesMessages, hermesSessions } from "./hermes";
 
-test("each user message is paired with the assistant's message before it", () => {
-  const turns = messageTurns([
-    {
-      role: "user",
-      content: "summarize the meeting",
-      at: "2026-08-01T00:00:00Z",
-    },
-    { role: "tool", content: "{}", at: "2026-08-01T00:00:01Z" },
-    {
-      role: "assistant",
-      content: "Here is the summary.",
-      at: "2026-08-01T00:00:02Z",
-    },
-    { role: "user", content: "shorter please", at: "2026-08-01T00:00:03Z" },
-  ]);
-  assert.deepEqual(
-    turns.map((t) => [t.prompt, t.before]),
-    [
-      ["summarize the meeting", ""],
-      ["shorter please", "Here is the summary."],
-    ],
+test("structured content is read as its text parts", () => {
+  assert.equal(contentText("plain words"), "plain words");
+  assert.equal(
+    contentText(
+      `\u0000json:${JSON.stringify([
+        { type: "text", text: "look at this" },
+        { type: "image_url", image_url: { url: "data:..." } },
+        { type: "text", text: "and this" },
+      ])}`,
+    ),
+    "look at this\nand this",
   );
+  assert.equal(contentText("\u0000json:{broken"), "");
+  assert.equal(contentText(null), "");
 });
 
-test("sessions started by the scheduler are left out", async () => {
+test("sessions its scheduler started and messages the person rewound are left out", () => {
   const home = mkdtempSync(join(tmpdir(), "hermes-"));
-  const previous = process.env.HERMES_HOME;
-  process.env.HERMES_HOME = home;
   try {
-    const db = new DatabaseSync(join(home, "state.db"));
-    db.exec(`CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT NOT NULL, cwd TEXT, git_repo_root TEXT, started_at REAL NOT NULL);
-      CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT, timestamp REAL NOT NULL);
-      INSERT INTO sessions VALUES ('a', 'cli', '/u/app/sub', '/u/app', 1788000000), ('b', 'cron', NULL, NULL, 1788000000);
-      INSERT INTO messages (session_id, role, content, timestamp) VALUES ('a', 'user', 'plan my week', 1788000001), ('b', 'user', 'scheduled job', 1788000002);`);
+    const path = join(home, "state.db");
+    const db = new DatabaseSync(path);
+    db.exec(`CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT NOT NULL, cwd TEXT, git_repo_root TEXT, hidden INTEGER DEFAULT 0, started_at REAL NOT NULL);
+      CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT, timestamp REAL NOT NULL, active INTEGER DEFAULT 1, compacted INTEGER DEFAULT 0);
+      INSERT INTO sessions VALUES ('a', 'cli', '/u/app/sub', '/u/app', 0, 1788000000), ('b', 'cron', NULL, NULL, 0, 1788000000), ('c', 'desktop', NULL, NULL, 1, 1788000000);
+      INSERT INTO messages (session_id, role, content, timestamp, active, compacted) VALUES
+        ('a', 'user', 'plan my week', 1788000001, 0, 1), ('a', 'tool', '{}', 1788000002, 1, 0),
+        ('a', 'user', 'no, start on Tuesday', 1788000003, 0, 0), ('a', 'assistant', 'Here is the plan.', 1788000004, 1, 0),
+        ('b', 'user', 'scheduled job', 1788000002, 1, 0), ('c', 'user', 'talk in the bot chat', 1788000002, 1, 0);`);
     db.close();
-    const found = await hermesConversations();
-    assert.equal(found.length, 1);
-    assert.equal(found[0].cwd, "/u/app");
-    assert.equal((await found[0].turns())[0].prompt, "plan my week");
+    const found = hermesSessions(path);
+    assert.deepEqual(
+      found.map((s) => [s.id, s.folder ?? null, s.count]),
+      [
+        ["a", "/u/app", 2],
+        ["c", null, 1],
+      ],
+      "a session hidden from its lists (its bot chat) is kept, as its search keeps it",
+    );
+    assert.deepEqual(
+      hermesMessages(path, "a").map((m) => [m.role, m.text]),
+      [
+        ["user", "plan my week"],
+        ["assistant", "Here is the plan."],
+      ],
+      "a compacted message stays; a rewound one does not",
+    );
   } finally {
-    if (previous === undefined) delete process.env.HERMES_HOME;
-    else process.env.HERMES_HOME = previous;
     rmSync(home, { recursive: true, force: true });
   }
 });

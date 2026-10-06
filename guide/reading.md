@@ -22,8 +22,10 @@ out are shown struck through, with **Left out** (뺐어요) to bring them back.
 ## Their past conversations
 
 So that it can answer "what did I do today" without keeping copies, the mini-me keeps a search
-index of their conversations with their AI tools, and of their conversations with the mini-me
-itself: only what they typed and what the AI answered in text, never tool output. The first reading indexes only the last two weeks, so it can start
+index of their conversations with their AI tools (Claude Code, Codex, Cursor's chat and Hermes
+Agent), and of their conversations with the mini-me itself: only what they typed and what the AI
+answered in text, never tool output. A conversation they delete in Cursor or Hermes Agent leaves
+the index too. The first reading indexes only the last two weeks, so it can start
 within seconds; the rest of the last three months is filled in afterwards, in the background. The
 index is a file on this computer, refreshed a little at a time; deleting it loses nothing, it is
 rebuilt from the AI tools' own records, which it only ever reads.

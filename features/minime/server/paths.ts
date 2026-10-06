@@ -38,8 +38,13 @@ export function openclawWorkspace(): string {
   );
 }
 
-/** Cursor's settings and chat database, where each system keeps an app's data. */
+/**
+ * Cursor's settings and chat database, where each system keeps an app's data. VSCODE_APPDATA moves
+ * it, as it moves the data of every app built on VS Code.
+ */
 export function cursorUserDir(): string {
+  if (process.env.VSCODE_APPDATA)
+    return join(process.env.VSCODE_APPDATA, "Cursor", "User");
   if (process.platform === "darwin")
     return join(homedir(), "Library", "Application Support", "Cursor", "User");
   if (process.platform === "win32")

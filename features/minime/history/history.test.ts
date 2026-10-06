@@ -9,6 +9,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import { after, before, test } from "node:test";
 import { isExcluded } from "../server/exclude";
 import { indexTerms, matchQuery } from "./cjk";
@@ -22,6 +23,8 @@ const db = join(root, "home", "index", "history.db");
 const saved = {
   CLAUDE_CONFIG_DIR: process.env.CLAUDE_CONFIG_DIR,
   CODEX_HOME: process.env.CODEX_HOME,
+  HERMES_HOME: process.env.HERMES_HOME,
+  VSCODE_APPDATA: process.env.VSCODE_APPDATA,
 };
 
 const user = (text: string, at: string) =>
@@ -57,6 +60,8 @@ function session(project: string, id: string, lines: string[]): string {
 before(() => {
   process.env.CLAUDE_CONFIG_DIR = claude;
   process.env.CODEX_HOME = join(root, "codex");
+  process.env.HERMES_HOME = join(root, "hermes");
+  process.env.VSCODE_APPDATA = join(root, "appdata");
 });
 after(() => {
   for (const [key, value] of Object.entries(saved)) {
@@ -255,5 +260,153 @@ test("a pass limited to recent hours reads only recent sessions and keeps older 
   assert.ok(
     indexed().includes("older"),
     "a recent pass never drops older sessions",
+  );
+});
+
+test("chats kept in Cursor's and Hermes Agent's databases are indexed, read again when they change, and leave when deleted", async () => {
+  const now = Date.parse("2026-10-06T00:00:00Z");
+  const at = (minutes: number) => now - 60 * 60 * 1000 + minutes * 60 * 1000;
+  const iso = (minutes: number) => new Date(at(minutes)).toISOString();
+
+  // Cursor: a chat, its bubbles, and the window (folder) it ran in.
+  const user = join(root, "appdata", "Cursor", "User");
+  mkdirSync(join(user, "globalStorage"), { recursive: true });
+  mkdirSync(join(user, "workspaceStorage", "w1"), { recursive: true });
+  writeFileSync(
+    join(user, "workspaceStorage", "w1", "workspace.json"),
+    JSON.stringify({ folder: "file:///work/shop" }),
+  );
+  const cursor = new DatabaseSync(join(user, "globalStorage", "state.vscdb"));
+  cursor.exec(
+    "CREATE TABLE cursorDiskKV (key TEXT UNIQUE ON CONFLICT REPLACE, value BLOB); CREATE TABLE composerHeaders (composerId TEXT PRIMARY KEY, workspaceId TEXT, createdAt INTEGER, lastUpdatedAt INTEGER)",
+  );
+  const put = cursor.prepare("INSERT INTO cursorDiskKV VALUES (?, ?)");
+  const chat = (bubbles: string[], minutes: number) =>
+    put.run(
+      "composerData:c1",
+      JSON.stringify({
+        composerId: "c1",
+        name: "Orders pagination",
+        createdAt: at(0),
+        lastUpdatedAt: at(minutes),
+        fullConversationHeadersOnly: bubbles.map((bubbleId) => ({ bubbleId })),
+      }),
+    );
+  const bubble = (id: string, type: number, text: string, minutes: number) =>
+    put.run(
+      `bubbleId:c1:${id}`,
+      JSON.stringify({ type, text, createdAt: iso(minutes) }),
+    );
+  bubble("b1", 1, "add cursor pagination to /orders", 1);
+  bubble("b2", 2, "Done: /orders now takes a cursor.", 2);
+  chat(["b1", "b2"], 2);
+  // An empty draft, as Cursor leaves when its panel opens, and a value that is not JSON.
+  put.run("composerData:c2", JSON.stringify({ createdAt: at(3) }));
+  put.run("composerData:c3", "not json");
+  cursor
+    .prepare("INSERT INTO composerHeaders VALUES ('c1', 'w1', ?, ?)")
+    .run(at(0), at(2));
+
+  // Hermes Agent: a session the person had, its bot chat (hidden from its lists), and one its
+  // scheduler ran.
+  mkdirSync(join(root, "hermes"), { recursive: true });
+  const hermes = new DatabaseSync(join(root, "hermes", "state.db"));
+  hermes.exec(`CREATE TABLE sessions (id TEXT PRIMARY KEY, source TEXT NOT NULL, cwd TEXT, git_repo_root TEXT, title TEXT, hidden INTEGER DEFAULT 0, started_at REAL NOT NULL);
+    CREATE TABLE messages (id INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT, timestamp REAL NOT NULL);`);
+  hermes
+    .prepare(
+      "INSERT INTO sessions VALUES ('h1', 'cli', '/work/notes/sub', '/work/notes', 'Weekly plan', 0, ?), ('h2', 'cli', NULL, NULL, NULL, 1, ?), ('h3', 'cron', NULL, NULL, NULL, 0, ?)",
+    )
+    .run(at(0) / 1000, at(0) / 1000, at(0) / 1000);
+  const said = hermes.prepare(
+    "INSERT INTO messages (session_id, role, content, timestamp) VALUES (?, ?, ?, ?)",
+  );
+  said.run("h1", "user", "plan my week around the launch", at(5) / 1000);
+  said.run("h1", "tool", "{}", at(6) / 1000);
+  said.run(
+    "h1",
+    "assistant",
+    `\u0000json:${JSON.stringify([{ type: "text", text: "Monday: launch checklist." }])}`,
+    at(7) / 1000,
+  );
+  said.run("h2", "user", "talk in the bot chat", at(5) / 1000);
+  said.run("h3", "user", "scheduled morning plan", at(5) / 1000);
+  hermes.close();
+
+  const sessions = () => {
+    const read = openHistoryForRead(db);
+    assert.ok(read);
+    try {
+      return read
+        .prepare(
+          "SELECT session, tool, project, title, messages FROM files WHERE tool IN ('Cursor', 'Hermes Agent') ORDER BY session",
+        )
+        .all() as {
+        session: string;
+        tool: string;
+        project: string | null;
+        title: string | null;
+        messages: number;
+      }[];
+    } finally {
+      read.close();
+    }
+  };
+
+  await indexHistory({ path: db, now });
+  assert.deepEqual(
+    sessions().map((s) => ({ ...s })),
+    [
+      {
+        session: "c1",
+        tool: "Cursor",
+        project: "/work/shop",
+        title: "Orders pagination",
+        messages: 2,
+      },
+      {
+        session: "h1",
+        tool: "Hermes Agent",
+        project: "/work/notes",
+        title: "Weekly plan",
+        messages: 2,
+      },
+      {
+        session: "h2",
+        tool: "Hermes Agent",
+        project: null,
+        title: "talk in the bot chat",
+        messages: 1,
+      },
+    ],
+    "drafts and scheduled sessions stay out",
+  );
+  let read = openHistoryForRead(db);
+  assert.ok(read);
+  assert.deepEqual(
+    searchSessions(read, { query: "pagination" }).results.map((r) => r.session),
+    ["c1"],
+  );
+  const plan = readSession(read, { session: "h1" });
+  read.close();
+  assert.deepEqual(
+    "messages" in plan ? plan.messages.map((m) => m.text) : [],
+    ["plan my week around the launch", "Monday: launch checklist."],
+    "structured content is read as its text",
+  );
+
+  // The chat goes on: it is read again whole, nothing twice.
+  bubble("b3", 1, "also return the total", 4);
+  chat(["b1", "b2", "b3"], 4);
+  await indexHistory({ path: db, now });
+  assert.equal(sessions().find((s) => s.session === "c1")?.messages, 3);
+
+  // Deleted in Cursor: it leaves the index.
+  cursor.exec("DELETE FROM cursorDiskKV WHERE key LIKE '%c1%'");
+  cursor.close();
+  await indexHistory({ path: db, now });
+  assert.deepEqual(
+    sessions().map((s) => s.session),
+    ["h1", "h2"],
   );
 });

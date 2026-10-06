@@ -26,6 +26,13 @@ export interface Conversation {
   turns(): Promise<Turn[]>;
 }
 
+/** One side of a conversation, as the conversation index keeps it. */
+export interface LineMessage {
+  role: "user" | "assistant";
+  at: string;
+  text: string;
+}
+
 const PROMPT_MAX = 1200;
 const BEFORE_MAX = 500;
 

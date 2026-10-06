@@ -114,8 +114,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
   Everything lives under `~/.sub-office` (`SUB_OFFICE_HOME` moves it). `server/sources/` reads
-  each AI tool's local records (Claude Code and Codex are indexed; the Cursor and Hermes Agent
-  readers are not used yet), plus notes about the person; `server/apps.ts` reads app usage from
+  each AI tool's local records (Claude Code and Codex session files; Cursor's and Hermes Agent's
+  own SQLite files, where a changed chat is read again whole and a deleted one leaves the index),
+  plus notes about the person; `server/apps.ts` reads app usage from
   what the system records (macOS, Windows, Linux).
 - Memory keeps only what stays true: how the person works, decides and talks, and corrections
   they gave. Anything that changes or can be found again on their computer (projects and their

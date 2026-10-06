@@ -8,12 +8,15 @@ import {
   type Conversation,
   cleanPrompt,
   headLines,
+  type LineMessage,
   type Lines,
   makeTurn,
   streamLines,
   type Turn,
 } from "./common.ts";
 import { mapLimit } from "./lines.ts";
+
+export type { LineMessage } from "./common.ts";
 
 const TOOL = "Claude Code";
 
@@ -61,13 +64,6 @@ export function isHumanPrompt(row: Row): boolean {
 
 const COMMAND_LOG =
   /^<(command-name|command-message|local-command-stdout|local-command-caveat|command-args)>/;
-
-/** One side of a conversation, as the conversation index keeps it. */
-export interface LineMessage {
-  role: "user" | "assistant";
-  at: string;
-  text: string;
-}
 
 /**
  * What one record line says, when it is the person's own prompt or the AI's reply in text.

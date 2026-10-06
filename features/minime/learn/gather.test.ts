@@ -11,12 +11,16 @@ const saved = {
   CLAUDE_CONFIG_DIR: process.env.CLAUDE_CONFIG_DIR,
   CODEX_HOME: process.env.CODEX_HOME,
   SUB_OFFICE_HOME: process.env.SUB_OFFICE_HOME,
+  HERMES_HOME: process.env.HERMES_HOME,
+  VSCODE_APPDATA: process.env.VSCODE_APPDATA,
 };
 
 before(() => {
   process.env.CLAUDE_CONFIG_DIR = join(root, "claude");
   process.env.CODEX_HOME = join(root, "codex");
   process.env.SUB_OFFICE_HOME = join(root, "home");
+  process.env.HERMES_HOME = join(root, "hermes");
+  process.env.VSCODE_APPDATA = join(root, "appdata");
 });
 after(() => {
   for (const [key, value] of Object.entries(saved)) {

@@ -1,6 +1,9 @@
 // Building the conversation index a little at a time. Each pass looks at the person's AI session
 // files, newest first, and reads only what was added since the last pass: every file's read
-// position is stored, so a session that grows is continued, never re-read. A pass stops at its
+// position is stored, so a session that grows is continued, never re-read. Tools that keep their
+// conversations in a database of their own (Cursor, Hermes Agent) have no read position: a
+// conversation that changed is read again whole, which is quick, and one the person deleted there
+// is removed here too. A pass stops at its
 // time budget or byte budget and the next pass carries on, so the index fills up within bounded
 // work however many gigabytes the records hold (Hermes Agent indexes its sessions as they happen;
 // here the records belong to other tools, so they are caught up in passes).
@@ -14,16 +17,27 @@ import type { DatabaseSync } from "node:sqlite";
 import { chatFiles, chatLineMessage } from "../chat/store.ts";
 import { tryLock } from "../memory/files.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
-import {
-  type LineMessage,
-  lineMessage,
-  projectDirs,
-} from "../server/sources/claude-code.ts";
+import { lineMessage, projectDirs } from "../server/sources/claude-code.ts";
 import {
   codexRolloutFiles,
   rolloutLineMessage,
 } from "../server/sources/codex.ts";
-import { isNoise, projectRoot } from "../server/sources/common.ts";
+import {
+  isNoise,
+  type LineMessage,
+  projectRoot,
+} from "../server/sources/common.ts";
+import {
+  cursorChats,
+  cursorDbPath,
+  cursorMessages,
+} from "../server/sources/cursor.ts";
+import {
+  type HermesSession,
+  hermesDbPath,
+  hermesMessages,
+  hermesSessions,
+} from "../server/sources/hermes.ts";
 import { boundedLines } from "../server/sources/lines.ts";
 import { indexTerms } from "./cjk.ts";
 import { historyDbPath, openHistoryForWrite } from "./db.ts";
@@ -36,6 +50,8 @@ const TITLE_MAX = 120;
 /** Rows written per transaction, so an interrupted pass loses little and resumes cleanly. */
 const BATCH = 400;
 const PRUNE_PER_PASS = 500;
+/** For the progress estimate only: about how much text one message of a database chat holds. */
+const CHAT_MESSAGE_BYTES = 1000;
 
 export interface IndexOptions {
   /** Index file; the default lives under the mini-me's home. */
@@ -68,14 +84,23 @@ export interface IndexReport {
   ms: number;
 }
 
-interface SourceFile {
+interface Source {
   path: string;
   tool: string;
   session: string;
   project?: string;
   mtimeMs: number;
   size: number;
+}
+
+interface SourceFile extends Source {
   parse: (line: string) => LineMessage | undefined;
+}
+
+/** A conversation inside another tool's database; `size` is its message count. */
+interface SourceChat extends Source {
+  title?: string;
+  read: () => LineMessage[];
 }
 
 /** Every session file the person's AI tools keep, with the project folder it ran in. */
@@ -115,6 +140,57 @@ export async function listSessionFiles(): Promise<SourceFile[]> {
       parse: rolloutLineMessage,
     });
   return out;
+}
+
+/**
+ * Conversations other tools keep in a database of their own, and the databases that were listed
+ * in full (a database that could not be read is not taken to mean its conversations are gone).
+ */
+export async function listDatabaseChats(): Promise<{
+  chats: SourceChat[];
+  listed: string[];
+}> {
+  const chats: SourceChat[] = [];
+  const listed: string[] = [];
+  const cursor = cursorDbPath();
+  try {
+    for (const chat of await cursorChats(cursor))
+      chats.push({
+        path: `${cursor}#${chat.id}`,
+        tool: "Cursor",
+        session: chat.id,
+        project: chat.folder ? projectRoot(chat.folder) : undefined,
+        title: chat.title,
+        mtimeMs: chat.updatedMs,
+        size: chat.count,
+        read: () => cursorMessages(cursor, chat.id),
+      });
+    listed.push(cursor);
+  } catch {
+    // Cursor's file is busy or unreadable now; the next pass tries again.
+  }
+  const hermes = hermesDbPath();
+  let sessions: HermesSession[] | undefined;
+  try {
+    sessions = hermesSessions(hermes);
+  } catch {
+    // The same for Hermes Agent's file.
+  }
+  if (sessions) {
+    for (const session of sessions)
+      chats.push({
+        path: `${hermes}#${session.id}`,
+        tool: "Hermes Agent",
+        session: session.id,
+        project: session.folder ? projectRoot(session.folder) : undefined,
+        title: session.title,
+        mtimeMs: session.updatedMs,
+        size: session.count,
+        read: () => hermesMessages(hermes, session.id),
+      });
+    listed.push(hermes);
+  }
+  return { chats, listed };
 }
 
 function clip(text: string, max: number): string {
@@ -204,8 +280,50 @@ export async function indexHistory(
       const addTerms = db.prepare(
         "INSERT INTO messages_fts (rowid, terms) VALUES (?, ?)",
       );
+      /** Keep one message in the index; returns how much text was kept. */
+      const keep = (
+        state: FileRow,
+        message: LineMessage,
+        fallbackAt: number,
+      ): number => {
+        const text = clip(message.text, MESSAGE_MAX);
+        const at = Date.parse(message.at) || fallbackAt;
+        const inserted = addMessage.get(
+          state.id,
+          state.messages,
+          message.role,
+          at,
+          text,
+        ) as { id: number };
+        addTerms.run(inserted.id, indexTerms(text));
+        state.messages += 1;
+        state.started =
+          state.started === null ? at : Math.min(state.started, at);
+        state.last = state.last === null ? at : Math.max(state.last, at);
+        if (!state.title && message.role === "user")
+          state.title = clip(text.replace(/\s+/g, " "), TITLE_MAX);
+        report.messages += 1;
+        return text.length;
+      };
 
-      const files = (await listSessionFiles())
+      const database = await listDatabaseChats();
+      // A conversation the person deleted in its tool leaves the index too.
+      const present = new Set(database.chats.map((chat) => chat.path));
+      for (const store of database.listed) {
+        const prefix = `${store}#`;
+        const gone = (
+          db
+            .prepare("SELECT id, path FROM files WHERE substr(path, 1, ?) = ?")
+            .all(prefix.length, prefix) as { id: number; path: string }[]
+        ).filter((row) => !present.has(row.path));
+        if (gone.length) {
+          db.exec("BEGIN");
+          for (const row of gone) removeFile(db, row.id);
+          db.exec("COMMIT");
+          report.removed += gone.length;
+        }
+      }
+      const files = [...(await listSessionFiles()), ...database.chats]
         .filter((file) => file.mtimeMs >= since)
         .sort((a, b) => b.mtimeMs - a.mtimeMs);
       report.files = files.length;
@@ -218,7 +336,14 @@ export async function indexHistory(
         )
           continue;
         const known = getFile.get(file.path) as FileRow | undefined;
-        if (!known || file.size < known.offset) waiting += file.size;
+        if ("read" in file) {
+          if (
+            !known ||
+            known.size !== file.size ||
+            known.mtime !== Math.floor(file.mtimeMs)
+          )
+            waiting += file.size * CHAT_MESSAGE_BYTES;
+        } else if (!known || file.size < known.offset) waiting += file.size;
         else if (
           known.offset !== file.size ||
           known.mtime !== Math.floor(file.mtimeMs)
@@ -246,6 +371,51 @@ export async function indexHistory(
         if (Date.now() > deadline || report.bytes >= maxBytes) {
           report.complete = false;
           break;
+        }
+        if ("read" in file) {
+          let bytes = 0;
+          db.exec("BEGIN");
+          try {
+            const messages = file.read();
+            if (row) removeFile(db, row.id);
+            const created = addFile.get(
+              file.path,
+              file.tool,
+              file.session,
+              file.project ?? null,
+            ) as { id: number };
+            const state: FileRow = {
+              id: created.id,
+              size: 0,
+              mtime: 0,
+              offset: 0,
+              messages: 0,
+              started: null,
+              last: null,
+              title: file.title ? clip(file.title, TITLE_MAX) : null,
+            };
+            for (const message of messages)
+              bytes += keep(state, message, mtime);
+            saveFile.run(
+              file.size,
+              mtime,
+              file.size,
+              state.messages,
+              state.started,
+              state.last,
+              state.title,
+              file.project ?? null,
+              state.id,
+            );
+            db.exec("COMMIT");
+          } catch {
+            // Its tool is writing the file just now: the next pass reads it.
+            db.exec("ROLLBACK");
+          }
+          report.read += 1;
+          report.bytes += bytes;
+          progress(0);
+          continue;
         }
         let state: FileRow;
         if (!row || file.size < row.offset) {
@@ -295,23 +465,7 @@ export async function indexHistory(
             offset = end;
             const message = skipped ? undefined : file.parse(line);
             if (message) {
-              const text = clip(message.text, MESSAGE_MAX);
-              const at = Date.parse(message.at) || mtime;
-              const inserted = addMessage.get(
-                state.id,
-                state.messages,
-                message.role,
-                at,
-                text,
-              ) as { id: number };
-              addTerms.run(inserted.id, indexTerms(text));
-              state.messages += 1;
-              state.started =
-                state.started === null ? at : Math.min(state.started, at);
-              state.last = state.last === null ? at : Math.max(state.last, at);
-              if (!state.title && message.role === "user")
-                state.title = clip(text.replace(/\s+/g, " "), TITLE_MAX);
-              report.messages += 1;
+              keep(state, message, mtime);
               pending += 1;
             }
             if (pending >= BATCH) {
