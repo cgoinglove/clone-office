@@ -134,7 +134,13 @@
       "WebFetch": "웹 페이지 열기",
       "WebSearch": "웹 검색",
       "mcp__minime__ask_colleague": "동료 미니미에게 부탁 보내기"
-    }
+    },
+    "ruleTitle": "앞으로 이렇게 할까요?",
+    "rule": "‘{menu}’에 대한 제 답을 세 번 그대로 보내셨어요. 앞으로는 제가 답하고 알려 드릴까요?",
+    "ruleYes": "네, 앞으로 그렇게",
+    "ruleNo": "계속 물어봐 줘",
+    "ruleDone": "앞으로 이런 건 제가 답하고 알려 드릴게요.",
+    "ruleKept": "앞으로도 먼저 물어볼게요."
   },
   "office": {
     "title": "오피스",

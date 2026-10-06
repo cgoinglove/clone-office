@@ -22,6 +22,8 @@ export interface OfficeState {
   >;
   /** Requests sent from a conversation: which one. */
   sent: Record<string, { chat: string }>;
+  /** Per menu kind the person sees first: answers they sent as they were, in a row. */
+  approvals: Record<string, number>;
 }
 
 function officeDir(): string {
@@ -40,9 +42,10 @@ export async function loadState(): Promise<OfficeState> {
       after: Number(parsed.after) || 0,
       handled: parsed.handled ?? {},
       sent: parsed.sent ?? {},
+      approvals: parsed.approvals ?? {},
     };
   } catch {
-    return { after: 0, handled: {}, sent: {} };
+    return { after: 0, handled: {}, sent: {}, approvals: {} };
   }
 }
 

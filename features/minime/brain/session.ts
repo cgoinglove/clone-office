@@ -17,6 +17,7 @@ import { NoteStore } from "../memory/notes.ts";
 import { SkillStore } from "../memory/skills.ts";
 import { MemoryStore, type Target } from "../memory/store.ts";
 import { MEMORY_GUIDANCE } from "../memory/tool.ts";
+import { keepAwake } from "../server/awake.ts";
 import { claudeCommand, cleanEnv, defaultModel } from "../server/brain.ts";
 import { minimeHome } from "../server/paths.ts";
 import { logRun } from "./runlog.ts";
@@ -324,10 +325,13 @@ export async function runSession(
     let cost: number | undefined;
     const started = Date.now();
     const pending = new Map<string, Record<string, unknown>>();
+    // The computer does not sleep in the middle of the mini-me's work.
+    const release = keepAwake();
     const finish = (result: Omit<SessionResult, "text">) => {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
+      release();
       // The curator waits for a quiet stretch after the person last used their mini-me.
       if (actor === "minime") noteActivity(skillsDir()).catch(() => {});
       logRun({

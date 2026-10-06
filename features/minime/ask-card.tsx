@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 export type GateAsk =
   | { kind: "question"; question: string; choices?: string[] }
-  | { kind: "permission"; tool: string; input: Record<string, unknown> };
+  | { kind: "permission"; tool: string; input: Record<string, unknown> }
+  | { kind: "rule"; menu: string; trust: "tell" | "auto" };
 
 export interface AskTurn {
   id: number;
@@ -62,6 +63,34 @@ export function AskCard({
   const [always, setAlways] = useState(false);
   const { ask } = turn;
   const open = turn.state === "open";
+  // Make it a rule: the person sent this kind's answers as they were, three times in a row.
+  if (ask.kind === "rule")
+    return (
+      <div className="flex max-w-full flex-col gap-3 self-start rounded-xl border border-waiting/40 bg-waiting/5 p-4 text-[15px]">
+        <span className="text-xs font-medium text-waiting">
+          {t("ruleTitle")}
+        </span>
+        <p>{t("rule", { menu: ask.menu })}</p>
+        {open ? (
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => onAnswer("yes", false)}>
+              {t("ruleYes")}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onAnswer("no", false)}
+            >
+              {t("ruleNo")}
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {turn.answer === "yes" ? t("ruleDone") : t("ruleKept")}
+          </p>
+        )}
+      </div>
+    );
   return (
     <div className="flex max-w-full flex-col gap-3 self-start rounded-xl border border-waiting/40 bg-waiting/5 p-4 text-[15px]">
       <span className="text-xs font-medium text-waiting">

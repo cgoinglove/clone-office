@@ -7,7 +7,7 @@
 
 import { runSession, type SessionGate } from "../brain/session.ts";
 import { appendMessage, createChat, listChats } from "../chat/store.ts";
-import { gateSecret, onAsk, waitFor } from "../gate/gate.ts";
+import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { checkBeforeSending } from "./check.ts";
@@ -18,7 +18,13 @@ import {
   tasks,
   updateRequest,
 } from "./client.ts";
-import { loadMenu, type MenuItem, menuLines, trustFor } from "./menu.ts";
+import {
+  loadMenu,
+  type MenuItem,
+  menuLines,
+  saveMenu,
+  trustFor,
+} from "./menu.ts";
 import { changeState, loadState, releaseLease, takeLease } from "./state.ts";
 import { officeClosing } from "./worker.ts";
 
@@ -129,7 +135,11 @@ async function answer(options: {
   const stop = onAsk((pending) => {
     if (pending.chat !== gate.chat) return;
     const question =
-      pending.ask.kind === "question" ? pending.ask.question : pending.ask.tool;
+      pending.ask.kind === "question"
+        ? pending.ask.question
+        : pending.ask.kind === "permission"
+          ? pending.ask.tool
+          : pending.ask.menu;
     void waitFor(pending.id)?.then((answer) => {
       if (answer.answered) said.push({ question, answer: answer.answer });
     });
@@ -180,7 +190,8 @@ async function answer(options: {
       note?: string;
     };
     // What the person set for this kind of request; code decides, the brain only named the kind.
-    const { trust } = trustFor(menu, answer.menu);
+    const { item, trust } = trustFor(menu, answer.menu);
+    const approving = trust === "ask" && said.length === 0;
     if (!result.ok || !answer.reply?.trim()) {
       await updateRequest(office, task.id, {
         state: "FAILED",
@@ -190,23 +201,25 @@ async function answer(options: {
       });
       return;
     }
+    const reply = answer.reply.trim();
     // A second look before it leaves; what it holds back goes to the person (product 2.8a).
     const outcome = await checkBeforeSending({
       request: task.history
         .filter((m) => m.role === "user")
         .map((m) => m.parts.map((p) => p.text).join("\n"))
         .join("\n\n"),
-      reply: answer.reply.trim(),
+      reply,
       chat: gate.chat ?? requestChat(task),
       language,
       said,
       // "Ask me first": the person sees the answer before it goes, whatever the check finds,
       // unless they already gave it themselves while it was made.
-      approve: trust === "ask" && said.length === 0,
+      approve: approving,
       from: from?.name,
     });
     if (officeClosing()) return;
     if ("hold" in outcome) {
+      if (approving && item) await countApproval(item, false);
       await updateRequest(office, task.id, {
         state: "REJECTED",
         text: "Their person will answer this directly.",
@@ -221,6 +234,9 @@ async function answer(options: {
           : "COMPLETED",
       text: outcome.send,
     });
+    // The person sent it as it was: three in a row, and the mini-me offers to do these alone.
+    if (approving && item)
+      await countApproval(item, "send" in outcome && outcome.send === reply);
     // "Do it and tell me": the person hears what was answered for them, in their conversation.
     if (trust === "tell")
       await tellPerson(
@@ -237,4 +253,42 @@ export async function tellPerson(note: string): Promise<void> {
   const [latest] = await listChats(1);
   const chat = latest ?? (await createChat(note));
   await appendMessage(chat.id, "told", note);
+}
+
+/** Answers of one kind the person sends as they were, in a row, before the mini-me offers a rule. */
+export const RULE_AFTER = 3;
+
+/** Where the offer waits: with the office's questions on the person's screen. */
+export const RULE_CHAT = "office-rules";
+
+const DAY = 24 * 60 * 60 * 1000;
+
+/**
+ * Make it a rule (product 2.4): when the person has sent the last three answers of a kind they see
+ * first as they were, the mini-me asks whether to answer that kind itself and tell them. Code
+ * changes the menu only on their yes.
+ */
+export async function countApproval(
+  item: MenuItem,
+  sentAsItWas: boolean,
+): Promise<void> {
+  let offer = false;
+  await changeState((state) => {
+    const count = sentAsItWas ? (state.approvals[item.id] ?? 0) + 1 : 0;
+    offer = count >= RULE_AFTER;
+    state.approvals[item.id] = offer ? 0 : count;
+  });
+  if (!offer) return;
+  const { done } = askPerson(
+    RULE_CHAT,
+    { kind: "rule", menu: item.name, trust: "tell" },
+    DAY,
+  );
+  void done.then(async (answer) => {
+    if (!answer.answered || answer.answer !== "yes") return;
+    const menu = await loadMenu();
+    await saveMenu(
+      menu.map((m) => (m.id === item.id ? { ...m, trust: "tell" } : m)),
+    );
+  });
 }

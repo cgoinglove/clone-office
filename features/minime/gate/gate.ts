@@ -8,7 +8,9 @@ import { randomUUID } from "node:crypto";
 
 export type Ask =
   | { kind: "question"; question: string; choices?: string[] }
-  | { kind: "permission"; tool: string; input: Record<string, unknown> };
+  | { kind: "permission"; tool: string; input: Record<string, unknown> }
+  /** Make it a rule: answers of this kind were sent as they were; shall it do them alone now? */
+  | { kind: "rule"; menu: string; trust: "tell" | "auto" };
 
 export interface Pending {
   id: string;

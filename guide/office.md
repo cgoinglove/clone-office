@@ -42,6 +42,11 @@ bring them, each with how much their mini-me does alone:
   when they say so. If it already asked them while answering (a date they gave, a yes), it does
   not ask again.
 
+When they send the mini-me's answers of an **Ask me first** kind as they were three times in a
+row, it asks whether to answer that kind itself and tell them from then on (**Make it a rule?**,
+앞으로 이렇게 할까요?); only their **Yes, from now on** (네, 앞으로 그렇게) changes it, and they can
+set it back on the menu at any time.
+
 **Draft it for me** (초안 써 줘) has the mini-me suggest kinds from what it knows of them, and
 **Add one** (직접 더하기) adds one by hand; every change is kept and shown on their card at once.
 Colleagues see the kinds they take, never how much is done alone. A request that fits none of
