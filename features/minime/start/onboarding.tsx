@@ -366,7 +366,7 @@ export function Onboarding() {
       ) : (
         <nav
           aria-label={t("title")}
-          className="absolute bottom-0 left-0 z-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-14 pb-7 font-mono text-[11px] text-muted-foreground max-sm:px-5"
+          className="absolute bottom-0 left-0 z-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4 bg-linear-to-t from-background from-60% to-transparent px-14 pt-10 pb-7 font-mono text-[11px] text-muted-foreground max-sm:px-5"
           style={{ width: wide ? COLUMN : "100%" }}
         >
           <button
