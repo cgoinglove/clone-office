@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { DiscordBot, type Incoming, type Press, pieces } from "./discord";
+import { DiscordBot, type Incoming, type Press } from "./discord";
+import { pieces } from "./text";
 
 /** Discord's gateway, played by the test: what the bot sent, and what Discord says to it. */
 class FakeSocket {
@@ -39,7 +40,11 @@ class FakeSocket {
 function connected() {
   const sockets: FakeSocket[] = [];
   const calls: { method: string; url: string; body: unknown }[] = [];
-  const heard: { messages: Incoming[]; presses: Press[]; failed: number[] } = {
+  const heard: {
+    messages: Incoming[];
+    presses: Press[];
+    failed: string[];
+  } = {
     messages: [],
     presses: [],
     failed: [],
@@ -190,7 +195,7 @@ test("a lost connection resumes the session where it was; a wrong token stops fo
   });
   sockets[1].close(4004);
   await new Promise((resolve) => setTimeout(resolve, 1200));
-  assert.deepEqual(heard.failed, [4004]);
+  assert.deepEqual(heard.failed, ["messenger-token-wrong"]);
   assert.equal(sockets.length, 2, "no new try after a wrong token");
   bot.stop();
 });
@@ -237,7 +242,7 @@ test("long text goes in pieces Discord takes, with the buttons on the last; a ra
 });
 
 test("text is cut at a line where it can be, else at the limit", () => {
-  assert.deepEqual(pieces("short"), ["short"]);
+  assert.deepEqual(pieces("short", 1900), ["short"]);
   assert.deepEqual(pieces("x".repeat(25), 10), [
     "x".repeat(10),
     "x".repeat(10),

@@ -250,12 +250,17 @@ These words help discussion. They do not mandate separate services, tables or UI
   nothing is learned; `tick` every minute while the app runs, under a lock), `tools.ts` (`flows`
   free, `flow_manage` asked first on a card). The page's part is `features/minime/flows-panel.tsx`
   with the route `app/api/me/flows`.
-- `features/minime/messenger/`: the mini-me in the person's messenger, Discord first (after
-  Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot with no
-  dependencies: the gateway over Node's own WebSocket (direct messages only, no privileged
+- `features/minime/messenger/`: the mini-me in the person's messenger, Discord or Telegram, one at
+  a time (after Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot
+  with no dependencies: the gateway over Node's own WebSocket (direct messages only, no privileged
   intent), resume, heartbeats, the close codes that end it, and the HTTP calls (messages in pieces
   with buttons, typing, a press taken at once and its message settled after, the invite link from
-  the application id). `bridge.ts` joins it to the mini-me: whoever writes first is asked about on
+  the application id). `telegram.ts` is the same over Telegram's Bot API: a long poll for updates
+  (private chats only; Start's "/start" is only a hello), messages in Telegram's HTML with inline
+  buttons and sent again as plain words when Telegram cannot parse the marks, a press answered at
+  once and its message edited after, the t.me link to the chat. `text.ts` cuts text into pieces
+  (a code block cut in two is closed and opened again) and draws markdown as Telegram's HTML.
+  `bridge.ts` joins either to the mini-me: whoever writes first is asked about on
   the page with a 4-digit code sent to their phone, one at a time, and what they wrote meanwhile
   is answered once they are let in; then their messages go into one conversation through
   `chat/turn.ts` `runTurn` ("/new" starts another), the gate's questions come as buttons or wait
@@ -270,8 +275,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   flow's answer, a colleague's answer in a conversation on the page; `chat/store.ts`
   `onChatMessage`). News in the phone's own conversation goes to it whoever is watching; progress
   never goes. A reply to one of its questions answers that one. `settings.json` `messenger` keeps
-  the token, the person and the conversation (`settings.json` is written for its person alone,
-  `writeSettings`); one process per folder holds the bot
+  the service, the token, the person and the conversation (`settings.json` is written for its
+  person alone, `writeSettings`); a new token for the same service keeps the person let in, another
+  service starts afresh; one process per folder holds the bot
   (`messenger/holder.json`). It starts when the server does (`instrumentation.ts`) and when the
   page asks; its words come from `messages/` through `i18n/messages.ts`. The page's part is
   `features/minime/messenger-panel.tsx` with the route `app/api/me/messenger`.

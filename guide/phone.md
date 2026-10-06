@@ -1,12 +1,22 @@
-# On their phone: the mini-me in Discord
+# On their phone: the mini-me in Discord or Telegram
 
-They can talk with their mini-me from Discord on their phone, the same as on its page. It answers
-while the app runs on their computer; what they say there goes into a conversation they also see
-on the page. The words go through Discord.
+They can talk with their mini-me from Discord or Telegram on their phone, the same as on its page.
+It answers while the app runs on their computer; what they say there goes into a conversation they
+also see on the page. The words go through Discord or Telegram. One messenger at a time: to change,
+they disconnect and set up the other.
 
 ## Setting it up, once
 
-Under **On your phone** (휴대폰에서) on their page:
+Under **On your phone** (휴대폰에서) on their page they pick Discord or Telegram.
+
+With Telegram (no server needed):
+
+1. In Telegram they open @BotFather and send /newbot, give the bot a name and then a username
+   that ends in "bot"; BotFather answers with its token, which they copy.
+2. They paste the token and press **Connect** (연결하기).
+3. **Open the chat with the bot** (봇과의 대화 열기), on their phone, and press Start.
+
+With Discord:
 
 1. At Discord's Developer Portal they make a New Application. So nobody else can add it to a
    server, they set Install Link to None on its Installation page and turn off Public Bot on its
@@ -32,7 +42,7 @@ only, in a settings file only they can read.
 ## What comes to the phone by itself
 
 While they are not looking at their mini-me's page (it is closed, hidden, or another window is in
-front for about a minute), what waits on them comes to Discord:
+front for about a minute), what waits on them comes to their messenger:
 
 - **A question waiting on them**: about a colleague's request (who asked, what, and the mini-me's
   question), or one from a conversation they left on the page. They answer with a button or in
@@ -50,6 +60,8 @@ everything stays there.
 ## When it does not answer
 
 The app has to be running on their computer, which must be awake. If another copy of the app on
-the same computer already talks through the bot, the page says so. If Discord stops taking the
-token (it was reset), they copy a new one from the Bot page and connect again. **Disconnect**
+the same computer already talks through the bot, the page says so. If Discord or Telegram stops
+taking the token (it was reset or revoked), they get a new one (Discord's Bot page, or /token at
+@BotFather) and connect again; they stay let in. A Telegram bot is read by one program at a time,
+so the same bot cannot also serve another app (Hermes Agent, for one). **Disconnect**
 (연결 끊기) forgets the token and who the bot talks with.

@@ -21,11 +21,27 @@ function leaves(tree: Tree, prefix = ""): Map<string, string> {
   return found;
 }
 
-/** The values a message takes: {name}, {count, plural, …}. */
-const args = (message: string) =>
-  new Set(
-    [...message.matchAll(/\{\s*([A-Za-z_]\w*)\s*[,}]/g)].map((m) => m[1]),
-  );
+/**
+ * The values a message takes: {name}, {count, plural, …}, {service, select, …}. Words and a
+ * value's own parts take turns: a brace in words opens a value, and a brace inside a value opens
+ * one of its cases, whose words may hold values again.
+ */
+const args = (message: string) => {
+  const found = new Set<string>();
+  const inside: ("words" | "value")[] = ["words"];
+  for (const [at, char] of [...message].entries()) {
+    if (char === "{") {
+      if (inside.at(-1) === "words") {
+        const name = /^\s*([A-Za-z_]\w*)/.exec(
+          [...message].slice(at + 1).join(""),
+        )?.[1];
+        if (name) found.add(name);
+        inside.push("value");
+      } else inside.push("words");
+    } else if (char === "}") inside.pop();
+  }
+  return found;
+};
 
 const english = leaves(load("en"));
 

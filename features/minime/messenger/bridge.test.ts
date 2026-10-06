@@ -106,7 +106,7 @@ test("the person's own bot: the first to write is let in by the code their phone
     send({ type: "done", chat: id });
   };
   const bridge = new bridgeModule.Bridge({
-    makeBot: (token, listener) => {
+    makeBot: (_service, token, listener) => {
       const bot = new FakeBot(token, listener);
       bots.push(bot);
       return bot;
@@ -115,15 +115,16 @@ test("the person's own bot: the first to write is let in by the code their phone
   });
 
   await assert.rejects(
-    bridge.connect("wrong-token-wrong-token"),
+    bridge.connect("discord", "wrong-token-wrong-token"),
     /messenger-token-wrong/,
   );
-  await bridge.connect("right-token-right-token");
+  await bridge.connect("discord", "right-token-right-token");
   const bot = bots.at(-1) as FakeBot;
   assert.equal((await bridge.status()).state, "on");
   assert.equal((await bridge.status()).bot, "Mini");
   const kept = JSON.parse(readFileSync(join(root, "settings.json"), "utf8"));
-  assert.equal(kept.messenger.discord.token, "right-token-right-token");
+  assert.equal(kept.messenger.token, "right-token-right-token");
+  assert.equal(kept.messenger.service, "discord");
   if (process.platform !== "win32")
     assert.equal(
       statSync(join(root, "settings.json")).mode & 0o777,
@@ -163,7 +164,7 @@ test("the person's own bot: the first to write is let in by the code their phone
   assert.equal(
     turns[1].chat,
     JSON.parse(readFileSync(join(root, "settings.json"), "utf8")).messenger
-      .discord.chat,
+      .chat,
   );
 
   // Its question comes with buttons, and a press answers it.
@@ -237,7 +238,7 @@ test("while no page is in view, what waits on the person goes to their phone; ne
     away: async () => away,
   };
   const bridge = new bridgeModule.Bridge({
-    makeBot: (token, listener) => {
+    makeBot: (_service, token, listener) => {
       const bot = new FakeBot(token, listener);
       bots.push(bot);
       return bot;
@@ -247,7 +248,7 @@ test("while no page is in view, what waits on the person goes to their phone; ne
     presence: () => seen,
     lookMs: 30,
   });
-  await bridge.connect("right-token-right-token");
+  await bridge.connect("discord", "right-token-right-token");
   const bot = bots.at(-1) as FakeBot;
   bot.write(ana, "hi");
   await until(() => bot.sent.length === 1);
@@ -390,7 +391,7 @@ test("while no page is in view, what waits on the person goes to their phone; ne
   // An answer to a request sent from the phone comes back to it, whoever is watching.
   const phoneChat = await store.createChat("From the phone");
   await bridge.disconnect();
-  await bridge.connect("right-token-right-token");
+  await bridge.connect("discord", "right-token-right-token");
   const again = bots.at(-1) as FakeBot;
   again.write(ana, "hi");
   await until(() => again.sent.length === 1);
@@ -398,7 +399,7 @@ test("while no page is in view, what waits on the person goes to their phone; ne
   const settings = JSON.parse(
     readFileSync(join(home, "settings.json"), "utf8"),
   );
-  settings.messenger.discord.chat = phoneChat.id;
+  settings.messenger.chat = phoneChat.id;
   const { writeFileSync } = await import("node:fs");
   writeFileSync(join(home, "settings.json"), JSON.stringify(settings));
   await store.appendMessage(phoneChat.id, "office", "Ben: Merged it.");
@@ -407,6 +408,46 @@ test("while no page is in view, what waits on the person goes to their phone; ne
     again.sent.find((m) => m.text.includes("Merged it."))?.text,
     "An answer to your request\nBen: Merged it.",
   );
+  await bridge.disconnect();
+  process.env.SUB_OFFICE_HOME = root;
+});
+
+test("Telegram's Start is only a hello; another messenger starts afresh, a new token for the same one keeps the person", async () => {
+  const home = join(root, "telegram");
+  process.env.SUB_OFFICE_HOME = home;
+  const bots: { service: string; bot: FakeBot }[] = [];
+  const turns: string[] = [];
+  const bridge = new bridgeModule.Bridge({
+    makeBot: (service, token, listener) => {
+      const bot = new FakeBot(token, listener);
+      bots.push({ service, bot });
+      return bot;
+    },
+    turn: async ({ text }) => {
+      turns.push(text);
+    },
+    presence: () => ({ state: "watching" }),
+  });
+  await bridge.connect("telegram", "123456:telegram-token-abc");
+  const bot = bots.at(-1)?.bot as FakeBot;
+  assert.equal(bots.at(-1)?.service, "telegram");
+  assert.equal((await bridge.status()).service, "telegram");
+  bot.write(ana, "/start");
+  await until(() => bot.sent.length === 1);
+  assert.match(bot.sent[0].text, /\b\d{4}\b/);
+  await bridge.allow((await bridge.status()).asking?.code ?? "");
+  await until(() => bot.sent.length === 2);
+  assert.match(bot.sent[1].text, /^You are in\. Write here/);
+  bot.write(ana, "/start");
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.deepEqual(turns, [], "nothing for the mini-me in a hello");
+
+  // A new token for the same bot keeps the person; Discord starts afresh.
+  await bridge.connect("telegram", "123456:telegram-token-new");
+  assert.equal((await bridge.status()).owner, "Ana");
+  await bridge.connect("discord", "right-token-right-token");
+  assert.equal((await bridge.status()).service, "discord");
+  assert.equal((await bridge.status()).owner, undefined);
   await bridge.disconnect();
   process.env.SUB_OFFICE_HOME = root;
 });

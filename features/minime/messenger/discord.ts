@@ -7,6 +7,8 @@
 // cannot help, such as a wrong token. Thursday's reach (features/reach/discord.ts) went this way
 // first: its invite link, its quick answer to a press and its list of buttons are taken from it.
 
+import { pieces } from "./text.ts";
+
 const GATEWAY = "wss://gateway.discord.gg/?v=10&encoding=json";
 const API = "https://discord.com/api/v10";
 /** DIRECT_MESSAGES: all the bot hears. */
@@ -49,7 +51,8 @@ export interface Press {
   channel: string;
   user: Person;
   value: string;
-  message?: { id: string; text: string };
+  /** `keep` is what the service needs to draw it again as it was (Telegram's marks). */
+  message?: { id: string; text: string; keep?: unknown };
 }
 
 export interface Choice {
@@ -62,8 +65,15 @@ export interface Listener {
   ready?(bot: Person): void;
   message?(message: Incoming): void;
   press?(press: Press): void;
-  /** It stopped trying: the close code says why (4004 is a wrong token). */
-  failed?(code: number): void;
+  /** It stopped trying, for good: a wrong token, or a refusal it cannot get past. */
+  failed?(
+    problem:
+      | "messenger-token-wrong"
+      | "messenger-telegram-token-wrong"
+      | "messenger-refused",
+  ): void;
+  /** Something keeps it from hearing everything, though it goes on trying; nothing once it clears. */
+  trouble?(problem: "messenger-telegram-taken" | undefined): void;
 }
 
 /** What the bot needs of a WebSocket: the one in Node, or a stand-in in tests. */
@@ -84,20 +94,6 @@ function person(user: Record<string, unknown> | undefined): Person {
     id,
     name: String(user?.global_name || user?.username || id),
   };
-}
-
-/** Text in pieces Discord takes, cut at a line where it can be. */
-export function pieces(text: string, max = MAX_TEXT): string[] {
-  const out: string[] = [];
-  let rest = text.trim();
-  while (rest.length > max) {
-    const cut = rest.lastIndexOf("\n", max);
-    const at = cut > max / 2 ? cut : max;
-    out.push(rest.slice(0, at).trimEnd());
-    rest = rest.slice(at).trimStart();
-  }
-  if (rest) out.push(rest);
-  return out.length ? out : [""];
 }
 
 /** Buttons in Discord's rows: one to a row while they fit, so they read as a list; else five. */
@@ -351,7 +347,9 @@ export class DiscordBot {
     if (this.stopped) return;
     if (FATAL.has(code)) {
       this.stopped = true;
-      this.listener.failed?.(code);
+      this.listener.failed?.(
+        code === 4004 ? "messenger-token-wrong" : "messenger-refused",
+      );
       return;
     }
     // The session's place in the stream is lost: start a new one.
@@ -407,7 +405,7 @@ export class DiscordBot {
     text: string,
     choices: Choice[] = [],
   ): Promise<string> {
-    const parts = pieces(text);
+    const parts = pieces(text, MAX_TEXT);
     let id = "";
     for (const [index, part] of parts.entries()) {
       const last = index === parts.length - 1;

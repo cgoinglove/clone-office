@@ -1,5 +1,6 @@
-// The person's mini-me in their messenger: their own Discord bot, which they talk to from their
-// phone as they do on its page, while the app runs on their computer. Only its person talks to it.
+// The person's mini-me in their messenger: their own Discord or Telegram bot, which they talk to
+// from their phone as they do on its page, while the app runs on their computer. Only its person
+// talks to it.
 // Whoever writes first is asked about on the computer, with a code sent to their phone: the person
 // lets in the phone in their hand, not a name anyone could pick; one at a time, and what they wrote
 // meanwhile is answered once they are in (as Thursday's reach does, features/reach/reach.ts, after
@@ -40,8 +41,13 @@ import {
   type Press,
 } from "./discord.ts";
 import { type Kept, type OfficeSide, officeSide } from "./office.ts";
+import { TelegramBot } from "./telegram.ts";
 
-/** What the bridge needs of a bot: the Discord one, or a stand-in in tests. */
+/** The messengers a person can talk to their mini-me through. */
+export const SERVICES = ["discord", "telegram"] as const;
+export type Service = (typeof SERVICES)[number];
+
+/** What the bridge needs of a bot: Discord's, Telegram's, or a stand-in in tests. */
 export interface Bot {
   me?: Person;
   invite?: string;
@@ -55,7 +61,8 @@ export interface Bot {
   dm(user: string): Promise<string>;
 }
 
-interface DiscordSettings {
+interface MessengerSettings {
+  service: Service;
   token: string;
   on: boolean;
   /** The person, once they were let in. */
@@ -66,9 +73,10 @@ interface DiscordSettings {
 
 export interface Status {
   configured: boolean;
+  service?: Service;
   state: "off" | "connecting" | "on" | "failed" | "elsewhere";
   bot?: string;
-  /** The link that adds the bot to a server. */
+  /** Where the person finds the bot: Discord's link that adds it to a server, Telegram's chat with it. */
   invite?: string;
   owner?: string;
   /** Someone wrote and waits to be let in: the code their phone shows. */
@@ -127,29 +135,25 @@ async function readSettings(): Promise<Record<string, unknown>> {
   }
 }
 
-async function loadDiscord(): Promise<DiscordSettings | undefined> {
-  const messenger = (await readSettings()).messenger as
-    | { discord?: DiscordSettings }
-    | undefined;
-  return messenger?.discord?.token ? messenger.discord : undefined;
+function asMessenger(value: unknown): MessengerSettings | undefined {
+  const messenger = value as Partial<MessengerSettings> | undefined;
+  return messenger?.token && SERVICES.includes(messenger.service as Service)
+    ? (messenger as MessengerSettings)
+    : undefined;
 }
 
-async function saveDiscord(
-  change: (was: DiscordSettings | undefined) => DiscordSettings | undefined,
+async function loadMessenger(): Promise<MessengerSettings | undefined> {
+  return asMessenger((await readSettings()).messenger);
+}
+
+async function saveMessenger(
+  change: (was: MessengerSettings | undefined) => MessengerSettings | undefined,
 ): Promise<void> {
   await withLock(minimeHome(), async () => {
-    const settings = await readSettings();
-    const messenger = (settings.messenger ?? {}) as {
-      discord?: DiscordSettings;
-    };
-    const discord = change(
-      messenger.discord?.token ? messenger.discord : undefined,
-    );
-    const { discord: _old, ...rest } = messenger;
-    const next = discord ? { ...rest, discord } : rest;
-    const { messenger: _was, ...others } = settings;
+    const { messenger, ...others } = await readSettings();
+    const next = change(asMessenger(messenger));
     await writeSettings(
-      `${JSON.stringify(Object.keys(next).length ? { ...others, messenger: next } : others, null, 2)}\n`,
+      `${JSON.stringify(next ? { ...others, messenger: next } : others, null, 2)}\n`,
     );
   });
 }
@@ -179,7 +183,7 @@ function alive(pid: number): boolean {
 }
 
 export class Bridge {
-  private makeBot: (token: string, listener: Listener) => Bot;
+  private makeBot: (service: Service, token: string, listener: Listener) => Bot;
   private turn: typeof runTurn;
   private gateUrl: () => string;
   private bot?: Bot;
@@ -219,7 +223,7 @@ export class Bridge {
 
   constructor(
     options: {
-      makeBot?: (token: string, listener: Listener) => Bot;
+      makeBot?: (service: Service, token: string, listener: Listener) => Bot;
       turn?: typeof runTurn;
       gateUrl?: () => string;
       office?: OfficeSide;
@@ -229,7 +233,11 @@ export class Bridge {
     } = {},
   ) {
     this.makeBot =
-      options.makeBot ?? ((token, listener) => new DiscordBot(token, listener));
+      options.makeBot ??
+      ((service, token, listener) =>
+        service === "telegram"
+          ? new TelegramBot(token, listener)
+          : new DiscordBot(token, listener));
     this.turn = options.turn ?? runTurn;
     // The app's own gate, where the mini-me's tool server puts its questions.
     this.gateUrl =
@@ -276,7 +284,7 @@ export class Bridge {
 
   /** Connects the bot when one is set up, in the one process that holds it. */
   async start(): Promise<void> {
-    const settings = await loadDiscord();
+    const settings = await loadMessenger();
     if (!settings?.on || this.bot) return;
     if (!(await this.hold())) {
       this.state = "elsewhere";
@@ -291,18 +299,20 @@ export class Bridge {
     this.problem = undefined;
     const report = (error: unknown) =>
       console.error(`messenger: ${(error as Error).message}`);
-    const bot = this.makeBot(settings.token, {
+    const bot = this.makeBot(settings.service, settings.token, {
       ready: () => {
         this.state = "on";
         this.lookSoon(0);
       },
       message: (message) => void this.onMessage(message).catch(report),
       press: (press) => void this.onPress(press).catch(report),
-      failed: (code) => {
+      failed: (problem) => {
         this.state = "failed";
-        this.problem =
-          code === 4004 ? "messenger-token-wrong" : "messenger-refused";
+        this.problem = problem;
         if (this.bot === bot) this.bot = undefined;
+      },
+      trouble: (problem) => {
+        this.problem = problem;
       },
     });
     this.bot = bot;
@@ -334,11 +344,12 @@ export class Bridge {
   }
 
   async status(): Promise<Status> {
-    const settings = await loadDiscord();
+    const settings = await loadMessenger();
     if (this.asking && Date.now() - this.asking.at > ASK_MS)
       this.asking = undefined;
     return {
       configured: Boolean(settings),
+      ...(settings ? { service: settings.service } : {}),
       state: settings ? this.state : "off",
       ...(this.bot?.me ? { bot: this.bot.me.name } : {}),
       ...(this.bot?.invite ? { invite: this.bot.invite } : {}),
@@ -350,16 +361,29 @@ export class Bridge {
     };
   }
 
-  /** Sets up the bot with its token, checked with Discord first; the person stays let in. */
-  async connect(token: string): Promise<void> {
+  /**
+   * Sets up the bot with its token, checked with its service first. One messenger at a time: a
+   * new token for the same one keeps the person let in; another service starts afresh.
+   */
+  async connect(service: Service, token: string): Promise<void> {
     const clean = token.trim();
     try {
-      await this.makeBot(clean, {}).whoAmI();
+      await this.makeBot(service, clean, {}).whoAmI();
     } catch {
-      throw new MessengerError("messenger-token-wrong");
+      throw new MessengerError(
+        service === "telegram"
+          ? "messenger-telegram-token-wrong"
+          : "messenger-token-wrong",
+      );
     }
     this.stop();
-    await saveDiscord((was) => ({ ...was, token: clean, on: true }));
+    this.asking = undefined;
+    await saveMessenger((was) => ({
+      ...(was?.service === service ? was : {}),
+      service,
+      token: clean,
+      on: true,
+    }));
     await this.start();
   }
 
@@ -367,7 +391,7 @@ export class Bridge {
   async disconnect(): Promise<void> {
     this.stop();
     this.asking = undefined;
-    await saveDiscord(() => undefined);
+    await saveMessenger(() => undefined);
   }
 
   /**
@@ -378,7 +402,7 @@ export class Bridge {
     const asking = this.asking;
     if (!asking || asking.code !== code.trim()) return false;
     this.asking = undefined;
-    await saveDiscord((was) => was && { ...was, owner: asking.user });
+    await saveMessenger((was) => was && { ...was, owner: asking.user });
     const { t } = await words();
     await this.bot
       ?.send(asking.channel, asking.held.length ? t("inHeld") : t("in"))
@@ -401,9 +425,12 @@ export class Bridge {
   }
 
   private async onMessage(message: Incoming): Promise<void> {
-    const settings = await loadDiscord();
+    const settings = await loadMessenger();
     if (!settings || !this.bot) return;
-    const text = message.text.trim();
+    // Telegram's Start button writes "/start": only a hello.
+    const text = /^\/start(\s|$)/.test(message.text.trim())
+      ? ""
+      : message.text.trim();
     if (!settings.owner) return this.knock(message, text);
     const { t } = await words();
     if (message.author.id !== settings.owner.id) {
@@ -428,7 +455,7 @@ export class Bridge {
       }
     }
     if (text === "/new") {
-      await saveDiscord((was) => was && { ...was, chat: undefined });
+      await saveMessenger((was) => was && { ...was, chat: undefined });
       await this.bot.send(message.channel, t("newChat"));
       return;
     }
@@ -479,7 +506,7 @@ export class Bridge {
     const bot = this.bot;
     if (!bot) return;
     const { t, errors } = await words();
-    const settings = await loadDiscord();
+    const settings = await loadMessenger();
     void bot.typing(message.channel);
     const typing = setInterval(() => void bot.typing(message.channel), 8000);
     typing.unref?.();
@@ -494,7 +521,9 @@ export class Bridge {
         send: (event) => {
           if (event.type === "chat") this.turnChat = event.id;
           if (event.type === "chat" && event.id !== settings?.chat)
-            said.push(saveDiscord((was) => was && { ...was, chat: event.id }));
+            said.push(
+              saveMessenger((was) => was && { ...was, chat: event.id }),
+            );
           else if (event.type === "ask") {
             // Asked in the phone's own conversation: here already, so it is not sent again.
             this.told.set(event.id, Date.now());
@@ -610,7 +639,7 @@ export class Bridge {
   }
 
   private async onPress(press: Press): Promise<void> {
-    const settings = await loadDiscord();
+    const settings = await loadMessenger();
     if (!this.bot || !settings?.owner || press.user.id !== settings.owner.id)
       return;
     const [kind, id = "", value = ""] = press.value.split(":");
@@ -683,7 +712,7 @@ export class Bridge {
     }
     if (news.role !== "office" && news.role !== "told") return;
     void (async () => {
-      const settings = await loadDiscord();
+      const settings = await loadMessenger();
       // In the phone's own conversation: it comes back there, whoever is watching.
       if (news.chat === settings?.chat) {
         const { chat } = await words();
@@ -712,7 +741,7 @@ export class Bridge {
   }
 
   private async dmChannel(): Promise<string | undefined> {
-    const settings = await loadDiscord();
+    const settings = await loadMessenger();
     const bot = this.bot;
     if (!bot || this.state !== "on" || !settings?.owner) return undefined;
     if (this.channel?.user !== settings.owner.id)

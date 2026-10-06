@@ -1,5 +1,9 @@
 import * as z from "zod";
-import { messenger, startMessenger } from "@/features/minime/messenger/bridge";
+import {
+  messenger,
+  SERVICES,
+  startMessenger,
+} from "@/features/minime/messenger/bridge";
 import { refuse } from "@/features/minime/server/guard";
 
 // The person's messenger as their screen sees it: whether their bot is connected, who it talks
@@ -14,6 +18,7 @@ export async function GET(request: Request) {
 const Body = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("connect"),
+    service: z.enum(SERVICES),
     token: z.string().trim().min(20).max(200),
   }),
   z.object({ action: z.literal("allow"), code: z.string().max(20) }),
@@ -30,7 +35,8 @@ export async function POST(request: Request) {
   const input = body.data;
   const bridge = messenger();
   try {
-    if (input.action === "connect") await bridge.connect(input.token);
+    if (input.action === "connect")
+      await bridge.connect(input.service, input.token);
     else if (input.action === "allow") {
       if (!(await bridge.allow(input.code)))
         return Response.json({ error: "no-longer-waiting" }, { status: 410 });
