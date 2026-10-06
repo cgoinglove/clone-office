@@ -86,6 +86,9 @@ try {
   });
   // The dependencies come from npm, for this computer's system, not from the build's folder.
   rmSync(join(out, "app", "node_modules"), { recursive: true, force: true });
+  // Next's file tracing copies the rule files a path pattern in them names (`.claude/rules`);
+  // they are notes for whoever works on the code, never part of the app.
+  rmSync(join(out, "app", ".claude"), { recursive: true, force: true });
   cpSync(
     join(source, ".next-package", "static"),
     join(out, "app", ".next-package", "static"),
