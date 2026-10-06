@@ -17,6 +17,11 @@ export interface Sql {
 
 export interface Database extends Sql {
   readonly kind: "pglite" | "postgres";
+  /**
+   * The driver's own handle (the PGlite instance, or pg's Pool), for a library that brings its own
+   * queries: the server's sign-in (accounts.ts).
+   */
+  readonly raw: unknown;
   /** Statements in one go, without parameters (the schema). */
   exec(text: string): Promise<void>;
   /** Runs `fn` in one transaction: committed when it returns, rolled back when it throws. */
@@ -48,6 +53,7 @@ async function openPGlite(folder: string): Promise<Database> {
   });
   return {
     kind: "pglite",
+    raw: db,
     ...sql(db),
     exec: async (text) => {
       await db.exec(text);
@@ -67,6 +73,7 @@ async function openPostgres(url: string): Promise<Database> {
   const listeners = new Set<InstanceType<typeof pg.Client>>();
   return {
     kind: "postgres",
+    raw: pool,
     query: async <T>(text: string, params?: unknown[]) =>
       (await pool.query(text, params)).rows as T[],
     exec: async (text) => {

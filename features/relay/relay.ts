@@ -155,6 +155,16 @@ const MIGRATIONS: string[][] = [
   [
     "CREATE TABLE office_settings (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, name TEXT NOT NULL, value JSONB NOT NULL, by_member TEXT NOT NULL, updated TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, name))",
   ],
+  // People with an account (accounts.ts): their place in an office, the mini-me that is theirs, and
+  // the one-time codes that connect a computer.
+  [
+    "ALTER TABLE members ADD COLUMN user_id TEXT",
+    "CREATE UNIQUE INDEX members_user ON members (office_id, user_id) WHERE user_id IS NOT NULL",
+    "CREATE TABLE office_people (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, user_id TEXT NOT NULL, role TEXT NOT NULL, joined TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, user_id))",
+    "CREATE INDEX office_people_user ON office_people (user_id)",
+    "CREATE TABLE setup_codes (code_hash TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, user_id TEXT NOT NULL, expires TIMESTAMPTZ NOT NULL, used TIMESTAMPTZ)",
+    "CREATE TABLE server_settings (name TEXT PRIMARY KEY, value TEXT NOT NULL)",
+  ],
 ];
 
 /** What an office keeps for all its members: the OAuth client a vendor wants registered first. */
@@ -293,6 +303,61 @@ export class Relay {
       [id, office.id, hashToken(token), JSON.stringify(card), now],
     );
     return { id, token };
+  }
+
+  /**
+   * The mini-me of a person with an account, given a new token: theirs when they had one in this
+   * office (one person, one mini-me: connecting another computer moves it there, and the token the
+   * last one held stops working), else a new member with their name on its card.
+   */
+  async joinAs(
+    office: string,
+    user: string,
+    name: string,
+  ): Promise<{ id: string; token: string; moved: boolean }> {
+    const token = randomBytes(24).toString("base64url");
+    const now = new Date().toISOString();
+    return this.db.transaction(async (tx) => {
+      const [had] = await tx.query<{ id: string }>(
+        "SELECT id FROM members WHERE office_id = $1 AND user_id = $2 FOR UPDATE",
+        [office, user],
+      );
+      if (had) {
+        await tx.query(
+          "UPDATE members SET token_hash = $1, seen = $2 WHERE id = $3",
+          [hashToken(token), now, had.id],
+        );
+        return { id: had.id, token, moved: true };
+      }
+      const id = `m-${randomBytes(6).toString("hex")}`;
+      await tx.query(
+        "INSERT INTO members (id, office_id, token_hash, card, joined, seen, user_id) VALUES ($1, $2, $3, $4::jsonb, $5, $5, $6)",
+        [
+          id,
+          office,
+          hashToken(token),
+          JSON.stringify(cleanCard({ name } as Card)),
+          now,
+          user,
+        ],
+      );
+      return { id, token, moved: false };
+    });
+  }
+
+  /** A person's mini-me in an office, if they connected one. */
+  async memberOf(office: string, user: string): Promise<Member | undefined> {
+    const [row] = await this.db.query<{
+      id: string;
+      card: Card;
+      seen: unknown;
+    }>(
+      "SELECT id, card, seen FROM members WHERE office_id = $1 AND user_id = $2",
+      [office, user],
+    );
+    return row
+      ? { id: row.id, card: row.card, seen: iso(row.seen) }
+      : undefined;
   }
 
   /** The member a token belongs to; throws when it belongs to none. */

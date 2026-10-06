@@ -17,9 +17,24 @@
 //   POST /r/:token      the answer, from the page's form
 //   GET  /invite        -> {path}                       one's office's invite link
 //   GET  /i/:key        the invite page (HTML): what the office is and how to join with the link
+// With people's accounts (accounts.ts), the invite page makes an account instead, and:
+//   POST /i/:key        the account's form -> one's own page, signed in
+//   GET|POST /login     signing in;  POST /logout  signing out
+//   GET  /home          one's own page: one's office, connecting one's computer, the invite link
+//   POST /home/pair     a one-time setup code, shown as the line to run on one's computer
+//   GET  /p/:code       what a setup link shows in a browser: the line to run
+//   POST /pair/claim    {code} -> {office, member, token, name}   the computer's own token
 
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { AccountError, type Accounts } from "./accounts.ts";
 import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
+import {
+  connectCommand,
+  homePage,
+  runPage,
+  signInPage,
+  signUpPage,
+} from "./people-pages.ts";
 import {
   FILE_BYTES,
   FILES_PER_MESSAGE,
@@ -124,8 +139,13 @@ export function relayHandler(
   options: {
     /** Behind a proxy of one's own: take the caller's address from X-Forwarded-For. */
     trustProxy?: boolean;
+    /** People's accounts: the invite page makes one, and one's own page connects one's computer. */
+    accounts?: Accounts;
+    /** The address people reach the server at, for the links and lines its pages give. */
+    publicUrl?: string;
   } = {},
 ) {
+  const accounts = options.accounts;
   const tries = new Tries(20, 10 * 60 * 1000);
   const address = (request: IncomingMessage): string =>
     (options.trustProxy
@@ -148,9 +168,209 @@ export function relayHandler(
       response.writeHead(status, { "content-type": "application/json" });
       response.end(JSON.stringify(data));
     };
+    const html = (status: number, page: string, cookies: string[] = []) => {
+      response.writeHead(status, {
+        ...PAGE_HEADERS,
+        ...(cookies.length ? { "set-cookie": cookies } : {}),
+      });
+      response.end(page);
+    };
+    const redirect = (location: string, cookies: string[] = []) => {
+      response.writeHead(303, {
+        location,
+        "cache-control": "no-store",
+        ...(cookies.length ? { "set-cookie": cookies } : {}),
+      });
+      response.end();
+    };
+    /** Where people reach this server: as set, or as this request came (its proxy's scheme kept). */
+    const base = () => {
+      if (options.publicUrl) return options.publicUrl.replace(/\/+$/, "");
+      const proto =
+        String(request.headers["x-forwarded-proto"] ?? "").split(",")[0] ||
+        "http";
+      return `${proto === "https" ? "https" : "http"}://${request.headers.host ?? "relay"}`;
+    };
+    /** A form posted from this server's own page: browsers name where a post comes from. */
+    const fromHere = () => {
+      const origin = request.headers.origin;
+      if (!origin) return true;
+      try {
+        return new URL(origin).host === request.headers.host;
+      } catch {
+        return false;
+      }
+    };
+    const url = new URL(request.url ?? "/", "http://relay");
+    const path = url.pathname;
+    /**
+     * The pages and calls of people with accounts. Answers whether it handled the request; an
+     * invite's page without accounts is left to the plain invite page.
+     */
+    const peoplePages = async (key: string | undefined): Promise<boolean> => {
+      if (!accounts) return false;
+      const lang = pageLanguage(request.headers["accept-language"]);
+      const from = address(request);
+      const cookie = request.headers.cookie;
+      const post = request.method === "POST";
+      if (post && !fromHere()) {
+        html(403, missingPage(lang));
+        return true;
+      }
+      if (key) {
+        if (tries.blocked(from) || !(await relay.knows(key))) {
+          tries.miss(from);
+          html(404, missingPage(lang));
+          return true;
+        }
+        const who =
+          url.searchParams.get("from")?.trim().slice(0, 80) || undefined;
+        const link = `${base()}${path}${url.search}`;
+        if (!post) {
+          // Someone signed in already joins this office too.
+          const person = await accounts.person(cookie);
+          if (person && (await accounts.enter(key, person.id))) {
+            redirect("/home");
+            return true;
+          }
+          html(200, signUpPage({ lang, from: who, key, link }));
+          return true;
+        }
+        const fields = new URLSearchParams(await raw(request));
+        const filled = {
+          name: fields.get("name") ?? "",
+          email: fields.get("email") ?? "",
+          password: fields.get("password") ?? "",
+        };
+        try {
+          const made = await accounts.signUp(key, filled);
+          redirect("/home", made.cookies);
+        } catch (error) {
+          const code =
+            error instanceof AccountError ? error.code : "account-failed";
+          html(
+            400,
+            signUpPage({
+              lang,
+              from: who,
+              key,
+              link,
+              error: code,
+              name: filled.name,
+              email: filled.email,
+            }),
+          );
+        }
+        return true;
+      }
+      if (path === "/login" && (request.method === "GET" || post)) {
+        const invited = url.searchParams.get("key") ?? undefined;
+        if (!post) {
+          html(200, signInPage({ lang, key: invited }));
+          return true;
+        }
+        const fields = new URLSearchParams(await raw(request));
+        const email = fields.get("email") ?? "";
+        if (tries.blocked(from)) {
+          html(429, signInPage({ lang, error: "too-many-tries", email }));
+          return true;
+        }
+        try {
+          const signed = await accounts.signIn(
+            { email, password: fields.get("password") ?? "" },
+            fields.get("key") || undefined,
+          );
+          redirect("/home", signed.cookies);
+        } catch (error) {
+          const code =
+            error instanceof AccountError ? error.code : "account-failed";
+          if (code === "sign-in-wrong") tries.miss(from);
+          html(
+            400,
+            signInPage({
+              lang,
+              key: fields.get("key") || undefined,
+              error: code,
+              email,
+            }),
+          );
+        }
+        return true;
+      }
+      if (path === "/logout" && post) {
+        redirect("/login", await accounts.signOut(cookie));
+        return true;
+      }
+      if (
+        (path === "/home" && request.method === "GET") ||
+        (path === "/home/pair" && post)
+      ) {
+        const person = await accounts.person(cookie);
+        if (!person) {
+          redirect("/login");
+          return true;
+        }
+        const [place] = await accounts.places(person.id);
+        const command =
+          place && path === "/home/pair"
+            ? connectCommand(
+                `${base()}/p/${(await accounts.setupCode(person.id, place.office)).code}`,
+              )
+            : undefined;
+        const mine = place
+          ? await relay.memberOf(place.office, person.id)
+          : undefined;
+        html(
+          200,
+          homePage({
+            lang,
+            name: person.name,
+            ...(place
+              ? {
+                  office: {
+                    name: place.name,
+                    invite: `${base()}/i/${place.key}?from=${encodeURIComponent(person.name)}`,
+                  },
+                }
+              : {}),
+            ...(mine
+              ? {
+                  computer: {
+                    name: mine.card.name,
+                    seen: new Date(mine.seen).toLocaleString(lang),
+                  },
+                }
+              : {}),
+            ...(command ? { command } : {}),
+          }),
+        );
+        return true;
+      }
+      const setup = /^\/p\/([\w-]{16,64})$/.exec(path);
+      if (setup && request.method === "GET") {
+        html(
+          200,
+          runPage({ lang, command: connectCommand(`${base()}${path}`) }),
+        );
+        return true;
+      }
+      if (path === "/pair/claim" && post) {
+        if (tries.blocked(from))
+          throw new RelayError(429, "Too many tries.", "too-many-tries");
+        const input = await body(request);
+        try {
+          const claimed = await accounts.claim(String(input.code ?? ""));
+          send(200, { relay: base(), ...claimed });
+        } catch (error) {
+          if (error instanceof RelayError && error.code === "setup-expired")
+            tries.miss(from);
+          throw error;
+        }
+        return true;
+      }
+      return false;
+    };
     try {
-      const url = new URL(request.url ?? "/", "http://relay");
-      const path = url.pathname;
       const page = /^\/r\/([\w-]{20,64})$/.exec(path);
       if (page && (request.method === "GET" || request.method === "POST")) {
         const lang = pageLanguage(request.headers["accept-language"]);
@@ -195,6 +415,7 @@ export function relayHandler(
         return;
       }
       const invite = /^\/i\/([\w-]{4,128})$/.exec(path);
+      if (accounts && (await peoplePages(invite?.[1]))) return;
       if (invite && request.method === "GET") {
         const lang = pageLanguage(request.headers["accept-language"]);
         const from = address(request);

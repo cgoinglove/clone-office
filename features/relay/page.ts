@@ -68,11 +68,19 @@ h1 { font-size: 1.25rem; margin: 0; text-wrap: balance; }
 label { display: block; font-weight: 600; margin-bottom: .5rem; }
 textarea { width: 100%; min-height: 8rem; font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: .75rem; }
 button { font: inherit; font-weight: 600; color: #fff; background: var(--brand); border: 0; border-radius: 10px; padding: .6rem 1.2rem; margin-top: .75rem; cursor: pointer; }
+input { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: .6rem .75rem; margin-bottom: .75rem; }
+form label { margin-bottom: .25rem; }
+pre { white-space: pre-wrap; word-break: break-all; user-select: all; -webkit-user-select: all; font: .9rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; border: 1px solid var(--line); border-radius: 10px; padding: .75rem; margin: 0; }
+section { display: flex; flex-direction: column; gap: .5rem; }
+h2 { font-size: 1.05rem; margin: 0; }
+a { color: var(--brand); }
+.error { color: #c43d18; }
+.quiet { background: transparent; color: var(--fg); border: 1px solid var(--line); }
 .note, footer { color: var(--muted); }
 footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem; }
 `;
 
-function shell(lang: PageLanguage, title: string, body: string): string {
+export function shell(lang: PageLanguage, title: string, body: string): string {
   return `<!doctype html>
 <html lang="${lang}">
 <head>

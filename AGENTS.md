@@ -190,6 +190,20 @@ These words help discussion. They do not mandate separate services, tables or UI
   for two weeks or until answered); the answer reaches the asker like any other. An invite is one
   link, `/i/<office key>?from=<name>` (`GET /invite` gives it to a member): the relay's page says
   how to join, and the join form fills in the relay and key from it (`office/invite.ts`).
+  People sign in on the server, after Paperclip (Better Auth) and OpenClaw (a one-time setup
+  link): `accounts.ts` runs Better Auth over the relay's own database (pg's pool, or PGlite through
+  a small Kysely dialect of its own, `pglite-dialect.ts`, without Kysely's transactions, which
+  would interleave with the relay's queries; its tables `auth_*`, made at start; its secret `BETTER_AUTH_SECRET` or one made once
+  and kept in `server_settings`), puts a person in the office whose invite they signed up with
+  (the first owns it; `office_people`), and makes a computer's setup code (hashed in
+  `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
+  member token under the person's account (`members.user_id`; one person, one mini-me:
+  `Relay.joinAs` moves it). `people-pages.ts` is the invite's sign-up page, sign-in and one's own
+  page with the line to run, plain HTML with no scripts; a form from another site is refused, and
+  wrong sign-ins count against the caller's address. `npx sub-office connect <link>`
+  (`bin/sub-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
+  office this computer hosted), and starts the app. `RELAY_PUBLIC_URL` is the address people reach
+  a server at behind a proxy.
 - `features/minime/office/`: the mini-me's side. `client.ts` (where its relay is and who it is
   there, in `settings.json` under `office`, and the calls), `host.ts` (an office opened on this
   computer: the app starts `features/relay/server.ts` itself, PGlite in `relay/` under the

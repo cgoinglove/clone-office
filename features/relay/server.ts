@@ -6,12 +6,14 @@
 // key its office was made with, and makes one the first time. With --host 0.0.0.0 it is reachable
 // from the network, and it says at which addresses. Started by the app with RELAY_WITH_PARENT=1
 // (and its stdin a pipe the app holds), it stops when the app does, however the app ends. The
-// routes are in handler.ts.
+// routes are in handler.ts. People make their accounts here from the office's invite link
+// (accounts.ts); RELAY_PUBLIC_URL is the address they reach it at, when a proxy stands in front.
 
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { Accounts } from "./accounts.ts";
 import { openDatabase } from "./db.ts";
 import { relayHandler } from "./handler.ts";
 import { Relay } from "./relay.ts";
@@ -40,8 +42,15 @@ const tidying = setInterval(
 );
 tidying.unref();
 
+const publicUrl = process.env.RELAY_PUBLIC_URL || undefined;
+const accounts = await Accounts.open(db, relay, { publicUrl });
+
 const server = createServer(
-  relayHandler(relay, { trustProxy: process.env.RELAY_TRUST_PROXY === "1" }),
+  relayHandler(relay, {
+    trustProxy: process.env.RELAY_TRUST_PROXY === "1",
+    accounts,
+    publicUrl,
+  }),
 );
 
 server.listen(Number(values.port), values.host as string, () => {
@@ -55,6 +64,10 @@ server.listen(Number(values.port), values.host as string, () => {
         if (net.family === "IPv4" && !net.internal)
           console.log(`on your network: http://${net.address}:${port}`);
   console.log(`office key: ${office.key}`);
+  // Whoever started the relay opens this first: the first account made there owns the office.
+  console.log(
+    `invite link (make your account here first): ${publicUrl ?? `http://${values.host === "0.0.0.0" || values.host === "::" ? "<address above>" : values.host}:${port}`}/i/${office.key}`,
+  );
   // Never the URL itself: it carries the database's password.
   console.log(
     `kept in: ${db.kind === "postgres" ? "Postgres (database URL)" : target}`,

@@ -111,8 +111,17 @@ or point it at a Postgres you have: `DATABASE_URL=postgres://… pnpm relay --ho
 On the internet, put it behind HTTPS (Caddy or nginx, for example) and set `RELAY_TRUST_PROXY=1`,
 so it counts wrong office keys by each caller's address rather than the proxy's.
 
-Then **Office** on each person's page joins it, with the invite link or the relay's address and
-key. To try an office alone, run a second mini-me with its own folder and port:
+It prints an invite link; open it first and make your account there (the first account owns the
+office), then send the same link to your team. Each person makes their account from it, and their
+page on the server gives them one line to run on their computer:
+
+```sh
+npx sub-office connect http://<your server>/p/<one-time code>
+```
+
+That puts their mini-me in the office and opens it. Behind a proxy, set `RELAY_PUBLIC_URL` to the
+address people reach. Someone already running sub-office can instead paste the invite link under
+**Office** on their page, with the invite link or the relay's address and key. To try an office alone, run a second mini-me with its own folder and port:
 `SUB_OFFICE_HOME=~/.sub-office-b pnpm dev --port 3001`.
 
 The Claude Code plugin, from this folder:

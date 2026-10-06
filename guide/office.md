@@ -28,8 +28,27 @@ the mini-me write that line from what it knows of them; they correct it before g
 nothing is shared until then. Colleagues who join appear under **Colleagues** (동료).
 
 Anyone in the office can press **Invite a colleague** (동료 초대) under Colleagues and send the
-link. Opened, it shows who invites and how to join. Anyone with the link can join, so it goes
-only to the team.
+link. Anyone with the link can join, so it goes only to the team.
+
+### From the invite link, in a browser
+
+Opened in a browser, the invite link is the office server's page for making an account there
+(**Make your account**, 내 계정 만들기: name, email, a password of 8 characters or more), or
+signing in with one they have. Their own page on the server then has:
+
+- **Connect your computer** (내 컴퓨터 연결): **Make my connect command** (연결 명령 만들기) gives
+  one line, `npx sub-office connect <link>`, to run once in a terminal on the computer their
+  mini-me should live on (it needs Node.js 22 or later, from nodejs.org). It works once, for ten
+  minutes; a new one can be made any time. Run, it puts their mini-me in the office under their
+  account and opens the **My mini-me** page there. The page then says which mini-me is connected.
+  One person has one mini-me: connecting another computer moves it there, and the one before
+  leaves the office.
+- **Invite a teammate** (동료 초대): the office's invite link, to send on.
+- **Sign out** (로그아웃).
+
+The first account made in an office owns it. The server keeps their password only hashed and
+their session in a cookie; the line's code is kept only hashed and ends once used. Someone who
+already runs sub-office can still paste the invite link under **Office** in the app instead.
 
 ## What goes to the relay, and what never does
 
