@@ -34,6 +34,7 @@ import { TopBar } from "./top-bar";
 import { useChat } from "./use-chat";
 import { useLearn } from "./use-learn";
 import { HEADERS, type Profile, useOffice } from "./use-office";
+import { usePreferences } from "./use-preferences";
 
 type Side = "chat" | "requests";
 
@@ -78,7 +79,12 @@ export function Home() {
 
   const chat = useChat(lang);
   const learn = useLearn(lang);
-  const office = useOffice(lang, { onNews: chat.refresh, profile });
+  const { preferences, change: changePreferences } = usePreferences();
+  const office = useOffice(lang, {
+    onNews: chat.refresh,
+    profile,
+    batchHours: preferences?.batchHours,
+  });
 
   const [side, setSide] = useState<Side | null>(null);
   const [settings, setSettings] = useState<SectionId | null>(null);
@@ -102,8 +108,13 @@ export function Home() {
     if (side === "chat") draft.current?.focus({ preventScroll: true });
   }, [side]);
 
-  // The lobby, the first time today; read once, so the office does not go back to it.
-  const [lobby] = useState(() => !clockedInToday());
+  // The lobby, the first time today unless the person turned it off; decided once, when their
+  // preferences are in, so the office does not go back to it.
+  const [lobby, setLobby] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (preferences && lobby === null)
+      setLobby(preferences.lobby && !clockedInToday());
+  }, [preferences, lobby]);
 
   const chatWaiting = chat.asking ? 1 : 0;
   const waiting = office.due.length + chatWaiting;
@@ -125,7 +136,7 @@ export function Home() {
       data-side={side ? "open" : undefined}
     >
       <h1 className="sr-only">{t("title")}</h1>
-      {office.room ? (
+      {office.room && lobby !== null ? (
         <OfficeRoom
           ref={control}
           full
@@ -203,6 +214,8 @@ export function Home() {
         learn={learn}
         profile={profile}
         onProfile={setProfile}
+        preferences={preferences}
+        onPreferences={changePreferences}
         onOpenChat={(id) => {
           setSettings(null);
           openSide("chat");

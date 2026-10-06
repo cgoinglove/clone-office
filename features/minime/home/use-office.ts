@@ -174,7 +174,16 @@ export const SOLO_ID = "me";
 
 export function useOffice(
   lang: string,
-  { onNews, profile }: { onNews?: () => void; profile?: Profile } = {},
+  {
+    onNews,
+    profile,
+    batchHours,
+  }: {
+    onNews?: () => void;
+    profile?: Profile;
+    /** The day's moments questions kept for later come at (Settings › Preferences). */
+    batchHours?: number[];
+  } = {},
 ) {
   const tAsk = useTranslations("ask");
   const tHome = useTranslations("home");
@@ -268,7 +277,10 @@ export function useOffice(
   // Questions kept for later call the person only at the day's batch moments; the list shows
   // them all the same.
   const due = waiting.filter(
-    (a) => !a.later || !a.at || Date.now() >= dueAt(new Date(a.at)).getTime(),
+    (a) =>
+      !a.later ||
+      !a.at ||
+      Date.now() >= dueAt(new Date(a.at), batchHours).getTime(),
   );
 
   /** Answers a question about a request: a kept one lets its request go on, a live one the gate. */

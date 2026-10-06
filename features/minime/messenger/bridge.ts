@@ -33,6 +33,7 @@ import { keepFile, SEND_BYTES, sizeText } from "../office/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { personLanguage } from "../server/language.ts";
 import { minimeHome } from "../server/paths.ts";
+import { readPreferences } from "../server/preferences.ts";
 import { watching } from "../server/presence.ts";
 import {
   type Choice,
@@ -957,11 +958,13 @@ export class Bridge {
       (one) => !one.phoned && !this.told.has(one.id),
     );
     const due: Kept[] = [];
+    // The day's moments as the person set them (Settings › Preferences).
+    const { batchHours: hours } = await readPreferences();
     for (const one of kept) {
       if (one.ask && this.told.has(one.ask)) {
         this.told.set(one.id, Date.now());
         await this.office.phoned(one.id).catch(() => {});
-      } else if (dueAt(new Date(one.at)).getTime() <= now) due.push(one);
+      } else if (dueAt(new Date(one.at), hours).getTime() <= now) due.push(one);
     }
     const open: { kept: Kept; about: string }[] = [];
     for (const one of due) {

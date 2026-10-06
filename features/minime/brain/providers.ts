@@ -71,8 +71,12 @@ export const PROVIDERS: Provider[] = [
     name: "Gemini",
     keysAt: "https://aistudio.google.com/apikey",
     models: [
-      { id: "gemini-3.5-flash-lite", label: "3.5 Flash Lite", tier: "small" },
-      { id: "gemini-3.8-flash", label: "3.8 Flash", tier: "mid" },
+      {
+        id: "gemini-3.5-flash-lite",
+        label: "Gemini 3.5 Flash Lite",
+        tier: "small",
+      },
+      { id: "gemini-3.8-flash", label: "Gemini 3.8 Flash", tier: "mid" },
     ],
   },
   {

@@ -14,6 +14,7 @@ import { createInterface } from "node:readline";
 import type { Connector } from "../connectors/catalog.ts";
 import { connectedConnectors } from "../connectors/oauth.ts";
 import { sessionRules } from "../connectors/tools.ts";
+import { ownModeRules } from "../gate/autonomy.ts";
 import { ASKABLE_TOOLS, TRUSTED_FROM_START } from "../gate/rules.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
 import { NoteStore } from "../memory/notes.ts";
@@ -323,10 +324,19 @@ export async function runSession(
           "mcp__minime__sessions",
           ...(gate.colleagues ? ["mcp__minime__colleagues"] : []),
           ...TRUSTED_FROM_START,
-          ...(await sessionRules(gate.allow)),
+          ...(await sessionRules([
+            ...gate.allow,
+            ...(await ownModeRules(options.purpose)),
+          ])),
         ]
       : standing
-        ? [...TRUSTED_FROM_START, ...(await sessionRules(standing.allow))]
+        ? [
+            ...TRUSTED_FROM_START,
+            ...(await sessionRules([
+              ...standing.allow,
+              ...(await ownModeRules(options.purpose)),
+            ])),
+          ]
         : []),
   ];
   const deny = (gate ?? standing)?.deny ?? [];

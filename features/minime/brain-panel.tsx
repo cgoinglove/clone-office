@@ -266,7 +266,10 @@ export function BrainChooser({
           tier: undefined,
         }))
       : (entry?.models ?? []);
-  const chosenModel = other.trim() || model;
+  // The model a way starts on when nothing is picked yet: the vendor's middle one, as Thursday's
+  // picker and Hermes Agent's setup suggest one, so "Use this" is one press away.
+  const suggested = models.find((m) => m.tier === "mid") ?? models[0];
+  const chosenModel = other.trim() || model || suggested?.id || "";
   const current = state.choice;
   const found = (v: Vendor) =>
     v.id === "claude"
@@ -516,7 +519,8 @@ export function BrainChooser({
               <legend className="mb-1.5 font-medium">{t("model")}</legend>
               <div className="flex flex-col overflow-hidden rounded-xl border border-border">
                 {models.map((option) => {
-                  const picked = !other.trim() && model === option.id;
+                  const picked =
+                    !other.trim() && (model || suggested?.id) === option.id;
                   const mark = id ? modelMark(option.id, id) : undefined;
                   return (
                     <label
@@ -553,6 +557,11 @@ export function BrainChooser({
                       <span className="min-w-0 flex-1 truncate">
                         {option.label}
                       </span>
+                      {option.id === suggested?.id && (
+                        <span className="shrink-0 rounded-md bg-brand/10 px-1.5 py-0.5 text-[11px] font-medium text-brand">
+                          {t("suggested")}
+                        </span>
+                      )}
                       {option.tier && (
                         <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
                           {t(`tier.${option.tier}`)}

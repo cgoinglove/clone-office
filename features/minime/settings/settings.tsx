@@ -14,6 +14,7 @@ import {
   Repeat,
   Settings2,
   ShieldCheck,
+  SlidersHorizontal,
   Smartphone,
   Sparkles,
 } from "lucide-react";
@@ -28,16 +29,19 @@ import { ConnectorsPanel } from "../connectors-panel";
 import { FlowsPanel } from "../flows-panel";
 import type { Learn } from "../home/use-learn";
 import type { OfficeState, Profile } from "../home/use-office";
+import type { Preferences } from "../home/use-preferences";
 import { MessengerPanel } from "../messenger-panel";
 import { CloneSection } from "./clone-section";
 import { FilesSection } from "./files-section";
 import { GeneralSection } from "./general-section";
 import { OfficeSection } from "./office-section";
 import { PermissionsSection } from "./permissions-section";
+import { PreferencesSection } from "./preferences-section";
 import { RequestsSection } from "./requests-section";
 
 export type SectionId =
   | "clone"
+  | "preferences"
   | "brain"
   | "requests"
   | "flows"
@@ -56,6 +60,7 @@ const SECTIONS: {
   icon: ComponentType<{ className?: string }>;
 }[] = [
   { id: "clone", group: "clone", icon: LogoMark },
+  { id: "preferences", group: "clone", icon: SlidersHorizontal },
   { id: "brain", group: "clone", icon: Sparkles },
   { id: "requests", group: "clone", icon: Inbox },
   { id: "flows", group: "work", icon: Repeat },
@@ -77,6 +82,8 @@ export function SettingsDialog({
   learn,
   profile,
   onProfile,
+  preferences,
+  onPreferences,
   onOpenChat,
   onAsk,
   onNews,
@@ -89,6 +96,8 @@ export function SettingsDialog({
   learn: Learn;
   profile: Profile;
   onProfile: (profile: Profile) => void;
+  preferences: Preferences | null;
+  onPreferences: (next: Partial<Preferences>) => Promise<boolean>;
   /** Opens a conversation (a flow's) in the side panel, closing settings. */
   onOpenChat: (id: string) => void;
   /** Says something to the clone in the side panel, closing settings. */
@@ -209,11 +218,18 @@ export function SettingsDialog({
                     office={office}
                   />
                 )}
+                {current.id === "preferences" && (
+                  <PreferencesSection
+                    preferences={preferences}
+                    onChange={onPreferences}
+                  />
+                )}
                 {current.id === "brain" && <BrainPanel />}
                 {current.id === "requests" && (
                   <RequestsSection
                     lang={lang}
                     office={office}
+                    defaultTrust={preferences?.defaultTrust ?? "tell"}
                     onOpenOffice={() => onSection("office")}
                   />
                 )}

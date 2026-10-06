@@ -9,12 +9,17 @@ import { connectorOfTool } from "../connectors/catalog.ts";
 import { readRule, readsOnly } from "../connectors/tools.ts";
 import { getFlow } from "../flows/store.ts";
 import { loadMenu } from "../office/menu.ts";
+import { allowedByMode } from "./autonomy.ts";
 import type { Ask } from "./gate.ts";
 import { loadTrust, ruleFor } from "./rules.ts";
 
 /** Whether the person's rules already let this through, so nobody needs to be asked. */
-export async function alreadyAllowed(ask: Ask): Promise<boolean> {
+export async function alreadyAllowed(ask: Ask, own = false): Promise<boolean> {
   if (ask.kind !== "permission") return false;
+  // What the person's autonomy mode lets the clone do on its own (Settings › Preferences), in
+  // their own work only: a colleague's request never reads or acts on the strength of it.
+  if (own && (await allowedByMode(ask.tool, ask.input).catch(() => false)))
+    return true;
   const rules = await loadTrust();
   const rule = ruleFor(ask.tool, ask.input);
   if (rule && rules.includes(rule)) return true;

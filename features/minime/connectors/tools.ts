@@ -25,7 +25,9 @@ export const readRuleService = (rule: string) => {
 };
 
 /** A tool's name as Claude Code writes it after mcp__<server>__. */
-const asClaudeCode = (name: string) => name.replace(/[^a-zA-Z0-9_-]/g, "_");
+/** A service's tool name as Claude Code names it in a session (`mcp__<service>__<tool>`). */
+export const asClaudeCode = (name: string) =>
+  name.replace(/[^a-zA-Z0-9_-]/g, "_");
 
 /** Asks the service's server for its tools now, and keeps them. `url` stands in for it in tests. */
 export async function listTools(

@@ -6,6 +6,7 @@
 // before anything new is made, one lesson in one place, and "Nothing to save." when nothing
 // stands out. Notes pages for people and ongoing work follow the LLM Wiki page rules.
 
+import { readPreferences } from "../server/preferences.ts";
 import {
   runSession,
   type SessionEvent,
@@ -72,11 +73,14 @@ Act on whatever has real signal. If genuinely nothing stands out, say 'Nothing t
  * .systemPrompt) so the copy starts from that session's prompt cache, as Hermes keeps the
  * review's prefix identical to its parent's.
  */
-export function reviewSession(
+export async function reviewSession(
   sessionId: string,
   onEvent?: (event: SessionEvent) => void,
   systemPrompt?: string,
 ): Promise<SessionResult> {
+  // The person can turn the learning after each conversation off (Settings › Preferences).
+  if (!(await readPreferences()).review)
+    return { ok: false, text: "", error: "review-off" };
   return runSession({
     resume: sessionId,
     fork: true,

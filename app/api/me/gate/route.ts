@@ -49,7 +49,11 @@ export async function POST(request: Request) {
   if ("ask" in body.data) {
     // Something they let through "from now on" while this session was already running (the
     // session's own list was made at its start) goes through without asking again.
-    if (await alreadyAllowed(body.data.ask).catch(() => false))
+    if (
+      await alreadyAllowed(body.data.ask, !isRequestChat(body.data.chat)).catch(
+        () => false,
+      )
+    )
       return Response.json({
         id: randomUUID(),
         answered: true,

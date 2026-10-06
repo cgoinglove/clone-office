@@ -643,7 +643,8 @@
       "small": "small",
       "mid": "mid",
       "large": "large"
-    }
+    },
+    "suggested": "Suggested"
   },
   "messenger": {
     "title": "On your phone",
@@ -820,6 +821,10 @@
         "label": "Your clone",
         "hint": "Who you are to it, and what it remembers about you."
       },
+      "preferences": {
+        "label": "Preferences",
+        "hint": "How your clone behaves when it works for you."
+      },
       "brain": {
         "label": "Brain",
         "hint": "What your clone thinks with: your subscription, an API key, or a model on this computer."
@@ -929,6 +934,37 @@
       "about": "About",
       "aboutBody": "sub-office gives everyone on a team a clone: an AI that works like them, does their everyday tasks, and stands in for them with teammates. It runs on your computer, and what it keeps stays here.",
       "guide": "Ask your clone how anything here works: it reads this app's guide to answer."
+    },
+    "preferences": {
+      "loading": "Loading…",
+      "default": "Default",
+      "autonomy": "How much it does on its own",
+      "autonomyHint": "In your own work: conversations with it and your flows.",
+      "modes": {
+        "ask": {
+          "title": "Ask me first",
+          "body": "It asks before it reads a file, opens a web page or uses one of your services. Tick “Don't ask again” on any card to let one kind through."
+        },
+        "reads": {
+          "title": "Read on its own",
+          "body": "It reads files (never in folders you left out), web pages and your connected services without asking. Anything that changes something is still asked."
+        },
+        "auto": {
+          "title": "Do it, then tell me",
+          "body": "It also acts in your connected services and asks colleagues without asking you first. You see everything in the conversation."
+        }
+      },
+      "always": "Whatever you pick, files leaving your computer, flows, and work in your Claude Code conversations are always shown to you first. Colleagues' requests don't use this: each kind there has its own trust level, under Requests you take.",
+      "trust": "New kinds of request start at",
+      "trustHint": "Where a kind of request starts when you add it or your clone drafts it. Promises and decisions always come to you.",
+      "batch": "When kept questions come",
+      "batchHint": "While you're busy or away, questions about colleagues' requests wait and come together at {hours}.",
+      "learning": "Learning",
+      "review": "Learn after each conversation",
+      "reviewHint": "It reads the conversation once more and keeps only what stays true about how you work. Off, it learns only what you tell it to remember.",
+      "office": "Office",
+      "lobby": "Clock in at the lobby",
+      "lobbyHint": "The first time you open the office each day, it starts at the building's lobby. Off, it opens straight at your desk."
     }
   }
 }

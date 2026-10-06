@@ -23,13 +23,20 @@ import { Empty, Group, Groups, Rows } from "./parts";
 
 const TRUSTS: Trust[] = ["auto", "tell", "ask"];
 
+/** The more careful of two trust levels: asking first over telling after, telling over neither. */
+const stricter = (a: Trust | undefined, b: Trust): Trust =>
+  TRUSTS.indexOf(a ?? b) > TRUSTS.indexOf(b) ? (a ?? b) : b;
+
 export function RequestsSection({
   lang,
   office,
+  defaultTrust,
   onOpenOffice,
 }: {
   lang: string;
   office: OfficeState;
+  /** Where a kind added here starts (Settings › Preferences). */
+  defaultTrust: Trust;
   onOpenOffice: () => void;
 }) {
   const t = useTranslations("settings.requests");
@@ -52,6 +59,7 @@ export function RequestsSection({
         likeMe={data.likeMe}
         lang={lang}
         busy={office.busy}
+        defaultTrust={defaultTrust}
         onSave={(menu) => office.post({ action: "menu", menu })}
       />
       {card && (
@@ -77,12 +85,14 @@ function Menu({
   likeMe,
   lang,
   busy,
+  defaultTrust,
   onSave,
 }: {
   menu: MenuItem[];
   likeMe?: LikeMe;
   lang: string;
   busy: boolean;
+  defaultTrust: Trust;
   onSave: (menu: MenuItem[]) => Promise<boolean>;
 }) {
   const t = useTranslations("office");
@@ -111,9 +121,14 @@ function Menu({
         return;
       }
       const known = new Set(menu.map((item) => item.name.toLowerCase()));
-      const fresh = ((data.menu as MenuItem[]) ?? []).filter(
-        (item) => !known.has(item.name.toLowerCase()),
-      );
+      // A drafted kind starts where the person said new kinds start, or more carefully when the
+      // clone thought it should (a kind that makes promises, say): never looser than either.
+      const fresh = ((data.menu as MenuItem[]) ?? [])
+        .filter((item) => !known.has(item.name.toLowerCase()))
+        .map((item) => ({
+          ...item,
+          trust: stricter(item.trust, defaultTrust),
+        }));
       if (fresh.length) await onSave([...menu, ...fresh]);
     } finally {
       setDrafting(false);
@@ -236,7 +251,7 @@ function Menu({
               {
                 name: name.trim(),
                 description: description.trim(),
-                trust: "tell",
+                trust: defaultTrust,
               },
             ]).then((ok) => {
               if (!ok) return;

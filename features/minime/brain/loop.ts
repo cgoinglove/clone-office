@@ -24,6 +24,7 @@ import {
 } from "ai";
 import { connectedConnectors } from "../connectors/oauth.ts";
 import { sessionRules } from "../connectors/tools.ts";
+import { ownModeRules } from "../gate/autonomy.ts";
 import { TRUSTED_FROM_START } from "../gate/rules.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
 import { atomicWrite, readText } from "../memory/files.ts";
@@ -269,10 +270,19 @@ export async function runLoop(
               "mcp__minime__sessions",
               ...(gate.colleagues ? ["mcp__minime__colleagues"] : []),
               ...TRUSTED_FROM_START,
-              ...(await sessionRules(gate.allow)),
+              ...(await sessionRules([
+                ...gate.allow,
+                ...(await ownModeRules(options.purpose)),
+              ])),
             ]
           : standing
-            ? [...TRUSTED_FROM_START, ...(await sessionRules(standing.allow))]
+            ? [
+                ...TRUSTED_FROM_START,
+                ...(await sessionRules([
+                  ...standing.allow,
+                  ...(await ownModeRules(options.purpose)),
+                ])),
+              ]
             : []),
       ],
       deny: (gate ?? standing)?.deny ?? [],
