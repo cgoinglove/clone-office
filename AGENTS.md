@@ -148,7 +148,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   AskUserQuestion for a session without a terminal). `gate.ts` holds the waiting questions in the
   server process; `tools.ts` is the tool server's side (it reaches the app's `gate` route with a
   per-process secret); `rules.ts` turns "from now on" into Claude Code permission rules in
-  `settings.json` (`trust.allow`) and the folders kept out into deny rules. Writing files and
+  `settings.json` (`trust.allow`) and the folders kept out into deny rules; `enrich.ts` works out
+  what a permission card shows besides the tool's input as it is asked (whether "from now on" can be
+  kept, never for a command or files; for a flow, the flow as it is and its kind's name), and
+  `ask-text.ts` `askDetails` draws those lines alike on the page and the phone. Writing files and
   running commands are not given to the mini-me; sending a request to a colleague is asked first.
 - `features/relay/`: the relay a team runs (`pnpm relay`). Files go with a request's messages:
   a member puts one (`POST /files`, its bytes, kept as bytea), then names it on the message it
@@ -255,7 +258,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   is a fresh session with nobody to ask: `runSession` `standing`, only what the person already
   allowed; its answer goes into the flow's own conversation as a "flow" line and the answer;
   nothing is learned; `tick` every minute while the app runs, under a lock), `tools.ts` (`flows`
-  free, `flow_manage` asked first on a card). The page's part is `features/minime/flows-panel.tsx`
+  free, `flow_manage` asked first on a card; a name over 80 characters or a request over 4,000 is
+  refused, never cut, so what was approved is what is kept), `when-text.ts` (a schedule in the
+  person's language, as it would be kept, for the page and the phone). The page's part is `features/minime/flows-panel.tsx`
   with the route `app/api/me/flows`.
 - `features/minime/messenger/`: the mini-me in the person's messenger, Discord, Telegram or Slack,
   one at a time (after Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot

@@ -21,11 +21,10 @@ import { createFormatter, createTranslator } from "next-intl";
 import { isLocale, type Locale } from "../../../i18n/locales.ts";
 import { loadMessages } from "../../../i18n/messages.ts";
 import type english from "../../../messages/en.json";
-import { changeOf, describe } from "../ask-text.ts";
+import { askDetails, changeOf, describe } from "../ask-text.ts";
 import { dueAt } from "../batch.ts";
 import { type ChatNews, onChatMessage, readChat } from "../chat/store.ts";
 import { runTurn } from "../chat/turn.ts";
-import { askedWhen } from "../flows/when-text.ts";
 import { answerPerson } from "../gate/answer.ts";
 import { type Ask, isRequestChat, onAsk, pendingAsks } from "../gate/gate.ts";
 import { pathRule } from "../gate/rules.ts";
@@ -189,6 +188,19 @@ async function words() {
   const tag = (await readSettings()).language;
   const base = typeof tag === "string" ? tag.split("-")[0] : undefined;
   const locale: Locale = isLocale(base) ? base : "en";
+  // Made once per language: a translator keeps what it has parsed.
+  let made = wordsMade.get(locale);
+  if (!made) {
+    made = makeWords(locale);
+    wordsMade.set(locale, made);
+  }
+  return made;
+}
+
+type Words = Awaited<ReturnType<typeof makeWords>>;
+const wordsMade = new Map<Locale, Promise<Words>>();
+
+async function makeWords(locale: Locale) {
   const messages = (await loadMessages(locale)) as typeof english;
   return {
     locale,
@@ -196,7 +208,11 @@ async function words() {
     ask: createTranslator({ locale, messages, namespace: "ask" }),
     chat: createTranslator({ locale, messages, namespace: "chat" }),
     flows: createTranslator({ locale, messages, namespace: "flows" }),
-    format: createFormatter({ locale }),
+    // The person's own clock: the computer's time zone, said, so dates read as theirs.
+    format: createFormatter({
+      locale,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    }),
     errors: createTranslator({ locale, messages, namespace: "errors" }),
   };
 }
@@ -658,29 +674,25 @@ export class Bridge {
     id: string,
     ask: Ask,
     about?: string,
+    known?: Words,
   ): Promise<void> {
-    const w = await words();
+    const w = known ?? (await words());
     const { t, ask: tAsk } = w;
     let text: string;
     let choices: Choice[] = [];
     if (ask.kind === "permission") {
       const change = changeOf(ask.tool, ask.input);
-      // A flow shows itself, as its card on the page does: its name, when, and what.
-      const flow =
-        ask.tool === "mcp__minime__flow_manage"
-          ? [
-              ask.input.name,
-              askedWhen(w.flows, w.format, ask.input),
-              ask.input.what,
-            ]
-              .filter((part) => typeof part === "string" && part.trim())
-              .map((part) => `\n${part}`)
-              .join("")
-          : "";
-      text = `${tAsk("mayI")}\n${describe(tAsk, ask.tool, ask.input)}${flow}${change ? `\n\`\`\`\n${change.replace(/```/g, "ˋˋˋ")}\n\`\`\`` : ""}`;
+      // The same lines its card shows on the page (a flow: its name, when, and what).
+      const details = askDetails(w, ask.tool, ask.input, ask)
+        .map((line) => `\n${line}`)
+        .join("");
+      text = `${tAsk("mayI")}\n${describe(tAsk, ask.tool, ask.input)}${details}${change ? `\n\`\`\`\n${change.replace(/```/g, "ˋˋˋ")}\n\`\`\`` : ""}`;
       choices = [
         { label: tAsk("allow"), value: `ask:${id}:allow`, style: "primary" },
-        { label: tAsk("always"), value: `ask:${id}:always` },
+        // "From now on" only where code can keep it as a rule: never a command, never files.
+        ...(ask.always
+          ? [{ label: tAsk("always"), value: `ask:${id}:always` }]
+          : []),
         { label: tAsk("deny"), value: `ask:${id}:deny` },
       ];
     } else if (ask.kind === "rule") {
@@ -929,7 +941,7 @@ export class Bridge {
       const about = await this.about(pending.chat, w);
       // Answered while it was looked into: it no longer waits.
       if (!pendingAsks().some((still) => still.id === pending.id)) continue;
-      await this.ask(channel, pending.id, pending.ask, about);
+      await this.ask(channel, pending.id, pending.ask, about, w);
       this.told.set(pending.id, Date.now());
     }
     // Questions kept for later, at the day's moments, once each; one that came live already

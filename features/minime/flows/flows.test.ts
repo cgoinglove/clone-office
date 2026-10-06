@@ -212,3 +212,22 @@ test("a flow for a kind of request is followed while answering one, never on a c
   );
   assert.match(prompt, /- Any request: Answer in two lines at most\./);
 });
+
+test("what the person approved is what is kept: a flow too long is refused, never cut", async () => {
+  const { callFlowTool } = await import("./tools");
+  const long = await callFlowTool("flow_manage", {
+    action: "create",
+    name: "Brief",
+    when: { kind: "every", minutes: 60 },
+    what: `${"Sum up what waits. ".repeat(220)}Never send it to anyone.`,
+  });
+  assert.equal(long.isError, true);
+  assert.match(String(long.result), /Too long to keep/);
+  const named = await callFlowTool("flow_manage", {
+    action: "create",
+    name: "n".repeat(81),
+    when: { kind: "every", minutes: 60 },
+    what: "Short.",
+  });
+  assert.equal(named.isError, true);
+});

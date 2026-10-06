@@ -150,8 +150,15 @@ export async function callFlowTool(
     ? `The kinds they take: ${menu.map((item) => `${item.id} (${item.name})`).join(", ")}.`
     : "They take no kinds yet: leave out menu for any request.";
   const action = String(args.action ?? "");
-  const text = (value: unknown, max: number) =>
-    typeof value === "string" ? value.trim().slice(0, max) : "";
+  const text = (value: unknown, _max: number) =>
+    typeof value === "string" ? value.trim() : "";
+  // What the person approved is what is kept: too long is refused, never cut.
+  if (text(args.name, 80).length > 80 || text(args.what, 4000).length > 4000)
+    return {
+      result:
+        "Too long to keep: a flow's name takes 80 characters and its request 4,000. Make it shorter and ask again.",
+      isError: true,
+    };
   if (action === "create") {
     const flowName = text(args.name, 80);
     const what = text(args.what, 4000);

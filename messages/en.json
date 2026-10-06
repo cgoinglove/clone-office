@@ -443,7 +443,8 @@
       "once": "Once, {at}",
       "inMinutes": "Once, in {minutes, plural, one {# minute} other {# minutes}}",
       "request": "When a colleague asks: {kind}",
-      "anyRequest": "When any colleague asks"
+      "anyRequest": "When any colleague asks",
+      "invalid": "Not a schedule it can keep: it would be refused."
     },
     "next": "Next: {at}",
     "paused": "Paused",
@@ -465,7 +466,8 @@
       "week": "Friday wrap-up",
       "weekAsk": "Make a flow: every Friday at 5 pm, list in a few lines what I finished this week and what is still open, from my AI conversations and my office requests."
     },
-    "onRequest": "Followed when such a request comes in"
+    "onRequest": "Followed when such a request comes in",
+    "tooLong": "Too long to be kept (a name takes 80 characters, the request 4,000): it would be refused."
   },
   "messenger": {
     "title": "On your phone",

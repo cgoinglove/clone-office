@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { enrichAsk } from "@/features/minime/gate/enrich";
 import {
   askPerson,
   gateSecret,
@@ -47,9 +48,10 @@ export async function POST(request: Request) {
   if ("ask" in body.data) {
     // A colleague's request asks a person who said they are away for later at once.
     const away = isRequestChat(body.data.chat) && (await personAway());
+    // What its card shows besides the tool's input is worked out here, once, for every screen.
     ({ id, done } = askPerson(
       body.data.chat,
-      body.data.ask,
+      await enrichAsk(body.data.ask),
       timeoutFor(body.data.chat, away),
     ));
   } else {

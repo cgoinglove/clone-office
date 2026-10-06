@@ -6,9 +6,23 @@
 
 import { randomUUID } from "node:crypto";
 
+/** What code worked out for a permission card when it was asked (gate/enrich.ts). */
+export interface AskShown {
+  /** Whether "from now on" can be kept as a rule for it; commands and files never can. */
+  always?: boolean;
+  /** A flow the question is about, as it stands now. */
+  flow?: { name: string; when: unknown; what: string };
+  /** The name of the kind of request a flow is for. */
+  menuName?: string;
+}
+
 export type Ask =
   | { kind: "question"; question: string; choices?: string[] }
-  | { kind: "permission"; tool: string; input: Record<string, unknown> }
+  | ({
+      kind: "permission";
+      tool: string;
+      input: Record<string, unknown>;
+    } & AskShown)
   /** Make it a rule: answers of this kind were sent as they were; shall it do them alone now? */
   | { kind: "rule"; menu: string; trust: "tell" | "auto" };
 

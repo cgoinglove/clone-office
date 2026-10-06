@@ -8,9 +8,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { When } from "./flows/schedule";
-import { askedWhen, whenText } from "./flows/when-text";
-
-export { whenText };
+import { whenText } from "./flows/when-text";
 
 interface FlowView {
   id: string;
@@ -26,26 +24,6 @@ interface FlowView {
 }
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
-
-/** A flow the mini-me is about to make or change, as its card shows it. */
-export function FlowAsk({ input }: { input: Record<string, unknown> }) {
-  const t = useTranslations("flows");
-  const format = useFormatter();
-  const line = askedWhen(t, format, input);
-  return (
-    <div className="flex flex-col gap-1 rounded-lg bg-muted p-3 text-sm">
-      {typeof input.name === "string" && (
-        <span className="font-medium">{input.name}</span>
-      )}
-      {line && <span>{line}</span>}
-      {typeof input.what === "string" && (
-        <span className="whitespace-pre-wrap text-muted-foreground">
-          {input.what}
-        </span>
-      )}
-    </div>
-  );
-}
 
 const SUGGESTIONS = ["morning", "week"] as const;
 

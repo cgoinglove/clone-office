@@ -4,18 +4,21 @@
 // (with choices or their own answer), or something it may not do without asking (allow, don't,
 // and "don't ask again for this").
 
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { changeOf, describe } from "./ask-text";
-import { FlowAsk } from "./flows-panel";
+import { type AskShown, askDetails, changeOf, describe } from "./ask-text";
 
 export { changeOf, describe };
 
 export type GateAsk =
   | { kind: "question"; question: string; choices?: string[] }
-  | { kind: "permission"; tool: string; input: Record<string, unknown> }
+  | ({
+      kind: "permission";
+      tool: string;
+      input: Record<string, unknown>;
+    } & AskShown)
   | { kind: "rule"; menu: string; trust: "tell" | "auto" };
 
 export interface AskTurn {
@@ -35,6 +38,8 @@ export function AskCard({
   onAnswer: (answer: string, always: boolean) => void;
 }) {
   const t = useTranslations("ask");
+  const flows = useTranslations("flows");
+  const format = useFormatter();
   const send = useTranslations("common")("send");
   const [own, setOwn] = useState("");
   const [always, setAlways] = useState(false);
@@ -83,8 +88,24 @@ export function AskCard({
               {changeOf(ask.tool, ask.input)}
             </pre>
           )}
-          {ask.tool === "mcp__minime__flow_manage" && (
-            <FlowAsk input={ask.input} />
+          {askDetails({ flows, format }, ask.tool, ask.input, ask).length >
+            0 && (
+            <div className="flex flex-col gap-1 rounded-lg bg-muted p-3 text-sm">
+              {askDetails({ flows, format }, ask.tool, ask.input, ask).map(
+                (line, index) => (
+                  <span
+                    key={line}
+                    className={
+                      index === 0
+                        ? "font-medium"
+                        : "whitespace-pre-wrap text-muted-foreground"
+                    }
+                  >
+                    {line}
+                  </span>
+                ),
+              )}
+            </div>
           )}
         </>
       )}
@@ -137,8 +158,8 @@ export function AskCard({
       )}
       {open && ask.kind === "permission" && (
         <div className="flex flex-col gap-2">
-          {/* A command is asked every time; there is no "from now on" for it. */}
-          {ask.tool !== "Bash" && (
+          {/* "From now on" only where code can keep it as a rule: never a command, never files. */}
+          {ask.always && (
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"

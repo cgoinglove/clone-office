@@ -614,6 +614,7 @@ test("a flow the mini-me would make shows itself on the phone, as its card does 
       const chat = await store.createChat(text);
       send({ type: "chat", id: chat.id, title: text });
       if (text === "remind me") {
+        // As the gate route makes it (enrich.ts): a flow may be allowed from now on.
         const ask = {
           kind: "permission" as const,
           tool: "mcp__minime__flow_manage",
@@ -623,6 +624,18 @@ test("a flow the mini-me would make shows itself on the phone, as its card does 
             when: { kind: "once", in_minutes: 2 },
             what: "Remind me to drink a glass of water.",
           },
+          always: true,
+        };
+        const asked = gate.askPerson(chat.id, ask);
+        send({ type: "ask", id: asked.id, ask });
+        await asked.done;
+      }
+      if (text === "run it") {
+        const ask = {
+          kind: "permission" as const,
+          tool: "Bash",
+          input: { command: "ls" },
+          always: false,
         };
         const asked = gate.askPerson(chat.id, ask);
         send({ type: "ask", id: asked.id, ask });
@@ -648,6 +661,14 @@ test("a flow the mini-me would make shows itself on the phone, as its card does 
   assert.deepEqual(
     card?.choices.map((c) => c.label),
     ["Allow", "Don't ask again for this", "Don't"],
+  );
+  for (const pending of gate.pendingAsks()) gate.answerAsk(pending.id, "deny");
+  // A command is asked every time: no "from now on" on the phone either.
+  bot.write(ana, "run it");
+  await until(() => bot.sent.some((m) => m.text.includes("$ ls")));
+  assert.deepEqual(
+    bot.sent.find((m) => m.text.includes("$ ls"))?.choices.map((c) => c.label),
+    ["Allow", "Don't"],
   );
   for (const pending of gate.pendingAsks()) gate.answerAsk(pending.id, "deny");
   await bridge.disconnect();

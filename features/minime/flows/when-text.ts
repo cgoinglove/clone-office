@@ -2,7 +2,7 @@
 // translator and formatter) or in their messenger (the same, made on the server).
 
 import type { useFormatter, useTranslations } from "next-intl";
-import type { When } from "./schedule.ts";
+import { cleanWhen, type When } from "./schedule.ts";
 
 /** The "flows" words, and dates in the person's own way: next-intl's, on the page or the server. */
 export type FlowWords = ReturnType<typeof useTranslations<"flows">>;
@@ -58,20 +58,27 @@ export function whenText(
   return t("when.days", { days, time });
 }
 
-/** The schedule a flow card asks about, as the mini-me wrote it: a one-off may be "in N minutes". */
+/**
+ * The schedule a flow card asks about, as it would be kept (cleanWhen), so the person approves what
+ * is saved; one that would be refused says so. A one-off "in N minutes" stays relative.
+ */
 export function askedWhen(
   t: FlowWords,
   format: DateFormat,
-  input: Record<string, unknown>,
+  raw: unknown,
+  kind?: string,
+  now = new Date(),
 ): string | undefined {
-  const raw = input.when as Record<string, unknown> | undefined;
+  if (!raw || typeof raw !== "object") return undefined;
+  const given = raw as Record<string, unknown>;
+  const clean = cleanWhen(given, now);
+  if (!clean) return t("when.invalid");
+  const minutes = Number(given.in_minutes);
+  if (clean.kind === "once" && Number.isInteger(minutes) && minutes > 0)
+    return t("when.inMinutes", { minutes });
   try {
-    return raw?.kind === "once" && typeof raw.in_minutes === "number"
-      ? t("when.inMinutes", { minutes: raw.in_minutes })
-      : raw?.kind
-        ? whenText(t, format, raw as unknown as When)
-        : undefined;
+    return whenText(t, format, clean, kind);
   } catch {
-    return undefined;
+    return t("when.invalid");
   }
 }
