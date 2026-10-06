@@ -122,3 +122,60 @@ test("a working copy's tool server offers only the permission prompt", async () 
   );
   assert.equal(refused.isError, true);
 });
+
+test("answering a colleague's request, the person's own office, flows and settings are left out", async () => {
+  const server = spawn(
+    process.execPath,
+    ["features/minime/memory/mcp-server.ts"],
+    {
+      env: {
+        ...process.env,
+        SUB_OFFICE_HOME: root,
+        MINIME_GATE_URL: "http://127.0.0.1:9/api/me/gate",
+        MINIME_GATE_SECRET: "s",
+        MINIME_CHAT_ID: "office-request-123",
+      },
+      stdio: ["pipe", "pipe", "pipe"],
+    },
+  );
+  const replies = new Map<number, (value: Record<string, unknown>) => void>();
+  createInterface({ input: server.stdout }).on("line", (line) => {
+    const reply = JSON.parse(line);
+    replies.get(reply.id)?.(reply);
+  });
+  const call = (
+    id: number,
+    method: string,
+    params: Record<string, unknown> = {},
+  ) => {
+    server.stdin.write(
+      `${JSON.stringify({ jsonrpc: "2.0", id, method, params })}\n`,
+    );
+    return new Promise<Record<string, unknown>>((resolve) =>
+      replies.set(id, resolve),
+    );
+  };
+  await call(1, "initialize", {
+    protocolVersion: "2025-06-18",
+    capabilities: {},
+    clientInfo: { name: "test", version: "0" },
+  });
+  const { tools } = (await call(2, "tools/list")).result as {
+    tools: { name: string }[];
+  };
+  const refused = (
+    await call(3, "tools/call", { name: "office_inbox", arguments: {} })
+  ).result as { isError?: boolean };
+  server.kill();
+  const names = tools.map((t) => t.name);
+  for (const name of [
+    "office_inbox",
+    "flows",
+    "flow_manage",
+    "leave_out_folder",
+  ])
+    assert.ok(!names.includes(name), `${name} is not offered`);
+  for (const name of ["memory", "sessions", "ask_session", "work_session"])
+    assert.ok(names.includes(name), `${name} is offered`);
+  assert.equal(refused.isError, true);
+});

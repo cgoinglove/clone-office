@@ -83,6 +83,19 @@ const server = new Server(
 // before each change: it sees the permission prompt and nothing of the mini-me's.
 const permissionOnly = process.env.MINIME_ROLE === "permission";
 
+// Answering a colleague's request: the person's own office, flows and settings stay out of it, so
+// nothing of other colleagues' requests can reach the answer, and a colleague's words never
+// change what the person set.
+const answering = (process.env.MINIME_CHAT_ID ?? "").startsWith(
+  "office-request-",
+);
+const PERSON_ONLY = new Set([
+  "flows",
+  "office_inbox",
+  "flow_manage",
+  "leave_out_folder",
+]);
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: (permissionOnly
     ? [PERMISSION_TOOL]
@@ -97,8 +110,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         CONVERSATION_TOOLS.search,
         CONVERSATION_TOOLS.read,
         GUIDE_TOOL,
-        FLOWS_TOOL,
-        OFFICE_INBOX_TOOL,
+        ...(answering ? [] : [FLOWS_TOOL, OFFICE_INBOX_TOOL]),
         ...(gateOpen
           ? [
               ASK_TOOL,
@@ -106,8 +118,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
               SESSIONS_TOOL,
               ASK_SESSION_TOOL,
               WORK_SESSION_TOOL,
-              LEAVE_OUT_TOOL,
-              FLOW_MANAGE_TOOL,
+              ...(answering ? [] : [LEAVE_OUT_TOOL, FLOW_MANAGE_TOOL]),
             ]
           : []),
         ...(colleaguesOpen
@@ -124,7 +135,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const args = (request.params.arguments ?? {}) as Record<string, unknown>;
   const operations = Array.isArray(args.operations) ? args.operations : [];
-  if (permissionOnly && request.params.name !== PERMISSION_TOOL.name)
+  if (
+    (permissionOnly && request.params.name !== PERMISSION_TOOL.name) ||
+    (answering && PERSON_ONLY.has(request.params.name))
+  )
     return text(`Unknown tool: ${request.params.name}`, true);
   switch (request.params.name) {
     case MEMORY_TOOL.name: {
