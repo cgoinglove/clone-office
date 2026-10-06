@@ -6,10 +6,16 @@
 // person set for that kind: send it, send it and tell them, or show it to them first.
 
 import { randomUUID } from "node:crypto";
-import { runSession, type SessionGate } from "../brain/session.ts";
+import { reviewSession } from "../brain/review.ts";
+import {
+  runSession,
+  type SessionEvent,
+  type SessionGate,
+} from "../brain/session.ts";
 import { appendMessage, createChat, listChats } from "../chat/store.ts";
 import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
+import { savedText } from "../saved-text.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { type CheckOutcome, checkBeforeSending, decideCheck } from "./check.ts";
 import {
@@ -304,9 +310,37 @@ async function answer(options: {
       return;
     }
     await finish(office, task, outcome, sending);
+    // The person answered while it was handled: their own words teach the mini-me most.
+    if (said.length)
+      await learnFromRequest(result.sessionId, result.systemPrompt);
   } finally {
     stop();
   }
+}
+
+/**
+ * Look back on a request the person spoke in, as a conversation is looked back on (Hermes'
+ * learning loop), and keep only what stays true: how they decide, what they take on, where they
+ * stop. What is kept is shown in their latest conversation, as everything kept is.
+ */
+async function learnFromRequest(
+  sessionId: string | undefined,
+  prompt?: string,
+): Promise<void> {
+  if (!sessionId) return;
+  const kept: string[] = [];
+  await reviewSession(
+    sessionId,
+    (event: SessionEvent) => {
+      const line = savedText(event as unknown as Record<string, unknown>);
+      if (line) kept.push(line);
+    },
+    prompt,
+  );
+  if (!kept.length) return;
+  const [latest] = await listChats(1);
+  const chat = latest ?? (await createChat(kept[0] ?? ""));
+  for (const line of kept) await appendMessage(chat.id, "saved", line);
 }
 
 /** Send the answer as the person's choices say, then count it toward a rule and tell them. */

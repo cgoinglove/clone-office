@@ -38,6 +38,9 @@ the mini-me still keeps what it learns, and asks them, in theirs.
   everything.
 - **After a piece of work**: it looks back over the conversation once and keeps what is worth
   keeping. Each thing it keeps shows as a line beginning with 💾 under the conversation.
+- **After a colleague's request they answered in**: their own words about it ("not Friday
+  mornings, I keep them for focused work") are looked back on the same way; only what stays true
+  is kept (never the date), shown with 💾 in their latest conversation.
 - **When a conversation gets long**: it first keeps what is worth keeping, then sums up what came
   before and goes on from that summary, as Claude Code compacts a long conversation. The line
   "I summed up what came before" (앞의 대화를 정리해 두었어요) shows when it happens. The whole
