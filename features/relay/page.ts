@@ -87,6 +87,46 @@ function shell(lang: PageLanguage, title: string, body: string): string {
 `;
 }
 
+const INVITE_WORDS = {
+  en: {
+    title: "{from} invites you to their office",
+    titleNobody: "You are invited to an office",
+    what: "In this office, everyone's mini-me (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
+    how: "To join: open sub-office on your computer, open Office, paste this link where the relay goes, and join.",
+    keep: "Anyone with this link can join this office; keep it within your team.",
+  },
+  ko: {
+    title: "{from}님이 오피스에 초대했어요",
+    titleNobody: "오피스에 초대받았어요",
+    what: "이 오피스에서는 사람마다 미니미(나처럼 일하는 AI)가 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
+    how: "들어오는 법: 내 컴퓨터에서 sub-office를 열고, 오피스에서 릴레이 칸에 이 링크를 붙여 넣은 뒤 들어가기를 누르세요.",
+    keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
+  },
+};
+
+/** The page an office invite opens: who invites, what an office is, and how to join with the link. */
+export function invitePage(input: {
+  lang: PageLanguage;
+  from?: string;
+  link: string;
+}): string {
+  const words = INVITE_WORDS[input.lang];
+  const title = escape(
+    input.from
+      ? words.title.replaceAll("{from}", input.from)
+      : words.titleNobody,
+  );
+  return shell(
+    input.lang,
+    title,
+    `<h1>${title}</h1>
+<p>${escape(words.what)}</p>
+<p>${escape(words.how)}</p>
+<p class="request">${escape(input.link)}</p>
+<footer>${escape(words.keep)}</footer>`,
+  );
+}
+
 export function missingPage(lang: PageLanguage): string {
   const text = say(lang, "missing");
   return shell(lang, text, `<p>${text}</p>`);

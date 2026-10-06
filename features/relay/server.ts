@@ -12,11 +12,13 @@
 //   POST /links         {name, text} -> {task, link}    a request to someone without a mini-me
 //   GET  /r/:token      the link's page (HTML): who asks, what, and a box to answer; no token needed
 //   POST /r/:token      the answer, from the page's form
+//   GET  /invite        -> {path}                         the office's invite link, for a member
+//   GET  /i/:key        the invite page (HTML): what the office is and how to join with the link
 
 import { randomBytes } from "node:crypto";
 import { createServer, type IncomingMessage } from "node:http";
 import { parseArgs } from "node:util";
-import { missingPage, pageLanguage, replyPage } from "./page.ts";
+import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
 import { Relay, RelayError, type TaskState } from "./relay.ts";
 
 const { values } = parseArgs({
@@ -119,6 +121,32 @@ const server = createServer(async (request, response) => {
           answer: answer?.parts[0]?.text,
         }),
       );
+    }
+    const invite = /^\/i\/([\w-]{4,128})$/.exec(path);
+    if (invite && request.method === "GET") {
+      const lang = pageLanguage(request.headers["accept-language"]);
+      if (invite[1] !== relay.key) {
+        response.writeHead(404, PAGE_HEADERS);
+        return response.end(missingPage(lang));
+      }
+      const from = url.searchParams.get("from")?.trim().slice(0, 80);
+      const host = request.headers.host ?? `${values.host}:${values.port}`;
+      // Behind a proxy that ends HTTPS, the link keeps the address people reach.
+      const proto =
+        String(request.headers["x-forwarded-proto"] ?? "").split(",")[0] ||
+        "http";
+      response.writeHead(200, PAGE_HEADERS);
+      return response.end(
+        invitePage({
+          lang,
+          from: from || undefined,
+          link: `${proto === "https" ? "https" : "http"}://${host}${path}${url.search}`,
+        }),
+      );
+    }
+    if (request.method === "GET" && path === "/invite") {
+      member(request);
+      return send(200, { path: `/i/${relay.key}` });
     }
     if (request.method === "POST" && path === "/links") {
       const me = member(request);

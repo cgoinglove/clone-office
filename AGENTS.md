@@ -155,7 +155,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   user/agent and text parts, A2A's task states. It keeps only cards and requests. Someone without a
   mini-me is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
   the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,
-  for two weeks or until answered); the answer reaches the asker like any other.
+  for two weeks or until answered); the answer reaches the asker like any other. An invite is one
+  link, `/i/<office key>?from=<name>` (`GET /invite` gives it to a member): the relay's page says
+  how to join, and the join form fills in the relay and key from it (`office/invite.ts`).
 - `features/minime/office/`: the mini-me's side. `client.ts` (where its relay is and who it is
   there, in `settings.json` under `office`, and the calls), `worker.ts` (one loop per server
   process: waits at the inbox, answers requests that come in, puts answers to sent requests back

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { escape, pageLanguage, replyPage } from "./page";
+import { escape, invitePage, pageLanguage, replyPage } from "./page";
 
 test("the link page is in the reader's language when it is written in it, else English", () => {
   assert.equal(pageLanguage("ko-KR,ko;q=0.9,en;q=0.8"), "ko");
@@ -35,4 +35,15 @@ test("everything a person wrote is escaped on the page", () => {
     }),
     /<form/,
   );
+});
+
+test("the invite page names who invites, escaped, and shows the link to paste", () => {
+  const page = invitePage({
+    lang: "ko",
+    from: "<b>Ben</b>",
+    link: "http://office.example.com/i/key?from=Ben",
+  });
+  assert.ok(page.includes("&lt;b&gt;Ben&lt;/b&gt;님이 오피스에 초대했어요"));
+  assert.ok(page.includes("http://office.example.com/i/key?from=Ben"));
+  assert.ok(!page.includes("<b>Ben</b>"));
 });

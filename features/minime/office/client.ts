@@ -158,6 +158,16 @@ export async function sendLink(
   return { task, url: new URL(link, office.relay).toString() };
 }
 
+/** The office's invite link, naming the one who gives it. */
+export async function inviteLink(office: OfficeConfig): Promise<string> {
+  const { path } = await call<{ path: string }>(office.relay, "/invite", {
+    token: office.token,
+  });
+  const url = new URL(path, office.relay);
+  if (office.card.name) url.searchParams.set("from", office.card.name);
+  return url.toString();
+}
+
 export async function sendRequest(
   office: OfficeConfig,
   to: string,

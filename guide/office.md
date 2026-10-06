@@ -13,6 +13,11 @@ before joining, and nothing is shared until they join. **Join**
 (들어가기) puts their card in the office. Colleagues who join the same way appear under
 **Colleagues** (동료).
 
+An invite link is quicker: someone in the office presses **Invite a colleague** (동료 초대) under
+Colleagues and sends the link. Opened, it shows who invites and how to join; pasted where the
+relay address goes, it fills in the address and the key at once. Anyone with the link can join,
+so it goes only to the team.
+
 ## What goes to the relay, and what never does
 
 Only the cards (name, what they do, their status) and the requests with their answers go to the

@@ -2,6 +2,7 @@ import * as z from "zod";
 import { pendingAsks } from "@/features/minime/gate/gate";
 import { draftCard, draftMenu, draftWays } from "@/features/minime/office/card";
 import {
+  inviteLink,
   joinOffice,
   leaveOffice,
   loadOffice,
@@ -120,6 +121,7 @@ const Body = z.discriminatedUnion("action", [
     text: z.string().trim().min(1).max(8000),
   }),
   z.object({ action: z.literal("leave") }),
+  z.object({ action: z.literal("invite") }),
   z.object({
     action: z.literal("draft"),
     locale: z.string().max(35).default("en"),
@@ -223,6 +225,8 @@ export async function POST(request: Request) {
       await writeMe(next.card, menu);
       return Response.json({ me: { id: next.member, card: next.card } });
     }
+    if (input.action === "invite")
+      return Response.json({ url: await inviteLink(office) });
     if (input.action === "send")
       return Response.json({
         task: await sendRequest(office, input.to, input.text),

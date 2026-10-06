@@ -259,7 +259,11 @@
     },
     "byLink": "{name} (by link)",
     "copyLink": "Copy link",
-    "copied": "Copied"
+    "copied": "Copied",
+    "relayPlaceholder": "The relay's address, or an invite link",
+    "invite": "Invite a colleague",
+    "inviteNote": "Anyone with this link can join your office; send it only to your team.",
+    "copyInvite": "Copy invite"
   },
   "files": {
     "title": "All files I keep",

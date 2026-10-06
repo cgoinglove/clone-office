@@ -17,6 +17,7 @@ import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
 import { dueAt } from "./batch";
+import { parseInvite } from "./office/invite";
 import type { LikeMe } from "./office/likeme";
 
 type State =
@@ -320,6 +321,7 @@ export function OfficePanel({
               {others.length === 0 && (
                 <p className="text-muted-foreground">{t("nobody")}</p>
               )}
+              <Invite busy={busy} />
               <ul className="flex flex-col">
                 {others.map((member) => (
                   <Colleague
@@ -492,7 +494,16 @@ function Join({
       <p className="text-muted-foreground">{t("intro")}</p>
       <label className="flex flex-col gap-1">
         <span>{t("relay")}</span>
-        <Input value={relay} onChange={(e) => setRelay(e.target.value)} />
+        <Input
+          value={relay}
+          placeholder={t("relayPlaceholder")}
+          onChange={(e) => {
+            // An invite link fills in both the relay and the key.
+            const invite = parseInvite(e.target.value);
+            setRelay(invite ? invite.relay : e.target.value);
+            if (invite) setKey(invite.key);
+          }}
+        />
       </label>
       <label className="flex flex-col gap-1">
         <span>{t("key")}</span>
@@ -581,6 +592,68 @@ function MyCard({
         onSave={onWays}
       />
     </section>
+  );
+}
+
+/** One link to bring a colleague in: the relay and the office's key, on the relay's invite page. */
+function Invite({ busy }: { busy: boolean }) {
+  const t = useTranslations("office");
+  const problemText = useProblem();
+  const [url, setUrl] = useState<string>();
+  const [copied, setCopied] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const make = async () => {
+    setProblem(null);
+    const response = await fetch("/api/me/office", {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify({ action: "invite" }),
+    }).catch(() => undefined);
+    const data = await response?.json().catch(() => ({}));
+    if (!response?.ok || typeof data?.url !== "string") {
+      setProblem(
+        String(data?.error ?? response?.status ?? "relay-unreachable"),
+      );
+      return;
+    }
+    setUrl(data.url);
+  };
+  if (!url)
+    return (
+      <div className="flex flex-col gap-1">
+        <div>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() => void make()}
+          >
+            {t("invite")}
+          </Button>
+        </div>
+        {problem && <p className="text-destructive">{problemText(problem)}</p>}
+      </div>
+    );
+  return (
+    <div className="flex flex-col gap-1 rounded-lg bg-muted p-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <code className="min-w-0 truncate text-xs">{url}</code>
+        <Button
+          size="xs"
+          variant="outline"
+          className="shrink-0"
+          onClick={() => {
+            void navigator.clipboard
+              ?.writeText(url)
+              .then(() => setCopied(true))
+              .catch(() => {});
+          }}
+        >
+          {copied ? t("copied") : t("copyInvite")}
+        </Button>
+      </div>
+      <span className="text-xs text-muted-foreground">{t("inviteNote")}</span>
+    </div>
   );
 }
 
