@@ -15,7 +15,7 @@ import {
 import { appendMessage, createChat, listChats } from "../chat/store.ts";
 import { changeFlow, listFlows } from "../flows/store.ts";
 import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
-import { denyRules, loadTrust } from "../gate/rules.ts";
+import { denyRules, loadTrust, pathRule } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { type CheckOutcome, checkBeforeSending, decideCheck } from "./check.ts";
@@ -28,6 +28,14 @@ import {
   tasks,
   updateRequest,
 } from "./client.ts";
+import {
+  filesDir,
+  filesLine,
+  putFiles,
+  readToSend,
+  SEND_FILES,
+  takeFiles,
+} from "./files.ts";
 import { recordOutcome } from "./likeme.ts";
 import {
   loadMenu,
@@ -55,6 +63,7 @@ export const REQUEST_SCHEMA = {
     menu: { type: "string" },
     note: { type: "string" },
     waiting_on_person: { type: "boolean" },
+    files: { type: "array", items: { type: "string" }, maxItems: 10 },
   },
   required: ["reply"],
 };
@@ -92,6 +101,8 @@ Answer it for your person, the way they would: from what you know of them and th
 Some things only your person can give: a promise (a date, money, scope), a decision they answer for, anything about a relationship (refusing, apologising, negotiating), or a check of work in their own field. For those, ask your person with ask_me, in their language, and answer with what they said. Never promise or decide on their behalf. If they have not answered yet, set waiting_on_person: you will go on when they do.
 
 If you need something from the one asking before you can answer, set needs_input and ask it in reply. If it is not something your person does or would take on, set declined and say so politely in reply.
+
+When the answer is a file of your person's (a document, a sheet, an image they asked for), put its full path on your person's computer in files, up to ten; your person sees the answer and the files before anything goes.
 ${
   menu.length
     ? `
@@ -185,7 +196,8 @@ async function answer(options: {
     url: gateUrl,
     secret: gateSecret(),
     chat: requestChat(task),
-    allow: await loadTrust(),
+    // The files colleagues sent with this request are there to be read.
+    allow: [...(await loadTrust()), `Read(${pathRule(filesDir(task.id))}/**)`],
     deny: denyRules(loadExcludes()),
   };
   // The one asking hears only that it is being checked while the person is asked; what the
@@ -223,7 +235,21 @@ async function answer(options: {
   });
   try {
     await updateRequest(office, task.id, { state: "WORKING" }).catch(() => {});
-    const text = latest?.parts.map((p) => p.text).join("\n") ?? "";
+    const words = latest?.parts.map((p) => p.text).join("\n") ?? "";
+    // Files the one asking sent with these words: taken onto this computer for the mini-me to read.
+    const came = latest?.files ?? [];
+    let attached = "";
+    if (came.length)
+      attached = await takeFiles(office, task.id, came)
+        .then(
+          (taken) =>
+            `\n\nThey sent ${taken.length === 1 ? "a file" : "files"} with it, now on your person's computer:\n${filesLine(taken)}\nRead what matters to the answer.`,
+        )
+        .catch(
+          () =>
+            `\n\nThey sent files that could not be taken from the office: ${came.map((file) => file.name).join(", ")}. Say so if the answer needs them.`,
+        );
+    const text = `${words}${attached}`;
     const howTo = waysText(
       menu,
       ways.map((flow) => ({
@@ -285,6 +311,7 @@ async function answer(options: {
       menu?: string;
       note?: string;
       waiting_on_person?: boolean;
+      files?: unknown;
     };
     // The person was asked and has not answered: the question waits for them, and the colleague
     // hears that they will get back to them.
@@ -327,6 +354,19 @@ async function answer(options: {
       return;
     }
     const reply = answer.reply.trim();
+    // Files of the person's to go with it: only ones that can go (there, not kept out, not too
+    // large); the person sees them with the answer before anything is sent.
+    const files: string[] = [];
+    for (const path of Array.isArray(answer.files) ? answer.files : [])
+      if (
+        typeof path === "string" &&
+        files.length < SEND_FILES &&
+        (await readToSend([path]).then(
+          () => true,
+          () => false,
+        ))
+      )
+        files.push(path);
     const state = answer.declined
       ? "REJECTED"
       : answer.needs_input
@@ -341,9 +381,10 @@ async function answer(options: {
       said,
       ways: applied.map((flow) => flow.what),
       // "Ask me first": the person sees the answer before it goes, whatever the check finds,
-      // unless they already gave it themselves while it was made.
-      approve: approving,
+      // unless they already gave it themselves while it was made. Files always.
+      approve: approving || files.length > 0,
       from: from?.name,
+      files,
     });
     if (officeClosing()) return;
     const sending = {
@@ -354,6 +395,7 @@ async function answer(options: {
       trust,
       note: answer.note?.trim(),
       from: from?.name,
+      ...(files.length ? { files } : {}),
     } as const;
     if ("later" in outcome) {
       await park(office, task, {
@@ -420,6 +462,8 @@ async function finish(
     trust?: Trust;
     note?: string;
     from?: string;
+    /** Files of the person's that go with the answer. */
+    files?: string[];
   },
 ): Promise<void> {
   const item = sending.menu
@@ -434,9 +478,14 @@ async function finish(
     });
     return;
   }
+  // The files go as they are now; one that can no longer go does not stop the answer.
+  const files = sending.files?.length
+    ? await putFiles(office, sending.files).catch(() => [])
+    : [];
   await updateRequest(office, task.id, {
     state: sending.state,
     text: outcome.send,
+    ...(files.length ? { files: files.map((file) => file.id) } : {}),
   });
   // The person sent it as it was: three in a row, and the mini-me offers to do these alone.
   if (sending.approving)
@@ -533,6 +582,7 @@ export async function answerLater(
             trust: kept.trust,
             note: kept.note,
             from: kept.from,
+            ...(kept.files?.length ? { files: kept.files } : {}),
           },
         );
         return;

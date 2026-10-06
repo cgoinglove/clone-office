@@ -14,6 +14,10 @@
 //
 // One relay can hold several offices; each has its own key, and members, requests and invites stay
 // within it. Everything is kept in Postgres (db.ts). A member's token is kept only as a hash.
+//
+// Files go with a request's messages: a mini-me puts a file here first, then names it on the
+// message it sends. Only the one who put it and the two members of its request can take it; it is
+// kept two weeks, and one never named on a message one day.
 
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { Database, Sql } from "./db.ts";
@@ -29,6 +33,17 @@ export type TaskState =
 
 /** How long a link can be answered. */
 export const LINK_DAYS = 14;
+
+/** How long a file named on a request is kept; one never named, a day. */
+export const FILE_DAYS = 14;
+const LOOSE_FILE_HOURS = 24;
+/** The largest file, and all of an office's files together; a relay's own may set others. */
+export const FILE_BYTES =
+  (Number(process.env.RELAY_FILE_MB) || 25) * 1024 * 1024;
+const OFFICE_FILE_BYTES =
+  (Number(process.env.RELAY_OFFICE_FILE_MB) || 1024) * 1024 * 1024;
+/** How many files one message may name. */
+export const FILES_PER_MESSAGE = 10;
 
 /** States after which a request takes no more messages. */
 export const FINAL: TaskState[] = [
@@ -54,10 +69,20 @@ export interface Card {
   howToWork?: string[];
 }
 
+/** A file named on a message: taken from the relay by its id (GET /files/:id). */
+export interface FileRef {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 export interface Message {
   messageId: string;
   role: "user" | "agent";
   parts: { text: string }[];
+  /** The files that go with it, like A2A's file parts, by reference. */
+  files?: FileRef[];
   taskId: string;
   contextId: string;
   metadata: { from: string; at: string };
@@ -120,6 +145,12 @@ const MIGRATIONS: string[][] = [
     "CREATE INDEX events_member ON events (member, seq)",
     "CREATE TABLE links (token TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks (id) ON DELETE CASCADE, name TEXT NOT NULL, created TIMESTAMPTZ NOT NULL, expires TIMESTAMPTZ NOT NULL)",
     "CREATE INDEX links_task ON links (task_id)",
+  ],
+  [
+    "CREATE TABLE files (id TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, owner TEXT NOT NULL, task_id TEXT REFERENCES tasks (id) ON DELETE CASCADE, name TEXT NOT NULL, type TEXT NOT NULL, size INTEGER NOT NULL, bytes BYTEA NOT NULL, created TIMESTAMPTZ NOT NULL, expires TIMESTAMPTZ NOT NULL)",
+    "CREATE INDEX files_task ON files (task_id)",
+    "CREATE INDEX files_office ON files (office_id, expires)",
+    "ALTER TABLE messages ADD COLUMN files JSONB NOT NULL DEFAULT '[]'::jsonb",
   ],
 ];
 
@@ -284,8 +315,13 @@ export class Relay {
     }));
   }
 
-  /** A request from one member to another in the same office. */
-  async send(from: Caller, to: string, text: string): Promise<Task> {
+  /** A request from one member to another in the same office, with files it put here first. */
+  async send(
+    from: Caller,
+    to: string,
+    text: string,
+    files: string[] = [],
+  ): Promise<Task> {
     if (from.id === to)
       throw new RelayError(
         400,
@@ -305,11 +341,110 @@ export class Relay {
         "INSERT INTO tasks (id, office_id, context_id, from_member, to_member, state, created, updated) VALUES ($1, $2, $3, $4, $5, 'SUBMITTED', $6, $6)",
         [id, from.office, randomUUID(), from.id, to, now],
       );
-      await addMessage(tx, id, "user", from.id, text, now);
+      await addMessage(
+        tx,
+        id,
+        "user",
+        from.id,
+        text,
+        now,
+        await attach(tx, from, id, files, now),
+      );
       await notify(tx, to, "task", id, now);
     });
     this.wake(to);
     return this.task(id);
+  }
+
+  /**
+   * A file a member puts here, to name on a message it sends next. Kept a day unless named; what
+   * has expired goes first, and an office keeps no more than its share.
+   */
+  async putFile(
+    member: Caller,
+    input: { name: string; type?: string; bytes: Uint8Array },
+    now = new Date(),
+  ): Promise<FileRef> {
+    const size = input.bytes.byteLength;
+    if (!size) throw new RelayError(400, "The file is empty.", "bad-request");
+    if (size > FILE_BYTES)
+      throw new RelayError(413, "The file is too large.", "file-too-large");
+    const name =
+      input.name
+        .split(/[\\/]/)
+        .at(-1)
+        ?.replace(/[\u0000-\u001f\u007f]/g, "")
+        .trim()
+        .slice(0, 200) || "file";
+    const type =
+      /^[\w.+-]+\/[\w.+-]+$/.test(input.type ?? "") &&
+      (input.type ?? "").length <= 100
+        ? (input.type as string)
+        : "application/octet-stream";
+    const at = now.toISOString();
+    const id = `f-${randomBytes(12).toString("base64url")}`;
+    await this.db.transaction(async (tx) => {
+      await tx.query("DELETE FROM files WHERE expires < $1", [at]);
+      const [used] = await tx.query<{ total: string | number | null }>(
+        "SELECT sum(size) AS total FROM files WHERE office_id = $1",
+        [member.office],
+      );
+      if (Number(used?.total ?? 0) + size > OFFICE_FILE_BYTES)
+        throw new RelayError(
+          413,
+          "The office keeps no more files for now.",
+          "files-full",
+        );
+      await tx.query(
+        "INSERT INTO files (id, office_id, owner, name, type, size, bytes, created, expires) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        [
+          id,
+          member.office,
+          member.id,
+          name,
+          type,
+          size,
+          input.bytes,
+          at,
+          new Date(
+            now.getTime() + LOOSE_FILE_HOURS * 60 * 60 * 1000,
+          ).toISOString(),
+        ],
+      );
+    });
+    return { id, name, type, size };
+  }
+
+  /** A file, for the member who put it here or either member of the request it went with. */
+  async file(
+    member: Caller,
+    id: string,
+    now = new Date(),
+  ): Promise<{ ref: FileRef; bytes: Uint8Array }> {
+    const [row] = await this.db.query<{
+      id: string;
+      name: string;
+      type: string;
+      size: number;
+      bytes: Uint8Array;
+      owner: string;
+      from_member: string | null;
+      to_member: string | null;
+      expires: unknown;
+    }>(
+      "SELECT f.id, f.name, f.type, f.size, f.bytes, f.owner, t.from_member, t.to_member, f.expires FROM files f LEFT JOIN tasks t ON t.id = f.task_id WHERE f.id = $1 AND f.office_id = $2",
+      [id, member.office],
+    );
+    const allowed =
+      row &&
+      [row.owner, row.from_member, row.to_member].includes(member.id) &&
+      now.getTime() < new Date(row.expires as string).getTime();
+    if (!row || !allowed)
+      throw new RelayError(404, "No such file.", "file-missing");
+    return {
+      ref: { id: row.id, name: row.name, type: row.type, size: row.size },
+      bytes: new Uint8Array(row.bytes),
+    };
   }
 
   /**
@@ -411,7 +546,7 @@ export class Relay {
   async update(
     member: Caller,
     id: string,
-    change: { state?: TaskState; text?: string },
+    change: { state?: TaskState; text?: string; files?: string[] },
   ): Promise<Task> {
     const now = new Date().toISOString();
     const other = await this.db.transaction(async (tx) => {
@@ -424,14 +559,16 @@ export class Relay {
         throw new RelayError(404, "No such request.", "not-found");
       if (FINAL.includes(row.state))
         throw new RelayError(409, "That request is closed.", "request-closed");
-      if (change.text?.trim())
+      const files = await attach(tx, member, id, change.files ?? [], now);
+      if (change.text?.trim() || files.length)
         await addMessage(
           tx,
           id,
           asked ? "agent" : "user",
           member.id,
-          change.text,
+          change.text ?? "",
           now,
+          files,
         );
       // The one asked moves the request along; the one asking can only answer a question or cancel.
       let state = row.state;
@@ -462,21 +599,26 @@ export class Relay {
       role: "user" | "agent";
       from_member: string;
       text: string;
+      files: FileRef[] | string | null;
       at: unknown;
     }>(
-      "SELECT id, role, from_member, text, at FROM messages WHERE task_id = $1 ORDER BY seq",
+      "SELECT id, role, from_member, text, files, at FROM messages WHERE task_id = $1 ORDER BY seq",
       [id],
     );
-    const history = messages.map(
-      (m): Message => ({
+    const history = messages.map((m): Message => {
+      const files = (
+        typeof m.files === "string" ? JSON.parse(m.files) : (m.files ?? [])
+      ) as FileRef[];
+      return {
         messageId: m.id,
         role: m.role,
         parts: [{ text: m.text }],
+        ...(files.length ? { files } : {}),
         taskId: id,
         contextId: row.context_id,
         metadata: { from: m.from_member, at: iso(m.at) },
-      }),
-    );
+      };
+    });
     const last = history.at(-1);
     const [link] = row.to_member.startsWith("link:")
       ? await this.db.query<{ name: string }>(
@@ -644,11 +786,55 @@ async function addMessage(
   from: string,
   text: string,
   at: string,
+  files: FileRef[] = [],
 ): Promise<void> {
   await tx.query(
-    "INSERT INTO messages (id, task_id, role, from_member, text, at) VALUES ($1, $2, $3, $4, $5, $6)",
-    [randomUUID(), task, role, from, text.slice(0, 20_000), at],
+    "INSERT INTO messages (id, task_id, role, from_member, text, files, at) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)",
+    [
+      randomUUID(),
+      task,
+      role,
+      from,
+      text.slice(0, 20_000),
+      JSON.stringify(files),
+      at,
+    ],
   );
+}
+
+/**
+ * Names files on a request: ones the member put here and not yet named on another request. They
+ * are kept from now for FILE_DAYS.
+ */
+async function attach(
+  tx: Sql,
+  member: Caller,
+  task: string,
+  ids: string[],
+  now: string,
+): Promise<FileRef[]> {
+  const wanted = [...new Set(ids)];
+  if (!wanted.length) return [];
+  if (wanted.length > FILES_PER_MESSAGE)
+    throw new RelayError(400, "Too many files at once.", "bad-request");
+  const expires = new Date(
+    Date.parse(now) + FILE_DAYS * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const named: FileRef[] = [];
+  for (const id of wanted) {
+    const [row] = await tx.query<FileRef>(
+      "UPDATE files SET task_id = $1, expires = $2 WHERE id = $3 AND owner = $4 AND office_id = $5 AND (task_id IS NULL OR task_id = $1) AND expires > $6 RETURNING id, name, type, size",
+      [task, expires, id, member.id, member.office, now],
+    );
+    if (!row) throw new RelayError(400, "No such file.", "file-missing");
+    named.push({
+      id: row.id,
+      name: row.name,
+      type: row.type,
+      size: Number(row.size),
+    });
+  }
+  return named;
 }
 
 /** News for a member's inbox; every relay process hears it once the transaction commits. */

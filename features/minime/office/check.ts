@@ -35,6 +35,7 @@ export function checkPrompt(
   approve = false,
   from?: string,
   ways: string[] = [],
+  files: string[] = [],
 ): string {
   const asked = said.length
     ? `\nWhat your person themselves said while it was answered (theirs to give; a promise or decision in it may go):\n${said.map((s) => `- Asked: ${s.question}\n  They said: ${s.answer}`).join("\n")}\n`
@@ -49,14 +50,14 @@ ${request}
 ${asked}${told}
 The answer about to be sent:
 ${reply}
-
+${files.length ? `\nWith these files from your person's computer:\n${files.map((file) => `- ${file}`).join("\n")}\n` : ""}
 Hold it back (ok: false) if it shares something private about your person or anyone else that the request does not need (health, family, money, personal life, things told in confidence, what you keep about how your person works beyond what helps here); promises a date, money or scope your person has not agreed to; decides something only your person can decide; or would hurt a relationship. Otherwise ok: true, and nothing else is needed.
 
 When you hold it back: say what is wrong in problem; give a fixed answer in revised when a small change would do; and write, in your person's language, ask_person (one short question that quotes the answer and says what is wrong) and choices (short labels for send, send_revised when there is a revised answer, and hold).${
     approve
       ? `
 
-Your person wants to see answers to this kind of request before they go, so whatever you find, write ask_person (one short question in their language that says who asked what and quotes the answer, and what is wrong if anything) and choices.`
+Your person wants to see answers to this kind of request before they go${files.length ? ", and files from their computer always" : ""}, so whatever you find, write ask_person (one short question in their language that says who asked what and quotes the answer${files.length ? ", names the files" : ""}, and what is wrong if anything) and choices.`
       : ""
   }`;
 }
@@ -101,6 +102,8 @@ export async function checkBeforeSending(options: {
   said?: { question: string; answer: string }[];
   /** The person's own instructions for this kind of request (their flows). */
   ways?: string[];
+  /** Files from the person's computer that would go with it, by name. */
+  files?: string[];
   /** The person sees the answer before it goes, whatever the check finds ("ask me first"). */
   approve?: boolean;
   /** Who asked, as their card names them. */
@@ -114,6 +117,7 @@ export async function checkBeforeSending(options: {
       options.approve,
       options.from,
       options.ways,
+      options.files,
     ),
     jsonSchema: CHECK_SCHEMA,
     language: options.language,
@@ -140,7 +144,7 @@ export async function checkBeforeSending(options: {
   };
   const question =
     verdict.ask_person?.trim() ||
-    `About to answer a colleague with: "${options.reply}". ${verdict.problem ?? (check.ok ? "" : "It could not be checked.")} Send it?`
+    `About to answer a colleague with: "${options.reply}"${options.files?.length ? ` and send ${options.files.join(", ")}` : ""}. ${verdict.problem ?? (check.ok ? "" : "It could not be checked.")} Send it?`
       .replace(/\s+/g, " ")
       .trim();
   const shown: CheckLater = {

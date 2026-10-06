@@ -55,7 +55,12 @@ const TRUSTS: Trust[] = ["auto", "tell", "ask"];
 interface Task {
   id: string;
   status: { state: State; timestamp: string };
-  history: { role: "user" | "agent"; parts: { text: string }[] }[];
+  history: {
+    role: "user" | "agent";
+    parts: { text: string }[];
+    /** Files that went with it. */
+    files?: { id: string; name: string; size: number }[];
+  }[];
   metadata: {
     from: string;
     to: string;
@@ -100,6 +105,28 @@ function statusText(t: Translate, status: string | undefined): string {
 }
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+
+const sizeText = (bytes: number) =>
+  bytes < 1024
+    ? `${bytes} B`
+    : bytes < 1024 * 1024
+      ? `${Math.round(bytes / 1024)} KB`
+      : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+
+/** Saves a file that went with a request, as the browser saves a download. */
+async function save(task: string, file: { id: string; name: string }) {
+  const response = await fetch(
+    `/api/me/office/file?task=${encodeURIComponent(task)}&id=${encodeURIComponent(file.id)}`,
+    { headers: HEADERS },
+  ).catch(() => undefined);
+  if (!response?.ok) return;
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = file.name;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
 
 // The office opens at its lobby once a day, as a person clocks in: the day it was last done is
 // kept in this browser only. Without storage the lobby is skipped rather than shown every time.
@@ -1249,6 +1276,7 @@ function Request({
     .join(" ");
   const state = task.status.state;
   const moving = state === "SUBMITTED" || state === "WORKING";
+  const files = task.history.flatMap((message) => message.files ?? []);
   return (
     <li className="flex min-w-0 flex-col gap-1 border-b border-border py-2 last:border-b-0">
       <div className="flex items-center justify-between gap-2">
@@ -1272,6 +1300,21 @@ function Request({
       </div>
       <p className="whitespace-pre-wrap text-muted-foreground">{first}</p>
       {answer && <p className="whitespace-pre-wrap">{answer}</p>}
+      {files.length > 0 && (
+        <ul className="flex flex-wrap gap-x-3 gap-y-1">
+          {files.map((file) => (
+            <li key={file.id} className="min-w-0">
+              <button
+                type="button"
+                className="max-w-full truncate text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                onClick={() => void save(task.id, file)}
+              >
+                {file.name} · {sizeText(file.size)}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       {link && moving && (
         <div className="flex min-w-0 items-center gap-2">
           <code className="min-w-0 truncate text-xs text-muted-foreground">

@@ -51,6 +51,9 @@ leaves each decision with the person it belongs to.
   a pointer to #payments-api." You ask; it shows you the flow on a card before making it.
 - **For developers:** with the Claude Code plugin, your teammates' mini-mes are tools in your
   Claude Code, and an answer that comes later lands in your idle session by itself.
+- **Files go along.** "Send Minsu the quote and ask him to check it": the files travel with the
+  request, shown to you on the card first, and an answer can bring a file back, after you saw it.
+  The relay keeps them two weeks, for the two of you only.
 - **People without a mini-me answer by a link.** Your mini-me makes the link, you send it the way
   you usually would, they answer on a plain page, and the answer comes back into your
   conversation. A colleague joins your office from one invite link.
@@ -116,5 +119,5 @@ publishing it.
 
 ## Status
 
-Early, in local development. Coming next: files between mini-mes; mail, calendar and documents as
-its hands; a desktop app for people who don't code.
+Early, in local development. Coming next: mail, calendar and documents as its hands; a desktop
+app for people who don't code.

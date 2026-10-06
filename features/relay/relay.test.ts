@@ -234,3 +234,139 @@ test("news reaches a waiting inbox in another relay process, and without a notif
     await other.close();
   }
 });
+
+test("files go with a request: put first, named on a message, taken by its two members only, kept two weeks", async () => {
+  const ana = await join("Ana F");
+  const ben = await join("Ben F");
+  const eve = await join("Eve F");
+  const text = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
+  const put = await relay.putFile(ana, {
+    name: "../../report.csv",
+    type: "text/csv",
+    bytes: new TextEncoder().encode("quarterly numbers"),
+  });
+  assert.equal(put.name, "report.csv", "a name only, never a path");
+  assert.deepEqual([put.type, put.size], ["text/csv", 17]);
+  await assert.rejects(
+    relay.putFile(ana, { name: "empty", bytes: new Uint8Array() }),
+    /empty/,
+  );
+  await assert.rejects(
+    relay.putFile(ana, {
+      name: "huge",
+      bytes: new Uint8Array(25 * 1024 * 1024 + 1),
+    }),
+    /too large/,
+  );
+  // Before it is named, only the one who put it may take it; nobody names another's file.
+  await assert.rejects(relay.file(ben, put.id), /No such file/);
+  await assert.rejects(
+    relay.send(ben, ana.id, "mine", [put.id]),
+    /No such file/,
+  );
+  const task = await relay.send(ana, ben.id, "Can you check these?", [put.id]);
+  assert.deepEqual(task.history[0].files, [put]);
+  assert.equal(
+    text((await relay.file(ben, put.id)).bytes),
+    "quarterly numbers",
+  );
+  await assert.rejects(relay.file(eve, put.id), /No such file/);
+
+  // The answer brings a file of its own.
+  const back = await relay.putFile(ben, {
+    name: "fixed.csv",
+    type: "not a type",
+    bytes: new TextEncoder().encode("fixed"),
+  });
+  const answered = await relay.update(ben, task.id, {
+    state: "COMPLETED",
+    text: "Fixed one row.",
+    files: [back.id],
+  });
+  assert.deepEqual(
+    answered.history.at(-1)?.files?.map((f) => [f.name, f.type]),
+    [["fixed.csv", "application/octet-stream"]],
+  );
+  assert.equal(text((await relay.file(ana, back.id)).bytes), "fixed");
+
+  // A file named on one request is not named on another.
+  const other = await relay.send(ana, ben.id, "Again?");
+  await assert.rejects(
+    relay.update(ana, other.id, { text: "the same file", files: [put.id] }),
+    /No such file/,
+  );
+  // Two weeks on, it is gone; a file never named goes after a day.
+  const later = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
+  await assert.rejects(relay.file(ben, put.id, later), /No such file/);
+  const loose = await relay.putFile(
+    ana,
+    { name: "draft.txt", bytes: new TextEncoder().encode("draft") },
+    new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  );
+  await relay.putFile(ana, {
+    name: "next.txt",
+    bytes: new TextEncoder().encode("next"),
+  });
+  const left = await db.query("SELECT 1 FROM files WHERE id = $1", [loose.id]);
+  assert.equal(left.length, 0, "cleared when the next file came");
+});
+
+test("over HTTP: a file is put with its name, named on a request, and taken with the member's token", async () => {
+  const { createServer } = await import("node:http");
+  const { relayHandler } = await import("./handler");
+  const server = createServer(relayHandler(relay));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as { port: number };
+  const base = `http://127.0.0.1:${port}`;
+  try {
+    const ana = await join("Ana H");
+    const ben = await join("Ben H");
+    const as = (
+      who: { token: string },
+      extra: Record<string, string> = {},
+    ) => ({
+      authorization: `Bearer ${who.token}`,
+      ...extra,
+    });
+    const put = await fetch(`${base}/files`, {
+      method: "POST",
+      headers: as(ana, {
+        "content-type": "application/pdf",
+        "x-file-name": encodeURIComponent("견적서 v2.pdf"),
+      }),
+      body: new Uint8Array([37, 80, 68, 70]),
+    }).then((r) => r.json());
+    assert.equal(put.file.name, "견적서 v2.pdf");
+    assert.equal(put.file.type, "application/pdf");
+    const sent = await fetch(`${base}/tasks`, {
+      method: "POST",
+      headers: as(ana, { "content-type": "application/json" }),
+      body: JSON.stringify({
+        to: ben.id,
+        text: "The quote",
+        files: [put.file.id],
+      }),
+    }).then((r) => r.json());
+    assert.equal(sent.task.history[0].files[0].id, put.file.id);
+    const taken = await fetch(`${base}/files/${put.file.id}`, {
+      headers: as(ben),
+    });
+    assert.equal(taken.status, 200);
+    assert.equal(taken.headers.get("content-type"), "application/octet-stream");
+    assert.equal(taken.headers.get("x-file-type"), "application/pdf");
+    assert.match(
+      String(taken.headers.get("content-disposition")),
+      /filename\*=UTF-8''/,
+    );
+    assert.deepEqual(
+      [...new Uint8Array(await taken.arrayBuffer())],
+      [37, 80, 68, 70],
+    );
+    const stranger = await fetch(`${base}/files/${put.file.id}`, {
+      headers: { authorization: "Bearer nope" },
+    });
+    assert.equal(stranger.status, 401);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+});

@@ -72,5 +72,12 @@ export function changeOf(
     return clipLines(input.content, 12);
   if (tool === "Bash" && typeof input.command === "string")
     return `$ ${input.command}`;
+  // Files that would leave this computer with a request: each one, by where it is.
+  if (Array.isArray(input.files) && input.files.length)
+    return input.files
+      .map((file) =>
+        String(file).replace(/^\/Users\/[^/]+|^\/home\/[^/]+/, "~"),
+      )
+      .join("\n");
   return undefined;
 }

@@ -150,7 +150,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   per-process secret); `rules.ts` turns "from now on" into Claude Code permission rules in
   `settings.json` (`trust.allow`) and the folders kept out into deny rules. Writing files and
   running commands are not given to the mini-me; sending a request to a colleague is asked first.
-- `features/relay/`: the relay a team runs (`pnpm relay`). It keeps everything in Postgres
+- `features/relay/`: the relay a team runs (`pnpm relay`). Files go with a request's messages:
+  a member puts one (`POST /files`, its bytes, kept as bytea), then names it on the message it
+  sends (`files` on `POST /tasks` and `/tasks/:id`, the message's `files` refs); only the one who
+  put it and the two members of its request take it (`GET /files/:id`, always as an attachment);
+  kept two weeks, one never named a day, 25 MB a file and 1 GB an office unless the relay sets
+  `RELAY_FILE_MB`/`RELAY_OFFICE_FILE_MB`. It keeps everything in Postgres
   (`db.ts`): a Postgres URL (`--database` or `DATABASE_URL`) for a relay deployed on a server, or
   PGlite, the same Postgres inside the process, in a folder (`relay-data` by default) for a relay
   on one computer; one SQL for both, its versions in `relay.ts` (`MIGRATIONS`). One relay can hold
@@ -187,7 +192,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   kinds of request the person takes, each with a trust level: auto, tell or ask; the kinds go on
   the card as A2A skills, the trust levels stay in `settings.json`. The brain names a request's
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role
-  `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the mini-me's own key, so it works in flows too), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind). In a
+  `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the mini-me's own key, so it works in flows too), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind), `files.ts` (files between mini-mes: what goes is checked first, a full path, not in a folder kept out, 25 MB at most, then put at the relay and named on the message; what comes is taken once into `office/files/<request>/` with an index, owner-only, and the request's session may read that folder alone; `ask_colleague` takes `files`, shown on its card (`ask-text.ts` `changeOf`) and asked every time, even when asking colleagues was allowed from now on (the tool server asks again, `seen`); an answer's `files` go only after the person saw them, through the check with `approve`; the page saves one through `app/api/me/office/file`, always as an attachment). In a
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screen's
   office is `features/minime/office-panel.tsx` with the route `app/api/me/office`.
 - `features/office/room/`: the office floor drawn in the panel, ported from the confirmed design

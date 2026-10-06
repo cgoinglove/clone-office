@@ -4,6 +4,7 @@
 import { readFile } from "node:fs/promises";
 import type {
   Card,
+  FileRef,
   InboxEvent,
   Member,
   Task,
@@ -13,7 +14,7 @@ import { withLock } from "../memory/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 
-export type { Card, InboxEvent, Member, Task, TaskState };
+export type { Card, FileRef, InboxEvent, Member, Task, TaskState };
 
 /** A failure at the relay, with the code the person's screen says in their language. */
 export class OfficeError extends Error {
@@ -140,6 +141,17 @@ export function tasks(office: OfficeConfig): Promise<{ tasks: Task[] }> {
   return call(office.relay, "/tasks", { token: office.token });
 }
 
+/** One request this mini-me sent or was asked. */
+export async function task(office: OfficeConfig, id: string): Promise<Task> {
+  return (
+    await call<{ task: Task }>(
+      office.relay,
+      `/tasks/${encodeURIComponent(id)}`,
+      { token: office.token },
+    )
+  ).task;
+}
+
 /**
  * A request to someone without a mini-me: the relay makes a link whose page they answer on. The
  * full link is returned to give to the person, who sends it themselves. Links are made on `base`,
@@ -176,19 +188,75 @@ export async function sendRequest(
   office: OfficeConfig,
   to: string,
   text: string,
+  files: string[] = [],
 ): Promise<Task> {
   return (
     await call<{ task: Task }>(office.relay, "/tasks", {
       token: office.token,
-      body: { to, text },
+      body: { to, text, ...(files.length ? { files } : {}) },
     })
   ).task;
+}
+
+/** The failure a relay answered with, in its own code. */
+async function refused(response: Response): Promise<OfficeError> {
+  const data = (await response.json().catch(() => ({}))) as Record<
+    string,
+    unknown
+  >;
+  return new OfficeError(
+    typeof data.code === "string" ? data.code : "relay-unreachable",
+    typeof data.error === "string"
+      ? data.error
+      : `The relay answered ${response.status}.`,
+  );
+}
+
+/** Puts a file at the relay, to name on the message sent next (files.ts checks it first). */
+export async function putFile(
+  office: OfficeConfig,
+  file: { name: string; type: string; bytes: Uint8Array },
+): Promise<FileRef> {
+  let response: Response;
+  try {
+    response = await fetch(new URL("/files", office.relay), {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${office.token}`,
+        "content-type": file.type,
+        "x-file-name": encodeURIComponent(file.name),
+      },
+      body: file.bytes as BodyInit,
+    });
+  } catch (error) {
+    throw new OfficeError("relay-unreachable", (error as Error).message);
+  }
+  if (!response.ok) throw await refused(response);
+  return ((await response.json()) as { file: FileRef }).file;
+}
+
+/** A file named on a request this mini-me is part of, from the relay. */
+export async function takeFile(
+  office: OfficeConfig,
+  id: string,
+): Promise<Uint8Array> {
+  let response: Response;
+  try {
+    response = await fetch(
+      new URL(`/files/${encodeURIComponent(id)}`, office.relay),
+      { headers: { authorization: `Bearer ${office.token}` } },
+    );
+  } catch (error) {
+    throw new OfficeError("relay-unreachable", (error as Error).message);
+  }
+  if (!response.ok) throw await refused(response);
+  return new Uint8Array(await response.arrayBuffer());
 }
 
 export async function updateRequest(
   office: OfficeConfig,
   id: string,
-  change: { state?: TaskState; text?: string },
+  change: { state?: TaskState; text?: string; files?: string[] },
 ): Promise<Task> {
   return (
     await call<{ task: Task }>(

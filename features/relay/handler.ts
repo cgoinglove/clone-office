@@ -3,8 +3,10 @@
 // link and invite pages carries the member's own token (Authorization: Bearer). Routes:
 //   POST /join          {key, card} -> {id, token}; with a token, updates the card
 //   GET  /members       -> {members}                    the members of one's office
-//   POST /tasks         {to, text} -> {task}            a request to another member
-//   POST /tasks/:id     {state?, text?} -> {task}       a message and the request's new state
+//   POST /tasks         {to, text, files?} -> {task}    a request to another member
+//   POST /tasks/:id     {state?, text?, files?} -> {task}  a message and the request's new state
+//   POST /files         the file's bytes, its name in X-File-Name -> {file}  to name on a message
+//   GET  /files/:id     the file's bytes, to its owner and the two members of its request
 //   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
@@ -16,7 +18,13 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
-import { type Relay, RelayError, type TaskState } from "./relay.ts";
+import {
+  FILE_BYTES,
+  FILES_PER_MESSAGE,
+  type Relay,
+  RelayError,
+  type TaskState,
+} from "./relay.ts";
 
 /** How long an inbox call waits for news before answering with none. */
 const INBOX_WAIT_MS = 25_000;
@@ -75,6 +83,27 @@ async function raw(request: IncomingMessage): Promise<string> {
   }
   return Buffer.concat(chunks).toString("utf8");
 }
+
+/** A file's bytes, up to the largest the relay keeps. */
+async function bytes(request: IncomingMessage): Promise<Uint8Array> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of request) {
+    size += (chunk as Buffer).length;
+    if (size > FILE_BYTES)
+      throw new RelayError(413, "The file is too large.", "file-too-large");
+    chunks.push(chunk as Buffer);
+  }
+  return new Uint8Array(Buffer.concat(chunks));
+}
+
+/** The file ids a message names. */
+const fileIds = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value
+        .filter((id): id is string => typeof id === "string")
+        .slice(0, FILES_PER_MESSAGE + 1)
+    : [];
 
 async function body(
   request: IncomingMessage,
@@ -236,8 +265,45 @@ export function relayHandler(
             me,
             String(input.to ?? ""),
             String(input.text ?? ""),
+            fileIds(input.files),
           ),
         });
+      }
+      if (request.method === "POST" && path === "/files") {
+        const me = await member(request);
+        let name = "file";
+        try {
+          name = decodeURIComponent(
+            String(request.headers["x-file-name"] ?? ""),
+          );
+        } catch {
+          // A name that is not encoded as asked: the file keeps a plain one.
+        }
+        return send(200, {
+          file: await relay.putFile(me, {
+            name,
+            type: String(request.headers["content-type"] ?? "").split(";")[0],
+            bytes: await bytes(request),
+          }),
+        });
+      }
+      const file = /^\/files\/([\w-]{4,64})$/.exec(path);
+      if (request.method === "GET" && file) {
+        const { ref, bytes: content } = await relay.file(
+          await member(request),
+          file[1],
+        );
+        response.writeHead(200, {
+          // Never drawn as a page here: it is for the mini-me that takes it.
+          "content-type": "application/octet-stream",
+          "content-length": String(content.byteLength),
+          "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(ref.name)}`,
+          "x-file-type": ref.type,
+          "x-content-type-options": "nosniff",
+          "cache-control": "no-store",
+        });
+        response.end(content);
+        return;
       }
       const one = /^\/tasks\/([\w-]+)$/.exec(path);
       if (request.method === "GET" && one) {
@@ -255,6 +321,7 @@ export function relayHandler(
                 ? (input.state as TaskState)
                 : undefined,
             text: typeof input.text === "string" ? input.text : undefined,
+            files: fileIds(input.files),
           }),
         });
       }

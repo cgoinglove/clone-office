@@ -47,7 +47,7 @@ export const ASK_BY_LINK_TOOL = {
 export const ASK_COLLEAGUE_TOOL = {
   name: "ask_colleague",
   description:
-    "Send a request to a colleague's mini-me on your person's behalf, when your person asks you to: a question, a check, or a piece of work that is the colleague's. Write it as your person would, short and complete (what, by when, why). Your person is asked before it goes. The answer comes later and is put into this conversation; tell your person it was sent. Promises, decisions and anything about relationships stay your person's.",
+    "Send a request to a colleague's mini-me on your person's behalf, when your person asks you to: a question, a check, or a piece of work that is the colleague's. Write it as your person would, short and complete (what, by when, why). To send files of your person's with it (a document to review, a sheet), give their full paths in files. Your person is asked before it goes, and sees the files. The answer comes later and is put into this conversation, with any files it brings; tell your person it was sent. Promises, decisions and anything about relationships stay your person's.",
   inputSchema: {
     type: "object",
     properties: {
@@ -56,6 +56,13 @@ export const ASK_COLLEAGUE_TOOL = {
         description: "The colleague's name or id, from colleagues",
       },
       request: { type: "string" },
+      files: {
+        type: "array",
+        items: { type: "string" },
+        maxItems: 10,
+        description:
+          "Full paths of files on your person's computer to send with it",
+      },
     },
     required: ["to", "request"],
   },
@@ -158,15 +165,34 @@ export async function callGateTool(
       return { result: JSON.stringify(members), isError: false };
     }
     if (name === ASK_COLLEAGUE_TOOL.name) {
-      const { sent } = await post(
-        {
-          action: "send",
-          to: String(args.to ?? ""),
-          text: String(args.request ?? ""),
-          chat: GATE.chat,
-        },
-        "/api/me/office/mcp",
-      );
+      const files =
+        Array.isArray(args.files) && args.files.length
+          ? args.files.map(String).slice(0, 10)
+          : [];
+      const body = {
+        action: "send",
+        to: String(args.to ?? ""),
+        text: String(args.request ?? ""),
+        ...(files.length ? { files } : {}),
+        chat: GATE.chat,
+      };
+      let { sent, ask: unseen } = await post(body, "/api/me/office/mcp");
+      // Asking a colleague was allowed from now on, but files leave this computer only after
+      // the person saw them: asked here, then sent.
+      if (unseen) {
+        const answer = await ask({
+          kind: "permission",
+          tool: `mcp__minime__${ASK_COLLEAGUE_TOOL.name}`,
+          input: { to: body.to, request: body.text, files },
+        });
+        if (!answer.answered || answer.answer !== "allow")
+          return {
+            result:
+              "Your person did not let it go with those files. Nothing was sent.",
+            isError: true,
+          };
+        ({ sent } = await post({ ...body, seen: true }, "/api/me/office/mcp"));
+      }
       return {
         result: `Sent to ${(sent as { to?: string })?.to ?? args.to}. The answer will be put into this conversation when it comes.`,
         isError: false,

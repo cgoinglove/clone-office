@@ -51,6 +51,8 @@ export interface Later {
   ask?: string;
   /** When it went to the person's phone, so it goes once. */
   phoned?: string;
+  /** check: files from the person's computer that go with the answer when they send it. */
+  files?: string[];
   /** question: the brain session to go on with. */
   session?: string;
   /** check: the answer about to be sent, a fixed one, what the choices mean, and the state it goes with. */

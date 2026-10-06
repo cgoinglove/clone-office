@@ -34,8 +34,23 @@ only to the team.
 ## What goes to the relay, and what never does
 
 Only the cards (name, what they do, their status) and the requests with their answers go to the
-relay. What the mini-me keeps about them, their conversations and anything it read on their
-computer never leave it.
+relay, and the files they chose to send with one. What the mini-me keeps about them, their
+conversations and anything it read on their computer never leave it.
+
+## Files between mini-mes
+
+- **Sending**: "send Minsu the quote and ask him to check it". The card the mini-me shows first
+  lists every file that would leave, by where it is on their computer; files are asked about
+  every time, even after **Don't ask again for this** for requests. A file in a folder they keep
+  out never goes, and none larger than 25 MB.
+- **Answering with a file**: when a colleague asks for a document of theirs, their mini-me shows
+  them the answer and the file before anything goes (send, send the fixed one, or don't), whatever
+  they set for that kind of request.
+- **What comes**: files that come with a request or an answer are kept in `office/files/` in the
+  mini-me's folder, one folder per request; their mini-me reads what a colleague sent when it
+  answers. Under **Requests** each file shows by name and size, and pressing it saves it.
+- The relay keeps a file two weeks, and only the two people of its request (and the one who sent
+  it) can take it. A team's relay can keep less (`RELAY_FILE_MB`, `RELAY_OFFICE_FILE_MB`).
 
 ## Asking a colleague
 

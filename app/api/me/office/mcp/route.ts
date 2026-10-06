@@ -1,12 +1,15 @@
 import * as z from "zod";
 import { gateSecret } from "@/features/minime/gate/gate";
+import { loadTrust } from "@/features/minime/gate/rules";
 import {
   loadOffice,
   members,
+  OfficeError,
   problemCode,
   sendLink,
   sendRequest,
 } from "@/features/minime/office/client";
+import { putFiles } from "@/features/minime/office/files";
 import { publicRelay } from "@/features/minime/office/host";
 import { changeState } from "@/features/minime/office/state";
 import { refuse } from "@/features/minime/server/guard";
@@ -17,6 +20,10 @@ const Body = z.discriminatedUnion("action", [
     action: z.literal("send"),
     to: z.string().min(1).max(80),
     text: z.string().trim().min(1).max(8000),
+    /** Files on the person's computer to send with it (the person saw them on the card). */
+    files: z.array(z.string().min(1).max(1000)).max(10).optional(),
+    /** The person saw the files on a card the tool server put to them. */
+    seen: z.boolean().optional(),
     chat: z.string().max(64).optional(),
   }),
   z.object({
@@ -71,14 +78,37 @@ export async function POST(request: Request) {
       others.find((m) => m.card.name.toLowerCase().includes(wanted));
     if (!to)
       return Response.json({ error: "no-such-colleague" }, { status: 404 });
-    const task = await sendRequest(office, to.id, input.text);
+    // Asking a colleague allowed from now on skips the card; files never leave unseen.
+    if (
+      input.files?.length &&
+      !input.seen &&
+      (await loadTrust()).includes("mcp__minime__ask_colleague")
+    )
+      return Response.json({ ask: true });
+    const files = input.files?.length
+      ? await putFiles(office, input.files)
+      : [];
+    const task = await sendRequest(
+      office,
+      to.id,
+      input.text,
+      files.map((file) => file.id),
+    );
     const chat = input.chat;
     if (chat)
       await changeState((s) => {
         s.sent[task.id] = { chat };
       });
-    return Response.json({ sent: { to: to.card.name, id: task.id } });
+    return Response.json({
+      sent: { to: to.card.name, id: task.id, files: files.length },
+    });
   } catch (error) {
+    // A file that cannot go is said with which one, for the mini-me to tell its person.
+    if (error instanceof OfficeError && error.code.startsWith("file"))
+      return Response.json(
+        { error: `${error.code}: ${error.message}` },
+        { status: 400 },
+      );
     return Response.json({ error: problemCode(error) }, { status: 502 });
   }
 }

@@ -77,7 +77,9 @@ export function ruleFor(
     typeof (input.file_path ?? input.notebook_path) === "string"
   )
     return `Edit(${pathRule(dirname(String(input.file_path ?? input.notebook_path)))}/**)`;
-  // The mini-me's own tools that reach out, such as asking a colleague: the tool itself.
+  // The mini-me's own tools that reach out, such as asking a colleague: the tool itself. Files
+  // leaving this computer are asked every time.
+  if (Array.isArray(input.files) && input.files.length) return undefined;
   if (tool.startsWith("mcp__minime__")) return tool;
   return undefined;
 }

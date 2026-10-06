@@ -15,6 +15,7 @@ import {
   problemCode,
   tasks,
 } from "./client.ts";
+import { filesLine, takeFiles } from "./files.ts";
 import { forgetLater, handleRequest } from "./handle.ts";
 import { changeState, holdWorker, loadState } from "./state.ts";
 
@@ -187,17 +188,26 @@ function onEvent(
     state !== "FAILED"
   )
     return;
-  void loadState().then(({ sent }) => {
+  void loadState().then(async ({ sent }) => {
     const chat = sent[task.id]?.chat;
     if (!chat) return;
     const name =
       cards.get(task.metadata.to)?.name ??
       task.metadata.guest ??
       task.metadata.to;
+    // Files that came with the answer are taken onto this computer, and the line says where.
+    const files = latest.files?.length
+      ? await takeFiles(office, task.id, latest.files)
+          .then((taken) => `\n\n${filesLine(taken)}`)
+          .catch(
+            () =>
+              `\n\n${latest.files?.map((file) => `- ${file.name}`).join("\n")}`,
+          )
+      : "";
     return appendMessage(
       chat,
       "office",
-      `${name}: ${latest.parts.map((p) => p.text).join("\n")}`,
+      `${name}: ${latest.parts.map((p) => p.text).join("\n")}${files}`,
     );
   });
 }
