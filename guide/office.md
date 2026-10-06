@@ -88,8 +88,14 @@ field — it asks them first, with a card under **Office** ("A request needs you
 When the AI is briefly unavailable it tries again a few minutes later before giving up.
 
 When they are not at their screen, such a card waits two minutes and is then kept under
-**Office** until they answer; the colleague is told that they will get back to them. When they
-answer, even hours later, their mini-me goes on with the request and sends the answer.
+**Office** until they answer; while their status says **In a meeting**, **Away** or **Off** it is
+kept at once. The colleague is told that they will get back to them. When they answer, even hours
+later, their mini-me goes on with the request and sends the answer.
+
+Kept questions are listed under **Office** at once, but they call them (the bot asking, the
+orange dot) only three times a day, at 10, 14 and 17 o'clock their time, all together, so they
+are interrupted a few times a day rather than for each one. A question waiting right now still
+calls them at once.
 
 Before an answer leaves, it is looked at once more, apart from the one who wrote it: does it
 share something private the request does not need (health, family, money, things said in

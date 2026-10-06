@@ -181,3 +181,23 @@ export function inbox(
     signal,
   });
 }
+
+// A card's status is a code (working, meeting, away, off); cards kept their person's own words
+// before, and those still count.
+const AWAY = new Set([
+  "meeting",
+  "away",
+  "off",
+  "회의 중",
+  "자리 비움",
+  "퇴근",
+  "In a meeting",
+  "Away",
+  "Off",
+]);
+
+/** The person said they are in a meeting, away or off: their questions are kept for later at once. */
+export async function personAway(): Promise<boolean> {
+  const status = (await loadOffice())?.card.status;
+  return Boolean(status && AWAY.has(status));
+}

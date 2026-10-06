@@ -2,9 +2,12 @@ import * as z from "zod";
 import {
   askPerson,
   gateSecret,
+  isRequestChat,
   pendingAsks,
+  timeoutFor,
   waitFor,
 } from "@/features/minime/gate/gate";
+import { personAway } from "@/features/minime/office/client";
 import { refuse } from "@/features/minime/server/guard";
 
 /** How long one request waits for the answer; the tool server asks again until the question times out. */
@@ -42,7 +45,13 @@ export async function POST(request: Request) {
   let id: string;
   let done: ReturnType<typeof waitFor>;
   if ("ask" in body.data) {
-    ({ id, done } = askPerson(body.data.chat, body.data.ask));
+    // A colleague's request asks a person who said they are away for later at once.
+    const away = isRequestChat(body.data.chat) && (await personAway());
+    ({ id, done } = askPerson(
+      body.data.chat,
+      body.data.ask,
+      timeoutFor(body.data.chat, away),
+    ));
   } else {
     id = body.data.id;
     done = waitFor(id);

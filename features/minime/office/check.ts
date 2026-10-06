@@ -5,7 +5,8 @@
 // send it, send a fixed one, or do not send. Code, not the model, then does what they chose.
 
 import { runSession } from "../brain/session.ts";
-import { askPerson } from "../gate/gate.ts";
+import { askPerson, timeoutFor } from "../gate/gate.ts";
+import { personAway } from "./client.ts";
 
 export const CHECK_SCHEMA = {
   type: "object",
@@ -145,11 +146,11 @@ export async function checkBeforeSending(options: {
     labels: choices,
     problem: verdict.problem,
   };
-  const { done } = askPerson(options.chat, {
-    kind: "question",
-    question,
-    choices: shown.choices,
-  });
+  const { done } = askPerson(
+    options.chat,
+    { kind: "question", question, choices: shown.choices },
+    timeoutFor(options.chat, await personAway()),
+  );
   const answer = await done;
   // Not decided while it waited: kept for the person, and decided when they answer.
   if (!answer.answered) return { later: shown };

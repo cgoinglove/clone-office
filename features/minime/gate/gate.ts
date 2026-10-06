@@ -50,8 +50,12 @@ export const OFFICE_ASK_LIVE_MS =
 export const isRequestChat = (chat: string | undefined) =>
   Boolean(chat?.startsWith("office-request-"));
 
-export function timeoutFor(chat: string | undefined): number {
-  return isRequestChat(chat) ? OFFICE_ASK_LIVE_MS : ASK_TIMEOUT_MS;
+/** Long enough to hand the question to the screen and keep it, when the person is away. */
+const AWAY_ASK_MS = 1000;
+
+export function timeoutFor(chat: string | undefined, away = false): number {
+  if (!isRequestChat(chat)) return ASK_TIMEOUT_MS;
+  return away ? AWAY_ASK_MS : OFFICE_ASK_LIVE_MS;
 }
 
 const holder = globalThis as typeof globalThis & { __minimeGate?: Registry };

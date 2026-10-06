@@ -91,3 +91,39 @@ test("a request tells the brain to wait for the person rather than guess", async
     /If they have not answered yet, set waiting_on_person/,
   );
 });
+
+test("a person in a meeting, away or off has a request's questions kept for later at once", async () => {
+  const { writeFileSync } = await import("node:fs");
+  const { OFFICE_ASK_LIVE_MS, timeoutFor } = await import("../gate/gate");
+  const { personAway } = await import("./client");
+  const card = (status?: string) =>
+    writeFileSync(
+      join(root, "settings.json"),
+      JSON.stringify({
+        office: {
+          relay: "http://r",
+          member: "m-1",
+          token: "t",
+          card: { name: "Ben", description: "", status },
+        },
+      }),
+    );
+  card("meeting");
+  assert.equal(await personAway(), true);
+  assert.ok(
+    timeoutFor("office-request-1", await personAway()) < OFFICE_ASK_LIVE_MS,
+  );
+  card("자리 비움");
+  assert.equal(
+    await personAway(),
+    true,
+    "the words cards kept before still count",
+  );
+  card("working");
+  assert.equal(await personAway(), false);
+  assert.equal(
+    timeoutFor("chat-1", true) > OFFICE_ASK_LIVE_MS,
+    true,
+    "the person's own conversation still waits",
+  );
+});

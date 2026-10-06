@@ -16,6 +16,7 @@ import { OfficeFloor, type OfficePerson } from "@/features/office";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
+import { dueAt } from "./batch";
 
 type State =
   | "SUBMITTED"
@@ -63,7 +64,13 @@ interface Office {
   tasks?: Task[];
   asks?: { id: string; chat?: string; ask: GateAsk }[];
   /** Questions about requests kept for the person: answering one lets the request go on. */
-  later?: { id: string; task: string; from?: string; ask: GateAsk }[];
+  later?: {
+    id: string;
+    task: string;
+    from?: string;
+    at: string;
+    ask: GateAsk;
+  }[];
   problem?: string;
 }
 
@@ -175,9 +182,14 @@ export function OfficePanel({
     ...(office?.asks ?? []),
     ...(office?.later ?? []).map((entry) => ({ ...entry, later: true })),
   ].filter((a) => !answered[a.id]);
+  // Questions kept for later call the person only at the day's batch moments; the list shows
+  // them all the same.
+  const calling = waiting.filter(
+    (a) => !("later" in a) || Date.now() >= dueAt(new Date(a.at)).getTime(),
+  ).length;
   useEffect(() => {
-    onWaiting?.(waiting.length);
-  }, [waiting.length, onWaiting]);
+    onWaiting?.(calling);
+  }, [calling, onWaiting]);
 
   return (
     <details
@@ -193,7 +205,7 @@ export function OfficePanel({
             {others.length}
           </span>
         )}
-        {waiting.length > 0 && (
+        {calling > 0 && (
           <span className="ml-2 text-xs font-medium text-waiting">
             {t("asksTitle")}
           </span>
@@ -238,7 +250,7 @@ export function OfficePanel({
               />
             ))}
             <OfficeFloor
-              people={floor(t, office, waiting.length)}
+              people={floor(t, office, calling)}
               layout="plaza"
               sky="now"
               label={t("title")}
