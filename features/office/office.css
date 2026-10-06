@@ -311,12 +311,13 @@
 .of .sb-ring {
   fill: var(--gray-0);
 }
+/* the dot on a mark is the one red in the office: a badge, as an app's icon wears one */
 .of .sb-dotc {
-  fill: var(--waiting);
+  fill: var(--destructive);
 }
 .of .sb-pulse {
   fill: none;
-  stroke: var(--waiting);
+  stroke: var(--destructive);
   stroke-width: 3;
 }
 .of .sb-dot.other .sb-dotc {

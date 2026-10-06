@@ -1,0 +1,1492 @@
+/*
+ * The office room, as the confirmed design (v13) draws it. The space is black and white: paper
+ * from the app's ladder and ink at an opacity. The brand blue is for buttons and a few marks (the
+ * lift's light, our floor), what waits on the viewer is the app's ember, and red is only the dot
+ * on a mini-me's mark. The mini-mes keep their own colours. Everything is scoped to `.of-wrap`.
+ *
+ * Nothing in the office animates without end in CSS: what keeps moving is stepped by the frame
+ * loop on its half-rate frames (office.mjs), and the rest runs a few steps a second.
+ */
+
+.of-wrap {
+  --paper: var(--gray-0);
+  --paper-2: var(--gray-50);
+  --paper-3: var(--gray-75);
+  --paper-4: var(--gray-100);
+  --floor: var(--gray-50);
+  --muted: var(--muted-foreground);
+  --badge: var(--destructive);
+  --lamp: rgba(255, 255, 255, 0.92);
+  --screen: #1c1c1c;
+  --screen-ink: rgba(255, 255, 255, 0.88);
+  --screen-faint: rgba(255, 255, 255, 0.09);
+  --shadow: #15171c;
+  --sh-0: 0.13;
+  --sh-1: 0.055;
+  --veil: color-mix(in oklab, var(--ink) 5%, transparent);
+  --dusk-veil: color-mix(in oklab, var(--ink) 2.5%, transparent);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-hand: var(--font-caveat), "Segoe Print", "Bradley Hand", cursive;
+  --ink-03: color-mix(in oklab, var(--ink) 3%, transparent);
+  --ink-05: color-mix(in oklab, var(--ink) 5%, transparent);
+  --ink-08: color-mix(in oklab, var(--ink) 8%, transparent);
+  --ink-10: color-mix(in oklab, var(--ink) 10%, transparent);
+  --ink-12: color-mix(in oklab, var(--ink) 12%, transparent);
+  --ink-16: color-mix(in oklab, var(--ink) 16%, transparent);
+  --ink-20: color-mix(in oklab, var(--ink) 20%, transparent);
+  --ink-30: color-mix(in oklab, var(--ink) 30%, transparent);
+  --ink-45: color-mix(in oklab, var(--ink) 45%, transparent);
+  --ink-56: color-mix(in oklab, var(--ink) 56%, transparent);
+  --ink-72: color-mix(in oklab, var(--ink) 72%, transparent);
+  --ink-85: color-mix(in oklab, var(--ink) 85%, transparent);
+  --waiting-soft: color-mix(in oklab, var(--waiting) 9%, var(--paper));
+  --waiting-line: color-mix(in oklab, var(--waiting) 45%, transparent);
+
+  position: relative;
+  height: clamp(440px, 64vh, 640px);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--ink-08);
+  overflow: hidden;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  contain: layout paint;
+  isolation: isolate;
+  container-type: inline-size;
+  font: 14px / 1.5 var(--font-sans);
+  color: var(--ink);
+}
+.dark .of-wrap {
+  --paper-3: var(--gray-100);
+  --paper-4: var(--gray-200);
+  --floor: var(--gray-25);
+  --screen: #070707;
+  --shadow: #000000;
+  --sh-0: 0.5;
+  --sh-1: 0.22;
+  --veil: rgba(0, 0, 0, 0.3);
+  --dusk-veil: color-mix(in oklab, var(--ink) 2%, transparent);
+  --hatch: var(--paper-4);
+}
+.of-wrap.dragging {
+  cursor: grabbing;
+}
+.of-wrap [hidden] {
+  display: none !important;
+}
+.of-wrap button {
+  font: inherit;
+  color: inherit;
+}
+.of-wrap :is(button, input):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.of-wrap .of-s {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+.of-wrap .of-s * {
+  pointer-events: visiblePainted;
+}
+.of-wrap .live {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+/* the copies a mini-me carries of what stands in front of it: shadows stay on the floor beneath */
+.of-wrap .cl .f-soft {
+  display: none;
+}
+/* a copy's lines are mixed with the paper rather than see-through, so the thin rim it shares with the drawing below never doubles */
+.of-wrap .ol {
+  --a: 56%;
+}
+.of-wrap .ol.s {
+  --a: 72%;
+}
+.of-wrap .ol.f {
+  --a: 30%;
+}
+.of-wrap .ol.c {
+  --a: 16%;
+}
+.of-wrap .ol.g {
+  --a: 20%;
+}
+.of-wrap .cov .ol:not(.w):not(.e) {
+  stroke: color-mix(in oklab, var(--ink) var(--a), var(--paper));
+}
+
+/* ink: three weights, heaviest for the building, faintest for the lines it is built on */
+.of-wrap .ol {
+  stroke: var(--ink-56);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.of-wrap .ol.s {
+  stroke: var(--ink-72);
+  stroke-width: 1.3;
+}
+.of-wrap .ol.f {
+  stroke: var(--ink-30);
+  stroke-width: 0.8;
+}
+.of-wrap .ol.c {
+  stroke: var(--ink-16);
+  stroke-width: 0.75;
+}
+.of-wrap .ol.g {
+  stroke: var(--ink-20);
+  stroke-width: 0.7;
+}
+.of-wrap .f-top {
+  fill: var(--paper);
+}
+.of-wrap .f-front {
+  fill: var(--paper-3);
+}
+.of-wrap .f-side {
+  fill: var(--paper-4);
+}
+.of-wrap .f-floor {
+  fill: var(--floor);
+}
+.of-wrap .f-wall {
+  fill: var(--paper);
+}
+.of-wrap .f-hatch {
+  fill: var(--hatch, url(#of-hatch));
+}
+.of-wrap .f-dots {
+  fill: url(#of-dots);
+}
+.of-wrap .f-soft {
+  fill: url(#of-soft);
+}
+.of-wrap .f-floorlight {
+  fill: url(#of-floorlight);
+}
+.of-wrap .f-lid {
+  fill: var(--ink-85);
+}
+.of-wrap .f-ink72 {
+  fill: var(--ink-72);
+}
+.of-wrap .f-paper {
+  fill: var(--paper);
+}
+.of-wrap .f-veil {
+  fill: var(--veil);
+}
+.of-wrap .f-duskveil {
+  fill: var(--dusk-veil);
+}
+.of-wrap .f-none {
+  fill: none;
+}
+.of-wrap .f-rug {
+  fill: var(--ink-03);
+}
+.of-wrap .f-plaza {
+  fill: color-mix(in oklab, var(--ink) 1.8%, transparent);
+}
+.of-wrap .f-myrug {
+  fill: var(--ink-05);
+}
+.of-wrap .f-open {
+  fill: none;
+  stroke: var(--ink-20);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 4 5;
+}
+.of-wrap .f-lamp {
+  fill: var(--lamp);
+}
+.of-wrap .f-book {
+  fill: var(--paper-4);
+}
+.of-wrap .f-screen {
+  fill: var(--screen);
+}
+.of-wrap .f-scr {
+  fill: var(--screen-ink);
+}
+.of-wrap .f-scrdim {
+  fill: color-mix(in oklab, var(--screen-ink) 35%, transparent);
+}
+.of-wrap .f-leaf {
+  fill: var(--paper);
+  stroke: var(--ink-56);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.of-wrap .hl {
+  stroke: var(--ink-30);
+}
+.of-wrap .dot-c {
+  fill: var(--ink-12);
+}
+.of-wrap .sh-stop {
+  stop-color: var(--shadow);
+}
+.of-wrap .sh-0 {
+  stop-opacity: var(--sh-0);
+}
+.of-wrap .sh-1 {
+  stop-opacity: var(--sh-1);
+}
+.of-wrap .dk-stop {
+  stop-color: var(--shadow);
+}
+.of-wrap .land {
+  animation: room-land 0.5s cubic-bezier(0.2, 1.35, 0.4, 1) both;
+}
+@keyframes room-land {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+/* words on the floor and the walls */
+.of-wrap .ftext {
+  fill: var(--ink-20);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+.of-wrap .ftext.faint {
+  fill: var(--ink-12);
+}
+.of-wrap .tname {
+  fill: var(--ink-05);
+  stroke: var(--ink-30);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.of-wrap .tname.mine {
+  fill: var(--ink-08);
+  stroke: var(--ink-56);
+}
+.of-wrap .tname.brand {
+  fill: var(--ink-03);
+  stroke: var(--ink-20);
+  letter-spacing: 0.06em;
+}
+.of-wrap .tcount {
+  fill: var(--ink-45);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+.of-wrap .tcount .on {
+  fill: var(--waiting);
+}
+.of-wrap .dname {
+  fill: var(--ink-45);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.12px;
+}
+.of-wrap .dname.off {
+  fill: var(--ink-30);
+}
+.of-wrap .offc {
+  fill: var(--ink-72);
+}
+.of-wrap .offt {
+  fill: var(--paper);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.08px;
+}
+.of-wrap .lmark {
+  fill: var(--ink-03);
+}
+.of-wrap .lmark-l {
+  fill: none;
+  stroke: var(--ink-20);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.of-wrap .lmark-t {
+  fill: var(--ink-30);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.25px;
+}
+.of-wrap .hand {
+  fill: var(--ink-56);
+  font-family: var(--font-hand);
+  font-weight: 600;
+}
+.of-wrap .hand-l {
+  fill: none;
+  stroke: var(--ink-45);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.of-wrap .wtext {
+  fill: var(--ink-45);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.02px;
+}
+.of-wrap .badge-c {
+  fill: var(--ink);
+}
+.of-wrap .badge-t {
+  fill: var(--paper);
+  font: 600 13px var(--font-sans);
+}
+
+/* the departures board: flaps of paper, a split across each, letters that flip in when they change */
+.of-wrap .sb-post {
+  fill: var(--ink-30);
+}
+.of-wrap .sm-eye {
+  fill: var(--paper);
+}
+.of-wrap .fb-frame {
+  fill: color-mix(in oklab, var(--paper) 84%, transparent);
+  stroke: var(--ink-30);
+  stroke-width: 2.4;
+}
+.of-wrap .fb-cell {
+  fill: var(--paper-3);
+  stroke: var(--ink-16);
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+.of-wrap .fb-split {
+  fill: none;
+  stroke: var(--ink-16);
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+.of-wrap .fb-l {
+  fill: var(--ink-72);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+.of-wrap .fb-hot {
+  fill: var(--waiting);
+}
+.of-wrap .fb-faint {
+  fill: var(--ink-30);
+}
+.of-wrap .fb-dim {
+  fill: var(--ink-56);
+  font-weight: 500;
+}
+.of-wrap .fb-clock {
+  fill: var(--ink-85);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+.of-wrap .fb-head {
+  fill: var(--ink-72);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 34px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.of-wrap .fb-sub {
+  fill: var(--ink-45);
+  font-family: var(--font-mono);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+}
+.of-wrap .fb-cap {
+  fill: var(--ink-45);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.2em;
+}
+/* a flap clacks over in four steps, as the real ones do, and the browser paints four frames rather than twenty */
+.of-wrap .fb-flip {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: room-flap 0.36s steps(4, end) backwards;
+}
+@keyframes room-flap {
+  from {
+    transform: scaleY(0);
+    opacity: 0.3;
+  }
+  55% {
+    transform: scaleY(1.12);
+    opacity: 1;
+  }
+}
+/* the sign painted on the ground at four o'clock: a box, chevrons running while at work, ember for your turn */
+.of-wrap .gs-box {
+  fill: none;
+  stroke: var(--ink-30);
+  stroke-width: 7;
+}
+.of-wrap .gs-box.e {
+  fill: color-mix(in oklab, var(--waiting) 9%, transparent);
+  stroke: color-mix(in oklab, var(--waiting) 80%, transparent);
+}
+.of-wrap .gs-word {
+  fill: var(--ink-56);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.of-wrap .gs-word.e {
+  fill: color-mix(in oklab, var(--waiting) 92%, transparent);
+}
+.of-wrap .gs-word.q {
+  fill: var(--ink-45);
+}
+.of-wrap :is(.gs-ch, .gs-tick) {
+  fill: none;
+  stroke: var(--ink-45);
+  stroke-width: 15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.of-wrap .gs-in {
+  animation: room-sign 0.5s steps(6, end) both;
+}
+@keyframes room-sign {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+/* the lift's floor number, its call buttons */
+.of-wrap :is(.lift-seg, .lift-arr) {
+  fill: var(--screen-ink);
+}
+.of-wrap .lift-btn {
+  fill: var(--paper);
+  stroke: var(--ink-45);
+  stroke-width: 0.9;
+  vector-effect: non-scaling-stroke;
+}
+
+/* a DONE stamp thumped on the floor, a paper plane and its dotted wake, the robot vacuum's light */
+.of-wrap .stamp {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation:
+    room-stamp-in 0.4s steps(5, end) both,
+    room-stamp-out 0.7s steps(6, end) 2.6s forwards;
+}
+@keyframes room-stamp-in {
+  from {
+    transform: scale(1.9) rotate(-10deg);
+    opacity: 0;
+  }
+  55% {
+    opacity: 1;
+  }
+}
+@keyframes room-stamp-out {
+  to {
+    opacity: 0;
+  }
+}
+.of-wrap .stamp-r {
+  fill: color-mix(in oklab, var(--paper) 60%, transparent);
+  stroke: var(--ink-72);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.of-wrap .stamp-t {
+  fill: var(--ink-72);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+.of-wrap .plane path {
+  fill: var(--paper);
+  stroke: var(--ink-72);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.of-wrap .plane .fold {
+  fill: none;
+  stroke: var(--ink-45);
+}
+.of-wrap .wake {
+  fill: none;
+  stroke: var(--ink-30);
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1.5 7;
+  stroke-linecap: round;
+  transition: opacity 0.6s;
+}
+.of-wrap .rb-led {
+  fill: var(--ink-72);
+}
+
+/* the laptop's lines and cursor hold still in the office: the mini-me's bounce shows the work */
+.of-wrap .steam path {
+  fill: none;
+  stroke: var(--ink-30);
+  stroke-width: 1.3;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.of-wrap .steam.on path {
+  animation: room-steam 2.1s steps(18, end) infinite;
+}
+.of-wrap .steam.on path:nth-child(2) {
+  animation-delay: 0.7s;
+}
+.of-wrap .steam.on path:nth-child(3) {
+  animation-delay: 1.4s;
+}
+@keyframes room-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(2px) scaleY(0.8);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) scaleY(1.15);
+  }
+}
+.of-wrap :is(.bot-g, [data-person], .board-hit) {
+  cursor: pointer;
+}
+.of-wrap .shadow-e {
+  fill: url(#of-soft);
+}
+.of-wrap .carry .sheet {
+  fill: var(--paper);
+  stroke: var(--ink-56);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  stroke-linejoin: round;
+}
+.of-wrap .carry .ln {
+  stroke: var(--ink-30);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+}
+.of-wrap .carry .tick {
+  fill: none;
+  stroke: var(--ink-72);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.of-wrap :is(.carry .mug, .carry.cup .sheetg) {
+  display: none;
+}
+.of-wrap .carry.cup .mug {
+  display: inline;
+}
+.of-wrap :is(.mug path, .mug ellipse) {
+  fill: var(--paper);
+  stroke: var(--ink-56);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+.of-wrap .trail {
+  fill: none;
+  stroke: var(--ink-20);
+  stroke-width: 1.1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+}
+
+/* doodles that come and go around the mini-mes, at twelve drawings a second like the boil inside them */
+.of-wrap .fx-i {
+  fill: var(--ink-72);
+}
+.of-wrap .fx-l {
+  fill: none;
+  stroke: var(--ink-56);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.of-wrap .fx-e .fx-i {
+  fill: var(--waiting);
+}
+.of-wrap .fx-e .fx-l {
+  stroke: var(--waiting);
+}
+.of-wrap .fx-p {
+  fill: var(--paper);
+}
+.of-wrap .fx-in {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.of-wrap .fx-pop .fx-in {
+  animation: room-fx-pop var(--dur, 0.9s) steps(11, end) both;
+}
+@keyframes room-fx-pop {
+  0% {
+    transform: scale(0) rotate(-12deg);
+    opacity: 0;
+  }
+  18% {
+    transform: scale(1.16) rotate(4deg);
+    opacity: 1;
+  }
+  30% {
+    transform: scale(0.95) rotate(0);
+  }
+  42%,
+  82% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9) translateY(-6px);
+    opacity: 0;
+  }
+}
+.of-wrap .fx-ring .fx-in {
+  transform-origin: 50% 50%;
+  animation: room-fx-ring var(--dur, 0.55s) steps(6, end) both;
+}
+@keyframes room-fx-ring {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.of-wrap .fx-twinkle .fx-in {
+  transform-origin: 50% 50%;
+  animation: room-fx-twinkle var(--dur, 1.2s) steps(14, end) both;
+}
+@keyframes room-fx-twinkle {
+  0% {
+    transform: scale(0) rotate(-40deg);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.15) rotate(8deg);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(0.85);
+  }
+  100% {
+    transform: scale(0) rotate(30deg);
+    opacity: 0;
+  }
+}
+.of-wrap .fx-drip .fx-in {
+  animation: room-fx-drip var(--dur, 1.6s) steps(18, end) both;
+}
+@keyframes room-fx-drip {
+  0% {
+    transform: translateY(-4px) scale(0);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px) scale(0.9);
+    opacity: 0;
+  }
+}
+/* the hand-drawn wobble: each doodle has two drawings, shown in turn */
+.of-wrap .boil > * {
+  animation: room-boil-a 0.3s steps(1, end) infinite;
+}
+.of-wrap .boil > :nth-child(2) {
+  opacity: 0;
+  animation-name: room-boil-b;
+}
+@keyframes room-boil-a {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes room-boil-b {
+  50% {
+    opacity: 1;
+  }
+}
+
+/* assembly: the floor is sketched in, walls rise, furniture drops into place, plants grow */
+.of-wrap .asm :is(.k-draw .ol, .k-draw .hand-l) {
+  stroke-dasharray: 1;
+  animation: room-k-line 0.95s cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+  animation-delay: var(--d, 0ms);
+}
+.of-wrap
+  .asm
+  :is(.k-draw polygon, .k-draw text, .k-draw ellipse, .k-draw rect) {
+  animation: room-k-fade 0.7s ease backwards;
+  animation-delay: calc(var(--d, 0ms) + 160ms);
+}
+.of-wrap .asm .k-fade {
+  animation: room-k-fade 0.6s ease backwards;
+  animation-delay: var(--d, 0ms);
+}
+.of-wrap .asm .k-drop {
+  animation: room-k-drop 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) backwards;
+  animation-delay: var(--d, 0ms);
+}
+.of-wrap .asm .k-rise {
+  animation: room-k-rise 0.6s cubic-bezier(0.25, 1.35, 0.45, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.of-wrap .asm .k-grow {
+  animation: room-k-grow 0.65s cubic-bezier(0.3, 1.5, 0.5, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+@keyframes room-k-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes room-k-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes room-k-drop {
+  from {
+    transform: translateY(var(--drop, -60px));
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+@keyframes room-k-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+@keyframes room-k-grow {
+  from {
+    transform: scale(0);
+  }
+}
+
+/* what floats over the drawing */
+.of-wrap .over {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.of-wrap .plate {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px 5px 8px;
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow:
+    0 0 0 1px var(--ink-10),
+    0 3px 10px var(--ink-05);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  will-change: transform;
+}
+.of-wrap .plate i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink-30);
+  flex: none;
+}
+.of-wrap .plate b {
+  font-weight: 600;
+}
+.of-wrap .plate span {
+  color: var(--muted);
+}
+.of-wrap .plate.on i {
+  background: var(--ink);
+}
+.of-wrap .plate.off i {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.2px var(--ink-45);
+}
+.of-wrap .plate.mine {
+  box-shadow:
+    0 0 0 1px var(--waiting-line),
+    0 3px 10px var(--ink-05);
+}
+.of-wrap .plate.mine i {
+  background: var(--waiting);
+}
+.of-wrap .plate.mine span {
+  color: var(--waiting);
+}
+.of-wrap .plate.you {
+  box-shadow:
+    0 0 0 1.5px var(--ink),
+    0 3px 10px var(--ink-05);
+}
+.of-wrap .bub {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: 260px;
+  width: max-content;
+  padding: 9px 12px 10px;
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow:
+    0 0 0 1px var(--ink-10),
+    0 10px 26px var(--ink-08);
+  font-size: 13.5px;
+  line-height: 1.38;
+  pointer-events: auto;
+  cursor: default;
+  will-change: transform;
+  animation: room-pop 0.3s cubic-bezier(0.3, 1.45, 0.5, 1) both;
+  transform-origin: 50% 100%;
+  overflow-wrap: anywhere;
+}
+.of-wrap .bub::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 6px);
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  transform: rotate(45deg);
+  box-shadow: 1px 1px 0 0 var(--ink-10);
+  border-radius: 0 0 3px 0;
+}
+.of-wrap .bub .who {
+  display: block;
+  font: 500 11px / 1.2 var(--font-mono);
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+.of-wrap .bub.small {
+  padding: 6px 10px 7px;
+  font-size: 12.5px;
+  border-radius: 12px;
+}
+.of-wrap .bub.small .who {
+  display: none;
+}
+.of-wrap .bub.human {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 8px 22px var(--ink-12);
+}
+.of-wrap .bub.human::after {
+  box-shadow: none;
+}
+.of-wrap .bub.human .who {
+  color: color-mix(in oklab, var(--paper) 60%, transparent);
+}
+.of-wrap .bub.mine {
+  box-shadow:
+    0 0 0 1.5px var(--waiting),
+    0 12px 28px var(--ink-12);
+  max-width: 280px;
+}
+.of-wrap .bub.mine::after {
+  box-shadow: 1.5px 1.5px 0 0 var(--waiting);
+}
+.of-wrap .bub.mine .who {
+  color: var(--waiting);
+}
+.of-wrap .bub .acts {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+  flex-wrap: wrap;
+}
+.of-wrap .bub .acts button {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--ink-12);
+}
+.of-wrap .bub .acts button.solid {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+.of-wrap .bub.out {
+  animation: room-popout 0.22s ease forwards;
+}
+@keyframes room-pop {
+  from {
+    opacity: 0;
+    scale: 0.82;
+  }
+}
+@keyframes room-popout {
+  to {
+    opacity: 0;
+    scale: 0.94;
+  }
+}
+
+.of-wrap .hud {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.of-wrap .hud.tl {
+  left: 18px;
+  top: 16px;
+}
+.of-wrap .hud.tr {
+  right: 16px;
+  top: 14px;
+}
+.of-wrap .hud.bl {
+  left: 14px;
+  bottom: 14px;
+}
+.of-wrap .note {
+  font: 500 11px / 1.4 var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.of-wrap .note b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.of-wrap .hud.tl .note {
+  padding: 4px 8px;
+  margin-left: -8px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--paper) 84%, transparent);
+}
+.of-wrap .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--paper);
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 13px;
+  box-shadow: 0 0 0 1px var(--ink-08);
+  line-height: 1;
+  white-space: nowrap;
+  border: 0;
+}
+.of-wrap .chip.need {
+  cursor: pointer;
+  color: var(--waiting);
+  background: var(--waiting-soft);
+  box-shadow: none;
+  font-weight: 500;
+}
+.of-wrap .chip.need .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--waiting);
+}
+.of-wrap .seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--paper-3);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+.of-wrap .seg button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1;
+  padding: 8px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.of-wrap .seg button:hover {
+  color: var(--ink);
+}
+.of-wrap .seg button[aria-pressed="true"] {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow:
+    0 1px 2px var(--ink-10),
+    0 0 0 1px var(--ink-05);
+}
+.of-wrap .zoom {
+  display: inline-flex;
+  background: var(--paper);
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--ink-08);
+}
+.of-wrap .zoom button {
+  appearance: none;
+  border: 0;
+  background: none;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  border-radius: 8px;
+}
+.of-wrap .zoom button:hover {
+  color: var(--ink);
+}
+.of-wrap .zoom svg {
+  width: 14px;
+  height: 14px;
+}
+.of-wrap .floors {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--paper);
+  border-radius: 10px;
+  box-shadow: 0 0 0 1px var(--ink-08);
+}
+.of-wrap .floors button {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: 500 11.5px / 1 var(--font-mono);
+  color: var(--muted);
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.of-wrap .floors button[aria-pressed="true"] {
+  background: var(--paper-3);
+  color: var(--ink);
+}
+
+.of-wrap .composer {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: min(520px, calc(100% - 420px));
+  display: grid;
+  gap: 7px;
+}
+.of-wrap .sugs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.2s,
+    transform 0.2s;
+  pointer-events: none;
+}
+.of-wrap .composer:is(:hover, :focus-within) .sugs {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.of-wrap .sugs button {
+  appearance: none;
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px var(--ink-10);
+  cursor: pointer;
+  color: var(--ink-72);
+}
+.of-wrap .sugs button:hover {
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--ink-30);
+}
+.of-wrap .box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 5px 5px 5px 10px;
+  box-shadow:
+    0 0 0 1px var(--ink-12),
+    0 10px 30px var(--ink-08);
+}
+.of-wrap .box .me {
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+.of-wrap .box .me svg {
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+  display: block;
+}
+.of-wrap .box input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  padding: 8px 2px;
+  outline: none;
+}
+.of-wrap .box input::placeholder {
+  color: var(--muted);
+}
+.of-wrap .box .send {
+  appearance: none;
+  border: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex: none;
+}
+.of-wrap .box .send svg {
+  width: 14px;
+  height: 14px;
+}
+@container (max-width: 1000px) {
+  .of-wrap .composer {
+    width: calc(100% - 28px);
+    bottom: 60px;
+  }
+  .of-wrap .sugs {
+    display: none;
+  }
+}
+
+.of-wrap .panel {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  bottom: 14px;
+  width: 330px;
+  background: var(--paper);
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 1px var(--ink-10),
+    0 16px 40px var(--ink-08);
+  padding: 18px;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  overflow: auto;
+  cursor: default;
+  user-select: text;
+  -webkit-user-select: text;
+}
+@container (max-width: 760px) {
+  .of-wrap .panel {
+    left: 14px;
+    right: 14px;
+    top: auto;
+    width: auto;
+    max-height: 56%;
+  }
+}
+.of-wrap .panel header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.of-wrap .panel .pb svg {
+  width: 52px;
+  height: 52px;
+  overflow: visible;
+  display: block;
+}
+.of-wrap .panel header div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.of-wrap .panel header b {
+  font-size: 17px;
+  letter-spacing: -0.01em;
+}
+.of-wrap .panel header div span {
+  font-size: 13px;
+  color: var(--muted);
+}
+.of-wrap .panel .x {
+  margin-left: auto;
+  align-self: start;
+  appearance: none;
+  border: 0;
+  background: var(--paper-3);
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.of-wrap .panel .x svg {
+  width: 12px;
+  height: 12px;
+}
+.of-wrap .pbody {
+  display: grid;
+  gap: 18px;
+}
+.of-wrap .pblock {
+  display: grid;
+  gap: 8px;
+}
+.of-wrap .pblock > small {
+  font: 500 11px var(--font-mono);
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.of-wrap .stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+.of-wrap .stats div {
+  background: var(--paper-2);
+  border-radius: 10px;
+  padding: 9px 10px;
+  display: grid;
+  gap: 2px;
+}
+.of-wrap .stats b {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.of-wrap .stats span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.of-wrap .decide {
+  background: var(--waiting-soft);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+}
+.of-wrap .decide small {
+  font: 500 11px var(--font-mono);
+  color: var(--waiting);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.of-wrap .decide.other {
+  background: var(--paper-2);
+}
+.of-wrap .decide.other small {
+  color: var(--muted);
+}
+.of-wrap .decide p {
+  margin: 0;
+  font-size: 14px;
+}
+.of-wrap .decide .acts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.of-wrap .btn {
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--ink-12);
+}
+.of-wrap .btn.solid {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: none;
+}
+.of-wrap .rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+}
+.of-wrap .rows li {
+  font-size: 13.5px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--ink-08);
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+.of-wrap .rows li:last-child {
+  border-bottom: 0;
+}
+.of-wrap .rows li i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+  flex: none;
+  transform: translateY(-1px);
+}
+.of-wrap .rows li i.past {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.2px var(--ink-45);
+}
+.of-wrap .rows li span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.of-wrap .rows li em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--muted);
+}
+.of-wrap .rows .none {
+  color: var(--muted);
+}
+.of-wrap .tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.of-wrap .tags span {
+  font-size: 12.5px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--ink-08);
+}
+
+/* the mark: a body in its colour, two hollow eyes, the red dot when its person is asked */
+.of-wrap .sb-fill {
+  fill: var(--bot, var(--ink));
+}
+.of-wrap :is(.sb-eye, .sb-ring) {
+  fill: var(--paper);
+}
+.of-wrap .sb-dotc {
+  fill: var(--badge);
+}
+.of-wrap .sb-pulse {
+  fill: none;
+  stroke: var(--badge);
+  stroke-width: 3;
+}
+.of-wrap .sb-dot.other .sb-dotc {
+  fill: var(--ink-45);
+}
+.of-wrap .sb-dot.other .sb-pulse {
+  display: none;
+}
+.of-wrap .sb-zp {
+  fill: none;
+  stroke: var(--ink-45);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (prefers-reduced-motion: reduce) {
+  .of-wrap
+    :is(
+      .fb-flip,
+      .stamp,
+      .gs-in,
+      .asm *,
+      .bub,
+      .steam.on path,
+      .boil > *,
+      .land,
+      [class^="fx-"] .fx-in
+    ) {
+    animation: none !important;
+  }
+}

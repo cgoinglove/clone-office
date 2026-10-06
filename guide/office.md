@@ -145,6 +145,28 @@ that person can reach the office's relay (a relay on one computer is reachable o
 the office's requests it shows as **(by link)** (링크), with **Copy link** (링크 복사) while it
 is open.
 
+## The office floor
+
+Opened, **Office** (오피스) shows the office as a floor seen from above: a desk for each member
+with their mini-me at it, their name on the floor in front. Their own mini-me is the black (in
+dark mode, white) one, with a loop drawn round its desk; each colleague's has a colour of its
+own. A colleague whose computer is off is not in: their desk shows **OFF** (꺼짐), and their
+mini-me comes in through the lift when the computer is back on.
+
+What happens to their requests plays out on it. A request walks from the asker's desk to the
+asked one's (or flies there as a paper plane when the desk is far) and lands on their pile; the
+mini-me takes it up and works at its laptop; the answer is carried back, and **DONE** (완료) is
+stamped on the floor. Only requests they are part of are shown: what colleagues ask each other
+stays between them. When something waits for them, their mini-me asks over its head with
+**Answer** (답하기), which brings them to the question, and **YOUR TURN** (내 차례) is written on
+the floor.
+
+Behind the wall stands the office board: everyone, those a decision waits on first, with what
+they are on and how much is on their desk. **My desk** (내 자리), **Board** (보드) and **Office**
+(오피스) at the bottom move the view; dragging moves it too, and Ctrl (or ⌘) with the wheel
+zooms. Clicking a mini-me opens a panel about that person: what is on their desk, what they do
+now, how to work with them, the requests they take, and the requests between them and you.
+
 ## What is waiting for them
 
 The mini-me can see where their office work stands, the same as their page shows: questions

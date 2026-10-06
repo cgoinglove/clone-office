@@ -6,19 +6,20 @@
 // It looks again every few seconds while open.
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
-import { OfficeFloor, type OfficePerson } from "@/features/office";
+import { OfficeRoom } from "@/features/office/room/office-room";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { AskCard, type GateAsk } from "./ask-card";
+import { AskCard, describe, type GateAsk } from "./ask-card";
 import { dueAt } from "./batch";
 import { parseInvite } from "./office/invite";
 import type { LikeMe } from "./office/likeme";
+import { roomData, STATUSES, statusCode } from "./office/room-data";
 
 type State =
   | "SUBMITTED"
@@ -88,29 +89,6 @@ interface Office {
   problem?: string;
 }
 
-// A card's status is a code, so each colleague reads it in their own language.
-const STATUSES = ["working", "meeting", "away", "off"] as const;
-type Status = (typeof STATUSES)[number];
-
-// Cards kept their person's own words before the status was a code.
-const OLD_WORDS: Record<string, Status> = {
-  "일하는 중": "working",
-  Working: "working",
-  "회의 중": "meeting",
-  "In a meeting": "meeting",
-  "자리 비움": "away",
-  Away: "away",
-  퇴근: "off",
-  Off: "off",
-};
-
-export function statusCode(status: string | undefined): Status | undefined {
-  if (!status) return undefined;
-  return (STATUSES as readonly string[]).includes(status)
-    ? (status as Status)
-    : OLD_WORDS[status];
-}
-
 type Translate = ReturnType<typeof useTranslations<"office">>;
 
 function statusText(t: Translate, status: string | undefined): string {
@@ -133,8 +111,10 @@ export function OfficePanel({
   onNews?: () => void;
 }) {
   const t = useTranslations("office");
+  const tAsk = useTranslations("ask");
   const problemText = useProblem();
   const [office, setOffice] = useState<Office | null>(null);
+  const asksBox = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -208,9 +188,23 @@ export function OfficePanel({
   ].filter((a) => !answered[a.id]);
   // Questions kept for later call the person only at the day's batch moments; the list shows
   // them all the same.
-  const calling = waiting.filter(
+  const due = waiting.filter(
     (a) => !("later" in a) || Date.now() >= dueAt(new Date(a.at)).getTime(),
-  ).length;
+  );
+  const calling = due.length;
+  // The office floor redraws from this only when a look brings something new.
+  const first = due[0]?.ask;
+  const line = !first
+    ? undefined
+    : first.kind === "question"
+      ? first.question
+      : first.kind === "permission"
+        ? `${tAsk("mayI")} ${describe(tAsk, first.tool, first.input)}`
+        : tAsk("rule", { menu: first.menu });
+  const room = useMemo(
+    () => (office?.joined ? roomData(office, calling, line) : null),
+    [office, calling, line],
+  );
   useEffect(() => {
     onWaiting?.(calling);
   }, [calling, onWaiting]);
@@ -244,54 +238,47 @@ export function OfficePanel({
             {office.problem && (
               <p className="text-destructive">{problemText(office.problem)}</p>
             )}
-            {waiting.map((pending) => (
-              <AskCard
-                key={pending.id}
-                turn={{
-                  id: 0,
-                  gate: pending.id,
-                  ask: pending.ask,
-                  state: answered[pending.id] ? "done" : "open",
-                  answer: answered[pending.id],
-                }}
-                onAnswer={(answer, always) => {
-                  setAnswered((all) => ({ ...all, [pending.id]: answer }));
-                  // A question kept for later lets its request go on; a live one answers the gate.
-                  void (
-                    "later" in pending
-                      ? post({ action: "later", id: pending.id, answer })
-                      : fetch("/api/me/gate/answer", {
-                          method: "POST",
-                          headers: HEADERS,
-                          body: JSON.stringify({
-                            id: pending.id,
-                            answer,
-                            always,
-                          }),
-                        })
-                  ).then(() => load());
+            <div ref={asksBox} className="flex flex-col gap-4 empty:hidden">
+              {waiting.map((pending) => (
+                <AskCard
+                  key={pending.id}
+                  turn={{
+                    id: 0,
+                    gate: pending.id,
+                    ask: pending.ask,
+                    state: answered[pending.id] ? "done" : "open",
+                    answer: answered[pending.id],
+                  }}
+                  onAnswer={(answer, always) => {
+                    setAnswered((all) => ({ ...all, [pending.id]: answer }));
+                    // A question kept for later lets its request go on; a live one answers the gate.
+                    void (
+                      "later" in pending
+                        ? post({ action: "later", id: pending.id, answer })
+                        : fetch("/api/me/gate/answer", {
+                            method: "POST",
+                            headers: HEADERS,
+                            body: JSON.stringify({
+                              id: pending.id,
+                              answer,
+                              always,
+                            }),
+                          })
+                    ).then(() => load());
+                  }}
+                />
+              ))}
+            </div>
+            {open && room && (
+              <OfficeRoom
+                data={room}
+                onAnswer={() => {
+                  const box = asksBox.current;
+                  box?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  box?.querySelector("button")?.focus({ preventScroll: true });
                 }}
               />
-            ))}
-            <OfficeFloor
-              people={floor(t, office, calling)}
-              layout="plaza"
-              sky="now"
-              label={t("title")}
-              bubbles="all"
-              words={{
-                you: (name) => t("floor.you", { name }),
-                yourBot: t("yourMiniMe"),
-                bot: (name) => t("miniMe", { name }),
-                needsYou: t("floor.needsYou"),
-                waitingOnDecision: t("floor.waitingOnDecision"),
-                computerOff: t("floor.computerOff"),
-                working: t("floor.working"),
-                away: t("floor.away"),
-                free: t("floor.free"),
-                onDesk: (count) => t("floor.onDesk", { count }),
-              }}
-            />
+            )}
             <MyCard
               card={office.me.card}
               lang={lang}
@@ -374,77 +361,6 @@ export function OfficePanel({
       </div>
     </details>
   );
-}
-
-const FINAL_STATES: State[] = ["COMPLETED", "FAILED", "CANCELED", "REJECTED"];
-
-/** One line of a request, short enough for a bubble. */
-function clip(value: string, max: number): string {
-  const line = value.replace(/\s+/g, " ").trim();
-  return line.length > max ? `${line.slice(0, max - 1)}…` : line;
-}
-
-/** How long an answer stays in its bot's bubble. */
-const SAYS_FOR_MS = 2 * 60 * 1000;
-
-/**
- * The office as a floor: each member's bot at their desk, as their card's status says (a computer
- * not at the relay for two minutes is off), with the open requests on their desk, and what the
- * bots are saying: the viewer's when a request waits for them, a request on its way in its
- * asker's bubble, an answer for a while in its answerer's. Only requests the viewer is part of
- * are known here; what colleagues ask each other stays between them.
- */
-function floor(t: Translate, office: Office, waiting: number): OfficePerson[] {
-  const now = Date.now();
-  const names = new Map((office.members ?? []).map((m) => [m.id, m.card.name]));
-  const says = new Map<string, string>();
-  for (const task of office.tasks ?? []) {
-    const state = task.status.state;
-    const last = task.history.at(-1);
-    const text = (message?: Task["history"][number]) =>
-      message?.parts.map((part) => part.text).join(" ") ?? "";
-    if (state === "SUBMITTED" || state === "WORKING") {
-      if (!says.has(task.metadata.from))
-        says.set(
-          task.metadata.from,
-          `→ ${names.get(task.metadata.to) ?? ""}: ${clip(text(task.history[0]), 48)}`,
-        );
-    } else if (
-      last?.role === "agent" &&
-      now - Date.parse(task.status.timestamp) < SAYS_FOR_MS &&
-      !says.has(task.metadata.to)
-    )
-      says.set(task.metadata.to, clip(text(last), 64));
-  }
-  return (office.members ?? []).map((member) => {
-    const you = member.id === office.me?.id;
-    const status = statusCode(member.card.status);
-    const gone = now - Date.parse(member.seen) > 2 * 60 * 1000;
-    const open = (office.tasks ?? []).filter(
-      (task) =>
-        task.metadata.to === member.id &&
-        !FINAL_STATES.includes(task.status.state),
-    );
-    const line = you && waiting > 0 ? t("needsYou") : says.get(member.id);
-    return {
-      name: member.card.name,
-      team: t("team"),
-      you,
-      botName: you ? t("yourMiniMe") : t("miniMe", { name: member.card.name }),
-      status:
-        status === "off" || (gone && !you)
-          ? "offline"
-          : status === "meeting" || status === "away"
-            ? "away"
-            : "active",
-      pile: open.length,
-      ...(open.some((task) => task.status.state === "WORKING")
-        ? { mood: "working" as const }
-        : {}),
-      ...(you && waiting > 0 ? { needsDecision: true } : {}),
-      ...(line ? { says: line } : {}),
-    };
-  });
 }
 
 function Join({

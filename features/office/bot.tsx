@@ -86,7 +86,7 @@ export interface BotBodyProps {
   gaze?: Pt;
   /** Holds the pose without moving. */
   still?: boolean;
-  /** The "needs you" dot is ember when the call is yours, grey when it is someone else's. */
+  /** The "needs you" dot is red when the call is yours, grey when it is someone else's. */
   mine?: boolean;
 }
 

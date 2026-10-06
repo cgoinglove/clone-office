@@ -13,7 +13,8 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
 
 ## Start here
 - `app/globals.css` — every colour token in both themes, `.inverse`, the app's keyframes (the
-  bots' body language and the office build-in came over from Thursday with them).
+  bots' body language came over from Thursday with them). The office floor keeps its own in
+  `features/office/room/room.css`, mapped onto these tokens.
 - `components/ui/button.tsx` — the button variants and `loading`.
 - `components/ui/notify.tsx` — `notify.alert` / `confirm` / `prompt`, a dialog from plain code.
 - `components/ui/toast.tsx` — `Toaster`, mounted once in `app/layout.tsx`.

@@ -174,6 +174,19 @@ These words help discussion. They do not mandate separate services, tables or UI
   `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the mini-me's own key, so it works in flows too), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind). In a
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screen's
   office is `features/minime/office-panel.tsx` with the route `app/api/me/office`.
+- `features/office/room/`: the office floor drawn in the panel, ported from the confirmed design
+  (`docs/office-room.local.d/`, v13). Plain ES modules that build SVG as strings: `core.mjs` (the
+  mini-me mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks,
+  commons, lift, the departures board, the floor sign), `floor.mjs` (the library plan, walking
+  on a grid), `office.mjs` (`createOffice`: sheets, scenes, camera, panel). Its performance shape
+  is the point: the board, the still drawing and each mover on separate SVG sheets, copies of what
+  stands in front of a mover cut to its outline, merged lines, half-rate frames, stopped off
+  screen. `office-room.tsx` is the React box with the screen's words; `room.css` maps the design
+  onto the app's tokens (black and white space, ember for what waits, red only for a mark's dot,
+  each mini-me its colour). `features/minime/office/room-data.ts` turns the relay's look into
+  what it draws: the members, and the requests between them that the viewer is part of. The
+  older React floor (`office-floor.tsx`, `plan.ts`, `objects.tsx`) is kept for the design
+  system export until it is rebuilt; `bot.tsx` is the mark on the page's own header.
 - `plugin/`: the Claude Code plugin, so a person's own Claude Code conversations ask colleagues'
   mini-mes (the repository is its marketplace: `.claude-plugin/marketplace.json`). It is copied
   alone when installed, so it imports nothing from the app and has no dependencies.

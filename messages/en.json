@@ -263,7 +263,107 @@
     "relayPlaceholder": "The relay's address, or an invite link",
     "invite": "Invite a colleague",
     "inviteNote": "Anyone with this link can join your office; send it only to your team.",
-    "copyInvite": "Copy invite"
+    "copyInvite": "Copy invite",
+    "room": {
+      "label": "The office: each person's desk with their mini-me, and the requests going between them",
+      "floor": "Floor {n}",
+      "people": "{count, plural, one {# person} other {# people}}",
+      "floorGroup": "Floor",
+      "openSeat": "OPEN SEAT",
+      "lift": "LIFT",
+      "offTag": "OFF",
+      "done": "DONE",
+      "answer": "Answer",
+      "needsYouChip": "Your mini-me needs you",
+      "notes": {
+        "myDesk": "my desk",
+        "tea": "tea?",
+        "lift": "in & out"
+      },
+      "views": {
+        "label": "View",
+        "desk": "My desk",
+        "board": "Board",
+        "office": "Office",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out"
+      },
+      "composer": {
+        "placeholder": "Ask your mini-me to get something from a colleague…",
+        "send": "Send",
+        "askFor": "{what} · {name}",
+        "askText": "Ask {name}: {what}"
+      },
+      "board": {
+        "you": "You",
+        "who": "WHO",
+        "status": "STATUS",
+        "on": "ON",
+        "desk": "DESK",
+        "to": "→ {name}",
+        "wait": "WAIT {name}",
+        "states": {
+          "ask": "NEEDS YOU",
+          "deciding": "DECIDING",
+          "work": "WORKING",
+          "free": "FREE",
+          "away": "AWAY",
+          "off": "OFF"
+        }
+      },
+      "counts": {
+        "in": "{count} IN",
+        "off": "{count} OFF",
+        "waiting": "{count} WAITING"
+      },
+      "sign": {
+        "you": "YOUR TURN",
+        "work": "AT WORK",
+        "quiet": "ALL CLEAR"
+      },
+      "plate": {
+        "youShort": "You",
+        "you": "{name} (you)",
+        "needsYou": "needs you",
+        "deciding": "waiting on a decision",
+        "computerOff": "computer off",
+        "working": "working",
+        "away": "away, mini-me on duty",
+        "free": "free",
+        "onDesk": "{count} on the desk",
+        "goingTo": "going to {name}"
+      },
+      "say": {
+        "isIn": "{name} is in.",
+        "bye": "{name}'s computer is off. Bye for now!",
+        "bring": "Hi {to}. This is from {from}: {what}",
+        "leftOnDesk": "{name}'s computer is off. I'll leave it on the desk.",
+        "gotIt": "Got it. I'm on it.",
+        "thanks": "Thanks, {name}!"
+      },
+      "panel": {
+        "close": "Close",
+        "yours": "Your mini-me",
+        "atDesk": "at the desk",
+        "away": "away from the desk",
+        "off": "computer off",
+        "needsYou": "Needs you",
+        "waitingOn": "Waiting on {name}'s decision",
+        "onDesk": "on the desk",
+        "doneToday": "done today",
+        "asked": "asked",
+        "now": "Now",
+        "workingOn": "Working on: {what}",
+        "waitingFor": "Waiting for {name}'s answer",
+        "free": "Free",
+        "notIn": "Not in. {name}'s mini-me comes in through the lift when the computer is back on.",
+        "ways": "How to work with {name}",
+        "myMenu": "What you take on",
+        "menu": "What {name} takes on",
+        "earlier": "Requests",
+        "nothingYet": "None yet"
+      }
+    }
   },
   "files": {
     "title": "All files I keep",

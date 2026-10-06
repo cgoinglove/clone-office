@@ -263,7 +263,107 @@
     "relayPlaceholder": "릴레이 주소, 또는 초대 링크",
     "invite": "동료 초대",
     "inviteNote": "이 링크가 있으면 누구나 오피스에 들어올 수 있어요. 팀에게만 보내세요.",
-    "copyInvite": "초대 링크 복사"
+    "copyInvite": "초대 링크 복사",
+    "room": {
+      "label": "오피스: 사람마다 책상과 미니미, 그 사이를 오가는 부탁",
+      "floor": "{n}층",
+      "people": "{count}명",
+      "floorGroup": "층",
+      "openSeat": "빈자리",
+      "lift": "엘리베이터",
+      "offTag": "꺼짐",
+      "done": "완료",
+      "answer": "답하기",
+      "needsYouChip": "내 미니미가 기다려요",
+      "notes": {
+        "myDesk": "내 자리",
+        "tea": "차 한잔?",
+        "lift": "출퇴근"
+      },
+      "views": {
+        "label": "보기",
+        "desk": "내 자리",
+        "board": "보드",
+        "office": "오피스",
+        "zoomIn": "확대",
+        "zoomOut": "축소"
+      },
+      "composer": {
+        "placeholder": "동료에게 받아 올 일을 미니미에게 부탁하세요…",
+        "send": "보내기",
+        "askFor": "{what} · {name}",
+        "askText": "{name} 님에게 부탁해 줘: {what}"
+      },
+      "board": {
+        "you": "나",
+        "who": "누가",
+        "status": "상태",
+        "on": "하는 일",
+        "desk": "책상",
+        "to": "→ {name}",
+        "wait": "{name} 기다림",
+        "states": {
+          "ask": "내 차례",
+          "deciding": "결정 중",
+          "work": "일하는 중",
+          "free": "한가함",
+          "away": "자리 비움",
+          "off": "꺼짐"
+        }
+      },
+      "counts": {
+        "in": "{count}명 출근",
+        "off": "{count}명 꺼짐",
+        "waiting": "{count}건 기다림"
+      },
+      "sign": {
+        "you": "내 차례",
+        "work": "일하는 중",
+        "quiet": "모두 끝"
+      },
+      "plate": {
+        "youShort": "나",
+        "you": "{name} (나)",
+        "needsYou": "답이 필요해요",
+        "deciding": "결정을 기다리는 중",
+        "computerOff": "컴퓨터 꺼짐",
+        "working": "일하는 중",
+        "away": "자리 비움, 미니미가 대신",
+        "free": "한가함",
+        "onDesk": "책상 위 {count}건",
+        "goingTo": "{name} 님에게 가는 중"
+      },
+      "say": {
+        "isIn": "{name} 님이 출근했어요.",
+        "bye": "{name} 님의 컴퓨터가 꺼졌어요. 다음에 봐요!",
+        "bring": "{to} 님, {from}의 부탁이에요: {what}",
+        "leftOnDesk": "{name} 님의 컴퓨터가 꺼져 있어요. 책상에 두고 갈게요.",
+        "gotIt": "받았어요. 바로 할게요.",
+        "thanks": "고마워요, {name} 님!"
+      },
+      "panel": {
+        "close": "닫기",
+        "yours": "내 미니미",
+        "atDesk": "자리에 있음",
+        "away": "자리 비움",
+        "off": "컴퓨터 꺼짐",
+        "needsYou": "답이 필요해요",
+        "waitingOn": "{name} 님의 결정을 기다리는 중",
+        "onDesk": "책상 위",
+        "doneToday": "오늘 끝냄",
+        "asked": "부탁 중",
+        "now": "지금",
+        "workingOn": "하는 일: {what}",
+        "waitingFor": "{name} 님의 답을 기다리는 중",
+        "free": "한가해요",
+        "notIn": "자리에 없어요. 컴퓨터가 다시 켜지면 {name} 님의 미니미가 엘리베이터로 들어와요.",
+        "ways": "{name} 님과 일하는 법",
+        "myMenu": "내가 받는 부탁",
+        "menu": "{name} 님이 받는 부탁",
+        "earlier": "부탁",
+        "nothingYet": "아직 없어요"
+      }
+    }
   },
   "files": {
     "title": "저장된 파일 전체",
