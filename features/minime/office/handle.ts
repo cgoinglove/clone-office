@@ -394,9 +394,15 @@ async function learnFromRequest(
     prompt,
   );
   if (!kept.length) return;
-  const [latest] = await listChats(1);
-  const chat = latest ?? (await createChat(kept[0] ?? ""));
+  const chat =
+    (await latestConversation()) ?? (await createChat(kept[0] ?? ""));
   for (const line of kept) await appendMessage(chat.id, "saved", line);
+}
+
+/** The person's latest conversation with their mini-me; a flow's own conversation is not one. */
+async function latestConversation() {
+  const flows = new Set((await listFlows()).map((flow) => flow.chat));
+  return (await listChats(30)).find((chat) => !flows.has(chat.id));
 }
 
 /** Send the answer as the person's choices say, then count it toward a rule and tell them. */
@@ -562,8 +568,7 @@ export async function forgetLater(task: string): Promise<void> {
 
 /** A line in the person's latest conversation with their mini-me (a new one if there is none). */
 export async function tellPerson(note: string): Promise<void> {
-  const [latest] = await listChats(1);
-  const chat = latest ?? (await createChat(note));
+  const chat = (await latestConversation()) ?? (await createChat(note));
   await appendMessage(chat.id, "told", note);
 }
 
