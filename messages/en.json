@@ -246,6 +246,15 @@
       "away": "away, mini-me on duty",
       "free": "free",
       "onDesk": "{count} on the desk"
+    },
+    "ways": {
+      "title": "How to work with me (ME.md) · colleagues see these lines",
+      "none": "Nothing yet. Draft it for me writes a few lines from what I know of you; only the lines you add go on your card.",
+      "drafted": "From what I know of you. Add the lines that are right:",
+      "add": "Add",
+      "skip": "Skip",
+      "placeholder": "A line, as you would say it",
+      "theirs": "How to work with {name}:"
     }
   },
   "files": {

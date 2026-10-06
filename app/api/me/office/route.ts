@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { pendingAsks } from "@/features/minime/gate/gate";
-import { draftCard, draftMenu } from "@/features/minime/office/card";
+import { draftCard, draftMenu, draftWays } from "@/features/minime/office/card";
 import {
   joinOffice,
   leaveOffice,
@@ -14,6 +14,7 @@ import {
 } from "@/features/minime/office/client";
 import { answerLater, laterQuestions } from "@/features/minime/office/handle";
 import { likeMe } from "@/features/minime/office/likeme";
+import { writeMe } from "@/features/minime/office/me";
 import {
   cleanMenu,
   loadMenu,
@@ -93,6 +94,7 @@ const Card = z.object({
   name: z.string().trim().min(1).max(80),
   description: z.string().trim().max(600).default(""),
   status: z.string().trim().max(60).optional(),
+  howToWork: z.array(z.string().trim().min(1).max(240)).max(12).optional(),
 });
 
 const Body = z.discriminatedUnion("action", [
@@ -131,6 +133,10 @@ const Body = z.discriminatedUnion("action", [
     locale: z.string().max(35).default("en"),
   }),
   z.object({
+    action: z.literal("draft-ways"),
+    locale: z.string().max(35).default("en"),
+  }),
+  z.object({
     action: z.literal("later"),
     id: z.string().uuid(),
     answer: z.string().trim().min(1).max(4000),
@@ -162,6 +168,14 @@ export async function POST(request: Request) {
         ? Response.json({ ok: true })
         : Response.json({ error: "no-longer-waiting" }, { status: 410 });
     }
+    if (input.action === "draft-ways") {
+      if (!hasClaudeCode())
+        return Response.json({ error: "claude-missing" }, { status: 409 });
+      const lines = await draftWays(await personLanguage(input.locale));
+      return lines.length
+        ? Response.json({ lines })
+        : Response.json({ error: "no-draft" }, { status: 502 });
+    }
     if (input.action === "draft-menu") {
       if (!hasClaudeCode())
         return Response.json({ error: "claude-missing" }, { status: 409 });
@@ -176,15 +190,22 @@ export async function POST(request: Request) {
       // Kept here with how much is done alone; colleagues see only the kinds, on the card.
       const menu = await saveMenu(input.menu);
       const office = await loadOffice();
-      if (office)
-        await updateCard(office, { ...office.card, skills: menuSkills(menu) });
+      if (office) {
+        const next = await updateCard(office, {
+          ...office.card,
+          skills: menuSkills(menu),
+        });
+        await writeMe(next.card, menu);
+      }
       return Response.json({ menu });
     }
     if (input.action === "join") {
+      const menu = await loadMenu();
       const office = await joinOffice(input.relay, input.key, {
         ...input.card,
-        skills: menuSkills(await loadMenu()),
+        skills: menuSkills(menu),
       });
+      await writeMe(office.card, menu);
       return Response.json({
         joined: true,
         me: { id: office.member, card: office.card },
@@ -194,10 +215,12 @@ export async function POST(request: Request) {
     if (!office)
       return Response.json({ error: "not-in-office" }, { status: 409 });
     if (input.action === "card") {
+      const menu = await loadMenu();
       const next = await updateCard(office, {
         ...input.card,
-        skills: menuSkills(await loadMenu()),
+        skills: menuSkills(menu),
       });
+      await writeMe(next.card, menu);
       return Response.json({ me: { id: next.member, card: next.card } });
     }
     if (input.action === "send")

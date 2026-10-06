@@ -33,6 +33,8 @@ export interface Member {
     status?: string;
     /** The kinds of request they take (A2A skills). */
     skills?: { id: string; name: string; description?: string }[];
+    /** How to work with them (their ME.md lines). */
+    howToWork?: string[];
   };
   seen: string;
 }

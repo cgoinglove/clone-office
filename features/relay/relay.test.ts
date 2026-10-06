@@ -118,3 +118,22 @@ test("a request can be read by the one asking and the one asked, and by no one e
   );
   assert.throws(() => relay.taskFor(eve.id, task.id), /No such request/);
 });
+
+test("a card carries how to work with its person, bounded", () => {
+  const ana = relay.join({
+    key: "office-key",
+    card: {
+      name: "Ana",
+      description: "",
+      howToWork: [
+        " Ask me before noon. ",
+        "",
+        ...Array(20).fill("x".repeat(500)),
+      ],
+    },
+  });
+  const card = relay.memberByToken(ana.token).card;
+  assert.equal(card.howToWork?.[0], "Ask me before noon.");
+  assert.equal(card.howToWork?.length, 11);
+  assert.equal(card.howToWork?.[1].length, 240);
+});

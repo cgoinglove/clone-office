@@ -20,7 +20,7 @@ export const colleaguesOpen = gateOpen && process.env.MINIME_COLLEAGUES === "1";
 export const COLLEAGUES_TOOL = {
   name: "colleagues",
   description:
-    "Who is in your person's office: each colleague's mini-me, by name, with what they do and whether they are around. Look here before asking someone.",
+    "Who is in your person's office: each colleague's mini-me, by name, with what they do, how they like to be worked with (follow it when asking them), and whether they are around. Look here before asking someone.",
   inputSchema: { type: "object", properties: {} },
 };
 

@@ -28,6 +28,35 @@ export async function draftCard(
   return result.ok && draft?.trim() ? draft.trim().slice(0, 200) : undefined;
 }
 
+export const WAYS_SCHEMA = {
+  type: "object",
+  properties: {
+    lines: { type: "array", items: { type: "string" }, maxItems: 5 },
+  },
+  required: ["lines"],
+};
+
+export const WAYS_PROMPT = `Your person's colleagues, and their mini-mes, read your person's card to know how to work with them: their ME.md, as AGENTS.md says how to work in a repository. Draft up to five lines for "how to work with me", from what you know of them (your memory, your notes, their past conversations, which you can search) and the requests they take: how they like to be asked (what to include, in what form), when to expect an answer, what they decide on their own and what to bring them early, what they do not take on. Only what helps a colleague work with them: never anything private (health, family, money, personal plans or goals), nothing about other people, and nothing that changes (projects, their status, dates). Each one line, in their language, in the first person, as they would put it. When you know too little, give fewer lines, or none.`;
+
+/** Lines for how to work with the person, for them to add one by one or leave out. */
+export async function draftWays(language?: string): Promise<string[]> {
+  const result = await runSession({
+    prompt: WAYS_PROMPT,
+    jsonSchema: WAYS_SCHEMA,
+    language,
+    maxTurns: 10,
+    purpose: "card",
+  });
+  const lines = (result.structured as { lines?: unknown[] } | undefined)?.lines;
+  return result.ok && Array.isArray(lines)
+    ? lines
+        .filter((line): line is string => typeof line === "string")
+        .map((line) => line.trim().slice(0, 240))
+        .filter(Boolean)
+        .slice(0, 5)
+    : [];
+}
+
 export const MENU_SCHEMA = {
   type: "object",
   properties: {

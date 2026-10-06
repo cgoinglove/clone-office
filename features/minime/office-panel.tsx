@@ -34,6 +34,8 @@ interface Card {
   status?: string;
   /** The kinds of request they take (A2A skills), from their menu. */
   skills?: { id: string; name: string; description?: string }[];
+  /** How to work with them (their ME.md), the lines they added one by one. */
+  howToWork?: string[];
 }
 
 type Trust = "auto" | "tell" | "ask";
@@ -273,11 +275,18 @@ export function OfficePanel({
             />
             <MyCard
               card={office.me.card}
+              lang={lang}
               busy={busy}
               onStatus={(status) =>
                 void post({
                   action: "card",
                   card: { ...office.me?.card, status },
+                })
+              }
+              onWays={(howToWork) =>
+                post({
+                  action: "card",
+                  card: { ...office.me?.card, howToWork },
                 })
               }
             />
@@ -509,12 +518,16 @@ function Join({
 
 function MyCard({
   card,
+  lang,
   busy,
   onStatus,
+  onWays,
 }: {
   card: Card;
+  lang: string;
   busy: boolean;
   onStatus: (status: string) => void;
+  onWays: (lines: string[]) => Promise<boolean>;
 }) {
   const t = useTranslations("office");
   const current = statusCode(card.status);
@@ -542,7 +555,169 @@ function MyCard({
           ))}
         </div>
       </div>
+      <Ways
+        lines={card.howToWork ?? []}
+        lang={lang}
+        busy={busy}
+        onSave={onWays}
+      />
     </section>
+  );
+}
+
+/**
+ * How to work with the person: the lines of their ME.md that colleagues and their mini-mes read on
+ * the card. The mini-me drafts lines from what it knows; a line goes on the card only when the
+ * person adds it, and any line can be taken off.
+ */
+function Ways({
+  lines,
+  lang,
+  busy,
+  onSave,
+}: {
+  lines: string[];
+  lang: string;
+  busy: boolean;
+  onSave: (lines: string[]) => Promise<boolean>;
+}) {
+  const t = useTranslations("office");
+  const problemText = useProblem();
+  // Kept here as well, so lines added one after another never undo each other.
+  const [mine, setMine] = useState(lines);
+  useEffect(() => setMine(lines), [lines]);
+  const [drafted, setDrafted] = useState<string[]>([]);
+  const [drafting, setDrafting] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [problem, setProblem] = useState<string | null>(null);
+
+  const save = (next: string[]) => {
+    setMine(next);
+    void onSave(next);
+  };
+
+  const draft = async () => {
+    setDrafting(true);
+    setProblem(null);
+    try {
+      const response = await fetch("/api/me/office", {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ action: "draft-ways", locale: lang }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setProblem(String(data.error ?? response.status));
+        return;
+      }
+      setDrafted(
+        ((data.lines as string[]) ?? []).filter((line) => !mine.includes(line)),
+      );
+    } finally {
+      setDrafting(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-xs text-muted-foreground">{t("ways.title")}</span>
+      {mine.length === 0 && drafted.length === 0 && (
+        <p className="text-muted-foreground">{t("ways.none")}</p>
+      )}
+      {mine.length > 0 && (
+        <ul className="flex flex-col">
+          {mine.map((line) => (
+            <li
+              key={line}
+              className="flex items-start justify-between gap-2 border-b border-border py-1.5 last:border-b-0"
+            >
+              <span className="min-w-0">{line}</span>
+              <Button
+                size="xs"
+                variant="ghost"
+                className="shrink-0 text-muted-foreground"
+                disabled={busy}
+                onClick={() => save(mine.filter((l) => l !== line))}
+              >
+                {t("menu.remove")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {drafted.length > 0 && (
+        <div className="flex flex-col gap-1 rounded-lg bg-muted p-3">
+          <span className="text-xs text-muted-foreground">
+            {t("ways.drafted")}
+          </span>
+          {drafted.map((line) => (
+            <div key={line} className="flex items-start justify-between gap-2">
+              <span className="min-w-0">{line}</span>
+              <span className="flex shrink-0 gap-1">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => {
+                    save([...mine, line]);
+                    setDrafted((all) => all.filter((l) => l !== line));
+                  }}
+                >
+                  {t("ways.add")}
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  className="text-muted-foreground"
+                  onClick={() =>
+                    setDrafted((all) => all.filter((l) => l !== line))
+                  }
+                >
+                  {t("ways.skip")}
+                </Button>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+      <form
+        className="flex gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          const line = typed.trim();
+          if (!line || mine.includes(line)) return;
+          setTyped("");
+          save([...mine, line]);
+        }}
+      >
+        <Input
+          value={typed}
+          placeholder={t("ways.placeholder")}
+          aria-label={t("ways.placeholder")}
+          onChange={(event) => setTyped(event.target.value)}
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          type="submit"
+          disabled={busy || !typed.trim()}
+        >
+          {t("ways.add")}
+        </Button>
+      </form>
+      <div>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={drafting || busy}
+          loading={drafting}
+          onClick={() => void draft()}
+        >
+          {drafting ? t("drafting") : t("draft")}
+        </Button>
+      </div>
+      {problem && <p className="text-destructive">{problemText(problem)}</p>}
+    </div>
   );
 }
 
@@ -763,6 +938,16 @@ function Colleague({
           {member.card.description && (
             <span className="block text-muted-foreground">
               {member.card.description}
+            </span>
+          )}
+          {(member.card.howToWork ?? []).length > 0 && (
+            <span className="mt-1 block text-xs text-muted-foreground">
+              {t("ways.theirs", { name: member.card.name })}
+              <span className="block whitespace-pre-line text-foreground">
+                {(member.card.howToWork ?? [])
+                  .map((line) => `· ${line}`)
+                  .join("\n")}
+              </span>
             </span>
           )}
           {(member.card.skills ?? []).length > 0 && (

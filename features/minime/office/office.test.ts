@@ -66,3 +66,38 @@ test("an answer of a kind the person sees first is shown to them whatever the ch
   );
   assert.doesNotMatch(checkPrompt("Q", "A"), /wants to see answers/);
 });
+
+test("ME.md is written from the card: who, how to work with them, what to ask them for", async () => {
+  const { meMarkdown } = await import("./me");
+  const md = meMarkdown(
+    {
+      name: "Ben",
+      description: "Payments backend; I look after /orders and refunds.",
+      howToWork: [
+        "Send the endpoint and what you tried.",
+        "I answer within a day.",
+      ],
+    },
+    [
+      {
+        id: "api",
+        name: "Payments API questions",
+        description: "Which endpoint, what you tried",
+        trust: "ask",
+      },
+    ],
+  );
+  assert.match(md, /^# Ben\n\nPayments backend/);
+  assert.match(
+    md,
+    /## How to work with me\n\n- Send the endpoint and what you tried\.\n- I answer within a day\./,
+  );
+  assert.match(
+    md,
+    /## What you can ask me for\n\n- \*\*Payments API questions\*\*: Which endpoint, what you tried/,
+  );
+  assert.doesNotMatch(
+    meMarkdown({ name: "Ana", description: "" }, []),
+    /How to work/,
+  );
+});

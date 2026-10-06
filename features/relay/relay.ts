@@ -40,6 +40,8 @@ export interface Card {
   }[];
   /** Working, in a meeting, off: what the person is doing now, as they set it. */
   status?: string;
+  /** How to work with the person (their ME.md), in lines they confirmed one by one. */
+  howToWork?: string[];
 }
 
 export interface Message {
@@ -390,5 +392,13 @@ function cleanCard(card: Card): Card {
         }
       : {}),
     ...(card.status ? { status: String(card.status).slice(0, 60) } : {}),
+    ...(Array.isArray(card.howToWork)
+      ? {
+          howToWork: card.howToWork
+            .slice(0, 12)
+            .map((line) => String(line).trim().slice(0, 240))
+            .filter(Boolean),
+        }
+      : {}),
   };
 }

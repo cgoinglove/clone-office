@@ -35,6 +35,16 @@ they take it on, their mini-me can have that conversation do it: in a copy of it
 "<name> · mini-me", asking them before each change (the card shows the lines before and after,
 or the command), and then tells the colleague what was done.
 
+## How to work with them (ME.md)
+
+Under their card, **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
+mini-mes read: how they like to be asked, when to expect an answer, what to bring them early.
+**Draft it for me** (초안 써 줘) has the mini-me write a few from what it knows of them, leaving out
+anything private; a line goes on the card only when they press **Add** (더하기), and **Remove**
+(지우기) takes one off. They can also type their own. The same lines, with their card and the
+requests they take, are kept as ME.md in the mini-me's folder, a file they can hand to anyone.
+Colleagues' cards show theirs the same way, and the mini-me follows them when it asks someone.
+
 ## Requests they take, and how much their mini-me does alone
 
 Below their card, **Requests I take** (받는 부탁) lists the kinds of request colleagues' mini-mes can
