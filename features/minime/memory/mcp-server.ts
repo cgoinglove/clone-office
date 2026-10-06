@@ -36,6 +36,7 @@ import {
   WORK_SESSION_TOOL,
 } from "../hands/tools.ts";
 import { CONVERSATION_TOOLS, callConversationTool } from "../history/tools.ts";
+import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
 import { NOTE_TOOLS, NoteStore } from "./notes.ts";
 import { type Actor, SKILL_TOOLS, SkillStore } from "./skills.ts";
@@ -99,6 +100,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
               SESSIONS_TOOL,
               ASK_SESSION_TOOL,
               WORK_SESSION_TOOL,
+              LEAVE_OUT_TOOL,
             ]
           : []),
         ...(colleaguesOpen ? [COLLEAGUES_TOOL, ASK_COLLEAGUE_TOOL] : []),
@@ -171,6 +173,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         request.params.name,
         args,
       );
+      return text(result, isError);
+    }
+    case LEAVE_OUT_TOOL.name: {
+      const { result, isError } = await leaveOut(args);
       return text(result, isError);
     }
     case ASK_TOOL.name:

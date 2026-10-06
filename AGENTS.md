@@ -197,7 +197,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   resume by byte offset, with CJK text indexed as bigrams; `tools.ts` gives the mini-me
   `conversation_search` and `conversation_read`. The index is derived: the tools' records are
   only read, and it can be deleted and rebuilt. A learning indexes only the conversations it reads
-  and the rest is caught up in the background (`catchUpIndex`). `features/minime/learn/`: the first
+  and the rest is caught up in the background (`catchUpIndex`; every ten minutes while the app
+  runs, `keepIndexFresh`). `features/minime/learn/`: the first
   transplant, `gather.ts` (budgeted material from instruction and memory files, recent prompts by
   most active folder, the person's own commits, document kinds and apps; a later reading takes only
   what changed) and `learn.ts` (one session whose structured answer holds a few lasting lines,

@@ -146,7 +146,8 @@
       "Write": "Write a file",
       "NotebookEdit": "Change a notebook",
       "Bash": "Run a command",
-      "mcp__minime__work_session": "Have one of your Claude Code conversations do work"
+      "mcp__minime__work_session": "Have one of your Claude Code conversations do work",
+      "mcp__minime__leave_out_folder": "Leave a folder out from now on"
     },
     "ruleTitle": "Make it a rule?",
     "rule": "You sent my last three answers to “{menu}” as they were. From now on, shall I answer these myself and tell you?",

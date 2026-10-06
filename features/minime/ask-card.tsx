@@ -38,6 +38,7 @@ export function describe(
     input.query ??
     input.pattern ??
     input.path ??
+    input.folder ??
     // Asking a colleague: to whom, and what.
     (typeof input.to === "string"
       ? `${input.to}: ${String(input.request ?? "")}`

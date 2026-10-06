@@ -269,6 +269,23 @@ export async function catchUpIndex(
   return report;
 }
 
+const keeper = globalThis as typeof globalThis & {
+  __minimeIndexTimer?: ReturnType<typeof setInterval>;
+};
+
+/**
+ * Keep the index caught up while the app runs, so a search finds today's conversations without
+ * waiting for one: a bounded catch-up every few minutes, started once per server process (Hermes
+ * Agent indexes its sessions as they happen; these records belong to other tools).
+ */
+export function keepIndexFresh(everyMs = 10 * 60 * 1000): void {
+  if (keeper.__minimeIndexTimer) return;
+  keeper.__minimeIndexTimer = setInterval(() => {
+    void catchUpIndex({ maxMs: 20_000 }).catch(() => {});
+  }, everyMs);
+  keeper.__minimeIndexTimer.unref?.();
+}
+
 /** One bounded pass. Never throws for a single bad file: it is skipped and reported as read. */
 export async function indexHistory(
   options: IndexOptions = {},

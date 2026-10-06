@@ -1,14 +1,8 @@
-import { readFile } from "node:fs/promises";
 import * as z from "zod";
-import { forgetExcluded } from "@/features/minime/history/indexer";
-import { atomicWrite } from "@/features/minime/memory/files";
-import {
-  isExcluded,
-  loadExcludes,
-  settingsPath,
-} from "@/features/minime/server/exclude";
+import { isExcluded, loadExcludes } from "@/features/minime/server/exclude";
 import { recentFolders } from "@/features/minime/server/folders";
 import { refuse } from "@/features/minime/server/guard";
+import { saveExcludes } from "@/features/minime/server/leave-out";
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -46,21 +40,5 @@ export async function POST(request: Request) {
   const body = Body.safeParse(await request.json().catch(() => ({})));
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
-  let settings: Record<string, unknown> = {};
-  try {
-    settings = JSON.parse(await readFile(settingsPath(), "utf8"));
-  } catch {
-    // No settings yet.
-  }
-  const exclude = [...new Set(body.data.exclude)];
-  await atomicWrite(
-    settingsPath(),
-    JSON.stringify({ ...settings, exclude }, null, 2),
-  );
-  try {
-    forgetExcluded(exclude);
-  } catch {
-    // The index is busy; its next pass removes them.
-  }
-  return Response.json({ exclude });
+  return Response.json({ exclude: await saveExcludes(body.data.exclude) });
 }

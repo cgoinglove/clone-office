@@ -1,5 +1,8 @@
 import * as z from "zod";
-import { catchUpIndex } from "@/features/minime/history/indexer";
+import {
+  catchUpIndex,
+  keepIndexFresh,
+} from "@/features/minime/history/indexer";
 import {
   currentLearn,
   follow,
@@ -36,6 +39,7 @@ export async function GET(request: Request) {
   return ndjson(async (send) => {
     const job = currentLearn();
     if (!job || job.done) void catchUpIndex({ maxMs: 30_000 }).catch(() => {});
+    keepIndexFresh();
     if (!job) {
       send((await savedLearn()) ?? { type: "idle" });
       return;

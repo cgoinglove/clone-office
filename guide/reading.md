@@ -23,7 +23,9 @@ to bring them back.
 Later, **Folders left out** (읽지 않는 폴더), under the conversation, shows the same list at any
 time, and they can type any other folder's name or path to leave it out. What the mini-me had
 gathered from a folder for searching is removed as soon as it is left out. Lines it already
-remembers stay in its memory, where they can remove any of them.
+remembers stay in its memory, where they can remove any of them. They can also just tell the
+mini-me ("don't look at my client work"): it asks first, with the folder shown, and leaves it out.
+Bringing a folder back is done only on the page.
 
 ## Their past conversations
 
@@ -33,7 +35,8 @@ Agent), and of their conversations with the mini-me itself: only what they typed
 answered in text, never tool output. A conversation they delete in Cursor or Hermes Agent leaves
 the index too. The first reading indexes only the last two weeks, so it can start
 within seconds; the rest of the last three months is filled in afterwards, in the background. The
-index is a file on this computer, refreshed a little at a time; deleting it loses nothing, it is
+index is a file on this computer, refreshed a little at a time (every ten minutes while the app
+is open, and just before each search); deleting it loses nothing, it is
 rebuilt from the AI tools' own records, which it only ever reads.
 
 ## What it records about itself
