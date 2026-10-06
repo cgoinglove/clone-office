@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
+import { isOnboarded } from "@/features/minime/server/onboarded";
+
+// The front door: someone new goes through the first steps, everyone else to their clone.
+export const dynamic = "force-dynamic";
+
 export default function Home() {
-  return (
-    <main className="flex flex-1 items-center justify-center">
-      <p className="text-muted-foreground text-sm">sub-office</p>
-    </main>
-  );
+  redirect(isOnboarded() ? "/me" : "/start");
 }

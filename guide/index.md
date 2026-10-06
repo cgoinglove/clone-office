@@ -28,6 +28,14 @@ Two things hold everywhere:
   a few lines about how they work. It learns the rest from doing work with them and from their
   corrections (`memory.md`).
 
+## The first time
+
+Opened the first time, the app shows **Get started** (시작하기): five short steps, each of which
+can be passed over. What a clone is; what it thinks with (`brain.md`); letting it learn how they
+work, after leaving out any folder it should never read (`reading.md`, `memory.md`); bringing it to
+their team or keeping it to themselves for now (`office.md`); then their clone's page. **Set up
+later** (나중에 하기) goes straight to that page. The screen's language is at the top of each page.
+
 ## What it can do now
 
 This is an early version, used on the **My clone** (내 클론) page.

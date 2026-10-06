@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // sub-office from npm: start the app on this computer, or a relay for a team.
 //
-//   npx sub-office              the app, at http://127.0.0.1:<port>/me, opened in the browser
+//   npx sub-office              the app, at http://127.0.0.1:<port>/, opened in the browser
 //   npx sub-office relay [...]  a relay for an office (--port, --host, --database, --key)
 //   npx sub-office connect <setup link>   this computer's mini-me joins one's office, then starts
 //                               (the link is the one-time line one's page on the office server gives)
@@ -191,7 +191,8 @@ async function startApp() {
     console.error(`Not a port: ${asked}`);
     process.exit(1);
   }
-  const url = () => `http://${HOST}:${port}/me`;
+  // The front door: someone new goes through the first steps, everyone else to their clone.
+  const url = () => `http://${HOST}:${port}/`;
   if (!(await free(port))) {
     if (await ours(port)) {
       console.log(`Your clone is already running at ${url()}`);

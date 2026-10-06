@@ -107,6 +107,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   in. Routes answer with error codes the screen reads in its language (`useProblem`); a status or
   kind that is stored or sent to colleagues is a code, so each reads it in their own language.
   The clone's language is separate: the one picked, else the browser's, whatever it is.
+- The front door (`app/page.tsx`) sends someone new to the first steps (`app/start`,
+  `features/minime/start/onboarding.tsx`: what a clone is, its brain, the first reading with the
+  folders left out, the team, then `/me`) and everyone else to `/me`; `server/onboarded.ts` says
+  which (`settings.json` `onboarded`, or anything already learned, kept or said).
 - `features/minime/`: making a person's clone at `/me`. `first-run.tsx` is the screen: it says
   what it will read and keep, learns in the background with progress (`learn/job.ts`), brings
   what the person's usual AI remembers about them (Claude's memory import: copy a prompt there,

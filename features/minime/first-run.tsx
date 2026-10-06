@@ -26,79 +26,25 @@ import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot, type Mood } from "@/features/office";
 import { personTag, useProblem } from "@/i18n/client";
-import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
 import { BrainPanel } from "./brain-panel";
 import { ConnectorsPanel } from "./connectors-panel";
 import { whenText } from "./flows/when-text";
 import { FlowsPanel } from "./flows-panel";
+import { type Folder, FolderList, type LeftOut } from "./folder-list";
 import { LanguageSwitch } from "./language-switch";
 import { EXPORT_PROMPT } from "./learn/export-prompt";
 import { MessengerPanel } from "./messenger-panel";
 import { OfficePanel } from "./office-panel";
 import { type Routine, routineNow } from "./routine";
 import { savedText } from "./saved-text";
+import { stream } from "./stream";
 import { TrustPanel } from "./trust-panel";
 import { usePresence } from "./use-presence";
 
 const PLAN = ["read", "keep", "skip", "time"] as const;
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
-
-/** Read a route's one-JSON-per-line answer as it arrives. */
-async function stream(
-  path: string,
-  body: unknown,
-  onEvent: (event: Record<string, unknown>) => void,
-  signal?: AbortSignal,
-): Promise<void> {
-  const response = await fetch(path, {
-    method: body === undefined ? "GET" : "POST",
-    headers: HEADERS,
-    body: body === undefined ? undefined : JSON.stringify(body),
-    signal,
-  });
-  if (!response.ok || !response.body) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(
-      typeof data.error === "string" ? data.error : `HTTP ${response.status}`,
-    );
-  }
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = "";
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let at = buffer.indexOf("\n");
-    while (at !== -1) {
-      const line = buffer.slice(0, at).trim();
-      buffer = buffer.slice(at + 1);
-      if (line) {
-        try {
-          onEvent(JSON.parse(line));
-        } catch {
-          // A partial or foreign line; skip it.
-        }
-      }
-      at = buffer.indexOf("\n");
-    }
-  }
-}
-
-interface Folder {
-  path: string;
-  name: string;
-  sessions: number;
-  excluded: boolean;
-}
-
-/** Something kept out that is not one of the recent folders: a folder, or a name pattern. */
-interface LeftOut {
-  pattern: string;
-  name: string;
-}
 
 interface Source {
   id: string;
@@ -685,6 +631,8 @@ export function FirstRun() {
 
   return (
     <div className="mx-auto flex w-full max-w-2xl min-w-0 flex-1 flex-col gap-4 px-4 py-8">
+      {/* The screen's language, where anyone looks for it first. */}
+      <LanguageSwitch />
       <header className="flex items-end gap-3">
         <Bot
           size={56}
@@ -1262,7 +1210,6 @@ export function FirstRun() {
       {stage !== "boot" && <ConnectorsPanel />}
       {stage !== "boot" && <TrustPanel />}
       {stage !== "boot" && <StoredFiles />}
-      {stage !== "boot" && <LanguageSwitch />}
       <div ref={bottom} />
     </div>
   );
@@ -1414,77 +1361,6 @@ function bytes(size: number): string {
 
 /** Every file the mini-me keeps, grouped by kind, each text file openable in place. */
 /** The folders the person worked in lately and what else they keep out, each with its switch. */
-function FolderList({
-  folders,
-  others,
-  excludes,
-  onToggle,
-  onBringBack,
-}: {
-  folders: Folder[];
-  others: LeftOut[];
-  excludes: string[];
-  onToggle: (folder: Folder) => void;
-  onBringBack: (pattern: string) => void;
-}) {
-  const t = useTranslations();
-  return (
-    <ul className="flex flex-col">
-      {folders.map((folder) => {
-        // Kept out by a name pattern rather than by itself: the pattern's own row brings it back.
-        const byPattern = folder.excluded && !excludes.includes(folder.path);
-        return (
-          <li
-            key={folder.path}
-            className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0"
-          >
-            <span
-              className={cn(
-                "min-w-0 truncate text-sm",
-                folder.excluded && "text-muted-foreground line-through",
-              )}
-              title={folder.path}
-            >
-              {folder.name}
-              <span className="ml-2 text-xs text-muted-foreground tabular-nums">
-                {t("firstRun.sessions", { count: folder.sessions })}
-              </span>
-            </span>
-            <Button
-              size="sm"
-              variant={folder.excluded ? "secondary" : "outline"}
-              disabled={byPattern}
-              onClick={() => onToggle(folder)}
-            >
-              {folder.excluded ? t("firstRun.leftOut") : t("firstRun.leaveOut")}
-            </Button>
-          </li>
-        );
-      })}
-      {others.map((other) => (
-        <li
-          key={other.pattern}
-          className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0"
-        >
-          <span
-            className="min-w-0 truncate text-sm text-muted-foreground line-through"
-            title={other.pattern}
-          >
-            {other.name}
-          </span>
-          <Button
-            size="sm"
-            variant="secondary"
-            onClick={() => onBringBack(other.pattern)}
-          >
-            {t("firstRun.leftOut")}
-          </Button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function StoredFiles() {
   const t = useTranslations("files");
   const [data, setData] = useState<{

@@ -60,6 +60,67 @@
     "brain-unreachable": "The service could not be reached. Try again in a moment.",
     "brain-local-unreachable": "Nothing answered at that address. Is Ollama or LM Studio running?"
   },
+  "start": {
+    "title": "Get started",
+    "steps": {
+      "welcome": "Welcome",
+      "brain": "Brain",
+      "learn": "Learn you",
+      "team": "Team",
+      "ready": "Ready"
+    },
+    "next": "Next",
+    "back": "Back",
+    "later": "Set up later",
+    "welcome": {
+      "title": "Send your clone.",
+      "body": "Your clone is an AI that works the way you do. It does your everyday tasks, stands in for you with your team, and brings you only the calls that are yours.",
+      "steps": "Three steps, a few minutes:",
+      "one": "Pick what it thinks with",
+      "two": "Let it learn how you work",
+      "three": "Bring it to your team, if you like",
+      "go": "Start",
+      "local": "It runs on this computer, and what it learns stays here."
+    },
+    "brain": {
+      "title": "What should it think with?",
+      "body": "Your own Claude Code thinks with your Claude subscription. Or pick a model and give your key for it; the key stays on this computer."
+    },
+    "learn": {
+      "title": "Let it learn how you work",
+      "body": "It reads your conversations with your AI tools on this computer and keeps only a few lines that stay true: how you decide, where you stop, how you talk. Projects, plans and files are looked up when needed, never kept.",
+      "folders": "It would read from these folders. Leave out any it should never see:",
+      "none": "There are no AI conversations to read on this computer. It learns as you work with it, and on its page you can bring what your usual AI remembers about you.",
+      "read": "Read and learn",
+      "reading": "You can go on; it keeps reading.",
+      "done": "Done. It keeps these lines about you:",
+      "nothing": "Nothing lasting stood out yet; it learns as you work with it.",
+      "skip": "Not now"
+    },
+    "team": {
+      "title": "Bring it to your team",
+      "body": "Clones talk to each other: they take your team's requests, answer what they can, and bring you only what is yours to decide. You can do this later.",
+      "alone": "Just me for now",
+      "aloneNote": "You can bring it to a team any time, under Office on its page.",
+      "invite": "I have an invite link",
+      "open": "Open an office here",
+      "openNote": "This computer becomes your team's office. Teammates on the same Wi-Fi join with the invite link you send them.",
+      "link": "Invite link",
+      "name": "Your name",
+      "role": "What you do, in a line (optional)",
+      "join": "Join",
+      "openGo": "Open the office",
+      "joined": "You are in. Your colleagues show under Office on your clone's page.",
+      "opened": "Your office is open. Copy its invite link under Office on your clone's page and send it to your team."
+    },
+    "ready": {
+      "title": "Your clone is ready",
+      "learned": "What it remembers about you:",
+      "reading": "It is still reading; what it learns shows on its page.",
+      "try": "Tell it what you need, as you would a colleague. It asks you before anything you have not allowed.",
+      "go": "Go to my clone"
+    }
+  },
   "firstRun": {
     "title": "My clone",
     "hello": "Hi, I'm your clone. To work the way you do, I first need to learn how you work. Here is how I'll learn.",
