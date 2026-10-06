@@ -4,9 +4,9 @@ import { type ReactNode, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Single-value radiogroup styled as a pill; one option is always selected, filled blue
+ * Single-value radiogroup styled as the tabs are; one option is always selected, filled blue
  * like everything else that is picked. A switch between views of one thing sets nothing,
- * so `view` raises the one shown as a white pill instead. Pass `w-full *:flex-1` in
+ * so `view` raises the one shown as a white tab instead. Pass `w-full *:flex-1` in
  * `className` to stretch the buttons.
  *
  * The keyboard is a radio group's (WAI-ARIA APG, Radio Group): Tab enters at the one picked
@@ -57,7 +57,7 @@ export function Segmented<T extends string>({
         step(by);
       }}
       className={cn(
-        "flex w-fit gap-0.5 rounded-full bg-muted",
+        "flex w-fit gap-0.5 rounded-lg bg-muted",
         size === "sm" ? "p-0.5" : "p-0.75",
         className,
       )}
@@ -79,7 +79,7 @@ export function Segmented<T extends string>({
             title={option.title}
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex items-center justify-center gap-1.5 rounded-full whitespace-nowrap transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+              "flex items-center justify-center gap-1.5 rounded-md whitespace-nowrap transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
               size === "sm"
                 ? "h-6 px-2.5 text-[12px]"
                 : "h-7 px-3 text-[12.5px]",

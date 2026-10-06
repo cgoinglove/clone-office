@@ -154,7 +154,7 @@ export function Combobox({
                     {option.label}
                   </span>
                   {option.badge && (
-                    <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
+                    <span className="shrink-0 rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">
                       {option.badge}
                     </span>
                   )}

@@ -11,9 +11,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        // The one thing a screen asks for, and round: the brand colour is a point, never a surface
+        // The one thing a screen asks for: the brand colour is a point, never a surface. Its shape
+        // is every button's (10-04: one corner for every button, round only for what is round)
         brand:
-          "rounded-full bg-brand text-brand-foreground hover:bg-brand/85 focus-visible:ring-brand/30",
+          "bg-brand text-brand-foreground hover:bg-brand/85 focus-visible:ring-brand/30",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
@@ -39,14 +40,6 @@ const buttonVariants = cva(
         "icon-lg": "size-9",
       },
     },
-    compoundVariants: [
-      // Every small size carries its own radius, and it lands after the variant's,
-      // so the one button that is always round came out square below `default`.
-      {
-        variant: "brand",
-        class: "rounded-full in-data-[slot=button-group]:rounded-full",
-      },
-    ],
     defaultVariants: {
       variant: "default",
       size: "default",

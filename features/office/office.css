@@ -1,0 +1,569 @@
+/*
+ * The office's sketch. Every colour is a token from app/globals.css: the paper is the ladder's
+ * first steps, a line is the ink at an opacity, ember is what waits on the viewer. The office adds
+ * only what a building has and an app does not: the floor's tone, sunlight, dusk, a lamp's
+ * glow, a dark screen. Everything is scoped to `.of`, the root of each office drawing.
+ */
+
+:root,
+.dark .inverse {
+  --of-floor: #f5f5f4;
+  --of-sun: #ffffff;
+  --of-lamp: rgba(255, 190, 80, 0.24);
+  --of-dusk: rgba(255, 168, 92, 0.26);
+  --of-screen: #141414;
+}
+
+.dark,
+:root:not(.dark) .inverse {
+  --of-floor: #141414;
+  --of-sun: #1d1d1d;
+  --of-lamp: rgba(255, 210, 130, 0.3);
+  --of-dusk: rgba(255, 168, 92, 0.2);
+  --of-screen: #050505;
+}
+
+/* Resolved on whichever element carries the ladder, as the app's own --alpha-* are. */
+:root,
+.dark,
+.inverse {
+  --of-ink-03: color-mix(in oklab, var(--ink) 3%, transparent);
+  --of-ink-05: color-mix(in oklab, var(--ink) 5%, transparent);
+  --of-ink-07: color-mix(in oklab, var(--ink) 7%, transparent);
+  --of-ink-08: color-mix(in oklab, var(--ink) 8%, transparent);
+  --of-ink-10: color-mix(in oklab, var(--ink) 10%, transparent);
+  --of-ink-12: color-mix(in oklab, var(--ink) 12%, transparent);
+  --of-ink-20: color-mix(in oklab, var(--ink) 20%, transparent);
+  --of-ink-30: color-mix(in oklab, var(--ink) 30%, transparent);
+  --of-ink-45: color-mix(in oklab, var(--ink) 45%, transparent);
+  --of-ink-56: color-mix(in oklab, var(--ink) 56%, transparent);
+  --of-ink-72: color-mix(in oklab, var(--ink) 72%, transparent);
+  --of-ink-85: color-mix(in oklab, var(--ink) 85%, transparent);
+  --of-glass: color-mix(in oklab, var(--gray-0) 50%, transparent);
+  --of-waiting-soft: color-mix(in oklab, var(--waiting) 9%, var(--gray-0));
+  --of-waiting-line: color-mix(in oklab, var(--waiting) 45%, transparent);
+  --of-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --of-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+.of-figure,
+.of-bot {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* lines */
+.of .ol {
+  stroke: var(--of-ink-56);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  fill: none;
+}
+.of .ol.s {
+  stroke: var(--of-ink-72);
+  stroke-width: 1.25;
+}
+.of .ol.f {
+  stroke: var(--of-ink-30);
+  stroke-width: 0.75;
+}
+.of .ol.w {
+  stroke: color-mix(in oklab, var(--gray-0) 70%, transparent);
+}
+.of .tl {
+  stroke: var(--of-ink-05);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.of .hl {
+  stroke: var(--of-ink-30);
+}
+
+/* faces */
+.of .f-top {
+  fill: var(--gray-0);
+}
+.of .f-front {
+  fill: var(--gray-75);
+}
+.of .f-side {
+  fill: var(--gray-100);
+}
+.of .f-floor {
+  fill: var(--of-floor);
+}
+.of .f-wall {
+  fill: var(--gray-0);
+}
+.of .f-hatch {
+  fill: var(--hatch);
+}
+.of .f-shade {
+  fill: var(--shade);
+}
+.of .f-lid {
+  fill: var(--of-ink-85);
+}
+.of .f-ink {
+  fill: var(--ink);
+}
+.of .f-paper {
+  fill: var(--gray-0);
+}
+.of .f-glass {
+  fill: var(--of-glass);
+}
+.of .f-sun {
+  fill: var(--of-sun);
+}
+.of .f-dusk {
+  fill: var(--of-dusk);
+}
+.of .f-night {
+  fill: var(--of-ink-85);
+}
+.of .f-veil {
+  fill: var(--of-ink-03);
+}
+.of .f-none {
+  fill: none;
+}
+.of .f-rug {
+  fill: var(--of-ink-03);
+}
+.of .f-room {
+  fill: var(--of-ink-03);
+}
+.of .f-plaza {
+  fill: var(--of-ink-05);
+}
+.of .f-myrug {
+  fill: var(--of-ink-07);
+}
+.of .f-open {
+  fill: none;
+  stroke: var(--of-ink-20);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 4 5;
+}
+.of .f-lamp {
+  fill: var(--of-lamp);
+}
+.of .f-book {
+  fill: var(--gray-100);
+}
+.of .f-screen {
+  fill: var(--of-screen);
+}
+.of .f-soft {
+  fill: var(--of-waiting-soft);
+}
+.of .f-leaf {
+  fill: var(--gray-0);
+  stroke: var(--of-ink-56);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.of .f-star {
+  fill: color-mix(in oklab, var(--gray-0) 80%, transparent);
+}
+
+/* the clock */
+.of .rim {
+  fill: none;
+  stroke: var(--of-ink-56);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+.of .hand-h {
+  stroke: var(--of-ink-85);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.of .hand-m {
+  stroke: var(--of-ink-85);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.of .hand-s {
+  stroke: var(--waiting);
+  stroke-width: 1;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.of .tick {
+  stroke: var(--of-ink-45);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* words on the floor, the walls, the screen */
+.of .ftext {
+  fill: var(--of-ink-20);
+  font-family: var(--of-mono);
+  font-weight: 500;
+  letter-spacing: 0.6px;
+}
+.of .ftext.faint {
+  fill: var(--of-ink-12);
+}
+.of .wtext {
+  fill: var(--of-ink-45);
+  font-family: var(--of-mono);
+  font-weight: 500;
+}
+.of .wtext.ink {
+  fill: var(--of-ink-85);
+  font-family: var(--of-sans);
+  font-weight: 600;
+}
+.of .wtext.on {
+  fill: var(--waiting);
+}
+.of .scr {
+  fill: #f4f4f4;
+  font-family: var(--of-sans);
+  font-weight: 600;
+}
+.of .scr.dim {
+  fill: rgba(244, 244, 244, 0.55);
+  font-family: var(--of-mono);
+  font-weight: 500;
+}
+.of .scr.ember {
+  fill: #ff8a63;
+}
+.of .bar {
+  fill: rgba(244, 244, 244, 0.35);
+}
+.of .bar.now {
+  fill: #f4f4f4;
+}
+.of .badge-c {
+  fill: var(--ink);
+}
+.of .badge-t {
+  fill: var(--gray-0);
+  font: 600 14px var(--of-sans);
+}
+
+/* things that move on their own */
+.of .logo {
+  fill: var(--gray-0);
+}
+.of .lit .logo {
+  animation: of-logo 1.6s ease-in-out infinite;
+}
+@keyframes of-logo {
+  50% {
+    opacity: 0.35;
+  }
+}
+.of .steam path {
+  fill: none;
+  stroke: var(--of-ink-30);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  opacity: 0;
+}
+.of .steam.on path {
+  animation: of-steam 1.8s ease-out infinite;
+}
+.of .steam.on path:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.of .steam.on path:nth-child(3) {
+  animation-delay: 1s;
+}
+@keyframes of-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  25% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-26px);
+  }
+}
+.of .ball {
+  fill: var(--gray-0);
+  stroke: var(--of-ink-72);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+/* the bot */
+.of .sb-fill {
+  fill: var(--bot, var(--ink));
+}
+.of .sb-eye {
+  fill: var(--gray-0);
+}
+.of .sb-ring {
+  fill: var(--gray-0);
+}
+.of .sb-dotc {
+  fill: var(--waiting);
+}
+.of .sb-pulse {
+  fill: none;
+  stroke: var(--waiting);
+  stroke-width: 3;
+}
+.of .sb-dot.other .sb-dotc {
+  fill: var(--of-ink-45);
+}
+.of .sb-dot.other .sb-pulse {
+  display: none;
+}
+.of .sb-z text {
+  fill: var(--of-ink-45);
+  font-family: var(--of-mono);
+  font-weight: 600;
+}
+.of .bot-g,
+.of [data-person] {
+  cursor: pointer;
+}
+
+/*
+ * Assembly: lines draw in, panels rise from the floor, tops and parts drop into place, leaves
+ * grow, the clock spins onto the wall. Each part waits its own --d; CSS alone runs it.
+ */
+.of .asm .k-draw .ol,
+.of .asm .k-draw .tl {
+  animation: of-line 0.9s cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+  animation-delay: var(--d, 0ms);
+}
+.of .asm .k-draw polygon,
+.of .asm .k-draw text {
+  animation: of-fade 0.6s ease backwards;
+  animation-delay: calc(var(--d, 0ms) + 140ms);
+}
+.of .asm .k-fade {
+  animation: of-fade 0.55s ease backwards;
+  animation-delay: var(--d, 0ms);
+}
+.of .asm .k-drop {
+  animation: of-drop 0.6s cubic-bezier(0.22, 0.95, 0.35, 1.18) backwards;
+  animation-delay: var(--d, 0ms);
+}
+.of .asm .k-rise {
+  animation: of-rise 0.5s cubic-bezier(0.3, 0.85, 0.3, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.of .asm .k-grow {
+  animation: of-grow 0.55s cubic-bezier(0.3, 1.45, 0.5, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+.of .asm .k-spin {
+  animation: of-spin 0.9s cubic-bezier(0.3, 1.2, 0.4, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+.of .asm .k-flip {
+  animation: of-flip 0.5s cubic-bezier(0.3, 1.3, 0.5, 1) backwards;
+  animation-delay: var(--d, 0ms);
+  transform-box: fill-box;
+  transform-origin: 50% 0%;
+}
+@keyframes of-line {
+  from {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes of-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes of-drop {
+  from {
+    transform: translateY(var(--drop, -60px));
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+@keyframes of-rise {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+@keyframes of-grow {
+  from {
+    transform: scale(0);
+  }
+}
+@keyframes of-spin {
+  from {
+    transform: rotate(-200deg) scale(0.2);
+    opacity: 0;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+@keyframes of-flip {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* the whole floor, with name plates and bubbles over it */
+.of-floor {
+  position: relative;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.of-floor .of-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.of-floor .of-over {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.of .plate {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border: 0;
+  border-radius: calc(var(--radius) * 0.8);
+  background: var(--gray-0);
+  color: var(--foreground);
+  box-shadow:
+    0 0 0 1px var(--of-ink-10),
+    0 2px 8px var(--of-ink-05);
+  font: 12.5px / 1 var(--of-sans);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+}
+.of .plate i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--of-ink-30);
+  flex: none;
+}
+.of .plate b {
+  font-weight: 600;
+}
+.of .plate span {
+  color: var(--muted-foreground);
+}
+.of .plate.on i {
+  background: var(--ink);
+}
+.of .plate.off i {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.2px var(--of-ink-45);
+}
+.of .plate.mine {
+  box-shadow:
+    0 0 0 1px var(--of-waiting-line),
+    0 2px 8px var(--of-ink-05);
+}
+.of .plate.mine i {
+  background: var(--waiting);
+}
+.of .plate.mine span {
+  color: var(--waiting);
+}
+.of .plate.you {
+  box-shadow:
+    0 0 0 1.5px var(--ink),
+    0 2px 8px var(--of-ink-05);
+}
+.of .bub {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 4px));
+  max-width: 250px;
+  width: max-content;
+  padding: 9px 12px 10px;
+  border-radius: calc(var(--radius) * 1.4);
+  background: var(--gray-0);
+  color: var(--foreground);
+  box-shadow:
+    0 0 0 1px var(--of-ink-10),
+    0 8px 22px var(--of-ink-08);
+  font: 13.5px / 1.38 var(--of-sans);
+  pointer-events: auto;
+  animation: of-pop 0.26s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+.of .bub::after {
+  content: "";
+  position: absolute;
+  left: calc(50% - 6px);
+  bottom: -6px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  transform: rotate(45deg);
+  box-shadow: 1px 1px 0 0 var(--of-ink-10);
+  border-radius: 0 0 3px 0;
+}
+.of .bub .who {
+  display: block;
+  font: 500 11px / 1.2 var(--of-mono);
+  color: var(--muted-foreground);
+  margin-bottom: 3px;
+}
+.of .bub.mine {
+  box-shadow:
+    0 0 0 1.5px var(--waiting),
+    0 10px 26px var(--of-ink-12);
+  max-width: 270px;
+}
+.of .bub.mine::after {
+  box-shadow: 1.5px 1.5px 0 0 var(--waiting);
+}
+.of .bub.mine .who {
+  color: var(--waiting);
+}
+@keyframes of-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 4px)) scale(0.86);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .of .asm *,
+  .of .bub,
+  .of .lit .logo,
+  .of .steam.on path {
+    animation: none !important;
+  }
+}

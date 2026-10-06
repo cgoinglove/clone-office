@@ -1,0 +1,56 @@
+{
+  "projectId": "93d1a393-cf0b-4d19-a461-9a4c28fdc507",
+  "shape": "package",
+  "pkg": "sub-office",
+  "globalName": "SubOffice",
+  "buildCmd": "node .design-sync/build.mjs",
+  "entry": ".design-sync/.cache/pkg/dist/index.js",
+  "tsconfig": "../../../tsconfig.json",
+  "cssEntry": "dist/styles.css",
+  "srcDir": "../../../features",
+  "componentSrcMap": {
+    "Desk": "../../../features/office/objects.tsx",
+    "Laptop": "../../../features/office/objects.tsx",
+    "DeskLamp": "../../../features/office/objects.tsx",
+    "PaperTray": "../../../features/office/objects.tsx",
+    "DeskChair": "../../../features/office/objects.tsx",
+    "WallClock": "../../../features/office/objects.tsx",
+    "WallCalendar": "../../../features/office/objects.tsx",
+    "OfficeScreen": "../../../features/office/objects.tsx",
+    "DecisionBoard": "../../../features/office/objects.tsx",
+    "TeamSign": "../../../features/office/objects.tsx",
+    "Plant": "../../../features/office/objects.tsx",
+    "CoffeeCorner": "../../../features/office/objects.tsx",
+    "PingPongTable": "../../../features/office/objects.tsx",
+    "Bookshelf": "../../../features/office/objects.tsx",
+    "Lounge": "../../../features/office/objects.tsx",
+    "MeetingRoom": "../../../features/office/objects.tsx",
+    "OfficeCorner": "../../../features/office/objects.tsx",
+    "Lift": "../../../features/office/objects.tsx",
+    "BotBody": "../../../features/office/bot.tsx"
+  },
+  "overrides": {
+    "OfficeFloor": {
+      "cardMode": "column"
+    },
+    "Dialog": {
+      "cardMode": "single",
+      "viewport": "640x420"
+    },
+    "DropdownMenu": {
+      "cardMode": "single",
+      "viewport": "420x320"
+    },
+    "Tooltip": {
+      "cardMode": "single",
+      "viewport": "520x200"
+    },
+    "Bubble": {
+      "cardMode": "column"
+    },
+    "Tabs": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}
