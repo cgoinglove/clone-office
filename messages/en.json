@@ -58,6 +58,9 @@
     "sessions": "{count, plural, one {# conversation} other {# conversations}}",
     "leaveOut": "Leave out",
     "leftOut": "Left out",
+    "foldersOpen": "Folders left out",
+    "foldersNote": "I never read or search these folders. Leaving one out also removes what I had gathered from it for searching.",
+    "folderPlaceholder": "Folder name or path",
     "start": "Go ahead",
     "phase": {
       "index": "Sorting your conversation records",

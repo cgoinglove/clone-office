@@ -20,6 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Markdown } from "@/components/ui/markdown";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
@@ -84,6 +85,12 @@ interface Folder {
   name: string;
   sessions: number;
   excluded: boolean;
+}
+
+/** Something kept out that is not one of the recent folders: a folder, or a name pattern. */
+interface LeftOut {
+  pattern: string;
+  name: string;
 }
 
 interface Source {
@@ -156,6 +163,9 @@ export function FirstRun() {
   );
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [excludes, setExcludes] = useState<string[]>([]);
+  const [others, setOthers] = useState<LeftOut[]>([]);
+  const [foldersOpen, setFoldersOpen] = useState(false);
+  const [adding, setAdding] = useState("");
   const [progress, setProgress] = useState<Progress | null>(null);
   const [sources, setSources] = useState<Source[]>([]);
   const [learned, setLearned] = useState<string[]>([]);
@@ -265,15 +275,24 @@ export function FirstRun() {
     [],
   );
 
+  // The first time, no folders at all means there are no AI records here: bringing what another
+  // AI knows is then the way to start.
   const loadFolders = useCallback(
-    () =>
+    (first = false) =>
       fetch("/api/me/sources", { headers: HEADERS })
         .then((r) => r.json())
-        .then((data: { folders: Folder[]; exclude: string[] }) => {
-          setFolders(data.folders);
-          setExcludes(data.exclude);
-          if (data.folders.length === 0) setImporting(true);
-        })
+        .then(
+          (data: {
+            folders: Folder[];
+            exclude: string[];
+            others?: LeftOut[];
+          }) => {
+            setFolders(data.folders);
+            setExcludes(data.exclude);
+            setOthers(data.others ?? []);
+            if (first && data.folders.length === 0) setImporting(true);
+          },
+        )
         .catch(() => setFolders([])),
     [],
   );
@@ -330,7 +349,7 @@ export function FirstRun() {
   useEffect(() => {
     const controller = new AbortController();
     void followLearn(controller.signal);
-    void loadFolders();
+    void loadFolders(true);
     void loadMemory();
     void loadChats(true);
     return () => controller.abort();
@@ -350,22 +369,29 @@ export function FirstRun() {
     return () => clearTimeout(timer);
   }, [keptCount]);
 
-  const toggle = async (folder: Folder) => {
-    const next = folder.excluded
-      ? excludes.filter((p) => p !== folder.path)
-      : [...excludes, folder.path];
+  // A pattern can keep several folders out at once, so the list is read again after each change.
+  const saveExcludes = async (next: string[]) => {
     setExcludes(next);
+    await fetch("/api/me/sources", {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify({ exclude: next }),
+    }).catch(() => {});
+    await loadFolders();
+  };
+
+  const toggle = async (folder: Folder) => {
     setFolders(
       (all) =>
         all?.map((f) =>
           f.path === folder.path ? { ...f, excluded: !f.excluded } : f,
         ) ?? null,
     );
-    await fetch("/api/me/sources", {
-      method: "POST",
-      headers: HEADERS,
-      body: JSON.stringify({ exclude: next }),
-    });
+    await saveExcludes(
+      folder.excluded
+        ? excludes.filter((p) => p !== folder.path)
+        : [...excludes, folder.path],
+    );
   };
 
   const start = async () => {
@@ -411,7 +437,7 @@ export function FirstRun() {
     setImporting(false);
     setStage("intro");
     void loadMemory();
-    void loadFolders();
+    void loadFolders(true);
   };
 
   const onImported = (kept: string[], saved: string[]) => {
@@ -678,36 +704,16 @@ export function FirstRun() {
               ? t("firstRun.noFolders")
               : t("firstRun.folders")}
           </p>
-          {folders && folders.length > 0 && (
-            <ul className="flex flex-col">
-              {folders.map((folder) => (
-                <li
-                  key={folder.path}
-                  className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0"
-                >
-                  <span
-                    className={cn(
-                      "min-w-0 truncate text-sm",
-                      folder.excluded && "text-muted-foreground line-through",
-                    )}
-                  >
-                    {folder.name}
-                    <span className="ml-2 text-xs text-muted-foreground tabular-nums">
-                      {t("firstRun.sessions", { count: folder.sessions })}
-                    </span>
-                  </span>
-                  <Button
-                    size="sm"
-                    variant={folder.excluded ? "secondary" : "outline"}
-                    onClick={() => void toggle(folder)}
-                  >
-                    {folder.excluded
-                      ? t("firstRun.leftOut")
-                      : t("firstRun.leaveOut")}
-                  </Button>
-                </li>
-              ))}
-            </ul>
+          {folders && (folders.length > 0 || others.length > 0) && (
+            <FolderList
+              folders={folders}
+              others={others}
+              excludes={excludes}
+              onToggle={(folder) => void toggle(folder)}
+              onBringBack={(pattern) =>
+                void saveExcludes(excludes.filter((p) => p !== pattern))
+              }
+            />
           )}
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => void start()}>{t("firstRun.start")}</Button>
@@ -1037,12 +1043,74 @@ export function FirstRun() {
               variant="ghost"
               size="sm"
               className="text-muted-foreground"
+              aria-expanded={foldersOpen}
+              onClick={() => {
+                if (!foldersOpen) void loadFolders();
+                setFoldersOpen(!foldersOpen);
+              }}
+            >
+              {t("firstRun.foldersOpen")}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
               disabled={busy}
               onClick={() => setSureOver(true)}
             >
               {t("firstRun.startOver")}
             </Button>
           </div>
+          {foldersOpen && (
+            <div className="flex flex-col gap-2 rounded-lg border border-border px-3 py-2 text-sm">
+              <p className="text-muted-foreground">
+                {t("firstRun.foldersNote")}
+              </p>
+              {folders && (folders.length > 0 || others.length > 0) && (
+                <FolderList
+                  folders={folders}
+                  others={others}
+                  excludes={excludes}
+                  onToggle={(folder) => void toggle(folder)}
+                  onBringBack={(pattern) =>
+                    void saveExcludes(excludes.filter((p) => p !== pattern))
+                  }
+                />
+              )}
+              <form
+                className="flex gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const value = adding.trim();
+                  if (!value) return;
+                  setAdding("");
+                  // A folder from the list is kept out by its path, so its own row switches.
+                  const listed = folders?.find(
+                    (f) => f.name === value || f.path === value,
+                  );
+                  void saveExcludes([
+                    ...excludes,
+                    listed ? listed.path : value,
+                  ]);
+                }}
+              >
+                <Input
+                  value={adding}
+                  onChange={(event) => setAdding(event.target.value)}
+                  placeholder={t("firstRun.folderPlaceholder")}
+                  aria-label={t("firstRun.folderPlaceholder")}
+                />
+                <Button
+                  size="sm"
+                  type="submit"
+                  variant="outline"
+                  disabled={!adding.trim()}
+                >
+                  {t("firstRun.leaveOut")}
+                </Button>
+              </form>
+            </div>
+          )}
           {sureOver && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
               <span className="min-w-0 flex-1">
@@ -1272,6 +1340,78 @@ function bytes(size: number): string {
 }
 
 /** Every file the mini-me keeps, grouped by kind, each text file openable in place. */
+/** The folders the person worked in lately and what else they keep out, each with its switch. */
+function FolderList({
+  folders,
+  others,
+  excludes,
+  onToggle,
+  onBringBack,
+}: {
+  folders: Folder[];
+  others: LeftOut[];
+  excludes: string[];
+  onToggle: (folder: Folder) => void;
+  onBringBack: (pattern: string) => void;
+}) {
+  const t = useTranslations();
+  return (
+    <ul className="flex flex-col">
+      {folders.map((folder) => {
+        // Kept out by a name pattern rather than by itself: the pattern's own row brings it back.
+        const byPattern = folder.excluded && !excludes.includes(folder.path);
+        return (
+          <li
+            key={folder.path}
+            className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0"
+          >
+            <span
+              className={cn(
+                "min-w-0 truncate text-sm",
+                folder.excluded && "text-muted-foreground line-through",
+              )}
+              title={folder.path}
+            >
+              {folder.name}
+              <span className="ml-2 text-xs text-muted-foreground tabular-nums">
+                {t("firstRun.sessions", { count: folder.sessions })}
+              </span>
+            </span>
+            <Button
+              size="sm"
+              variant={folder.excluded ? "secondary" : "outline"}
+              disabled={byPattern}
+              onClick={() => onToggle(folder)}
+            >
+              {folder.excluded ? t("firstRun.leftOut") : t("firstRun.leaveOut")}
+            </Button>
+          </li>
+        );
+      })}
+      {others.map((other) => (
+        <li
+          key={other.pattern}
+          className="flex items-center justify-between gap-3 border-b border-border py-2 last:border-b-0"
+        >
+          <span
+            className="min-w-0 truncate text-sm text-muted-foreground line-through"
+            title={other.pattern}
+          >
+            {other.name}
+          </span>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => onBringBack(other.pattern)}
+          >
+            {t("firstRun.leftOut")}
+          </Button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function StoredFiles() {
   const t = useTranslations("files");
   const [data, setData] = useState<{

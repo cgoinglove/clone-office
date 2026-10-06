@@ -15,9 +15,15 @@ again** (다시 읽기) reads only what is new or changed since the last time.
 
 ## Leaving something out
 
-Before it reads, the **My mini-me** (내 미니미) page lists the folders they worked in lately; **Leave out** (빼기)
-keeps a folder out of everything the mini-me reads and searches, from then on. Folders it leaves
-out are shown struck through, with **Left out** (뺐어요) to bring them back.
+Before it reads, the **My mini-me** (내 미니미) page lists the folders they worked in lately, from
+all their AI tools; **Leave out** (빼기) keeps a folder out of everything the mini-me reads and
+searches, from then on. Folders it leaves out are shown struck through, with **Left out** (뺐어요)
+to bring them back.
+
+Later, **Folders left out** (읽지 않는 폴더), under the conversation, shows the same list at any
+time, and they can type any other folder's name or path to leave it out. What the mini-me had
+gathered from a folder for searching is removed as soon as it is left out. Lines it already
+remembers stay in its memory, where they can remove any of them.
 
 ## Their past conversations
 

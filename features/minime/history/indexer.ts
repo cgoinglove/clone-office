@@ -12,6 +12,7 @@
 // temporary folders and the mini-me's own folder are left out, and anything already indexed
 // from them is removed.
 
+import { existsSync } from "node:fs";
 import { basename, dirname } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { chatFiles, chatLineMessage } from "../chat/store.ts";
@@ -214,6 +215,38 @@ interface FileRow {
   started: number | null;
   last: number | null;
   title: string | null;
+}
+
+/**
+ * Remove at once everything indexed from folders the person now keeps out, rather than at the next
+ * pass. Returns how many conversations were removed.
+ */
+export function forgetExcluded(
+  excludes: string[] = loadExcludes(),
+  path = historyDbPath(),
+): number {
+  if (!excludes.length || !existsSync(path)) return 0;
+  const db = openHistoryForWrite(path);
+  try {
+    const rows = db.prepare("SELECT id, path, project FROM files").all() as {
+      id: number;
+      path: string;
+      project: string | null;
+    }[];
+    const gone = rows.filter(
+      (row) =>
+        isExcluded(row.path, excludes) ||
+        (row.project !== null && isExcluded(row.project, excludes)),
+    );
+    if (gone.length) {
+      db.exec("BEGIN");
+      for (const row of gone) removeFile(db, row.id);
+      db.exec("COMMIT");
+    }
+    return gone.length;
+  } finally {
+    db.close();
+  }
 }
 
 /**

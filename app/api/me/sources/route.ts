@@ -1,50 +1,45 @@
 import { readFile } from "node:fs/promises";
 import * as z from "zod";
+import { forgetExcluded } from "@/features/minime/history/indexer";
 import { atomicWrite } from "@/features/minime/memory/files";
 import {
   isExcluded,
   loadExcludes,
   settingsPath,
 } from "@/features/minime/server/exclude";
+import { recentFolders } from "@/features/minime/server/folders";
 import { refuse } from "@/features/minime/server/guard";
-import { projectDirs } from "@/features/minime/server/sources/claude-code";
-import {
-  folderName,
-  isNoise,
-  projectRoot,
-} from "@/features/minime/server/sources/common";
 
 const DAY = 24 * 60 * 60 * 1000;
 
-// The folders the person worked in most lately (from their AI tools' records), each marked when
-// they keep it out, so the first screen can offer "leave this out" before anything is read.
+/** How a left-out entry is shown: a path by its last folder, a name pattern as it is. */
+function entryName(pattern: string): string {
+  const parts = pattern.replaceAll("\\", "/").split("/").filter(Boolean);
+  return parts.at(-1) ?? pattern;
+}
+
+// The folders the person worked in lately (from their AI tools' records), each marked when they
+// keep it out, and what else they keep out, so the screen can offer "leave this out" before
+// anything is read and change it at any time after.
 export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
-  const since = Date.now() - 14 * DAY;
   const excludes = loadExcludes();
-  const counts = new Map<string, number>();
-  for (const dir of await projectDirs().catch(() => [])) {
-    const root = projectRoot(dir.cwd);
-    if (isNoise(root)) continue;
-    const recent = dir.files.filter((file) => file.mtimeMs >= since).length;
-    if (recent) counts.set(root, (counts.get(root) ?? 0) + recent);
-  }
-  const folders = [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([path, sessions]) => ({
-      path,
-      name: folderName(path),
-      sessions,
-      excluded: isExcluded(path, excludes),
-    }));
-  return Response.json({ folders, exclude: excludes });
+  const folders = (await recentFolders(Date.now() - 14 * DAY)).map(
+    (folder) => ({ ...folder, excluded: isExcluded(folder.path, excludes) }),
+  );
+  const others = excludes
+    .filter((pattern) => !folders.some((folder) => folder.path === pattern))
+    .map((pattern) => ({ pattern, name: entryName(pattern) }));
+  return Response.json({ folders, exclude: excludes, others });
 }
 
-const Body = z.object({ exclude: z.array(z.string().min(1)).max(200) });
+const Body = z.object({
+  exclude: z.array(z.string().trim().min(1).max(500)).max(200),
+});
 
-// Saves the folders the person keeps out; the rest of settings.json is kept as it is.
+// Saves the folders the person keeps out (the rest of settings.json is kept as it is), and removes
+// at once what the search index holds from them.
 export async function POST(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
@@ -57,13 +52,15 @@ export async function POST(request: Request) {
   } catch {
     // No settings yet.
   }
+  const exclude = [...new Set(body.data.exclude)];
   await atomicWrite(
     settingsPath(),
-    JSON.stringify(
-      { ...settings, exclude: [...new Set(body.data.exclude)] },
-      null,
-      2,
-    ),
+    JSON.stringify({ ...settings, exclude }, null, 2),
   );
-  return Response.json({ exclude: body.data.exclude });
+  try {
+    forgetExcluded(exclude);
+  } catch {
+    // The index is busy; its next pass removes them.
+  }
+  return Response.json({ exclude });
 }

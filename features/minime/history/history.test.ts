@@ -14,7 +14,7 @@ import { after, before, test } from "node:test";
 import { isExcluded } from "../server/exclude";
 import { indexTerms, matchQuery } from "./cjk";
 import { openHistoryForRead, walSafe } from "./db";
-import { indexHistory } from "./indexer";
+import { forgetExcluded, indexHistory } from "./indexer";
 import { parseBound, readSession, searchSessions } from "./search";
 
 const root = mkdtempSync(join(tmpdir(), "minime-history-"));
@@ -408,5 +408,33 @@ test("chats kept in Cursor's and Hermes Agent's databases are indexed, read agai
   assert.deepEqual(
     sessions().map((s) => s.session),
     ["h1", "h2"],
+  );
+});
+
+test("leaving a folder out removes what was indexed from it at once", async () => {
+  const now = Date.parse("2026-10-06T00:00:00Z");
+  const day = "2026-10-05T11:00:00.000Z";
+  session("/work/private-notes", "private", [user("개인 메모 정리", day)]);
+  session("/work/open", "open", [user("공개 문서 정리", day)]);
+  await indexHistory({ path: db, now });
+  const indexed = () => {
+    const read = openHistoryForRead(db);
+    assert.ok(read);
+    try {
+      return (
+        read.prepare("SELECT session FROM files").all() as { session: string }[]
+      ).map((row) => row.session);
+    } finally {
+      read.close();
+    }
+  };
+  assert.ok(indexed().includes("private"));
+  assert.ok(forgetExcluded(["private-notes"], db) >= 1);
+  assert.ok(!indexed().includes("private"));
+  assert.ok(indexed().includes("open"));
+  assert.equal(
+    forgetExcluded(["x"], join(root, "none.db")),
+    0,
+    "no index yet: nothing is created",
   );
 });

@@ -58,6 +58,9 @@
     "sessions": "대화 {count}개",
     "leaveOut": "빼기",
     "leftOut": "뺐어요",
+    "foldersOpen": "읽지 않는 폴더",
+    "foldersNote": "이 폴더들은 읽지도 찾지도 않아요. 빼면 찾아보려고 모아 둔 것도 바로 지워요.",
+    "folderPlaceholder": "폴더 이름이나 경로",
     "start": "읽어 주세요",
     "phase": {
       "index": "대화 기록을 정리하는 중",

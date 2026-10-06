@@ -206,7 +206,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   into `backup/`, never deleted).
 - `features/minime/server/sources/lines.ts`: line readers every record reader uses (lines over
   2 MB are skipped, logs can be read from the end); `server/exclude.ts`: folders the person keeps
-  out of everything, from `settings.json`.
+  out of everything, from `settings.json`; `server/folders.ts`: the folders they worked in lately,
+  from every tool's lists, which the screen offers to leave out before the first reading and any
+  time after ("Folders left out"); leaving one out removes what the index holds from it at once
+  (`history/indexer.ts` `forgetExcluded`).
 - `guide/`: how sub-office works, written for the person using it; the mini-me reads it with
   `guide_read` (`features/minime/memory/guide.ts`). A change the person would notice updates
   `guide/` in the same change.
