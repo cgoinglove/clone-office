@@ -296,7 +296,7 @@
     "copied": "Copied",
     "relayPlaceholder": "The relay's address, or an invite link",
     "invite": "Invite a colleague",
-    "inviteNote": "Anyone with this link can join your office; send it only to your team.",
+    "inviteNote": "Anyone with this link can join your office; send it only to your team. Opened in a browser, it makes their account and gives them one line that connects their computer.",
     "copyInvite": "Copy invite",
     "room": {
       "label": "The office: each person's desk with their mini-me, and the requests going between them",

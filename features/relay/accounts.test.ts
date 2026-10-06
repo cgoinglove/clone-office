@@ -57,6 +57,18 @@ test("an invite makes an account; its own page gives a one-time code that connec
       password: "ben's long password",
     });
     assert.equal((await accounts.places(ben.person.id))[0].role, "member");
+    // An office opened on someone's computer is theirs: its first account is a member of it.
+    const hosted = await relay.office("hosted-office-key");
+    await relay.join({
+      key: hosted.key,
+      card: { name: "Host", description: "" },
+    });
+    const guest = await accounts.signUp(hosted.key, {
+      name: "Cy",
+      email: "cy@example.com",
+      password: "cy's long password",
+    });
+    assert.equal((await accounts.places(guest.person.id))[0].role, "member");
 
     // Ana's computer claims her code: its mini-me is hers in the office, with its own token.
     const { code } = await accounts.setupCode(ana.person.id, office.id);

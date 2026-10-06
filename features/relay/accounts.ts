@@ -151,12 +151,15 @@ export class Accounts {
     return row;
   }
 
-  /** Puts a person in an office: its owner when they are its first, else a member. */
+  /**
+   * Puts a person in an office: its owner when nobody was in it before them, neither an account
+   * nor a mini-me (an office opened on someone's computer is theirs), else a member.
+   */
   private async place(office: string, user: string): Promise<void> {
     await this.db.transaction(async (tx) => {
       await tx.query("SELECT pg_advisory_xact_lock(4174003)");
       const [first] = await tx.query(
-        "SELECT 1 FROM office_people WHERE office_id = $1 LIMIT 1",
+        "SELECT 1 FROM office_people WHERE office_id = $1 UNION ALL SELECT 1 FROM members WHERE office_id = $1 LIMIT 1",
         [office],
       );
       await tx.query(
