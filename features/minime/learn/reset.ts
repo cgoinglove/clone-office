@@ -48,9 +48,9 @@ export async function onlyRead(home = minimeHome()): Promise<boolean> {
     return false;
   const read = await stat(at("learn.json")).catch(() => undefined);
   for (const name of ["USER.md", "MEMORY.md"]) {
-    const memory = await stat(join(at("memories"), name)).catch(
-      () => undefined,
-    );
+    const memory = await stat(
+      join(/*turbopackIgnore: true*/ home, "memories", name),
+    ).catch(() => undefined);
     // The reading writes its record after the lines it keeps.
     if (memory && (!read || memory.mtimeMs > read.mtimeMs)) return false;
   }
