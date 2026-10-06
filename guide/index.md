@@ -14,7 +14,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
 | `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's clone (also from Claude Code, with the sub-office plugin), answering requests that come in, what goes to the relay and what never does, files between clones |
 | `phone.md` | Talking with the clone from Discord, Telegram or Slack on their phone: setting up their own bot, letting their phone in by its code, questions as buttons, what comes to the phone by itself while they are away from the page, when it does not answer |
-| `brain.md` | What the clone thinks with: their own Claude Code, or a model with their key (Claude, OpenAI, Gemini, OpenRouter) or on their computer (Ollama, LM Studio); keys, cost, changing it |
+| `brain.md` | What the clone thinks with: their ChatGPT plan, their Claude subscription through Claude Code (Haiku, Sonnet or Opus), a key (OpenAI, Claude, Gemini, OpenRouter) or a model on their computer (Ollama, LM Studio); keys, cost, the lighter model for background work, changing it |
 | `connectors.md` | Connectors: the services the clone works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
 | `flows.md` | Flows: what the clone does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
 | `trouble.md` | Claude Code missing or signed out, learning that takes long, something said that is out of date, reading again |
@@ -28,17 +28,65 @@ Two things hold everywhere:
   a few lines about how they work. It learns the rest from doing work with them and from their
   corrections (`memory.md`).
 
+## Where things are
+
+- **The office** (오피스) is the main screen: their clone at its desk, colleagues' clones at
+  theirs, requests carried between desks, and the board on the back wall. **My desk**, **Board**
+  and **Office** (내 자리, 보드, 오피스) at the bottom left move the view. The first time each day
+  it opens at the building's lobby, where **Clock in** (출근하기) takes the lift up; Settings ›
+  Preferences can turn the lobby off.
+- **The box at the bottom**, **Ask your clone anything…** (클론에게 무엇이든 부탁하세요…), asks
+  their clone; the answer opens in the side panel.
+- **The side panel** on the right has two tabs. **Chat** (대화): the conversation with their
+  clone, with **New conversation** (새 대화) and **Past conversations** (이전 대화) at its top.
+  **Requests** (부탁): what waits on them about colleagues' requests, their colleagues with
+  **Ask** (부탁하기) beside each, and the requests sent and received.
+- **The bar at the top**: their status in the office (working, in a meeting, away, off), what
+  waits on them (**N waiting on you**, N개가 나를 기다려요), Requests, **Settings** (설정), and
+  their clone's face, which opens the chat.
+- **Settings** (설정) holds everything else, one section each: **Your clone** (내 클론: about
+  them, what it remembers, reading again, bringing it from another AI, starting over),
+  **Preferences** (개인 설정), **Brain** (두뇌), **Requests you take** (받는 부탁), **Flows**
+  (플로우), **Connectors** (도구 연결), **Phone** (휴대폰), **Permissions** (권한: what it does
+  without asking, folders left out), **Office** (오피스), **Files** (파일), **General** (일반:
+  language, theme).
+- Keys: ⌘, (Ctrl+, on Windows and Linux) opens Settings, ⌘1–9 jumps to a section there, / goes to
+  the box, and Esc closes the side panel.
+
 ## The first time
 
-Opened the first time, the app shows **Get started** (시작하기): five short steps, each of which
-can be passed over. What a clone is; what it thinks with (`brain.md`); letting it learn how they
-work, after leaving out any folder it should never read (`reading.md`, `memory.md`); bringing it to
-their team or keeping it to themselves for now (`office.md`); then their clone's page. **Set up
-later** (나중에 하기) goes straight to that page. The screen's language is at the top of each page.
+Opened the first time, the app shows **Get started** (시작하기) beside the office playing a short
+scene. Four steps follow, each of which can be passed over: what it thinks with (`brain.md`);
+letting it learn how they work, after leaving out any folder it should never read (`reading.md`,
+`memory.md`); what to call them and whether a team is in it (`office.md`); then **Go to my office**
+(내 오피스로 가기), which opens the office at its lobby. **Set up later** (나중에 하기) goes straight
+to the office. The screen's language is at the top right of the first steps, and under Settings ›
+General.
+
+## Preferences
+
+Settings › **Preferences** (개인 설정) sets how the clone behaves in their own work:
+
+- **How much it does on its own** (혼자 해도 되는 정도): **Ask me first** (먼저 묻기, the default)
+  asks before reading a file, opening a web page or using a connected service; **Read on its own**
+  (읽기는 알아서) reads files (never in folders left out), web pages and connected services without
+  asking, and still asks before anything that changes something; **Do it, then tell me** (하고 나서
+  알려 주기) also acts in connected services and asks colleagues without asking first. In every
+  mode, files leaving the computer, flows, and work in their Claude Code conversations are shown
+  to them first, and colleagues' requests never use this: there, each kind of request has its own
+  trust level under Requests you take.
+- **New kinds of request start at** (새로 받는 부탁의 기본값): on its own, tell me, or ask me first.
+- **When kept questions come** (미뤄 둔 질문을 받을 때): the hours questions kept for later come
+  together, 10:00, 14:00 and 17:00 unless they choose others.
+- **Learn after each conversation** (대화가 끝나면 배우기): on by default; off, it learns only what
+  they tell it to remember.
+- **Lighter model for background work** (뒤에서 도는 일은 가벼운 모델로): looking back, summaries and
+  drafts on the brain's smaller model; off by default.
+- **Quiet hours** (방해 금지 시간) for the phone, and **Clock in at the lobby** (로비에서 출근하기).
 
 ## What it can do now
 
-This is an early version, used on the **My clone** (내 클론) page.
+This is version 0.1, an early one.
 
 - Learn how they work from their AI tools' records and from what their usual AI (ChatGPT, Claude,
   Gemini…) remembers about them, and show what it keeps exactly as saved, each line correctable or

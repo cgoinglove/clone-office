@@ -1,6 +1,6 @@
 # Connectors: the services the clone works in
 
-Under **Connectors** (도구 연결) on their page they connect the services their clone may work in:
+Under Settings › **Connectors** (도구 연결) they connect the services their clone may work in:
 Notion, Linear, Jira and Confluence, GitHub, and Google's Gmail, Calendar, Drive, Docs and Sheets.
 The clone reaches each one through the service's own MCP server, made by the service itself,
 signed in as them. It works there in their conversations with it and in their flows; it never

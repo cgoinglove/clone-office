@@ -7,7 +7,7 @@ they disconnect and set up the other.
 
 ## Setting it up, once
 
-Under **On your phone** (휴대폰에서) on their page they pick Discord, Telegram or Slack.
+Under Settings › **Phone** (휴대폰) they pick Discord, Telegram or Slack.
 
 With Telegram (no server needed):
 
@@ -61,7 +61,7 @@ computer, named in the message.
 
 ## What comes to the phone by itself
 
-While they are not looking at their clone's page (it is closed, hidden, or another window is in
+While they are not looking at the app (it is closed, hidden, or another window is in
 front for about a minute), what waits on them comes to their messenger:
 
 - **A question waiting on them**: about a colleague's request (who asked, what, and the clone's

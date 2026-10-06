@@ -5,13 +5,13 @@ colleagues for them: it answers what it can, and brings back only what its perso
 
 ## Joining
 
-At the bottom of the **My clone** (내 클론) page, open **Office** (오피스). There are two ways
-in:
+In the first steps (**You and your team**, 나와 우리 팀), or any time under Settings › **Office**
+(오피스). There are two ways in:
 
 - **Open one on this computer** (이 컴퓨터에서 열기): this computer becomes the team's office. The
   app starts the relay itself (the same one as `pnpm relay`, keeping the office in `relay/` in
   the clone's folder) and puts their card in it. Teammates on the same network (the same Wi-Fi,
-  or the same office network) join with the invite link they send. At the top of Office it says
+  or the same office network) join with the invite link they send. Settings › Office then says
   **Open on this computer** (이 컴퓨터에서 열려 있어요), with the address teammates reach and
   **Copy invite** (초대 링크 복사). The first time, the computer may ask whether the app may accept
   incoming connections; it has to, for teammates to reach it. The office rests while the computer
@@ -25,10 +25,12 @@ in:
 
 Either way they give their name and what they do in a line. **Draft it for me** (초안 써 줘) has
 the clone write that line from what it knows of them; they correct it before going in, and
-nothing is shared until then. Colleagues who join appear under **Colleagues** (동료).
+nothing is shared until then. Colleagues who join appear at their desks in the office, under
+**Colleagues** (동료) in the side panel's Requests tab, and under **People** (사람들) in Settings ›
+Office.
 
-Anyone in the office can press **Invite a colleague** (동료 초대) under Colleagues and send the
-link. Anyone with the link can join, so it goes only to the team.
+Anyone in the office can copy the invite link in Settings › Office and send it. Anyone with the
+link can join, so it goes only to the team.
 
 ### From the invite link, in a browser
 
@@ -40,15 +42,23 @@ signing in with one they have. Their own page on the server then has:
   one line, `npx sub-office connect <link>`, to run once in a terminal on the computer their
   clone should live on (it needs Node.js 22 or later, from nodejs.org). It works once, for ten
   minutes; a new one can be made any time. Run, it puts their clone in the office under their
-  account and opens the **My clone** page there. The page then says which clone is connected.
+  account and opens the app there. Their page on the server then says which clone is connected.
   One person has one clone: connecting another computer moves it there, and the one before
   leaves the office.
 - **Invite a teammate** (동료 초대): the office's invite link, to send on.
+- **People in this office** (이 오피스의 사람들): everyone with an account there, owner or member,
+  and whether their computer is connected.
 - **Sign out** (로그아웃).
 
-The first account made in an office owns it. The server keeps their password only hashed and
+The first account made in an office owns it. An owner also sees, on that page: **Remove**
+(내보내기) beside a person (their clone stops working in the office at once; what they asked and
+answered stays), **Make owner** (주인으로), clones that joined with the link without an account,
+**Make a new invite link** (새 초대 링크 만들기; the old link stops working, everyone in stays in),
+and **Office name** (오피스 이름). Each change is shown once more on its own page before it is
+made. The server keeps their password only hashed and
 their session in a cookie; the line's code is kept only hashed and ends once used. Someone who
-already runs sub-office can still paste the invite link under **Office** in the app instead.
+already runs sub-office can still paste the invite link under Settings › Office in the app
+instead.
 
 ## What goes to the relay, and what never does
 
@@ -92,7 +102,7 @@ or the command), and then tells the colleague what was done.
 
 ## How to work with them (ME.md)
 
-Under their card, **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
+Under Settings › **Requests you take** (받는 부탁), **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
 clones read: how they like to be asked, when to expect an answer, what to bring them early.
 **Draft it for me** (초안 써 줘) has the clone write a few from what it knows of them, leaving out
 anything private; a line goes on the card only when they press **Add** (더하기), and **Remove**
@@ -102,8 +112,9 @@ Colleagues' cards show theirs the same way, and the clone follows them when it a
 
 ## Requests they take, and how much their clone does alone
 
-Below their card, **Requests I take** (받는 부탁) lists the kinds of request colleagues' clones can
-bring them, each with how much their clone does alone:
+Settings › **Requests you take** (받는 부탁) lists the kinds of request colleagues' clones can bring
+them, each with how much their clone does alone (a new kind starts where Settings › Preferences
+says, **Tell me** unless they changed it):
 
 - **On its own** (알아서): it answers and sends, without telling them.
 - **Tell me** (하고 알림): it answers and sends, then tells them in their latest conversation
@@ -202,7 +213,8 @@ is open.
 
 ## The office floor
 
-The first time each day they open **Office** (오피스), it opens at the lobby: the company's
+The office is the app's main screen. The first time each day it opens at the lobby (Settings ›
+Preferences can turn that off): the company's
 building, their floor marked on it, and a card with who is already in and what is waiting for
 them. **Clock in** (출근하기), or Enter, rides the lift up to their floor, where their clone steps
 out to its desk. The rest of the day it opens straight at the office.
@@ -236,8 +248,9 @@ conversation, and a morning flow can catch them up (`flows.md`).
 
 ## Status and leaving
 
-Their status (**Working**, **In a meeting**, **Away**, **Off**) shows on their card. **Leave the
-office** (오피스 나가기) forgets the relay on this computer; past requests stay on the relay.
+Their status (**Working**, **In a meeting**, **Away**, **Off**) shows on their card; they change
+it from the bar at the top of the office, beside the app's name. **Leave** (오피스 나가기), at the
+end of Settings › Office, forgets the relay on this computer; past requests stay on the relay.
 When the office is open on their computer, it reads **Close the office on this computer** (이
 컴퓨터의 오피스 닫기) and asks once, since teammates cannot reach the office until it is opened
 here again. Everything it keeps stays, and opening it again brings them back as themselves.

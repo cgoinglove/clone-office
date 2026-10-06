@@ -50,7 +50,7 @@ Either one is asked of the clone in the conversation, so they see the card and c
 before it is made. When the clone offers something they usually do around this time, **Every
 time** (매번 하기) asks it to make that a flow.
 
-## On their page
+## In Settings
 
 **Flows** (플로우) lists each flow with when it runs, when it runs next and how its last run went,
 and has **Run now** (지금 실행), **See the answers** (답 보기), **Pause** (멈추기) or **Resume**
