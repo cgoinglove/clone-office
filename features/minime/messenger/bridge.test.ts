@@ -81,7 +81,8 @@ class FakeBot implements Bot {
   }
 }
 
-const until = async (check: () => boolean, ms = 3000) => {
+// Generous: the whole suite runs at once, and a busy machine is slow, not wrong.
+const until = async (check: () => boolean, ms = 10_000) => {
   const end = Date.now() + ms;
   while (!check()) {
     if (Date.now() > end) throw new Error("timed out");

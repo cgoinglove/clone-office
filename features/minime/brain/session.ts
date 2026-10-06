@@ -13,6 +13,7 @@ import { join } from "node:path";
 import { createInterface } from "node:readline";
 import type { Connector } from "../connectors/catalog.ts";
 import { connectedConnectors } from "../connectors/oauth.ts";
+import { sessionRules } from "../connectors/tools.ts";
 import { ASKABLE_TOOLS, TRUSTED_FROM_START } from "../gate/rules.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
 import { NoteStore } from "../memory/notes.ts";
@@ -312,10 +313,10 @@ export async function runSession(
           "mcp__minime__sessions",
           ...(gate.colleagues ? ["mcp__minime__colleagues"] : []),
           ...TRUSTED_FROM_START,
-          ...gate.allow,
+          ...(await sessionRules(gate.allow)),
         ]
       : standing
-        ? [...TRUSTED_FROM_START, ...standing.allow]
+        ? [...TRUSTED_FROM_START, ...(await sessionRules(standing.allow))]
         : []),
   ];
   const deny = (gate ?? standing)?.deny ?? [];

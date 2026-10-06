@@ -1,6 +1,6 @@
 // What the person lets their mini-me do without asking, in Claude Code's own permission-rule
 // syntax, kept in settings.json as {"trust": {"allow": ["Read(~/Documents/**)", ...]}}. A rule is
-// added when they answer a question with "from now on"; they take one back by removing its line.
+// added when they answer a question with "from now on"; they take one back on their page.
 // The folders they keep out become rules the mini-me may never break.
 
 import { readFile } from "node:fs/promises";
@@ -42,6 +42,20 @@ export async function addTrust(rule: string): Promise<void> {
     await writeSettings(
       `${JSON.stringify({ ...settings, trust: { ...trust, allow: [...allow] } }, null, 2)}\n`,
     );
+  });
+}
+
+/** Takes back something allowed "from now on": the mini-me asks first again. */
+export async function removeTrust(rule: string): Promise<boolean> {
+  return withLock(minimeHome(), async () => {
+    const settings = await readSettings();
+    const trust = (settings.trust ?? {}) as { allow?: string[] };
+    const allow = Array.isArray(trust.allow) ? trust.allow : [];
+    if (!allow.includes(rule)) return false;
+    await writeSettings(
+      `${JSON.stringify({ ...settings, trust: { ...trust, allow: allow.filter((kept) => kept !== rule) } }, null, 2)}\n`,
+    );
+    return true;
   });
 }
 

@@ -47,6 +47,51 @@ before(async () => {
         code_challenge_methods_supported: ["S256"],
         token_endpoint_auth_methods_supported: ["none", "client_secret_post"],
       });
+    // Its MCP server: tools for whoever brings a token it gave (or a personal one).
+    if (url.pathname === "/mcp" && request.method === "POST") {
+      const auth = request.headers.authorization ?? "";
+      if (!/^Bearer (access-[12]|github_pat_\w+)$/.test(auth)) {
+        response.writeHead(401, { "www-authenticate": "Bearer" });
+        return response.end();
+      }
+      const message = JSON.parse(body);
+      if (!("id" in message)) {
+        response.writeHead(202);
+        return response.end();
+      }
+      return json(200, {
+        jsonrpc: "2.0",
+        id: message.id,
+        result:
+          message.method === "initialize"
+            ? {
+                protocolVersion: message.params.protocolVersion,
+                capabilities: { tools: {} },
+                serverInfo: { name: "stand-in", version: "1" },
+              }
+            : message.method === "tools/list"
+              ? {
+                  tools: [
+                    {
+                      name: "search",
+                      inputSchema: { type: "object" },
+                      annotations: { readOnlyHint: true },
+                    },
+                    {
+                      name: "fetch.page",
+                      inputSchema: { type: "object" },
+                      annotations: { readOnlyHint: true },
+                    },
+                    { name: "update-page", inputSchema: { type: "object" } },
+                  ],
+                }
+              : {},
+      });
+    }
+    if (url.pathname === "/mcp") {
+      response.writeHead(405);
+      return response.end();
+    }
     if (url.pathname === "/register") {
       const asked = JSON.parse(body);
       seen.registered.push(asked);
@@ -222,4 +267,88 @@ test("a personal token is kept as it is; the session's helper hands it over, or 
     { env },
   );
   assert.equal(none.stdout, "{}");
+});
+
+test("a service's reading tools, as its server marks them, can be let through at once; each change is still asked", async () => {
+  const oauth = await import("./oauth");
+  const tools = await import("./tools");
+  const { alreadyAllowed, enrichAsk } = await import("../gate/enrich");
+  const { addTrust, loadTrust } = await import("../gate/rules");
+  const { askPerson, pendingAsks } = await import("../gate/gate");
+  const { answerPerson } = await import("../gate/answer");
+  const address = await oauth.startConnect("notion", REDIRECT, {
+    url: `${base}/mcp`,
+  });
+  const { code, state } = await approve(address);
+  await oauth.finishConnect(state, code);
+  const listed = await tools.listTools("notion", { url: `${base}/mcp` });
+  assert.deepEqual(listed, [
+    { name: "search", readOnly: true },
+    { name: "fetch.page", readOnly: true },
+    { name: "update-page", readOnly: false },
+  ]);
+  assert.equal(await tools.readsOnly("mcp__notion__search"), true);
+  assert.equal(
+    await tools.readsOnly("mcp__notion__fetch_page"),
+    true,
+    "as Claude Code names it",
+  );
+  assert.equal(await tools.readsOnly("mcp__notion__update-page"), false);
+
+  // The card for a reading tool offers reading in the whole service; for a change, that one tool.
+  const reading = await enrichAsk({
+    kind: "permission",
+    tool: "mcp__notion__search",
+    input: { query: "plans" },
+  });
+  assert.equal(reading.kind === "permission" && reading.reads, "Notion");
+  const change = await enrichAsk({
+    kind: "permission",
+    tool: "mcp__notion__update-page",
+    input: {},
+  });
+  assert.equal(change.kind === "permission" && change.reads, undefined);
+  assert.equal(change.kind === "permission" && change.always, true);
+
+  // "From now on" on it keeps one rule, and the session's list has every reading tool.
+  const { id } = askPerson("chat-reads", reading);
+  assert.deepEqual(await answerPerson(id, "allow", true), {
+    ok: true,
+    rule: "connector:notion:read",
+  });
+  assert.equal(pendingAsks("chat-reads").length, 0);
+  assert.deepEqual(await loadTrust(), ["connector:notion:read"]);
+  assert.deepEqual(
+    await tools.sessionRules([...(await loadTrust()), "Read(~/Documents/**)"]),
+    ["mcp__notion__search", "mcp__notion__fetch_page", "Read(~/Documents/**)"],
+  );
+  // Asked again in the same session, reading goes through; a change is still asked.
+  assert.equal(
+    await alreadyAllowed({
+      kind: "permission",
+      tool: "mcp__notion__fetch_page",
+      input: {},
+    }),
+    true,
+  );
+  assert.equal(
+    await alreadyAllowed({
+      kind: "permission",
+      tool: "mcp__notion__update-page",
+      input: {},
+    }),
+    false,
+  );
+  await addTrust("mcp__notion__update-page");
+  assert.equal(
+    await alreadyAllowed({
+      kind: "permission",
+      tool: "mcp__notion__update-page",
+      input: {},
+    }),
+    true,
+    "a rule for one tool, agreed to in this session",
+  );
+  await oauth.disconnect("notion");
+  assert.deepEqual(await tools.sessionRules(["connector:notion:read"]), []);
 });

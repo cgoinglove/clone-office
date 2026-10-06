@@ -78,5 +78,7 @@ the mini-me still keeps what it learns, and asks them, in theirs.
 - **It never does now**: changing their files, running programs, or sending anything to anyone.
 - **When only they can decide**, it asks with a card (**Needs you**, 답이 필요해요), with choices or
   their own answer, and waits up to ten minutes; without an answer it does not guess.
-- What they allowed "from now on" is kept as lines in `settings.json` in the `.sub-office` folder,
-  under `trust`; removing a line takes it back.
+- What they allowed "from now on" holds at once, even later in the same answer. It is listed on
+  their page under **What it does without asking** (묻지 않고 하는 일), each in plain words;
+  **Ask me first again** (다시 먼저 묻기) takes one back. (It is kept in `settings.json` in the
+  `.sub-office` folder, under `trust`.)

@@ -1,6 +1,6 @@
 # Connectors: the services the mini-me works in
 
-Under **Connectors** (커넥터) on their page they connect the services their mini-me may work in:
+Under **Connectors** (도구 연결) on their page they connect the services their mini-me may work in:
 Notion, Linear, Jira and Confluence, GitHub, and Google's Gmail, Calendar, Drive, Docs and Sheets.
 The mini-me reaches each one through the service's own MCP server, made by the service itself,
 signed in as them. It works there in their conversations with it and in their flows; it never
@@ -8,7 +8,7 @@ uses them for a colleague's request.
 
 ## Connecting one
 
-- **Notion, Linear, Jira and Confluence:** **Connect** (연결하기) opens the service in a new tab;
+- **Notion, Linear, Jira and Confluence:** **Connect** (연결) opens the service in a new tab;
   they sign in there if they have not, and approve. The tab says when it is done and can be
   closed; the page shows **Connected** (연결됨).
 - **GitHub:** it takes a personal token. **Make a token** (토큰 만들기) opens GitHub's page for a
@@ -44,10 +44,18 @@ The office keeps only the client (its ID and secret), never anyone's Google sign
 
 ## What the mini-me does with them
 
-It asks before it uses a service, on a card that names the service and what it would do there,
-the first time it wants each kind of action ("search Notion", "read a mail"). They allow it once,
-or tick that it may do that from now on without asking; refusing is always possible. A flow can
-use only what they already let it do alone, since nobody is there to ask.
+It asks before it uses a service, on a card that names the service and what it would do there
+("Use Notion: notion-search"), with what it would send. They allow it once, or tick that it may do
+that from now on without asking; refusing is always possible.
+
+- When the service marks which of its tools only read (Notion does), the card for a reading tool
+  offers **Don't ask again for reading in Notion** (앞으로 Notion에서 읽는 건 묻지 않기): from then
+  on it searches and reads there alone, and every change it would make there is still asked, one
+  kind at a time.
+- What they allowed takes effect at once, even later in the same answer.
+- Everything they allowed is listed under **What it does without asking** (묻지 않고 하는 일);
+  **Ask me first again** (다시 먼저 묻기) takes one back.
+- A flow can use only what they already let it do alone, since nobody is there to ask.
 
 When a colleague's mini-me asks it something, it does not look in their connected services: what
 is in their mail or documents does not go out to colleagues by itself.

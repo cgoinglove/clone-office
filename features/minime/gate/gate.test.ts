@@ -103,3 +103,50 @@ test("a card shows the change itself: the lines before and after, or the command
   );
   assert.equal(changeOf("Read", { file_path: "a.ts" }), undefined);
 });
+
+test("what was allowed from now on reads as the person would say it, and can be taken back", async () => {
+  const { createTranslator } = await import("next-intl");
+  const english = (await import("../../../messages/en.json")).default;
+  const { ruleText } = await import("../ask-text");
+  const t = createTranslator({
+    locale: "en",
+    messages: english,
+    namespace: "ask",
+  });
+  assert.equal(
+    ruleText(t, "Read(~/Documents/**)"),
+    "Read files in ~/Documents",
+  );
+  assert.equal(ruleText(t, "Edit(//srv/app/**)"), "Change files in /srv/app");
+  assert.equal(
+    ruleText(t, "WebFetch(domain:example.com)"),
+    "Open pages on example.com",
+  );
+  assert.equal(
+    ruleText(t, "mcp__minime__ask_colleague"),
+    "Send a request to a colleague's mini-me",
+  );
+  assert.equal(
+    ruleText(t, "mcp__notion__notion-search"),
+    "Use Notion: notion-search",
+  );
+  assert.equal(ruleText(t, "Bash(npm test)"), "Bash(npm test)");
+
+  const { mkdtempSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const home = mkdtempSync(join(tmpdir(), "minime-trust-"));
+  const was = process.env.SUB_OFFICE_HOME;
+  process.env.SUB_OFFICE_HOME = home;
+  try {
+    const { addTrust, loadTrust, removeTrust } = await import("./rules");
+    await addTrust("Read(~/Documents/**)");
+    await addTrust("mcp__notion__notion-search");
+    assert.equal(await removeTrust("Read(~/Documents/**)"), true);
+    assert.equal(await removeTrust("Read(~/Documents/**)"), false);
+    assert.deepEqual(await loadTrust(), ["mcp__notion__notion-search"]);
+  } finally {
+    if (was === undefined) delete process.env.SUB_OFFICE_HOME;
+    else process.env.SUB_OFFICE_HOME = was;
+    rmSync(home, { recursive: true, force: true });
+  }
+});

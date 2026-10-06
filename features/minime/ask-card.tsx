@@ -166,7 +166,9 @@ export function AskCard({
                 checked={always}
                 onChange={(event) => setAlways(event.target.checked)}
               />
-              {t("always")}
+              {ask.reads
+                ? t("alwaysReads", { service: ask.reads })
+                : t("always")}
             </label>
           )}
           <div className="flex gap-2">

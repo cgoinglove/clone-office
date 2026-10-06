@@ -159,6 +159,7 @@
     "allow": "Allow",
     "deny": "Don't",
     "always": "Don't ask again for this",
+    "alwaysReads": "Don't ask again for reading in {service}",
     "allowed": "Allowed",
     "denied": "Declined",
     "answered": "Answer: {answer}",
@@ -191,7 +192,11 @@
       "resume": "Resume a flow",
       "remove": "Remove a flow"
     },
-    "connector": "Use {service}: {tool}"
+    "connector": "Use {service}: {tool}",
+    "ruleRead": "Read files in {path}",
+    "ruleEdit": "Change files in {path}",
+    "ruleSite": "Open pages on {site}",
+    "ruleReads": "Read in {service}"
   },
   "office": {
     "title": "Office",
@@ -436,7 +441,8 @@
       "index": "Conversation search index (rebuilt from the original records)",
       "backup": "Backups (moved there when starting over)",
       "other": "Other files",
-      "office": "The office opened on this computer (its relay's records)"
+      "office": "The office opened on this computer (its relay's records)",
+      "connectors": "Connected services (each one's sign-in, its tokens hidden here)"
     },
     "empty": "(empty)"
   },
@@ -596,5 +602,11 @@
       "failed": "The service did not accept the sign-in. Try again from your page.",
       "close": "You can close this tab."
     }
+  },
+  "trust": {
+    "title": "What it does without asking",
+    "intro": "When you tick “Don't ask again for this” on a card, it is kept here. Take one back and your mini-me asks you first again.",
+    "empty": "Nothing yet: it asks you first.",
+    "askAgain": "Ask me first again"
   }
 }

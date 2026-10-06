@@ -69,3 +69,37 @@ test("the office opened on this computer is one entry with its whole size, not i
     [["office", "relay/", 102]],
   );
 });
+
+test("a connected service's sign-in is listed with the services, its tokens and verifier masked", async () => {
+  mkdirSync(join(root, "connectors"), { recursive: true });
+  writeFileSync(
+    join(root, "connectors", "notion.json"),
+    JSON.stringify({
+      client: { client_id: "registered", client_secret: "client-secret-1" },
+      tokens: {
+        access_token: "access-token-1",
+        refresh_token: "refresh-token-1",
+      },
+      connected: "2026-10-06T21:00:00.000Z",
+    }),
+  );
+  writeFileSync(
+    join(root, "connectors", "pending.json"),
+    JSON.stringify({ "the-state": { id: "linear", verifier: "verifier-1" } }),
+  );
+  const files = await storedFiles(root);
+  const kept = files.filter((f) => f.group === "connectors");
+  assert.deepEqual(
+    kept.map((f) => f.path),
+    ["connectors/notion.json", "connectors/pending.json"],
+  );
+  const shown = kept.map((f) => f.text ?? "").join("\n");
+  assert.ok(shown.includes("registered") && shown.includes("2026-10-06"));
+  for (const secret of [
+    "client-secret-1",
+    "access-token-1",
+    "refresh-token-1",
+    "verifier-1",
+  ])
+    assert.ok(!shown.includes(secret), secret);
+});

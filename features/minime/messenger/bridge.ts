@@ -691,7 +691,14 @@ export class Bridge {
         { label: tAsk("allow"), value: `ask:${id}:allow`, style: "primary" },
         // "From now on" only where code can keep it as a rule: never a command, never files.
         ...(ask.always
-          ? [{ label: tAsk("always"), value: `ask:${id}:always` }]
+          ? [
+              {
+                label: ask.reads
+                  ? tAsk("alwaysReads", { service: ask.reads })
+                  : tAsk("always"),
+                value: `ask:${id}:always`,
+              },
+            ]
           : []),
         { label: tAsk("deny"), value: `ask:${id}:deny` },
       ];

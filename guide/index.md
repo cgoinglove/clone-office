@@ -63,6 +63,6 @@ This is an early version, used on the **My mini-me** (내 미니미) page.
 - Keep a folder out of everything it reads and searches when they say so, after a card
   (`reading.md`).
 
-- Work in the services they connected under **Connectors** (커넥터): Notion, Linear, Jira and
+- Work in the services they connected under **Connectors** (도구 연결): Notion, Linear, Jira and
   Confluence, GitHub, and Google's Gmail, Calendar, Drive, Docs and Sheets, through each one's own
   MCP server, asking first for each kind of action (`connectors.md`).

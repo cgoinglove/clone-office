@@ -1,6 +1,7 @@
 import { createTranslator } from "next-intl";
 import { connector } from "@/features/minime/connectors/catalog";
 import { finishConnect } from "@/features/minime/connectors/oauth";
+import { listTools } from "@/features/minime/connectors/tools";
 import { isLocale } from "@/i18n/locales";
 import { loadMessages } from "@/i18n/messages";
 import type english from "@/messages/en.json";
@@ -30,7 +31,10 @@ export async function GET(request: Request) {
     problem = t("callback.declined");
   else
     try {
-      done = connector(await finishConnect(state, code))?.name;
+      const id = await finishConnect(state, code);
+      done = connector(id)?.name;
+      // What it offers, and which of it only reads, is asked while the person reads this page.
+      void listTools(id).catch(() => {});
     } catch {
       problem = t("callback.failed");
     }

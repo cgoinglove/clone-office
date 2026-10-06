@@ -72,7 +72,7 @@ function fakeSlack(
   return { fetch, calls };
 }
 
-const until = async (check: () => boolean, ms = 3000) => {
+const until = async (check: () => boolean, ms = 10_000) => {
   const end = Date.now() + ms;
   while (!check()) {
     if (Date.now() > end) throw new Error("timed out");

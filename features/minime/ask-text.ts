@@ -2,7 +2,7 @@
 // person's messenger. Plain functions over a translator, so the server can use them too.
 
 import type { useTranslations } from "next-intl";
-import { connectorOfTool } from "./connectors/catalog.ts";
+import { connector, connectorOfTool } from "./connectors/catalog.ts";
 import {
   askedWhen,
   type DateFormat,
@@ -62,6 +62,24 @@ export function describe(
       ? on.replace(/^\/Users\/[^/]+|^\/home\/[^/]+/, "~")
       : "";
   return shown ? `${what}: ${shown}` : what;
+}
+
+/** Something allowed "from now on" (a rule gate/rules.ts keeps), as the person reads it. */
+export function ruleText(t: AskWords, rule: string): string {
+  // Reading in a connected service, every reading tool of it (connectors/tools.ts).
+  const reads = /^connector:([a-z0-9-]+):read$/.exec(rule);
+  if (reads)
+    return t("ruleReads", { service: connector(reads[1])?.name ?? reads[1] });
+  const found = /^(Read|Edit|WebFetch)\((.+)\)$/.exec(rule);
+  if (!found) return describe(t, rule, {});
+  const [, tool, spec] = found;
+  if (tool === "WebFetch")
+    return spec.startsWith("domain:")
+      ? t("ruleSite", { site: spec.slice("domain:".length) })
+      : rule;
+  // A folder as the rule has it: home-relative with "~/", absolute with "//".
+  const path = spec.replace(/\/\*\*$/, "").replace(/^\/\//, "/");
+  return t(tool === "Read" ? "ruleRead" : "ruleEdit", { path });
 }
 
 const clipLines = (value: unknown, lines: number) => {

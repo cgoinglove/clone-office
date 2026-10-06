@@ -159,6 +159,7 @@
     "allow": "허락",
     "deny": "거절",
     "always": "앞으로 이런 건 묻지 않기",
+    "alwaysReads": "앞으로 {service}에서 읽는 건 묻지 않기",
     "allowed": "허락했어요",
     "denied": "거절했어요",
     "answered": "답: {answer}",
@@ -191,7 +192,11 @@
       "resume": "플로우 다시 켜기",
       "remove": "플로우 지우기"
     },
-    "connector": "{service} 쓰기: {tool}"
+    "connector": "{service} 쓰기: {tool}",
+    "ruleRead": "{path}의 파일 읽기",
+    "ruleEdit": "{path}의 파일 고치기",
+    "ruleSite": "{site}의 페이지 열기",
+    "ruleReads": "{service}에서 읽기"
   },
   "office": {
     "title": "오피스",
@@ -436,7 +441,8 @@
       "index": "대화 검색 색인 (원래 기록에서 다시 만들 수 있어요)",
       "backup": "보관함 (처음부터 다시 할 때 옮긴 것)",
       "other": "그 밖의 파일",
-      "office": "이 컴퓨터에서 연 오피스(릴레이 기록)"
+      "office": "이 컴퓨터에서 연 오피스(릴레이 기록)",
+      "connectors": "연결한 서비스 (서비스마다 로그인 정보, 토큰은 여기서 가려요)"
     },
     "empty": "(비어 있음)"
   },
@@ -596,5 +602,11 @@
       "failed": "서비스가 로그인을 받지 않았어요. 미니미 화면에서 다시 연결해 주세요.",
       "close": "이 탭은 닫아도 돼요."
     }
+  },
+  "trust": {
+    "title": "묻지 않고 하는 일",
+    "intro": "카드에서 “앞으로 이런 건 묻지 않기”를 고르면 여기에 남아요. 되돌리면 미니미가 다시 먼저 물어요.",
+    "empty": "아직 없어요. 모두 먼저 물어요.",
+    "askAgain": "다시 먼저 묻기"
   }
 }

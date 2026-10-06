@@ -111,7 +111,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   what the person's usual AI remembers about them (Claude's memory import: copy a prompt there,
   paste the answer here), shows the memory exactly as saved with each entry correctable or
   removable, lists every file it keeps (`server/stored.ts`), does work with them, and can start
-  over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows}`, which
+  over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust}`, which
   answer only this app's pages; they take the person's language tag and tell the mini-me that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
@@ -281,8 +281,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   request): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
   (`dist/connector-headers.mjs` in the package) for a fresh token, so no token is in the
   arguments, and each tool is asked through the gate (`rules.ts` `ruleFor` makes "from now on" a
-  rule for that one tool). The page's part is `features/minime/connectors-panel.tsx` with the
-  route `app/api/me/connectors`.
+  rule for that one tool). `tools.ts` keeps what each server offers (`tools/list`, again once a
+  day) and which tools only read (MCP's `readOnlyHint`): on a reading tool's card "from now on"
+  becomes `connector:<id>:read`, reading in that whole service, which `runSession` turns into its
+  reading tools (`sessionRules`), while each change is still asked. The page's part is
+  `features/minime/connectors-panel.tsx` with the route `app/api/me/connectors`.
 - `features/minime/messenger/`: the mini-me in the person's messenger, Discord, Telegram or Slack,
   one at a time (after Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot
   with no dependencies: the gateway over Node's own WebSocket (direct messages only, no privileged

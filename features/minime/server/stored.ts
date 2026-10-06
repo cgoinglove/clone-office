@@ -16,6 +16,7 @@ export type StoredGroup =
   | "reading"
   | "settings"
   | "office"
+  | "connectors"
   | "index"
   | "backup"
   | "other";
@@ -29,6 +30,7 @@ export const STORED_GROUPS: StoredGroup[] = [
   "reading",
   "settings",
   "office",
+  "connectors",
   "index",
   "backup",
   "other",
@@ -58,12 +60,16 @@ function groupOf(path: string): StoredGroup {
   if (path === "learn.json") return "reading";
   if (path === "settings.json") return "settings";
   if (first === "relay") return "office";
+  if (first === "connectors") return "connectors";
   if (first === "index") return "index";
   if (first === "backup") return "backup";
   return "other";
 }
 
-/** Credentials kept in a JSON file (the office token and key) are shown masked: a screen gets shared. */
+/**
+ * Credentials kept in a JSON file (the office token and key, a service's tokens and a sign-in's
+ * verifier) are shown masked: a screen gets shared.
+ */
 function masked(name: string, text: string): string {
   if (!name.endsWith(".json")) return text;
   try {
@@ -71,7 +77,7 @@ function masked(name: string, text: string): string {
       JSON.parse(text),
       (key, value) =>
         typeof value === "string" &&
-        (/token|secret|password/i.test(key) || key === "key")
+        (/token|secret|password|verifier/i.test(key) || key === "key")
           ? "••••••"
           : value,
       2,

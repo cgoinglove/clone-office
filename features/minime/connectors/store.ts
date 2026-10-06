@@ -5,7 +5,7 @@
 // A team's OAuth client for a vendor that wants one registered first (Google) is in settings.json
 // ("connectors.clients"), or comes from the office.
 
-import { readFile, unlink } from "node:fs/promises";
+import { chmod, mkdir, readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { AuthorizationServerMetadata } from "@modelcontextprotocol/sdk/shared/auth.js";
 import { atomicWrite, readText, withLock } from "../memory/files.ts";
@@ -34,6 +34,15 @@ export interface Kept {
   /** A personal token the person made at the service. */
   token?: string;
   connected?: string;
+  /** The tools its server offers, as it last said (tools.ts), and when, in ms. */
+  tools?: ServiceTool[];
+  toolsAt?: number;
+}
+
+/** One tool of a service's MCP server: its name there, and whether it only reads. */
+export interface ServiceTool {
+  name: string;
+  readOnly: boolean;
 }
 
 /** A sign-in started in the browser, waiting for the service to send the person back. */
@@ -54,6 +63,14 @@ export interface TeamClient {
 
 export function connectorsDir(): string {
   return join(/*turbopackIgnore: true*/ minimeHome(), "connectors");
+}
+
+/** The folder, for its person's eyes only: its files are, and so is the list of them. */
+async function ownDir(): Promise<string> {
+  const dir = connectorsDir();
+  await mkdir(dir, { recursive: true, mode: 0o700 });
+  if (process.platform !== "win32") await chmod(dir, 0o700).catch(() => {});
+  return dir;
 }
 
 function keptPath(id: string): string {
@@ -77,7 +94,7 @@ export async function changeKept(
   id: string,
   change: (kept: Kept) => Kept | undefined,
 ): Promise<Kept | undefined> {
-  return withLock(connectorsDir(), async () => {
+  return withLock(await ownDir(), async () => {
     const next = change(await loadKept(id));
     if (next)
       await atomicWrite(keptPath(id), JSON.stringify(next, null, 2), {
@@ -92,7 +109,7 @@ export async function addPending(
   state: string,
   pending: Pending,
 ): Promise<void> {
-  await withLock(connectorsDir(), async () => {
+  await withLock(await ownDir(), async () => {
     const read = await readText(pendingPath());
     let all: Record<string, Pending> = {};
     try {
@@ -110,7 +127,7 @@ export async function addPending(
 
 /** The sign-in a callback's state names, taken (once) if it is still waiting. */
 export async function takePending(state: string): Promise<Pending | undefined> {
-  return withLock(connectorsDir(), async () => {
+  return withLock(await ownDir(), async () => {
     const read = await readText(pendingPath());
     let all: Record<string, Pending> = {};
     try {

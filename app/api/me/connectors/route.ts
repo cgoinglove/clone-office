@@ -13,6 +13,7 @@ import {
   forgetClient,
   saveClient,
 } from "@/features/minime/connectors/team";
+import { listTools } from "@/features/minime/connectors/tools";
 import { loadOffice, members } from "@/features/minime/office/client";
 import { refuse } from "@/features/minime/server/guard";
 
@@ -100,8 +101,10 @@ export async function POST(request: Request) {
       });
       return Response.json({ authorize });
     }
-    if (input.action === "token") await setToken(input.id, input.token);
-    else if (input.action === "disconnect") await disconnect(input.id);
+    if (input.action === "token") {
+      await setToken(input.id, input.token);
+      void listTools(input.id).catch(() => {});
+    } else if (input.action === "disconnect") await disconnect(input.id);
     else if (input.action === "client")
       return Response.json({
         saved: await saveClient(input.provider, input, input.team),

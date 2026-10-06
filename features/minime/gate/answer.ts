@@ -2,6 +2,8 @@
 // messenger. "From now on" on a tool becomes a rule in settings.json before the waiting session
 // hears the answer.
 
+import { connectorOfTool } from "../connectors/catalog.ts";
+import { readRule } from "../connectors/tools.ts";
 import { answerAsk, pendingAsks } from "./gate.ts";
 import { addTrust, ruleFor } from "./rules.ts";
 
@@ -15,7 +17,13 @@ export async function answerPerson(
   if (!waiting) return { ok: false };
   let rule: string | undefined;
   if (always && answer === "allow" && waiting.ask.kind === "permission") {
-    rule = ruleFor(waiting.ask.tool, waiting.ask.input);
+    // A service's reading tool: reading in that service, every reading tool of it.
+    const service = waiting.ask.reads
+      ? connectorOfTool(waiting.ask.tool)
+      : undefined;
+    rule = service
+      ? readRule(service.connector.id)
+      : ruleFor(waiting.ask.tool, waiting.ask.input);
     if (rule) await addTrust(rule);
   }
   answerAsk(id, answer, Boolean(rule));

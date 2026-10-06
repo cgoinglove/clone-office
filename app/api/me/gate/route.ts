@@ -1,5 +1,6 @@
+import { randomUUID } from "node:crypto";
 import * as z from "zod";
-import { enrichAsk } from "@/features/minime/gate/enrich";
+import { alreadyAllowed, enrichAsk } from "@/features/minime/gate/enrich";
 import {
   askPerson,
   gateSecret,
@@ -46,6 +47,14 @@ export async function POST(request: Request) {
   let id: string;
   let done: ReturnType<typeof waitFor>;
   if ("ask" in body.data) {
+    // Something they let through "from now on" while this session was already running (the
+    // session's own list was made at its start) goes through without asking again.
+    if (await alreadyAllowed(body.data.ask).catch(() => false))
+      return Response.json({
+        id: randomUUID(),
+        answered: true,
+        answer: "allow",
+      });
     // A colleague's request asks a person who said they are away for later at once.
     const away = isRequestChat(body.data.chat) && (await personAway());
     // What its card shows besides the tool's input is worked out here, once, for every screen.

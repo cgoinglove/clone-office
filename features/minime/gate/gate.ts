@@ -10,6 +10,11 @@ import { randomUUID } from "node:crypto";
 export interface AskShown {
   /** Whether "from now on" can be kept as a rule for it; commands and files never can. */
   always?: boolean;
+  /**
+   * A connected service's tool that only reads: "from now on" then lets the mini-me read in that
+   * service (named here) without asking, every reading tool of it at once.
+   */
+  reads?: string;
   /** A flow the question is about, as it stands now. */
   flow?: { name: string; when: unknown; what: string };
   /** The name of the kind of request a flow is for. */

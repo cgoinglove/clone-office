@@ -37,6 +37,7 @@ import { MessengerPanel } from "./messenger-panel";
 import { OfficePanel } from "./office-panel";
 import { type Routine, routineNow } from "./routine";
 import { savedText } from "./saved-text";
+import { TrustPanel } from "./trust-panel";
 import { usePresence } from "./use-presence";
 
 const PLAN = ["read", "keep", "skip", "time"] as const;
@@ -1256,6 +1257,7 @@ export function FirstRun() {
       )}
       {stage !== "boot" && <MessengerPanel />}
       {stage !== "boot" && <ConnectorsPanel />}
+      {stage !== "boot" && <TrustPanel />}
       {stage !== "boot" && <StoredFiles />}
       {stage !== "boot" && <LanguageSwitch />}
       <div ref={bottom} />
@@ -1394,6 +1396,8 @@ const FILE_GROUPS = [
   "logs",
   "reading",
   "settings",
+  "office",
+  "connectors",
   "index",
   "backup",
   "other",
