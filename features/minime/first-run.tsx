@@ -1265,11 +1265,8 @@ function ImportCard({
   const [result, setResult] = useState<string | null>(null);
   const t = useTranslations();
   const problemText = useProblem();
-  // The prompt in the screen's language; English where it is not written yet.
-  const locale = useLocale();
-  const prompt =
-    (EXPORT_PROMPT as Partial<Record<string, string>>)[locale] ??
-    EXPORT_PROMPT.en;
+  // Claude's own export text, the same in every language, as Claude's memory import shows it.
+  const prompt = EXPORT_PROMPT;
 
   const copyPrompt = async () => {
     try {

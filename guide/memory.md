@@ -28,8 +28,9 @@ the mini-me still keeps what it learns, and asks them, in theirs.
 
 - **The first time**: it reads a little of what is on their computer (`reading.md`) and keeps at
   most five lines about how they work. Lines kept this time are marked **New** (새로).
-- **From another AI**: **Bring it from another AI** (다른 AI에서 가져오기) shows a short text to copy
-  (**Copy**, 복사) into a chat with the AI they use most — ChatGPT, Claude, Gemini or another. They
+- **From another AI**: **Bring it from another AI** (다른 AI에서 가져오기) shows the text Claude's own
+  memory import uses (**Copy**, 복사), to paste into a chat with the AI they use most — ChatGPT,
+  Claude, Gemini or another. It asks that AI for everything it remembers; the mini-me sorts it. They
   paste that AI's answer back and press **Add to memory** (기억에 추가). The mini-me keeps only what
   will still be true in months (at most five lines each time) and never stores the pasted text. It
   can be done while the first reading runs, or any time later from the bottom of the page.
