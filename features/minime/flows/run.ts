@@ -117,8 +117,16 @@ export async function tick(
           : { last: { at: slot.toISOString(), ok: false, missed: true } }),
       }));
       if (!decision.run) continue;
-      await run(flow.id, { now });
-      ran.push(flow.id);
+      // One run failing never holds up the others due now.
+      try {
+        await run(flow.id, { now });
+        ran.push(flow.id);
+      } catch {
+        await changeFlow(flow.id, (f) => ({
+          ...f,
+          last: { at: now.toISOString(), ok: false, error: "flow-failed" },
+        })).catch(() => {});
+      }
     }
   } finally {
     await release();

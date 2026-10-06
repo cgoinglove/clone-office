@@ -119,6 +119,27 @@ test("each minute: a flow whose time came runs once, a missed one is noted, a pa
   assert.deepEqual(ran, ["morning-aaaaaa"]);
 });
 
+test("a run that fails is noted and never holds up the others due at the same time", async () => {
+  const { addFlow, getFlow } = await import("./store");
+  const { tick } = await import("./run");
+  const made = new Date(2026, 9, 5, 12).toISOString();
+  for (const id of ["first-dddddd", "second-eeeeee"])
+    await addFlow({
+      id,
+      name: id,
+      what: "Sum up.",
+      when: { kind: "weekly", days: [0, 1, 2, 3, 4, 5, 6], time: "11:00" },
+      created: made,
+    });
+  const ran: string[] = [];
+  await tick(new Date(2026, 9, 6, 11, 1), async (id) => {
+    if (id === "first-dddddd") throw new Error("the brain fell over");
+    ran.push(id);
+  });
+  assert.deepEqual(ran, ["second-eeeeee"]);
+  assert.equal((await getFlow("first-dddddd"))?.last?.ok, false);
+});
+
 test("a flow for a kind of request is followed while answering one, never on a clock", async () => {
   const { saveMenu } = await import("../office/menu");
   const { callFlowTool } = await import("./tools");
