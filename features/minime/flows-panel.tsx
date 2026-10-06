@@ -8,6 +8,9 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { When } from "./flows/schedule";
+import { askedWhen, whenText } from "./flows/when-text";
+
+export { whenText };
 
 interface FlowView {
   id: string;
@@ -24,76 +27,11 @@ interface FlowView {
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
 
-type Format = ReturnType<typeof useFormatter>;
-type Translate = ReturnType<typeof useTranslations<"flows">>;
-
-/**
- * A schedule in the person's language, with their own way of writing days and times. A request
- * flow shows the kind it is for (`kind`, its name when known).
- */
-export function whenText(
-  t: Translate,
-  format: Format,
-  when: When,
-  kind?: string,
-): string {
-  if (when.kind === "request")
-    return when.menu
-      ? t("when.request", { kind: kind ?? when.menu.replaceAll("-", " ") })
-      : t("when.anyRequest");
-  const clock = (time: string) => {
-    const [hour, minute] = time.split(":").map(Number);
-    return format.dateTime(new Date(2000, 0, 1, hour, minute), {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
-  if (when.kind === "every")
-    return when.minutes % 60 === 0
-      ? t("when.hours", { hours: when.minutes / 60 })
-      : t("when.minutes", { minutes: when.minutes });
-  if (when.kind === "once") {
-    const [date, time] = when.at.split("T");
-    const [y, m, d] = date.split("-").map(Number);
-    const [hour, minute] = time.split(":").map(Number);
-    return t("when.once", {
-      at: format.dateTime(new Date(y, m - 1, d, hour, minute), {
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      }),
-    });
-  }
-  const time = clock(when.time);
-  if (when.days.length === 7) return t("when.daily", { time });
-  if (when.days.join(",") === "1,2,3,4,5") return t("when.weekdays", { time });
-  // 4 October 2026 was a Sunday: each day's name in the person's language.
-  const days = when.days
-    .map((day) =>
-      format.dateTime(new Date(2026, 9, 4 + day), { weekday: "short" }),
-    )
-    .join(", ");
-  return t("when.days", { days, time });
-}
-
 /** A flow the mini-me is about to make or change, as its card shows it. */
 export function FlowAsk({ input }: { input: Record<string, unknown> }) {
   const t = useTranslations("flows");
   const format = useFormatter();
-  // What the mini-me wrote, before the code checked it: a one-off may still be "in N minutes".
-  const raw = input.when as Record<string, unknown> | undefined;
-  let line: string | undefined;
-  try {
-    line =
-      raw?.kind === "once" && typeof raw.in_minutes === "number"
-        ? t("when.inMinutes", { minutes: raw.in_minutes })
-        : raw?.kind
-          ? whenText(t, format, raw as unknown as When)
-          : undefined;
-  } catch {
-    line = undefined;
-  }
+  const line = askedWhen(t, format, input);
   return (
     <div className="flex flex-col gap-1 rounded-lg bg-muted p-3 text-sm">
       {typeof input.name === "string" && (

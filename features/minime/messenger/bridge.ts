@@ -17,7 +17,7 @@
 import { randomInt } from "node:crypto";
 import { readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { createTranslator } from "next-intl";
+import { createFormatter, createTranslator } from "next-intl";
 import { isLocale, type Locale } from "../../../i18n/locales.ts";
 import { loadMessages } from "../../../i18n/messages.ts";
 import type english from "../../../messages/en.json";
@@ -25,6 +25,7 @@ import { changeOf, describe } from "../ask-text.ts";
 import { dueAt } from "../batch.ts";
 import { type ChatNews, onChatMessage, readChat } from "../chat/store.ts";
 import { runTurn } from "../chat/turn.ts";
+import { askedWhen } from "../flows/when-text.ts";
 import { answerPerson } from "../gate/answer.ts";
 import { type Ask, isRequestChat, onAsk, pendingAsks } from "../gate/gate.ts";
 import { pathRule } from "../gate/rules.ts";
@@ -194,6 +195,8 @@ async function words() {
     t: createTranslator({ locale, messages, namespace: "messenger" }),
     ask: createTranslator({ locale, messages, namespace: "ask" }),
     chat: createTranslator({ locale, messages, namespace: "chat" }),
+    flows: createTranslator({ locale, messages, namespace: "flows" }),
+    format: createFormatter({ locale }),
     errors: createTranslator({ locale, messages, namespace: "errors" }),
   };
 }
@@ -656,12 +659,25 @@ export class Bridge {
     ask: Ask,
     about?: string,
   ): Promise<void> {
-    const { t, ask: tAsk } = await words();
+    const w = await words();
+    const { t, ask: tAsk } = w;
     let text: string;
     let choices: Choice[] = [];
     if (ask.kind === "permission") {
       const change = changeOf(ask.tool, ask.input);
-      text = `${tAsk("mayI")}\n${describe(tAsk, ask.tool, ask.input)}${change ? `\n\`\`\`\n${change.replace(/```/g, "ˋˋˋ")}\n\`\`\`` : ""}`;
+      // A flow shows itself, as its card on the page does: its name, when, and what.
+      const flow =
+        ask.tool === "mcp__minime__flow_manage"
+          ? [
+              ask.input.name,
+              askedWhen(w.flows, w.format, ask.input),
+              ask.input.what,
+            ]
+              .filter((part) => typeof part === "string" && part.trim())
+              .map((part) => `\n${part}`)
+              .join("")
+          : "";
+      text = `${tAsk("mayI")}\n${describe(tAsk, ask.tool, ask.input)}${flow}${change ? `\n\`\`\`\n${change.replace(/```/g, "ˋˋˋ")}\n\`\`\`` : ""}`;
       choices = [
         { label: tAsk("allow"), value: `ask:${id}:allow`, style: "primary" },
         { label: tAsk("always"), value: `ask:${id}:always` },

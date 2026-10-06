@@ -599,3 +599,57 @@ test("files from the person's phone are kept for the mini-me to read; a stranger
   await bridge.disconnect();
   process.env.SUB_OFFICE_HOME = root;
 });
+
+test("a flow the mini-me would make shows itself on the phone, as its card does on the page", async () => {
+  const home = join(root, "flow-card");
+  process.env.SUB_OFFICE_HOME = home;
+  const bots: FakeBot[] = [];
+  const bridge = new bridgeModule.Bridge({
+    makeBot: ({ token }, listener) => {
+      const bot = new FakeBot(token, listener);
+      bots.push(bot);
+      return bot;
+    },
+    turn: async ({ text, send }) => {
+      const chat = await store.createChat(text);
+      send({ type: "chat", id: chat.id, title: text });
+      if (text === "remind me") {
+        const ask = {
+          kind: "permission" as const,
+          tool: "mcp__minime__flow_manage",
+          input: {
+            action: "create",
+            name: "Water",
+            when: { kind: "once", in_minutes: 2 },
+            what: "Remind me to drink a glass of water.",
+          },
+        };
+        const asked = gate.askPerson(chat.id, ask);
+        send({ type: "ask", id: asked.id, ask });
+        await asked.done;
+      }
+      send({ type: "done", chat: chat.id });
+    },
+    presence: () => ({ state: "watching" }),
+  });
+  await bridge.connect("discord", "right-token-right-token");
+  const bot = bots.at(-1) as FakeBot;
+  bot.write(ana, "hi");
+  await until(() => bot.sent.length === 1);
+  await bridge.allow((await bridge.status()).asking?.code ?? "");
+  await until(() => bot.sent.length === 2);
+  bot.write(ana, "remind me");
+  await until(() => bot.sent.some((m) => m.text.includes("Water")));
+  const card = bot.sent.find((m) => m.text.includes("Water"));
+  assert.match(
+    card?.text ?? "",
+    /^May I do this\?\nMake a flow\nWater\nOnce, in 2 minutes\nRemind me to drink a glass of water\.$/,
+  );
+  assert.deepEqual(
+    card?.choices.map((c) => c.label),
+    ["Allow", "Don't ask again for this", "Don't"],
+  );
+  for (const pending of gate.pendingAsks()) gate.answerAsk(pending.id, "deny");
+  await bridge.disconnect();
+  process.env.SUB_OFFICE_HOME = root;
+});
