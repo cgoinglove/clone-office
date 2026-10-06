@@ -11,10 +11,19 @@ export type TaskState =
   | "CANCELED"
   | "REJECTED";
 
+/** A file named on a message, taken from the relay by its id. */
+export interface FileRef {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+}
+
 /** The relay's shapes (A2A v1.0.0), as much of them as the plugin reads. */
 export interface Message {
   role: "user" | "agent";
   parts: { text: string }[];
+  files?: FileRef[];
   metadata: { from: string; at: string };
 }
 
@@ -69,6 +78,8 @@ export interface News {
   state: TaskState;
   text: string;
   asked: string;
+  /** Files that came with the new words. */
+  files: FileRef[];
   /** The messages read once this is read. */
   seen: number;
   final: boolean;
@@ -119,9 +130,17 @@ export function newsOf(task: Task, read: Read): News | undefined {
       fresh.map(firstText).filter(Boolean).join("\n\n") ||
       (ENDS[state] ?? "(no message)"),
     asked: firstText(task.history[0]),
+    files: fresh.flatMap((message) => message.files ?? []),
     seen: task.history.length,
     final: FINAL.has(state),
   };
+}
+
+/** A file's size as a person reads it. */
+export function sizeText(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 const HEADS: Partial<Record<TaskState, string>> = {
@@ -141,6 +160,14 @@ export function describe(news: News): string {
       .map((line) => `> ${line}`)
       .join("\n"),
   ];
+  if (news.files.length)
+    lines.push(
+      "",
+      `It sent ${news.files.length === 1 ? "a file" : "files"} with it; take one onto this computer with office_file (request ${news.id}) when it is needed:`,
+      ...news.files.map(
+        (file) => `- ${file.name} (${sizeText(file.size)}), file ${file.id}`,
+      ),
+    );
   if (news.state === "INPUT_REQUIRED")
     lines.push(
       "",

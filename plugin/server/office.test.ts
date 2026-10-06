@@ -181,7 +181,13 @@ test("from Claude Code: see colleagues, ask one, get a quick answer, or note whe
   };
   assert.deepEqual(
     tools.map((t) => t.name),
-    ["colleagues", "ask_colleague", "answer_colleague", "office_requests"],
+    [
+      "colleagues",
+      "ask_colleague",
+      "answer_colleague",
+      "office_file",
+      "office_requests",
+    ],
   );
   assert.match(
     said(await call("tools/call", { name: "colleagues", arguments: {} })),
@@ -271,5 +277,91 @@ test("from Claude Code: see colleagues, ask one, get a quick answer, or note whe
   assert.match(
     said(await call("tools/call", { name: "office_requests", arguments: {} })),
     /to Ben · answered · "Can you take the refund bug this week\?"/,
+  );
+
+  // A file goes with a request, and one comes back with the answer, taken onto this computer
+  // when it is needed, into the folder the app keeps a request's files in.
+  const log = join(root, "error.log");
+  writeFileSync(log, "TypeError: cursor is undefined\n");
+  const asBen = { authorization: `Bearer ${ben.token}` };
+  const answeringFile = (async () => {
+    for (;;) {
+      const { tasks } = await (
+        await fetch(new URL("/tasks", relay), { headers: asBen })
+      ).json();
+      const asked = tasks.find(
+        (t: { history: { files?: { id: string }[] }[] }) =>
+          t.history[0].files?.length,
+      );
+      if (asked) {
+        const got = await (
+          await fetch(
+            new URL(`/files/${asked.history[0].files[0].id}`, relay),
+            {
+              headers: asBen,
+            },
+          )
+        ).text();
+        const fix = await (
+          await fetch(new URL("/files", relay), {
+            method: "POST",
+            headers: {
+              ...asBen,
+              "content-type": "text/plain",
+              "x-file-name": "fix.patch",
+            },
+            body: "- a\n+ b\n",
+          })
+        ).json();
+        return post(
+          relay,
+          `/tasks/${asked.id}`,
+          {
+            state: "COMPLETED",
+            text: `Seen: ${got.trim()}. Here is a patch.`,
+            files: [fix.file.id],
+          },
+          ben.token,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+  })();
+  const withFile = said(
+    await call("tools/call", {
+      name: "ask_colleague",
+      arguments: { to: "Ben", text: "Why does this fail?", files: [log] },
+    }),
+  );
+  await answeringFile;
+  assert.match(
+    withFile,
+    /> Seen: TypeError: cursor is undefined\. Here is a patch\./,
+  );
+  const fileId = /- fix\.patch \(8 B\), file (f-[\w-]+)/.exec(withFile)?.[1];
+  const fileRequest = /\(request ([\w-]+)\)/.exec(withFile)?.[1] as string;
+  assert.ok(fileId, withFile);
+  const taking = {
+    name: "office_file",
+    arguments: { request: fileRequest, file: fileId },
+  };
+  const taken = said(await call("tools/call", taking));
+  const where = join(home, "office", "files", fileRequest, "fix.patch");
+  assert.equal(taken, `fix.patch (8 B) is at ${where}`);
+  assert.equal(readFileSync(where, "utf8"), "- a\n+ b\n");
+  assert.equal(said(await call("tools/call", taking)), `It is at ${where}`);
+  // A file that is not there is said, and nothing is sent.
+  assert.match(
+    said(
+      await call("tools/call", {
+        name: "ask_colleague",
+        arguments: {
+          to: "Ben",
+          text: "And this?",
+          files: [join(root, "nope.log")],
+        },
+      }),
+    ),
+    /No such file/,
   );
 });

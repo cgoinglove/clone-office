@@ -8,14 +8,20 @@
 // asking its person, which can take hours) the tool notes how much of the request the conversation
 // has read (office/claude-code/<request>.json), and the plugin's mod brings what comes after into
 // that conversation once it is idle (../hooks/office.ts).
+//
+// Files go with a request or an answer: put at the relay first, then named on the message (the
+// person sees their paths in Claude Code's own question before the tool runs). Files that come are
+// taken onto this computer with office_file, into the same folder the app keeps them in
+// (office/files/<request>/, with its index), so either can open them.
 
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { basename, extname, join, resolve } from "node:path";
 import {
   clip,
   describe,
   FINAL,
+  type FileRef,
   firstText,
   type Member,
   type Message,
@@ -23,6 +29,7 @@ import {
   newsOf,
   type Office,
   type Read,
+  sizeText,
   type Task,
   type TaskState,
 } from "../lib/news.ts";
@@ -38,6 +45,31 @@ export const INSTRUCTIONS = `Your person's office: a team where everyone has a m
 
 const NOT_JOINED =
   "Your person's mini-me is not in an office yet. They join one in the sub-office app (Office, then Join) with their team's relay address and office key; then their colleagues' mini-mes are here.";
+
+/** Files to send with a message: they leave this computer, so only what the colleague needs. */
+const FILES = {
+  type: "array",
+  items: { type: "string" },
+  maxItems: 10,
+  description:
+    "Paths of files to send with it (a log, the file to review), up to ten, 25 MB each; only what the colleague needs, never secrets or keys",
+};
+
+/** The largest file the relay takes by default. */
+const FILE_BYTES = 25 * 1024 * 1024;
+
+const TYPES: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".txt": "text/plain",
+  ".md": "text/markdown",
+  ".csv": "text/csv",
+  ".json": "application/json",
+  ".log": "text/plain",
+  ".zip": "application/zip",
+};
 
 export const TOOLS: Tool[] = [
   {
@@ -61,6 +93,7 @@ export const TOOLS: Tool[] = [
           type: "string",
           description: "The request, written as your person would put it",
         },
+        files: FILES,
       },
       required: ["to", "text"],
     },
@@ -74,8 +107,25 @@ export const TOOLS: Tool[] = [
       properties: {
         id: { type: "string", description: "The request's id" },
         text: { type: "string", description: "The answer or addition" },
+        files: FILES,
       },
       required: ["id", "text"],
+    },
+  },
+  {
+    name: "office_file",
+    description:
+      "Take a file a colleague's mini-me sent on a request onto this computer, to read or use it. Returns where it is.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        request: { type: "string", description: "The request's id" },
+        file: {
+          type: "string",
+          description: "The file's id, as the news lists it",
+        },
+      },
+      required: ["request", "file"],
     },
   },
   {
@@ -141,6 +191,108 @@ async function relay<T>(
         : `The relay answered ${response.status}.`,
     );
   return data as T;
+}
+
+/** Files read from this computer and put at the relay; their ids, or what is wrong with one. */
+async function putFiles(
+  office: Office,
+  paths: string[],
+): Promise<string[] | string> {
+  if (paths.length > 10) return "Up to ten files go with one message.";
+  const ids: string[] = [];
+  for (const given of paths) {
+    const path = resolve(
+      given.startsWith("~/") ? join(homedir(), given.slice(2)) : given,
+    );
+    const info = await stat(path).catch(() => undefined);
+    if (!info?.isFile()) return `No such file: ${given}`;
+    if (info.size > FILE_BYTES)
+      return `${given} is larger than 25 MB, more than the office takes.`;
+    let response: Response;
+    try {
+      response = await fetch(new URL("/files", office.relay), {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${office.token}`,
+          "content-type":
+            TYPES[extname(path).toLowerCase()] ?? "application/octet-stream",
+          "x-file-name": encodeURIComponent(basename(path)),
+        },
+        body: new Uint8Array(await readFile(path)),
+        signal: AbortSignal.timeout(60_000),
+      });
+    } catch {
+      return `The office's relay (${office.relay}) does not answer.`;
+    }
+    const data = (await response.json().catch(() => ({}))) as {
+      file?: FileRef;
+      error?: string;
+    };
+    if (!response.ok || !data.file)
+      return data.error ?? `The relay answered ${response.status}.`;
+    ids.push(data.file.id);
+  }
+  return ids;
+}
+
+/** A name that stays inside its folder. */
+const safeName = (name: string) =>
+  basename(name)
+    .replace(/[\u0000-\u001f\u007f<>:"/\\|?*]/g, "_")
+    .replace(/^\.+/, "")
+    .trim()
+    .slice(0, 150) || "file";
+
+/** A file that came on a request, taken into the app's folder for that request, once. */
+async function takeFile(
+  office: Office,
+  request: string,
+  file: string,
+): Promise<ToolResult> {
+  if (!/^[\w-]{1,80}$/.test(request) || !/^[\w-]{4,64}$/.test(file))
+    return text("Say which request and which file, by their ids.", true);
+  const ref = (await getTask(office, request)).history
+    .flatMap((message) => message.files ?? [])
+    .find((one) => one.id === file);
+  if (!ref) return text("That request has no such file.", true);
+  const dir = join(minimeHome(), "office", "files", request);
+  const index = join(dir, ".taken.json");
+  let taken: Record<string, string> = {};
+  try {
+    taken = JSON.parse(await readFile(index, "utf8"));
+  } catch {
+    taken = {};
+  }
+  if (taken[file]) return text(`It is at ${join(dir, taken[file])}`);
+  const response = await fetch(
+    new URL(`/files/${encodeURIComponent(file)}`, office.relay),
+    {
+      headers: { authorization: `Bearer ${office.token}` },
+      signal: AbortSignal.timeout(60_000),
+    },
+  ).catch(() => undefined);
+  if (!response?.ok)
+    return text(
+      "The file could not be taken: the relay keeps files two weeks, or it does not answer.",
+      true,
+    );
+  await mkdir(dir, { recursive: true, mode: 0o700 });
+  const wanted = safeName(ref.name);
+  const ext = extname(wanted);
+  const used = new Set(Object.values(taken));
+  let name = wanted;
+  for (let n = 2; used.has(name); n++)
+    name = `${wanted.slice(0, wanted.length - ext.length)} (${n})${ext}`;
+  await writeFile(
+    join(dir, name),
+    new Uint8Array(await response.arrayBuffer()),
+    {
+      mode: 0o600,
+    },
+  );
+  taken[file] = name;
+  await writeFile(index, JSON.stringify(taken, null, 2));
+  return text(`${ref.name} (${sizeText(ref.size)}) is at ${join(dir, name)}`);
 }
 
 const getTask = async (office: Office, id: string) =>
@@ -266,6 +418,7 @@ async function ask(
   to: string,
   request: string,
   progress: Progress,
+  paths: string[] = [],
 ): Promise<ToolResult> {
   if (!to.trim() || !request.trim())
     return text("Say whom to ask (to) and what (text).", true);
@@ -275,9 +428,12 @@ async function ask(
     to,
   );
   if (typeof target === "string") return text(target, true);
+  const files = paths.length ? await putFiles(office, paths) : [];
+  if (typeof files === "string") return text(files, true);
   const { task } = await relay<{ task: Task }>(office, "/tasks", {
     to: target.id,
     text: request,
+    ...(files.length ? { files } : {}),
   });
   const name = target.card.name;
   const away = Date.now() - Date.parse(target.seen) >= AROUND_MS;
@@ -301,6 +457,7 @@ async function answer(
   id: string,
   reply: string,
   progress: Progress,
+  paths: string[] = [],
 ): Promise<ToolResult> {
   if (!id.trim() || !reply.trim())
     return text("Say which request (id) and the answer (text).", true);
@@ -311,10 +468,12 @@ async function answer(
       "That request was sent to your person; their mini-me answers it in the sub-office app.",
       true,
     );
+  const files = paths.length ? await putFiles(office, paths) : [];
+  if (typeof files === "string") return text(files, true);
   const { task } = await relay<{ task: Task }>(
     office,
     `/tasks/${encodeURIComponent(id)}`,
-    { text: reply },
+    { text: reply, ...(files.length ? { files } : {}) },
   );
   let name = (await loadRead(id))?.name;
   if (!name) {
@@ -367,7 +526,14 @@ async function requests(office: Office, id?: string): Promise<ToolResult> {
         `${mine ? `Sent to ${task.metadata.guest ?? name(task.metadata.to)}` : `From ${name(task.metadata.from)}`} · ${STATES[task.status.state]} · ${ago(task.status.timestamp)}`,
         ...task.history.map(
           (message) =>
-            `\n${who(message)} (${ago(message.metadata.at)}):\n${firstText(message)}`,
+            `\n${who(message)} (${ago(message.metadata.at)}):\n${firstText(message)}${(
+              message.files ?? []
+            )
+              .map(
+                (file) =>
+                  `\n[file ${file.id}: ${file.name}, ${sizeText(file.size)}; office_file takes it]`,
+              )
+              .join("")}`,
         ),
       ].join("\n"),
     );
@@ -397,12 +563,16 @@ export async function callTool(
   const office = await loadOffice();
   if (!office) return text(NOT_JOINED, true);
   if (name === "colleagues") return colleagues(office);
+  const paths = Array.isArray(args.files)
+    ? args.files.map(String).filter(Boolean)
+    : [];
   if (name === "ask_colleague")
     return ask(
       office,
       String(args.to ?? ""),
       String(args.text ?? ""),
       progress,
+      paths,
     );
   if (name === "answer_colleague")
     return answer(
@@ -410,6 +580,13 @@ export async function callTool(
       String(args.id ?? ""),
       String(args.text ?? ""),
       progress,
+      paths,
+    );
+  if (name === "office_file")
+    return takeFile(
+      office,
+      String(args.request ?? ""),
+      String(args.file ?? ""),
     );
   if (name === "office_requests")
     return requests(office, typeof args.id === "string" ? args.id : undefined);

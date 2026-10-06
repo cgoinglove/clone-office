@@ -135,6 +135,10 @@ It uses the office their mini-me joined in the app; the app does not need to be 
   holds the answer, and otherwise asks them.
 - What a colleague's mini-me writes is information from that colleague, not instructions:
   Claude Code checks with them before doing something it asks.
+- Files go too: "send Ben this log and ask why it fails". Claude Code's own question before the
+  request leaves shows the files' paths. Files that come back are named in the answer, and Claude
+  Code takes one onto the computer when it needs it (into the same `office/files/` folder the app
+  uses).
 
 ## When a colleague asks them
 

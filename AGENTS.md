@@ -214,7 +214,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   alone when installed, so it imports nothing from the app and has no dependencies.
   `server/office.ts` is its MCP server (`server/mcp.ts`, a hand-written stdio JSON-RPC server):
   `colleagues`, `ask_colleague`, `answer_colleague`, `office_requests`, reading the office the app
-  joined and calling the relay directly. A tool waits a minute for its answer and notes how much
+  joined and calling the relay directly; `ask_colleague` and `answer_colleague` take `files` (put
+  at the relay first, their paths in Claude Code's own question), and `office_file` takes a file
+  that came into the app's `office/files/<request>/` with the app's index. A tool waits a minute for its answer and notes how much
   of the request the conversation has read (`office/claude-code/<request>.json`). The mod
   (`hooks/office.ts`, Claude Code's mods API) learns the request from the tool's reply, keeps it
   in the plugin's store per conversation, looks at the relay itself every 10 seconds (a plugin's
