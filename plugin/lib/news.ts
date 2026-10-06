@@ -27,7 +27,13 @@ export interface Task {
 
 export interface Member {
   id: string;
-  card: { name: string; description: string; status?: string };
+  card: {
+    name: string;
+    description: string;
+    status?: string;
+    /** The kinds of request they take (A2A skills). */
+    skills?: { id: string; name: string; description?: string }[];
+  };
   seen: string;
 }
 

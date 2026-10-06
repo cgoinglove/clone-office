@@ -2,8 +2,11 @@
 // way its person would: from what it knows of them. What only its person can give (a promise, a
 // decision they answer for, a relationship, a check in their field) is asked on their screen
 // through the trust gate, and the one asking only hears that it is being checked meanwhile.
+// The brain says which kind of request on the person's menu it is; code then does what the
+// person set for that kind: send it, send it and tell them, or show it to them first.
 
 import { runSession, type SessionGate } from "../brain/session.ts";
+import { appendMessage, createChat, listChats } from "../chat/store.ts";
 import { gateSecret, onAsk, waitFor } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { loadExcludes } from "../server/exclude.ts";
@@ -15,6 +18,7 @@ import {
   tasks,
   updateRequest,
 } from "./client.ts";
+import { loadMenu, type MenuItem, menuLines, trustFor } from "./menu.ts";
 import { changeState, loadState, releaseLease, takeLease } from "./state.ts";
 import { officeClosing } from "./worker.ts";
 
@@ -24,11 +28,17 @@ export const REQUEST_SCHEMA = {
     reply: { type: "string" },
     needs_input: { type: "boolean" },
     declined: { type: "boolean" },
+    menu: { type: "string" },
+    note: { type: "string" },
   },
   required: ["reply"],
 };
 
-export function requestPrompt(from: Card | undefined, text: string): string {
+export function requestPrompt(
+  from: Card | undefined,
+  text: string,
+  menu: MenuItem[] = [],
+): string {
   const who = from
     ? `the mini-me of ${from.name}${from.description ? ` (${from.description})` : ""}`
     : "a colleague's mini-me";
@@ -40,7 +50,17 @@ Answer it for your person, the way they would: from what you know of them and th
 
 Some things only your person can give: a promise (a date, money, scope), a decision they answer for, anything about a relationship (refusing, apologising, negotiating), or a check of work in their own field. For those, ask your person with ask_me, in their language, and answer with what they said. Never promise or decide on their behalf.
 
-If you need something from the one asking before you can answer, set needs_input and ask it in reply. If it is not something your person does or would take on, set declined and say so politely in reply.`;
+If you need something from the one asking before you can answer, set needs_input and ask it in reply. If it is not something your person does or would take on, set declined and say so politely in reply.
+${
+  menu.length
+    ? `
+The kinds of request your person takes (id: name — what it is):
+${menuLines(menu)}
+Put in menu the id of the one this request is, or leave it empty if none fits.
+`
+    : ""
+}
+In note, write one line for your person, in their language: who asked what, and what you answered.`;
 }
 
 /** Waits before trying a failed run again, when the failure looks like it will pass. */
@@ -94,6 +114,7 @@ async function answer(options: {
 }): Promise<void> {
   const { office, task, from, gateUrl, language, latest } = options;
   const previous = (await loadState()).handled[task.id];
+  const menu = await loadMenu();
   const gate: SessionGate = {
     url: gateUrl,
     secret: gateSecret(),
@@ -124,7 +145,11 @@ async function answer(options: {
       runSession({
         prompt: previous?.session
           ? `They answered: ${latest.parts.map((p) => p.text).join("\n")}\n\nGo on with the request.`
-          : requestPrompt(from, latest.parts.map((p) => p.text).join("\n")),
+          : requestPrompt(
+              from,
+              latest.parts.map((p) => p.text).join("\n"),
+              menu,
+            ),
         resume: previous?.session,
         jsonSchema: REQUEST_SCHEMA,
         language,
@@ -151,7 +176,11 @@ async function answer(options: {
       reply?: string;
       needs_input?: boolean;
       declined?: boolean;
+      menu?: string;
+      note?: string;
     };
+    // What the person set for this kind of request; code decides, the brain only named the kind.
+    const { trust } = trustFor(menu, answer.menu);
     if (!result.ok || !answer.reply?.trim()) {
       await updateRequest(office, task.id, {
         state: "FAILED",
@@ -171,6 +200,10 @@ async function answer(options: {
       chat: gate.chat ?? requestChat(task),
       language,
       said,
+      // "Ask me first": the person sees the answer before it goes, whatever the check finds,
+      // unless they already gave it themselves while it was made.
+      approve: trust === "ask" && said.length === 0,
+      from: from?.name,
     });
     if (officeClosing()) return;
     if ("hold" in outcome) {
@@ -188,7 +221,20 @@ async function answer(options: {
           : "COMPLETED",
       text: outcome.send,
     });
+    // "Do it and tell me": the person hears what was answered for them, in their conversation.
+    if (trust === "tell")
+      await tellPerson(
+        answer.note?.trim() ||
+          `${from?.name ?? "A colleague"}: ${latest.parts.map((p) => p.text).join(" ")}\n→ ${outcome.send}`,
+      );
   } finally {
     stop();
   }
+}
+
+/** A line in the person's latest conversation with their mini-me (a new one if there is none). */
+export async function tellPerson(note: string): Promise<void> {
+  const [latest] = await listChats(1);
+  const chat = latest ?? (await createChat(note));
+  await appendMessage(chat.id, "told", note);
 }

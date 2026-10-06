@@ -114,7 +114,8 @@
     "carrying": "This conversation is long: keeping what matters first, then summing up what came before",
     "carried": "I summed up what came before and will go on from that.",
     "turns": "{count, plural, one {# message} other {# messages}}",
-    "fromColleague": "From a colleague's mini-me"
+    "fromColleague": "From a colleague's mini-me",
+    "told": "I answered for you"
   },
   "ask": {
     "needsYou": "Needs you",
@@ -175,7 +176,31 @@
     "leave": "Leave the office",
     "asksTitle": "A request needs your answer",
     "team": "Our team",
-    "needsYou": "Needs you"
+    "needsYou": "Needs you",
+    "menu": {
+      "title": "Requests I take",
+      "intro": "What colleagues' mini-mes can bring you, and how much your mini-me does alone for each. Colleagues see the kinds, never how much it does alone.",
+      "none": "Nothing set yet. Once you set what you take, colleagues' mini-mes know what to bring you, and you decide for each kind whether your mini-me answers alone or asks you first.",
+      "free": "A request that fits none of these: your mini-me answers it and tells you.",
+      "trust": {
+        "auto": "On its own",
+        "tell": "Tell me",
+        "ask": "Ask me first"
+      },
+      "trustHint": {
+        "auto": "Answers and sends, without telling you",
+        "tell": "Answers and sends, then tells you in your conversation",
+        "ask": "Shows you the answer first; it goes only when you say so"
+      },
+      "add": "Add one",
+      "name": "What it is",
+      "namePlaceholder": "e.g. Questions about the payments API",
+      "description": "What to include",
+      "descriptionPlaceholder": "e.g. Which endpoint, and what you tried",
+      "save": "Add",
+      "remove": "Remove",
+      "takes": "Takes: {list}"
+    }
   },
   "files": {
     "title": "All files I keep",

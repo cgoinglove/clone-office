@@ -43,7 +43,7 @@ export const TOOLS: Tool[] = [
   {
     name: "colleagues",
     description:
-      "Who is in your person's office: each colleague's mini-me, with what that colleague does, their status, and whether their mini-me is around now. Look here before asking someone.",
+      "Who is in your person's office: each colleague's mini-me, with what that colleague does, the kinds of request they take, their status, and whether their mini-me is around now. Look here before asking someone.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -232,7 +232,14 @@ async function colleagues(office: Office): Promise<ToolResult> {
             ? "around now"
             : `last around ${ago(m.seen)}`;
         const status = m.card.status ? ` · ${m.card.status}` : "";
-        return `- ${m.card.name} (${m.id}): ${m.card.description || "no description"}${status} · ${around}`;
+        const takes = (m.card.skills ?? [])
+          .map((skill) =>
+            skill.description
+              ? `${skill.name} (${skill.description})`
+              : skill.name,
+          )
+          .join("; ");
+        return `- ${m.card.name} (${m.id}): ${m.card.description || "no description"}${status} · ${around}${takes ? `\n  takes: ${takes}` : ""}`;
       })
       .join("\n"),
   );

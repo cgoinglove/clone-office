@@ -67,13 +67,17 @@ export function newsSince(messages: ChatMessage[]): string[] {
   const lastAnswer = messages.map((m) => m.role).lastIndexOf("minime");
   return messages
     .slice(lastAnswer + 1)
-    .filter((m) => m.role === "office")
-    .map((m) => m.text);
+    .filter((m) => m.role === "office" || m.role === "told")
+    .map((m) =>
+      m.role === "told"
+        ? `You answered a colleague for them: ${m.text}`
+        : m.text,
+    );
 }
 
 function withNews(news: string[], text: string): string {
   return news.length
-    ? `Since your last answer, colleagues' mini-mes answered:\n${news.map((n) => `- ${n}`).join("\n")}\n\n---\n\n${text}`
+    ? `Since your last answer, from the office:\n${news.map((n) => `- ${n}`).join("\n")}\n\n---\n\n${text}`
     : text;
 }
 

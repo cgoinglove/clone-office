@@ -1,6 +1,6 @@
 import * as z from "zod";
 import { pendingAsks } from "@/features/minime/gate/gate";
-import { draftCard } from "@/features/minime/office/card";
+import { draftCard, draftMenu } from "@/features/minime/office/card";
 import {
   joinOffice,
   leaveOffice,
@@ -12,6 +12,12 @@ import {
   updateCard,
   updateRequest,
 } from "@/features/minime/office/client";
+import {
+  cleanMenu,
+  loadMenu,
+  menuSkills,
+  saveMenu,
+} from "@/features/minime/office/menu";
 import {
   officeProblem,
   startOffice,
@@ -28,7 +34,8 @@ export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
   const office = await loadOffice();
-  if (!office) return Response.json({ joined: false });
+  const menu = await loadMenu();
+  if (!office) return Response.json({ joined: false, menu });
   const url = new URL(request.url);
   startOffice(
     new URL("/api/me/gate", request.url).toString(),
@@ -43,6 +50,7 @@ export async function GET(request: Request) {
       joined: true,
       relay: office.relay,
       me: { id: office.member, card: office.card },
+      menu,
       members: everyone,
       tasks: requests,
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
@@ -53,6 +61,7 @@ export async function GET(request: Request) {
       joined: true,
       relay: office.relay,
       me: { id: office.member, card: office.card },
+      menu,
       members: [],
       tasks: [],
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
@@ -94,6 +103,14 @@ const Body = z.discriminatedUnion("action", [
     action: z.literal("draft"),
     locale: z.string().max(35).default("en"),
   }),
+  z.object({
+    action: z.literal("menu"),
+    menu: z.array(z.record(z.string(), z.unknown())).max(12),
+  }),
+  z.object({
+    action: z.literal("draft-menu"),
+    locale: z.string().max(35).default("en"),
+  }),
 ]);
 
 export async function POST(request: Request) {
@@ -112,8 +129,29 @@ export async function POST(request: Request) {
         ? Response.json({ description })
         : Response.json({ error: "no-draft" }, { status: 502 });
     }
+    if (input.action === "draft-menu") {
+      if (!hasClaudeCode())
+        return Response.json({ error: "claude-missing" }, { status: 409 });
+      const drafted = cleanMenu(
+        await draftMenu(await personLanguage(input.locale)),
+      );
+      return drafted.length
+        ? Response.json({ menu: drafted })
+        : Response.json({ error: "no-draft" }, { status: 502 });
+    }
+    if (input.action === "menu") {
+      // Kept here with how much is done alone; colleagues see only the kinds, on the card.
+      const menu = await saveMenu(input.menu);
+      const office = await loadOffice();
+      if (office)
+        await updateCard(office, { ...office.card, skills: menuSkills(menu) });
+      return Response.json({ menu });
+    }
     if (input.action === "join") {
-      const office = await joinOffice(input.relay, input.key, input.card);
+      const office = await joinOffice(input.relay, input.key, {
+        ...input.card,
+        skills: menuSkills(await loadMenu()),
+      });
       return Response.json({
         joined: true,
         me: { id: office.member, card: office.card },
@@ -123,7 +161,10 @@ export async function POST(request: Request) {
     if (!office)
       return Response.json({ error: "not-in-office" }, { status: 409 });
     if (input.action === "card") {
-      const next = await updateCard(office, input.card);
+      const next = await updateCard(office, {
+        ...input.card,
+        skills: menuSkills(await loadMenu()),
+      });
       return Response.json({ me: { id: next.member, card: next.card } });
     }
     if (input.action === "send")

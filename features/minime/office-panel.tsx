@@ -9,6 +9,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { OfficeFloor, type OfficePerson } from "@/features/office";
@@ -29,7 +30,21 @@ interface Card {
   name: string;
   description: string;
   status?: string;
+  /** The kinds of request they take (A2A skills), from their menu. */
+  skills?: { id: string; name: string; description?: string }[];
 }
+
+type Trust = "auto" | "tell" | "ask";
+
+interface MenuItem {
+  id?: string;
+  name: string;
+  description: string;
+  examples?: string[];
+  trust: Trust;
+}
+
+const TRUSTS: Trust[] = ["auto", "tell", "ask"];
 
 interface Task {
   id: string;
@@ -42,6 +57,8 @@ interface Office {
   joined: boolean;
   relay?: string;
   me?: { id: string; card: Card };
+  /** The person's own menu, with how much their mini-me does alone for each kind. */
+  menu?: MenuItem[];
   members?: { id: string; card: Card; seen: string }[];
   tasks?: Task[];
   asks?: { id: string; chat?: string; ask: GateAsk }[];
@@ -114,12 +131,7 @@ export function OfficePanel({
     let news = false;
     for (const task of data.tasks ?? []) {
       const before = seen.current.get(task.id);
-      if (
-        before !== undefined &&
-        before !== task.status.state &&
-        task.metadata.from === data.me?.id
-      )
-        news = true;
+      if (before !== undefined && before !== task.status.state) news = true;
       seen.current.set(task.id, task.status.state);
     }
     if (news) onNews?.();
@@ -226,6 +238,12 @@ export function OfficePanel({
                   card: { ...office.me?.card, status },
                 })
               }
+            />
+            <Menu
+              menu={office.menu ?? []}
+              lang={lang}
+              busy={busy}
+              onSave={(menu) => post({ action: "menu", menu })}
             />
             <section className="flex flex-col gap-2">
               <h3 className="font-medium">{t("colleagues")}</h3>
@@ -453,6 +471,173 @@ function MyCard({
   );
 }
 
+/**
+ * The kinds of request the person takes, each with how much their mini-me does alone: on its
+ * own, then tell them, or ask them first. Every change is kept and goes on the card at once.
+ */
+function Menu({
+  menu,
+  lang,
+  busy,
+  onSave,
+}: {
+  menu: MenuItem[];
+  lang: string;
+  busy: boolean;
+  onSave: (menu: MenuItem[]) => Promise<boolean>;
+}) {
+  const t = useTranslations("office");
+  const cancel = useTranslations("common")("cancel");
+  const problemText = useProblem();
+  const [adding, setAdding] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [drafting, setDrafting] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  // The mini-me drafts the kinds from what it knows; the person keeps, changes or removes them.
+  const draft = async () => {
+    setDrafting(true);
+    setProblem(null);
+    try {
+      const response = await fetch("/api/me/office", {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ action: "draft-menu", locale: lang }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setProblem(String(data.error ?? response.status));
+        return;
+      }
+      const known = new Set(menu.map((item) => item.name.toLowerCase()));
+      const fresh = ((data.menu as MenuItem[]) ?? []).filter(
+        (item) => !known.has(item.name.toLowerCase()),
+      );
+      if (fresh.length) await onSave([...menu, ...fresh]);
+    } finally {
+      setDrafting(false);
+    }
+  };
+
+  return (
+    <section className="flex flex-col gap-2">
+      <h3 className="font-medium">{t("menu.title")}</h3>
+      <p className="text-muted-foreground">
+        {menu.length ? t("menu.intro") : t("menu.none")}
+      </p>
+      {menu.length > 0 && (
+        <ul className="flex flex-col">
+          {menu.map((item, index) => (
+            <li
+              key={item.id ?? item.name}
+              className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-border py-2 last:border-b-0"
+            >
+              <span className="min-w-0 flex-1 basis-48">
+                <span className="font-medium">{item.name}</span>
+                {item.description && (
+                  <span className="block text-xs text-muted-foreground">
+                    {item.description}
+                  </span>
+                )}
+              </span>
+              <Segmented<Trust>
+                size="sm"
+                options={TRUSTS.map((trust) => ({
+                  value: trust,
+                  label: t(`menu.trust.${trust}`),
+                  title: t(`menu.trustHint.${trust}`),
+                }))}
+                value={item.trust}
+                onChange={(trust) =>
+                  void onSave(
+                    menu.map((m, i) => (i === index ? { ...m, trust } : m)),
+                  )
+                }
+              />
+              <Button
+                size="xs"
+                variant="ghost"
+                className="text-muted-foreground"
+                disabled={busy}
+                onClick={() => void onSave(menu.filter((_, i) => i !== index))}
+              >
+                {t("menu.remove")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {menu.length > 0 && (
+        <p className="text-xs text-muted-foreground">{t("menu.free")}</p>
+      )}
+      {adding && (
+        <form
+          className="flex flex-col gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void onSave([
+              ...menu,
+              {
+                name: name.trim(),
+                description: description.trim(),
+                trust: "tell",
+              },
+            ]).then((ok) => {
+              if (!ok) return;
+              setName("");
+              setDescription("");
+              setAdding(false);
+            });
+          }}
+        >
+          <label className="flex flex-col gap-1">
+            <span>{t("menu.name")}</span>
+            <Input
+              value={name}
+              placeholder={t("menu.namePlaceholder")}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span>{t("menu.description")}</span>
+            <Input
+              value={description}
+              placeholder={t("menu.descriptionPlaceholder")}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </label>
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={busy || !name.trim()}>
+              {t("menu.save")}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setAdding(false)}>
+              {cancel}
+            </Button>
+          </div>
+        </form>
+      )}
+      {!adding && (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={drafting || busy}
+            loading={drafting}
+            onClick={() => void draft()}
+          >
+            {drafting ? t("drafting") : t("draft")}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setAdding(true)}>
+            {t("menu.add")}
+          </Button>
+        </div>
+      )}
+      {problem && <p className="text-destructive">{problemText(problem)}</p>}
+    </section>
+  );
+}
+
 function Colleague({
   member,
   busy,
@@ -480,6 +665,15 @@ function Colleague({
           {member.card.description && (
             <span className="block text-muted-foreground">
               {member.card.description}
+            </span>
+          )}
+          {(member.card.skills ?? []).length > 0 && (
+            <span className="block text-xs text-muted-foreground">
+              {t("menu.takes", {
+                list: (member.card.skills ?? [])
+                  .map((skill) => skill.name)
+                  .join(" · "),
+              })}
             </span>
           )}
           <span className="block text-xs text-muted-foreground">

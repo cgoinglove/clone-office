@@ -27,3 +27,38 @@ export async function draftCard(
     ?.description;
   return result.ok && draft?.trim() ? draft.trim().slice(0, 200) : undefined;
 }
+
+export const MENU_SCHEMA = {
+  type: "object",
+  properties: {
+    items: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          description: { type: "string" },
+          examples: { type: "array", items: { type: "string" } },
+          trust: { type: "string", enum: ["auto", "tell", "ask"] },
+        },
+        required: ["name", "description", "trust"],
+      },
+    },
+  },
+  required: ["items"],
+};
+
+export const MENU_PROMPT = `Your person is setting out the kinds of request their colleagues' mini-mes can bring them, so those know what to ask for. Draft three to five, from what you know of them, their recent conversations (search them) and requests they have answered: what colleagues actually come to them for. For each: a name of a few words; a description saying what it is and what the one asking should include; up to two short examples as a colleague would ask; and how much you may do alone — auto for information that is theirs to give and binds them to nothing (how their part works, where something is), ask for anything that commits them (a date, money, scope, taking on work), a review of work in their field, or that speaks for them outside the team, and tell for the rest. Write in their language, in plain words.`;
+
+/** A first menu, for the person to correct rather than write from nothing. */
+export async function draftMenu(language?: string): Promise<unknown[]> {
+  const result = await runSession({
+    prompt: MENU_PROMPT,
+    jsonSchema: MENU_SCHEMA,
+    language,
+    maxTurns: 10,
+    purpose: "card",
+  });
+  const items = (result.structured as { items?: unknown[] } | undefined)?.items;
+  return result.ok && Array.isArray(items) ? items : [];
+}

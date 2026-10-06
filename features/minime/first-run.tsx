@@ -113,6 +113,7 @@ type Turn =
   | { id: number; kind: "saved"; text: string }
   | { id: number; kind: "note"; text: string }
   | { id: number; kind: "office"; text: string }
+  | { id: number; kind: "told"; text: string }
   | {
       id: number;
       kind: "ask";
@@ -210,6 +211,7 @@ export function FirstRun() {
           return { id, kind: "minime", text: m.text, live: false };
         if (m.role === "saved") return { id, kind: "saved", text: m.text };
         if (m.role === "office") return { id, kind: "office", text: m.text };
+        if (m.role === "told") return { id, kind: "told", text: m.text };
         return { id, kind: "error", text: m.text };
       }),
       ...waiting.asks.map(
@@ -940,6 +942,18 @@ export function FirstRun() {
               <BubbleContent className="text-[15px]">
                 <span className="block text-xs text-muted-foreground">
                   {t("chat.fromColleague")}
+                </span>
+                <span className="whitespace-pre-wrap">{turn.text}</span>
+              </BubbleContent>
+            </Bubble>
+          );
+        // What the mini-me answered a colleague for the person ("do it and tell me").
+        if (turn.kind === "told")
+          return (
+            <Bubble key={turn.id} variant="secondary" className="max-w-full">
+              <BubbleContent className="text-[15px]">
+                <span className="block text-xs text-muted-foreground">
+                  {t("chat.told")}
                 </span>
                 <span className="whitespace-pre-wrap">{turn.text}</span>
               </BubbleContent>

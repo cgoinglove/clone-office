@@ -36,3 +36,28 @@ test("the check knows what the person said, so it does not ask them twice", asyn
   assert.match(prompt, /a promise or decision in it may go/);
   assert.doesNotMatch(checkPrompt("a", "b"), /They said/);
 });
+
+test("a request is put with the person's menu, and asks for a line to tell them", async () => {
+  const { requestPrompt } = await import("./handle");
+  const { cleanMenu } = await import("./menu");
+  const prompt = requestPrompt(
+    { name: "Ana", description: "Web" },
+    "How does /orders page?",
+    cleanMenu([
+      { name: "API questions", description: "How it works", trust: "auto" },
+    ]),
+  );
+  assert.match(prompt, /- api-questions: API questions — How it works/);
+  assert.match(prompt, /Put in menu the id/);
+  assert.match(prompt, /In note, write one line for your person/);
+  assert.doesNotMatch(requestPrompt(undefined, "Hi"), /Put in menu/);
+});
+
+test("an answer of a kind the person sees first is shown to them whatever the check finds", async () => {
+  const { checkPrompt } = await import("./check");
+  assert.match(
+    checkPrompt("Q", "A", [], true),
+    /wants to see answers to this kind/,
+  );
+  assert.doesNotMatch(checkPrompt("Q", "A"), /wants to see answers/);
+});

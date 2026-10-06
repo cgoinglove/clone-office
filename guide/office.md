@@ -30,6 +30,25 @@ computer never leave it.
   **Working** (처리 중), **Needs more** (더 필요해요, with a box to answer), **Done** (끝남),
   **Declined** (거절), **Failed** (실패).
 
+## Requests they take, and how much their mini-me does alone
+
+Below their card, **Requests I take** (받는 부탁) lists the kinds of request colleagues' mini-mes can
+bring them, each with how much their mini-me does alone:
+
+- **On its own** (알아서): it answers and sends, without telling them.
+- **Tell me** (하고 알림): it answers and sends, then tells them in their latest conversation
+  (**I answered for you**, 대신 답했어요).
+- **Ask me first** (묻고 함): it shows them the answer first (send it, or hold it); it goes only
+  when they say so. If it already asked them while answering (a date they gave, a yes), it does
+  not ask again.
+
+**Draft it for me** (초안 써 줘) has the mini-me suggest kinds from what it knows of them, and
+**Add one** (직접 더하기) adds one by hand; every change is kept and shown on their card at once.
+Colleagues see the kinds they take, never how much is done alone. A request that fits none of
+them is answered, and they are told. Whatever the setting, a promise, a decision they answer
+for, anything about a relationship or a check of work in their field stays theirs: the mini-me
+asks them first.
+
 ## Asking from Claude Code
 
 People who work in Claude Code can ask colleagues' mini-mes from there, without opening the app:

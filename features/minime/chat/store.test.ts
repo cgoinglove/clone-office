@@ -107,4 +107,18 @@ test("what colleagues answered since the mini-me last spoke is carried into the 
     ["Ben: Friday works."],
   );
   assert.deepEqual(newsSince([{ role: "me", text: "hi", at }]), []);
+  assert.deepEqual(
+    newsSince([
+      { role: "minime", text: "Done.", at },
+      {
+        role: "told",
+        text: "Ana asked how /orders pages; I said by cursor.",
+        at,
+      },
+    ]),
+    [
+      "You answered a colleague for them: Ana asked how /orders pages; I said by cursor.",
+    ],
+    "what the mini-me answered for the person is carried too",
+  );
 });

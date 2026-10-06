@@ -7,8 +7,11 @@ import { appendFile, mkdir, readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { minimeHome } from "../server/paths.ts";
 
-/** "office": an answer from a colleague's mini-me to a request sent from this conversation. */
-export type ChatRole = "me" | "minime" | "saved" | "error" | "office";
+/**
+ * "office": an answer from a colleague's mini-me to a request sent from this conversation.
+ * "told": what the mini-me answered a colleague for the person, told to them ("do it and tell me").
+ */
+export type ChatRole = "me" | "minime" | "saved" | "error" | "office" | "told";
 
 export interface ChatMessage {
   role: ChatRole;
