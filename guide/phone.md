@@ -1,6 +1,6 @@
-# On their phone: the mini-me in Discord, Telegram or Slack
+# On their phone: the clone in Discord, Telegram or Slack
 
-They can talk with their mini-me from Discord, Telegram or Slack on their phone, the same as on its
+They can talk with their clone from Discord, Telegram or Slack on their phone, the same as on its
 page. It answers while the app runs on their computer; what they say there goes into a conversation
 they also see on the page. The words go through that messenger. One messenger at a time: to change,
 they disconnect and set up the other.
@@ -20,7 +20,7 @@ With Telegram (no server needed):
 With Slack (in a workspace where they may add an app):
 
 1. At api.slack.com/apps: Create New App, From a manifest, their workspace, and the manifest the
-   page copies (**Copy the manifest**, 매니페스트 복사). It asks only for what the mini-me uses:
+   page copies (**Copy the manifest**, 매니페스트 복사). It asks only for what the clone uses:
    its Messages tab, writing there first, the person's name, and files sent there both ways.
 2. Basic Information, App-Level Tokens: one with connections:write (it starts with xapp-).
 3. Install App to the workspace, and the Bot User OAuth Token (it starts with xoxb-). Both tokens
@@ -39,13 +39,13 @@ With Discord:
    server's member list, then Message.
 
 The bot answers with a code and the page asks about them with the same code. They press **Let
-in** (들여보내기) only if the code is the one their phone shows; then the mini-me answers what they
+in** (들여보내기) only if the code is the one their phone shows; then the clone answers what they
 wrote. Anyone else who writes to the bot is not answered: it talks with its person only. **Not
 them** (내가 아니에요) turns away someone who is not them.
 
 ## Talking
 
-They write as they would on the page. When the mini-me needs something from them (may it read a
+They write as they would on the page. When the clone needs something from them (may it read a
 file, which of two options), it asks with buttons; they press one, or answer a question in their
 own words. "/new" starts a new conversation. The app keeps the bot's token on their computer
 only, in a settings file only they can read.
@@ -53,7 +53,7 @@ only, in a settings file only they can read.
 ## Files
 
 A photo or a document they send the bot is kept on their computer (in `messenger/files/` in the
-mini-me's folder, a folder a day, up to 25 MB each), and the mini-me reads it: "what does this
+clone's folder, a folder a day, up to 25 MB each), and the clone reads it: "what does this
 receipt say?", "send this to Minsu". Only the person let in is taken from; a stranger's file is
 never fetched. A file that comes with a colleague's answer to something asked from the phone
 comes to the phone too (up to 10 MB, which Discord takes from a bot); a larger one stays on the
@@ -61,10 +61,10 @@ computer, named in the message.
 
 ## What comes to the phone by itself
 
-While they are not looking at their mini-me's page (it is closed, hidden, or another window is in
+While they are not looking at their clone's page (it is closed, hidden, or another window is in
 front for about a minute), what waits on them comes to their messenger:
 
-- **A question waiting on them**: about a colleague's request (who asked, what, and the mini-me's
+- **A question waiting on them**: about a colleague's request (who asked, what, and the clone's
   question), or one from a conversation they left on the page. They answer with a button or in
   their own words; when several wait, replying to one answers that one.
 - **Questions kept for later**: ones they did not answer in time come together at 10, 14 and 17

@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "sub-office",
   description:
-    "Send your mini-me: an AI that works like you, for everyone on your team.",
+    "Send your clone: an AI that works like you, for everyone on your team.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

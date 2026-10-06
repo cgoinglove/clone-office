@@ -20,7 +20,7 @@ export function awakeCommand(
       [
         "--what=idle:sleep",
         "--who=sub-office",
-        "--why=Your mini-me is working",
+        "--why=Your clone is working",
         "--mode=block",
         "sh",
         "-c",

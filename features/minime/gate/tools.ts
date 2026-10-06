@@ -20,14 +20,14 @@ export const colleaguesOpen = gateOpen && process.env.MINIME_COLLEAGUES === "1";
 export const COLLEAGUES_TOOL = {
   name: "colleagues",
   description:
-    "Who is in your person's office: each colleague's mini-me, by name, with what they do, how they like to be worked with (follow it when asking them), and whether they are around. Look here before asking someone.",
+    "Who is in your person's office: each colleague's clone, by name, with what they do, how they like to be worked with (follow it when asking them), and whether they are around. Look here before asking someone.",
   inputSchema: { type: "object", properties: {} },
 };
 
 export const ASK_BY_LINK_TOOL = {
   name: "ask_by_link",
   description:
-    "Ask someone who has no mini-me (not in colleagues): make a link to a page where they read the request and answer, for your person to send them by their usual messenger. Use it when your person asks you to ask such a person. Write the request as your person would, short and complete; it is shown to whoever opens the link. Your person is asked before it is made. Give your person the link and say they send it themselves; it works where that person can reach the office's relay. The answer will be put into this conversation.",
+    "Ask someone who has no clone (not in colleagues): make a link to a page where they read the request and answer, for your person to send them by their usual messenger. Use it when your person asks you to ask such a person. Write the request as your person would, short and complete; it is shown to whoever opens the link. Your person is asked before it is made. Give your person the link and say they send it themselves; it works where that person can reach the office's relay. The answer will be put into this conversation.",
   inputSchema: {
     type: "object",
     properties: {
@@ -47,7 +47,7 @@ export const ASK_BY_LINK_TOOL = {
 export const ASK_COLLEAGUE_TOOL = {
   name: "ask_colleague",
   description:
-    "Send a request to a colleague's mini-me on your person's behalf, when your person asks you to: a question, a check, or a piece of work that is the colleague's. Write it as your person would, short and complete (what, by when, why). To send files of your person's with it (a document to review, a sheet), give their full paths in files. Your person is asked before it goes, and sees the files. The answer comes later and is put into this conversation, with any files it brings; tell your person it was sent. Promises, decisions and anything about relationships stay your person's.",
+    "Send a request to a colleague's clone on your person's behalf, when your person asks you to: a question, a check, or a piece of work that is the colleague's. Write it as your person would, short and complete (what, by when, why). To send files of your person's with it (a document to review, a sheet), give their full paths in files. Your person is asked before it goes, and sees the files. The answer comes later and is put into this conversation, with any files it brings; tell your person it was sent. Promises, decisions and anything about relationships stay your person's.",
   inputSchema: {
     type: "object",
     properties: {

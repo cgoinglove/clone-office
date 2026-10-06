@@ -1,6 +1,6 @@
-# What the mini-me keeps
+# What the clone keeps
 
-The mini-me keeps four small things, all as plain text files on this computer:
+The clone keeps four small things, all as plain text files on this computer:
 
 - **About them**: a few short lines on how they work, decide and talk, and what they want to be
   asked first. Read at the start of every conversation, so it stays short (about 1,400
@@ -15,7 +15,7 @@ The mini-me keeps four small things, all as plain text files on this computer:
 
 - **Anything that changes or can be found again on the computer**: projects and how far along
   they are, plans, goals, dates, versions, folders and files, what they are doing now, what they
-  did. A kept copy goes out of date and would mislead; the mini-me looks these up each time
+  did. A kept copy goes out of date and would mislead; the clone looks these up each time
   instead (`reading.md`).
 - Passwords, keys and other secrets, health details, and private details about other people.
 
@@ -24,14 +24,14 @@ The mini-me keeps four small things, all as plain text files on this computer:
 Everything it keeps is written in their own language, whatever it is: the one they picked under
 **Language** (언어) at the bottom of the page, else the one their browser uses. The page itself
 reads in English or Korean (more can be added); in any other language it reads in English while
-the mini-me still keeps what it learns, and asks them, in theirs.
+the clone still keeps what it learns, and asks them, in theirs.
 
 - **The first time**: it reads a little of what is on their computer (`reading.md`) and keeps at
   most five lines about how they work. Lines kept this time are marked **New** (새로).
 - **From another AI**: **Bring it from another AI** (다른 AI에서 가져오기) shows the text Claude's own
   memory import uses (**Copy**, 복사), to paste into a chat with the AI they use most — ChatGPT,
-  Claude, Gemini or another. It asks that AI for everything it remembers; the mini-me sorts it. They
-  paste that AI's answer back and press **Add to memory** (기억에 추가). The mini-me keeps only what
+  Claude, Gemini or another. It asks that AI for everything it remembers; the clone sorts it. They
+  paste that AI's answer back and press **Add to memory** (기억에 추가). The clone keeps only what
   will still be true in months (at most five lines each time) and never stores the pasted text. It
   can be done while the first reading runs, or any time later from the bottom of the page.
 - **While working**: when they correct it ("shorter", "always ask before sending"), it keeps the
@@ -52,9 +52,9 @@ the mini-me still keeps what it learns, and asks them, in theirs.
 
 ## Seeing and changing it
 
-- **What I remember about you** (제가 기억하는 당신) on the **My mini-me** (내 미니미) page shows every
+- **What I remember about you** (제가 기억하는 당신) on the **My clone** (내 클론) page shows every
   line it keeps about them, exactly as saved. **Correct** (고치기) lets them write a line the way it
-  should read; the mini-me then fixes it, in their words. **Remove** (지우기) removes the line.
+  should read; the clone then fixes it, in their words. **Remove** (지우기) removes the line.
 - In the conversation they can simply say so: "forget that", "that's no longer true", "from now
   on, always…".
 - **Start over** (처음부터 다시), at the bottom of the page, moves everything it keeps into a backup
@@ -62,7 +62,7 @@ the mini-me still keeps what it learns, and asks them, in theirs.
   keeps came from reading their records (they have not talked with it, taught it or brought
   anything from another AI yet), there is nothing of theirs to keep, so it clears that instead of
   making a backup, and says so before they confirm; reading again brings it back.
-- **All files I keep** (저장된 파일 전체), at the bottom of the page, lists every file the mini-me
+- **All files I keep** (저장된 파일 전체), at the bottom of the page, lists every file the clone
   keeps on the computer, grouped by kind, and opens each text file in place.
 - The files are theirs to read and edit with any text editor, in the `.sub-office` folder in their
   home folder.

@@ -10,7 +10,7 @@ const WORDS = {
   en: {
     inviteTitle: "{from} invites you to their office",
     inviteTitleNobody: "You are invited to an office",
-    what: "In this office, everyone's mini-me (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
+    what: "In this office, everyone's clone (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
     makeAccount: "Make your account",
     name: "Your name",
     email: "Email",
@@ -28,11 +28,11 @@ const WORDS = {
     yourOffice: "Your office",
     connectTitle: "Connect your computer",
     connectWhat:
-      "Your mini-me runs on your computer: it learns from your AI records there, thinks with your own AI, and works with your files. Run this once in a terminal on that computer (it needs Node.js 22 or later, from nodejs.org):",
+      "Your clone runs on your computer: it learns from your AI records there, thinks with your own AI, and works with your files. Run this once in a terminal on that computer (it needs Node.js 22 or later, from nodejs.org):",
     makeCommand: "Make my connect command",
     commandNote:
-      "It works once, for 10 minutes; make a new one any time. Connecting another computer moves your mini-me there.",
-    connected: "Connected: {name}'s mini-me, last seen {when}.",
+      "It works once, for 10 minutes; make a new one any time. Connecting another computer moves your clone there.",
+    connected: "Connected: {name}'s clone, last seen {when}.",
     notConnected: "No computer is connected yet.",
     inviteTeam: "Invite a teammate",
     inviteWhat: "Send them this link; they make their account with it.",
@@ -57,7 +57,7 @@ const WORDS = {
   ko: {
     inviteTitle: "{from}님이 오피스에 초대했어요",
     inviteTitleNobody: "오피스에 초대받았어요",
-    what: "이 오피스에서는 사람마다 미니미(나처럼 일하는 AI)가 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
+    what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)가 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
     makeAccount: "내 계정 만들기",
     name: "이름",
     email: "이메일",
@@ -75,11 +75,11 @@ const WORDS = {
     yourOffice: "내 오피스",
     connectTitle: "내 컴퓨터 연결",
     connectWhat:
-      "미니미는 내 컴퓨터에서 돌아요. 그 컴퓨터의 AI 기록으로 나를 배우고, 내 AI로 생각하고, 내 파일로 일해요. 그 컴퓨터의 터미널에서 이 한 줄을 한 번 실행하세요 (Node.js 22 이상이 필요해요, nodejs.org):",
+      "클론은 내 컴퓨터에서 돌아요. 그 컴퓨터의 AI 기록으로 나를 배우고, 내 AI로 생각하고, 내 파일로 일해요. 그 컴퓨터의 터미널에서 이 한 줄을 한 번 실행하세요 (Node.js 22 이상이 필요해요, nodejs.org):",
     makeCommand: "연결 명령 만들기",
     commandNote:
-      "한 번, 10분 동안만 돼요. 언제든 새로 만들 수 있어요. 다른 컴퓨터를 연결하면 미니미가 그리로 옮겨 가요.",
-    connected: "연결됨: {name}님의 미니미, 마지막으로 본 때 {when}.",
+      "한 번, 10분 동안만 돼요. 언제든 새로 만들 수 있어요. 다른 컴퓨터를 연결하면 클론이 그리로 옮겨 가요.",
+    connected: "연결됨: {name}님의 클론, 마지막으로 본 때 {when}.",
     notConnected: "아직 연결된 컴퓨터가 없어요.",
     inviteTeam: "동료 초대",
     inviteWhat: "이 링크를 보내면 동료가 그걸로 계정을 만들어요.",

@@ -6,13 +6,13 @@ You ask your AI to write up the request. You paste it into Slack. You wait, you 
 answer back. Everyone on your team has an AI, and none of them can reach each other, so the people
 carry the messages.
 
-**sub-office gives everyone on the team a mini-me, an AI that works like them, and lets the
-mini-mes talk.** Your mini-me learns how you work from your own records, does your everyday tasks
-like an assistant, and stands in for you with your teammates' mini-mes. It answers what it can,
+**sub-office gives everyone on the team a clone, an AI that works like them, and lets the
+clones talk.** Your clone learns how you work from your own records, does your everyday tasks
+like an assistant, and stands in for you with your teammates' clones. It answers what it can,
 takes requests, has your Claude Code conversations do the work, and brings you only the calls that
 are yours.
 
-> Not one person with ten bots. Ten people, ten mini-mes.
+> Not one person with ten bots. Ten people, ten clones.
 
 `sub-office` is a working name.
 
@@ -46,7 +46,7 @@ leaves each decision with the person it belongs to.
   are away, its questions wait and come to you three times a day.
 - **It tells you how like you it is.** The like-me score: how often you send its answers as they
   were.
-- **From your phone.** Talk with your mini-me from Discord, Telegram or Slack as you do on its
+- **From your phone.** Talk with your clone from Discord, Telegram or Slack as you do on its
   page, through a bot of your own that answers only you; its questions come as buttons. While you
   are away from its page, what needs you comes there by itself: a colleague's question, your
   morning brief, the answer to what you asked. Tried with a real Discord bot; Telegram and Slack
@@ -57,21 +57,21 @@ leaves each decision with the person it belongs to.
   team registers a client once and everyone connects their own account.
 - **Flows.** "Every weekday at 9, catch me up." "When someone asks about the payments API, end with
   a pointer to #payments-api." You ask; it shows you the flow on a card before making it.
-- **For developers:** with the Claude Code plugin, your teammates' mini-mes are tools in your
+- **For developers:** with the Claude Code plugin, your teammates' clones are tools in your
   Claude Code, and an answer that comes later lands in your idle session by itself.
 - **Files go along.** "Send Minsu the quote and ask him to check it": the files travel with the
   request, shown to you on the card first, and an answer can bring a file back, after you saw it.
   The relay keeps them two weeks, for the two of you only.
-- **People without a mini-me answer by a link.** Your mini-me makes the link, you send it the way
+- **People without a clone answer by a link.** Your clone makes the link, you send it the way
   you usually would, they answer on a plain page, and the answer comes back into your
   conversation. A colleague joins your office from one invite link.
 - **An office in one click.** Your computer can be the office for teammates on the same Wi-Fi; a
   team that works apart runs the same relay on a server, with Docker and Postgres.
-- **The office, drawn.** Your team's floor: each person's mini-me at their desk, requests carried
+- **The office, drawn.** Your team's floor: each person's clone at their desk, requests carried
   from desk to desk and brought back answered, a board of who is on what. It opens at the lobby
   the first time each day.
 - **It is yours.** Everything it keeps is files on your computer, and it thinks with your own
-  Claude Code. The relay that carries requests between mini-mes, on one of your computers or a
+  Claude Code. The relay that carries requests between clones, on one of your computers or a
   server your team runs, holds cards and requests, never memories or conversations.
 
 English and Korean today; a language is one file under `messages/`.
@@ -83,12 +83,12 @@ You need Node.js 22.18 or later, pnpm, and Claude Code, signed in.
 ```sh
 git clone <this repository> sub-office && cd sub-office
 pnpm install
-pnpm dev        # your mini-me: http://127.0.0.1:3000/me
+pnpm dev        # your clone: http://127.0.0.1:3000/me
 ```
 
 For an office on your network, open **Office** on your page and choose **Open one on this
-computer**: the app starts the relay that carries requests between mini-mes (its records in
-`relay/` in your mini-me's folder, with PGlite, Postgres inside the process; nothing to install)
+computer**: the app starts the relay that carries requests between clones (its records in
+`relay/` in your clone's folder, with PGlite, Postgres inside the process; nothing to install)
 and gives you an invite link with your computer's network address. Teammates on the same Wi-Fi
 paste that link under **Join with an invite link**. The office rests while your computer sleeps
 or the app is closed. This has been tried on one computer, not yet across two.
@@ -119,9 +119,9 @@ page on the server gives them one line to run on their computer:
 npx sub-office connect http://<your server>/p/<one-time code>
 ```
 
-That puts their mini-me in the office and opens it. Behind a proxy, set `RELAY_PUBLIC_URL` to the
+That puts their clone in the office and opens it. Behind a proxy, set `RELAY_PUBLIC_URL` to the
 address people reach. Someone already running sub-office can instead paste the invite link under
-**Office** on their page, with the invite link or the relay's address and key. To try an office alone, run a second mini-me with its own folder and port:
+**Office** on their page, with the invite link or the relay's address and key. To try an office alone, run a second clone with its own folder and port:
 `SUB_OFFICE_HOME=~/.sub-office-b pnpm dev --port 3001`.
 
 The Claude Code plugin, from this folder:

@@ -1,12 +1,12 @@
 {
   "name": "sub-office",
   "owner": { "name": "sub-office" },
-  "description": "Plugins for working with your team's mini-mes from Claude Code.",
+  "description": "Plugins for working with your team's clones from Claude Code.",
   "plugins": [
     {
       "name": "sub-office",
       "source": "./plugin",
-      "description": "Ask your colleagues' mini-mes from Claude Code. A quick answer comes back in the reply; a later one comes into the conversation by itself."
+      "description": "Ask your colleagues' clones from Claude Code. A quick answer comes back in the reply; a later one comes into the conversation by itself."
     }
   ]
 }

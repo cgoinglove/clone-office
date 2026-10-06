@@ -108,7 +108,7 @@ export function findSession(
 }
 
 export function askPrompt(question: string): string {
-  return `Your person's mini-me asks, for a task or a colleague's request: ${question}
+  return `Your person's clone asks, for a task or a colleague's request: ${question}
 
 Answer from what this conversation knows and from the files, in a few sentences. Read only: change nothing, run nothing.`;
 }
@@ -125,7 +125,7 @@ export async function askSession(
   if (!session)
     return {
       ok: false,
-      text: `No conversation called "${wanted}" in the last 90 days that the mini-me may open. Look at sessions for the names.`,
+      text: `No conversation called "${wanted}" in the last 90 days that the clone may open. Look at sessions for the names.`,
     };
   if (!existsSync(session.cwd))
     return {
@@ -251,7 +251,7 @@ function permissionServer(chat: string): string {
 }
 
 export function workPrompt(task: string): string {
-  return `Your person's mini-me hands you this task, which your person has taken on: ${task}
+  return `Your person's clone hands you this task, which your person has taken on: ${task}
 
 Do it in this project. Every change you make and every command you run is asked of your person first, so do only what the task needs. When done, say in a few lines what you changed, what you checked and how, and anything left to do. Say that tests pass only if you ran them.`;
 }
@@ -279,7 +279,7 @@ export async function workSession(
   if (!session)
     return {
       ok: false,
-      text: `No conversation called "${wanted}" in the last 90 days that the mini-me may open. Look at sessions for the names.`,
+      text: `No conversation called "${wanted}" in the last 90 days that the clone may open. Look at sessions for the names.`,
     };
   if (!existsSync(session.cwd))
     return {
@@ -303,7 +303,7 @@ export async function workSession(
     session.id,
     "--fork-session",
     "--name",
-    `${session.name ?? "conversation"} · mini-me`,
+    `${session.name ?? "conversation"} · clone`,
     "--output-format",
     "json",
     "--model",

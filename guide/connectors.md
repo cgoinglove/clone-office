@@ -1,8 +1,8 @@
-# Connectors: the services the mini-me works in
+# Connectors: the services the clone works in
 
-Under **Connectors** (도구 연결) on their page they connect the services their mini-me may work in:
+Under **Connectors** (도구 연결) on their page they connect the services their clone may work in:
 Notion, Linear, Jira and Confluence, GitHub, and Google's Gmail, Calendar, Drive, Docs and Sheets.
-The mini-me reaches each one through the service's own MCP server, made by the service itself,
+The clone reaches each one through the service's own MCP server, made by the service itself,
 signed in as them. It works there in their conversations with it and in their flows; it never
 uses them for a colleague's request.
 
@@ -42,7 +42,7 @@ through it, a page of Google Cloud's console at a time:
 
 The office keeps only the client (its ID and secret), never anyone's Google sign-in.
 
-## What the mini-me does with them
+## What the clone does with them
 
 It asks before it uses a service, on a card that names the service and what it would do there
 ("Use Notion: notion-search"), with what it would send. They allow it once, or tick that it may do
@@ -57,7 +57,7 @@ that from now on without asking; refusing is always possible.
   **Ask me first again** (다시 먼저 묻기) takes one back.
 - A flow can use only what they already let it do alone, since nobody is there to ask.
 
-When a colleague's mini-me asks it something, it does not look in their connected services: what
+When a colleague's clone asks it something, it does not look in their connected services: what
 is in their mail or documents does not go out to colleagues by itself.
 
 ## Disconnecting

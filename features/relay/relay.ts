@@ -394,11 +394,7 @@ export class Relay {
     files: string[] = [],
   ): Promise<Task> {
     if (from.id === to)
-      throw new RelayError(
-        400,
-        "A mini-me does not ask itself.",
-        "bad-request",
-      );
+      throw new RelayError(400, "A clone does not ask itself.", "bad-request");
     const [found] = await this.db.query(
       "SELECT 1 FROM members WHERE id = $1 AND office_id = $2",
       [to, from.office],

@@ -2,7 +2,7 @@
   "name": "sub-office",
   "version": "0.0.0",
   "private": true,
-  "description": "Send your mini-me: an AI that works like you, for everyone on your team.",
+  "description": "Send your clone: an AI that works like you, for everyone on your team.",
   "engines": {
     "node": ">=22.18"
   },

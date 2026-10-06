@@ -124,7 +124,7 @@ test("what was allowed from now on reads as the person would say it, and can be 
   );
   assert.equal(
     ruleText(t, "mcp__minime__ask_colleague"),
-    "Send a request to a colleague's mini-me",
+    "Send a request to a colleague's clone",
   );
   assert.equal(
     ruleText(t, "mcp__notion__notion-search"),

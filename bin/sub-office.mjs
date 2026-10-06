@@ -129,7 +129,7 @@ async function connect(link) {
   });
   renameSync(temp, path);
   console.log(
-    `Connected: your mini-me is ${answer.name} in ${answer.office?.name || "your office"}.`,
+    `Connected: your clone is ${answer.name} in ${answer.office?.name || "your office"}.`,
   );
   if (answer.moved)
     console.log(
@@ -194,7 +194,7 @@ async function startApp() {
   const url = () => `http://${HOST}:${port}/me`;
   if (!(await free(port))) {
     if (await ours(port)) {
-      console.log(`Your mini-me is already running at ${url()}`);
+      console.log(`Your clone is already running at ${url()}`);
       if (!args.includes("--no-open")) open(url());
       return;
     }
@@ -225,7 +225,7 @@ async function startApp() {
     }
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  console.log(`Your mini-me is at ${url()}
+  console.log(`Your clone is at ${url()}
 It runs on this computer only. Keep this window open; press Ctrl+C to stop.`);
   if (!args.includes("--no-open")) open(url());
 }

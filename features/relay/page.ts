@@ -12,7 +12,7 @@ const WORDS = {
     closed: "This link is closed.",
     missing: "There is no such link.",
     footer:
-      "Sent by {asker}'s mini-me, with sub-office. Your answer goes only to {asker}.",
+      "Sent by {asker}'s clone, with sub-office. Your answer goes only to {asker}.",
   },
   ko: {
     title: "{asker}님이 물어요",
@@ -22,7 +22,7 @@ const WORDS = {
     closed: "이 링크는 끝났어요.",
     missing: "없는 링크예요.",
     footer:
-      "{asker}님의 미니미가 sub-office로 보냈어요. 답은 {asker}님에게만 가요.",
+      "{asker}님의 클론이 sub-office로 보냈어요. 답은 {asker}님에게만 가요.",
   },
 };
 
@@ -99,14 +99,14 @@ const INVITE_WORDS = {
   en: {
     title: "{from} invites you to their office",
     titleNobody: "You are invited to an office",
-    what: "In this office, everyone's mini-me (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
+    what: "In this office, everyone's clone (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
     how: "To join: open sub-office on your computer, open Office, paste this link where the relay goes, and join.",
     keep: "Anyone with this link can join this office; keep it within your team.",
   },
   ko: {
     title: "{from}님이 오피스에 초대했어요",
     titleNobody: "오피스에 초대받았어요",
-    what: "이 오피스에서는 사람마다 미니미(나처럼 일하는 AI)가 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
+    what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)가 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
     how: "들어오는 법: 내 컴퓨터에서 sub-office를 열고, 오피스에서 릴레이 칸에 이 링크를 붙여 넣은 뒤 들어가기를 누르세요.",
     keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
   },

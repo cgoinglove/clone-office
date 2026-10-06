@@ -318,7 +318,7 @@ export class SlackBot implements Bot {
       team_id?: string;
     }>("auth.test", {});
     this.team = me.team_id;
-    return { id: me.user_id ?? "", name: me.user ? `@${me.user}` : "mini-me" };
+    return { id: me.user_id ?? "", name: me.user ? `@${me.user}` : "clone" };
   }
 
   /** Checks both tokens, for setting it up: the bot's, and the app-level one that opens sockets. */

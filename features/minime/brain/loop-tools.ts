@@ -244,7 +244,7 @@ async function webFetchTool(input: Record<string, unknown>): Promise<string> {
   const response = await fetch(address, {
     signal: AbortSignal.timeout(20_000),
     redirect: "follow",
-    headers: { "user-agent": "sub-office (a person's mini-me)" },
+    headers: { "user-agent": "sub-office (a person's clone)" },
   }).catch((error: Error) => error);
   if (response instanceof Error)
     return `The page could not be opened: ${response.message}`;

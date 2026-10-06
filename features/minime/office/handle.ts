@@ -90,8 +90,8 @@ export function requestPrompt(
   ways: Way[] = [],
 ): string {
   const who = from
-    ? `the mini-me of ${from.name}${from.description ? ` (${from.description})` : ""}`
-    : "a colleague's mini-me";
+    ? `the clone of ${from.name}${from.description ? ` (${from.description})` : ""}`
+    : "a colleague's clone";
   return `A request came to you from ${who}, on their behalf:
 
 ${text}

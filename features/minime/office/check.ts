@@ -43,9 +43,9 @@ export function checkPrompt(
   const told = ways.length
     ? `\nHow your person told you to handle requests like this, in their own words (following it is theirs, not a fault):\n${ways.map((way) => `- ${way}`).join("\n")}\n`
     : "";
-  return `Before this answer goes to a colleague's mini-me on your person's behalf, look at it once more, as your person would.
+  return `Before this answer goes to a colleague's clone on your person's behalf, look at it once more, as your person would.
 
-The request${from ? ` (from the mini-me of ${from})` : ""}:
+The request${from ? ` (from the clone of ${from})` : ""}:
 ${request}
 ${asked}${told}
 The answer about to be sent:

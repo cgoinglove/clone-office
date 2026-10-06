@@ -189,7 +189,7 @@ test("from the invite link to a connected computer, as a person does it: sign up
       [bin, "connect", link, "--no-start"],
       { env },
     );
-    assert.match(done.stdout, /Connected: your mini-me is Ben/);
+    assert.match(done.stdout, /Connected: your clone is Ben/);
     const settings = JSON.parse(
       readFileSync(join(home, "settings.json"), "utf8"),
     );

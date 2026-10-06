@@ -221,7 +221,7 @@ test("from Claude Code: see colleagues, ask one, get a quick answer, or note whe
   await answering;
   assert.match(
     quick,
-    /Ben's mini-me answered[\s\S]*> Yes: cursor-based, 50 a page\./,
+    /Ben's clone answered[\s\S]*> Yes: cursor-based, 50 a page\./,
   );
   const quickId = /\(request ([\w-]+)\)/.exec(quick)?.[1] as string;
   assert.deepEqual(read(quickId), { name: "Ben", seen: 2, ended: true });
@@ -235,7 +235,7 @@ test("from Claude Code: see colleagues, ask one, get a quick answer, or note whe
   );
   assert.match(
     late,
-    /Sent to Ben's mini-me \(request [\w-]+\)\.[\s\S]*brought into this conversation/,
+    /Sent to Ben's clone \(request [\w-]+\)\.[\s\S]*brought into this conversation/,
   );
   const id = /\(request ([\w-]+)\)/.exec(late)?.[1] as string;
   assert.deepEqual(read(id), { name: "Ben", seen: 1 });
@@ -251,7 +251,7 @@ test("from Claude Code: see colleagues, ask one, get a quick answer, or note whe
     said(
       await call("tools/call", { name: "office_requests", arguments: { id } }),
     ),
-    /Sent to Ben · asked something back[\s\S]*Ben's mini-me[\s\S]*is it the one from Monday\?/,
+    /Sent to Ben · asked something back[\s\S]*Ben's clone[\s\S]*is it the one from Monday\?/,
   );
   assert.equal(read(id).seen, 2);
 

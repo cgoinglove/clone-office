@@ -168,13 +168,13 @@ async function look($: EngineInterface): Promise<void> {
     }
     $.ui.status(
       waiting.size
-        ? `waiting on ${[...waiting].map((name) => `${name}'s mini-me`).join(", ")}`
+        ? `waiting on ${[...waiting].map((name) => `${name}'s clone`).join(", ")}`
         : undefined,
     );
     if (!found.length) return;
     $.ui.toast(
       found.length === 1
-        ? `${found[0]?.kept.name}'s mini-me answered`
+        ? `${found[0]?.kept.name}'s clone answered`
         : `${found.length} answers from the office`,
     );
     // Resolves when the turn starts; until then the news stays unread, so a conversation

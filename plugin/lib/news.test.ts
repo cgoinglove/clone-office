@@ -60,7 +60,7 @@ test("news reads as the colleague's quoted words, with the request's id to find 
   const text = describe(asked as NonNullable<typeof asked>);
   assert.match(
     text,
-    /^Ben's mini-me asks something back on your request "Review\?" \(request 3f2a9c1e-[\w-]+\):\n\n> Which branch\?/,
+    /^Ben's clone asks something back on your request "Review\?" \(request 3f2a9c1e-[\w-]+\):\n\n> Which branch\?/,
   );
   assert.match(text, /answer_colleague/);
   assert.equal(

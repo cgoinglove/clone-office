@@ -103,7 +103,7 @@ export async function callHandsTool(
     );
     return {
       result: work.ok
-        ? `"${work.session?.name ?? work.session?.id}" did it, in a copy named "${work.session?.name ?? "conversation"} · mini-me"${work.copy ? ` (${work.copy})` : ""} that your person can open:\n${work.text}`
+        ? `"${work.session?.name ?? work.session?.id}" did it, in a copy named "${work.session?.name ?? "conversation"} · clone"${work.copy ? ` (${work.copy})` : ""} that your person can open:\n${work.text}`
         : work.text,
       isError: !work.ok,
     };

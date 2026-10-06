@@ -13,16 +13,16 @@
     "generic": "Something went wrong: {detail}",
     "claude-missing": "Claude Code is not installed or signed in on this computer. Set it up, or pick another brain under Brain.",
     "bad-request": "The page sent something the app didn't expect. Reload the page and try again.",
-    "forbidden": "Only this app's own page can talk to your mini-me. Open it from the app's address.",
-    "busy": "Your mini-me is still working on something else. Try again in a moment.",
+    "forbidden": "Only this app's own page can talk to your clone. Open it from the app's address.",
+    "busy": "Your clone is still working on something else. Try again in a moment.",
     "not-found": "That is no longer there.",
     "no-longer-waiting": "This question is no longer waiting.",
     "not-in-office": "You're not in an office yet.",
     "no-such-colleague": "No one by that name is in the office.",
-    "no-draft": "Your mini-me couldn't write a draft. Try again, or write it yourself.",
+    "no-draft": "Your clone couldn't write a draft. Try again, or write it yourself.",
     "relay-unreachable": "Can't reach the relay. Whoever runs it may need to start it again.",
     "office-key-wrong": "That office key doesn't open this office.",
-    "office-member-unknown": "The relay no longer knows your mini-me. Leave the office and join again.",
+    "office-member-unknown": "The relay no longer knows your clone. Leave the office and join again.",
     "request-closed": "That request is already closed.",
     "ai-busy": "The AI service was busy. Try again a little later.",
     "timeout": "It took too long and was stopped. Try again.",
@@ -31,13 +31,13 @@
     "import-failed": "I couldn't read what you pasted. Try again.",
     "task-failed": "I couldn't finish that. Try again, or ask it another way.",
     "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead.",
-    "flow-failed": "The flow did not finish. Try Run now, or tell your mini-me what to change.",
+    "flow-failed": "The flow did not finish. Try Run now, or tell your clone what to change.",
     "too-many-tries": "Too many wrong office keys from here. Try again in a few minutes.",
     "relay-failed": "The relay ran into a problem. Try again.",
     "relay-port-taken": "Another program is using the office's port on this computer. Close it and try again.",
     "messenger-token-wrong": "Discord did not take that token. Copy it again from the Bot page.",
     "messenger-telegram-token-wrong": "Telegram did not take that token. Copy it again from @BotFather; /token there gives a new one.",
-    "messenger-telegram-taken": "Another program reads this bot's messages too (Hermes Agent, for one), so they may not reach your mini-me. Stop it there, or make a new bot for your mini-me.",
+    "messenger-telegram-taken": "Another program reads this bot's messages too (Hermes Agent, for one), so they may not reach your clone. Stop it there, or make a new bot for your clone.",
     "messenger-slack-token-wrong": "Slack did not take those tokens. Check the app-level token (xapp-, with connections:write) and the Bot User OAuth Token (xoxb-), and that the app was made from the manifest.",
     "messenger-refused": "Discord stopped the bot. Check it in the Developer Portal and connect again.",
     "file-too-large": "That file is larger than 25 MB, more than the office takes.",
@@ -55,14 +55,14 @@
     "connector-token": "This one takes a personal token.",
     "connector-token-wrong": "That does not look like a token.",
     "connector-client-wrong": "That is not an OAuth client: give its client ID (and secret), or the JSON file.",
-    "brain-key-missing": "Your mini-me needs a key for the model it thinks with: add it under Brain.",
+    "brain-key-missing": "Your clone needs a key for the model it thinks with: add it under Brain.",
     "brain-key-wrong": "The service did not accept that key. Check it and paste it again.",
     "brain-unreachable": "The service could not be reached. Try again in a moment.",
     "brain-local-unreachable": "Nothing answered at that address. Is Ollama or LM Studio running?"
   },
   "firstRun": {
-    "title": "My mini-me",
-    "hello": "Hi, I'm your mini-me. To work the way you do, I first need to learn how you work. Here is how I'll learn.",
+    "title": "My clone",
+    "hello": "Hi, I'm your clone. To work the way you do, I first need to learn how you work. Here is how I'll learn.",
     "plan": {
       "read": {
         "title": "What I read",
@@ -173,7 +173,7 @@
       "Grep": "Search inside files",
       "WebFetch": "Open a web page",
       "WebSearch": "Search the web",
-      "mcp__minime__ask_colleague": "Send a request to a colleague's mini-me",
+      "mcp__minime__ask_colleague": "Send a request to a colleague's clone",
       "mcp__minime__ask_session": "Ask one of your Claude Code conversations",
       "Edit": "Change a file",
       "Write": "Write a file",
@@ -181,7 +181,7 @@
       "Bash": "Run a command",
       "mcp__minime__work_session": "Have one of your Claude Code conversations do work",
       "mcp__minime__leave_out_folder": "Leave a folder out from now on",
-      "mcp__minime__ask_by_link": "Make a link to ask someone without a mini-me"
+      "mcp__minime__ask_by_link": "Make a link to ask someone without a clone"
     },
     "ruleTitle": "Make it a rule?",
     "rule": "You sent my last three answers to “{menu}” as they were. From now on, shall I answer these myself and tell you?",
@@ -204,14 +204,14 @@
   },
   "office": {
     "title": "Office",
-    "intro": "Where your mini-me and your colleagues' trade requests. Your memory and conversations never go there; only cards and requests do.",
+    "intro": "Where your clone and your colleagues' trade requests. Your memory and conversations never go there; only cards and requests do.",
     "relay": "Relay address",
     "key": "Office key",
     "name": "Your name",
     "role": "What you do, in a line",
     "rolePlaceholder": "e.g. I look after the payments API and releases",
     "draft": "Draft it for me",
-    "drafting": "Your mini-me is writing",
+    "drafting": "Your clone is writing",
     "join": "Join",
     "me": "You",
     "status": {
@@ -221,9 +221,9 @@
       "off": "Off"
     },
     "colleagues": "Colleagues",
-    "nobody": "No other mini-me yet. Send a colleague the invite link.",
+    "nobody": "No other clone yet. Send a colleague the invite link.",
     "ask": "Ask",
-    "askPlaceholder": "What to ask {name}'s mini-me",
+    "askPlaceholder": "What to ask {name}'s clone",
     "requests": "Requests",
     "none": "No requests yet.",
     "sent": "→ {name}",
@@ -245,9 +245,9 @@
     "needsYou": "Needs you",
     "menu": {
       "title": "Requests I take",
-      "intro": "What colleagues' mini-mes can bring you, and how much your mini-me does alone for each. Colleagues see the kinds, never how much it does alone.",
-      "none": "Nothing set yet. Once you set what you take, colleagues' mini-mes know what to bring you, and you decide for each kind whether your mini-me answers alone or asks you first.",
-      "free": "A request that fits none of these: your mini-me answers it and tells you.",
+      "intro": "What colleagues' clones can bring you, and how much your clone does alone for each. Colleagues see the kinds, never how much it does alone.",
+      "none": "Nothing set yet. Once you set what you take, colleagues' clones know what to bring you, and you decide for each kind whether your clone answers alone or asks you first.",
+      "free": "A request that fits none of these: your clone answers it and tells you.",
       "likeMe": "<b>Like you: {percent}%</b>. In the last 30 days you sent {asIs} of the {total} answers I showed you first as they were.",
       "likeMeFew": "In the last 30 days you sent {asIs} of the {total, plural, one {# answer} other {# answers}} I showed you first as {total, plural, one {it was} other {they were}}.",
       "itemLikeMe": "{asIs} of {total} sent as they were",
@@ -270,15 +270,15 @@
       "remove": "Remove",
       "takes": "Takes: {list}"
     },
-    "yourMiniMe": "Your mini-me",
-    "miniMe": "{name}'s mini-me",
+    "yourMiniMe": "Your clone",
+    "miniMe": "{name}'s clone",
     "floor": {
       "you": "{name} (you)",
       "needsYou": "needs you",
       "waitingOnDecision": "waiting on a decision",
       "computerOff": "computer off",
       "working": "working",
-      "away": "away, mini-me on duty",
+      "away": "away, clone on duty",
       "free": "free",
       "onDesk": "{count} on the desk"
     },
@@ -299,7 +299,7 @@
     "inviteNote": "Anyone with this link can join your office; send it only to your team. Opened in a browser, it makes their account and gives them one line that connects their computer.",
     "copyInvite": "Copy invite",
     "room": {
-      "label": "The office: each person's desk with their mini-me, and the requests going between them",
+      "label": "The office: each person's desk with their clone, and the requests going between them",
       "floor": "Floor {n}",
       "people": "{count, plural, one {# person} other {# people}}",
       "floorGroup": "Floor",
@@ -308,7 +308,7 @@
       "offTag": "OFF",
       "done": "DONE",
       "answer": "Answer",
-      "needsYouChip": "Your mini-me needs you",
+      "needsYouChip": "Your clone needs you",
       "notes": {
         "myDesk": "my desk",
         "tea": "tea?",
@@ -323,7 +323,7 @@
         "zoomOut": "Zoom out"
       },
       "composer": {
-        "placeholder": "Ask your mini-me to get something from a colleague…",
+        "placeholder": "Ask your clone to get something from a colleague…",
         "send": "Send",
         "askFor": "{what} · {name}",
         "askText": "Ask {name}: {what}"
@@ -362,7 +362,7 @@
         "deciding": "waiting on a decision",
         "computerOff": "computer off",
         "working": "working",
-        "away": "away, mini-me on duty",
+        "away": "away, clone on duty",
         "free": "free",
         "onDesk": "{count} on the desk",
         "goingTo": "going to {name}"
@@ -389,7 +389,7 @@
         "workingOn": "Working on: {what}",
         "waitingFor": "Waiting for {name}'s answer",
         "free": "Free",
-        "notIn": "Not in. {name}'s mini-me comes in through the lift when the computer is back on.",
+        "notIn": "Not in. {name}'s clone comes in through the lift when the computer is back on.",
         "ways": "How to work with {name}",
         "myMenu": "What you take on",
         "menu": "What {name} takes on",
@@ -406,7 +406,7 @@
         "waiting": "{count, plural, one {# thing is waiting for you} other {# things are waiting for you}}",
         "clockIn": "Clock in",
         "enter": "Enter",
-        "foot": "Your mini-me runs on this computer.",
+        "foot": "Your clone runs on this computer.",
         "floors": "FLOORS 1–{count}",
         "yourFloor": "your floor"
       }
@@ -433,7 +433,7 @@
   },
   "files": {
     "title": "All files I keep",
-    "where": "Every file your mini-me keeps on this computer. All of it is in {home}, and any text editor can open it.",
+    "where": "Every file your clone keeps on this computer. All of it is in {home}, and any text editor can open it.",
     "group": {
       "memory": "Read every time (about you: USER.md, your work: MEMORY.md)",
       "skills": "Skills",
@@ -452,8 +452,8 @@
   },
   "flows": {
     "title": "Flows",
-    "intro": "What your mini-me does on its own: at set times, or when a colleague's request comes in. A timed flow's answers go into a conversation of its own.",
-    "none": "None yet. Tell your mini-me, for example: “Every weekday at 9, sum up what is waiting for me,” or “When someone asks for a code review, have my web-app conversation look first.” It shows you the flow before making it.",
+    "intro": "What your clone does on its own: at set times, or when a colleague's request comes in. A timed flow's answers go into a conversation of its own.",
+    "none": "None yet. Tell your clone, for example: “Every weekday at 9, sum up what is waiting for me,” or “When someone asks for a code review, have my web-app conversation look first.” It shows you the flow before making it.",
     "when": {
       "daily": "Every day at {time}",
       "weekdays": "Weekdays at {time}",
@@ -491,7 +491,7 @@
   },
   "brain": {
     "title": "Brain",
-    "intro": "What your mini-me thinks with. Your own Claude Code thinks with your Claude subscription, on this computer; or pick a model and give your key for it. Keys stay on this computer.",
+    "intro": "What your clone thinks with. Your own Claude Code thinks with your Claude subscription, on this computer; or pick a model and give your key for it. Keys stay on this computer.",
     "claudeCode": "My Claude Code",
     "claudeCodeNote": "Thinks with your Claude subscription, on this computer.",
     "claudeMissing": "Claude Code is not installed or signed in on this computer. Pick a model with your key instead, or set up Claude Code and reopen this page.",
@@ -508,7 +508,7 @@
     "modelLocal": "The model you pulled (e.g. qwen3:8b)",
     "address": "Address",
     "localNote": "A model running on this computer with Ollama or LM Studio. Nothing leaves the computer; it can be slower and less able than the services above.",
-    "cost": "The service bills your key for what your mini-me uses.",
+    "cost": "The service bills your key for what your clone uses.",
     "use": "Use this",
     "inUse": "In use",
     "tier": {
@@ -519,7 +519,7 @@
   },
   "messenger": {
     "title": "On your phone",
-    "intro": "Talk with your mini-me from your phone, in Discord, Telegram or Slack, as you do here. It answers while this app runs on this computer, and what you say there shows here too.",
+    "intro": "Talk with your clone from your phone, in Discord, Telegram or Slack, as you do here. It answers while this app runs on this computer, and what you say there shows here too.",
     "step2": "Paste the token here and connect.",
     "token": "Bot token",
     "connect": "Connect",
@@ -531,11 +531,11 @@
     "paired": "{bot} talks with {name} only. “/new” in {service, select, telegram {Telegram} slack {Slack} other {Discord}} starts a new conversation.",
     "elsewhere": "Another app on this computer is talking through this bot now.",
     "disconnect": "Disconnect",
-    "knock": "Almost there. Your mini-me is asking on your computer whether to let you in. Let yourself in there only if it shows {code}, and it answers what you wrote.",
+    "knock": "Almost there. Your clone is asking on your computer whether to let you in. Let yourself in there only if it shows {code}, and it answers what you wrote.",
     "someoneWaiting": "Someone else is already waiting to be let in here. If that is not you, press “Not them” on the computer, then write again.",
-    "taken": "This mini-me already talks with someone else.",
-    "in": "You are in. Write here and your mini-me answers. While you are away from its page, what needs you comes here too.",
-    "inHeld": "You are in. Your mini-me answers what you wrote. While you are away from its page, what needs you comes here too.",
+    "taken": "This clone already talks with someone else.",
+    "in": "You are in. Write here and your clone answers. While you are away from its page, what needs you comes here too.",
+    "inHeld": "You are in. Your clone answers what you wrote. While you are away from its page, what needs you comes here too.",
     "newChat": "A new conversation, then.",
     "busy": "Still on your last message; I'll take this one next.",
     "orReply": "Or reply with your own words.",
@@ -545,7 +545,7 @@
     "fromRequest": "{name} asked: “{request}”",
     "colleague": "A colleague",
     "inChat": "From your conversation “{title}”:",
-    "fromPage": "Your mini-me asks:",
+    "fromPage": "Your clone asks:",
     "waiting": "{count, plural, one {# question has} other {# questions have}} waited for you.",
     "pushNote": "While you are not looking at this page, what needs you comes to {service, select, telegram {Telegram} slack {Slack} other {Discord}}: questions about colleagues' requests, your flows' answers, and answers to what you asked. While your status says you are in a meeting, away or off, colleagues' questions wait and come together at 10, 14 and 17.",
     "discord": {
@@ -566,7 +566,7 @@
     },
     "appToken": "App-level token",
     "slack": {
-      "step1": "At api.slack.com/apps, choose Create New App, then From a manifest. Pick your workspace and paste this manifest; it asks only for what your mini-me uses.",
+      "step1": "At api.slack.com/apps, choose Create New App, then From a manifest. Pick your workspace and paste this manifest; it asks only for what your clone uses.",
       "portal": "Open api.slack.com/apps",
       "copyManifest": "Copy the manifest",
       "copied": "Copied",
@@ -581,7 +581,7 @@
   },
   "connectors": {
     "title": "Connectors",
-    "intro": "Let your mini-me work in Notion, Google, GitHub and more, through each service's own MCP server. It asks you before it uses one, until you let a kind of action go on alone. What you connect stays on this computer.",
+    "intro": "Let your clone work in Notion, Google, GitHub and more, through each service's own MCP server. It asks you before it uses one, until you let a kind of action go on alone. What you connect stays on this computer.",
     "connect": "Connect",
     "connecting": "Approve it in the tab that opened…",
     "connected": "Connected",
@@ -629,7 +629,7 @@
       "forget": "Remove the client"
     },
     "callback": {
-      "done": "{name} is connected. Your mini-me can work there now.",
+      "done": "{name} is connected. Your clone can work there now.",
       "declined": "The sign-in did not finish.",
       "failed": "The service did not accept the sign-in. Try again from your page.",
       "close": "You can close this tab."
@@ -637,7 +637,7 @@
   },
   "trust": {
     "title": "What it does without asking",
-    "intro": "When you tick “Don't ask again for this” on a card, it is kept here. Take one back and your mini-me asks you first again.",
+    "intro": "When you tick “Don't ask again for this” on a card, it is kept here. Take one back and your clone asks you first again.",
     "empty": "Nothing yet: it asks you first.",
     "askAgain": "Ask me first again"
   }

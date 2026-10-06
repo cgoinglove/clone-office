@@ -15,7 +15,7 @@ test("a request names who asked and keeps promises with the person", () => {
     { name: "Ana", description: "Payments" },
     "Can we meet on Friday?",
   );
-  assert.match(prompt, /the mini-me of Ana \(Payments\)/);
+  assert.match(prompt, /the clone of Ana \(Payments\)/);
   assert.match(prompt, /Can we meet on Friday\?/);
   assert.match(prompt, /Never promise or decide on their behalf/);
 });

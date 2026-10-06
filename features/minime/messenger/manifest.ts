@@ -4,13 +4,13 @@
 // copy it without the bot.
 
 export const SLACK_MANIFEST = `display_information:
-  name: mini-me
+  name: clone
 features:
   app_home:
     messages_tab_enabled: true
     messages_tab_read_only_enabled: false
   bot_user:
-    display_name: mini-me
+    display_name: clone
     always_online: true
 oauth_config:
   scopes:
