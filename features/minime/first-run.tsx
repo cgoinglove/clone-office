@@ -8,6 +8,7 @@
 // removable, and offers three things to do together right away. The learning runs on the server,
 // so a reload attaches to it instead of starting over.
 
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bubble, BubbleContent } from "@/components/ui/bubble";
 import { Button } from "@/components/ui/button";
@@ -23,278 +24,15 @@ import { Markdown } from "@/components/ui/markdown";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot, type Mood } from "@/features/office";
+import { personTag, useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
+import { LanguageSwitch } from "./language-switch";
 import { EXPORT_PROMPT } from "./learn/export-prompt";
 import { OfficePanel } from "./office-panel";
 import { savedText } from "./saved-text";
 
-type Locale = "en" | "ko";
-
-const COPY = {
-  ko: {
-    hello:
-      "안녕하세요, 미니미예요. 당신처럼 일하려면 먼저 당신이 일하는 방식을 알아야 해요. 이렇게 배울게요.",
-    me: "내 미니미",
-    plan: [
-      [
-        "읽는 것",
-        "최근 14일 동안 AI에게 한 말, AI 지침·메모 파일, 자주 쓰는 문서 종류와 앱, 코드를 쓴다면 커밋도. 문서는 종류만 보고 내용과 이름은 읽지 않아요.",
-      ],
-      [
-        "기억하는 것",
-        "일하는 방식, 판단 기준, 말투처럼 몇 달 뒤에도 맞을 것만, 다섯 줄 안으로.",
-      ],
-      [
-        "기억하지 않는 것",
-        "프로젝트, 일정, 파일처럼 바뀌는 것. 필요할 때 그때 찾아봐요.",
-      ],
-      ["걸리는 시간", "30초쯤. 이 창을 닫아도 뒤에서 계속돼요."],
-    ],
-    folders: "최근에 일한 폴더예요. 읽지 말았으면 하는 곳은 빼 주세요.",
-    noFolders:
-      "이 컴퓨터에서 AI 대화 기록을 찾지 못했어요. 평소 쓰는 AI가 아는 당신을 가져오면 가장 빨라요.",
-    sessions: (n: number) => `대화 ${n}개`,
-    leaveOut: "빼기",
-    leftOut: "뺐어요",
-    start: "읽어 주세요",
-    importOpen: "다른 AI에서 가져오기",
-    importWhile: "기다리는 동안, 평소 쓰는 AI가 아는 당신도 가져올까요?",
-    importStep1:
-      "이 글을 복사해 평소 쓰는 AI(ChatGPT, Claude, Gemini 등)와의 대화에 붙여 넣으세요.",
-    copy: "복사",
-    copied: "복사했어요",
-    importStep2:
-      "그 AI가 준 답을 여기에 붙여 넣으세요. 오래갈 것만 골라 기억하고, 붙여 넣은 글은 저장하지 않아요.",
-    importPlaceholder: "여기에 붙여 넣기",
-    importAdd: "기억에 추가",
-    importing: "오래갈 것만 고르는 중",
-    imported: (n: number) =>
-      n ? `${n}줄을 기억했어요.` : "새로 기억할 만한 게 없었어요.",
-    close: "닫기",
-    phase: {
-      index: "대화 기록을 정리하는 중",
-      read: "기록을 읽는 중",
-      learn: "읽은 것으로 배우는 중",
-    },
-    source: {
-      notes: "AI 지침과 메모 파일을 읽는 중",
-      inputs: "최근에 AI에게 한 말을 읽는 중",
-      commits: "커밋을 보는 중",
-      work: "쓰는 문서 종류와 앱을 보는 중",
-    } as Record<string, string>,
-    sourceLabel: {
-      notes: "AI 지침·메모 파일",
-      inputs: "AI에게 한 말",
-      commits: "커밋",
-      work: "문서 종류와 앱",
-    } as Record<string, string>,
-    read: "읽은 것",
-    memoryTitle: "제가 기억하는 당신",
-    lines: (n: number) => `${n}줄`,
-    memoryNone: "아직 기억한 게 없어요. 같이 일하면서 배울게요.",
-    memoryWhere: (dir: string) =>
-      `이 컴퓨터의 ${dir}에 이대로 저장돼 있어요. 바뀌는 건 기억하지 않고 필요할 때 찾아봐요.`,
-    isNew: "새로",
-    fix: "고치기",
-    fixHint: "어떻게 고칠까요?",
-    remove: "지우기",
-    removeSure: "이 줄을 지울까요?",
-    cancel: "그만두기",
-    tryNow: "바로 같이 해 볼까요?",
-    ask: "다른 일 시키기",
-    send: "보내기",
-    saved: "기억함",
-    error: (m: string) => `문제가 생겼어요: ${m}`,
-    noClaude:
-      "이 컴퓨터에서 Claude Code를 찾지 못했어요. 설치하고 로그인한 뒤 다시 열어 주세요.",
-    again: "다시 읽기",
-    startOver: "처음부터 다시",
-    startOverSure:
-      "지금 기억은 보관함으로 옮기고 처음부터 시작할까요? 지우지는 않아요.",
-    startOverYes: "처음부터",
-    newChat: "새 대화",
-    pastChats: "이전 대화",
-    noChats: "아직 대화가 없어요",
-    carrying:
-      "대화가 길어져서, 기억할 것을 먼저 챙기고 앞의 대화를 정리하는 중",
-    carried: "앞의 대화를 정리해 두었어요. 그 정리에서 이어 갈게요.",
-    turnsCount: (n: number) => `${n}번 말함`,
-    needsYou: "답이 필요해요",
-    fromColleague: "동료 미니미의 답",
-    ownAnswer: "직접 답하기",
-    mayI: "이걸 해도 될까요?",
-    allow: "허락",
-    deny: "거절",
-    always: "앞으로 이런 건 묻지 않기",
-    allowed: "허락했어요",
-    denied: "거절했어요",
-    answered: (a: string) => `답: ${a}`,
-    noLonger: "이 질문은 이제 기다리지 않아요",
-    doing: {
-      Read: "파일 읽기",
-      Glob: "파일 찾기",
-      Grep: "파일 내용에서 찾기",
-      WebFetch: "웹 페이지 열기",
-      WebSearch: "웹 검색",
-      mcp__minime__ask_colleague: "동료 미니미에게 부탁 보내기",
-    } as Record<string, string>,
-    freshOffer: (n: number) =>
-      `지난번 읽은 뒤로 AI와 새로 나눈 대화가 ${n}개 있어요. 새로 알게 될 게 있는지 읽어 볼까요?`,
-    freshRead: "읽어 보기",
-    files: "저장된 파일 전체",
-    filesWhere: (home: string) =>
-      `미니미가 이 컴퓨터에 남긴 파일 전부예요. 모두 ${home} 안에 있고, 아무 편집기로 열어 볼 수 있어요.`,
-    fileGroup: {
-      memory: "매번 읽는 기억 (나 USER.md, 일 환경 MEMORY.md)",
-      skills: "스킬",
-      notes: "노트",
-      chats: "나와 나눈 대화 (대화 하나에 파일 하나)",
-      logs: "실행 기록 (세션마다 무엇을 했는지, 걸린 시간과 사용량. 대화 내용은 없어요)",
-      reading: "지난 읽기 기록 (언제 무엇을 읽었는지, 해 볼 일)",
-      settings: "설정 (뺀 폴더)",
-      index: "대화 검색 색인 (원래 기록에서 다시 만들 수 있어요)",
-      backup: "보관함 (처음부터 다시 할 때 옮긴 것)",
-      other: "그 밖의 파일",
-    } as Record<string, string>,
-    fileEmpty: "(비어 있음)",
-  },
-  en: {
-    hello:
-      "Hi, I'm your mini-me. To work the way you do, I first need to learn how you work. Here is how I'll learn.",
-    me: "My mini-me",
-    plan: [
-      [
-        "What I read",
-        "What you asked your AI tools in the last 14 days, your AI instruction and memory files, the kinds of documents and apps you use, and your commits if you write code. For documents I see only the kind, never the contents or names.",
-      ],
-      [
-        "What I keep",
-        "Only what will still be true in months — how you work, decide and talk — in five lines or fewer.",
-      ],
-      [
-        "What I don't keep",
-        "Things that change, like projects, schedules and files. I look them up when I need them.",
-      ],
-      [
-        "How long",
-        "About 30 seconds. It keeps going if you close this window.",
-      ],
-    ],
-    folders:
-      "These are the folders you worked in lately. Leave out any I shouldn't read.",
-    noFolders:
-      "I found no AI conversations on this computer. Bringing what your usual AI knows about you is the quickest start.",
-    sessions: (n: number) => `${n} conversations`,
-    leaveOut: "Leave out",
-    leftOut: "Left out",
-    start: "Go ahead",
-    importOpen: "Bring it from another AI",
-    importWhile:
-      "While you wait, shall I bring what your usual AI knows about you?",
-    importStep1:
-      "Copy this into a chat with the AI you use most, such as ChatGPT, Claude or Gemini.",
-    copy: "Copy",
-    copied: "Copied",
-    importStep2:
-      "Paste its answer here. I'll keep only what lasts, and the pasted text is not stored.",
-    importPlaceholder: "Paste here",
-    importAdd: "Add to memory",
-    importing: "Picking out what lasts",
-    imported: (n: number) =>
-      n
-        ? `I kept ${n} line${n === 1 ? "" : "s"}.`
-        : "There was nothing new worth keeping.",
-    close: "Close",
-    phase: {
-      index: "Sorting your conversation records",
-      read: "Reading your records",
-      learn: "Learning from what I read",
-    },
-    source: {
-      notes: "Reading your AI instructions and memory files",
-      inputs: "Reading what you asked your AI tools lately",
-      commits: "Looking at your commits",
-      work: "Looking at the kinds of documents and apps you use",
-    } as Record<string, string>,
-    sourceLabel: {
-      notes: "AI instruction and memory files",
-      inputs: "what you asked AI tools",
-      commits: "commits",
-      work: "document kinds and apps",
-    } as Record<string, string>,
-    read: "Read",
-    memoryTitle: "What I remember about you",
-    lines: (n: number) => `${n} line${n === 1 ? "" : "s"}`,
-    memoryNone: "Nothing yet. I'll learn as we work together.",
-    memoryWhere: (dir: string) =>
-      `Saved exactly like this in ${dir} on this computer. Things that change aren't kept; I look them up when I need them.`,
-    isNew: "New",
-    fix: "Correct",
-    fixHint: "How should it read?",
-    remove: "Remove",
-    removeSure: "Remove this line?",
-    cancel: "Cancel",
-    tryNow: "Shall we do one together now?",
-    ask: "Ask something else",
-    send: "Send",
-    saved: "Saved",
-    error: (m: string) => `Something went wrong: ${m}`,
-    noClaude:
-      "Claude Code isn't installed or signed in on this computer. Set it up, then reopen this page.",
-    again: "Read again",
-    startOver: "Start over",
-    startOverSure:
-      "Move what I remember into a backup and start from the beginning? Nothing is deleted.",
-    startOverYes: "Start over",
-    newChat: "New conversation",
-    pastChats: "Past conversations",
-    noChats: "No conversations yet",
-    carrying:
-      "This conversation is long: keeping what matters first, then summing up what came before",
-    carried: "I summed up what came before and will go on from that.",
-    turnsCount: (n: number) => `${n} message${n === 1 ? "" : "s"}`,
-    needsYou: "Needs you",
-    fromColleague: "From a colleague's mini-me",
-    ownAnswer: "Your own answer",
-    mayI: "May I do this?",
-    allow: "Allow",
-    deny: "Don't",
-    always: "Don't ask again for this",
-    allowed: "Allowed",
-    denied: "Declined",
-    answered: (a: string) => `Answer: ${a}`,
-    noLonger: "This question is no longer waiting",
-    doing: {
-      Read: "Read a file",
-      Glob: "Find files",
-      Grep: "Search inside files",
-      WebFetch: "Open a web page",
-      WebSearch: "Search the web",
-      mcp__minime__ask_colleague: "Send a request to a colleague's mini-me",
-    } as Record<string, string>,
-    freshOffer: (n: number) =>
-      `You've had ${n} new conversations with your AI tools since I last read. Shall I see if there's anything new to learn?`,
-    freshRead: "Read them",
-    files: "All files I keep",
-    filesWhere: (home: string) =>
-      `Every file your mini-me keeps on this computer. All of it is in ${home}, and any text editor can open it.`,
-    fileGroup: {
-      memory: "Read every time (about you: USER.md, your work: MEMORY.md)",
-      skills: "Skills",
-      notes: "Notes",
-      chats: "Our conversations (one file each)",
-      logs: "Run log (what each session did, how long it took and what it used; no conversation text)",
-      reading: "The last reading (what was read when, things to try)",
-      settings: "Settings (folders left out)",
-      index: "Conversation search index (rebuilt from the original records)",
-      backup: "Backups (moved there when starting over)",
-      other: "Other files",
-    } as Record<string, string>,
-    fileEmpty: "(empty)",
-  },
-};
-type Copy = (typeof COPY)[Locale];
+const PLAN = ["read", "keep", "skip", "time"] as const;
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
 
@@ -399,11 +137,18 @@ type TurnInput = Turn extends infer T
   : never;
 
 export function FirstRun() {
-  // The screen's words exist in Korean and English for now; the mini-me is told the browser's own
-  // language, whatever it is, and keeps what it learns in it.
+  // The screen's words come from messages/<language>.json (i18n/); the mini-me is told the
+  // language the person picked, else their browser's own, whatever it is, and keeps what it
+  // learns in it.
+  const t = useTranslations();
+  const problemText = useProblem();
+  const format = useFormatter();
+  const locale = useLocale();
   const [lang, setLang] = useState("en");
-  const locale: Locale = lang.toLowerCase().startsWith("ko") ? "ko" : "en";
-  const copy: Copy = COPY[locale];
+  // The mini-me's language follows the one picked for the screen, as soon as it is picked.
+  useEffect(() => {
+    if (locale) setLang(personTag());
+  }, [locale]);
   const [stage, setStage] = useState<"boot" | "intro" | "learning" | "known">(
     "boot",
   );
@@ -557,7 +302,7 @@ export function FirstRun() {
           break;
         }
         case "error":
-          setProblem(String(event.message));
+          setProblem(String(event.code ?? event.message));
           setStage("intro");
           break;
       }
@@ -576,7 +321,6 @@ export function FirstRun() {
   );
 
   useEffect(() => {
-    setLang(navigator.language || "en");
     const controller = new AbortController();
     void followLearn(controller.signal);
     void loadFolders();
@@ -631,11 +375,7 @@ export function FirstRun() {
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
-      setProblem(
-        data.error === "claude-missing"
-          ? copy.noClaude
-          : copy.error(String(data.error ?? response.status)),
-      );
+      setProblem(String(data.error ?? response.status));
       setStage("intro");
       return;
     }
@@ -649,7 +389,7 @@ export function FirstRun() {
       headers: HEADERS,
     });
     if (!response.ok) {
-      setProblem(copy.error(String(response.status)));
+      setProblem(String(response.status));
       return;
     }
     setChatId(undefined);
@@ -695,7 +435,7 @@ export function FirstRun() {
         },
       );
     } catch (error) {
-      push({ kind: "error", text: copy.error((error as Error).message) });
+      push({ kind: "error", text: (error as Error).message });
     } finally {
       setTurns((all) =>
         all.map((t) =>
@@ -716,7 +456,7 @@ export function FirstRun() {
     });
     const data = await response.json().catch(() => ({}));
     if (response.ok) setMemory(data as Memory);
-    else setProblem(copy.error(String(data.error ?? response.status)));
+    else setProblem(String(data.error ?? response.status));
   };
 
   const ask = async (text: string) => {
@@ -761,16 +501,22 @@ export function FirstRun() {
             setTurns((all) => {
               const at = all.findIndex((t) => t.id === reply);
               const next = [...all];
-              next.splice(at, 0, { id, kind: "note", text: copy.carrying });
+              next.splice(at, 0, {
+                id,
+                kind: "note",
+                text: t("chat.carrying"),
+              });
               return next;
             });
           }
-          if (event.type === "carried")
+          if (event.type === "carried") {
+            const carried = t("chat.carried");
             setTurns((all) =>
-              all.map((t) =>
-                t.id === note ? { ...t, text: copy.carried } : t,
+              all.map((turn) =>
+                turn.id === note ? { ...turn, text: carried } : turn,
               ),
             );
+          }
           if (event.type === "text")
             setTurns((all) =>
               all.map((t) =>
@@ -790,16 +536,11 @@ export function FirstRun() {
           }
           if (event.type === "reviewed") void loadMemory();
           if (event.type === "error")
-            push({ kind: "error", text: copy.error(String(event.message)) });
+            push({ kind: "error", text: String(event.code ?? event.message) });
         },
       );
     } catch (error) {
-      const message = (error as Error).message;
-      push({
-        kind: "error",
-        text:
-          message === "claude-missing" ? copy.noClaude : copy.error(message),
-      });
+      push({ kind: "error", text: (error as Error).message });
     } finally {
       finishReply();
       setBusy(false);
@@ -818,15 +559,12 @@ export function FirstRun() {
       headers: HEADERS,
       body: JSON.stringify({ id: gate, answer, always }),
     });
+    const gone = t("errors.no-longer-waiting");
     setTurns((all) =>
-      all.map((t) =>
-        t.id === turnId && t.kind === "ask"
-          ? {
-              ...t,
-              state: "done",
-              answer: response.ok ? answer : copy.noLonger,
-            }
-          : t,
+      all.map((turn) =>
+        turn.id === turnId && turn.kind === "ask"
+          ? { ...turn, state: "done", answer: response.ok ? answer : gone }
+          : turn,
       ),
     );
     if (!response.ok || busy || !chatId) return;
@@ -860,10 +598,11 @@ export function FirstRun() {
                 ? "asking"
                 : "idle";
 
+  const source = `firstRun.source.${progress?.source}` as const;
   const label = progress
-    ? progress.phase === "read" && progress.source
-      ? (copy.source[progress.source] ?? copy.phase.read)
-      : copy.phase[progress.phase]
+    ? progress.phase === "read" && progress.source && t.has(source as never)
+      ? t(source as never)
+      : t(`firstRun.phase.${progress.phase}`)
     : "";
 
   const entries: Entry[] = memory
@@ -884,26 +623,34 @@ export function FirstRun() {
           size={56}
           mood={mood}
           mine={asking}
-          label={copy.me}
+          label={t("firstRun.title")}
           className="shrink-0"
         />
         <Bubble variant="secondary">
-          <BubbleContent className="text-[15px]">{copy.hello}</BubbleContent>
+          <BubbleContent className="text-[15px]">
+            {t("firstRun.hello")}
+          </BubbleContent>
         </Bubble>
       </header>
 
       {stage === "intro" && (
         <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
           <dl className="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
-            {copy.plan.map(([term, text]) => (
-              <div key={term} className="contents">
-                <dt className="font-medium">{term}</dt>
-                <dd className="mb-1 text-muted-foreground sm:mb-0">{text}</dd>
+            {PLAN.map((part) => (
+              <div key={part} className="contents">
+                <dt className="font-medium">
+                  {t(`firstRun.plan.${part}.title`)}
+                </dt>
+                <dd className="mb-1 text-muted-foreground sm:mb-0">
+                  {t(`firstRun.plan.${part}.body`)}
+                </dd>
               </div>
             ))}
           </dl>
           <p className="text-sm text-muted-foreground">
-            {folders?.length === 0 ? copy.noFolders : copy.folders}
+            {folders?.length === 0
+              ? t("firstRun.noFolders")
+              : t("firstRun.folders")}
           </p>
           {folders && folders.length > 0 && (
             <ul className="flex flex-col">
@@ -920,7 +667,7 @@ export function FirstRun() {
                   >
                     {folder.name}
                     <span className="ml-2 text-xs text-muted-foreground tabular-nums">
-                      {copy.sessions(folder.sessions)}
+                      {t("firstRun.sessions", { count: folder.sessions })}
                     </span>
                   </span>
                   <Button
@@ -928,17 +675,19 @@ export function FirstRun() {
                     variant={folder.excluded ? "secondary" : "outline"}
                     onClick={() => void toggle(folder)}
                   >
-                    {folder.excluded ? copy.leftOut : copy.leaveOut}
+                    {folder.excluded
+                      ? t("firstRun.leftOut")
+                      : t("firstRun.leaveOut")}
                   </Button>
                 </li>
               ))}
             </ul>
           )}
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => void start()}>{copy.start}</Button>
+            <Button onClick={() => void start()}>{t("firstRun.start")}</Button>
             {!importing && (
               <Button variant="outline" onClick={() => setImporting(true)}>
-                {copy.importOpen}
+                {t("import.open")}
               </Button>
             )}
           </div>
@@ -947,7 +696,9 @@ export function FirstRun() {
 
       {problem && (
         <Bubble variant="destructive">
-          <BubbleContent className="text-[15px]">{problem}</BubbleContent>
+          <BubbleContent className="text-[15px]">
+            {problemText(problem)}
+          </BubbleContent>
         </Bubble>
       )}
 
@@ -973,10 +724,15 @@ export function FirstRun() {
       {(stage === "learning" || stage === "known") &&
         sources.some((s) => s.items > 0) && (
           <div className="rounded-lg border border-border px-3 py-2 text-sm">
-            <span className="text-muted-foreground">{copy.read}: </span>
+            <span className="text-muted-foreground">
+              {t("firstRun.read")}:{" "}
+            </span>
             {sources
               .filter((s) => s.items > 0)
-              .map((s) => `${copy.sourceLabel[s.id] ?? s.label} ${s.items}`)
+              .map((s) => {
+                const key = `firstRun.sourceLabel.${s.id}`;
+                return `${t.has(key as never) ? t(key as never) : s.label} ${s.items}`;
+              })
               .join(" · ")}
           </div>
         )}
@@ -987,7 +743,7 @@ export function FirstRun() {
             key={`${i}-${text}`}
             className="self-start rounded-md bg-muted px-2 py-1 text-xs"
           >
-            💾 {copy.saved}: {text}
+            💾 {t("firstRun.saved")}: {text}
           </span>
         ))}
 
@@ -1000,21 +756,20 @@ export function FirstRun() {
               aria-expanded={memoryOpen ?? turns.length === 0}
               onClick={() => setMemoryOpen(!(memoryOpen ?? turns.length === 0))}
             >
-              <b>{copy.memoryTitle}</b>
+              <b>{t("memory.title")}</b>
               <span className="text-xs text-muted-foreground tabular-nums">
-                {copy.lines(entries.length)}{" "}
+                {t("memory.lines", { count: entries.length })}{" "}
                 {(memoryOpen ?? turns.length === 0) ? "▴" : "▾"}
               </span>
             </button>
             {(memoryOpen ?? turns.length === 0) &&
               memory &&
-              entries.length === 0 && <p>{copy.memoryNone}</p>}
+              entries.length === 0 && <p>{t("memory.none")}</p>}
             {(memoryOpen ?? turns.length === 0) && entries.length > 0 && (
               <ol className="flex flex-col gap-2">
                 {entries.map((entry, i) => (
                   <MemoryRow
                     key={`${entry.target}-${entry.text}`}
-                    copy={copy}
                     index={i}
                     entry={entry}
                     isNew={fresh.includes(entry.text)}
@@ -1026,7 +781,7 @@ export function FirstRun() {
             )}
             {(memoryOpen ?? turns.length === 0) && memory && (
               <p className="text-xs text-muted-foreground">
-                {copy.memoryWhere(memory.dir)}
+                {t("memory.where", { dir: memory.dir })}
               </p>
             )}
           </BubbleContent>
@@ -1037,9 +792,7 @@ export function FirstRun() {
       {stage !== "boot" &&
         (importing ? (
           <ImportCard
-            copy={copy}
             onWorking={setListening}
-            locale={locale}
             lang={lang}
             onClose={() => setImporting(false)}
             onImported={onImported}
@@ -1047,13 +800,13 @@ export function FirstRun() {
         ) : (
           stage === "learning" && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 text-sm">
-              <span className="min-w-0">{copy.importWhile}</span>
+              <span className="min-w-0">{t("import.while")}</span>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setImporting(true)}
               >
-                {copy.importOpen}
+                {t("import.open")}
               </Button>
             </div>
           )
@@ -1061,9 +814,11 @@ export function FirstRun() {
 
       {stage === "known" && freshOffer > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-3 text-sm">
-          <span className="min-w-0">{copy.freshOffer(freshOffer)}</span>
+          <span className="min-w-0">
+            {t("firstRun.freshOffer", { count: freshOffer })}
+          </span>
           <Button size="sm" variant="outline" onClick={() => void start()}>
-            {copy.freshRead}
+            {t("firstRun.freshRead")}
           </Button>
         </div>
       )}
@@ -1071,7 +826,7 @@ export function FirstRun() {
       {showMemory && (
         <div className="flex items-center justify-between gap-2 border-b border-border pb-2">
           <span className="min-w-0 truncate text-sm font-medium">
-            {chats.find((c) => c.id === chatId)?.title ?? copy.newChat}
+            {chats.find((c) => c.id === chatId)?.title ?? t("chat.newChat")}
           </span>
           <div className="flex shrink-0 gap-1">
             <Button
@@ -1080,20 +835,20 @@ export function FirstRun() {
               disabled={busy || turns.length === 0}
               onClick={newChat}
             >
-              {copy.newChat}
+              {t("chat.newChat")}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
                   <Button size="sm" variant="ghost" disabled={busy}>
-                    {copy.pastChats}
+                    {t("chat.pastChats")}
                   </Button>
                 }
               />
               <DropdownMenuContent align="end" className="w-72">
                 <DropdownMenuGroup>
                   {chats.length === 0 && (
-                    <DropdownMenuLabel>{copy.noChats}</DropdownMenuLabel>
+                    <DropdownMenuLabel>{t("chat.noChats")}</DropdownMenuLabel>
                   )}
                   {chats.map((chat) => (
                     <DropdownMenuItem
@@ -1103,13 +858,13 @@ export function FirstRun() {
                       <span className="flex min-w-0 flex-col">
                         <span className="truncate">{chat.title}</span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(chat.updated).toLocaleString(lang, {
+                          {format.dateTime(new Date(chat.updated), {
                             month: "short",
                             day: "numeric",
                             hour: "2-digit",
                             minute: "2-digit",
                           })}{" "}
-                          · {copy.turnsCount(chat.turns)}
+                          · {t("chat.turns", { count: chat.turns })}
                         </span>
                       </span>
                     </DropdownMenuItem>
@@ -1123,7 +878,9 @@ export function FirstRun() {
 
       {showMemory && tasks.length > 0 && turns.length === 0 && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">{copy.tryNow}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("firstRun.tryNow")}
+          </p>
           <div className="flex flex-col gap-2">
             {tasks.map((task) => (
               <Button
@@ -1171,7 +928,6 @@ export function FirstRun() {
           return (
             <AskCard
               key={turn.id}
-              copy={copy}
               turn={turn}
               onAnswer={(answer, always) =>
                 void answerGate(turn.id, turn.gate, answer, always)
@@ -1183,7 +939,7 @@ export function FirstRun() {
             <Bubble key={turn.id} variant="outline" className="max-w-full">
               <BubbleContent className="text-[15px]">
                 <span className="block text-xs text-muted-foreground">
-                  {copy.fromColleague}
+                  {t("chat.fromColleague")}
                 </span>
                 <span className="whitespace-pre-wrap">{turn.text}</span>
               </BubbleContent>
@@ -1204,12 +960,15 @@ export function FirstRun() {
               key={turn.id}
               className="self-start rounded-md bg-muted px-2 py-1 text-xs"
             >
-              💾 {copy.saved}: {turn.text}
+              💾 {t("firstRun.saved")}: {turn.text}
             </span>
           );
+        // Errors are kept as their codes and read in the screen's language.
         return (
           <Bubble key={turn.id} variant="destructive">
-            <BubbleContent className="text-[15px]">{turn.text}</BubbleContent>
+            <BubbleContent className="text-[15px]">
+              {problemText(turn.text)}
+            </BubbleContent>
           </Bubble>
         );
       })}
@@ -1224,7 +983,7 @@ export function FirstRun() {
               disabled={busy}
               onClick={() => void start()}
             >
-              {copy.again}
+              {t("firstRun.again")}
             </Button>
             {!importing && (
               <Button
@@ -1233,7 +992,7 @@ export function FirstRun() {
                 className="text-muted-foreground"
                 onClick={() => setImporting(true)}
               >
-                {copy.importOpen}
+                {t("import.open")}
               </Button>
             )}
             <Button
@@ -1243,21 +1002,23 @@ export function FirstRun() {
               disabled={busy}
               onClick={() => setSureOver(true)}
             >
-              {copy.startOver}
+              {t("firstRun.startOver")}
             </Button>
           </div>
           {sureOver && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm">
-              <span className="min-w-0 flex-1">{copy.startOverSure}</span>
+              <span className="min-w-0 flex-1">
+                {t("firstRun.startOverSure")}
+              </span>
               <Button size="sm" onClick={() => void startOver()}>
-                {copy.startOverYes}
+                {t("firstRun.startOverYes")}
               </Button>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => setSureOver(false)}
               >
-                {copy.cancel}
+                {t("common.cancel")}
               </Button>
             </div>
           )}
@@ -1275,7 +1036,7 @@ export function FirstRun() {
           <Textarea
             id="minime-ask"
             value={draft}
-            placeholder={copy.ask}
+            placeholder={t("chat.placeholder")}
             className="min-h-11 flex-1"
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={(event) => {
@@ -1290,20 +1051,19 @@ export function FirstRun() {
             }}
           />
           <Button type="submit" disabled={busy || !draft.trim()} loading={busy}>
-            {copy.send}
+            {t("common.send")}
           </Button>
         </form>
       )}
       {stage !== "boot" && (
         <OfficePanel
-          locale={locale}
           lang={lang}
-          askCopy={copy}
           onWaiting={setOfficeWaiting}
           onNews={refreshChat}
         />
       )}
-      {stage !== "boot" && <StoredFiles copy={copy} />}
+      {stage !== "boot" && <StoredFiles />}
+      {stage !== "boot" && <LanguageSwitch />}
       <div ref={bottom} />
     </div>
   );
@@ -1314,16 +1074,12 @@ export function FirstRun() {
  * AI, paste its answer back. Only what lasts is kept; the pasted text is not stored.
  */
 function ImportCard({
-  copy,
   onWorking,
-  locale,
   lang,
   onClose,
   onImported,
 }: {
-  copy: Copy;
   onWorking: (working: boolean) => void;
-  locale: Locale;
   lang: string;
   onClose: () => void;
   onImported: (kept: string[], saved: string[]) => void;
@@ -1332,7 +1088,13 @@ function ImportCard({
   const [copied, setCopied] = useState(false);
   const [working, setWorking] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const prompt = EXPORT_PROMPT[locale];
+  const t = useTranslations();
+  const problemText = useProblem();
+  // The prompt in the screen's language; English where it is not written yet.
+  const locale = useLocale();
+  const prompt =
+    (EXPORT_PROMPT as Partial<Record<string, string>>)[locale] ??
+    EXPORT_PROMPT.en;
 
   const copyPrompt = async () => {
     try {
@@ -1357,17 +1119,14 @@ function ImportCard({
         if (event.type === "done") {
           const kept = (event.kept as string[]) ?? [];
           onImported(kept, saved);
-          setResult(copy.imported(kept.length));
+          setResult(t("import.done", { count: kept.length }));
           setText("");
         }
         if (event.type === "error")
-          setResult(copy.error(String(event.message)));
+          setResult(problemText(String(event.code ?? event.message)));
       });
     } catch (error) {
-      const message = (error as Error).message;
-      setResult(
-        message === "claude-missing" ? copy.noClaude : copy.error(message),
-      );
+      setResult(problemText((error as Error).message));
     } finally {
       setWorking(false);
       onWorking(false);
@@ -1376,19 +1135,19 @@ function ImportCard({
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border p-4">
-      <b>{copy.importOpen}</b>
+      <b>{t("import.open")}</b>
       <ol className="flex flex-col gap-4 text-sm">
         <li className="flex flex-col gap-2">
           <span className="flex items-start gap-2">
             <Step n={1} />
-            <span className="min-w-0 flex-1">{copy.importStep1}</span>
+            <span className="min-w-0 flex-1">{t("import.step1")}</span>
             <Button
               size="sm"
               variant="secondary"
               className="shrink-0"
               onClick={() => void copyPrompt()}
             >
-              {copied ? copy.copied : copy.copy}
+              {copied ? t("common.copied") : t("common.copy")}
             </Button>
           </span>
           <pre className="max-h-36 overflow-auto rounded-lg bg-muted p-3 font-sans text-xs whitespace-pre-wrap text-muted-foreground">
@@ -1398,23 +1157,23 @@ function ImportCard({
         <li className="flex flex-col gap-2">
           <span className="flex gap-2">
             <Step n={2} />
-            <span className="min-w-0">{copy.importStep2}</span>
+            <span className="min-w-0">{t("import.step2")}</span>
           </span>
           <Textarea
             id="minime-import"
             value={text}
-            placeholder={copy.importPlaceholder}
+            placeholder={t("import.placeholder")}
             className="min-h-30"
             disabled={working}
             onChange={(event) => setText(event.target.value)}
           />
         </li>
       </ol>
-      {working && <ShinyText className="text-sm" text={copy.importing} />}
+      {working && <ShinyText className="text-sm" text={t("import.working")} />}
       {!working && result && <p className="text-sm">{result}</p>}
       <div className="flex justify-end gap-2">
         <Button size="sm" variant="ghost" onClick={onClose}>
-          {result ? copy.close : copy.cancel}
+          {result ? t("common.close") : t("common.cancel")}
         </Button>
         <Button
           size="sm"
@@ -1422,7 +1181,7 @@ function ImportCard({
           loading={working}
           onClick={() => void submit()}
         >
-          {copy.importAdd}
+          {t("import.add")}
         </Button>
       </div>
     </div>
@@ -1447,7 +1206,7 @@ const FILE_GROUPS = [
   "index",
   "backup",
   "other",
-];
+] as const;
 
 function bytes(size: number): string {
   if (size < 1024) return `${size} B`;
@@ -1456,7 +1215,8 @@ function bytes(size: number): string {
 }
 
 /** Every file the mini-me keeps, grouped by kind, each text file openable in place. */
-function StoredFiles({ copy }: { copy: Copy }) {
+function StoredFiles() {
+  const t = useTranslations("files");
   const [data, setData] = useState<{
     home: string;
     files: StoredFile[];
@@ -1474,7 +1234,7 @@ function StoredFiles({ copy }: { copy: Copy }) {
       }}
     >
       <summary className="cursor-pointer font-medium">
-        {copy.files}
+        {t("title")}
         {data && (
           <span className="ml-2 text-muted-foreground tabular-nums">
             {data.files.length}
@@ -1483,13 +1243,15 @@ function StoredFiles({ copy }: { copy: Copy }) {
       </summary>
       {data && (
         <div className="mt-3 flex flex-col gap-4">
-          <p className="text-muted-foreground">{copy.filesWhere(data.home)}</p>
+          <p className="text-muted-foreground">
+            {t("where", { home: data.home })}
+          </p>
           {FILE_GROUPS.map((group) => {
             const files = data.files.filter((f) => f.group === group);
             if (files.length === 0) return null;
             return (
               <section key={group} className="flex flex-col gap-1">
-                <h3 className="font-medium">{copy.fileGroup[group]}</h3>
+                <h3 className="font-medium">{t(`group.${group}`)}</h3>
                 <ul className="flex flex-col">
                   {files.map((file) => (
                     <li
@@ -1512,7 +1274,7 @@ function StoredFiles({ copy }: { copy: Copy }) {
                             </span>
                           </summary>
                           <pre className="mt-2 max-h-80 overflow-auto rounded-lg bg-muted p-3 text-xs whitespace-pre-wrap">
-                            {file.text || copy.fileEmpty}
+                            {file.text || t("empty")}
                           </pre>
                         </details>
                       )}
@@ -1537,14 +1299,12 @@ function Step({ n }: { n: number }) {
 }
 
 function MemoryRow({
-  copy,
   index,
   entry,
   isNew,
   onFix,
   onRemove,
 }: {
-  copy: Copy;
   index: number;
   entry: Entry;
   isNew: boolean;
@@ -1555,6 +1315,7 @@ function MemoryRow({
     "open" | "fixing" | "saving" | "removing" | "sure"
   >("open");
   const [text, setText] = useState(entry.text);
+  const t = useTranslations();
   return (
     <li className="flex flex-col gap-2">
       <div className="flex flex-wrap items-start gap-x-2 gap-y-1">
@@ -1563,7 +1324,7 @@ function MemoryRow({
           {entry.text}
           {isNew && (
             <span className="ml-2 inline-block rounded-sm border border-border px-1.5 py-0.5 align-middle text-xs whitespace-nowrap text-muted-foreground">
-              {copy.isNew}
+              {t("memory.isNew")}
             </span>
           )}
         </span>
@@ -1575,7 +1336,7 @@ function MemoryRow({
               className="text-muted-foreground"
               onClick={() => setState("fixing")}
             >
-              {copy.fix}
+              {t("memory.fix")}
             </Button>
             <Button
               size="sm"
@@ -1583,19 +1344,21 @@ function MemoryRow({
               className="text-muted-foreground"
               onClick={() => setState("sure")}
             >
-              {copy.remove}
+              {t("memory.remove")}
             </Button>
           </span>
         )}
         {(state === "saving" || state === "removing") && (
           <span className="ml-auto shrink-0 text-sm">
-            <ShinyText text={state === "saving" ? copy.fix : copy.remove} />
+            <ShinyText
+              text={state === "saving" ? t("memory.fix") : t("memory.remove")}
+            />
           </span>
         )}
       </div>
       {state === "sure" && (
         <span className="flex flex-wrap items-center gap-2 pl-5 text-sm">
-          <span>{copy.removeSure}</span>
+          <span>{t("memory.removeSure")}</span>
           <Button
             size="sm"
             variant="outline"
@@ -1604,10 +1367,10 @@ function MemoryRow({
               void onRemove().finally(() => setState("open"));
             }}
           >
-            {copy.remove}
+            {t("memory.remove")}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setState("open")}>
-            {copy.cancel}
+            {t("common.cancel")}
           </Button>
         </span>
       )}
@@ -1616,7 +1379,7 @@ function MemoryRow({
           <Textarea
             id={`memory-fix-${index}`}
             value={text}
-            aria-label={copy.fixHint}
+            aria-label={t("memory.fixHint")}
             onChange={(event) => setText(event.target.value)}
           />
           <span className="flex gap-2">
@@ -1628,10 +1391,10 @@ function MemoryRow({
                 void onFix(text.trim()).finally(() => setState("open"));
               }}
             >
-              {copy.fix}
+              {t("memory.fix")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setState("open")}>
-              {copy.cancel}
+              {t("common.cancel")}
             </Button>
           </span>
         </span>

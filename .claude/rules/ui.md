@@ -21,12 +21,19 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
 - `components/ui/shiny-text.tsx` — words for something still running.
 - `hooks/use-hotkey.ts` — the keys the window owns: Esc layers, `windowKey`.
 - `lib/utils.ts` — `cn`, `WAITING_INK` and the formatters screens share.
+- `messages/<language>.json` and `i18n/` — every word a person reads (next-intl, no language in
+  the address): `useTranslations` in a component, English as the source and the fallback,
+  `useProblem` for an error code, `LanguageSwitch` to pick a language.
 
 ## How it fits
 `components/ui` is shadcn in its Base UI style (`components.json`) plus the app's own parts; add a
 shadcn part with `pnpm dlx shadcn add <name>` (the `shadcn` skill knows how).
 
 ## What breaks
+- A word typed into a component, or a sentence a route returns, reads in one language only:
+  words go in `messages/en.json` (and every other language file: `pnpm test` says what is
+  missing), a route answers with an error code, and a status or kind stored or sent to others
+  is a code each screen reads in its own language.
 - A palette class or a hex follows neither the theme nor `.inverse`: every colour is a token from
   `app/globals.css`, picked by meaning — `destructive` failed, `waiting` wants the user, `brand` is
   picked or asked for, success has none.

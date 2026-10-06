@@ -3,6 +3,7 @@ import { gateSecret } from "@/features/minime/gate/gate";
 import {
   loadOffice,
   members,
+  problemCode,
   sendRequest,
 } from "@/features/minime/office/client";
 import { changeState } from "@/features/minime/office/state";
@@ -25,16 +26,13 @@ export async function POST(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
   if (request.headers.get("x-minime-gate") !== gateSecret())
-    return Response.json({ error: "Not the mini-me." }, { status: 403 });
+    return Response.json({ error: "forbidden" }, { status: 403 });
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   const office = await loadOffice();
   if (!office)
-    return Response.json(
-      { error: "Your person has not joined an office." },
-      { status: 409 },
-    );
+    return Response.json({ error: "not-in-office" }, { status: 409 });
   try {
     const { members: everyone } = await members(office);
     const others = everyone.filter((m) => m.id !== office.member);
@@ -49,10 +47,7 @@ export async function POST(request: Request) {
       others.find((m) => m.card.name.trim().toLowerCase() === wanted) ??
       others.find((m) => m.card.name.toLowerCase().includes(wanted));
     if (!to)
-      return Response.json(
-        { error: `No one called ${input.to} in the office.` },
-        { status: 404 },
-      );
+      return Response.json({ error: "no-such-colleague" }, { status: 404 });
     const task = await sendRequest(office, to.id, input.text);
     const chat = input.chat;
     if (chat)
@@ -61,6 +56,6 @@ export async function POST(request: Request) {
       });
     return Response.json({ sent: { to: to.card.name, id: task.id } });
   } catch (error) {
-    return Response.json({ error: (error as Error).message }, { status: 502 });
+    return Response.json({ error: problemCode(error) }, { status: 502 });
   }
 }

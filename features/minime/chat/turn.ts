@@ -17,6 +17,7 @@ import { type Ask, gateSecret, onAsk } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
 import { loadExcludes } from "../server/exclude.ts";
+import { errorCode } from "../server/ndjson.ts";
 import {
   appendMessage,
   type ChatInfo,
@@ -45,7 +46,7 @@ export type TurnEvent =
   | { type: "saved"; event: SessionEvent }
   | { type: "ask"; id: string; ask: Ask }
   | { type: "reviewed"; ok: boolean }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string; code?: string };
 
 /** The end of a conversation's own record, for a session that starts without the brain's copy. */
 export function recap(messages: ChatMessage[], max = 6000): string {
@@ -173,8 +174,10 @@ export async function runTurn(options: {
   }
   if (!result.ok || !result.sessionId) {
     const message = result.error ?? "task-failed";
-    await appendMessage(info.id, "error", message);
-    send({ type: "error", message });
+    const code = errorCode(message);
+    // Kept as its code when it has one, so the conversation reads in the person's language.
+    await appendMessage(info.id, "error", code ?? message);
+    send({ type: "error", message, code });
     return;
   }
   await appendMessage(info.id, "minime", result.text);

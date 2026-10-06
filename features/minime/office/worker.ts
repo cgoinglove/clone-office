@@ -12,6 +12,7 @@ import {
   loadOffice,
   members,
   type OfficeConfig,
+  problemCode,
   tasks,
 } from "./client.ts";
 import { handleRequest } from "./handle.ts";
@@ -136,7 +137,7 @@ async function loop(worker: Worker): Promise<void> {
       });
     } catch (error) {
       if (!worker.running) return;
-      worker.problem = (error as Error).message;
+      worker.problem = problemCode(error);
       await sleep(5000);
     }
   }
@@ -165,7 +166,7 @@ function onEvent(
       language: worker.language,
     })
       .catch((error) => {
-        worker.problem = (error as Error).message;
+        worker.problem = problemCode(error);
       })
       .finally(() => worker.busy.delete(task.id));
     return;

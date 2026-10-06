@@ -118,7 +118,7 @@ export type DraftEvent =
       total?: number;
     }
   | { type: "done"; state: MinimeState }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string; code?: string };
 
 export interface AskAnswer {
   answer: string;

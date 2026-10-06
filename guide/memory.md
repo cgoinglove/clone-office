@@ -21,7 +21,10 @@ The mini-me keeps four small things, all as plain text files on this computer:
 
 ## How it learns
 
-Everything it keeps is written in their own language (the one their browser uses), whatever it is.
+Everything it keeps is written in their own language, whatever it is: the one they picked under
+**Language** (언어) at the bottom of the page, else the one their browser uses. The page itself
+reads in English or Korean (more can be added); in any other language it reads in English while
+the mini-me still keeps what it learns, and asks them, in theirs.
 
 - **The first time**: it reads a little of what is on their computer (`reading.md`) and keeps at
   most five lines about how they work. Lines kept this time are marked **New** (새로).

@@ -13,7 +13,7 @@
     "lint": "biome check",
     "format": "biome format --write",
     "typecheck": "next typegen && tsc --noEmit",
-    "test": "tsx --test \"features/**/*.test.ts\" \"plugin/**/*.test.ts\"",
+    "test": "tsx --test \"features/**/*.test.ts\" \"plugin/**/*.test.ts\" \"i18n/**/*.test.ts\"",
     "relay": "node features/relay/server.ts"
   },
   "dependencies": {
@@ -31,6 +31,7 @@
     "date-fns": "^4.4.0",
     "lucide-react": "^1.49.0",
     "next": "16.3.4",
+    "next-intl": "4.14.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "streamdown": "^2.6.0",

@@ -1,0 +1,197 @@
+{
+  "common": {
+    "send": "보내기",
+    "cancel": "그만두기",
+    "close": "닫기",
+    "copy": "복사",
+    "copied": "복사했어요"
+  },
+  "language": {
+    "label": "언어"
+  },
+  "errors": {
+    "generic": "문제가 생겼어요: {detail}",
+    "claude-missing": "이 컴퓨터에서 Claude Code를 찾지 못했어요. 설치하고 로그인한 뒤 다시 열어 주세요.",
+    "bad-request": "화면이 앱이 예상하지 못한 것을 보냈어요. 새로 고친 뒤 다시 해 주세요.",
+    "forbidden": "이 앱의 화면만 미니미와 이야기할 수 있어요. 앱의 주소로 열어 주세요.",
+    "busy": "미니미가 아직 다른 일을 하고 있어요. 잠시 뒤에 다시 해 주세요.",
+    "not-found": "이제 그 자리에 없어요.",
+    "no-longer-waiting": "이 질문은 이제 기다리지 않아요.",
+    "not-in-office": "아직 오피스에 들어가지 않았어요.",
+    "no-such-colleague": "오피스에 그 이름의 동료가 없어요.",
+    "no-draft": "미니미가 초안을 쓰지 못했어요. 다시 해 보거나 직접 써 주세요.",
+    "relay-unreachable": "릴레이에 닿지 않아요. 릴레이를 띄운 사람이 다시 켜야 할 수 있어요.",
+    "office-key-wrong": "이 오피스의 열쇠가 아니에요.",
+    "office-member-unknown": "릴레이가 내 미니미를 더 이상 알지 못해요. 오피스에서 나간 뒤 다시 들어가 주세요.",
+    "request-closed": "이미 끝난 부탁이에요.",
+    "ai-busy": "AI 서버가 붐볐어요. 조금 뒤에 다시 해 주세요.",
+    "timeout": "너무 오래 걸려서 멈췄어요. 다시 해 주세요.",
+    "learn-failed": "이번에는 배우기를 끝내지 못했어요. 다시 해 주세요.",
+    "fix-failed": "그 줄을 고치지 못했어요. 다시 해 주세요.",
+    "import-failed": "붙여 넣은 글을 읽지 못했어요. 다시 해 주세요.",
+    "task-failed": "그 일을 끝내지 못했어요. 다시 하거나 다르게 말해 주세요."
+  },
+  "firstRun": {
+    "title": "내 미니미",
+    "hello": "안녕하세요, 미니미예요. 당신처럼 일하려면 먼저 당신이 일하는 방식을 알아야 해요. 이렇게 배울게요.",
+    "plan": {
+      "read": {
+        "title": "읽는 것",
+        "body": "최근 14일 동안 AI에게 한 말, AI 지침·메모 파일, 자주 쓰는 문서 종류와 앱, 코드를 쓴다면 커밋도. 문서는 종류만 보고 내용과 이름은 읽지 않아요."
+      },
+      "keep": {
+        "title": "기억하는 것",
+        "body": "일하는 방식, 판단 기준, 말투처럼 몇 달 뒤에도 맞을 것만, 다섯 줄 안으로."
+      },
+      "skip": {
+        "title": "기억하지 않는 것",
+        "body": "프로젝트, 일정, 파일처럼 바뀌는 것. 필요할 때 그때 찾아봐요."
+      },
+      "time": {
+        "title": "걸리는 시간",
+        "body": "30초쯤. 이 창을 닫아도 뒤에서 계속돼요."
+      }
+    },
+    "folders": "최근에 일한 폴더예요. 읽지 말았으면 하는 곳은 빼 주세요.",
+    "noFolders": "이 컴퓨터에서 AI 대화 기록을 찾지 못했어요. 평소 쓰는 AI가 아는 당신을 가져오면 가장 빨라요.",
+    "sessions": "대화 {count}개",
+    "leaveOut": "빼기",
+    "leftOut": "뺐어요",
+    "start": "읽어 주세요",
+    "phase": {
+      "index": "대화 기록을 정리하는 중",
+      "read": "기록을 읽는 중",
+      "learn": "읽은 것으로 배우는 중"
+    },
+    "source": {
+      "notes": "AI 지침과 메모 파일을 읽는 중",
+      "inputs": "최근에 AI에게 한 말을 읽는 중",
+      "commits": "커밋을 보는 중",
+      "work": "쓰는 문서 종류와 앱을 보는 중"
+    },
+    "sourceLabel": {
+      "notes": "AI 지침·메모 파일",
+      "inputs": "AI에게 한 말",
+      "commits": "커밋",
+      "work": "문서 종류와 앱"
+    },
+    "read": "읽은 것",
+    "saved": "기억함",
+    "freshOffer": "지난번 읽은 뒤로 AI와 새로 나눈 대화가 {count}개 있어요. 새로 알게 될 게 있는지 읽어 볼까요?",
+    "freshRead": "읽어 보기",
+    "again": "다시 읽기",
+    "startOver": "처음부터 다시",
+    "startOverSure": "지금 기억은 보관함으로 옮기고 처음부터 시작할까요? 지우지는 않아요.",
+    "startOverYes": "처음부터",
+    "tryNow": "바로 같이 해 볼까요?"
+  },
+  "memory": {
+    "title": "제가 기억하는 당신",
+    "lines": "{count}줄",
+    "none": "아직 기억한 게 없어요. 같이 일하면서 배울게요.",
+    "where": "이 컴퓨터의 {dir}에 이대로 저장돼 있어요. 바뀌는 건 기억하지 않고 필요할 때 찾아봐요.",
+    "isNew": "새로",
+    "fix": "고치기",
+    "fixHint": "어떻게 고칠까요?",
+    "remove": "지우기",
+    "removeSure": "이 줄을 지울까요?"
+  },
+  "import": {
+    "open": "다른 AI에서 가져오기",
+    "while": "기다리는 동안, 평소 쓰는 AI가 아는 당신도 가져올까요?",
+    "step1": "이 글을 복사해 평소 쓰는 AI(ChatGPT, Claude, Gemini 등)와의 대화에 붙여 넣으세요.",
+    "step2": "그 AI가 준 답을 여기에 붙여 넣으세요. 오래갈 것만 골라 기억하고, 붙여 넣은 글은 저장하지 않아요.",
+    "placeholder": "여기에 붙여 넣기",
+    "add": "기억에 추가",
+    "working": "오래갈 것만 고르는 중",
+    "done": "{count, plural, =0 {새로 기억할 만한 게 없었어요.} other {{count}줄을 기억했어요.}}"
+  },
+  "chat": {
+    "placeholder": "다른 일 시키기",
+    "newChat": "새 대화",
+    "pastChats": "이전 대화",
+    "noChats": "아직 대화가 없어요",
+    "carrying": "대화가 길어져서, 기억할 것을 먼저 챙기고 앞의 대화를 정리하는 중",
+    "carried": "앞의 대화를 정리해 두었어요. 그 정리에서 이어 갈게요.",
+    "turns": "{count}번 말함",
+    "fromColleague": "동료 미니미의 답"
+  },
+  "ask": {
+    "needsYou": "답이 필요해요",
+    "mayI": "이걸 해도 될까요?",
+    "ownAnswer": "직접 답하기",
+    "allow": "허락",
+    "deny": "거절",
+    "always": "앞으로 이런 건 묻지 않기",
+    "allowed": "허락했어요",
+    "denied": "거절했어요",
+    "answered": "답: {answer}",
+    "doing": {
+      "Read": "파일 읽기",
+      "Glob": "파일 찾기",
+      "Grep": "파일 내용에서 찾기",
+      "WebFetch": "웹 페이지 열기",
+      "WebSearch": "웹 검색",
+      "mcp__minime__ask_colleague": "동료 미니미에게 부탁 보내기"
+    }
+  },
+  "office": {
+    "title": "오피스",
+    "intro": "동료의 미니미와 부탁을 주고받는 곳이에요. 팀이 띄운 릴레이의 주소와 오피스 열쇠로 들어가요. 내 기억이나 대화는 릴레이로 가지 않고, 명함과 부탁만 오가요.",
+    "relay": "릴레이 주소",
+    "key": "오피스 열쇠",
+    "name": "내 이름",
+    "role": "하는 일 한 줄",
+    "rolePlaceholder": "예: 결제 API와 배포를 맡아요",
+    "draft": "초안 써 줘",
+    "drafting": "미니미가 쓰는 중",
+    "join": "들어가기",
+    "me": "나",
+    "status": {
+      "working": "일하는 중",
+      "meeting": "회의 중",
+      "away": "자리 비움",
+      "off": "퇴근"
+    },
+    "colleagues": "동료",
+    "nobody": "아직 다른 미니미가 없어요. 오피스 열쇠를 동료에게 알려 주세요.",
+    "ask": "부탁하기",
+    "askPlaceholder": "{name}의 미니미에게 부탁할 것",
+    "requests": "부탁",
+    "none": "주고받은 부탁이 없어요.",
+    "sent": "→ {name}",
+    "received": "← {name}",
+    "state": {
+      "SUBMITTED": "보냄",
+      "WORKING": "처리 중",
+      "INPUT_REQUIRED": "더 필요해요",
+      "COMPLETED": "끝남",
+      "FAILED": "실패",
+      "CANCELED": "취소",
+      "REJECTED": "거절"
+    },
+    "reply": "답하기",
+    "seen": "마지막 접속 {when}",
+    "leave": "오피스 나가기",
+    "asksTitle": "받은 부탁에 답이 필요해요",
+    "team": "우리 팀",
+    "needsYou": "답이 필요해요"
+  },
+  "files": {
+    "title": "저장된 파일 전체",
+    "where": "미니미가 이 컴퓨터에 남긴 파일 전부예요. 모두 {home} 안에 있고, 아무 편집기로 열어 볼 수 있어요.",
+    "group": {
+      "memory": "매번 읽는 기억 (나 USER.md, 일 환경 MEMORY.md)",
+      "skills": "스킬",
+      "notes": "노트",
+      "chats": "나와 나눈 대화 (대화 하나에 파일 하나)",
+      "logs": "실행 기록 (세션마다 무엇을 했는지, 걸린 시간과 사용량. 대화 내용은 없어요)",
+      "reading": "지난 읽기 기록 (언제 무엇을 읽었는지, 해 볼 일)",
+      "settings": "설정 (뺀 폴더, 내 언어, 내 오피스)",
+      "index": "대화 검색 색인 (원래 기록에서 다시 만들 수 있어요)",
+      "backup": "보관함 (처음부터 다시 할 때 옮긴 것)",
+      "other": "그 밖의 파일"
+    },
+    "empty": "(비어 있음)"
+  }
+}

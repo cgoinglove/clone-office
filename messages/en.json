@@ -1,0 +1,197 @@
+{
+  "common": {
+    "send": "Send",
+    "cancel": "Cancel",
+    "close": "Close",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "errors": {
+    "generic": "Something went wrong: {detail}",
+    "claude-missing": "Claude Code isn't installed or signed in on this computer. Set it up, then reopen this page.",
+    "bad-request": "The page sent something the app didn't expect. Reload the page and try again.",
+    "forbidden": "Only this app's own page can talk to your mini-me. Open it from the app's address.",
+    "busy": "Your mini-me is still working on something else. Try again in a moment.",
+    "not-found": "That is no longer there.",
+    "no-longer-waiting": "This question is no longer waiting.",
+    "not-in-office": "You're not in an office yet.",
+    "no-such-colleague": "No one by that name is in the office.",
+    "no-draft": "Your mini-me couldn't write a draft. Try again, or write it yourself.",
+    "relay-unreachable": "Can't reach the relay. Whoever runs it may need to start it again.",
+    "office-key-wrong": "That office key doesn't open this office.",
+    "office-member-unknown": "The relay no longer knows your mini-me. Leave the office and join again.",
+    "request-closed": "That request is already closed.",
+    "ai-busy": "The AI service was busy. Try again a little later.",
+    "timeout": "It took too long and was stopped. Try again.",
+    "learn-failed": "I couldn't finish learning this time. Try again.",
+    "fix-failed": "I couldn't make that correction. Try again.",
+    "import-failed": "I couldn't read what you pasted. Try again.",
+    "task-failed": "I couldn't finish that. Try again, or ask it another way."
+  },
+  "firstRun": {
+    "title": "My mini-me",
+    "hello": "Hi, I'm your mini-me. To work the way you do, I first need to learn how you work. Here is how I'll learn.",
+    "plan": {
+      "read": {
+        "title": "What I read",
+        "body": "What you asked your AI tools in the last 14 days, your AI instruction and memory files, the kinds of documents and apps you use, and your commits if you write code. For documents I see only the kind, never the contents or names."
+      },
+      "keep": {
+        "title": "What I keep",
+        "body": "Only what will still be true in months — how you work, decide and talk — in five lines or fewer."
+      },
+      "skip": {
+        "title": "What I don't keep",
+        "body": "Things that change, like projects, schedules and files. I look them up when I need them."
+      },
+      "time": {
+        "title": "How long",
+        "body": "About 30 seconds. It keeps going if you close this window."
+      }
+    },
+    "folders": "These are the folders you worked in lately. Leave out any I shouldn't read.",
+    "noFolders": "I found no AI conversations on this computer. Bringing what your usual AI knows about you is the quickest start.",
+    "sessions": "{count, plural, one {# conversation} other {# conversations}}",
+    "leaveOut": "Leave out",
+    "leftOut": "Left out",
+    "start": "Go ahead",
+    "phase": {
+      "index": "Sorting your conversation records",
+      "read": "Reading your records",
+      "learn": "Learning from what I read"
+    },
+    "source": {
+      "notes": "Reading your AI instructions and memory files",
+      "inputs": "Reading what you asked your AI tools lately",
+      "commits": "Looking at your commits",
+      "work": "Looking at the kinds of documents and apps you use"
+    },
+    "sourceLabel": {
+      "notes": "AI instruction and memory files",
+      "inputs": "what you asked AI tools",
+      "commits": "commits",
+      "work": "document kinds and apps"
+    },
+    "read": "Read",
+    "saved": "Saved",
+    "freshOffer": "{count, plural, one {You've had # new conversation with your AI tools since I last read.} other {You've had # new conversations with your AI tools since I last read.}} Shall I see if there's anything new to learn?",
+    "freshRead": "Read them",
+    "again": "Read again",
+    "startOver": "Start over",
+    "startOverSure": "Move what I remember into a backup and start from the beginning? Nothing is deleted.",
+    "startOverYes": "Start over",
+    "tryNow": "Shall we do one together now?"
+  },
+  "memory": {
+    "title": "What I remember about you",
+    "lines": "{count, plural, one {# line} other {# lines}}",
+    "none": "Nothing yet. I'll learn as we work together.",
+    "where": "Saved exactly like this in {dir} on this computer. Things that change aren't kept; I look them up when I need them.",
+    "isNew": "New",
+    "fix": "Correct",
+    "fixHint": "How should it read?",
+    "remove": "Remove",
+    "removeSure": "Remove this line?"
+  },
+  "import": {
+    "open": "Bring it from another AI",
+    "while": "While you wait, shall I bring what your usual AI knows about you?",
+    "step1": "Copy this into a chat with the AI you use most, such as ChatGPT, Claude or Gemini.",
+    "step2": "Paste its answer here. I'll keep only what lasts, and the pasted text is not stored.",
+    "placeholder": "Paste here",
+    "add": "Add to memory",
+    "working": "Picking out what lasts",
+    "done": "{count, plural, =0 {There was nothing new worth keeping.} one {I kept # line.} other {I kept # lines.}}"
+  },
+  "chat": {
+    "placeholder": "Ask something else",
+    "newChat": "New conversation",
+    "pastChats": "Past conversations",
+    "noChats": "No conversations yet",
+    "carrying": "This conversation is long: keeping what matters first, then summing up what came before",
+    "carried": "I summed up what came before and will go on from that.",
+    "turns": "{count, plural, one {# message} other {# messages}}",
+    "fromColleague": "From a colleague's mini-me"
+  },
+  "ask": {
+    "needsYou": "Needs you",
+    "mayI": "May I do this?",
+    "ownAnswer": "Your own answer",
+    "allow": "Allow",
+    "deny": "Don't",
+    "always": "Don't ask again for this",
+    "allowed": "Allowed",
+    "denied": "Declined",
+    "answered": "Answer: {answer}",
+    "doing": {
+      "Read": "Read a file",
+      "Glob": "Find files",
+      "Grep": "Search inside files",
+      "WebFetch": "Open a web page",
+      "WebSearch": "Search the web",
+      "mcp__minime__ask_colleague": "Send a request to a colleague's mini-me"
+    }
+  },
+  "office": {
+    "title": "Office",
+    "intro": "Where your mini-me and your colleagues' trade requests. Join with the address of the relay your team runs and the office key. Your memory and conversations never go to the relay; only cards and requests do.",
+    "relay": "Relay address",
+    "key": "Office key",
+    "name": "Your name",
+    "role": "What you do, in a line",
+    "rolePlaceholder": "e.g. I look after the payments API and releases",
+    "draft": "Draft it for me",
+    "drafting": "Your mini-me is writing",
+    "join": "Join",
+    "me": "You",
+    "status": {
+      "working": "Working",
+      "meeting": "In a meeting",
+      "away": "Away",
+      "off": "Off"
+    },
+    "colleagues": "Colleagues",
+    "nobody": "No other mini-me yet. Share the office key with a colleague.",
+    "ask": "Ask",
+    "askPlaceholder": "What to ask {name}'s mini-me",
+    "requests": "Requests",
+    "none": "No requests yet.",
+    "sent": "→ {name}",
+    "received": "← {name}",
+    "state": {
+      "SUBMITTED": "Sent",
+      "WORKING": "Working",
+      "INPUT_REQUIRED": "Needs more",
+      "COMPLETED": "Done",
+      "FAILED": "Failed",
+      "CANCELED": "Canceled",
+      "REJECTED": "Declined"
+    },
+    "reply": "Reply",
+    "seen": "Last seen {when}",
+    "leave": "Leave the office",
+    "asksTitle": "A request needs your answer",
+    "team": "Our team",
+    "needsYou": "Needs you"
+  },
+  "files": {
+    "title": "All files I keep",
+    "where": "Every file your mini-me keeps on this computer. All of it is in {home}, and any text editor can open it.",
+    "group": {
+      "memory": "Read every time (about you: USER.md, your work: MEMORY.md)",
+      "skills": "Skills",
+      "notes": "Notes",
+      "chats": "Our conversations (one file each)",
+      "logs": "Run log (what each session did, how long it took and what it used; no conversation text)",
+      "reading": "The last reading (what was read when, things to try)",
+      "settings": "Settings (folders left out, your language, your office)",
+      "index": "Conversation search index (rebuilt from the original records)",
+      "backup": "Backups (moved there when starting over)",
+      "other": "Other files"
+    },
+    "empty": "(empty)"
+  }
+}

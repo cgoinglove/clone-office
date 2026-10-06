@@ -15,6 +15,21 @@ import { minimeHome } from "../server/paths.ts";
 
 export type { Card, InboxEvent, Member, Task, TaskState };
 
+/** A failure at the relay, with the code the person's screen says in their language. */
+export class OfficeError extends Error {
+  readonly code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
+/** The code of a failure for the screen: the relay's own, else the message as it came. */
+export function problemCode(error: unknown): string {
+  return error instanceof OfficeError ? error.code : (error as Error).message;
+}
+
 export interface OfficeConfig {
   /** The relay's address, such as http://127.0.0.1:3200. */
   relay: string;
@@ -56,21 +71,28 @@ async function call<T>(
     signal?: AbortSignal;
   } = {},
 ): Promise<T> {
-  const response = await fetch(new URL(path, relay), {
-    method: init.method ?? (init.body === undefined ? "GET" : "POST"),
-    headers: {
-      "content-type": "application/json",
-      ...(init.token ? { authorization: `Bearer ${init.token}` } : {}),
-    },
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
-    signal: init.signal,
-  });
+  let response: Response;
+  try {
+    response = await fetch(new URL(path, relay), {
+      method: init.method ?? (init.body === undefined ? "GET" : "POST"),
+      headers: {
+        "content-type": "application/json",
+        ...(init.token ? { authorization: `Bearer ${init.token}` } : {}),
+      },
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+      signal: init.signal,
+    });
+  } catch (error) {
+    if ((error as Error).name === "AbortError") throw error;
+    throw new OfficeError("relay-unreachable", (error as Error).message);
+  }
   const data = (await response.json().catch(() => ({}))) as Record<
     string,
     unknown
   >;
   if (!response.ok)
-    throw new Error(
+    throw new OfficeError(
+      typeof data.code === "string" ? data.code : "relay-unreachable",
       typeof data.error === "string"
         ? data.error
         : `The relay answered ${response.status}.`,

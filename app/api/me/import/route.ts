@@ -3,7 +3,7 @@ import { IMPORT_MAX, importMemory } from "@/features/minime/learn/import";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 import { personLanguage } from "@/features/minime/server/language";
-import { ndjson } from "@/features/minime/server/ndjson";
+import { errorCode, ndjson } from "@/features/minime/server/ndjson";
 
 const Body = z.object({
   text: z.string().trim().min(1).max(IMPORT_MAX),
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if (refused) return refused;
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   if (!hasClaudeCode())
     return Response.json({ error: "claude-missing" }, { status: 409 });
   const { text, locale } = body.data;
@@ -30,7 +30,11 @@ export async function POST(request: Request) {
     send(
       result.ok
         ? { type: "done", kept: result.kept }
-        : { type: "error", message: result.error ?? "import-failed" },
+        : {
+            type: "error",
+            message: result.error ?? "import-failed",
+            code: errorCode(result.error ?? "import-failed"),
+          },
     );
   });
 }

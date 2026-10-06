@@ -35,14 +35,15 @@ async function body(
   let size = 0;
   for await (const chunk of request) {
     size += (chunk as Buffer).length;
-    if (size > 1_000_000) throw new RelayError(413, "Too large.");
+    if (size > 1_000_000)
+      throw new RelayError(413, "Too large.", "bad-request");
     chunks.push(chunk as Buffer);
   }
   if (!chunks.length) return {};
   try {
     return JSON.parse(Buffer.concat(chunks).toString("utf8"));
   } catch {
-    throw new RelayError(400, "Not JSON.");
+    throw new RelayError(400, "Not JSON.", "bad-request");
   }
 }
 
@@ -112,10 +113,10 @@ const server = createServer(async (request, response) => {
       const events = await relay.inbox(me.id, after, 25_000);
       return send(200, { events, next: events.at(-1)?.seq ?? after });
     }
-    send(404, { error: "Not here." });
+    send(404, { error: "Not here.", code: "not-found" });
   } catch (error) {
     if (error instanceof RelayError)
-      return send(error.status, { error: error.message });
+      return send(error.status, { error: error.message, code: error.code });
     send(500, { error: (error as Error).message });
   }
 });

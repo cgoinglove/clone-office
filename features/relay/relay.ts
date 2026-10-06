@@ -81,12 +81,15 @@ CREATE INDEX IF NOT EXISTS messages_task ON messages (task_id, at);
 `;
 
 // Node runs this file without a build, so no TypeScript-only syntax such as parameter properties.
+// The code is what a mini-me's screen shows in its person's language; the message is for logs.
 export class RelayError extends Error {
   readonly status: number;
+  readonly code: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code: string) {
     super(message);
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -121,7 +124,11 @@ export class Relay {
       return { id: member.id, token: input.token };
     }
     if (input.key !== this.key)
-      throw new RelayError(403, "That is not this office's key.");
+      throw new RelayError(
+        403,
+        "That is not this office's key.",
+        "office-key-wrong",
+      );
     const id = `m-${randomUUID().slice(0, 8)}`;
     const token = randomBytes(24).toString("base64url");
     this.db
@@ -137,7 +144,8 @@ export class Relay {
     const row = this.db
       .prepare("SELECT id, card FROM members WHERE token = ?")
       .get(token) as { id: string; card: string } | undefined;
-    if (!row) throw new RelayError(401, "Unknown member.");
+    if (!row)
+      throw new RelayError(401, "Unknown member.", "office-member-unknown");
     return { id: row.id, card: JSON.parse(row.card) };
   }
 
@@ -156,9 +164,13 @@ export class Relay {
   /** A request from one member to another. */
   send(from: string, to: string, text: string): Task {
     if (from === to)
-      throw new RelayError(400, "A mini-me does not ask itself.");
+      throw new RelayError(
+        400,
+        "A mini-me does not ask itself.",
+        "bad-request",
+      );
     if (!this.members().some((m) => m.id === to))
-      throw new RelayError(404, "No such member.");
+      throw new RelayError(404, "No such member.", "no-such-colleague");
     const id = randomUUID();
     const now = new Date().toISOString();
     this.db
@@ -180,9 +192,9 @@ export class Relay {
     const row = this.taskRow(id);
     const asked = row.to_member === member;
     if (!asked && row.from_member !== member)
-      throw new RelayError(404, "No such request.");
+      throw new RelayError(404, "No such request.", "not-found");
     if (FINAL.includes(row.state as TaskState))
-      throw new RelayError(409, "That request is closed.");
+      throw new RelayError(409, "That request is closed.", "request-closed");
     const now = new Date().toISOString();
     if (change.text?.trim())
       this.addMessage(id, asked ? "agent" : "user", member, change.text, now);
@@ -249,7 +261,7 @@ export class Relay {
   taskFor(member: string, id: string): Task {
     const row = this.taskRow(id);
     if (row.from_member !== member && row.to_member !== member)
-      throw new RelayError(404, "No such request.");
+      throw new RelayError(404, "No such request.", "not-found");
     return this.task(id);
   }
 
@@ -323,7 +335,7 @@ export class Relay {
           updated: string;
         }
       | undefined;
-    if (!row) throw new RelayError(404, "No such request.");
+    if (!row) throw new RelayError(404, "No such request.", "not-found");
     return row;
   }
 
@@ -355,7 +367,7 @@ function cleanCard(card: Card): Card {
   const name = String(card?.name ?? "")
     .trim()
     .slice(0, 80);
-  if (!name) throw new RelayError(400, "A card needs a name.");
+  if (!name) throw new RelayError(400, "A card needs a name.", "bad-request");
   return {
     name,
     description: String(card.description ?? "")

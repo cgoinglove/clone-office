@@ -6,6 +6,7 @@ import {
   leaveOffice,
   loadOffice,
   members,
+  problemCode,
   sendRequest,
   tasks,
   updateCard,
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
       members: [],
       tasks: [],
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
-      problem: (error as Error).message,
+      problem: problemCode(error),
     });
   }
 }
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
   if (refused) return refused;
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   try {
     const input = body.data;
     if (input.action === "draft") {
@@ -109,7 +110,7 @@ export async function POST(request: Request) {
       const description = await draftCard(await personLanguage(input.locale));
       return description
         ? Response.json({ description })
-        : Response.json({ error: "No draft." }, { status: 502 });
+        : Response.json({ error: "no-draft" }, { status: 502 });
     }
     if (input.action === "join") {
       const office = await joinOffice(input.relay, input.key, input.card);
@@ -120,7 +121,7 @@ export async function POST(request: Request) {
     }
     const office = await loadOffice();
     if (!office)
-      return Response.json({ error: "Not in an office." }, { status: 409 });
+      return Response.json({ error: "not-in-office" }, { status: 409 });
     if (input.action === "card") {
       const next = await updateCard(office, input.card);
       return Response.json({ me: { id: next.member, card: next.card } });
@@ -141,6 +142,6 @@ export async function POST(request: Request) {
     await leaveOffice();
     return Response.json({ joined: false });
   } catch (error) {
-    return Response.json({ error: (error as Error).message }, { status: 502 });
+    return Response.json({ error: problemCode(error) }, { status: 502 });
   }
 }

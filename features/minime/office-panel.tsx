@@ -5,14 +5,16 @@
 // received and how far each has come, and the questions about requests that wait for them.
 // It looks again every few seconds while open.
 
+import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { OfficeFloor, type OfficePerson } from "@/features/office";
+import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
-import { AskCard, type AskCopy, type GateAsk } from "./ask-card";
+import { AskCard, type GateAsk } from "./ask-card";
 
 type State =
   | "SUBMITTED"
@@ -46,113 +48,52 @@ interface Office {
   problem?: string;
 }
 
-const COPY = {
-  ko: {
-    title: "오피스",
-    intro:
-      "동료의 미니미와 부탁을 주고받는 곳이에요. 팀이 띄운 릴레이의 주소와 오피스 열쇠로 들어가요. 내 기억이나 대화는 릴레이로 가지 않고, 명함과 부탁만 오가요.",
-    relay: "릴레이 주소",
-    key: "오피스 열쇠",
-    name: "내 이름",
-    role: "하는 일 한 줄",
-    rolePlaceholder: "예: 결제 API와 배포를 맡아요",
-    draft: "초안 써 줘",
-    drafting: "미니미가 쓰는 중",
-    join: "들어가기",
-    me: "나",
-    statuses: ["일하는 중", "회의 중", "자리 비움", "퇴근"],
-    colleagues: "동료",
-    nobody: "아직 다른 미니미가 없어요. 오피스 열쇠를 동료에게 알려 주세요.",
-    ask: "부탁하기",
-    askPlaceholder: (name: string) => `${name}의 미니미에게 부탁할 것`,
-    send: "보내기",
-    cancel: "그만두기",
-    requests: "부탁",
-    none: "주고받은 부탁이 없어요.",
-    sent: (name: string) => `→ ${name}`,
-    received: (name: string) => `← ${name}`,
-    state: {
-      SUBMITTED: "보냄",
-      WORKING: "처리 중",
-      INPUT_REQUIRED: "더 필요해요",
-      COMPLETED: "끝남",
-      FAILED: "실패",
-      CANCELED: "취소",
-      REJECTED: "거절",
-    } as Record<State, string>,
-    reply: "답하기",
-    seen: (when: string) => `마지막 접속 ${when}`,
-    leave: "오피스 나가기",
-    problem: (m: string) => `릴레이에 닿지 않아요: ${m}`,
-    asksTitle: "받은 부탁에 답이 필요해요",
-    team: "우리 팀",
-    away: ["회의 중", "자리 비움"],
-    off: "퇴근",
-    needsYou: "답이 필요해요",
-  },
-  en: {
-    title: "Office",
-    intro:
-      "Where your mini-me and your colleagues' trade requests. Join with the address of the relay your team runs and the office key. Your memory and conversations never go to the relay; only cards and requests do.",
-    relay: "Relay address",
-    key: "Office key",
-    name: "Your name",
-    role: "What you do, in a line",
-    rolePlaceholder: "e.g. I look after the payments API and releases",
-    draft: "Draft it for me",
-    drafting: "Your mini-me is writing",
-    join: "Join",
-    me: "You",
-    statuses: ["Working", "In a meeting", "Away", "Off"],
-    colleagues: "Colleagues",
-    nobody: "No other mini-me yet. Share the office key with a colleague.",
-    ask: "Ask",
-    askPlaceholder: (name: string) => `What to ask ${name}'s mini-me`,
-    send: "Send",
-    cancel: "Cancel",
-    requests: "Requests",
-    none: "No requests yet.",
-    sent: (name: string) => `→ ${name}`,
-    received: (name: string) => `← ${name}`,
-    state: {
-      SUBMITTED: "Sent",
-      WORKING: "Working",
-      INPUT_REQUIRED: "Needs more",
-      COMPLETED: "Done",
-      FAILED: "Failed",
-      CANCELED: "Canceled",
-      REJECTED: "Declined",
-    } as Record<State, string>,
-    reply: "Reply",
-    seen: (when: string) => `Last seen ${when}`,
-    leave: "Leave the office",
-    problem: (m: string) => `Can't reach the relay: ${m}`,
-    asksTitle: "A request needs your answer",
-    team: "Our team",
-    away: ["In a meeting", "Away"],
-    off: "Off",
-    needsYou: "Needs you",
-  },
+// A card's status is a code, so each colleague reads it in their own language.
+const STATUSES = ["working", "meeting", "away", "off"] as const;
+type Status = (typeof STATUSES)[number];
+
+// Cards kept their person's own words before the status was a code.
+const OLD_WORDS: Record<string, Status> = {
+  "일하는 중": "working",
+  Working: "working",
+  "회의 중": "meeting",
+  "In a meeting": "meeting",
+  "자리 비움": "away",
+  Away: "away",
+  퇴근: "off",
+  Off: "off",
 };
+
+export function statusCode(status: string | undefined): Status | undefined {
+  if (!status) return undefined;
+  return (STATUSES as readonly string[]).includes(status)
+    ? (status as Status)
+    : OLD_WORDS[status];
+}
+
+type Translate = ReturnType<typeof useTranslations<"office">>;
+
+function statusText(t: Translate, status: string | undefined): string {
+  const code = statusCode(status);
+  return code ? t(`status.${code}`) : (status ?? "");
+}
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
 
 export function OfficePanel({
-  locale,
   lang,
-  askCopy,
   onWaiting,
   onNews,
 }: {
-  locale: "ko" | "en";
+  /** The language the mini-me works in, for what it writes (a card's draft, its answers). */
   lang: string;
-  askCopy: AskCopy;
   /** How many questions about requests wait for the person, for the bot's face. */
   onWaiting?: (count: number) => void;
   /** A request this mini-me sent was answered (or needs more): its conversation may have news. */
   onNews?: () => void;
 }) {
-  const copy = COPY[locale];
+  const t = useTranslations("office");
+  const problemText = useProblem();
   const [office, setOffice] = useState<Office | null>(null);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -229,7 +170,7 @@ export function OfficePanel({
       }
     >
       <summary className="cursor-pointer font-medium">
-        {copy.title}
+        {t("title")}
         {office?.joined && (
           <span className="ml-2 text-muted-foreground tabular-nums">
             {others.length}
@@ -237,28 +178,22 @@ export function OfficePanel({
         )}
         {waiting.length > 0 && (
           <span className="ml-2 text-xs font-medium text-waiting">
-            {copy.asksTitle}
+            {t("asksTitle")}
           </span>
         )}
       </summary>
       <div className="mt-3 flex flex-col gap-4">
         {office && !office.joined && (
-          <Join
-            copy={copy}
-            lang={lang}
-            busy={busy}
-            onJoin={(body) => post(body)}
-          />
+          <Join lang={lang} busy={busy} onJoin={(body) => post(body)} />
         )}
         {office?.joined && office.me && (
           <>
             {office.problem && (
-              <p className="text-destructive">{copy.problem(office.problem)}</p>
+              <p className="text-destructive">{problemText(office.problem)}</p>
             )}
             {waiting.map((pending) => (
               <AskCard
                 key={pending.id}
-                copy={askCopy}
                 turn={{
                   id: 0,
                   gate: pending.id,
@@ -277,13 +212,12 @@ export function OfficePanel({
               />
             ))}
             <OfficeFloor
-              people={floor(copy, office, waiting.length)}
+              people={floor(t, office, waiting.length)}
               layout="plaza"
               sky="now"
-              label={copy.title}
+              label={t("title")}
             />
             <MyCard
-              copy={copy}
               card={office.me.card}
               busy={busy}
               onStatus={(status) =>
@@ -294,16 +228,14 @@ export function OfficePanel({
               }
             />
             <section className="flex flex-col gap-2">
-              <h3 className="font-medium">{copy.colleagues}</h3>
+              <h3 className="font-medium">{t("colleagues")}</h3>
               {others.length === 0 && (
-                <p className="text-muted-foreground">{copy.nobody}</p>
+                <p className="text-muted-foreground">{t("nobody")}</p>
               )}
               <ul className="flex flex-col">
                 {others.map((member) => (
                   <Colleague
                     key={member.id}
-                    copy={copy}
-                    lang={lang}
                     member={member}
                     busy={busy}
                     onSend={(text) =>
@@ -314,15 +246,14 @@ export function OfficePanel({
               </ul>
             </section>
             <section className="flex flex-col gap-2">
-              <h3 className="font-medium">{copy.requests}</h3>
+              <h3 className="font-medium">{t("requests")}</h3>
               {(office.tasks ?? []).length === 0 && (
-                <p className="text-muted-foreground">{copy.none}</p>
+                <p className="text-muted-foreground">{t("none")}</p>
               )}
               <ul className="flex flex-col">
                 {(office.tasks ?? []).map((task) => (
                   <Request
                     key={task.id}
-                    copy={copy}
                     task={task}
                     me={office.me?.id ?? ""}
                     names={names}
@@ -334,7 +265,7 @@ export function OfficePanel({
                 ))}
               </ul>
             </section>
-            {error && <p className="text-destructive">{error}</p>}
+            {error && <p className="text-destructive">{problemText(error)}</p>}
             <Button
               size="sm"
               variant="ghost"
@@ -342,19 +273,17 @@ export function OfficePanel({
               disabled={busy}
               onClick={() => void post({ action: "leave" })}
             >
-              {copy.leave}
+              {t("leave")}
             </Button>
           </>
         )}
         {office && !office.joined && error && (
-          <p className="text-destructive">{error}</p>
+          <p className="text-destructive">{problemText(error)}</p>
         )}
       </div>
     </details>
   );
 }
-
-type Copy = (typeof COPY)["ko"];
 
 const FINAL_STATES: State[] = ["COMPLETED", "FAILED", "CANCELED", "REJECTED"];
 
@@ -363,11 +292,11 @@ const FINAL_STATES: State[] = ["COMPLETED", "FAILED", "CANCELED", "REJECTED"];
  * not at the relay for two minutes is off), with the open requests on their desk, and a word from
  * the viewer's own bot when a request waits for them.
  */
-function floor(copy: Copy, office: Office, waiting: number): OfficePerson[] {
+function floor(t: Translate, office: Office, waiting: number): OfficePerson[] {
   const now = Date.now();
   return (office.members ?? []).map((member) => {
     const you = member.id === office.me?.id;
-    const status = member.card.status ?? "";
+    const status = statusCode(member.card.status);
     const gone = now - Date.parse(member.seen) > 2 * 60 * 1000;
     const open = (office.tasks ?? []).filter(
       (task) =>
@@ -376,12 +305,12 @@ function floor(copy: Copy, office: Office, waiting: number): OfficePerson[] {
     );
     return {
       name: member.card.name,
-      team: copy.team,
+      team: t("team"),
       you,
       status:
-        status === copy.off || (gone && !you)
+        status === "off" || (gone && !you)
           ? "offline"
-          : copy.away.includes(status)
+          : status === "meeting" || status === "away"
             ? "away"
             : "active",
       pile: open.length,
@@ -389,19 +318,17 @@ function floor(copy: Copy, office: Office, waiting: number): OfficePerson[] {
         ? { mood: "working" as const }
         : {}),
       ...(you && waiting > 0
-        ? { needsDecision: true, says: copy.needsYou }
+        ? { needsDecision: true, says: t("needsYou") }
         : {}),
     };
   });
 }
 
 function Join({
-  copy,
   lang,
   busy,
   onJoin,
 }: {
-  copy: Copy;
   lang: string;
   busy: boolean;
   onJoin: (body: unknown) => Promise<boolean>;
@@ -411,6 +338,7 @@ function Join({
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [drafting, setDrafting] = useState(false);
+  const t = useTranslations("office");
   // The mini-me drafts the line from what it knows; the person corrects it before joining.
   const draft = async () => {
     setDrafting(true);
@@ -440,26 +368,26 @@ function Join({
         });
       }}
     >
-      <p className="text-muted-foreground">{copy.intro}</p>
+      <p className="text-muted-foreground">{t("intro")}</p>
       <label className="flex flex-col gap-1">
-        <span>{copy.relay}</span>
+        <span>{t("relay")}</span>
         <Input value={relay} onChange={(e) => setRelay(e.target.value)} />
       </label>
       <label className="flex flex-col gap-1">
-        <span>{copy.key}</span>
+        <span>{t("key")}</span>
         <Input value={key} onChange={(e) => setKey(e.target.value)} />
       </label>
       <label className="flex flex-col gap-1">
-        <span>{copy.name}</span>
+        <span>{t("name")}</span>
         <Input value={name} onChange={(e) => setName(e.target.value)} />
       </label>
       <label className="flex flex-col gap-1">
-        <span>{copy.role}</span>
+        <span>{t("role")}</span>
         <div className="flex gap-2">
           <Input
             value={role}
             className="flex-1"
-            placeholder={drafting ? copy.drafting : copy.rolePlaceholder}
+            placeholder={drafting ? t("drafting") : t("rolePlaceholder")}
             disabled={drafting}
             onChange={(e) => setRole(e.target.value)}
           />
@@ -470,7 +398,7 @@ function Join({
             loading={drafting}
             onClick={() => void draft()}
           >
-            {copy.draft}
+            {t("draft")}
           </Button>
         </div>
       </label>
@@ -480,26 +408,26 @@ function Join({
         disabled={busy || !relay.trim() || !key.trim() || !name.trim()}
         loading={busy}
       >
-        {copy.join}
+        {t("join")}
       </Button>
     </form>
   );
 }
 
 function MyCard({
-  copy,
   card,
   busy,
   onStatus,
 }: {
-  copy: Copy;
   card: Card;
   busy: boolean;
   onStatus: (status: string) => void;
 }) {
+  const t = useTranslations("office");
+  const current = statusCode(card.status);
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="font-medium">{copy.me}</h3>
+      <h3 className="font-medium">{t("me")}</h3>
       <div className="flex flex-col gap-1">
         <span>
           {card.name}
@@ -508,15 +436,15 @@ function MyCard({
           )}
         </span>
         <div className="flex flex-wrap gap-1">
-          {copy.statuses.map((status) => (
+          {STATUSES.map((status) => (
             <Button
               key={status}
               size="xs"
-              variant={card.status === status ? "secondary" : "ghost"}
+              variant={current === status ? "secondary" : "ghost"}
               disabled={busy}
               onClick={() => onStatus(status)}
             >
-              {status}
+              {t(`status.${status}`)}
             </Button>
           ))}
         </div>
@@ -526,20 +454,19 @@ function MyCard({
 }
 
 function Colleague({
-  copy,
-  lang,
   member,
   busy,
   onSend,
 }: {
-  copy: Copy;
-  lang: string;
   member: { id: string; card: Card; seen: string };
   busy: boolean;
   onSend: (text: string) => Promise<boolean>;
 }) {
   const [asking, setAsking] = useState(false);
   const [text, setText] = useState("");
+  const t = useTranslations("office");
+  const common = useTranslations("common");
+  const format = useFormatter();
   return (
     <li className="flex flex-col gap-2 border-b border-border py-2 last:border-b-0">
       <div className="flex items-start justify-between gap-2">
@@ -547,7 +474,7 @@ function Colleague({
           <span className="font-medium">{member.card.name}</span>
           {member.card.status && (
             <span className="ml-2 text-xs text-muted-foreground">
-              {member.card.status}
+              {statusText(t, member.card.status)}
             </span>
           )}
           {member.card.description && (
@@ -556,14 +483,14 @@ function Colleague({
             </span>
           )}
           <span className="block text-xs text-muted-foreground">
-            {copy.seen(
-              new Date(member.seen).toLocaleString(lang, {
+            {t("seen", {
+              when: format.dateTime(new Date(member.seen), {
                 month: "short",
                 day: "numeric",
                 hour: "2-digit",
                 minute: "2-digit",
               }),
-            )}
+            })}
           </span>
         </span>
         {!asking && (
@@ -573,7 +500,7 @@ function Colleague({
             className="shrink-0"
             onClick={() => setAsking(true)}
           >
-            {copy.ask}
+            {t("ask")}
           </Button>
         )}
       </div>
@@ -592,7 +519,7 @@ function Colleague({
         >
           <Textarea
             value={text}
-            placeholder={copy.askPlaceholder(member.card.name)}
+            placeholder={t("askPlaceholder", { name: member.card.name })}
             onChange={(e) => setText(e.target.value)}
           />
           <div className="flex gap-2">
@@ -602,10 +529,10 @@ function Colleague({
               disabled={busy || !text.trim()}
               loading={busy}
             >
-              {copy.send}
+              {common("send")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAsking(false)}>
-              {copy.cancel}
+              {common("cancel")}
             </Button>
           </div>
         </form>
@@ -615,14 +542,12 @@ function Colleague({
 }
 
 function Request({
-  copy,
   task,
   me,
   names,
   busy,
   onReply,
 }: {
-  copy: Copy;
   task: Task;
   me: string;
   names: Map<string, string>;
@@ -630,6 +555,7 @@ function Request({
   onReply: (text: string) => Promise<boolean>;
 }) {
   const [text, setText] = useState("");
+  const t = useTranslations("office");
   const sent = task.metadata.from === me;
   const other = sent ? task.metadata.to : task.metadata.from;
   const first = task.history[0]?.parts.map((p) => p.text).join(" ") ?? "";
@@ -645,8 +571,8 @@ function Request({
       <div className="flex items-center justify-between gap-2">
         <span className="min-w-0 truncate font-medium">
           {sent
-            ? copy.sent(names.get(other) ?? other)
-            : copy.received(names.get(other) ?? other)}
+            ? t("sent", { name: names.get(other) ?? other })
+            : t("received", { name: names.get(other) ?? other })}
         </span>
         <span
           className={cn(
@@ -656,7 +582,11 @@ function Request({
               : "text-muted-foreground",
           )}
         >
-          {moving ? <ShinyText text={copy.state[state]} /> : copy.state[state]}
+          {moving ? (
+            <ShinyText text={t(`state.${state}`)} />
+          ) : (
+            t(`state.${state}`)
+          )}
         </span>
       </div>
       <p className="whitespace-pre-wrap text-muted-foreground">{first}</p>
@@ -675,7 +605,7 @@ function Request({
             onChange={(e) => setText(e.target.value)}
           />
           <Button type="submit" size="sm" disabled={busy || !text.trim()}>
-            {copy.reply}
+            {t("reply")}
           </Button>
         </form>
       )}

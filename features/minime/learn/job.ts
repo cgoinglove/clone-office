@@ -7,6 +7,7 @@
 
 import type { SessionEvent } from "../brain/session.ts";
 import { catchUpIndex } from "../history/indexer.ts";
+import { errorCode } from "../server/ndjson.ts";
 import type { SourceReport } from "./gather.ts";
 import {
   freshConversations,
@@ -28,7 +29,7 @@ export type LearnEvent =
       /** Conversations with their AI tools since this learning, to offer reading again. */
       fresh?: number;
     }
-  | { type: "error"; message: string };
+  | { type: "error"; message: string; code?: string };
 
 interface Job {
   id: string;
@@ -81,14 +82,16 @@ export function startLearn(options: {
               tasks: result.tasks,
               at: new Date().toISOString(),
             }
-          : { type: "error", message: result.error ?? "learn-failed" },
+          : {
+              type: "error",
+              message: result.error ?? "learn-failed",
+              code: errorCode(result.error ?? "learn-failed"),
+            },
       );
     })
     .catch((error: unknown) => {
-      emit(job, {
-        type: "error",
-        message: error instanceof Error ? error.message : String(error),
-      });
+      const message = error instanceof Error ? error.message : String(error);
+      emit(job, { type: "error", message, code: errorCode(message) });
     })
     .finally(() => {
       job.done = true;

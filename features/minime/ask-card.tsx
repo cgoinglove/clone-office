@@ -4,6 +4,7 @@
 // (with choices or their own answer), or something it may not do without asking (allow, don't,
 // and "don't ask again for this").
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,27 +21,16 @@ export interface AskTurn {
   answer?: string;
 }
 
-export interface AskCopy {
-  needsYou: string;
-  mayI: string;
-  ownAnswer: string;
-  send: string;
-  allow: string;
-  deny: string;
-  always: string;
-  allowed: string;
-  denied: string;
-  answered: (a: string) => string;
-  doing: Record<string, string>;
-}
+type Translate = ReturnType<typeof useTranslations<"ask">>;
 
 /** How a tool's use reads on a card: what it would do, and on what. */
 export function describe(
-  copy: AskCopy,
+  t: Translate,
   tool: string,
   input: Record<string, unknown>,
 ): string {
-  const what = copy.doing[tool] ?? tool;
+  const key = `doing.${tool}` as Parameters<Translate>[0];
+  const what = t.has(key) ? t(key) : tool;
   const on =
     input.file_path ??
     input.url ??
@@ -60,14 +50,14 @@ export function describe(
 
 /** A question from the gate: the mini-me's own question, or a tool it may not use without asking. */
 export function AskCard({
-  copy,
   turn,
   onAnswer,
 }: {
-  copy: AskCopy;
   turn: AskTurn;
   onAnswer: (answer: string, always: boolean) => void;
 }) {
+  const t = useTranslations("ask");
+  const send = useTranslations("common")("send");
   const [own, setOwn] = useState("");
   const [always, setAlways] = useState(false);
   const { ask } = turn;
@@ -75,22 +65,22 @@ export function AskCard({
   return (
     <div className="flex max-w-full flex-col gap-3 self-start rounded-xl border border-waiting/40 bg-waiting/5 p-4 text-[15px]">
       <span className="text-xs font-medium text-waiting">
-        {ask.kind === "question" ? copy.needsYou : copy.mayI}
+        {ask.kind === "question" ? t("needsYou") : t("mayI")}
       </span>
       {ask.kind === "question" ? (
         <p className="whitespace-pre-wrap">{ask.question}</p>
       ) : (
-        <p className="break-all">{describe(copy, ask.tool, ask.input)}</p>
+        <p className="break-all">{describe(t, ask.tool, ask.input)}</p>
       )}
       {!open && (
         <p className="text-sm text-muted-foreground">
           {ask.kind === "permission"
             ? turn.answer === "allow"
-              ? copy.allowed
+              ? t("allowed")
               : turn.answer === "deny"
-                ? copy.denied
+                ? t("denied")
                 : turn.answer
-            : copy.answered(turn.answer ?? "")}
+            : t("answered", { answer: turn.answer ?? "" })}
         </p>
       )}
       {open && ask.kind === "question" && (
@@ -119,12 +109,12 @@ export function AskCard({
             <Textarea
               id={`ask-own-${turn.id}`}
               value={own}
-              placeholder={copy.ownAnswer}
+              placeholder={t("ownAnswer")}
               className="min-h-9 flex-1"
               onChange={(event) => setOwn(event.target.value)}
             />
             <Button type="submit" size="sm" disabled={!own.trim()}>
-              {copy.send}
+              {send}
             </Button>
           </form>
         </div>
@@ -137,18 +127,18 @@ export function AskCard({
               checked={always}
               onChange={(event) => setAlways(event.target.checked)}
             />
-            {copy.always}
+            {t("always")}
           </label>
           <div className="flex gap-2">
             <Button size="sm" onClick={() => onAnswer("allow", always)}>
-              {copy.allow}
+              {t("allow")}
             </Button>
             <Button
               size="sm"
               variant="outline"
               onClick={() => onAnswer("deny", false)}
             >
-              {copy.deny}
+              {t("deny")}
             </Button>
           </div>
         </div>

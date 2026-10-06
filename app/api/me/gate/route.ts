@@ -35,10 +35,10 @@ export async function POST(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
   if (request.headers.get("x-minime-gate") !== gateSecret())
-    return Response.json({ error: "Not the mini-me." }, { status: 403 });
+    return Response.json({ error: "forbidden" }, { status: 403 });
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   let id: string;
   let done: ReturnType<typeof waitFor>;
   if ("ask" in body.data) {

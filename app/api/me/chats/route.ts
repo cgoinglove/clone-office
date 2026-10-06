@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     });
   }
   const chat = await readChat(id).catch(() => undefined);
-  if (!chat) return Response.json({ error: "Not found." }, { status: 404 });
+  if (!chat) return Response.json({ error: "not-found" }, { status: 404 });
   return Response.json({
     id: chat.info.id,
     title: chat.info.title,

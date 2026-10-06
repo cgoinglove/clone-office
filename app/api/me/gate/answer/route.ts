@@ -17,11 +17,11 @@ export async function POST(request: Request) {
   if (refused) return refused;
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   const { id, answer, always } = body.data;
   const waiting = pendingAsks().find((ask) => ask.id === id);
   if (!waiting)
-    return Response.json({ error: "No longer waiting." }, { status: 410 });
+    return Response.json({ error: "no-longer-waiting" }, { status: 410 });
   let rule: string | undefined;
   if (always && answer === "allow" && waiting.ask.kind === "permission") {
     rule = ruleFor(waiting.ask.tool, waiting.ask.input);

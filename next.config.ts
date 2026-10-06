@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
   devIndicators: false,
@@ -7,4 +8,5 @@ const nextConfig: NextConfig = {
   agentRules: false,
 };
 
-export default nextConfig;
+// The screen's words come from messages/<language>.json, chosen per request in i18n/request.ts.
+export default createNextIntlPlugin()(nextConfig);

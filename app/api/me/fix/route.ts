@@ -2,7 +2,7 @@ import * as z from "zod";
 import { runSession } from "@/features/minime/brain/session";
 import { refuse } from "@/features/minime/server/guard";
 import { personLanguage } from "@/features/minime/server/language";
-import { ndjson } from "@/features/minime/server/ndjson";
+import { errorCode, ndjson } from "@/features/minime/server/ndjson";
 
 const Body = z.object({
   line: z.string().min(1).max(2000),
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if (refused) return refused;
   const body = Body.safeParse(await request.json().catch(() => ({})));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   const { line, fix, locale } = body.data;
   return ndjson(async (send) => {
     const result = await runSession({
@@ -31,7 +31,11 @@ export async function POST(request: Request) {
     send(
       result.ok
         ? { type: "done" }
-        : { type: "error", message: result.error ?? "fix-failed" },
+        : {
+            type: "error",
+            message: result.error ?? "fix-failed",
+            code: errorCode(result.error ?? "fix-failed"),
+          },
     );
   });
 }

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   if (refused) return refused;
   const body = Body.safeParse(await request.json().catch(() => ({})));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   let settings: Record<string, unknown> = {};
   try {
     settings = JSON.parse(await readFile(settingsPath(), "utf8"));

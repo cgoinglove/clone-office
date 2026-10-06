@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 import "./globals.css";
 import { ThemeSync } from "@/components/ui/theme-sync";
 import { Toaster } from "@/components/ui/toast";
@@ -22,10 +24,12 @@ export const metadata: Metadata = {
     "Send your mini-me: an AI that works like you, for everyone on your team.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // The screen's language (i18n/request.ts): what the person picked, else their browser's.
+  const locale = await getLocale();
   return (
     <html
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
@@ -34,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {THEME_BOOT}
         </Script>
         <ThemeSync />
-        {children}
+        <NextIntlClientProvider>{children}</NextIntlClientProvider>
         <Toaster />
       </body>
     </html>

@@ -19,10 +19,8 @@ export function ndjson(
       try {
         await work(send);
       } catch (error) {
-        send({
-          type: "error",
-          message: error instanceof Error ? error.message : String(error),
-        });
+        const message = error instanceof Error ? error.message : String(error);
+        send({ type: "error", message, code: errorCode(message) });
       } finally {
         if (open)
           try {
@@ -57,4 +55,29 @@ export function languageName(tag: string | undefined): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/** Failures the screen says in the person's language (messages/*.json, "errors"). */
+const CODES = new Set([
+  "claude-missing",
+  "ai-busy",
+  "timeout",
+  "learn-failed",
+  "fix-failed",
+  "import-failed",
+  "task-failed",
+]);
+
+/**
+ * The code of a failure the app recognizes, for the screen to say in the person's language: one
+ * of its own, an AI service that was busy, or a run that took too long. Anything else has none and
+ * is shown as it came.
+ */
+export function errorCode(message: string | undefined): string | undefined {
+  if (!message) return undefined;
+  if (CODES.has(message)) return message;
+  if (/\b(529|503|429)\b|overloaded|rate.?limit/i.test(message))
+    return "ai-busy";
+  if (/timed? ?out|did not finish in time/i.test(message)) return "timeout";
+  return undefined;
 }

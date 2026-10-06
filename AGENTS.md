@@ -97,14 +97,22 @@ These words help discussion. They do not mandate separate services, tables or UI
 - `app/`: Next.js pages; `app/globals.css`: current theme tokens and animation.
 - `components/ui/`, `hooks/`, `lib/`: existing shared UI and utilities.
 - `features/`: a possible home for domain code when needed, not a required upfront structure.
+- `messages/<language>.json` and `i18n/`: every word a person reads, with next-intl and no
+  language in the address. English is the source and the fallback; a language is one more file
+  (with every key of `en.json`) and its code in `i18n/locales.ts`. The screen's language is the
+  one picked under Language (a cookie), else the first of the browser's languages it is written
+  in. Routes answer with error codes the screen reads in its language (`useProblem`); a status or
+  kind that is stored or sent to colleagues is a code, so each reads it in their own language.
+  The mini-me's language is separate: the one picked, else the browser's, whatever it is.
 - `features/minime/`: making a person's mini-me at `/me`. `first-run.tsx` is the screen: it says
   what it will read and keep, learns in the background with progress (`learn/job.ts`), brings
   what the person's usual AI remembers about them (Claude's memory import: copy a prompt there,
   paste the answer here), shows the memory exactly as saved with each entry correctable or
   removable, lists every file it keeps (`server/stored.ts`), does work with them, and can start
   over. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset}`, which
-  answer only this app's pages; they take the browser's language tag and tell the mini-me that
-  language by name (`server/ndjson.ts` `languageName`).
+  answer only this app's pages; they take the person's language tag and tell the mini-me that
+  language by name, keeping the last one for work that runs with no page open
+  (`server/language.ts` `personLanguage`).
   Everything lives under `~/.sub-office` (`SUB_OFFICE_HOME` moves it). `server/sources/` reads
   each AI tool's local records (Claude Code and Codex are indexed; the Cursor and Hermes Agent
   readers are not used yet), plus notes about the person; `server/apps.ts` reads app usage from

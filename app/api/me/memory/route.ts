@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   if (refused) return refused;
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
-    return Response.json({ error: "Bad request." }, { status: 400 });
+    return Response.json({ error: "bad-request" }, { status: 400 });
   const { target, entry } = body.data.remove;
   const result = await new MemoryStore(memoryDir()).remove(target, entry);
   if (!result.success)
