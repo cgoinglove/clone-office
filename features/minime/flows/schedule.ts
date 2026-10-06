@@ -1,6 +1,8 @@
-// When a flow runs: on some days at a time ("weekdays at 9"), every so many minutes, or once. The
-// mini-me turns the person's words into this shape (the code never reads their words), and times
-// are the person's own, by this computer's clock. A run missed while the computer slept or the app
+// When a flow runs: on some days at a time ("weekdays at 9"), every so many minutes, once, or when a
+// colleague's request of a kind comes in (then its request is how the person wants those handled,
+// and it is read while answering, never on a clock). The mini-me turns the person's words into
+// this shape (the code never reads their words), and times are the person's own, by this
+// computer's clock. A run missed while the computer slept or the app
 // was closed is caught up within half its period, at least 2 minutes and at most 2 hours (Hermes
 // Agent's catch-up window); later than that, it is noted as missed and the flow waits for its next
 // time.
@@ -10,7 +12,9 @@ export type When =
   | { kind: "weekly"; days: number[]; time: string }
   | { kind: "every"; minutes: number }
   /** Local date and time, "YYYY-MM-DDTHH:MM". */
-  | { kind: "once"; at: string };
+  | { kind: "once"; at: string }
+  /** A colleague's request of this menu kind comes in; any request when there is none. */
+  | { kind: "request"; menu?: string };
 
 /** Each run costs the person's AI usage: nothing more often than this. */
 export const MIN_EVERY = 30;
@@ -70,6 +74,10 @@ export function cleanWhen(value: unknown, now = new Date()): When | undefined {
       ? { kind: "every", minutes }
       : undefined;
   }
+  if (raw.kind === "request") {
+    const menu = typeof raw.menu === "string" ? raw.menu.trim() : "";
+    return menu ? { kind: "request", menu } : { kind: "request" };
+  }
   if (raw.kind === "once") {
     const after = Number(raw.in_minutes);
     if (Number.isInteger(after) && after > 0 && after <= 366 * 24 * 60)
@@ -94,6 +102,7 @@ export function nextRun(
   after: Date,
   anchor: Date = after,
 ): Date | undefined {
+  if (when.kind === "request") return undefined;
   if (when.kind === "once") {
     const at = parseLocal(when.at);
     return at && at > after ? at : undefined;
@@ -123,7 +132,7 @@ export function nextRun(
 
 /** How late a missed run may still be made up: half its period, between 2 minutes and 2 hours. */
 export function catchUpMs(when: When): number {
-  if (when.kind === "once") return 2 * MINUTE;
+  if (when.kind === "once" || when.kind === "request") return 2 * MINUTE;
   const half =
     when.kind === "every" ? (when.minutes * MINUTE) / 2 : 12 * 60 * MINUTE;
   return Math.min(120 * MINUTE, Math.max(2 * MINUTE, half));

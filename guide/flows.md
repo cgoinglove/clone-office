@@ -2,7 +2,8 @@
 
 A flow is something the mini-me does on its own at set times: "every weekday at 9, sum up what is
 waiting for me", "every Friday at 5, list what I finished this week", "in an hour, remind me to
-call Ana". They make one by telling the mini-me in a conversation; it shows the flow on a card
+call Ana". It can also be how they want a kind of colleague's request handled: "when someone asks
+about the payments API, end with a pointer to the #payments-api channel". They make one by telling the mini-me in a conversation; it shows the flow on a card
 first (its name, when it runs and what it will do), and makes it only when they say so.
 
 ## When it runs
@@ -12,6 +13,14 @@ run uses their AI), or once. Times are their computer's clock. Flows run while t
 a run missed because the computer slept or the app was closed is made up when the app comes
 back, if it is not much later (up to two hours for a daily flow); otherwise it is noted as
 missed and the flow waits for its next time.
+
+## When a colleague asks
+
+A flow for requests names one of the kinds of request they take (or any request). When such a
+request comes in, the mini-me follows their instruction while it answers, and the second look
+before the answer leaves takes it as their own words. What only they can give (a promise, a
+decision) is still asked of them first. On the page it shows as **When a colleague asks: …**
+(동료가 부탁할 때: …) with when it was last followed; it has no Run now.
 
 ## What a run does
 

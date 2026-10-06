@@ -13,6 +13,7 @@ import {
   type SessionGate,
 } from "../brain/session.ts";
 import { appendMessage, createChat, listChats } from "../chat/store.ts";
+import { changeFlow, listFlows } from "../flows/store.ts";
 import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
@@ -58,10 +59,26 @@ export const REQUEST_SCHEMA = {
   required: ["reply"],
 };
 
+/** How the person wants requests handled, from their flows: a kind's own, or any request's. */
+export interface Way {
+  menu?: string;
+  what: string;
+}
+
+/** The person's own instructions for requests, as the prompt gives them; empty without any. */
+export function waysText(menu: MenuItem[], ways: Way[]): string {
+  if (!ways.length) return "";
+  const kind = (id?: string) =>
+    id ? (menu.find((item) => item.id === id)?.name ?? id) : "Any request";
+  return `How your person wants these handled, in their own words; follow them as theirs, still asking them first for what only they can give:
+${ways.map((way) => `- ${kind(way.menu)}: ${way.what}`).join("\n")}`;
+}
+
 export function requestPrompt(
   from: Card | undefined,
   text: string,
   menu: MenuItem[] = [],
+  ways: Way[] = [],
 ): string {
   const who = from
     ? `the mini-me of ${from.name}${from.description ? ` (${from.description})` : ""}`
@@ -83,7 +100,7 @@ ${menuLines(menu)}
 Put in menu the id of the one this request is, or leave it empty if none fits.
 `
     : ""
-}
+}${ways.length ? `\n${waysText(menu, ways)}\n` : ""}
 In note, write one line for your person, in their language: who asked what, and what you answered.`;
 }
 
@@ -135,6 +152,8 @@ interface Resume {
   prompt: string;
   session?: string;
   said: Said[];
+  /** The kind the first run took the request for, when the going on does not say. */
+  menu?: string;
 }
 
 const FINAL_STATES = ["COMPLETED", "FAILED", "CANCELED", "REJECTED"];
@@ -158,6 +177,10 @@ async function answer(options: {
   const { office, task, from, gateUrl, language, latest, resume } = options;
   const previous = (await loadState()).handled[task.id];
   const menu = await loadMenu();
+  // The person's flows for requests: how they want them handled, read while answering.
+  const ways = (await listFlows()).filter(
+    (flow) => flow.when.kind === "request" && !flow.paused,
+  );
   const gate: SessionGate = {
     url: gateUrl,
     secret: gateSecret(),
@@ -201,11 +224,29 @@ async function answer(options: {
   try {
     await updateRequest(office, task.id, { state: "WORKING" }).catch(() => {});
     const text = latest?.parts.map((p) => p.text).join("\n") ?? "";
+    const howTo = waysText(
+      menu,
+      ways.map((flow) => ({
+        menu: flow.when.kind === "request" ? flow.when.menu : undefined,
+        what: flow.what,
+      })),
+    );
+    // Going on in the same session: the person's own ways are said again, as a reminder.
     const prompt =
       resume?.session || (!resume && previous?.session)
-        ? (resume?.prompt ??
-          `They answered: ${text}\n\nGo on with the request.`)
-        : `${requestPrompt(from, resume ? userText(task) : text, menu)}${
+        ? `${
+            resume?.prompt ??
+            `They answered: ${text}\n\nGo on with the request.`
+          }${howTo ? `\n\n${howTo}` : ""}`
+        : `${requestPrompt(
+            from,
+            resume ? userText(task) : text,
+            menu,
+            ways.map((flow) => ({
+              menu: flow.when.kind === "request" ? flow.when.menu : undefined,
+              what: flow.what,
+            })),
+          )}${
             resume
               ? `\n\nYou already asked your person; they answered: ${resume.said.map((x) => `"${x.question}" → ${x.answer}`).join("; ")}`
               : ""
@@ -256,11 +297,24 @@ async function answer(options: {
         ...(last?.choices?.length ? { choices: last.choices } : {}),
         session: result.sessionId,
         from: from?.name,
+        ...(answer.menu ? { menu: answer.menu } : {}),
       });
       return;
     }
     // What the person set for this kind of request; code decides, the brain only named the kind.
-    const { item, trust } = trustFor(menu, answer.menu);
+    const { item, trust } = trustFor(menu, answer.menu || resume?.menu);
+    // The flows that applied to it: the check hears them as the person's own words, and the page
+    // shows when each was last followed.
+    const applied = ways.filter(
+      (flow) =>
+        flow.when.kind === "request" &&
+        (!flow.when.menu || flow.when.menu === item?.id),
+    );
+    for (const flow of applied)
+      await changeFlow(flow.id, (f) => ({
+        ...f,
+        last: { at: new Date().toISOString(), ok: true },
+      }));
     const approving = trust === "ask" && said.length === 0;
     if (!result.ok || !answer.reply?.trim()) {
       await updateRequest(office, task.id, {
@@ -284,6 +338,7 @@ async function answer(options: {
       chat: gate.chat ?? requestChat(task),
       language,
       said,
+      ways: applied.map((flow) => flow.what),
       // "Ask me first": the person sees the answer before it goes, whatever the check finds,
       // unless they already gave it themselves while it was made.
       approve: approving,
@@ -487,6 +542,7 @@ export async function answerLater(
           prompt: `Your person answered your question ("${kept.question}"): ${given}\n\nGo on with the request and answer the one asking.`,
           session: kept.session,
           said: [{ question: kept.question, answer: given }],
+          menu: kept.menu,
         },
       });
     } finally {

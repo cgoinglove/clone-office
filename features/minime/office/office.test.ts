@@ -35,6 +35,11 @@ test("the check knows what the person said, so it does not ask them twice", asyn
   assert.match(prompt, /They said: Yes, Tuesday 11 is fine\./);
   assert.match(prompt, /a promise or decision in it may go/);
   assert.doesNotMatch(checkPrompt("a", "b"), /They said/);
+  // The person's own instructions for the kind are theirs, not a fault to hold back.
+  assert.match(
+    checkPrompt("a", "b", [], false, undefined, ["End with the docs link."]),
+    /told you to handle requests like this[\s\S]*- End with the docs link\./,
+  );
 });
 
 test("a request is put with the person's menu, and asks for a line to tell them", async () => {

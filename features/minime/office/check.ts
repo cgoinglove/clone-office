@@ -34,15 +34,19 @@ export function checkPrompt(
   said: { question: string; answer: string }[] = [],
   approve = false,
   from?: string,
+  ways: string[] = [],
 ): string {
   const asked = said.length
     ? `\nWhat your person themselves said while it was answered (theirs to give; a promise or decision in it may go):\n${said.map((s) => `- Asked: ${s.question}\n  They said: ${s.answer}`).join("\n")}\n`
+    : "";
+  const told = ways.length
+    ? `\nHow your person told you to handle requests like this, in their own words (following it is theirs, not a fault):\n${ways.map((way) => `- ${way}`).join("\n")}\n`
     : "";
   return `Before this answer goes to a colleague's mini-me on your person's behalf, look at it once more, as your person would.
 
 The request${from ? ` (from the mini-me of ${from})` : ""}:
 ${request}
-${asked}
+${asked}${told}
 The answer about to be sent:
 ${reply}
 
@@ -93,6 +97,8 @@ export async function checkBeforeSending(options: {
   language?: string;
   /** What the person said to the mini-me's questions while the answer was made. */
   said?: { question: string; answer: string }[];
+  /** The person's own instructions for this kind of request (their flows). */
+  ways?: string[];
   /** The person sees the answer before it goes, whatever the check finds ("ask me first"). */
   approve?: boolean;
   /** Who asked, as their card names them. */
@@ -105,6 +111,7 @@ export async function checkBeforeSending(options: {
       options.said,
       options.approve,
       options.from,
+      options.ways,
     ),
     jsonSchema: CHECK_SCHEMA,
     language: options.language,

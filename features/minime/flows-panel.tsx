@@ -13,6 +13,8 @@ interface FlowView {
   id: string;
   name: string;
   when: When;
+  /** For a request flow: the name of the kind of request it is for. */
+  menuName?: string;
   what: string;
   paused: boolean;
   next?: string;
@@ -25,8 +27,20 @@ const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
 type Format = ReturnType<typeof useFormatter>;
 type Translate = ReturnType<typeof useTranslations<"flows">>;
 
-/** A schedule in the person's language, with their own way of writing days and times. */
-export function whenText(t: Translate, format: Format, when: When): string {
+/**
+ * A schedule in the person's language, with their own way of writing days and times. A request
+ * flow shows the kind it is for (`kind`, its name when known).
+ */
+export function whenText(
+  t: Translate,
+  format: Format,
+  when: When,
+  kind?: string,
+): string {
+  if (when.kind === "request")
+    return when.menu
+      ? t("when.request", { kind: kind ?? when.menu.replaceAll("-", " ") })
+      : t("when.anyRequest");
   const clock = (time: string) => {
     const [hour, minute] = time.split(":").map(Number);
     return format.dateTime(new Date(2000, 0, 1, hour, minute), {
@@ -209,7 +223,7 @@ export function FlowsPanel({
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                   <span className="font-medium">{flow.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {whenText(t, format, flow.when)}
+                    {whenText(t, format, flow.when, flow.menuName)}
                   </span>
                 </div>
                 <p className="whitespace-pre-wrap text-muted-foreground">
@@ -221,9 +235,11 @@ export function FlowsPanel({
                       ? t("running")
                       : flow.paused
                         ? t("paused")
-                        : flow.next
-                          ? t("next", { at: at(flow.next) })
-                          : t("finished"),
+                        : flow.when.kind === "request"
+                          ? t("onRequest")
+                          : flow.next
+                            ? t("next", { at: at(flow.next) })
+                            : t("finished"),
                     flow.last &&
                       t(
                         flow.last.missed
@@ -238,15 +254,17 @@ export function FlowsPanel({
                     .join(" · ")}
                 </p>
                 <div className="flex flex-wrap items-center gap-1">
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    disabled={running.has(flow.id)}
-                    loading={running.has(flow.id)}
-                    onClick={() => void act("run", flow)}
-                  >
-                    {t("runNow")}
-                  </Button>
+                  {flow.when.kind !== "request" && (
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={running.has(flow.id)}
+                      loading={running.has(flow.id)}
+                      onClick={() => void act("run", flow)}
+                    >
+                      {t("runNow")}
+                    </Button>
+                  )}
                   {flow.chat && (
                     <Button
                       size="xs"

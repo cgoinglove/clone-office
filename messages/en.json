@@ -267,8 +267,8 @@
   },
   "flows": {
     "title": "Flows",
-    "intro": "Things your mini-me does on its own at set times. Each one's answers go into a conversation of its own.",
-    "none": "None yet. Tell your mini-me, for example: “Every weekday at 9, sum up what is waiting for me.” It shows you the flow before making it.",
+    "intro": "What your mini-me does on its own: at set times, or when a colleague's request comes in. A timed flow's answers go into a conversation of its own.",
+    "none": "None yet. Tell your mini-me, for example: “Every weekday at 9, sum up what is waiting for me,” or “When someone asks for a code review, have my web-app conversation look first.” It shows you the flow before making it.",
     "when": {
       "daily": "Every day at {time}",
       "weekdays": "Weekdays at {time}",
@@ -276,7 +276,9 @@
       "hours": "{hours, plural, one {Every hour} other {Every # hours}}",
       "minutes": "Every {minutes} minutes",
       "once": "Once, {at}",
-      "inMinutes": "Once, in {minutes, plural, one {# minute} other {# minutes}}"
+      "inMinutes": "Once, in {minutes, plural, one {# minute} other {# minutes}}",
+      "request": "When a colleague asks: {kind}",
+      "anyRequest": "When any colleague asks"
     },
     "next": "Next: {at}",
     "paused": "Paused",
@@ -297,6 +299,7 @@
       "morningAsk": "Make a flow: every weekday at 9, catch me up in a few lines: what is waiting for my answer in the office, what came back from the requests I sent, and what I left open in my AI conversations since yesterday.",
       "week": "Friday wrap-up",
       "weekAsk": "Make a flow: every Friday at 5 pm, list in a few lines what I finished this week and what is still open, from my AI conversations and my office requests."
-    }
+    },
+    "onRequest": "Followed when such a request comes in"
   }
 }

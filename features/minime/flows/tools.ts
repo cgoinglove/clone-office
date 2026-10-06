@@ -1,8 +1,10 @@
 // The flows as the mini-me's tools: `flows` to see them, free to use; `flow_manage` to make or
 // change one, which the person is asked first (a card shows the flow), as Claude Code asks before a
 // tool it was not told to allow. Shaped after Hermes Agent's cronjob tool: a schedule and a request
-// complete on its own, and changing a flow the person has rather than making a near-copy.
+// complete on its own, and changing a flow the person has rather than making a near-copy. A flow
+// may also be how the person wants a kind of colleague's request handled, read while answering one.
 
+import { loadMenu } from "../office/menu.ts";
 import { cleanWhen, localStamp, nextRun, type When } from "./schedule.ts";
 import {
   addFlow,
@@ -25,6 +27,10 @@ const DAYS = [
 
 /** A schedule in plain English, for the mini-me (the screen writes it in the person's language). */
 export function describeWhen(when: When): string {
+  if (when.kind === "request")
+    return when.menu
+      ? `when a colleague's request of the kind ${when.menu} comes in`
+      : "when any colleague's request comes in";
   if (when.kind === "every")
     return when.minutes % 60 === 0
       ? `every ${when.minutes / 60} hour(s)`
@@ -42,14 +48,15 @@ export function describeWhen(when: When): string {
 const WHEN_SCHEMA = {
   type: "object",
   description:
-    'When it runs, worked out by you from their words. weekly: `days` (0 Sunday … 6 Saturday; all seven for every day) and `time` ("HH:MM", their own clock). every: `minutes`, at least 30. once: `in_minutes` from now (for "in an hour": never work out the clock yourself), or `at` ("YYYY-MM-DDTHH:MM", their own clock).',
+    'When it runs, worked out by you from their words. weekly: `days` (0 Sunday … 6 Saturday; all seven for every day) and `time` ("HH:MM", their own clock). every: `minutes`, at least 30. once: `in_minutes` from now (for "in an hour": never work out the clock yourself), or `at` ("YYYY-MM-DDTHH:MM", their own clock). request: when a colleague\'s request comes in, of the kind `menu` (an id from `flows`), or any request without one; `what` is then how they want those handled, which you follow while answering such a request.',
   properties: {
-    kind: { type: "string", enum: ["weekly", "every", "once"] },
+    kind: { type: "string", enum: ["weekly", "every", "once", "request"] },
     days: { type: "array", items: { type: "integer", minimum: 0, maximum: 6 } },
     time: { type: "string" },
     minutes: { type: "integer", minimum: 30 },
     in_minutes: { type: "integer", minimum: 1 },
     at: { type: "string" },
+    menu: { type: "string" },
   },
   required: ["kind"],
 };
@@ -57,14 +64,14 @@ const WHEN_SCHEMA = {
 export const FLOWS_TOOL = {
   name: "flows",
   description:
-    'Your person\'s flows: the things you do on your own at set times ("every weekday at 9, sum up what is waiting for me"), each with when it runs next and how its last run went. Also the time now on their computer. Look here before making one, so you change a flow they have rather than make a near-copy.',
+    'Your person\'s flows: what you do on your own at set times ("every weekday at 9, sum up what is waiting for me") or when a colleague\'s request comes in ("when someone asks about the payments API, check with my api conversation first"), each with when it runs next and how its last run went. Also the time now on their computer and the kinds of request they take (`menu`). Look here before making one, so you change a flow they have rather than make a near-copy.',
   inputSchema: { type: "object", properties: {} },
 };
 
 export const FLOW_MANAGE_TOOL = {
   name: "flow_manage",
   description:
-    'Make, change, pause, resume or remove one of your person\'s flows: something you do on your own at set times, again and again or once later. Only when they ask for that ("every Friday at 5, list what I finished this week", "remind me in an hour to call Ana"); for anything to do now, just do it. `what` is the request you will get at that time with nobody to ask and none of this conversation, so make it complete on its own: what to look at, what to bring back, how short. They are asked first, with the flow shown. A flow\'s answer goes into its own conversation on their page. You cannot run one now from here; do it in this conversation instead if they want to see it.',
+    'Make, change, pause, resume or remove one of your person\'s flows: something you do on your own at set times, again and again or once later, or how to handle a kind of colleague\'s request when it comes in. Only when they ask for that ("every Friday at 5, list what I finished this week", "remind me in an hour to call Ana", "when someone asks for a code review, have my web-app conversation look first"); for anything to do now, just do it. For a set time, `what` is the request you will get then with nobody to ask and none of this conversation, so make it complete on its own: what to look at, what to bring back, how short. For a colleague\'s request, `what` is how they want it handled. They are asked first, with the flow shown. A timed flow\'s answer goes into its own conversation on their page. You cannot run one now from here; do it in this conversation instead if they want to see it.',
   inputSchema: {
     type: "object",
     properties: {
@@ -83,7 +90,8 @@ export const FLOW_MANAGE_TOOL = {
       when: WHEN_SCHEMA,
       what: {
         type: "string",
-        description: "The request, complete on its own.",
+        description:
+          "The request, complete on its own; or, for a colleague's request, how to handle it.",
       },
     },
     required: ["action"],
@@ -123,14 +131,24 @@ export async function callFlowTool(
   args: Record<string, unknown>,
   now = new Date(),
 ): Promise<{ result: unknown; isError: boolean }> {
+  const menu = await loadMenu();
   if (name === FLOWS_TOOL.name)
     return {
       result: {
         now: `${localStamp(now).replace("T", " ")} (${DAYS[now.getDay()]})`,
+        menu: menu.map((item) => ({ id: item.id, name: item.name })),
         flows: (await listFlows()).map((flow) => view(flow, now)),
       },
       isError: false,
     };
+  // A request flow names a kind they take, or none for every request.
+  const unknownKind = (when: When | undefined) =>
+    when?.kind === "request" &&
+    when.menu !== undefined &&
+    !menu.some((item) => item.id === when.menu);
+  const kinds = menu.length
+    ? `The kinds they take: ${menu.map((item) => `${item.id} (${item.name})`).join(", ")}.`
+    : "They take no kinds yet: leave out menu for any request.";
   const action = String(args.action ?? "");
   const text = (value: unknown, max: number) =>
     typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -141,9 +159,11 @@ export async function callFlowTool(
     if (!flowName || !what || !when)
       return {
         result:
-          "A flow needs a name, a request complete on its own, and when it runs (see the `when` field: weekly days and time, every 30 minutes or more, or once).",
+          "A flow needs a name, a request complete on its own, and when it runs (see the `when` field: weekly days and time, every 30 minutes or more, once, or a colleague's request).",
         isError: true,
       };
+    if (unknownKind(when))
+      return { result: `No such kind of request. ${kinds}`, isError: true };
     const flow: Flow = {
       id: newFlowId(flowName),
       name: flowName,
@@ -168,6 +188,10 @@ export async function callFlowTool(
         args.when === undefined ? flow.when : cleanWhen(args.when, now);
       if (!when) {
         error = "That is not a schedule (see the `when` field).";
+        return flow;
+      }
+      if (unknownKind(when)) {
+        error = `No such kind of request. ${kinds}`;
         return flow;
       }
       return {

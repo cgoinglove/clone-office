@@ -118,3 +118,76 @@ test("each minute: a flow whose time came runs once, a missed one is noted, a pa
   await tick(new Date(2026, 9, 6, 9, 31), run);
   assert.deepEqual(ran, ["morning-aaaaaa"]);
 });
+
+test("a flow for a kind of request is followed while answering one, never on a clock", async () => {
+  const { saveMenu } = await import("../office/menu");
+  const { callFlowTool } = await import("./tools");
+  const { decide } = await import("./schedule");
+  const { requestPrompt } = await import("../office/handle");
+  await saveMenu([
+    {
+      id: "payments-api",
+      name: "Payments API questions",
+      description: "",
+      trust: "ask",
+    },
+  ]);
+  const now = new Date(2026, 9, 6, 14, 5);
+  const wrong = await callFlowTool(
+    "flow_manage",
+    {
+      action: "create",
+      name: "Reviews",
+      what: "Have my web-app conversation look first.",
+      when: { kind: "request", menu: "code-review" },
+    },
+    now,
+  );
+  assert.equal(wrong.isError, true);
+  assert.match(String(wrong.result), /payments-api \(Payments API questions\)/);
+  const made = await callFlowTool(
+    "flow_manage",
+    {
+      action: "create",
+      name: "API answers",
+      what: "Check with my api conversation first, and end with the docs link.",
+      when: { kind: "request", menu: "payments-api" },
+    },
+    now,
+  );
+  assert.equal(made.isError, false);
+  const listed = (await callFlowTool("flows", {}, now)).result as {
+    menu: { id: string }[];
+    flows: { when: string; next: string | null }[];
+  };
+  assert.deepEqual(listed.menu, [
+    { id: "payments-api", name: "Payments API questions" },
+  ]);
+  const flow = listed.flows.find((f) => f.when.includes("payments-api"));
+  assert.equal(flow?.next, null);
+  assert.deepEqual(
+    decide({ kind: "request", menu: "payments-api" }, now, undefined, now),
+    { run: false },
+  );
+  const prompt = requestPrompt(
+    { name: "Ana", description: "" },
+    "Does /orders return a total?",
+    [
+      {
+        id: "payments-api",
+        name: "Payments API questions",
+        description: "",
+        trust: "ask",
+      },
+    ],
+    [
+      { menu: "payments-api", what: "Check with my api conversation first." },
+      { what: "Answer in two lines at most." },
+    ],
+  );
+  assert.match(
+    prompt,
+    /- Payments API questions: Check with my api conversation first\./,
+  );
+  assert.match(prompt, /- Any request: Answer in two lines at most\./);
+});

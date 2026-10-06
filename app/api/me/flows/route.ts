@@ -2,6 +2,7 @@ import * as z from "zod";
 import { keepFlowsRunning, runFlow } from "@/features/minime/flows/run";
 import { nextRun } from "@/features/minime/flows/schedule";
 import { changeFlow, getFlow, listFlows } from "@/features/minime/flows/store";
+import { loadMenu } from "@/features/minime/office/menu";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 
@@ -13,6 +14,7 @@ export async function GET(request: Request) {
   if (refused) return refused;
   keepFlowsRunning();
   const now = new Date();
+  const menu = await loadMenu();
   const flows = (await listFlows()).map((flow) => {
     const next = flow.paused
       ? undefined
@@ -21,10 +23,14 @@ export async function GET(request: Request) {
           flow.seen ? new Date(flow.seen) : now,
           new Date(flow.created),
         );
+    const kind = flow.when.kind === "request" ? flow.when.menu : undefined;
     return {
       id: flow.id,
       name: flow.name,
       when: flow.when,
+      ...(kind
+        ? { menuName: menu.find((item) => item.id === kind)?.name }
+        : {}),
       what: flow.what,
       paused: Boolean(flow.paused),
       next: next?.toISOString(),
@@ -50,6 +56,8 @@ export async function POST(request: Request) {
   if (!(await getFlow(id)))
     return Response.json({ error: "not-found" }, { status: 404 });
   if (action === "run") {
+    if ((await getFlow(id))?.when.kind === "request")
+      return Response.json({ error: "bad-request" }, { status: 400 });
     if (!hasClaudeCode())
       return Response.json({ error: "claude-missing" }, { status: 409 });
     // It runs on in this server; its answer lands in the flow's conversation.
