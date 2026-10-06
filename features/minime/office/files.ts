@@ -101,13 +101,38 @@ export async function putFiles(
 }
 
 /** A name that stays inside its folder and reads on any system. */
-function safeName(name: string): string {
+export function safeName(name: string): string {
   const plain = basename(name)
     .replace(/[\u0000-\u001f\u007f<>:"/\\|?*]/g, "_")
     .replace(/^\.+/, "")
     .trim()
     .slice(0, 150);
   return plain || "file";
+}
+
+/** Writes a file that came into `dir`, for its person's eyes only; a name taken gets a number. */
+export async function keepFile(
+  dir: string,
+  name: string,
+  bytes: Uint8Array,
+): Promise<string> {
+  await mkdir(dir, { recursive: true, mode: 0o700 });
+  const wanted = safeName(name);
+  const ext = extname(wanted);
+  const stem = wanted.slice(0, wanted.length - ext.length);
+  for (let n = 1; ; n++) {
+    const path = join(
+      /*turbopackIgnore: true*/ dir,
+      n === 1 ? wanted : `${stem} (${n})${ext}`,
+    );
+    try {
+      // "wx": never over a file already there.
+      await writeFile(path, bytes, { mode: 0o600, flag: "wx" });
+      return path;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
+    }
+  }
 }
 
 interface Taken {

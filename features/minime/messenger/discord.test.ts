@@ -250,3 +250,67 @@ test("text is cut at a line where it can be, else at the limit", () => {
   ]);
   assert.deepEqual(pieces("aaaaaaa\nbbbbbbb", 10), ["aaaaaaa", "bbbbbbb"]);
 });
+
+test("files come with a direct message and are fetched when wanted; a file of ours goes as a message", async () => {
+  const fetched: string[] = [];
+  const posts: { url: string; body: unknown }[] = [];
+  const heard: Incoming[] = [];
+  const sockets: FakeSocket[] = [];
+  const bot = new DiscordBot(
+    "bot-token",
+    { message: (message) => heard.push(message) },
+    {
+      open: (url) => {
+        const socket = new FakeSocket(url);
+        sockets.push(socket);
+        return socket;
+      },
+      fetch: (async (url: string, init?: RequestInit) => {
+        if (String(url).startsWith("https://cdn.example")) {
+          fetched.push(String(url));
+          return new Response("photo-bytes");
+        }
+        posts.push({ url: String(url), body: init?.body });
+        return new Response(JSON.stringify({ id: "m9" }));
+      }) as typeof fetch,
+    },
+  );
+  bot.start();
+  sockets[0].say({
+    op: 0,
+    s: 1,
+    t: "MESSAGE_CREATE",
+    d: {
+      id: "m1",
+      channel_id: "dm1",
+      author: { id: "u1", username: "ana" },
+      content: "",
+      attachments: [
+        {
+          filename: "receipt.jpg",
+          size: 11,
+          url: "https://cdn.example/receipt.jpg",
+          content_type: "image/jpeg",
+        },
+      ],
+    },
+  });
+  const [file] = heard[0].files ?? [];
+  assert.deepEqual(
+    [file.name, file.size, file.type],
+    ["receipt.jpg", 11, "image/jpeg"],
+  );
+  assert.deepEqual(fetched, [], "not before it is wanted");
+  assert.equal(new TextDecoder().decode(await file.fetch()), "photo-bytes");
+  await bot.sendFile("dm1", {
+    name: "quote.csv",
+    type: "text/csv",
+    bytes: new TextEncoder().encode("a,b"),
+  });
+  assert.match(posts[0].url, /\/channels\/dm1\/messages$/);
+  const form = posts[0].body as FormData;
+  assert.ok(form instanceof FormData);
+  assert.equal((form.get("files[0]") as File).name, "quote.csv");
+  assert.equal(await (form.get("files[0]") as File).text(), "a,b");
+  bot.stop();
+});

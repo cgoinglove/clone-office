@@ -32,6 +32,7 @@ class FakeBot implements Bot {
   me: Person = { id: "b1", name: "Mini" };
   sent: { channel: string; text: string; choices: Choice[] }[] = [];
   settled: { press: Press; text: string }[] = [];
+  files: { channel: string; name: string; bytes: string }[] = [];
   listener: Listener;
   token: string;
 
@@ -58,6 +59,16 @@ class FakeBot implements Bot {
   // The direct-message channel with the person, the one they write in.
   async dm() {
     return "dm1";
+  }
+  async sendFile(
+    channel: string,
+    file: { name: string; type: string; bytes: Uint8Array },
+  ) {
+    this.files.push({
+      channel,
+      name: file.name,
+      bytes: new TextDecoder().decode(file.bytes),
+    });
   }
   write(author: Person, text: string, replyTo?: string) {
     this.listener.message?.({
@@ -484,6 +495,106 @@ test("Slack's two tokens are told apart by how they start, and both are needed",
     token: "xoxb-1234567890-bot-token",
     appToken: "xapp-1-A1-1234567890-app-level",
     on: true,
+  });
+  await bridge.disconnect();
+  process.env.SUB_OFFICE_HOME = root;
+});
+
+test("files from the person's phone are kept for the mini-me to read; a stranger's are never taken; a colleague's come to the phone", async () => {
+  const home = join(root, "phone-files");
+  process.env.SUB_OFFICE_HOME = home;
+  const bots: FakeBot[] = [];
+  const turns: { text: string; allow?: string[] }[] = [];
+  const bridge = new bridgeModule.Bridge({
+    makeBot: ({ token }, listener) => {
+      const bot = new FakeBot(token, listener);
+      bots.push(bot);
+      return bot;
+    },
+    turn: async ({ text, allow, send }) => {
+      turns.push({ text, allow });
+      const chat = await store.createChat(text);
+      send({ type: "chat", id: chat.id, title: text });
+      await store.appendMessage(chat.id, "minime", "Got it.");
+      send({ type: "done", chat: chat.id });
+    },
+    presence: () => ({ state: "watching" }),
+  });
+  await bridge.connect("telegram", "123456:telegram-token-abc");
+  const bot = bots.at(-1) as FakeBot;
+  const fetched: string[] = [];
+  const photo = (name: string) => ({
+    name,
+    size: 5,
+    fetch: async () => {
+      fetched.push(name);
+      return new TextEncoder().encode("bytes");
+    },
+  });
+  // Someone knocking with a file: asked about, the file never taken.
+  bot.listener.message?.({
+    id: "1",
+    channel: "dm1",
+    author: ana,
+    text: "hi",
+    files: [photo("knock.jpg")],
+  });
+  await until(() => bot.sent.length === 1);
+  assert.deepEqual(fetched, []);
+  await bridge.allow((await bridge.status()).asking?.code ?? "");
+  await until(() => turns.length === 1);
+
+  // The person sends a photo with a line: kept in today's folder, and the mini-me told where.
+  bot.listener.message?.({
+    id: "2",
+    channel: "dm1",
+    author: ana,
+    text: "What is on this receipt?",
+    files: [photo("receipt.jpg")],
+  });
+  await until(() => turns.length === 2);
+  const day = new Date().toISOString().slice(0, 10);
+  const kept = join(home, "messenger", "files", day, "receipt.jpg");
+  assert.equal(
+    turns[1].text,
+    `What is on this receipt?\n\n[Sent from their phone, now on this computer:\n- receipt.jpg (5 B): ${kept}]`,
+  );
+  assert.equal(readFileSync(kept, "utf8"), "bytes");
+  assert.ok(
+    turns[1].allow?.some(
+      (rule) => rule.startsWith("Read(") && rule.includes("messenger/files"),
+    ),
+    "read without asking",
+  );
+  // A file alone is a message too; the same name again gets a number.
+  bot.listener.message?.({
+    id: "3",
+    channel: "dm1",
+    author: ana,
+    text: "",
+    files: [photo("receipt.jpg")],
+  });
+  await until(() => turns.length === 3);
+  assert.match(turns[2].text, /receipt \(2\)\.jpg/);
+
+  // A colleague's answer with a file, in the phone's conversation, brings the file along.
+  const settings = JSON.parse(
+    readFileSync(join(home, "settings.json"), "utf8"),
+  );
+  const attached = join(home, "quote-fixed.csv");
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync(attached, "item,price");
+  await store.appendMessage(
+    settings.messenger.chat,
+    "office",
+    "Ben: Fixed it.",
+    [attached],
+  );
+  await until(() => bot.files.length === 1);
+  assert.deepEqual(bot.files[0], {
+    channel: "dm1",
+    name: "quote-fixed.csv",
+    bytes: "item,price",
   });
   await bridge.disconnect();
   process.env.SUB_OFFICE_HOME = root;

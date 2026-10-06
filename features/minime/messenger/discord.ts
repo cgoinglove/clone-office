@@ -35,6 +35,21 @@ export interface Person {
   name: string;
 }
 
+/** A file someone sent, fetched only when it is wanted; `size` as the service says, where it says. */
+export interface IncomingFile {
+  name: string;
+  size?: number;
+  type?: string;
+  fetch(): Promise<Uint8Array>;
+}
+
+/** A file of ours to send. */
+export interface OutgoingFile {
+  name: string;
+  type: string;
+  bytes: Uint8Array;
+}
+
 export interface Incoming {
   id: string;
   channel: string;
@@ -42,6 +57,8 @@ export interface Incoming {
   text: string;
   /** The message it replies to, when it is a reply. */
   replyTo?: string;
+  /** Files that came with it: photos, documents. */
+  files?: IncomingFile[];
 }
 
 /** A button pressed on a message the bot sent, and that message as it was. */
@@ -268,6 +285,34 @@ export class DiscordBot {
       const reference = d.message_reference as
         | Record<string, unknown>
         | undefined;
+      // Files are on Discord's own servers at a signed address, fetched when wanted.
+      const attachments = (
+        Array.isArray(d.attachments) ? d.attachments : []
+      ) as {
+        filename?: string;
+        size?: number;
+        url?: string;
+        content_type?: string;
+      }[];
+      const files = attachments.flatMap((file) =>
+        file.url
+          ? [
+              {
+                name: file.filename ?? "file",
+                size: file.size,
+                type: file.content_type,
+                fetch: async () => {
+                  const response = await this.request(String(file.url));
+                  if (!response.ok)
+                    throw new Error(
+                      `Discord answered ${response.status} for a file.`,
+                    );
+                  return new Uint8Array(await response.arrayBuffer());
+                },
+              },
+            ]
+          : [],
+      );
       this.listener.message?.({
         id: String(d.id),
         channel: String(d.channel_id),
@@ -276,6 +321,7 @@ export class DiscordBot {
         ...(reference?.message_id
           ? { replyTo: String(reference.message_id) }
           : {}),
+        ...(files.length ? { files } : {}),
       });
       return;
     }
@@ -443,6 +489,43 @@ export class DiscordBot {
         components: [],
       },
     ).catch(() => {});
+  }
+
+  /** A file of ours, as a message of its own. */
+  async sendFile(channel: string, file: OutgoingFile): Promise<void> {
+    const form = new FormData();
+    form.set(
+      "payload_json",
+      JSON.stringify({ allowed_mentions: { parse: [] } }),
+    );
+    form.set(
+      "files[0]",
+      new Blob([file.bytes as BlobPart], { type: file.type }),
+      file.name,
+    );
+    for (let attempt = 0; ; attempt++) {
+      const response = await this.request(
+        `${API}/channels/${channel}/messages`,
+        {
+          method: "POST",
+          headers: {
+            authorization: `Bot ${this.token}`,
+            "user-agent": "DiscordBot (sub-office, 0)",
+          },
+          body: form,
+        },
+      );
+      if (response.status === 429 && attempt < 3) {
+        const data = (await response.json().catch(() => ({}))) as {
+          retry_after?: number;
+        };
+        await sleep(Math.ceil((Number(data.retry_after) || 1) * 1000));
+        continue;
+      }
+      if (!response.ok)
+        throw new Error(`Discord answered ${response.status} to a file.`);
+      return;
+    }
   }
 
   /** The direct-message channel with a user, to write to them first. */

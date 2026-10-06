@@ -95,6 +95,8 @@ export async function runTurn(options: {
   language?: string;
   /** The app's gate route, for questions to the person; without it the mini-me cannot ask or read. */
   gateUrl?: string;
+  /** What it may do without asking in this conversation besides what the person allowed. */
+  allow?: string[];
   send: (event: TurnEvent) => void;
 }): Promise<void> {
   const { text, language, send } = options;
@@ -140,7 +142,7 @@ export async function runTurn(options: {
         url: options.gateUrl,
         secret: gateSecret(),
         chat: info.id,
-        allow: await loadTrust(),
+        allow: [...(await loadTrust()), ...(options.allow ?? [])],
         deny: denyRules(loadExcludes()),
         colleagues: true,
       }

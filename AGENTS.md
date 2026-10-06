@@ -269,7 +269,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   the app-level token opens a WebSocket for events (every envelope taken at once; a new socket when
   Slack closes one), the bot token speaks through the Web API (mrkdwn, buttons as blocks, a thread
   reply as a reply), and `manifest.ts` is the app the page copies, with exactly those scopes; the
-  two tokens are told apart by their xoxb-/xapp- starts. `text.ts` cuts text into pieces (a code
+  two tokens are told apart by their xoxb-/xapp- starts. Each bot hears the files sent to it
+  (fetched only when wanted, and only from the person let in: `bridge.ts` keeps them in
+  `messenger/files/<day>/` with `office/files.ts` `keepFile`, tells the mini-me where, and lets the
+  phone's turns read that folder alone) and sends files (`sendFile`: a colleague's answer's files,
+  carried on the conversation's line, `chat/store.ts` `files`). `text.ts` cuts text into pieces (a code
   block cut in two is closed and opened again) and draws markdown as Telegram's HTML and Slack's
   mrkdwn.
   `bridge.ts` joins either to the mini-me: whoever writes first is asked about on

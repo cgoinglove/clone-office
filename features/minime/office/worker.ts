@@ -196,18 +196,19 @@ function onEvent(
       task.metadata.guest ??
       task.metadata.to;
     // Files that came with the answer are taken onto this computer, and the line says where.
-    const files = latest.files?.length
-      ? await takeFiles(office, task.id, latest.files)
-          .then((taken) => `\n\n${filesLine(taken)}`)
-          .catch(
-            () =>
-              `\n\n${latest.files?.map((file) => `- ${file.name}`).join("\n")}`,
-          )
-      : "";
+    const taken = latest.files?.length
+      ? await takeFiles(office, task.id, latest.files).catch(() => undefined)
+      : [];
+    const files = taken?.length
+      ? `\n\n${filesLine(taken)}`
+      : latest.files?.length
+        ? `\n\n${latest.files.map((file) => `- ${file.name}`).join("\n")}`
+        : "";
     return appendMessage(
       chat,
       "office",
       `${name}: ${latest.parts.map((p) => p.text).join("\n")}${files}`,
+      (taken ?? []).map((one) => one.path),
     );
   });
 }

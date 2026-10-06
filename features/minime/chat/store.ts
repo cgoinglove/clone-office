@@ -25,6 +25,8 @@ export interface ChatMessage {
   role: ChatRole;
   text: string;
   at: string;
+  /** Files on this computer that came with it (a colleague's answer, a photo from the phone). */
+  files?: string[];
 }
 
 export interface ChatInfo {
@@ -46,7 +48,13 @@ export interface ChatInfo {
 
 type Line =
   | { type: "chat"; id: string; title: string; at: string }
-  | { type: "message"; role: ChatRole; text: string; at: string }
+  | {
+      type: "message";
+      role: ChatRole;
+      text: string;
+      at: string;
+      files?: string[];
+    }
   | { type: "session"; session: string; context?: number; at: string }
   | { type: "carried"; summary: string; at: string }
   | { type: "reviewed"; session: string; at: string };
@@ -91,6 +99,7 @@ export interface ChatNews {
   role: ChatRole;
   text: string;
   at: string;
+  files?: string[];
 }
 
 const hearing = globalThis as typeof globalThis & {
@@ -110,12 +119,14 @@ export async function appendMessage(
   id: string,
   role: ChatRole,
   text: string,
+  files: string[] = [],
 ): Promise<void> {
   const at = new Date().toISOString();
-  await append(id, { type: "message", role, text, at });
+  const more = files.length ? { files } : {};
+  await append(id, { type: "message", role, text, at, ...more });
   for (const listener of hearing.__minimeChatNews ?? [])
     try {
-      listener({ chat: id, role, text, at });
+      listener({ chat: id, role, text, at, ...more });
     } catch {
       // One listener failing never stops the line from being kept.
     }
@@ -169,7 +180,12 @@ function parse(raw: string): {
     if (!info) continue;
     info.updated = line.at ?? info.updated;
     if (line.type === "message") {
-      messages.push({ role: line.role, text: line.text, at: line.at });
+      messages.push({
+        role: line.role,
+        text: line.text,
+        at: line.at,
+        ...(line.files?.length ? { files: line.files } : {}),
+      });
       if (line.role === "me") info.turns += 1;
     }
     if (line.type === "session") {

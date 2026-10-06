@@ -27,7 +27,9 @@ import { type ChatNews, onChatMessage, readChat } from "../chat/store.ts";
 import { runTurn } from "../chat/turn.ts";
 import { answerPerson } from "../gate/answer.ts";
 import { type Ask, isRequestChat, onAsk, pendingAsks } from "../gate/gate.ts";
+import { pathRule } from "../gate/rules.ts";
 import { atomicWrite, readText, withLock } from "../memory/files.ts";
+import { keepFile, SEND_BYTES, sizeText } from "../office/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { personLanguage } from "../server/language.ts";
 import { minimeHome } from "../server/paths.ts";
@@ -37,6 +39,7 @@ import {
   DiscordBot,
   type Incoming,
   type Listener,
+  type OutgoingFile,
   type Person,
   type Press,
 } from "./discord.ts";
@@ -69,6 +72,8 @@ export interface Bot {
   settle(press: Press, answer: string): Promise<void>;
   /** The direct-message channel with a user, to write to them first. */
   dm(user: string): Promise<string>;
+  /** A file of ours, where the service takes files from a bot. */
+  sendFile?(channel: string, file: OutgoingFile): Promise<void>;
 }
 
 interface MessengerSettings extends Account {
@@ -116,6 +121,18 @@ const LOOK_MS = 15_000;
 const TOLD_MS = 24 * 60 * 60 * 1000;
 /** How much of a colleague's request the phone is shown over the question about it. */
 const ABOUT_CHARS = 300;
+/** The largest file sent to the phone; Discord takes about 10 MB from a bot. */
+const PHONE_FILE_BYTES = 10 * 1024 * 1024;
+
+/** Where files from the phone are kept, a folder a day. */
+export function phoneFilesDir(day?: string): string {
+  const all = join(
+    /*turbopackIgnore: true*/ minimeHome(),
+    "messenger",
+    "files",
+  );
+  return day ? join(/*turbopackIgnore: true*/ all, day) : all;
+}
 
 /** A question on the phone that words answer: one from the gate, or one kept for later. */
 interface Waiting {
@@ -455,21 +472,28 @@ export class Bridge {
     const settings = await loadMessenger();
     if (!settings || !this.bot) return;
     // Telegram's Start button writes "/start": only a hello.
-    const text = /^\/start(\s|$)/.test(message.text.trim())
+    let text = /^\/start(\s|$)/.test(message.text.trim())
       ? ""
       : message.text.trim();
+    // Files are taken only from the person let in, never from someone knocking.
     if (!settings.owner) return this.knock(message, text);
     const { t } = await words();
     if (message.author.id !== settings.owner.id) {
       await this.bot.send(message.channel, t("taken"));
       return;
     }
-    if (!text) return;
+    if (message.files?.length) {
+      text = `${text}${await this.takePhoneFiles(message)}`.trim();
+      // A file is for the conversation, not an answer to a question waiting for words.
+      message = { ...message, text, replyTo: undefined };
+    } else if (!text) return;
     // A reply to one of its questions answers that one; else a question waiting for their words.
     const replied = message.replyTo
       ? this.asked.get(message.replyTo)
       : undefined;
-    const waiting = replied ?? this.waitingWords;
+    const waiting = message.files?.length
+      ? undefined
+      : (replied ?? this.waitingWords);
     if (waiting) {
       if (this.waitingWords?.id === waiting.id) this.waitingWords = undefined;
       if (await this.answerWith(waiting, text)) {
@@ -498,6 +522,39 @@ export class Bridge {
     } finally {
       this.busy = false;
     }
+  }
+
+  /**
+   * Files the person sent from their phone, kept in today's folder: the words for the mini-me say
+   * where each one is, and which could not be taken.
+   */
+  private async takePhoneFiles(message: Incoming): Promise<string> {
+    const day = new Date().toISOString().slice(0, 10);
+    const kept: string[] = [];
+    const left: string[] = [];
+    for (const file of message.files ?? []) {
+      if ((file.size ?? 0) > SEND_BYTES) {
+        left.push(`${file.name} (larger than 25 MB)`);
+        continue;
+      }
+      try {
+        const bytes = await file.fetch();
+        if (bytes.byteLength > SEND_BYTES) {
+          left.push(`${file.name} (larger than 25 MB)`);
+          continue;
+        }
+        const path = await keepFile(phoneFilesDir(day), file.name, bytes);
+        kept.push(`- ${file.name} (${sizeText(bytes.byteLength)}): ${path}`);
+      } catch {
+        left.push(`${file.name} (it could not be taken)`);
+      }
+    }
+    return [
+      kept.length
+        ? `\n\n[Sent from their phone, now on this computer:\n${kept.join("\n")}]`
+        : "",
+      left.length ? `\n\n[Sent but not taken: ${left.join(", ")}]` : "",
+    ].join("");
   }
 
   /** Someone not let in wrote: the screen asks about them, with a code their phone alone is sent. */
@@ -545,6 +602,8 @@ export class Bridge {
         chat: settings?.chat,
         language: await personLanguage(),
         gateUrl: this.gateUrl(),
+        // What the person sent from their phone is there to be read.
+        allow: [`Read(${pathRule(phoneFilesDir())}/**)`],
         send: (event) => {
           if (event.type === "chat") this.turnChat = event.id;
           if (event.type === "chat" && event.id !== settings?.chat)
@@ -740,12 +799,13 @@ export class Bridge {
     if (news.role !== "office" && news.role !== "told") return;
     void (async () => {
       const settings = await loadMessenger();
-      // In the phone's own conversation: it comes back there, whoever is watching.
+      // In the phone's own conversation: it comes back there, whoever is watching, with its files.
       if (news.chat === settings?.chat) {
         const { chat } = await words();
         await this.say(
           `${news.role === "office" ? chat("fromColleague") : chat("told")}\n${news.text}`,
         );
+        await this.sendFiles(news.files ?? []);
         return;
       }
       // A colleague's answer in a conversation on the page: for the phone if nobody looks there.
@@ -756,6 +816,26 @@ export class Bridge {
     })().catch((error) =>
       console.error(`messenger: ${(error as Error).message}`),
     );
+  }
+
+  /** Files on this computer to the phone, where the service takes them; the words name them anyway. */
+  private async sendFiles(paths: string[]): Promise<void> {
+    const channel = await this.dmChannel();
+    const bot = this.bot;
+    if (!channel || !bot?.sendFile) return;
+    for (const path of paths) {
+      const bytes = await readFile(path).catch(() => undefined);
+      if (!bytes || bytes.byteLength > PHONE_FILE_BYTES) continue;
+      await bot
+        .sendFile(channel, {
+          name: path.split(/[\\/]/).at(-1) ?? "file",
+          type: "application/octet-stream",
+          bytes: new Uint8Array(bytes),
+        })
+        .catch((error) =>
+          console.error(`messenger: ${(error as Error).message}`),
+        );
+    }
   }
 
   /** Writes to the person first, in their direct messages. */

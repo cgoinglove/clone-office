@@ -1,6 +1,7 @@
 // The Slack app the person makes at api.slack.com/apps from a manifest, with exactly the scopes
 // slack.ts uses: its Messages tab to talk in, reading and writing there, opening it to write
-// first, and the person's name. Apart from slack.ts so the page can copy it without the bot.
+// first, the person's name, and files sent there both ways. Apart from slack.ts so the page can
+// copy it without the bot.
 
 export const SLACK_MANIFEST = `display_information:
   name: mini-me
@@ -13,7 +14,7 @@ features:
     always_online: true
 oauth_config:
   scopes:
-    bot: [chat:write, im:history, im:read, im:write, users:read]
+    bot: [chat:write, im:history, im:read, im:write, users:read, files:read, files:write]
 settings:
   event_subscriptions:
     bot_events: [message.im]

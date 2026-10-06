@@ -4,7 +4,14 @@
 // taken at once (the spinner on it stops) and its message is settled after.
 
 import type { Bot } from "./bridge.ts";
-import type { Choice, Listener, Person, Press } from "./discord.ts";
+import type {
+  Choice,
+  IncomingFile,
+  Listener,
+  OutgoingFile,
+  Person,
+  Press,
+} from "./discord.ts";
 import { pieces, telegramHtml } from "./text.ts";
 
 const API = "https://api.telegram.org";
@@ -23,6 +30,13 @@ interface TelegramUser {
   username?: string;
 }
 
+interface TelegramFile {
+  file_id: string;
+  file_size?: number;
+  file_name?: string;
+  mime_type?: string;
+}
+
 interface TelegramMessage {
   message_id: number;
   from?: TelegramUser;
@@ -31,6 +45,12 @@ interface TelegramMessage {
   caption?: string;
   entities?: unknown[];
   reply_to_message?: { message_id: number };
+  document?: TelegramFile;
+  /** The same picture at several sizes, smallest first. */
+  photo?: TelegramFile[];
+  audio?: TelegramFile;
+  voice?: TelegramFile;
+  video?: TelegramFile;
 }
 
 interface TelegramUpdate {
@@ -194,6 +214,7 @@ export class TelegramBot implements Bot {
     // Private chats with people only: not a group, not a bot.
     if (!message?.from || message.from.is_bot) return;
     if (message.chat.type !== "private") return;
+    const files = this.filesOf(message);
     this.listener.message?.({
       id: String(message.message_id),
       channel: String(message.chat.id),
@@ -202,7 +223,51 @@ export class TelegramBot implements Bot {
       ...(message.reply_to_message
         ? { replyTo: String(message.reply_to_message.message_id) }
         : {}),
+      ...(files.length ? { files } : {}),
     });
+  }
+
+  /** The file a message carries: a document, the largest size of a photo, a voice note, audio, video. */
+  private filesOf(message: TelegramMessage): IncomingFile[] {
+    const id = message.message_id;
+    const found: { file: TelegramFile; name: string }[] = [];
+    if (message.document)
+      found.push({
+        file: message.document,
+        name: message.document.file_name ?? `file-${id}`,
+      });
+    const photo = message.photo?.at(-1);
+    if (photo) found.push({ file: photo, name: `photo-${id}.jpg` });
+    if (message.voice)
+      found.push({ file: message.voice, name: `voice-${id}.ogg` });
+    if (message.audio)
+      found.push({
+        file: message.audio,
+        name: message.audio.file_name ?? `audio-${id}`,
+      });
+    if (message.video)
+      found.push({
+        file: message.video,
+        name: message.video.file_name ?? `video-${id}.mp4`,
+      });
+    return found.map(({ file, name }) => ({
+      name,
+      size: file.file_size,
+      type: file.mime_type,
+      fetch: async () => {
+        const { file_path: path } = await this.call<{ file_path?: string }>(
+          "getFile",
+          { file_id: file.file_id },
+        );
+        if (!path) throw new Error("Telegram did not say where the file is.");
+        const response = await this.request(
+          `${API}/file/bot${this.token}/${path}`,
+        );
+        if (!response.ok)
+          throw new Error(`Telegram answered ${response.status} for a file.`);
+        return new Uint8Array(await response.arrayBuffer());
+      },
+    }));
   }
 
   private async call<T>(
@@ -316,6 +381,33 @@ export class TelegramBot implements Bot {
       ...(press.message.keep ? { entities: press.message.keep } : {}),
       link_preview_options: { is_disabled: true },
     }).catch(() => {});
+  }
+
+  /** A file of ours, as a document. */
+  async sendFile(channel: string, file: OutgoingFile): Promise<void> {
+    const form = new FormData();
+    form.set("chat_id", channel);
+    form.set(
+      "document",
+      new Blob([file.bytes as BlobPart], { type: file.type }),
+      file.name,
+    );
+    const response = await this.request(
+      `${API}/bot${this.token}/sendDocument`,
+      {
+        method: "POST",
+        body: form,
+      },
+    );
+    const said = (await response.json().catch(() => null)) as {
+      ok?: boolean;
+      description?: string;
+    } | null;
+    if (!said?.ok)
+      throw new TelegramError(
+        said?.description ?? `Telegram answered ${response.status}`,
+        response.status,
+      );
   }
 
   /** A private chat's id is the person's own. */

@@ -285,3 +285,102 @@ test("tokens Slack turns away stop it for good, and are found out before it is s
     /not_allowed_token_type/,
   );
 });
+
+test("a file shared in the Messages tab is fetched with the bot's token; a file of ours is uploaded and posted", async () => {
+  const slack = fakeSlack({
+    "files.getUploadURLExternal": () => ({
+      ok: true,
+      upload_url: "https://files.example/upload/1",
+      file_id: "F9",
+    }),
+  });
+  const plain = slack.fetch;
+  const fetched: { url: string; auth: string }[] = [];
+  const uploads: unknown[] = [];
+  const sockets: FakeSocket[] = [];
+  const heard: Incoming[] = [];
+  const bot = new SlackBot(
+    "xoxb-bot",
+    "xapp-app",
+    { message: (message) => heard.push(message) },
+    {
+      open: () => {
+        const socket = new FakeSocket();
+        sockets.push(socket);
+        return socket;
+      },
+      fetch: (async (url: string, init: RequestInit = {}) => {
+        if (String(url).startsWith("https://files.slack.example")) {
+          fetched.push({
+            url: String(url),
+            auth: String(
+              (init.headers as Record<string, string>)?.authorization,
+            ),
+          });
+          return new Response("sheet-bytes");
+        }
+        if (String(url).startsWith("https://files.example/upload")) {
+          uploads.push(init.body);
+          return new Response("OK");
+        }
+        if (String(url).endsWith("/files.getUploadURLExternal"))
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              upload_url: "https://files.example/upload/1",
+              file_id: "F9",
+            }),
+          );
+        return plain(url, init);
+      }) as typeof globalThis.fetch,
+    },
+  );
+  bot.start();
+  await until(() => sockets.length === 1);
+  sockets[0].say({
+    envelope_id: "e1",
+    type: "events_api",
+    payload: {
+      event: {
+        type: "message",
+        subtype: "file_share",
+        channel_type: "im",
+        channel: "D1",
+        user: "U1",
+        ts: "1.1",
+        text: "",
+        files: [
+          {
+            name: "budget.xlsx",
+            size: 11,
+            mimetype: "application/vnd.ms-excel",
+            url_private_download: "https://files.slack.example/budget.xlsx",
+          },
+        ],
+      },
+    },
+  });
+  await until(() => heard.length === 1);
+  const [file] = heard[0].files ?? [];
+  assert.equal(file.name, "budget.xlsx");
+  assert.equal(new TextDecoder().decode(await file.fetch()), "sheet-bytes");
+  assert.deepEqual(fetched[0], {
+    url: "https://files.slack.example/budget.xlsx",
+    auth: "Bearer xoxb-bot",
+  });
+
+  await bot.sendFile("D1", {
+    name: "quote.csv",
+    type: "text/csv",
+    bytes: new TextEncoder().encode("a,b"),
+  });
+  assert.equal(uploads.length, 1);
+  assert.deepEqual(
+    slack.calls.find((c) => c.method === "files.completeUploadExternal")?.body,
+    {
+      files: [{ id: "F9", title: "quote.csv" }],
+      channel_id: "D1",
+    },
+  );
+  bot.stop();
+});

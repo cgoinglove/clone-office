@@ -5,7 +5,15 @@
 // (manifest.ts), which asks for exactly the scopes used here.
 
 import type { Bot } from "./bridge.ts";
-import type { Choice, Listener, Person, Press, Socket } from "./discord.ts";
+import type {
+  Choice,
+  IncomingFile,
+  Listener,
+  OutgoingFile,
+  Person,
+  Press,
+  Socket,
+} from "./discord.ts";
 import { pieces, slackMrkdwn } from "./text.ts";
 
 const API = "https://slack.com/api";
@@ -48,6 +56,12 @@ interface SlackEvent {
   text?: string;
   ts?: string;
   thread_ts?: string;
+  files?: {
+    name?: string;
+    size?: number;
+    mimetype?: string;
+    url_private_download?: string;
+  }[];
 }
 
 export class SlackBot implements Bot {
@@ -172,10 +186,32 @@ export class SlackBot implements Bot {
     if (frame.type === "events_api") {
       const event = (payload.event ?? {}) as SlackEvent;
       if (event.type !== "message" || event.channel_type !== "im") return;
-      // People's own words only: not the app's, not an edit or a join.
-      if (event.subtype || event.bot_id || !event.user || !event.channel)
-        return;
+      // People's own words and files only: not the app's, not an edit or a join.
+      const plain = !event.subtype || event.subtype === "file_share";
+      if (!plain || event.bot_id || !event.user || !event.channel) return;
       const { user, channel } = event;
+      const files: IncomingFile[] = (event.files ?? []).flatMap((file) => {
+        const url = file.url_private_download;
+        if (!url) return [];
+        return [
+          {
+            name: file.name ?? "file",
+            size: file.size,
+            type: file.mimetype,
+            // Slack's files are the workspace's: fetched with the bot's own token.
+            fetch: async () => {
+              const response = await this.request(url, {
+                headers: { authorization: `Bearer ${this.token}` },
+              });
+              if (!response.ok)
+                throw new Error(
+                  `Slack answered ${response.status} for a file.`,
+                );
+              return new Uint8Array(await response.arrayBuffer());
+            },
+          },
+        ];
+      });
       void this.name(user).then((name) =>
         this.listener.message?.({
           id: event.ts ?? "",
@@ -186,6 +222,7 @@ export class SlackBot implements Bot {
           ...(event.thread_ts && event.thread_ts !== event.ts
             ? { replyTo: event.thread_ts }
             : {}),
+          ...(files.length ? { files } : {}),
         }),
       );
       return;
@@ -346,6 +383,36 @@ export class SlackBot implements Bot {
       text: `${press.message.text.slice(0, MAX_TEXT - after.length)}${after}`,
       blocks: [],
     }).catch(() => {});
+  }
+
+  /** A file of ours: an upload address from Slack, the bytes, then the file posted in the channel. */
+  async sendFile(channel: string, file: OutgoingFile): Promise<void> {
+    const asked = await this.request(`${API}/files.getUploadURLExternal`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${this.token}` },
+      body: new URLSearchParams({
+        filename: file.name,
+        length: String(file.bytes.byteLength),
+      }),
+    });
+    const slot = (await asked.json().catch(() => ({}))) as {
+      ok?: boolean;
+      error?: string;
+      upload_url?: string;
+      file_id?: string;
+    };
+    if (!slot.ok || !slot.upload_url || !slot.file_id)
+      throw new SlackError(slot.error ?? `http_${asked.status}`);
+    const put = await this.request(slot.upload_url, {
+      method: "POST",
+      body: new Blob([file.bytes as BlobPart], { type: file.type }),
+    });
+    // Completed anyway, it would post a file with nothing in it.
+    if (!put.ok) throw new SlackError(`http_${put.status}`);
+    await this.call("files.completeUploadExternal", {
+      files: [{ id: slot.file_id, title: file.name }],
+      channel_id: channel,
+    });
   }
 
   /** The direct conversation with a person, to write to them first. */

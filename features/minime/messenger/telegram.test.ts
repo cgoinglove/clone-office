@@ -293,3 +293,95 @@ test("another program reading the same bot is said while it lasts", async () => 
   assert.deepEqual(troubles, ["messenger-telegram-taken", undefined]);
   bot.stop();
 });
+
+test("a document or photo comes with its caption and is fetched when wanted; a file of ours goes as a document", async () => {
+  const telegram = fakeTelegram();
+  const heard: Incoming[] = [];
+  const plain = telegram.fetch;
+  const downloads: string[] = [];
+  const bodies: unknown[] = [];
+  const bot = new TelegramBot(
+    "123:token",
+    { message: (message) => heard.push(message) },
+    {
+      fetch: (async (url: string, init: RequestInit) => {
+        if (String(url).includes("/file/bot123:token/")) {
+          downloads.push(String(url));
+          return new Response("pdf-bytes");
+        }
+        if (String(url).endsWith("/getFile"))
+          return new Response(
+            JSON.stringify({
+              ok: true,
+              result: { file_path: "documents/file_7.pdf" },
+            }),
+          );
+        if (String(url).endsWith("/sendDocument")) {
+          bodies.push(init.body);
+          return new Response(
+            JSON.stringify({ ok: true, result: { message_id: 9 } }),
+          );
+        }
+        return plain(url, init);
+      }) as typeof globalThis.fetch,
+      pollSeconds: 1,
+    },
+  );
+  bot.start();
+  telegram.push([
+    {
+      update_id: 20,
+      message: {
+        message_id: 7,
+        from: ana,
+        chat: { id: 7, type: "private" },
+        caption: "Can you read this?",
+        document: {
+          file_id: "F1",
+          file_name: "contract.pdf",
+          file_size: 9,
+          mime_type: "application/pdf",
+        },
+      },
+    },
+    {
+      update_id: 21,
+      message: {
+        message_id: 8,
+        from: ana,
+        chat: { id: 7, type: "private" },
+        photo: [
+          { file_id: "small", file_size: 1 },
+          { file_id: "large", file_size: 4 },
+        ],
+      },
+    },
+  ]);
+  await until(() => heard.length === 2);
+  assert.equal(heard[0].text, "Can you read this?");
+  assert.deepEqual(
+    heard[0].files?.map((f) => [f.name, f.size]),
+    [["contract.pdf", 9]],
+  );
+  assert.equal(
+    new TextDecoder().decode(
+      await (heard[0].files?.[0].fetch() as Promise<Uint8Array>),
+    ),
+    "pdf-bytes",
+  );
+  assert.match(downloads[0], /\/file\/bot123:token\/documents\/file_7\.pdf$/);
+  assert.deepEqual(
+    heard[1].files?.map((f) => [f.name, f.size]),
+    [["photo-8.jpg", 4]],
+    "the largest size",
+  );
+  await bot.sendFile("7", {
+    name: "quote.csv",
+    type: "text/csv",
+    bytes: new TextEncoder().encode("a,b"),
+  });
+  const form = bodies[0] as FormData;
+  assert.equal(form.get("chat_id"), "7");
+  assert.equal((form.get("document") as File).name, "quote.csv");
+  bot.stop();
+});

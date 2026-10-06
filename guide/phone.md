@@ -21,7 +21,7 @@ With Slack (in a workspace where they may add an app):
 
 1. At api.slack.com/apps: Create New App, From a manifest, their workspace, and the manifest the
    page copies (**Copy the manifest**, 매니페스트 복사). It asks only for what the mini-me uses:
-   its Messages tab, writing there first, and the person's name.
+   its Messages tab, writing there first, the person's name, and files sent there both ways.
 2. Basic Information, App-Level Tokens: one with connections:write (it starts with xapp-).
 3. Install App to the workspace, and the Bot User OAuth Token (it starts with xoxb-). Both tokens
    go on the page, in either box, and **Connect** (연결하기).
@@ -49,6 +49,15 @@ They write as they would on the page. When the mini-me needs something from them
 file, which of two options), it asks with buttons; they press one, or answer a question in their
 own words. "/new" starts a new conversation. The app keeps the bot's token on their computer
 only, in a settings file only they can read.
+
+## Files
+
+A photo or a document they send the bot is kept on their computer (in `messenger/files/` in the
+mini-me's folder, a folder a day, up to 25 MB each), and the mini-me reads it: "what does this
+receipt say?", "send this to Minsu". Only the person let in is taken from; a stranger's file is
+never fetched. A file that comes with a colleague's answer to something asked from the phone
+comes to the phone too (up to 10 MB, which Discord takes from a bot); a larger one stays on the
+computer, named in the message.
 
 ## What comes to the phone by itself
 
