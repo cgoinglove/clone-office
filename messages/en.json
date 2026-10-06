@@ -45,7 +45,16 @@
     "file-not-found": "That file is not there any more.",
     "file-left-out": "That file is in a folder you keep out, so it does not leave this computer.",
     "files-full": "The office keeps no more files for now. Older ones go after two weeks.",
-    "file-missing": "That file is no longer at the office (files are kept two weeks)."
+    "file-missing": "That file is no longer at the office (files are kept two weeks).",
+    "connector-unknown": "There is no such connector.",
+    "connector-needs-client": "Google needs your team's OAuth client first.",
+    "connector-unreachable": "The service's sign-in could not be reached. Try again in a moment.",
+    "connector-refused": "The service did not accept it. Try connecting again.",
+    "connector-expired": "That sign-in was started too long ago. Connect again.",
+    "connector-signed-out": "The connection ran out. Connect again.",
+    "connector-token": "This one takes a personal token.",
+    "connector-token-wrong": "That does not look like a token.",
+    "connector-client-wrong": "That is not an OAuth client: give its client ID (and secret), or the JSON file."
   },
   "firstRun": {
     "title": "My mini-me",
@@ -181,7 +190,8 @@
       "pause": "Pause a flow",
       "resume": "Resume a flow",
       "remove": "Remove a flow"
-    }
+    },
+    "connector": "Use {service}: {tool}"
   },
   "office": {
     "title": "Office",
@@ -529,6 +539,62 @@
       "step4": "In Slack, open your app under Apps and write in its Messages tab. A question with a code appears here.",
       "addBot": "Open the app in Slack",
       "scan": "Or point your phone's camera at this."
+    }
+  },
+  "connectors": {
+    "title": "Connectors",
+    "intro": "Let your mini-me work in Notion, Google, GitHub and more, through each service's own MCP server. It asks you before it uses one, until you let a kind of action go on alone. What you connect stays on this computer.",
+    "connect": "Connect",
+    "connecting": "Approve it in the tab that opened…",
+    "connected": "Connected",
+    "disconnect": "Disconnect",
+    "token": "Personal token",
+    "tokenPlaceholder": "Paste the token",
+    "save": "Save",
+    "makeToken": "Make a token",
+    "docs": "About it",
+    "does": {
+      "notion": "Pages and databases",
+      "linear": "Issues and projects",
+      "atlassian": "Jira issues and Confluence pages",
+      "github": "Repositories, issues and pull requests",
+      "gmail": "Search and read mail, write drafts",
+      "calendar": "Calendars and events, to read",
+      "drive": "Find and read files",
+      "docs": "Read and write documents",
+      "sheets": "Read and write spreadsheets"
+    },
+    "google": {
+      "title": "Google",
+      "needsClient": "Google wants an OAuth client registered for your team first. Someone on the team does it once in Google Cloud; then everyone connects their own account.",
+      "preview": "Google's MCP servers are still in developer preview: whoever registers the client needs a Google Workspace account that joined Google's preview program.",
+      "setUp": "Register the client",
+      "steps": {
+        "preview": "With your Google Workspace account, join Google's <link>Workspace Developer Preview Program</link>. Google answers within a couple of days.",
+        "apis": "<link>Turn on the APIs</link> in a Google Cloud project (pick one or make one): Gmail, Calendar, Drive, Docs and Sheets, with their MCP servers.",
+        "branding": "In <link>Branding</link>, give the app a name such as sub-office; in <audience>Audience</audience>, choose Internal.",
+        "scopes": "In <link>Data Access</link>, press Add or remove scopes and paste these where it says Manually add scopes:",
+        "client": "<link>Create a client</link> of the type Desktop app, then press Download JSON.",
+        "file": "Choose that file here."
+      },
+      "copyScopes": "Copy the scopes",
+      "copied": "Copied",
+      "webClient": "A Web application client works too, with this address among its Authorized redirect URIs:",
+      "chooseFile": "Choose the JSON file",
+      "typeIt": "Or type its client ID and secret",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret",
+      "forTeam": "For everyone in the office",
+      "byTeam": "Registered for the office by {name}",
+      "byTeamNoName": "Registered for the office",
+      "own": "Your own client",
+      "forget": "Remove the client"
+    },
+    "callback": {
+      "done": "{name} is connected. Your mini-me can work there now.",
+      "declined": "The sign-in did not finish.",
+      "failed": "The service did not accept the sign-in. Try again from your page.",
+      "close": "You can close this tab."
     }
   }
 }

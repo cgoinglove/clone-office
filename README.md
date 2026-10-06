@@ -46,7 +46,12 @@ leaves each decision with the person it belongs to.
 - **From your phone.** Talk with your mini-me from Discord, Telegram or Slack as you do on its
   page, through a bot of your own that answers only you; its questions come as buttons. While you
   are away from its page, what needs you comes there by itself: a colleague's question, your
-  morning brief, the answer to what you asked. Tried against stand-ins so far, not yet a real bot.
+  morning brief, the answer to what you asked. Tried with a real Discord bot; Telegram and Slack
+  against stand-ins so far.
+- **It works in your services.** Notion, Linear, Jira and Confluence, GitHub, and Google's Gmail,
+  Calendar, Drive, Docs and Sheets, through each service's own MCP server, signed in as you and
+  asking before each kind of action. Most connect with one approval; for Google, someone on the
+  team registers a client once and everyone connects their own account.
 - **Flows.** "Every weekday at 9, catch me up." "When someone asks about the payments API, end with
   a pointer to #payments-api." You ask; it shows you the flow on a card before making it.
 - **For developers:** with the Claude Code plugin, your teammates' mini-mes are tools in your
@@ -119,5 +124,5 @@ publishing it.
 
 ## Status
 
-Early, in local development. Coming next: mail, calendar and documents as its hands; a desktop
-app for people who don't code.
+Early, in local development. Coming next: the browser as its hands; a desktop app for people who
+don't code.

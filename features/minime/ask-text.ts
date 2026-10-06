@@ -2,6 +2,7 @@
 // person's messenger. Plain functions over a translator, so the server can use them too.
 
 import type { useTranslations } from "next-intl";
+import { connectorOfTool } from "./connectors/catalog.ts";
 import {
   askedWhen,
   type DateFormat,
@@ -29,6 +30,13 @@ export function describe(
       : "update";
     return t(`flow.${action}` as Parameters<AskWords>[0]);
   }
+  // A connected service's tool: the service by its name, and the tool's own.
+  const service = connectorOfTool(tool);
+  if (service)
+    return t("connector", {
+      service: service.connector.name,
+      tool: service.tool,
+    });
   const key = `doing.${tool}` as Parameters<AskWords>[0];
   const what = t.has(key) ? t(key) : tool;
   const on =
@@ -80,6 +88,14 @@ export function changeOf(
     return clipLines(input.content, 12);
   if (tool === "Bash" && typeof input.command === "string")
     return `$ ${input.command}`;
+  // What a connected service's tool would be given, each value on its line.
+  if (connectorOfTool(tool)) {
+    const lines = Object.entries(input).map(([key, value]) => {
+      const shown = typeof value === "string" ? value : JSON.stringify(value);
+      return `${key}: ${shown.length > 200 ? `${shown.slice(0, 200)}…` : shown}`;
+    });
+    return lines.length ? clipLines(lines.join("\n"), 12) : undefined;
+  }
   // Files that would leave this computer with a request: each one, by where it is.
   if (Array.isArray(input.files) && input.files.length)
     return input.files

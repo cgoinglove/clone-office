@@ -11,6 +11,8 @@ import { randomUUID } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
+import type { Connector } from "../connectors/catalog.ts";
+import { connectedConnectors } from "../connectors/oauth.ts";
 import { ASKABLE_TOOLS, TRUSTED_FROM_START } from "../gate/rules.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
 import { NoteStore } from "../memory/notes.ts";
@@ -19,7 +21,12 @@ import { MemoryStore, type Target } from "../memory/store.ts";
 import { MEMORY_GUIDANCE } from "../memory/tool.ts";
 import { keepAwake } from "../server/awake.ts";
 import { claudeCommand, cleanEnv, defaultModel } from "../server/brain.ts";
-import { appDir, minimeHome, toolServerPath } from "../server/paths.ts";
+import {
+  appDir,
+  connectorHeadersPath,
+  minimeHome,
+  toolServerPath,
+} from "../server/paths.ts";
 import { logRun } from "./runlog.ts";
 
 export function memoryDir(): string {
@@ -129,6 +136,12 @@ export interface SessionOptions {
    * do alone, and everything else is refused rather than asked.
    */
   standing?: { allow: string[]; deny: string[] };
+  /**
+   * The person's own work (their conversation, a flow): the services they connected are reached
+   * too (connectors/), each tool asked first unless they allowed it. Never for a colleague's
+   * request, so what is in their mail or documents does not go out to colleagues by itself.
+   */
+  connectors?: boolean;
   onEvent?: (event: SessionEvent) => void;
 }
 
@@ -221,9 +234,29 @@ interface StreamEvent {
   };
 }
 
-function mcpConfig(actor: "minime" | "review", gate?: SessionGate): string {
+/** A command as a shell reads it, its paths quoted (POSIX shells and Windows' alike). */
+const quoted = (path: string) => `"${path.replace(/"/g, '\\"')}"`;
+
+/** The session's MCP servers: its own tools, and the services the person connected. */
+export function mcpConfig(
+  actor: "minime" | "review",
+  gate?: SessionGate,
+  connectors: Connector[] = [],
+): string {
   return JSON.stringify({
     mcpServers: {
+      // Each service the person connected, its token handed over fresh at every connection
+      // (connectors/headers.ts), never written into the session's arguments.
+      ...Object.fromEntries(
+        connectors.map((entry) => [
+          entry.id,
+          {
+            type: "http",
+            url: entry.url,
+            headersHelper: `${quoted(process.execPath)} --no-warnings ${quoted(connectorHeadersPath())} ${entry.id}`,
+          },
+        ]),
+      ),
       minime: {
         command: process.execPath,
         // Node runs the TypeScript server as is (bundled in the package); warnings would only
@@ -296,7 +329,13 @@ export async function runSession(
     "--setting-sources",
     "project",
     "--mcp-config",
-    mcpConfig(actor, gate),
+    mcpConfig(
+      actor,
+      gate,
+      options.connectors && actor === "minime"
+        ? await connectedConnectors().catch(() => [])
+        : [],
+    ),
     "--strict-mcp-config",
     "--tools",
     gate || standing ? ASKABLE_TOOLS.join(",") : "",
@@ -322,6 +361,8 @@ export async function runSession(
   ];
   return new Promise((resolve) => {
     const env = cleanEnv();
+    // The helpers it starts (a service's token) find the same mini-me.
+    env.SUB_OFFICE_HOME = home;
     // A question to the person may wait up to ten minutes inside one tool call.
     if (gate) env.MCP_TOOL_TIMEOUT = String(11 * 60 * 1000);
     const child = spawn(command.file, [...command.prefix, ...args], {

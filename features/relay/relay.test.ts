@@ -370,3 +370,32 @@ test("over HTTP: a file is put with its name, named on a request, and taken with
     await new Promise((resolve) => server.close(resolve));
   }
 });
+
+test("an office keeps a vendor's OAuth client for all its members, with who set it; other offices never see it", async () => {
+  const ana = await join("Ana S");
+  const ben = await join("Ben S");
+  await relay.office("other-key");
+  const eve = await join("Eve S", "other-key");
+  await assert.rejects(
+    relay.teamSetting(ana, "anything"),
+    /Not an office setting/,
+  );
+  assert.equal(await relay.teamSetting(ana, "connector:google"), undefined);
+  await relay.setTeamSetting(ana, "connector:google", {
+    client_id: "c.apps.googleusercontent.com",
+    client_secret: "s",
+  });
+  const seen = await relay.teamSetting(ben, "connector:google");
+  assert.deepEqual(seen?.value, {
+    client_id: "c.apps.googleusercontent.com",
+    client_secret: "s",
+  });
+  assert.equal(seen?.by, ana.id);
+  assert.equal(
+    await relay.teamSetting(eve, "connector:google"),
+    undefined,
+    "another office's",
+  );
+  await relay.setTeamSetting(ben, "connector:google", null);
+  assert.equal(await relay.teamSetting(ana, "connector:google"), undefined);
+});

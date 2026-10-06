@@ -102,6 +102,7 @@ try {
   for (const [entry, file] of [
     ["features/minime/memory/mcp-server.ts", "mcp-server.mjs"],
     ["features/relay/server.ts", "relay.mjs"],
+    ["features/minime/connectors/headers.ts", "connector-headers.mjs"],
   ])
     await build({
       entryPoints: [join(source, entry)],

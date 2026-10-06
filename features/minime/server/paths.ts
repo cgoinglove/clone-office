@@ -43,6 +43,23 @@ export function toolServerPath(): string {
       );
 }
 
+/** What hands a session's connection to a service its token (connectors/headers.ts). */
+export function connectorHeadersPath(): string {
+  return process.env.SUB_OFFICE_APP_DIR
+    ? join(
+        /*turbopackIgnore: true*/ process.env.SUB_OFFICE_APP_DIR,
+        "dist",
+        "connector-headers.mjs",
+      )
+    : join(
+        /*turbopackIgnore: true*/ process.cwd(),
+        "features",
+        "minime",
+        "connectors",
+        "headers.ts",
+      );
+}
+
 /** The relay's server, for an office opened on this computer: bundled in the package, or the source. */
 export function relayServerPath(): string {
   return process.env.SUB_OFFICE_APP_DIR

@@ -162,6 +162,7 @@ export async function runTurn(options: {
       maxTurns: 16,
       purpose: "task",
       gate,
+      connectors: true,
       onEvent,
     });
     if (!result.ok && session && !result.text) {
@@ -172,6 +173,7 @@ export async function runTurn(options: {
         maxTurns: 16,
         purpose: "task",
         gate,
+        connectors: true,
         onEvent,
       });
     }

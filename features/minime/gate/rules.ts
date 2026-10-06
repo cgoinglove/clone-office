@@ -6,6 +6,7 @@
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, sep } from "node:path";
+import { connectorOfTool } from "../connectors/catalog.ts";
 import { withLock } from "../memory/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
@@ -80,7 +81,8 @@ export function ruleFor(
   // The mini-me's own tools that reach out, such as asking a colleague: the tool itself. Files
   // leaving this computer are asked every time.
   if (Array.isArray(input.files) && input.files.length) return undefined;
-  if (tool.startsWith("mcp__minime__")) return tool;
+  // A connected service's tool, one at a time (as Paperclip allows each action of a connection).
+  if (tool.startsWith("mcp__minime__") || connectorOfTool(tool)) return tool;
   return undefined;
 }
 

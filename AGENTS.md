@@ -170,7 +170,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   machine with Docker. Members join with the office key and then use their own token; a mini-me
   waits at its inbox (long polling) because it sits on a personal computer out of reach. Shapes follow
   A2A v1.0.0: an AgentCard per member, a Task per request with a contextId, Messages with roles
-  user/agent and text parts, A2A's task states. It keeps only cards and requests. Someone without a
+  user/agent and text parts, A2A's task states. It keeps only cards and requests, their files, and
+  a few settings an office shares (`/settings/:name`: the OAuth client a vendor wants registered
+  once for the team, `connector:<vendor>`, which any member sets and all read). Someone without a
   mini-me is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
   the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,
   for two weeks or until answered); the answer reaches the asker like any other. An invite is one
@@ -262,6 +264,25 @@ These words help discussion. They do not mandate separate services, tables or UI
   refused, never cut, so what was approved is what is kept), `when-text.ts` (a schedule in the
   person's language, as it would be kept, for the page and the phone). The page's part is `features/minime/flows-panel.tsx`
   with the route `app/api/me/flows`.
+- `features/minime/connectors/`: the services the mini-me works in, each through its vendor's own
+  remote MCP server (Hermes Agent's catalog, Claude Code's remote servers). `catalog.ts` lists them
+  and how each is signed in to: `oauth` (the server registers this app itself, dynamic client
+  registration: Notion, Linear, Atlassian), `team-oauth` (Google wants a client registered first,
+  with the APIs and scopes the page asks the team to turn on), `token` (GitHub's personal token).
+  `oauth.ts` signs in with the MCP SDK's own steps (discovery, registration, PKCE, RFC 8707
+  resource except for Google, which is asked for offline access), takes the code back at
+  `app/api/me/connectors/callback` (reached by the browser, by the Host it used) and refreshes an
+  access token under a lock before it runs out; `store.ts` keeps each service's client, sign-in
+  place and tokens in `connectors/<id>.json` (0600) and a sign-in under way for ten minutes;
+  `team.ts` takes the Google client from the office (the relay's `office_settings`,
+  `connector:google`, set by any member, shown with who set it) or else the person's own
+  (`settings.json` `connectors.clients`). A session reaches the connected services only for the
+  person's own work (`runSession` `connectors`: conversations and flows, never a colleague's
+  request): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
+  (`dist/connector-headers.mjs` in the package) for a fresh token, so no token is in the
+  arguments, and each tool is asked through the gate (`rules.ts` `ruleFor` makes "from now on" a
+  rule for that one tool). The page's part is `features/minime/connectors-panel.tsx` with the
+  route `app/api/me/connectors`.
 - `features/minime/messenger/`: the mini-me in the person's messenger, Discord, Telegram or Slack,
   one at a time (after Thursday's `features/reach/` and Hermes Agent's gateway). `discord.ts` is a bot
   with no dependencies: the gateway over Node's own WebSocket (direct messages only, no privileged

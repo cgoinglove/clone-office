@@ -141,6 +141,30 @@ export function tasks(office: OfficeConfig): Promise<{ tasks: Task[] }> {
   return call(office.relay, "/tasks", { token: office.token });
 }
 
+/** Something the office keeps for all its members (a vendor's OAuth client), with who set it. */
+export async function teamSetting(
+  office: OfficeConfig,
+  name: string,
+): Promise<{ value: unknown; by: string; updated: string } | undefined> {
+  const { setting } = await call<{
+    setting: { value: unknown; by: string; updated: string } | null;
+  }>(office.relay, `/settings/${encodeURIComponent(name)}`, {
+    token: office.token,
+  });
+  return setting ?? undefined;
+}
+
+export async function setTeamSetting(
+  office: OfficeConfig,
+  name: string,
+  value: unknown,
+): Promise<void> {
+  await call(office.relay, `/settings/${encodeURIComponent(name)}`, {
+    token: office.token,
+    body: { value },
+  });
+}
+
 /** One request this mini-me sent or was asked. */
 export async function task(office: OfficeConfig, id: string): Promise<Task> {
   return (

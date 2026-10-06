@@ -63,6 +63,7 @@ export async function runFlow(
     maxTurns: 12,
     timeoutMs: 5 * 60 * 1000,
     purpose: "flow",
+    connectors: true,
     standing: {
       allow: await loadTrust(),
       deny: denyRules(loadExcludes()),

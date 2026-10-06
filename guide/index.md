@@ -14,6 +14,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
 | `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's mini-me (also from Claude Code, with the sub-office plugin), answering requests that come in, what goes to the relay and what never does, files between mini-mes |
 | `phone.md` | Talking with the mini-me from Discord, Telegram or Slack on their phone: setting up their own bot, letting their phone in by its code, questions as buttons, what comes to the phone by itself while they are away from the page, when it does not answer |
+| `connectors.md` | Connectors: the services the mini-me works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
 | `flows.md` | Flows: what the mini-me does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
 | `trouble.md` | Claude Code missing or signed out, learning that takes long, something said that is out of date, reading again |
 
@@ -62,4 +63,6 @@ This is an early version, used on the **My mini-me** (내 미니미) page.
 - Keep a folder out of everything it reads and searches when they say so, after a card
   (`reading.md`).
 
-Connecting mail and calendars comes later; say so plainly when asked, rather than promising.
+- Work in the services they connected under **Connectors** (커넥터): Notion, Linear, Jira and
+  Confluence, GitHub, and Google's Gmail, Calendar, Drive, Docs and Sheets, through each one's own
+  MCP server, asking first for each kind of action (`connectors.md`).

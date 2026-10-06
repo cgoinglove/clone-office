@@ -7,6 +7,8 @@
 //   POST /tasks/:id     {state?, text?, files?} -> {task}  a message and the request's new state
 //   POST /files         the file's bytes, its name in X-File-Name -> {file}  to name on a message
 //   GET  /files/:id     the file's bytes, to its owner and the two members of its request
+//   GET  /settings/:name -> {setting}                  what the office keeps for all (a vendor's OAuth client)
+//   POST /settings/:name {value} -> {ok}               set it, or clear it with null
 //   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
@@ -286,6 +288,27 @@ export function relayHandler(
             bytes: await bytes(request),
           }),
         });
+      }
+      let setting: RegExpExecArray | null = null;
+      if (path.startsWith("/settings/"))
+        try {
+          setting = /^\/settings\/(connector:[a-z0-9-]{1,40})$/.exec(
+            decodeURIComponent(path),
+          );
+        } catch {
+          setting = null;
+        }
+      if (setting && request.method === "GET") {
+        const me = await member(request);
+        return send(200, {
+          setting: (await relay.teamSetting(me, setting[1])) ?? null,
+        });
+      }
+      if (setting && request.method === "POST") {
+        const me = await member(request);
+        const input = await body(request);
+        await relay.setTeamSetting(me, setting[1], input.value ?? null);
+        return send(200, { ok: true });
       }
       const file = /^\/files\/([\w-]{4,64})$/.exec(path);
       if (request.method === "GET" && file) {

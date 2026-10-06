@@ -152,7 +152,13 @@ const MIGRATIONS: string[][] = [
     "CREATE INDEX files_office ON files (office_id, expires)",
     "ALTER TABLE messages ADD COLUMN files JSONB NOT NULL DEFAULT '[]'::jsonb",
   ],
+  [
+    "CREATE TABLE office_settings (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, name TEXT NOT NULL, value JSONB NOT NULL, by_member TEXT NOT NULL, updated TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, name))",
+  ],
 ];
+
+/** What an office keeps for all its members: the OAuth client a vendor wants registered first. */
+const TEAM_SETTING = /^connector:[a-z0-9-]{1,40}$/;
 
 // Node runs this file without a build, so no TypeScript-only syntax such as parameter properties.
 // The code is what a mini-me's screen shows in its person's language; the message is for logs.
@@ -413,6 +419,50 @@ export class Relay {
       );
     });
     return { id, name, type, size };
+  }
+
+  /** Something the office keeps for all its members, with who set it and when. */
+  async teamSetting(
+    member: Caller,
+    name: string,
+  ): Promise<{ value: unknown; by: string; updated: string } | undefined> {
+    if (!TEAM_SETTING.test(name))
+      throw new RelayError(400, "Not an office setting.", "bad-request");
+    const [row] = await this.db.query<{
+      value: unknown;
+      by_member: string;
+      updated: unknown;
+    }>(
+      "SELECT value, by_member, updated FROM office_settings WHERE office_id = $1 AND name = $2",
+      [member.office, name],
+    );
+    return row
+      ? { value: row.value, by: row.by_member, updated: iso(row.updated) }
+      : undefined;
+  }
+
+  /** Sets (or, with null, clears) something the office keeps for all its members. */
+  async setTeamSetting(
+    member: Caller,
+    name: string,
+    value: unknown,
+  ): Promise<void> {
+    if (!TEAM_SETTING.test(name))
+      throw new RelayError(400, "Not an office setting.", "bad-request");
+    if (value === null || value === undefined) {
+      await this.db.query(
+        "DELETE FROM office_settings WHERE office_id = $1 AND name = $2",
+        [member.office, name],
+      );
+      return;
+    }
+    const text = JSON.stringify(value);
+    if (text.length > 4000)
+      throw new RelayError(400, "Too large.", "bad-request");
+    await this.db.query(
+      "INSERT INTO office_settings (office_id, name, value, by_member, updated) VALUES ($1, $2, $3::jsonb, $4, $5) ON CONFLICT (office_id, name) DO UPDATE SET value = $3::jsonb, by_member = $4, updated = $5",
+      [member.office, name, text, member.id, new Date().toISOString()],
+    );
   }
 
   /** A file, for the member who put it here or either member of the request it went with. */

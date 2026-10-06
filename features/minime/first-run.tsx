@@ -28,6 +28,7 @@ import { Bot, type Mood } from "@/features/office";
 import { personTag, useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard, type GateAsk } from "./ask-card";
+import { ConnectorsPanel } from "./connectors-panel";
 import { whenText } from "./flows/when-text";
 import { FlowsPanel } from "./flows-panel";
 import { LanguageSwitch } from "./language-switch";
@@ -1254,6 +1255,7 @@ export function FirstRun() {
         />
       )}
       {stage !== "boot" && <MessengerPanel />}
+      {stage !== "boot" && <ConnectorsPanel />}
       {stage !== "boot" && <StoredFiles />}
       {stage !== "boot" && <LanguageSwitch />}
       <div ref={bottom} />
