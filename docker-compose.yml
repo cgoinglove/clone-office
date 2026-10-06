@@ -2,7 +2,8 @@
 # instance, a computer in the office):
 #   POSTGRES_PASSWORD=<letters and digits> docker compose up -d
 #   docker compose logs relay        # the office key, and the addresses to join with
-# RELAY_KEY sets the office key; RELAY_PORT the port people reach it on (3200).
+# RELAY_KEY sets the office key; RELAY_PORT the port people reach it on (3200); RELAY_TRUST_PROXY=1
+# when it sits behind an HTTPS proxy of your own.
 services:
   postgres:
     image: postgres:17-alpine
@@ -25,6 +26,7 @@ services:
     environment:
       DATABASE_URL: postgres://relay:${POSTGRES_PASSWORD}@postgres:5432/relay
       RELAY_KEY: ${RELAY_KEY:-}
+      RELAY_TRUST_PROXY: ${RELAY_TRUST_PROXY:-}
     ports:
       - "${RELAY_PORT:-3200}:3200"
     depends_on:

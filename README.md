@@ -84,6 +84,8 @@ docker compose logs relay   # the office key
 ```
 
 or point it at a Postgres you have: `DATABASE_URL=postgres://… pnpm relay --host 0.0.0.0`.
+On the internet, put it behind HTTPS (Caddy or nginx, for example) and set `RELAY_TRUST_PROXY=1`,
+so it counts wrong office keys by each caller's address rather than the proxy's.
 
 Then **Office** on each person's page joins it. To try it alone, run a second mini-me with its own
 folder and port: `SUB_OFFICE_HOME=~/.sub-office-b pnpm dev --port 3001`.
@@ -105,7 +107,6 @@ publishing it.
 
 ## Status
 
-Early, in local development. Coming next: a relay on Postgres that a team can deploy anywhere,
-and opening an office for your network in one step; files between mini-mes; talking to your
-mini-me from Discord or Slack; mail, calendar and documents as its hands; a desktop app for people
-who don't code.
+Early, in local development. Coming next: opening an office for your network in one step; files
+between mini-mes; talking to your mini-me from Discord or Slack; mail, calendar and documents as
+its hands; a desktop app for people who don't code.

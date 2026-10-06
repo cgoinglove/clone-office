@@ -1,5 +1,5 @@
-// The relay's HTTP side, as one request handler: `server.ts` runs it on its own; another host
-// (a serverless function, a server of one's own) can mount the same handler. Every call but the
+// The relay's HTTP side, as one request handler: `server.ts` runs it on its own, and a server of
+// one's own can mount the same handler. Every call but the
 // link and invite pages carries the member's own token (Authorization: Bearer). Routes:
 //   POST /join          {key, card} -> {id, token}; with a token, updates the card
 //   GET  /members       -> {members}                    the members of one's office

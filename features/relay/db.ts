@@ -4,7 +4,7 @@
 // there is one schema and one set of queries.
 //
 // A relay can run as several processes over one Postgres. They hear each other's news through
-// LISTEN/NOTIFY; where that is not available (a pooler, a serverless host) the inbox also looks
+// LISTEN/NOTIFY; where that is not available (behind a connection pooler) the inbox also looks
 // again every few seconds, so nothing depends on it.
 
 export interface Sql {
