@@ -4,6 +4,8 @@ node_modules/
 # build
 .next/
 .next-package/
+# a second dev server's build (SUB_OFFICE_DEV_DIR)
+.next-*/
 out/
 dist/
 *.tsbuildinfo

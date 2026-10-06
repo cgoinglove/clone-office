@@ -54,6 +54,7 @@ import {
   withOv,
 } from "./core.mjs";
 import { buildGrid, FXD, findPath, planFloor, WALL_H, ZA } from "./floor.mjs";
+import { looksOf } from "./looks.mjs";
 import {
   armchairSvg,
   chairSvg,
@@ -109,51 +110,9 @@ const SEAT_Z = 4,
   PACE = 32,
   STEP = 4.6,
   STOREYS = 5;
-/** Each colleague's mini-me wears a colour of its own; the viewer's is the ink. */
-const PALETTE = [
-  "#10a65a",
-  "#8B5CF6",
-  "#EC4899",
-  "#0098dc",
-  "#6366F1",
-  "#00a190",
-  "#5ca100",
-  "#D946EF",
-  "#14B8A6",
-];
-const SHAPE_KEYS = [
-  "b7",
-  "b23",
-  "b41",
-  "b58",
-  "b77",
-  "b90",
-  "b7",
-  "squircle",
-  "b41",
-];
 const OPEN = new Set(["SUBMITTED", "WORKING"]);
 const ANSWERED = new Set(["COMPLETED", "INPUT_REQUIRED", "REJECTED"]);
 
-/**
- * A colour, a shape and sometimes one of Thursday's paints. The colour goes by place in the relay's
- * list of members, so a small team's are all different and everyone sees the same colour on the
- * same colleague; the viewer's own is the ink.
- */
-export function looksOf(p, index = 0) {
-  if (p.mine) return { color: "system", shape: "b113", paint: null };
-  const h = hashStr(p.id),
-    k = h % 13,
-    paint = k === 5 ? "rainbow" : k === 9 ? "duo" : null;
-  return {
-    color: PALETTE[index % PALETTE.length],
-    shape:
-      paint === "rainbow" && (h >>> 9) % 2
-        ? "heart"
-        : SHAPE_KEYS[(h >>> 4) % SHAPE_KEYS.length],
-    paint,
-  };
-}
 const clip = (s, n) => {
   const t = String(s || "")
     .replace(/\s+/g, " ")
@@ -206,9 +165,20 @@ function lobbyMarkup(W) {
  * `destroy()` when it leaves the page. `words` are the screen's language; `onAnswer` opens what
  * waits for the viewer, `onAsk(text)` hands a request to their mini-me.
  */
+export { looksOf };
+
 export function createOffice(
   root,
-  { words, locale, onAnswer, onAsk, lobby = false, onClockIn, fps = 60 },
+  {
+    words,
+    locale,
+    onAnswer,
+    onAsk,
+    lobby = false,
+    onClockIn,
+    onPanel,
+    fps = 60,
+  },
 ) {
   const W = words,
     HALF = fps === 30;
@@ -286,7 +256,11 @@ export function createOffice(
     panelKey = "",
     hover = null,
     userMoved = false,
-    boardOn = false;
+    boardOn = false,
+    /** Room kept clear at the sides for what the page lays over the office (a panel, a column). */
+    insetR = 0,
+    insetL = 0,
+    panelShown = false;
   let staticObjs = [],
     sceneOrder = [],
     decision = null,
@@ -1994,7 +1968,7 @@ export function createOffice(
       ),
       narrow()
         ? { t: 48, b: onAsk ? 140 : 70, l: 10, r: 10 }
-        : { t: 44, b: 84, l: 16, r: 16 },
+        : { t: 44, b: 84, l: 16 + insetL, r: 16 + insetR },
     );
   /** The scoreboard, as large as it fits. */
   const boardView = () => {
@@ -2003,7 +1977,7 @@ export function createOffice(
       [r[0] - 30, r[1] - 30, r[2] + 30, r[3] + 10],
       narrow()
         ? { t: 56, b: onAsk ? 150 : 80, l: 8, r: 8 }
-        : { t: 56, b: 96, l: 40, r: 40 },
+        : { t: 56, b: 96, l: 40 + insetL, r: 40 + insetR },
       2.6,
     );
   };
@@ -2011,7 +1985,9 @@ export function createOffice(
     const d = p.desk;
     return viewFor(
       [d.px, d.py, d.px + PW, d.py + PD, 0, 24],
-      !narrow() ? { r: 360, t: 70, b: 110 } : { b: Math.round(ch * 0.56) + 20 },
+      !narrow()
+        ? { r: Math.max(360, insetR + 40), t: 70, b: 110 }
+        : { b: Math.round(ch * 0.56) + 20 },
       1.5,
     );
   };
@@ -2019,6 +1995,10 @@ export function createOffice(
   // ---- the panel beside the office for one person
   function openPanel(p) {
     panel.hidden = false;
+    if (!panelShown) {
+      panelShown = true;
+      onPanel?.(true);
+    }
     panelKey = "";
     unmountBot(panelRec);
     panel.innerHTML = `<header><span class="pb"></span><div><b></b><span></span></div><button type="button" class="x" aria-label="${esc(W.panel.close)}">${ICON.close}</button></header><div class="pbody"></div>`;
@@ -2040,6 +2020,10 @@ export function createOffice(
   }
   function closePanel() {
     panel.hidden = true;
+    if (panelShown) {
+      panelShown = false;
+      onPanel?.(false);
+    }
     unmountBot(panelRec);
     panelRec = null;
   }
@@ -3387,6 +3371,19 @@ export function createOffice(
     update(next) {
       update(next);
       suggest(next.people);
+    },
+    setInset(right, left = 0) {
+      const nextR = Math.max(0, Math.round(right || 0)),
+        nextL = Math.max(0, Math.round(left || 0));
+      if (nextR === insetR && nextL === insetL) return;
+      insetR = nextR;
+      insetL = nextL;
+      if (!plan || lobbyOn || !opened || destroyed) return;
+      glide(focus ? deskView(focus) : boardOn ? boardView() : floorView(), 650);
+    },
+    closePanel() {
+      if (panel.hidden) return;
+      closeFocus();
     },
     destroy() {
       destroyed = true;

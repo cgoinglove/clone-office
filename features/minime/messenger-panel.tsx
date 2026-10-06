@@ -6,12 +6,14 @@
 // a Slack app from the manifest); this panel walks through it in a few steps, the way Thursday's
 // reach guide does, and asks about whoever wrote to the bot first.
 
+import { Hash } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { encode } from "uqr";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
+import { BrandMark } from "@/features/brand/brand-mark";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { SLACK_MANIFEST } from "./messenger/manifest";
@@ -39,6 +41,12 @@ const SERVICES: Record<Service, { name: string; portal: string }> = {
   telegram: { name: "Telegram", portal: "https://t.me/BotFather" },
   slack: { name: "Slack", portal: "https://api.slack.com/apps" },
 };
+
+/** The messenger's own mark; Slack's is not in the sets this app draws from, so a hash stands in. */
+function ServiceMark({ service }: { service: Service }) {
+  if (service === "slack") return <Hash className="size-3.5" aria-hidden />;
+  return <BrandMark id={service} className="size-3.5" />;
+}
 
 /** The chat with the bot, big enough for a phone camera to read off the screen (as Thursday's reach guide draws it). */
 function Scan({ link, label }: { link: string; label: string }) {
@@ -77,7 +85,8 @@ export function MessengerPanel() {
   const t = useTranslations("messenger");
   const problemText = useProblem();
   const [status, setStatus] = useState<Status | null>(null);
-  const [open, setOpen] = useState(false);
+  // Shown in settings: it looks again while someone waits to be let in.
+  const open = true;
   const [token, setToken] = useState("");
   const [service, setService] = useState<Service>("discord");
   const [appToken, setAppToken] = useState("");
@@ -130,27 +139,8 @@ export function MessengerPanel() {
   const using = status?.service ?? service;
 
   return (
-    <details
-      className="rounded-xl border border-border p-4 text-sm"
-      onToggle={(event) =>
-        setOpen((event.currentTarget as HTMLDetailsElement).open)
-      }
-    >
-      <summary className="cursor-pointer font-medium">
-        {t("title")}
-        {status?.owner && (
-          <span className="ml-2 text-muted-foreground">
-            {SERVICES[using].name}
-          </span>
-        )}
-        {asking && (
-          <span className="ml-2 text-xs font-medium text-waiting tabular-nums">
-            {asking.code}
-          </span>
-        )}
-      </summary>
-      <div className="mt-3 flex flex-col gap-3">
-        <p className="text-muted-foreground">{t("intro")}</p>
+    <div className="flex flex-col gap-3 text-sm">
+      <div className="flex flex-col gap-3">
         {status && !status.configured && (
           <form
             className="flex flex-col gap-3"
@@ -179,7 +169,12 @@ export function MessengerPanel() {
               options={(["discord", "telegram", "slack"] as const).map(
                 (value) => ({
                   value,
-                  label: SERVICES[value].name,
+                  label: (
+                    <span className="flex items-center gap-1.5">
+                      <ServiceMark service={value} />
+                      {SERVICES[value].name}
+                    </span>
+                  ),
                 }),
               )}
             />
@@ -366,6 +361,6 @@ export function MessengerPanel() {
         )}
         {problem && <p className="text-destructive">{problemText(problem)}</p>}
       </div>
-    </details>
+    </div>
   );
 }

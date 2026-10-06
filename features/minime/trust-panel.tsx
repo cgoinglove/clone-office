@@ -1,10 +1,10 @@
 "use client";
 
-// What the person let their mini-me do without asking: each "Don't ask again for this" they ticked
+// Settings › Permissions: what the person let their clone do without asking: each "Don't ask again for this" they ticked
 // on a card, in their words, and taking one back (gate/rules.ts keeps them).
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ruleText } from "./ask-text";
 
@@ -21,6 +21,10 @@ export function TrustPanel() {
       .then((r) => r.json())
       .then((data: { rules?: string[] }) => setRules(data.rules ?? []))
       .catch(() => {});
+
+  useEffect(() => {
+    void load();
+  }, []);
 
   const takeBack = async (rule: string) => {
     setBusy(true);
@@ -40,23 +44,9 @@ export function TrustPanel() {
   };
 
   return (
-    <details
-      className="rounded-xl border border-border p-4 text-sm"
-      onToggle={(event) => {
-        if ((event.currentTarget as HTMLDetailsElement).open) void load();
-      }}
-    >
-      <summary className="cursor-pointer font-medium">
-        {t("title")}
-        {rules && rules.length > 0 && (
-          <span className="ml-2 text-muted-foreground tabular-nums">
-            {rules.length}
-          </span>
-        )}
-      </summary>
+    <div className="flex flex-col gap-3 text-sm">
       {rules && (
-        <div className="mt-3 flex flex-col gap-3">
-          <p className="text-muted-foreground">{t("intro")}</p>
+        <div className="flex flex-col gap-3">
           {rules.length === 0 ? (
             <p className="text-muted-foreground">{t("empty")}</p>
           ) : (
@@ -84,6 +74,6 @@ export function TrustPanel() {
           )}
         </div>
       )}
-    </details>
+    </div>
   );
 }

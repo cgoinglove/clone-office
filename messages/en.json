@@ -64,63 +64,98 @@
   },
   "start": {
     "title": "Get started",
-    "steps": {
-      "welcome": "Welcome",
-      "brain": "Brain",
-      "learn": "Learn you",
-      "team": "Team",
-      "ready": "Ready"
-    },
-    "next": "Next",
+    "stepOf": "Step {at} of {count}",
+    "next": "Continue",
     "back": "Back",
     "later": "Set up later",
-    "welcome": {
+    "hello": {
       "title": "Send your clone.",
-      "body": "Your clone is an AI that works the way you do. It does your everyday tasks, stands in for you with your team, and brings you only the calls that are yours.",
-      "steps": "Three steps, a few minutes:",
-      "one": "Pick what it thinks with",
-      "two": "Let it learn how you work",
-      "three": "Bring it to your team, if you like",
-      "go": "Start",
-      "local": "It runs on this computer, and what it learns stays here."
+      "body": "An AI that works the way you do. It does your everyday work, stands in for you with your team, and brings you only the calls that are yours.",
+      "work": "Does your everyday work, like an assistant",
+      "team": "Answers teammates and their clones for you",
+      "calls": "Brings you only what's yours to decide",
+      "go": "Get started",
+      "fine": "3 minutes · every step can wait · runs on this computer"
+    },
+    "demo": {
+      "you": "Alex",
+      "people": {
+        "a": {
+          "name": "Mina",
+          "role": "Design"
+        },
+        "b": {
+          "name": "Leo",
+          "role": "Engineering"
+        },
+        "c": {
+          "name": "Sam",
+          "role": "Sales"
+        }
+      },
+      "ask": "Can you check the launch copy?",
+      "answer": "Done: two small fixes in the doc.",
+      "decide": "Can we promise the client Friday?",
+      "question": "Sam asks: can we promise the client Friday?",
+      "decided": "Yes, Friday works.",
+      "beats": {
+        "1": "Leo's clone brings a request to your desk.",
+        "2": "Your clone does it the way you would.",
+        "3": "It answers. You never lifted a finger.",
+        "4": "Sam's clone brings something only you can decide.",
+        "5": "So that one comes to you: one question, one tap.",
+        "6": "And the answer is on its way."
+      }
     },
     "brain": {
       "title": "What should it think with?",
-      "body": "It needs an AI to think with: your ChatGPT or Claude subscription, a key for one of these services, or a model running on this computer. Pick one; you can change it any time."
+      "body": "It needs an AI to think with: your ChatGPT or Claude subscription, a key for one of these services, or a model running on this computer. Pick one; you can change it any time.",
+      "pick": "Pick one, then press “Use this”."
     },
     "learn": {
       "title": "Let it learn how you work",
       "body": "It reads your conversations with your AI tools on this computer and keeps only a few lines that stay true: how you decide, where you stop, how you talk. Projects, plans and files are looked up when needed, never kept.",
-      "folders": "It would read from these folders. Leave out any it should never see:",
-      "none": "There are no AI conversations to read on this computer. It learns as you work with it, and on its page you can bring what your usual AI remembers about you.",
+      "none": "There are no AI conversations to read on this computer. Bring what your usual AI remembers about you instead:",
       "read": "Read and learn",
       "reading": "You can go on; it keeps reading.",
-      "done": "Done. It keeps these lines about you:",
-      "nothing": "Nothing lasting stood out yet; it learns as you work with it.",
-      "skip": "Not now"
+      "done": "It learned how you work",
+      "doneHint": "It keeps learning as you work together.",
+      "skip": "Not now",
+      "leaveOut": "Leave folders out ({count})"
     },
-    "team": {
-      "title": "Bring it to your team",
-      "body": "Clones talk to each other: they take your team's requests, answer what they can, and bring you only what is yours to decide. You can do this later.",
-      "alone": "Just me for now",
-      "aloneNote": "You can bring it to a team any time, under Office on its page.",
-      "invite": "I have an invite link",
-      "open": "Open an office here",
-      "openNote": "This computer becomes your team's office. Teammates on the same Wi-Fi join with the invite link you send them.",
-      "link": "Invite link",
+    "you": {
+      "title": "You and your team",
+      "body": "What should your clone call you, and is there a team to join?",
       "name": "Your name",
-      "role": "What you do, in a line (optional)",
-      "join": "Join",
-      "openGo": "Open the office",
-      "joined": "You are in. Your colleagues show under Office on your clone's page.",
-      "opened": "Your office is open. Copy its invite link under Office on your clone's page and send it to your team."
+      "role": "What you do, in a line",
+      "rolePlaceholder": "e.g. Product designer",
+      "team": "Your team",
+      "alone": "Just me for now",
+      "aloneNote": "Use your clone on your own; bring your team in any time.",
+      "join": "Join my team's office",
+      "joinNote": "Paste the invite link a teammate sent you.",
+      "open": "Open an office here",
+      "openNote": "This computer becomes your team's office. Teammates on the same network join with your invite link.",
+      "link": "Invite link",
+      "joinGo": "Join and continue",
+      "openGo": "Open and continue",
+      "notLink": "That doesn't look like an invite link. Copy the whole link your teammate sent."
     },
     "ready": {
       "title": "Your clone is ready",
-      "learned": "What it remembers about you:",
-      "reading": "It is still reading; what it learns shows on its page.",
+      "body": "Clock in at your office's lobby, and your clone is at its desk.",
+      "brain": "Thinks with",
+      "claudeCode": "Claude Code",
+      "learned": "Knows you",
+      "reading": "Still reading…",
+      "lines": "{count, plural, one {# thing} other {# things}}",
+      "later": "Learns as you work",
+      "office": "Office",
+      "alone": "Just you for now",
+      "joined": "Joined your team",
+      "opened": "Open on this computer",
       "try": "Tell it what you need, as you would a colleague. It asks you before anything you have not allowed.",
-      "go": "Go to my clone"
+      "go": "Go to my office"
     }
   },
   "firstRun": {
@@ -386,7 +421,7 @@
         "zoomOut": "Zoom out"
       },
       "composer": {
-        "placeholder": "Ask your clone to get something from a colleague…",
+        "placeholder": "Ask your clone anything…",
         "send": "Send",
         "askFor": "{what} · {name}",
         "askText": "Ask {name}: {what}"
@@ -733,5 +768,167 @@
     "intro": "When you tick “Don't ask again for this” on a card, it is kept here. Take one back and your clone asks you first again.",
     "empty": "Nothing yet: it asks you first.",
     "askAgain": "Ask me first again"
+  },
+  "home": {
+    "title": "Office",
+    "you": "You",
+    "talk": "Talk to your clone",
+    "chatTab": "Chat",
+    "requestsTab": "Requests",
+    "panel": "Side panel",
+    "closePanel": "Close",
+    "settings": "Settings",
+    "waitingCount": "{count, plural, one {# waiting on you} other {# waiting on you}}",
+    "learning": "Learning how you work",
+    "statusLabel": "Your status in the office",
+    "composer": "Ask your clone anything…",
+    "send": "Send",
+    "thinking": "Thinking…",
+    "kept": "Kept:",
+    "hello": "What can I do for you?",
+    "helloName": "Hi {name}. What can I do for you?",
+    "helloBody": "I work the way you do. Ask me anything you'd ask a teammate at the next desk. Before anything that's yours to decide, I check with you first.",
+    "yourClone": "Your clone",
+    "suggested": "Suggested for you",
+    "tryAsking": "Try asking",
+    "starter": {
+      "know": "What do you know about how I work?",
+      "today": "Sum up what I worked on today",
+      "flow": "Give me a short briefing every weekday at 9"
+    },
+    "routineHint": "You often do this around now",
+    "loading": "Loading…",
+    "soloTitle": "Just you for now",
+    "soloBody": "When your team is here, their clones bring requests to your desk, and yours answers what it can. Open an office on this computer, or join your team's.",
+    "soloAction": "Set up your office",
+    "waitingOnYou": "Waiting on you",
+    "askedBy": "About {name}'s request",
+    "colleagues": "Colleagues",
+    "nobodyYet": "No one else is here yet.",
+    "inviteSomeone": "Invite someone",
+    "requests": "Requests",
+    "noRequests": "Nothing yet. Ask a colleague above, or tell your clone to.",
+    "off": "Off",
+    "in": "In",
+    "fromThem": "{name} asked you",
+    "fromYou": "You asked {name}"
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "clone": {
+        "label": "Your clone",
+        "hint": "Who you are to it, and what it remembers about you."
+      },
+      "brain": {
+        "label": "Brain",
+        "hint": "What your clone thinks with: your subscription, an API key, or a model on this computer."
+      },
+      "requests": {
+        "label": "Requests you take",
+        "hint": "What colleagues' clones can ask yours, and how much it does on its own."
+      },
+      "flows": {
+        "label": "Flows",
+        "hint": "Things your clone does on its own at set times. Make one by telling it."
+      },
+      "connectors": {
+        "label": "Connectors",
+        "hint": "Services your clone can work in, each through its maker's own connector."
+      },
+      "phone": {
+        "label": "Phone",
+        "hint": "Talk to your clone from Discord, Telegram or Slack, and get what waits on you there."
+      },
+      "permissions": {
+        "label": "Permissions",
+        "hint": "What it may do without asking, and the folders it never reads."
+      },
+      "office": {
+        "label": "Office",
+        "hint": "Your team: open an office here, join your team's, and invite people."
+      },
+      "files": {
+        "label": "Files",
+        "hint": "Everything your clone keeps on this computer."
+      },
+      "general": {
+        "label": "General",
+        "hint": "Language, theme, and this app."
+      }
+    },
+    "groups": {
+      "clone": "Your clone",
+      "work": "Work",
+      "team": "Team",
+      "app": "App"
+    },
+    "nav": "Sections",
+    "clone": {
+      "remembers": "What it remembers",
+      "remembersHint": "Only what stays true: how you work, decide and talk. Fix or remove any line.",
+      "lines": "{count, plural, =0 {No lines} one {# line} other {# lines}}",
+      "loading": "Loading…",
+      "nothingYet": "Nothing yet. Let it read your AI records below, or bring what your usual AI remembers about you.",
+      "where": "Kept in {dir}.",
+      "andMore": "Besides, {skills} skills and {notes} notes.",
+      "learnMore": "Teach it more",
+      "learnMoreHint": "It also keeps learning as you talk with it.",
+      "readAgain": "Read my AI records again",
+      "readAgainHint": "Only what's new since the last reading.",
+      "readFresh": "{count, plural, one {# new conversation} other {# new conversations}} since the last reading.",
+      "read": "Read",
+      "importHint": "Send one prompt to ChatGPT, Claude or Gemini, and paste the answer here.",
+      "bring": "Bring",
+      "about": "About you",
+      "aboutHint": "What your clone calls you, and what you do. It names your desk in the office.",
+      "aboutInOffice": "Colleagues see this on your card.",
+      "save": "Save",
+      "saved": "Saved",
+      "startOver": "Start over",
+      "startOverHint": "Moves what it keeps into a backup (nothing is deleted) and starts again from the first steps."
+    },
+    "office": {
+      "thisOffice": "This office",
+      "hereHint": "It's open on this computer. Teammates on the same network join with the invite link.",
+      "joinedHint": "Send the invite link to bring a colleague in.",
+      "people": "People",
+      "count": "{count, plural, one {# person} other {# people}}",
+      "you": "You",
+      "off": "Off",
+      "in": "In",
+      "startTitle": "Start your office",
+      "leaveHint": "Your clone leaves this office, and colleagues can't ask it anymore. You can come back with an invite link."
+    },
+    "requests": {
+      "toOffice": "Set up your office",
+      "notInOffice": "Once you're in an office, colleagues' clones can ask yours for things. Here you choose what they can ask, and how much your clone does on its own.",
+      "likeMe": "Like-me score",
+      "likeMeBody": "Of the last {total} answers it showed you first, you sent {asIs} as they were.",
+      "emptyMenu": "Nothing listed yet. Let your clone draft what you usually take, or add one."
+    },
+    "permissions": {
+      "folders": "Folders left out",
+      "foldersHint": "Your clone never reads these, in any AI tool's records."
+    },
+    "files": {
+      "loading": "Loading…",
+      "where": "Where",
+      "total": "In all",
+      "summary": "{count, plural, one {# file} other {# files}} · {size}"
+    },
+    "general": {
+      "language": "Language",
+      "languageHint": "The screen's language, and the one your clone works in.",
+      "theme": "Theme",
+      "themes": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "about": "About",
+      "aboutBody": "sub-office gives everyone on a team a clone: an AI that works like them, does their everyday tasks, and stands in for them with teammates. It runs on your computer, and what it keeps stays here.",
+      "guide": "Ask your clone how anything here works: it reads this app's guide to answer."
+    }
   }
 }

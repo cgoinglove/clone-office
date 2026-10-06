@@ -4,7 +4,7 @@
 // vendor wants. A service that registers this app itself is one press and an approval in a new
 // tab; GitHub takes a personal token; Google wants an OAuth client registered for the team first,
 // which anyone on the team does once here (for the whole office), then each person connects their
-// own account. What is connected stays on this computer; the mini-me asks before using it.
+// own account. What is connected stays on this computer; the clone asks before using it.
 
 import { useTranslations } from "next-intl";
 import {
@@ -16,6 +16,7 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { useProblem } from "@/i18n/client";
 import { CONNECTORS } from "./connectors/catalog";
 
@@ -57,6 +58,19 @@ const GOOGLE_LINKS = {
 };
 /** A client's JSON file from Google is well under this. */
 const CLIENT_FILE_CHARS = 5000;
+
+/** Each service's own mark, beside its name. */
+const CONNECTOR_MARKS = {
+  notion: "notion",
+  linear: "linear",
+  atlassian: "atlassian",
+  github: "github",
+  gmail: "gmail",
+  calendar: "googlecalendar",
+  drive: "googledrive",
+  docs: "googledocs",
+  sheets: "googlesheets",
+} as const satisfies Record<string, MarkId>;
 
 const outLink = (href: string) => (chunks: ReactNode) => (
   <a
@@ -163,15 +177,22 @@ export function ConnectorsPanel() {
   const google = rows.filter((row) => row.provider === "google");
   const others = rows.filter((row) => row.provider !== "google");
   const googleClient = state?.clients.google;
-  const count = rows.filter((row) => row.connected).length;
 
   const row = (entry: Row, blocked = false) => (
     <li
       key={entry.id}
       className="flex flex-col gap-2 border-b border-border py-2 last:border-b-0"
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="min-w-0">
+      <div className="flex items-center justify-between gap-3">
+        {entry.id in CONNECTOR_MARKS && (
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-background">
+            <BrandMark
+              id={CONNECTOR_MARKS[entry.id as keyof typeof CONNECTOR_MARKS]}
+              className="size-5"
+            />
+          </span>
+        )}
+        <span className="min-w-0 flex-1">
           <span className="font-medium">{entry.name}</span>
           <span className="block text-muted-foreground">
             {t(`does.${entry.id}` as Parameters<typeof t>[0])}
@@ -255,17 +276,8 @@ export function ConnectorsPanel() {
   );
 
   return (
-    <details className="rounded-xl border border-border p-4 text-sm">
-      <summary className="cursor-pointer font-medium">
-        {t("title")}
-        {count > 0 && (
-          <span className="ml-2 text-muted-foreground tabular-nums">
-            {count}
-          </span>
-        )}
-      </summary>
-      <div className="mt-3 flex flex-col gap-4">
-        <p className="text-muted-foreground">{t("intro")}</p>
+    <div className="flex flex-col gap-4 text-sm">
+      <div className="flex flex-col gap-4">
         <ul className="flex flex-col">{others.map((entry) => row(entry))}</ul>
         {google.length > 0 && (
           <section className="flex flex-col gap-2">
@@ -473,6 +485,6 @@ export function ConnectorsPanel() {
         )}
         {problem && <p className="text-destructive">{problemText(problem)}</p>}
       </div>
-    </details>
+    </div>
   );
 }

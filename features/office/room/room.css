@@ -1990,3 +1990,37 @@
     display: none;
   }
 }
+
+/* The app's main screen: the office is the screen itself, with no frame of its own. The page lays
+   its own bar over the top edge (the name, what waits, settings), so the office's notes sit under
+   it, and the page says what waits on the viewer, so the office's own chip is not drawn twice. */
+.of-wrap.of-full {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+.of-wrap.of-full .hud.tl {
+  top: 66px;
+  left: 20px;
+}
+.of-wrap.of-full .hud.tr {
+  display: none;
+}
+.of-wrap.of-full .hud.bl {
+  left: 16px;
+  bottom: 16px;
+}
+.of-wrap.of-full .composer {
+  bottom: 18px;
+}
+.of-wrap.of-full .panel {
+  top: 66px;
+  right: 16px;
+  bottom: 16px;
+}
+/* While the page's side panel is open, the conversation is typed there. */
+[data-side="open"] .of-wrap.of-full .composer {
+  display: none;
+}

@@ -4,7 +4,7 @@
 // phone only while the desktop is idle). Right after the app starts nobody is known yet: a page
 // that was open comes back within the grace, so until then "nobody" is only "nobody yet".
 
-/** A page in view says so this often (first-run.tsx). */
+/** A page in view says so this often (use-presence.ts). */
 export const BEAT_MS = 20_000;
 /** Silent this long, a page is taken as gone: a missed beat or two is not leaving. */
 export const GONE_MS = 50_000;

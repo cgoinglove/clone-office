@@ -1,11 +1,11 @@
 "use client";
 
-// The person's flows on their page: what each one asks, when it runs (in their language), when it
+// Settings › Flows: the person's flows: what each one asks, when it runs (in their language), when it
 // runs next and how its last run went, with run now, pause or resume, and remove. Flows are made by
 // talking to the mini-me, so an empty list says how.
 
 import { useFormatter, useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import type { When } from "./flows/schedule";
 import { whenText } from "./flows/when-text";
@@ -54,6 +54,10 @@ export function FlowsPanel({
         return data.flows;
       })
       .catch(() => undefined);
+
+  useEffect(() => {
+    void load();
+  }, []);
 
   const act = async (
     action: "run" | "pause" | "resume" | "remove",
@@ -117,22 +121,9 @@ export function FlowsPanel({
     });
 
   return (
-    <details
-      className="rounded-xl border border-border p-4 text-sm"
-      onToggle={(event) => {
-        if ((event.currentTarget as HTMLDetailsElement).open) void load();
-      }}
-    >
-      <summary className="cursor-pointer font-medium">
-        {t("title")}
-        {flows && flows.length > 0 && (
-          <span className="ml-2 text-muted-foreground tabular-nums">
-            {flows.length}
-          </span>
-        )}
-      </summary>
+    <div className="flex flex-col gap-3 text-sm">
       {flows && (
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           <p className="text-muted-foreground">
             {flows.length ? t("intro") : t("none")}
           </p>
@@ -253,6 +244,6 @@ export function FlowsPanel({
           </ul>
         </div>
       )}
-    </details>
+    </div>
   );
 }

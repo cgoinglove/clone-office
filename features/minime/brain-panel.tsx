@@ -6,11 +6,21 @@
 // key), Gemini, OpenRouter, or a model running on this computer. What this computer already has is
 // marked. A key is checked for free before it is kept and never comes back to the page.
 
+import {
+  Check,
+  CircleAlert,
+  CircleCheck,
+  Cpu,
+  KeyRound,
+  LogIn,
+  Terminal,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
+import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import {
@@ -86,25 +96,60 @@ const providerOfWay = (way: Way): ProviderId | undefined =>
 
 const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
 
-/** The panel on the clone's page: what it thinks with, and changing it. */
+/** Each vendor's own mark; a model on this computer shows the two apps that run one. */
+function VendorMark({ vendor }: { vendor: Vendor["id"] }) {
+  if (vendor === "local")
+    return (
+      <span className="flex items-center gap-0.5">
+        <BrandMark id="ollama" className="size-3.5" />
+        <BrandMark id="lmstudio" className="size-3.5" />
+      </span>
+    );
+  return <BrandMark id={vendor} className="size-5" />;
+}
+
+const WAY_ICONS = {
+  "sign-in": LogIn,
+  "claude-code": Terminal,
+  key: KeyRound,
+  local: Cpu,
+} as const;
+
+function WayIcon({ kind }: { kind: Way["kind"] }) {
+  const Icon = WAY_ICONS[kind];
+  return <Icon className="size-3.5" aria-hidden />;
+}
+
+/** Whose model it is: the vendor's own, or for OpenRouter the maker its id names. */
+const MAKERS: Record<string, MarkId> = {
+  anthropic: "claude",
+  openai: "openai",
+  google: "gemini",
+  "meta-llama": "meta",
+  deepseek: "deepseek",
+  mistralai: "mistral",
+  qwen: "qwen",
+  "x-ai": "xai",
+  "z-ai": "zai",
+  moonshotai: "kimi",
+};
+const PROVIDER_MARKS: Partial<Record<ProviderId, MarkId>> = {
+  chatgpt: "openai",
+  openai: "openai",
+  anthropic: "claude",
+  google: "gemini",
+};
+function modelMark(model: string, provider: ProviderId): MarkId | undefined {
+  if (provider === "openrouter") return MAKERS[model.split("/")[0]];
+  return PROVIDER_MARKS[provider];
+}
+
+/** Settings › Brain: what the clone thinks with, and changing it. */
 export function BrainPanel() {
-  const t = useTranslations("brain");
-  const [state, setState] = useState<BrainState | null>(null);
   return (
-    <details className="rounded-xl border border-border p-4 text-sm">
-      <summary className="cursor-pointer font-medium">
-        {t("title")}
-        {state && (
-          <span className="ml-2 font-normal text-muted-foreground">
-            {brainLabel(state, t("way.claude-code"))}
-          </span>
-        )}
-      </summary>
-      <div className="mt-3 flex flex-col gap-4">
-        <p className="text-muted-foreground">{t("intro")}</p>
-        <BrainChooser onChange={setState} />
-      </div>
-    </details>
+    <div className="flex flex-col gap-4 text-sm">
+      <BrainChooser />
+    </div>
   );
 }
 
@@ -253,7 +298,11 @@ export function BrainChooser({
 
   return (
     <div className="flex flex-col gap-4 text-sm">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup">
+      <div
+        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+        role="radiogroup"
+        aria-label={t("title")}
+      >
         {VENDORS.map((v) => (
           <button
             key={v.id}
@@ -261,8 +310,9 @@ export function BrainChooser({
             role="radio"
             aria-checked={vendorId === v.id}
             className={cn(
-              "flex flex-col items-start gap-1 rounded-[10px] border border-border px-3 py-2.5 text-left transition-colors hover:bg-muted/60",
-              vendorId === v.id && "border-foreground",
+              "flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-3 text-left transition-[border-color,background-color,box-shadow] hover:bg-muted/50",
+              vendorId === v.id &&
+                "border-foreground/70 shadow-[0_0_0_1px_var(--foreground)] hover:bg-background",
             )}
             onClick={() => {
               setVendorId(v.id);
@@ -273,20 +323,28 @@ export function BrainChooser({
               setProblem(null);
             }}
           >
-            <span className="flex w-full items-center justify-between gap-2">
-              <span className="font-medium">{v.name ?? t("local")}</span>
-              {inUse(v) ? (
-                <span className="text-xs text-muted-foreground">
-                  {t("inUse")}
-                </span>
-              ) : found(v) ? (
-                <span className="text-xs text-muted-foreground">
-                  {t("found")}
-                </span>
-              ) : null}
+            <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-border bg-background">
+              <VendorMark vendor={v.id} />
             </span>
-            <span className="text-xs text-muted-foreground">
-              {t(`vendor.${v.id}`)}
+            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="flex items-center justify-between gap-2">
+                <span className="truncate font-medium">
+                  {v.name ?? t("local")}
+                </span>
+                {inUse(v) ? (
+                  <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-brand">
+                    <CircleCheck className="size-3.5" />
+                    {t("inUse")}
+                  </span>
+                ) : found(v) ? (
+                  <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                    {t("found")}
+                  </span>
+                ) : null}
+              </span>
+              <span className="text-xs leading-snug text-muted-foreground">
+                {t(`vendor.${v.id}`)}
+              </span>
             </span>
           </button>
         ))}
@@ -307,15 +365,32 @@ export function BrainChooser({
               }}
               options={vendor.ways.map((w, at) => ({
                 value: String(at),
-                label: t(`way.${w.kind}`),
+                label: (
+                  <span className="flex items-center justify-center gap-1.5">
+                    <WayIcon kind={w.kind} />
+                    {t(`way.${w.kind}`)}
+                  </span>
+                ),
               }))}
             />
           )}
           <p className="text-muted-foreground">{t(`wayNote.${way.kind}`)}</p>
 
           {way.kind === "claude-code" && (
-            <p>
-              {state.claudeCode ? t("claudeCodeFound") : t("claudeMissing")}
+            <p
+              className={cn(
+                "flex items-start gap-2 rounded-lg px-3 py-2",
+                state.claudeCode ? "bg-muted" : "bg-waiting/8 text-waiting",
+              )}
+            >
+              {state.claudeCode ? (
+                <BrandMark id="claudecode" className="mt-0.5" />
+              ) : (
+                <CircleAlert className="mt-0.5 size-4 shrink-0" />
+              )}
+              <span>
+                {state.claudeCode ? t("claudeCodeFound") : t("claudeMissing")}
+              </span>
             </p>
           )}
 
@@ -337,10 +412,12 @@ export function BrainChooser({
             ) : (
               <div className="flex flex-col items-start gap-2">
                 <Button
+                  size="lg"
                   disabled={busy || signingIn}
                   loading={signingIn}
                   onClick={() => void signIn()}
                 >
+                  {!signingIn && <BrandMark id="openai" />}
                   {t("chatgpt.signIn")}
                 </Button>
                 {signingIn && (
@@ -435,27 +512,56 @@ export function BrainChooser({
           )}
 
           {way.kind !== "claude-code" && (
-            <fieldset className="flex flex-col gap-1">
-              <legend className="mb-1 font-medium">{t("model")}</legend>
-              {models.map((option) => (
-                <label key={option.id} className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="brain-model"
-                    checked={!other.trim() && model === option.id}
-                    onChange={() => {
-                      setModel(option.id);
-                      setOther("");
-                    }}
-                  />
-                  <span>{option.label}</span>
-                  {option.tier && (
-                    <span className="text-xs text-muted-foreground">
-                      {t(`tier.${option.tier}`)}
-                    </span>
-                  )}
-                </label>
-              ))}
+            <fieldset className="flex flex-col gap-1.5">
+              <legend className="mb-1.5 font-medium">{t("model")}</legend>
+              <div className="flex flex-col overflow-hidden rounded-xl border border-border">
+                {models.map((option) => {
+                  const picked = !other.trim() && model === option.id;
+                  const mark = id ? modelMark(option.id, id) : undefined;
+                  return (
+                    <label
+                      key={option.id}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-2.5 border-b border-border/70 px-3 py-2.5 transition-colors last:border-b-0 hover:bg-muted/50",
+                        picked && "bg-muted/70 hover:bg-muted/70",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="brain-model"
+                        className="sr-only"
+                        checked={picked}
+                        onChange={() => {
+                          setModel(option.id);
+                          setOther("");
+                        }}
+                      />
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "grid size-4 shrink-0 place-items-center rounded-full border",
+                          picked
+                            ? "border-foreground bg-foreground"
+                            : "border-foreground/30",
+                        )}
+                      >
+                        {picked && (
+                          <span className="size-1.5 rounded-full bg-background" />
+                        )}
+                      </span>
+                      {mark && <BrandMark id={mark} />}
+                      <span className="min-w-0 flex-1 truncate">
+                        {option.label}
+                      </span>
+                      {option.tier && (
+                        <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                          {t(`tier.${option.tier}`)}
+                        </span>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
               <Input
                 spellCheck={false}
                 className="mt-1"
@@ -470,7 +576,7 @@ export function BrainChooser({
           )}
 
           <Button
-            size="sm"
+            variant={isCurrent ? "outline" : "brand"}
             className="self-start"
             disabled={busy || !wayReady || isCurrent}
             onClick={() =>
@@ -486,6 +592,7 @@ export function BrainChooser({
               )
             }
           >
+            {isCurrent && <Check />}
             {isCurrent ? t("inUse") : t("use")}
           </Button>
         </div>

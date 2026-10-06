@@ -155,6 +155,10 @@ export interface RoomWords {
 export interface Room {
   /** The relay's latest look: what changed since the last plays out on the floor. */
   update(data: RoomData): void;
+  /** Keeps this many pixels clear at the right and left (a panel laid over the office), and reframes. */
+  setInset(right: number, left?: number): void;
+  /** Closes the panel about one person, if it is open, and goes back to the whole office. */
+  closePanel(): void;
   destroy(): void;
 }
 
@@ -172,6 +176,8 @@ export function createOffice(
     lobby?: boolean;
     /** Clocked in at the lobby. */
     onClockIn?: () => void;
+    /** The panel about one person opened (true) or closed (false). */
+    onPanel?: (open: boolean) => void;
     /** 30 runs the office on every other frame. */
     fps?: 30 | 60;
   },

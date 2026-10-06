@@ -5,22 +5,48 @@
 // what is inside. The engine loads with the box, so pages without an office never carry it.
 
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef } from "react";
+import {
+  type Ref,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from "react";
 import { cn } from "@/lib/utils";
 import type { Room, RoomData, RoomWords } from "./office.mjs";
 import "./room.css";
 
 export type { RoomData, RoomPerson, RoomRequest } from "./office.mjs";
 
+/** What a page may ask of the office it holds. */
+export interface OfficeControl {
+  /** Closes the panel about one person, if it is open. */
+  closePanel(): void;
+}
+
 export function OfficeRoom({
   data,
   lobby = false,
+  full = false,
+  inset = 0,
+  insetLeft = 0,
   onClockIn,
   onAnswer,
   onAsk,
+  onPanel,
   className,
+  ref,
 }: {
   data: RoomData;
+  /** Fills the screen it is on, with no frame of its own: the app's main screen. */
+  full?: boolean;
+  /** Pixels kept clear at the right for a panel the page lays over the office. */
+  inset?: number;
+  /** Pixels kept clear at the left, for a column of words laid over it. */
+  insetLeft?: number;
+  /** The office's own panel about one person opened or closed. */
+  onPanel?: (open: boolean) => void;
+  ref?: Ref<OfficeControl>;
   /** Opens at the lobby (the building, a card to clock in, the lift up) rather than at the office. */
   lobby?: boolean;
   onClockIn?: () => void;
@@ -163,8 +189,13 @@ export function OfficeRoom({
   const room = useRef<Room | null>(null);
   const latest = useRef(data);
   latest.current = data;
-  const handlers = useRef({ onAnswer, onAsk, onClockIn });
-  handlers.current = { onAnswer, onAsk, onClockIn };
+  const handlers = useRef({ onAnswer, onAsk, onClockIn, onPanel });
+  handlers.current = { onAnswer, onAsk, onClockIn, onPanel };
+  const insetNow = useRef([inset, insetLeft]);
+  insetNow.current = [inset, insetLeft];
+  useImperativeHandle(ref, () => ({
+    closePanel: () => room.current?.closePanel(),
+  }));
   // Read once: the office does not go back to the lobby while it is open.
   const atLobby = useRef(lobby).current;
   const asks = !!onAsk;
@@ -181,8 +212,10 @@ export function OfficeRoom({
         onAsk: asks ? (text) => handlers.current.onAsk?.(text) : undefined,
         lobby: atLobby,
         onClockIn: () => handlers.current.onClockIn?.(),
+        onPanel: (open) => handlers.current.onPanel?.(open),
       });
       made.update(latest.current);
+      made.setInset(insetNow.current[0], insetNow.current[1]);
       room.current = made;
     });
     return () => {
@@ -196,5 +229,12 @@ export function OfficeRoom({
     room.current?.update(data);
   }, [data]);
 
-  return <div ref={box} className={cn("of-wrap", className)} />;
+  useEffect(() => {
+    room.current?.setInset(inset, insetLeft);
+  }, [inset, insetLeft]);
+
+  // The class list is set once: the office adds its own (the lobby, a drag) as it runs, and a
+  // class changed here later would wipe them.
+  const classes = useRef(cn("of-wrap", full && "of-full", className)).current;
+  return <div ref={box} className={classes} />;
 }
