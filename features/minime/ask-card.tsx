@@ -41,6 +41,10 @@ export function describe(
     // Asking a colleague: to whom, and what.
     (typeof input.to === "string"
       ? `${input.to}: ${String(input.request ?? "")}`
+      : undefined) ??
+    // Asking one of the person's Claude Code conversations: which, and what.
+    (typeof input.session === "string"
+      ? `${input.session}: ${String(input.question ?? "")}`
       : undefined);
   const shown =
     typeof on === "string"

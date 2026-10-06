@@ -6,7 +6,7 @@ import { spawn } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { findOnPath } from "./which";
+import { findOnPath } from "./which.ts";
 
 export interface BrainCall {
   prompt: string;

@@ -29,6 +29,11 @@ import {
   gateOpen,
   PERMISSION_TOOL,
 } from "../gate/tools.ts";
+import {
+  ASK_SESSION_TOOL,
+  callHandsTool,
+  SESSIONS_TOOL,
+} from "../hands/tools.ts";
 import { CONVERSATION_TOOLS, callConversationTool } from "../history/tools.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
 import { NOTE_TOOLS, NoteStore } from "./notes.ts";
@@ -80,7 +85,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     CONVERSATION_TOOLS.search,
     CONVERSATION_TOOLS.read,
     GUIDE_TOOL,
-    ...(gateOpen ? [ASK_TOOL, PERMISSION_TOOL] : []),
+    ...(gateOpen
+      ? [ASK_TOOL, PERMISSION_TOOL, SESSIONS_TOOL, ASK_SESSION_TOOL]
+      : []),
     ...(colleaguesOpen ? [COLLEAGUES_TOOL, ASK_COLLEAGUE_TOOL] : []),
   ].map((tool) => ({
     name: tool.name,
@@ -140,6 +147,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         typeof args.file === "string" ? args.file : undefined,
       );
       return text(guide, "error" in guide);
+    }
+    case SESSIONS_TOOL.name:
+    case ASK_SESSION_TOOL.name: {
+      const { result, isError } = await callHandsTool(
+        request.params.name,
+        args,
+      );
+      return text(result, isError);
     }
     case ASK_TOOL.name:
     case PERMISSION_TOOL.name:

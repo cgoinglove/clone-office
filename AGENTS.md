@@ -181,6 +181,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   into that conversation with `$.prompt.submit` once it is idle. `lib/news.ts` is what both share,
   with no imports. What a colleague's mini-me wrote is quoted as information, never as
   instructions. Check the mod with `claude plugin validate plugin`.
+- `features/minime/hands/`: what the mini-me drives besides its own brain. `sessions.ts` lists the
+  person's recent Claude Code conversations (by the name they gave with `/rename`, else the title
+  Claude Code gave, never in folders left out or the mini-me's own) and asks one: a fork
+  (`--resume <id> --fork-session --no-session-persistence`) with read-only tools, user settings
+  only (no project hooks) and no MCP server, so the conversation itself is never touched.
+  `tools.ts` serves `sessions` (free) and `ask_session` (asked through the gate) to the brain.
 - `features/minime/history/`: a search index (SQLite FTS5 via `node:sqlite`, under `index/`) of
   what the person typed to their AI tools and what those answered, built in bounded passes that
   resume by byte offset, with CJK text indexed as bigrams; `tools.ts` gives the mini-me

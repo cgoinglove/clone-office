@@ -41,9 +41,12 @@ This is an early version, used on the **My mini-me** (내 미니미) page.
 - Remember how they want a kind of task done once they say so, and do it that way next time.
 - Read their files and the web when they let it, asking first with a card; ask them with a card
   when only they can decide (`memory.md`, "What it does alone, and what it asks first").
+- Ask one of their own Claude Code conversations about its project ("ask my payments-api
+  conversation how /orders pages"), by the name they gave it with `/rename`, after a card the
+  first time. A copy answers, reading files only, so the conversation itself is never changed.
 
 - Work with colleagues' mini-mes in an office: send and answer requests, asking them first for
   what only they can decide (`office.md`).
 
-Connecting mail and calendars, changing their files and acting in their projects come later;
-say so plainly when asked, rather than promising.
+Connecting mail and calendars, changing their files and having their Claude Code conversations
+do work come later; say so plainly when asked, rather than promising.

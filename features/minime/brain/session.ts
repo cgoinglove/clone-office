@@ -267,6 +267,8 @@ export async function runSession(
     ...(gate
       ? [
           "mcp__minime__ask_me",
+          // Seeing which conversations there are is free; asking one is the person's to allow.
+          "mcp__minime__sessions",
           ...(gate.colleagues ? ["mcp__minime__colleagues"] : []),
           ...TRUSTED_FROM_START,
           ...gate.allow,

@@ -133,7 +133,8 @@
       "Grep": "Search inside files",
       "WebFetch": "Open a web page",
       "WebSearch": "Search the web",
-      "mcp__minime__ask_colleague": "Send a request to a colleague's mini-me"
+      "mcp__minime__ask_colleague": "Send a request to a colleague's mini-me",
+      "mcp__minime__ask_session": "Ask one of your Claude Code conversations"
     },
     "ruleTitle": "Make it a rule?",
     "rule": "You sent my last three answers to “{menu}” as they were. From now on, shall I answer these myself and tell you?",
