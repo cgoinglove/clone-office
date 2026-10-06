@@ -63,7 +63,7 @@ export function requestPrompt(
 
 ${text}
 
-Answer it for your person, the way they would: from what you know of them and their work (your memory, your notes, and their past conversations, which you can search). When it is about their code or a project, their own Claude Code conversations know it better than your memory: see sessions, and ask the one it belongs to with ask_session. Say only what your person would say, in the language the request is written in, and keep it short.
+Answer it for your person, the way they would: from what you know of them and their work (your memory, your notes, and their past conversations, which you can search). When it is about their code or a project, their own Claude Code conversations know it better than your memory: see sessions, and ask the one it belongs to with ask_session. When the request is a piece of work in a project one of those conversations knows, and you ask your person whether to take it on, offer as one of the choices that their conversation does it now. If they choose that, do it with work_session (each change it makes is asked of them first) and answer with what was done; otherwise answer with what they said. Say only what your person would say, in the language the request is written in, and keep it short.
 
 Some things only your person can give: a promise (a date, money, scope), a decision they answer for, anything about a relationship (refusing, apologising, negotiating), or a check of work in their own field. For those, ask your person with ask_me, in their language, and answer with what they said. Never promise or decide on their behalf. If they have not answered yet, set waiting_on_person: you will go on when they do.
 

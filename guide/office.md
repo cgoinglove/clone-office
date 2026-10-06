@@ -30,6 +30,11 @@ computer never leave it.
   **Working** (처리 중), **Needs more** (더 필요해요, with a box to answer), **Done** (끝남),
   **Declined** (거절), **Failed** (실패).
 
+When a colleague asks for work in a project one of their Claude Code conversations knows, and
+they take it on, their mini-me can have that conversation do it: in a copy of it named
+"<name> · mini-me", asking them before each change (the card shows the lines before and after,
+or the command), and then tells the colleague what was done.
+
 ## Requests they take, and how much their mini-me does alone
 
 Below their card, **Requests I take** (받는 부탁) lists the kinds of request colleagues' mini-mes can

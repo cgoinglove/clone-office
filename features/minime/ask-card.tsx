@@ -53,6 +53,33 @@ export function describe(
   return shown ? `${what}: ${shown}` : what;
 }
 
+const clipLines = (value: unknown, lines: number) => {
+  const all = String(value ?? "").split("\n");
+  return all.length > lines
+    ? [...all.slice(0, lines), "…"].join("\n")
+    : all.join("\n");
+};
+
+/** What a change would be, so the person decides on the change itself: the lines, or the command. */
+export function changeOf(
+  tool: string,
+  input: Record<string, unknown>,
+): string | undefined {
+  if (tool === "Edit" && typeof input.new_string === "string")
+    return `${clipLines(input.old_string, 8)
+      .split("\n")
+      .map((line) => `- ${line}`)
+      .join("\n")}\n${clipLines(input.new_string, 8)
+      .split("\n")
+      .map((line) => `+ ${line}`)
+      .join("\n")}`;
+  if (tool === "Write" && typeof input.content === "string")
+    return clipLines(input.content, 12);
+  if (tool === "Bash" && typeof input.command === "string")
+    return `$ ${input.command}`;
+  return undefined;
+}
+
 /** A question from the gate: the mini-me's own question, or a tool it may not use without asking. */
 export function AskCard({
   turn,
@@ -103,7 +130,14 @@ export function AskCard({
       {ask.kind === "question" ? (
         <p className="whitespace-pre-wrap">{ask.question}</p>
       ) : (
-        <p className="break-all">{describe(t, ask.tool, ask.input)}</p>
+        <>
+          <p className="break-all">{describe(t, ask.tool, ask.input)}</p>
+          {changeOf(ask.tool, ask.input) && (
+            <pre className="max-h-60 overflow-auto rounded-lg bg-muted p-3 text-xs whitespace-pre-wrap">
+              {changeOf(ask.tool, ask.input)}
+            </pre>
+          )}
+        </>
       )}
       {!open && (
         <p className="text-sm text-muted-foreground">
@@ -154,14 +188,17 @@ export function AskCard({
       )}
       {open && ask.kind === "permission" && (
         <div className="flex flex-col gap-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={always}
-              onChange={(event) => setAlways(event.target.checked)}
-            />
-            {t("always")}
-          </label>
+          {/* A command is asked every time; there is no "from now on" for it. */}
+          {ask.tool !== "Bash" && (
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={always}
+                onChange={(event) => setAlways(event.target.checked)}
+              />
+              {t("always")}
+            </label>
+          )}
           <div className="flex gap-2">
             <Button size="sm" onClick={() => onAnswer("allow", always)}>
               {t("allow")}

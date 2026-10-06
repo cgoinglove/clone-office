@@ -88,3 +88,11 @@ test("a conversation is asked to read only", async () => {
     /How does \/orders page\?[\s\S]*Read only: change nothing/,
   );
 });
+
+test("a conversation given work is told every change is asked, and to claim only what it checked", async () => {
+  const { workPrompt } = await import("./sessions");
+  assert.match(
+    workPrompt("Add total to /orders"),
+    /Add total to \/orders[\s\S]*asked of your person first[\s\S]*only if you ran them/,
+  );
+});

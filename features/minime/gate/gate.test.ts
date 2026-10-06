@@ -56,6 +56,50 @@ test("an answer 'from now on' becomes a rule for a folder or a site, and kept-ou
   assert.equal(ruleFor("Bash", { command: "ls" }), undefined);
   assert.deepEqual(denyRules(["client-*", "~/work/private", "/srv/secret"]), [
     "Read(~/work/private/**)",
+    "Edit(~/work/private/**)",
     "Read(//srv/secret/**)",
+    "Edit(//srv/secret/**)",
   ]);
+});
+
+test("changing files becomes a rule for that folder; a command never does; folders left out stay closed", async () => {
+  const { denyRules, ruleFor } = await import("./rules");
+  const { homedir } = await import("node:os");
+  assert.equal(
+    ruleFor("Edit", {
+      file_path: `${homedir()}/work/payments/orders.ts`,
+      old_string: "a",
+      new_string: "b",
+    }),
+    "Edit(~/work/payments/**)",
+  );
+  assert.equal(
+    ruleFor("Write", { file_path: "/srv/app/new.ts", content: "x" }),
+    "Edit(//srv/app/**)",
+  );
+  assert.equal(ruleFor("Bash", { command: "rm -rf build" }), undefined);
+  assert.deepEqual(denyRules(["~/work/client-a"]), [
+    "Read(~/work/client-a/**)",
+    "Edit(~/work/client-a/**)",
+  ]);
+});
+
+test("a card shows the change itself: the lines before and after, or the command", async () => {
+  const { changeOf } = await import("../ask-card");
+  assert.equal(
+    changeOf("Edit", {
+      file_path: "a.ts",
+      old_string: "limit = 25",
+      new_string: "limit = 50",
+    }),
+    "- limit = 25\n+ limit = 50",
+  );
+  assert.equal(changeOf("Bash", { command: "pnpm test" }), "$ pnpm test");
+  assert.match(
+    changeOf("Write", {
+      content: Array.from({ length: 20 }, (_, i) => `line ${i}`).join("\n"),
+    }) ?? "",
+    /line 11\n…$/,
+  );
+  assert.equal(changeOf("Read", { file_path: "a.ts" }), undefined);
 });

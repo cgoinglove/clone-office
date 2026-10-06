@@ -186,7 +186,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   Claude Code gave, never in folders left out or the mini-me's own) and asks one: a fork
   (`--resume <id> --fork-session --no-session-persistence`) with read-only tools, user settings
   only (no project hooks) and no MCP server, so the conversation itself is never touched.
-  `tools.ts` serves `sessions` (free) and `ask_session` (asked through the gate) to the brain.
+  Work goes to a kept copy instead (`workSession`: `--fork-session --name "<name> · mini-me"`),
+  so an open conversation is never written to and the person can resume the copy; it may read
+  alone, and each edit or command goes to the person's screen through the gate (the mini-me's tool
+  server run with `MINIME_ROLE=permission` offers it only the permission prompt). `tools.ts`
+  serves `sessions` (free), `ask_session` and `work_session` (asked through the gate) to the brain.
 - `features/minime/history/`: a search index (SQLite FTS5 via `node:sqlite`, under `index/`) of
   what the person typed to their AI tools and what those answered, built in bounded passes that
   resume by byte offset, with CJK text indexed as bigrams; `tools.ts` gives the mini-me

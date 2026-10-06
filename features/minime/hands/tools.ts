@@ -3,7 +3,8 @@
 // allowed yet (a permission card, then "don't ask again" if they like).
 
 import { homedir } from "node:os";
-import { askSession, listSessions } from "./sessions.ts";
+import { loadTrust } from "../gate/rules.ts";
+import { askSession, listSessions, workSession } from "./sessions.ts";
 
 export const SESSIONS_TOOL = {
   name: "sessions",
@@ -31,6 +32,34 @@ export const ASK_SESSION_TOOL = {
     required: ["session", "question"],
   },
 };
+
+export const WORK_SESSION_TOOL = {
+  name: "work_session",
+  description:
+    "Have one of your person's Claude Code conversations do a piece of work in its project, once your person has taken it on: a change, a fix, a small feature. It works in a copy of that conversation, kept and named after it, so your person can open it later; every file it changes and every command it runs is asked of your person first. Say plainly what to do and why.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      session: {
+        type: "string",
+        description: "The conversation's name or id, from sessions",
+      },
+      task: {
+        type: "string",
+        description: "What to do, complete in itself",
+      },
+    },
+    required: ["session", "task"],
+  },
+};
+
+/** Where a working copy's questions show: with the request they are for, or the conversation. */
+function workChat(): string {
+  const chat = process.env.MINIME_CHAT_ID ?? "";
+  return chat.startsWith("office-request-")
+    ? chat.replace("office-request-", "office-work-")
+    : chat;
+}
 
 const short = (path: string) => {
   const home = homedir();
@@ -64,6 +93,19 @@ export async function callHandsTool(
         )
         .join("\n"),
       isError: false,
+    };
+  }
+  if (name === WORK_SESSION_TOOL.name) {
+    const work = await workSession(
+      String(args.session ?? ""),
+      String(args.task ?? ""),
+      { chat: workChat(), allow: await loadTrust() },
+    );
+    return {
+      result: work.ok
+        ? `"${work.session?.name ?? work.session?.id}" did it, in a copy named "${work.session?.name ?? "conversation"} · mini-me"${work.copy ? ` (${work.copy})` : ""} that your person can open:\n${work.text}`
+        : work.text,
+      isError: !work.ok,
     };
   }
   const answer = await askSession(

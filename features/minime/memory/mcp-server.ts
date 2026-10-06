@@ -33,6 +33,7 @@ import {
   ASK_SESSION_TOOL,
   callHandsTool,
   SESSIONS_TOOL,
+  WORK_SESSION_TOOL,
 } from "../hands/tools.ts";
 import { CONVERSATION_TOOLS, callConversationTool } from "../history/tools.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
@@ -73,23 +74,36 @@ const server = new Server(
   { capabilities: { tools: {} } },
 );
 
+// A working copy of the person's conversation is given this server only to ask the person
+// before each change: it sees the permission prompt and nothing of the mini-me's.
+const permissionOnly = process.env.MINIME_ROLE === "permission";
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    MEMORY_TOOL,
-    SKILL_TOOLS.list,
-    SKILL_TOOLS.view,
-    SKILL_TOOLS.manage,
-    NOTE_TOOLS.search,
-    NOTE_TOOLS.view,
-    NOTE_TOOLS.write,
-    CONVERSATION_TOOLS.search,
-    CONVERSATION_TOOLS.read,
-    GUIDE_TOOL,
-    ...(gateOpen
-      ? [ASK_TOOL, PERMISSION_TOOL, SESSIONS_TOOL, ASK_SESSION_TOOL]
-      : []),
-    ...(colleaguesOpen ? [COLLEAGUES_TOOL, ASK_COLLEAGUE_TOOL] : []),
-  ].map((tool) => ({
+  tools: (permissionOnly
+    ? [PERMISSION_TOOL]
+    : [
+        MEMORY_TOOL,
+        SKILL_TOOLS.list,
+        SKILL_TOOLS.view,
+        SKILL_TOOLS.manage,
+        NOTE_TOOLS.search,
+        NOTE_TOOLS.view,
+        NOTE_TOOLS.write,
+        CONVERSATION_TOOLS.search,
+        CONVERSATION_TOOLS.read,
+        GUIDE_TOOL,
+        ...(gateOpen
+          ? [
+              ASK_TOOL,
+              PERMISSION_TOOL,
+              SESSIONS_TOOL,
+              ASK_SESSION_TOOL,
+              WORK_SESSION_TOOL,
+            ]
+          : []),
+        ...(colleaguesOpen ? [COLLEAGUES_TOOL, ASK_COLLEAGUE_TOOL] : []),
+      ]
+  ).map((tool) => ({
     name: tool.name,
     description: tool.description,
     inputSchema: tool.inputSchema,
@@ -99,6 +113,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const args = (request.params.arguments ?? {}) as Record<string, unknown>;
   const operations = Array.isArray(args.operations) ? args.operations : [];
+  if (permissionOnly && request.params.name !== PERMISSION_TOOL.name)
+    return text(`Unknown tool: ${request.params.name}`, true);
   switch (request.params.name) {
     case MEMORY_TOOL.name: {
       const result = await callMemoryTool(store, args);
@@ -149,7 +165,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return text(guide, "error" in guide);
     }
     case SESSIONS_TOOL.name:
-    case ASK_SESSION_TOOL.name: {
+    case ASK_SESSION_TOOL.name:
+    case WORK_SESSION_TOOL.name: {
       const { result, isError } = await callHandsTool(
         request.params.name,
         args,

@@ -48,5 +48,9 @@ This is an early version, used on the **My mini-me** (내 미니미) page.
 - Work with colleagues' mini-mes in an office: send and answer requests, asking them first for
   what only they can decide (`office.md`).
 
-Connecting mail and calendars, changing their files and having their Claude Code conversations
-do work come later; say so plainly when asked, rather than promising.
+- Have one of their Claude Code conversations do a piece of work they took on (often a
+  colleague's request): it works in a copy of that conversation named "<name> · mini-me", which
+  they can open later with `/resume`, and every file it changes and every command it runs is
+  asked of them first, on a card that shows the change itself.
+
+Connecting mail and calendars comes later; say so plainly when asked, rather than promising.

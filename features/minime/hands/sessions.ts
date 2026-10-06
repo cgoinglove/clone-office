@@ -226,3 +226,176 @@ export async function askSession(
     child.stdin.end(askPrompt(question));
   });
 }
+
+const WORK_TIMEOUT_MS = 30 * 60 * 1000;
+
+/**
+ * The tool server a working copy is given: the mini-me's own, offering only the permission prompt,
+ * so each change the copy wants to make is asked of the person on their screen (in `chat`).
+ */
+function permissionServer(chat: string): string {
+  return JSON.stringify({
+    mcpServers: {
+      minime: {
+        command: process.execPath,
+        args: ["--no-warnings", process.argv[1] ?? ""],
+        env: {
+          MINIME_ROLE: "permission",
+          MINIME_GATE_URL: process.env.MINIME_GATE_URL ?? "",
+          MINIME_GATE_SECRET: process.env.MINIME_GATE_SECRET ?? "",
+          MINIME_CHAT_ID: chat,
+        },
+      },
+    },
+  });
+}
+
+export function workPrompt(task: string): string {
+  return `Your person's mini-me hands you this task, which your person has taken on: ${task}
+
+Do it in this project. Every change you make and every command you run is asked of your person first, so do only what the task needs. When done, say in a few lines what you changed, what you checked and how, and anything left to do. Say that tests pass only if you ran them.`;
+}
+
+/**
+ * Have one of the person's conversations do work: a copy of it that is kept, named after it
+ * ("<name> · mini-me"), so the conversation itself is never written to and the person can open
+ * the copy later and go on from it. The copy may read alone; every edit and command is asked of the
+ * person on their screen, through the trust gate, in `chat`.
+ */
+export async function workSession(
+  wanted: string,
+  task: string,
+  options: { chat: string; allow: string[] },
+): Promise<{
+  ok: boolean;
+  text: string;
+  session?: ClaudeSession;
+  copy?: string;
+}> {
+  const session = findSession(
+    await listSessions({ days: 90, limit: 200 }),
+    wanted,
+  );
+  if (!session)
+    return {
+      ok: false,
+      text: `No conversation called "${wanted}" in the last 90 days that the mini-me may open. Look at sessions for the names.`,
+    };
+  if (!existsSync(session.cwd))
+    return {
+      ok: false,
+      text: `The folder of that conversation is no longer there (${session.cwd}).`,
+      session,
+    };
+  if (!process.env.MINIME_GATE_URL)
+    return {
+      ok: false,
+      text: "Nobody can be asked now, so nothing can be changed.",
+      session,
+    };
+  const command = claudeCommand();
+  if (!command)
+    return { ok: false, text: "Claude Code was not found.", session };
+  const excludes = loadExcludes();
+  const args = [
+    "-p",
+    "--resume",
+    session.id,
+    "--fork-session",
+    "--name",
+    `${session.name ?? "conversation"} · mini-me`,
+    "--output-format",
+    "json",
+    "--model",
+    defaultModel(),
+    "--setting-sources",
+    "user",
+    "--mcp-config",
+    permissionServer(options.chat),
+    "--strict-mcp-config",
+    "--tools",
+    "Read,Glob,Grep,Edit,Write,Bash",
+    "--allowedTools",
+    ["Read", "Glob", "Grep", ...options.allow].join(","),
+    "--disallowedTools",
+    ["SendMessage", "ListAgents", ...denyRules(excludes)].join(","),
+    "--permission-mode",
+    "default",
+    "--permission-prompt-tool",
+    "mcp__minime__permission_prompt",
+    "--max-turns",
+    "40",
+  ];
+  const started = Date.now();
+  return new Promise((resolve) => {
+    const env = cleanEnv();
+    // Each change waits for the person's answer on their screen.
+    env.MCP_TOOL_TIMEOUT = String(11 * 60 * 1000);
+    const child = spawn(command.file, [...command.prefix, ...args], {
+      cwd: session.cwd,
+      env: env as NodeJS.ProcessEnv,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    const finish = (
+      ok: boolean,
+      text: string,
+      copy?: string,
+      cost?: number,
+    ) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      logRun({
+        at: new Date(started).toISOString(),
+        purpose: "work",
+        brain: "claude-code",
+        model: defaultModel(),
+        session: copy ?? session.id,
+        ok,
+        ...(ok ? {} : { error: text.slice(0, 200) }),
+        ms: Date.now() - started,
+        cost_usd: cost,
+      });
+      resolve({ ok, text, session, copy });
+    };
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM");
+      finish(false, "The work did not finish in time.");
+    }, WORK_TIMEOUT_MS);
+    timer.unref?.();
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on("error", (error) => finish(false, error.message));
+    child.on("close", () => {
+      try {
+        const out = JSON.parse(stdout) as {
+          result?: string;
+          is_error?: boolean;
+          session_id?: string;
+          total_cost_usd?: number;
+        };
+        finish(
+          Boolean(out.result) && !out.is_error,
+          out.result || "The conversation could not do it.",
+          out.session_id,
+          out.total_cost_usd,
+        );
+      } catch {
+        finish(
+          false,
+          stderr.trim().slice(-300) || "The conversation could not do it.",
+        );
+      }
+    });
+    child.stdin.end(workPrompt(task));
+  });
+}

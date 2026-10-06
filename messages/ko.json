@@ -134,7 +134,12 @@
       "WebFetch": "웹 페이지 열기",
       "WebSearch": "웹 검색",
       "mcp__minime__ask_colleague": "동료 미니미에게 부탁 보내기",
-      "mcp__minime__ask_session": "내 Claude Code 대화에게 묻기"
+      "mcp__minime__ask_session": "내 Claude Code 대화에게 묻기",
+      "Edit": "파일 고치기",
+      "Write": "파일 쓰기",
+      "NotebookEdit": "노트북 고치기",
+      "Bash": "명령 실행",
+      "mcp__minime__work_session": "내 Claude Code 대화에게 일 시키기"
     },
     "ruleTitle": "앞으로 이렇게 할까요?",
     "rule": "‘{menu}’에 대한 제 답을 세 번 그대로 보내셨어요. 앞으로는 제가 답하고 알려 드릴까요?",

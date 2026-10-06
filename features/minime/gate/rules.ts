@@ -72,6 +72,12 @@ export function ruleFor(
     }
   }
   if (tool === "WebSearch") return "WebSearch";
+  // Changing files: from now on in that folder. A command is asked every time.
+  if (
+    (tool === "Edit" || tool === "Write" || tool === "NotebookEdit") &&
+    typeof (input.file_path ?? input.notebook_path) === "string"
+  )
+    return `Edit(${pathRule(dirname(String(input.file_path ?? input.notebook_path)))}/**)`;
   // The mini-me's own tools that reach out, such as asking a colleague: the tool itself.
   if (tool.startsWith("mcp__minime__")) return tool;
   return undefined;
@@ -90,5 +96,8 @@ export function denyRules(excludes: readonly string[]): string[] {
           : "",
     )
     .filter(Boolean)
-    .map((path) => `Read(${pathRule(path)}/**)`);
+    .flatMap((path) => [
+      `Read(${pathRule(path)}/**)`,
+      `Edit(${pathRule(path)}/**)`,
+    ]);
 }
