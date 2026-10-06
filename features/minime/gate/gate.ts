@@ -38,6 +38,22 @@ interface Registry {
 /** How long a question waits for the person before the session goes on without an answer. */
 export const ASK_TIMEOUT_MS = 10 * 60 * 1000;
 
+/**
+ * A question about a colleague's request waits only a little for the person at their screen;
+ * after that it is kept for them to answer later (office/state.json), and the request goes on
+ * when they do, so a colleague is told "they will get back to you" rather than kept hanging.
+ */
+export const OFFICE_ASK_LIVE_MS =
+  Number(process.env.SUB_OFFICE_ASK_LIVE_MS) || 2 * 60 * 1000;
+
+/** The conversation id a colleague's request is asked under. */
+export const isRequestChat = (chat: string | undefined) =>
+  Boolean(chat?.startsWith("office-request-"));
+
+export function timeoutFor(chat: string | undefined): number {
+  return isRequestChat(chat) ? OFFICE_ASK_LIVE_MS : ASK_TIMEOUT_MS;
+}
+
 const holder = globalThis as typeof globalThis & { __minimeGate?: Registry };
 
 function registry(): Registry {
@@ -62,7 +78,7 @@ function plain({ id, chat, ask, at }: Pending): Pending {
 export function askPerson(
   chat: string | undefined,
   ask: Ask,
-  timeoutMs = ASK_TIMEOUT_MS,
+  timeoutMs = timeoutFor(chat),
 ): { id: string; done: Promise<Answer> } {
   const r = registry();
   const id = randomUUID();

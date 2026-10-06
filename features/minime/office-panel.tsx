@@ -62,6 +62,8 @@ interface Office {
   members?: { id: string; card: Card; seen: string }[];
   tasks?: Task[];
   asks?: { id: string; chat?: string; ask: GateAsk }[];
+  /** Questions about requests kept for the person: answering one lets the request go on. */
+  later?: { id: string; task: string; from?: string; ask: GateAsk }[];
   problem?: string;
 }
 
@@ -169,7 +171,10 @@ export function OfficePanel({
     (office?.members ?? []).map((m) => [m.id, m.card.name]),
   );
   const others = (office?.members ?? []).filter((m) => m.id !== office?.me?.id);
-  const waiting = (office?.asks ?? []).filter((a) => !answered[a.id]);
+  const waiting = [
+    ...(office?.asks ?? []),
+    ...(office?.later ?? []).map((entry) => ({ ...entry, later: true })),
+  ].filter((a) => !answered[a.id]);
   useEffect(() => {
     onWaiting?.(waiting.length);
   }, [waiting.length, onWaiting]);
@@ -215,11 +220,20 @@ export function OfficePanel({
                 }}
                 onAnswer={(answer, always) => {
                   setAnswered((all) => ({ ...all, [pending.id]: answer }));
-                  void fetch("/api/me/gate/answer", {
-                    method: "POST",
-                    headers: HEADERS,
-                    body: JSON.stringify({ id: pending.id, answer, always }),
-                  }).then(() => load());
+                  // A question kept for later lets its request go on; a live one answers the gate.
+                  void (
+                    "later" in pending
+                      ? post({ action: "later", id: pending.id, answer })
+                      : fetch("/api/me/gate/answer", {
+                          method: "POST",
+                          headers: HEADERS,
+                          body: JSON.stringify({
+                            id: pending.id,
+                            answer,
+                            always,
+                          }),
+                        })
+                  ).then(() => load());
                 }}
               />
             ))}

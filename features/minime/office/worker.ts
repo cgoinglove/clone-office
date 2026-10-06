@@ -15,7 +15,7 @@ import {
   problemCode,
   tasks,
 } from "./client.ts";
-import { handleRequest } from "./handle.ts";
+import { forgetLater, handleRequest } from "./handle.ts";
 import { changeState, holdWorker, loadState } from "./state.ts";
 
 interface Worker {
@@ -151,6 +151,11 @@ function onEvent(
 ): void {
   const { task } = event;
   if (task.metadata.to === office.member) {
+    // Canceled by the one asking: questions kept about it no longer wait for the person.
+    if (task.status.state === "CANCELED") {
+      void forgetLater(task.id);
+      return;
+    }
     // A request to this mini-me, new or answered by the one asking: answer it (once at a time).
     const latest = task.history.at(-1);
     const fresh =

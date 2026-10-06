@@ -56,7 +56,33 @@ Your person wants to see answers to this kind of request before they go, so what
   }`;
 }
 
-export type CheckOutcome = { send: string } | { hold: true; problem?: string };
+/** An answer the person was shown but has not decided on yet: kept, and decided when they do. */
+export interface CheckLater {
+  question: string;
+  choices: string[];
+  reply: string;
+  revised?: string;
+  labels: { send: string; revised?: string; hold: string };
+  problem?: string;
+}
+
+export type CheckOutcome =
+  | { send: string }
+  | { hold: true; problem?: string }
+  | { later: CheckLater };
+
+/** What the person's choice on the card means: send it, send the fixed one, hold it, or their own words. */
+export function decideCheck(
+  answer: string,
+  shown: Pick<CheckLater, "labels" | "reply" | "revised" | "problem">,
+): { send: string } | { hold: true; problem?: string } {
+  if (answer === shown.labels.send) return { send: shown.reply };
+  if (shown.labels.revised && answer === shown.labels.revised)
+    return { send: shown.revised ?? shown.reply };
+  if (answer === shown.labels.hold)
+    return { hold: true, problem: shown.problem };
+  return { send: answer };
+}
 
 /** Let the answer go, hold it, or ask the person, as the check and then the person decide. */
 export async function checkBeforeSending(options: {
@@ -107,22 +133,25 @@ export async function checkBeforeSending(options: {
     `About to answer a colleague with: "${options.reply}". ${verdict.problem ?? (check.ok ? "" : "It could not be checked.")} Send it?`
       .replace(/\s+/g, " ")
       .trim();
-  const { done } = askPerson(options.chat, {
-    kind: "question",
+  const shown: CheckLater = {
     question,
     choices: [
       choices.send,
       ...(choices.revised ? [choices.revised] : []),
       choices.hold,
     ],
+    reply: options.reply,
+    revised: verdict.revised?.trim() || undefined,
+    labels: choices,
+    problem: verdict.problem,
+  };
+  const { done } = askPerson(options.chat, {
+    kind: "question",
+    question,
+    choices: shown.choices,
   });
   const answer = await done;
-  if (!answer.answered) return { hold: true, problem: verdict.problem };
-  if (answer.answer === choices.send) return { send: options.reply };
-  if (choices.revised && answer.answer === choices.revised)
-    return { send: verdict.revised?.trim() ?? options.reply };
-  if (answer.answer === choices.hold)
-    return { hold: true, problem: verdict.problem };
-  // Their own words: sent as they wrote them.
-  return { send: answer.answer };
+  // Not decided while it waited: kept for the person, and decided when they answer.
+  if (!answer.answered) return { later: shown };
+  return decideCheck(answer.answer, shown);
 }

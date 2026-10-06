@@ -158,7 +158,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   into their conversations), `handle.ts` (answers a request with the brain from what it knows,
   asking its person through the gate for what only they can give; a busy AI service is retried
   before failing), `check.ts` (a separate look before an answer leaves, product 2.8a: what it
-  holds back goes to the person as a card: send, send a fixed answer, or hold), `menu.ts` (the
+  holds back goes to the person as a card: send, send a fixed answer, or hold), questions about a
+  request the person does not answer within two minutes are kept in `state.ts` (`later`) and the
+  colleague hears they will get back to them; answering one later goes on with the request
+  (`answerLater`), `menu.ts` (the
   kinds of request the person takes, each with a trust level: auto, tell or ask; the kinds go on
   the card as A2A skills, the trust levels stay in `settings.json`. The brain names a request's
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role

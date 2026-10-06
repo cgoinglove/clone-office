@@ -24,6 +24,36 @@ export interface OfficeState {
   sent: Record<string, { chat: string }>;
   /** Per menu kind the person sees first: answers they sent as they were, in a row. */
   approvals: Record<string, number>;
+  /** Questions about requests that wait for the person, by id; the request goes on when answered. */
+  later: Record<string, Later>;
+}
+
+/**
+ * A question about a colleague's request that the person did not answer at once, kept until they
+ * do. "question" is the mini-me's own question: their answer goes into the session that asked
+ * it, which then answers the colleague. "check" is an answer about to be sent that they see
+ * first: they send it, send the fixed one, or hold it.
+ */
+export interface Later {
+  task: string;
+  /** Who asked, as their card names them. */
+  from?: string;
+  kind: "question" | "check";
+  question: string;
+  choices?: string[];
+  /** question: the brain session to go on with. */
+  session?: string;
+  /** check: the answer about to be sent, a fixed one, what the choices mean, and the state it goes with. */
+  reply?: string;
+  revised?: string;
+  labels?: { send: string; revised?: string; hold: string };
+  state?: "COMPLETED" | "INPUT_REQUIRED" | "REJECTED";
+  /** check: the menu kind it is, how much is done alone for it, and the line to tell the person. */
+  menu?: string;
+  trust?: "auto" | "tell" | "ask";
+  approving?: boolean;
+  note?: string;
+  at: string;
 }
 
 function officeDir(): string {
@@ -43,9 +73,10 @@ export async function loadState(): Promise<OfficeState> {
       handled: parsed.handled ?? {},
       sent: parsed.sent ?? {},
       approvals: parsed.approvals ?? {},
+      later: parsed.later ?? {},
     };
   } catch {
-    return { after: 0, handled: {}, sent: {}, approvals: {} };
+    return { after: 0, handled: {}, sent: {}, approvals: {}, later: {} };
   }
 }
 

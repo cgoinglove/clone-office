@@ -12,6 +12,7 @@ import {
   updateCard,
   updateRequest,
 } from "@/features/minime/office/client";
+import { answerLater, laterQuestions } from "@/features/minime/office/handle";
 import {
   cleanMenu,
   loadMenu,
@@ -54,6 +55,18 @@ export async function GET(request: Request) {
       members: everyone,
       tasks: requests,
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
+      // Questions about requests kept for the person to answer when they can.
+      later: (await laterQuestions(requests)).map((entry) => ({
+        id: entry.id,
+        task: entry.task,
+        from: entry.from,
+        at: entry.at,
+        ask: {
+          kind: "question",
+          question: entry.question,
+          ...(entry.choices?.length ? { choices: entry.choices } : {}),
+        },
+      })),
       problem: officeProblem(),
     });
   } catch (error) {
@@ -111,6 +124,11 @@ const Body = z.discriminatedUnion("action", [
     action: z.literal("draft-menu"),
     locale: z.string().max(35).default("en"),
   }),
+  z.object({
+    action: z.literal("later"),
+    id: z.string().uuid(),
+    answer: z.string().trim().min(1).max(4000),
+  }),
 ]);
 
 export async function POST(request: Request) {
@@ -128,6 +146,15 @@ export async function POST(request: Request) {
       return description
         ? Response.json({ description })
         : Response.json({ error: "no-draft" }, { status: 502 });
+    }
+    if (input.action === "later") {
+      const going = await answerLater(input.id, input.answer, {
+        gateUrl: new URL("/api/me/gate", request.url).toString(),
+        language: await personLanguage(undefined),
+      });
+      return going
+        ? Response.json({ ok: true })
+        : Response.json({ error: "no-longer-waiting" }, { status: 410 });
     }
     if (input.action === "draft-menu") {
       if (!hasClaudeCode())

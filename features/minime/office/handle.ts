@@ -5,14 +5,17 @@
 // The brain says which kind of request on the person's menu it is; code then does what the
 // person set for that kind: send it, send it and tell them, or show it to them first.
 
+import { randomUUID } from "node:crypto";
 import { runSession, type SessionGate } from "../brain/session.ts";
 import { appendMessage, createChat, listChats } from "../chat/store.ts";
 import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { loadExcludes } from "../server/exclude.ts";
-import { checkBeforeSending } from "./check.ts";
+import { type CheckOutcome, checkBeforeSending, decideCheck } from "./check.ts";
 import {
   type Card,
+  loadOffice,
+  members,
   type OfficeConfig,
   type Task,
   tasks,
@@ -23,9 +26,16 @@ import {
   type MenuItem,
   menuLines,
   saveMenu,
+  type Trust,
   trustFor,
 } from "./menu.ts";
-import { changeState, loadState, releaseLease, takeLease } from "./state.ts";
+import {
+  changeState,
+  type Later,
+  loadState,
+  releaseLease,
+  takeLease,
+} from "./state.ts";
 import { officeClosing } from "./worker.ts";
 
 export const REQUEST_SCHEMA = {
@@ -36,6 +46,7 @@ export const REQUEST_SCHEMA = {
     declined: { type: "boolean" },
     menu: { type: "string" },
     note: { type: "string" },
+    waiting_on_person: { type: "boolean" },
   },
   required: ["reply"],
 };
@@ -54,7 +65,7 @@ ${text}
 
 Answer it for your person, the way they would: from what you know of them and their work (your memory, your notes, and their past conversations, which you can search). Say only what your person would say, in the language the request is written in, and keep it short.
 
-Some things only your person can give: a promise (a date, money, scope), a decision they answer for, anything about a relationship (refusing, apologising, negotiating), or a check of work in their own field. For those, ask your person with ask_me, in their language, and answer with what they said. Never promise or decide on their behalf.
+Some things only your person can give: a promise (a date, money, scope), a decision they answer for, anything about a relationship (refusing, apologising, negotiating), or a check of work in their own field. For those, ask your person with ask_me, in their language, and answer with what they said. Never promise or decide on their behalf. If they have not answered yet, set waiting_on_person: you will go on when they do.
 
 If you need something from the one asking before you can answer, set needs_input and ask it in reply. If it is not something your person does or would take on, set declined and say so politely in reply.
 ${
@@ -81,7 +92,7 @@ export function passing(error: string | undefined): boolean {
 
 /** The gate's conversation id for a request, so its questions show with the office. */
 export function requestChat(task: Task): string {
-  return `office-${task.id}`;
+  return `office-request-${task.id}`;
 }
 
 export async function handleRequest(options: {
@@ -110,15 +121,34 @@ export async function handleRequest(options: {
   }
 }
 
+type Said = { question: string; answer: string };
+
+/** Going on with a request after the person answered a question kept for later. */
+interface Resume {
+  prompt: string;
+  session?: string;
+  said: Said[];
+}
+
+const FINAL_STATES = ["COMPLETED", "FAILED", "CANCELED", "REJECTED"];
+
+const userText = (task: Task) =>
+  task.history
+    .filter((m) => m.role === "user")
+    .map((m) => m.parts.map((p) => p.text).join("\n"))
+    .join("\n\n");
+
 async function answer(options: {
   office: OfficeConfig;
   task: Task;
   from?: Card;
   gateUrl: string;
   language?: string;
-  latest: Task["history"][number];
+  /** The asker's latest words, for a request just in; absent when going on after the person answered. */
+  latest?: Task["history"][number];
+  resume?: Resume;
 }): Promise<void> {
-  const { office, task, from, gateUrl, language, latest } = options;
+  const { office, task, from, gateUrl, language, latest, resume } = options;
   const previous = (await loadState()).handled[task.id];
   const menu = await loadMenu();
   const gate: SessionGate = {
@@ -129,9 +159,14 @@ async function answer(options: {
     deny: denyRules(loadExcludes()),
   };
   // The one asking hears only that it is being checked while the person is asked; what the
-  // person says is kept for the check before sending, so it does not ask them again.
+  // person says is kept for the check before sending, so it does not ask them again. A question
+  // they leave unanswered is kept for later.
   let told = false;
-  const said: { question: string; answer: string }[] = [];
+  const said: Said[] = [...(resume?.said ?? [])];
+  const asked = new Map<
+    string,
+    { question: string; choices?: string[]; answered: boolean }
+  >();
   const stop = onAsk((pending) => {
     if (pending.chat !== gate.chat) return;
     const question =
@@ -140,8 +175,17 @@ async function answer(options: {
         : pending.ask.kind === "permission"
           ? pending.ask.tool
           : pending.ask.menu;
+    if (pending.ask.kind === "question")
+      asked.set(pending.id, {
+        question,
+        choices: pending.ask.choices,
+        answered: false,
+      });
     void waitFor(pending.id)?.then((answer) => {
-      if (answer.answered) said.push({ question, answer: answer.answer });
+      if (!answer.answered) return;
+      said.push({ question, answer: answer.answer });
+      const entry = asked.get(pending.id);
+      if (entry) entry.answered = true;
     });
     if (told) return;
     told = true;
@@ -149,18 +193,22 @@ async function answer(options: {
   });
   try {
     await updateRequest(office, task.id, { state: "WORKING" }).catch(() => {});
+    const text = latest?.parts.map((p) => p.text).join("\n") ?? "";
+    const prompt =
+      resume?.session || (!resume && previous?.session)
+        ? (resume?.prompt ??
+          `They answered: ${text}\n\nGo on with the request.`)
+        : `${requestPrompt(from, resume ? userText(task) : text, menu)}${
+            resume
+              ? `\n\nYou already asked your person; they answered: ${resume.said.map((x) => `"${x.question}" → ${x.answer}`).join("; ")}`
+              : ""
+          }`;
     // Nobody watches this run: a busy or unreachable AI service is waited out a little (a minute,
     // then three) before the request is reported as failed, as Hermes retries a failed turn.
     const run = () =>
       runSession({
-        prompt: previous?.session
-          ? `They answered: ${latest.parts.map((p) => p.text).join("\n")}\n\nGo on with the request.`
-          : requestPrompt(
-              from,
-              latest.parts.map((p) => p.text).join("\n"),
-              menu,
-            ),
-        resume: previous?.session,
+        prompt,
+        resume: resume ? resume.session : previous?.session,
         jsonSchema: REQUEST_SCHEMA,
         language,
         maxTurns: 16,
@@ -188,7 +236,22 @@ async function answer(options: {
       declined?: boolean;
       menu?: string;
       note?: string;
+      waiting_on_person?: boolean;
     };
+    // The person was asked and has not answered: the question waits for them, and the colleague
+    // hears that they will get back to them.
+    const open = [...asked.values()].filter((a) => !a.answered);
+    if (result.ok && (answer.waiting_on_person || open.length)) {
+      const last = open.at(-1);
+      await park(office, task, {
+        kind: "question",
+        question: last?.question ?? answer.note?.trim() ?? userText(task),
+        ...(last?.choices?.length ? { choices: last.choices } : {}),
+        session: result.sessionId,
+        from: from?.name,
+      });
+      return;
+    }
     // What the person set for this kind of request; code decides, the brain only named the kind.
     const { item, trust } = trustFor(menu, answer.menu);
     const approving = trust === "ask" && said.length === 0;
@@ -202,12 +265,14 @@ async function answer(options: {
       return;
     }
     const reply = answer.reply.trim();
+    const state = answer.declined
+      ? "REJECTED"
+      : answer.needs_input
+        ? "INPUT_REQUIRED"
+        : "COMPLETED";
     // A second look before it leaves; what it holds back goes to the person (product 2.8a).
     const outcome = await checkBeforeSending({
-      request: task.history
-        .filter((m) => m.role === "user")
-        .map((m) => m.parts.map((p) => p.text).join("\n"))
-        .join("\n\n"),
+      request: userText(task),
       reply,
       chat: gate.chat ?? requestChat(task),
       language,
@@ -218,34 +283,184 @@ async function answer(options: {
       from: from?.name,
     });
     if (officeClosing()) return;
-    if ("hold" in outcome) {
-      if (approving && item) await countApproval(item, false);
-      await updateRequest(office, task.id, {
-        state: "REJECTED",
-        text: "Their person will answer this directly.",
+    const sending = {
+      state,
+      reply,
+      approving,
+      menu: item?.id,
+      trust,
+      note: answer.note?.trim(),
+      from: from?.name,
+    } as const;
+    if ("later" in outcome) {
+      await park(office, task, {
+        kind: "check",
+        question: outcome.later.question,
+        choices: outcome.later.choices,
+        ...(outcome.later.revised ? { revised: outcome.later.revised } : {}),
+        labels: outcome.later.labels,
+        ...sending,
       });
       return;
     }
-    await updateRequest(office, task.id, {
-      state: answer.declined
-        ? "REJECTED"
-        : answer.needs_input
-          ? "INPUT_REQUIRED"
-          : "COMPLETED",
-      text: outcome.send,
-    });
-    // The person sent it as it was: three in a row, and the mini-me offers to do these alone.
-    if (approving && item)
-      await countApproval(item, "send" in outcome && outcome.send === reply);
-    // "Do it and tell me": the person hears what was answered for them, in their conversation.
-    if (trust === "tell")
-      await tellPerson(
-        answer.note?.trim() ||
-          `${from?.name ?? "A colleague"}: ${latest.parts.map((p) => p.text).join(" ")}\n→ ${outcome.send}`,
-      );
+    await finish(office, task, outcome, sending);
   } finally {
     stop();
   }
+}
+
+/** Send the answer as the person's choices say, then count it toward a rule and tell them. */
+async function finish(
+  office: OfficeConfig,
+  task: Task,
+  outcome: Exclude<CheckOutcome, { later: unknown }>,
+  sending: {
+    state: "COMPLETED" | "INPUT_REQUIRED" | "REJECTED";
+    reply: string;
+    approving?: boolean;
+    menu?: string;
+    trust?: Trust;
+    note?: string;
+    from?: string;
+  },
+): Promise<void> {
+  const item = sending.menu
+    ? (await loadMenu()).find((m) => m.id === sending.menu)
+    : undefined;
+  if ("hold" in outcome) {
+    if (sending.approving && item) await countApproval(item, false);
+    await updateRequest(office, task.id, {
+      state: "REJECTED",
+      text: "Their person will answer this directly.",
+    });
+    return;
+  }
+  await updateRequest(office, task.id, {
+    state: sending.state,
+    text: outcome.send,
+  });
+  // The person sent it as it was: three in a row, and the mini-me offers to do these alone.
+  if (sending.approving && item)
+    await countApproval(item, outcome.send === sending.reply);
+  // "Do it and tell me": the person hears what was answered for them, in their conversation.
+  if (sending.trust === "tell")
+    await tellPerson(
+      sending.note ||
+        `${sending.from ?? "A colleague"}: ${userText(task)}\n→ ${outcome.send}`,
+    );
+}
+
+/** Keep a question for the person, and tell the one asking that they will get back to them. */
+async function park(
+  office: OfficeConfig,
+  task: Task,
+  later: Omit<Later, "task" | "at">,
+): Promise<void> {
+  await changeState((s) => {
+    s.later[randomUUID()] = {
+      ...later,
+      task: task.id,
+      at: new Date().toISOString(),
+    };
+  });
+  await updateRequest(office, task.id, {
+    state: "WORKING",
+    text: `${office.card.name} will get back to you on this.`,
+  });
+}
+
+/** Questions about requests that wait for the person, for their screen; closed requests drop out. */
+export async function laterQuestions(
+  open: Task[],
+): Promise<(Later & { id: string })[]> {
+  const openIds = new Set(
+    open.filter((t) => !FINAL_STATES.includes(t.status.state)).map((t) => t.id),
+  );
+  const { later } = await loadState();
+  const gone = Object.entries(later)
+    .filter(([, entry]) => !openIds.has(entry.task))
+    .map(([id]) => id);
+  if (gone.length)
+    await changeState((s) => {
+      for (const id of gone) delete s.later[id];
+    });
+  return Object.entries(later)
+    .filter(([id]) => !gone.includes(id))
+    .map(([id, entry]) => ({ id, ...entry }));
+}
+
+/**
+ * The person answered a question kept for later: the request goes on in the background. A
+ * question goes back into the session that asked it; an answer they were shown is sent, fixed or
+ * held as they chose.
+ */
+export async function answerLater(
+  id: string,
+  given: string,
+  options: { gateUrl: string; language?: string },
+): Promise<boolean> {
+  let entry: Later | undefined;
+  await changeState((s) => {
+    entry = s.later[id];
+    delete s.later[id];
+  });
+  const office = await loadOffice();
+  const kept = entry;
+  if (!kept || !office) return false;
+  void (async () => {
+    if (!(await takeLease(kept.task))) return;
+    try {
+      const task = (await tasks(office)).tasks.find((t) => t.id === kept.task);
+      if (!task || FINAL_STATES.includes(task.status.state)) return;
+      if (kept.kind === "check" && kept.labels && kept.reply) {
+        await finish(
+          office,
+          task,
+          decideCheck(given, {
+            labels: kept.labels,
+            reply: kept.reply,
+            revised: kept.revised,
+          }),
+          {
+            state: kept.state ?? "COMPLETED",
+            reply: kept.reply,
+            approving: kept.approving,
+            menu: kept.menu,
+            trust: kept.trust,
+            note: kept.note,
+            from: kept.from,
+          },
+        );
+        return;
+      }
+      const from = (await members(office)).members.find(
+        (m) => m.id === task.metadata.from,
+      )?.card;
+      await answer({
+        office,
+        task,
+        from,
+        gateUrl: options.gateUrl,
+        language: options.language,
+        resume: {
+          prompt: `Your person answered your question ("${kept.question}"): ${given}\n\nGo on with the request and answer the one asking.`,
+          session: kept.session,
+          said: [{ question: kept.question, answer: given }],
+        },
+      });
+    } finally {
+      await releaseLease(kept.task);
+    }
+  })();
+  return true;
+}
+
+/** A request closed by the one asking: its questions no longer wait. */
+export async function forgetLater(task: string): Promise<void> {
+  await changeState((s) => {
+    for (const [id, entry] of Object.entries(s.later))
+      if (entry.task === task) delete s.later[id];
+  });
 }
 
 /** A line in the person's latest conversation with their mini-me (a new one if there is none). */

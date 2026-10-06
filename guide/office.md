@@ -87,6 +87,10 @@ field — it asks them first, with a card under **Office** ("A request needs you
 부탁에 답이 필요해요), and answers with what they said. Meanwhile the colleague sees **Working**.
 When the AI is briefly unavailable it tries again a few minutes later before giving up.
 
+When they are not at their screen, such a card waits two minutes and is then kept under
+**Office** until they answer; the colleague is told that they will get back to them. When they
+answer, even hours later, their mini-me goes on with the request and sends the answer.
+
 Before an answer leaves, it is looked at once more, apart from the one who wrote it: does it
 share something private the request does not need (health, family, money, things said in
 confidence), promise or decide what only they can, or risk a relationship? If so, it asks them

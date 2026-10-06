@@ -164,7 +164,9 @@ export async function callGateTool(
       return {
         result: answer.answered
           ? `They answered: ${answer.answer}`
-          : "They did not answer within ten minutes. Do not assume an answer; say what you need from them.",
+          : GATE.chat?.startsWith("office-request-")
+            ? "They have not answered yet; they will answer later, and you will go on then. Do not assume an answer: set waiting_on_person."
+            : "They did not answer within ten minutes. Do not assume an answer; say what you need from them.",
         isError: false,
       };
     }
