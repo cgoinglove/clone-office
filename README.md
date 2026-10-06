@@ -6,11 +6,15 @@ You ask your AI to write up the request. You paste it into Slack. You wait, you 
 answer back. Everyone on your team has an AI, and none of them can reach each other, so the people
 carry the messages.
 
-**sub-office gives everyone on the team an AI stand-in, a *sub*, and lets the subs talk.**
-Your sub knows what you own and how you work. It answers what it can, takes requests, runs your
-Claude Code sessions and your docs, and brings you only the calls that are yours.
+**sub-office gives everyone on the team a mini-me, an AI that works like them, and lets the
+mini-mes talk.** Your mini-me learns how you work from your own records, does your everyday tasks
+like an assistant, and stands in for you with your teammates' mini-mes. It answers what it can,
+takes requests, has your Claude Code conversations do the work, and brings you only the calls that
+are yours.
 
-> Not one person with ten bots. Ten people, ten subs.
+> Not one person with ten bots. Ten people, ten mini-mes.
+
+`sub-office` is a working name.
 
 ## Why now
 
@@ -19,38 +23,66 @@ back to human speed. The bottleneck has moved to the handoffs between people, an
 the access, the responsibility and the final call. sub-office runs the handoffs at AI speed and
 leaves each decision with the person it belongs to.
 
-## A day with a sub
+## What works today
 
-| | What happened | Who handled it |
-|---|---|---|
-| 10:10 | The PM's sub asks when the new payment spec lands | Your sub answered from the Notion spec. You never saw it. |
-| 11:30 | Frontend's sub asks for a new API | Your sub started it in your `api` Claude Code session, asked you once when tests passed, sent the usage back and updated the doc. |
-| 14:00 | You're in a meeting | Two questions answered, one decision saved for later. |
-| 15:00 | One card on your phone: "Run the migration now?" | You tapped **7 pm**. |
+- **It starts from what your AI tools already know.** It reads your conversations with Claude
+  Code, Codex, Cursor and Hermes Agent, the notes you wrote for them and your recent commits, or
+  what ChatGPT, Claude or Gemini remembers about you (copy a prompt there, paste the answer here).
+  It keeps a few lines about how you work, shown exactly as saved; you correct or remove any. You
+  choose the folders it never reads.
+- **It keeps learning, and only what lasts.** After each conversation it looks back and keeps how
+  you decide and talk and what you corrected. Anything that changes (projects, plans, dates,
+  files) is looked up when needed, never stored.
+- **It finds things in your past AI conversations.** "What did I decide yesterday?", "How did I
+  handle this last time?", across your tools, on your computer.
+- **It asks your Claude Code conversations, and has them do work.** By the names you gave them.
+  Every change and every command is shown to you on a card first.
+- **It takes your team's requests your way.** Your card says what people can ask you for; for each
+  kind you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about
+  a relationship always come to you. A second look checks every answer before it leaves. When you
+  are away, its questions wait and come to you three times a day.
+- **It tells you how like you it is.** The like-me score: how often you send its answers as they
+  were.
+- **Flows.** "Every weekday at 9, catch me up." "When someone asks about the payments API, end with
+  a pointer to #payments-api." You ask; it shows you the flow on a card before making it.
+- **For developers:** with the Claude Code plugin, your teammates' mini-mes are tools in your
+  Claude Code, and an answer that comes later lands in your idle session by itself.
+- **It is yours.** Everything it keeps is files on your computer, and it thinks with your own
+  Claude Code. The relay that carries requests between mini-mes is a small server your team runs;
+  it holds cards and requests, never memories or conversations.
 
-You made one decision and two taps. The subs did the rest.
+English and Korean today; a language is one file under `messages/`.
 
-## What your sub does
+## Try it
 
-- **Starts as you.** Your sub drafts its card from your own records (Claude Code history, git,
-  docs), shows where every line came from, checks five sample answers with you, and starts in
-  shadow mode: it drafts, you decide, nothing leaves until you trust it.
-- **Remembers you, not just your project.** A small, capped memory it reads every turn, notes it
-  opens only when needed, a source on every fact, and a tidy-up every night.
-- **Talks to other subs.** Questions, requests, progress and done reports go from sub to sub.
-  Nobody copies a message from one chat into another.
-- **Carries your card.** Your card lists what you own and what people can ask you for, so other
-  subs route to you the way an agent picks a skill.
-- **Asks you only what is yours.** Trust levels for each kind of request, an auto-reply mode,
-  questions batched into one-tap cards, and rules learned from the calls you keep making the same way.
-- **Follows your flows.** "When someone asks for a new API, start it in my `api` Claude Code
-  session, check with me before replying, then update the Notion doc."
-- **Uses your tools.** Your Claude Code sessions, Google Docs, Calendar, Gmail, Notion, Slack,
-  GitHub and your browser, on your own computer.
-- **Works for people who don't code.** You chat with your sub like a messenger. One teammate sets
-  up the connectors and team billing once; everyone else signs in.
+You need Node.js 22.18 or later, pnpm, and Claude Code, signed in.
 
-For developers: your teammates show up as tools in Claude Code, and your sessions take your team's
-requests under your rules.
+```sh
+git clone <this repository> sub-office && cd sub-office
+pnpm install
+pnpm dev        # your mini-me: http://127.0.0.1:3000/me
+```
 
-Status: early. The design and the first version are in progress. Star the repo to follow along.
+For an office, one teammate runs a relay and shares its address and the key it prints:
+
+```sh
+pnpm relay      # http://127.0.0.1:3200 by default; --host and --port to change
+```
+
+Then **Office** on each person's page joins it. To try it alone, run a second mini-me with its own
+folder and port: `SUB_OFFICE_HOME=~/.sub-office-b pnpm dev --port 3001`.
+
+The Claude Code plugin, from this folder:
+
+```sh
+claude plugin marketplace add .
+claude plugin install sub-office@sub-office
+```
+
+`node scripts/pack.mjs` builds the npm package (`npx sub-office`) from the committed files, without
+publishing it.
+
+## Status
+
+Early. Coming next: mail, calendar and documents as the mini-me's hands; a reply page for people
+who don't have a mini-me yet; a desktop app for people who don't code.
