@@ -16,6 +16,7 @@ export interface Preferences {
   review: boolean;
   lobby: boolean;
   lightBackground: boolean;
+  quiet: { on: boolean; from: number; to: number };
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -25,6 +26,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   review: true,
   lobby: true,
   lightBackground: false,
+  quiet: { on: false, from: 22, to: 7 },
 };
 
 export function usePreferences() {

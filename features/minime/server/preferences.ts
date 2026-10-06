@@ -33,6 +33,11 @@ export interface Preferences {
    * the one they picked.
    */
   lightBackground: boolean;
+  /**
+   * Hours the phone is left alone (after OpenClaw's push quiet hours): what waits on the person is
+   * kept and sent when they end. Replies to what they write from the phone still come.
+   */
+  quiet: { on: boolean; from: number; to: number };
 }
 
 /** The work that may go to the lighter model when the person wants it. */
@@ -50,7 +55,13 @@ export const DEFAULT_PREFERENCES: Preferences = {
   review: true,
   lobby: true,
   lightBackground: false,
+  quiet: { on: false, from: 22, to: 7 },
 };
+
+const hourOf = (value: unknown, fallback: number) =>
+  Number.isInteger(value) && (value as number) >= 0 && (value as number) <= 23
+    ? (value as number)
+    : fallback;
 
 const AUTONOMIES: Autonomy[] = ["ask", "reads", "auto"];
 const TRUSTS: Trust[] = ["auto", "tell", "ask"];
@@ -89,6 +100,14 @@ export function cleanPreferences(input: unknown): Preferences {
       typeof raw.lightBackground === "boolean"
         ? raw.lightBackground
         : DEFAULT_PREFERENCES.lightBackground,
+    quiet: (() => {
+      const quiet = (raw.quiet ?? {}) as Record<string, unknown>;
+      return {
+        on: typeof quiet.on === "boolean" ? quiet.on : false,
+        from: hourOf(quiet.from, DEFAULT_PREFERENCES.quiet.from),
+        to: hourOf(quiet.to, DEFAULT_PREFERENCES.quiet.to),
+      };
+    })(),
   };
 }
 
@@ -121,4 +140,25 @@ export async function writePreferences(
     );
     return next;
   });
+}
+
+/**
+ * How long the phone stays quiet from `now`, in ms (0 when it may be written to). Hours are this
+ * computer's own; a stretch past midnight (22 to 7) wraps.
+ */
+export function quietFor(
+  quiet: Preferences["quiet"],
+  now = new Date(),
+): number {
+  if (!quiet.on || quiet.from === quiet.to) return 0;
+  const hour = now.getHours();
+  const inside =
+    quiet.from < quiet.to
+      ? hour >= quiet.from && hour < quiet.to
+      : hour >= quiet.from || hour < quiet.to;
+  if (!inside) return 0;
+  const end = new Date(now);
+  end.setHours(quiet.to, 0, 0, 0);
+  if (end.getTime() <= now.getTime()) end.setDate(end.getDate() + 1);
+  return end.getTime() - now.getTime();
 }

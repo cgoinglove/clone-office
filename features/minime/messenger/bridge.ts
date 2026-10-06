@@ -33,7 +33,7 @@ import { keepFile, SEND_BYTES, sizeText } from "../office/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { personLanguage } from "../server/language.ts";
 import { minimeHome } from "../server/paths.ts";
-import { readPreferences } from "../server/preferences.ts";
+import { quietFor, readPreferences } from "../server/preferences.ts";
 import { watching } from "../server/presence.ts";
 import {
   type Choice,
@@ -935,6 +935,9 @@ export class Bridge {
       this.endings = [];
       return;
     }
+    // The person's quiet hours: what waits is kept, and goes when they end.
+    const quiet = quietFor((await readPreferences()).quiet);
+    if (quiet > 0) return this.lookSoon(quiet + 1000);
     const channel = await this.dmChannel();
     if (!channel) return;
     const w = await words();

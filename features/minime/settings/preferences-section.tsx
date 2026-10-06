@@ -4,7 +4,7 @@
 // on its own (after Claude Code's permission modes), where a new kind of request starts, when the
 // questions it kept for later come, whether it learns after each conversation, and the lobby.
 
-import { BookOpen, Eye, Feather, Hand, Zap } from "lucide-react";
+import { BookOpen, Eye, Feather, Hand, Moon, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
@@ -159,6 +159,38 @@ export function PreferencesSection({
         />
       </Group>
 
+      <Group title={t("phone")}>
+        <Toggle
+          icon={<Moon className="size-4" />}
+          title={t("quiet")}
+          body={t("quietHint")}
+          checked={preferences.quiet.on}
+          onChange={(on) =>
+            void onChange({ quiet: { ...preferences.quiet, on } })
+          }
+        />
+        {preferences.quiet.on && (
+          <div className="flex flex-wrap items-center gap-2 pl-1 text-sm">
+            <span className="text-muted-foreground">{t("quietFrom")}</span>
+            <HourSelect
+              label={t("quietFrom")}
+              value={preferences.quiet.from}
+              onChange={(from) =>
+                void onChange({ quiet: { ...preferences.quiet, from } })
+              }
+            />
+            <span className="text-muted-foreground">{t("quietTo")}</span>
+            <HourSelect
+              label={t("quietTo")}
+              value={preferences.quiet.to}
+              onChange={(to) =>
+                void onChange({ quiet: { ...preferences.quiet, to } })
+              }
+            />
+          </div>
+        )}
+      </Group>
+
       <Group title={t("office")}>
         <Toggle
           title={t("lobby")}
@@ -199,5 +231,30 @@ function Toggle({
       </span>
       <Switch checked={checked} onCheckedChange={onChange} className="mt-1" />
     </label>
+  );
+}
+
+function HourSelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (hour: number) => void;
+}) {
+  return (
+    <select
+      aria-label={label}
+      value={value}
+      onChange={(event) => onChange(Number(event.target.value))}
+      className="h-8 rounded-lg border border-border bg-background px-2 text-sm tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {Array.from({ length: 24 }, (_, hour) => (
+        <option key={hour} value={hour}>
+          {`${String(hour).padStart(2, "0")}:00`}
+        </option>
+      ))}
+    </select>
   );
 }

@@ -19,6 +19,13 @@ const Body = z.object({
   review: z.boolean().optional(),
   lobby: z.boolean().optional(),
   lightBackground: z.boolean().optional(),
+  quiet: z
+    .object({
+      on: z.boolean(),
+      from: z.number().int().min(0).max(23),
+      to: z.number().int().min(0).max(23),
+    })
+    .optional(),
 });
 
 export async function POST(request: Request) {

@@ -967,7 +967,12 @@
       "lobbyHint": "The first time you open the office each day, it starts at the building's lobby. Off, it opens straight at your desk.",
       "models": "Models",
       "light": "Lighter model for background work",
-      "lightHint": "Looking back after a conversation, summaries and drafts run on your brain's smaller model (Claude Haiku on your Claude subscription), using less of your plan or key. Your conversations, your flows and every answer to colleagues stay on the model you picked."
+      "lightHint": "Looking back after a conversation, summaries and drafts run on your brain's smaller model (Claude Haiku on your Claude subscription), using less of your plan or key. Your conversations, your flows and every answer to colleagues stay on the model you picked.",
+      "phone": "Phone",
+      "quiet": "Quiet hours",
+      "quietHint": "Nothing goes to your phone in these hours; what waits is kept and comes when they end. Replies to what you write from your phone still come.",
+      "quietFrom": "From",
+      "quietTo": "to"
     }
   }
 }
