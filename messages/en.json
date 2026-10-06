@@ -39,7 +39,13 @@
     "messenger-telegram-token-wrong": "Telegram did not take that token. Copy it again from @BotFather; /token there gives a new one.",
     "messenger-telegram-taken": "Another program reads this bot's messages too (Hermes Agent, for one), so they may not reach your mini-me. Stop it there, or make a new bot for your mini-me.",
     "messenger-slack-token-wrong": "Slack did not take those tokens. Check the app-level token (xapp-, with connections:write) and the Bot User OAuth Token (xoxb-), and that the app was made from the manifest.",
-    "messenger-refused": "Discord stopped the bot. Check it in the Developer Portal and connect again."
+    "messenger-refused": "Discord stopped the bot. Check it in the Developer Portal and connect again.",
+    "file-too-large": "That file is larger than 25 MB, more than the office takes.",
+    "files-too-many": "Up to ten files go with one request.",
+    "file-not-found": "That file is not there any more.",
+    "file-left-out": "That file is in a folder you keep out, so it does not leave this computer.",
+    "files-full": "The office keeps no more files for now. Older ones go after two weeks.",
+    "file-missing": "That file is no longer at the office (files are kept two weeks)."
   },
   "firstRun": {
     "title": "My mini-me",
@@ -401,7 +407,10 @@
     "close": "Close the office on this computer",
     "closeNote": "Teammates can't reach the office until you open it here again. Everything it keeps stays.",
     "keepOpen": "Keep it open",
-    "byLinkInstead": "Join with an invite link instead"
+    "byLinkInstead": "Join with an invite link instead",
+    "attach": "Attach files",
+    "removeFile": "Remove",
+    "fileTooLarge": "{name} is larger than 25 MB."
   },
   "files": {
     "title": "All files I keep",

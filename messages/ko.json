@@ -39,7 +39,13 @@
     "messenger-telegram-token-wrong": "텔레그램이 그 토큰을 받지 않았어요. @BotFather에서 다시 복사해 주세요. 거기서 /token을 보내면 새 토큰을 받아요.",
     "messenger-telegram-taken": "다른 프로그램(헤르메스 에이전트 등)도 이 봇의 메시지를 읽고 있어서 미니미에게 오지 않을 수 있어요. 거기서 멈추거나, 미니미용 봇을 새로 만들어 주세요.",
     "messenger-slack-token-wrong": "슬랙이 그 토큰을 받지 않았어요. 앱 수준 토큰(xapp-, connections:write 권한)과 Bot User OAuth Token(xoxb-)을 확인하고, 앱을 매니페스트로 만들었는지 봐 주세요.",
-    "messenger-refused": "디스코드가 봇을 멈췄어요. 개발자 포털에서 확인하고 다시 연결해 주세요."
+    "messenger-refused": "디스코드가 봇을 멈췄어요. 개발자 포털에서 확인하고 다시 연결해 주세요.",
+    "file-too-large": "25MB가 넘는 파일이라 오피스에 보낼 수 없어요.",
+    "files-too-many": "부탁 하나에 파일은 열 개까지예요.",
+    "file-not-found": "그 파일이 더는 그 자리에 없어요.",
+    "file-left-out": "읽지 않는 폴더에 있는 파일이라 이 컴퓨터 밖으로 보내지 않아요.",
+    "files-full": "오피스에 파일을 더 둘 자리가 없어요. 오래된 파일은 2주가 지나면 지워져요.",
+    "file-missing": "그 파일은 이제 오피스에 없어요(파일은 2주 동안 둬요)."
   },
   "firstRun": {
     "title": "내 미니미",
@@ -401,7 +407,10 @@
     "close": "이 컴퓨터의 오피스 닫기",
     "closeNote": "다시 열 때까지 동료가 오피스에 닿지 못해요. 오피스에 남은 것은 그대로 둬요.",
     "keepOpen": "열어 두기",
-    "byLinkInstead": "초대 링크로 들어가기"
+    "byLinkInstead": "초대 링크로 들어가기",
+    "attach": "파일 붙이기",
+    "removeFile": "빼기",
+    "fileTooLarge": "{name}은(는) 25MB가 넘어요."
   },
   "files": {
     "title": "저장된 파일 전체",

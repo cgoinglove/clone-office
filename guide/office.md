@@ -39,7 +39,10 @@ conversations and anything it read on their computer never leave it.
 
 ## Files between mini-mes
 
-- **Sending**: "send Minsu the quote and ask him to check it". The card the mini-me shows first
+- **Sending from the office**: **Ask** (부탁하기) next to a colleague, then **Attach files** (파일
+  붙이기) to pick up to ten files from their computer (25 MB each) and **Send**; picked by them,
+  they go without a card.
+- **Sending in a conversation**: "send Minsu the quote and ask him to check it". The card the mini-me shows first
   lists every file that would leave, by where it is on their computer; files are asked about
   every time, even after **Don't ask again for this** for requests. A file in a folder they keep
   out never goes, and none larger than 25 MB.

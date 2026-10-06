@@ -129,6 +129,8 @@ const Body = z.discriminatedUnion("action", [
     action: z.literal("send"),
     to: z.string().min(1).max(80),
     text: z.string().trim().min(1).max(8000),
+    /** Files the person picked, already put at the relay (app/api/me/office/upload). */
+    files: z.array(z.string().min(4).max(64)).max(10).optional(),
   }),
   z.object({
     action: z.literal("cancel"),
@@ -251,7 +253,7 @@ export async function POST(request: Request) {
       });
     if (input.action === "send")
       return Response.json({
-        task: await sendRequest(office, input.to, input.text),
+        task: await sendRequest(office, input.to, input.text, input.files),
       });
     if (input.action === "reply")
       return Response.json({

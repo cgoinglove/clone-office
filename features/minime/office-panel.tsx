@@ -113,6 +113,27 @@ const sizeText = (bytes: number) =>
       ? `${Math.round(bytes / 1024)} KB`
       : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 
+/** The largest file that goes with a request, as the relay keeps by default. */
+const FILE_BYTES = 25 * 1024 * 1024;
+
+/** Puts a picked file at the relay; its id, or the problem in a code. */
+async function upload(file: File): Promise<string | { error: string }> {
+  const response = await fetch("/api/me/office/upload", {
+    method: "POST",
+    headers: {
+      "x-sub-office": "1",
+      "content-type": file.type || "application/octet-stream",
+      "x-file-name": encodeURIComponent(file.name),
+    },
+    body: file,
+  }).catch(() => undefined);
+  const data = (await response?.json().catch(() => ({}))) as {
+    file?: { id: string };
+    error?: string;
+  };
+  return data?.file?.id ?? { error: data?.error ?? "relay-unreachable" };
+}
+
 /** Saves a file that went with a request, as the browser saves a download. */
 async function save(task: string, file: { id: string; name: string }) {
   const response = await fetch(
@@ -368,8 +389,8 @@ export function OfficePanel({
                     key={member.id}
                     member={member}
                     busy={busy}
-                    onSend={(text) =>
-                      post({ action: "send", to: member.id, text })
+                    onSend={(text, files) =>
+                      post({ action: "send", to: member.id, text, files })
                     }
                   />
                 ))}
@@ -1141,10 +1162,16 @@ function Colleague({
 }: {
   member: { id: string; card: Card; seen: string };
   busy: boolean;
-  onSend: (text: string) => Promise<boolean>;
+  onSend: (text: string, files: string[]) => Promise<boolean>;
 }) {
   const [asking, setAsking] = useState(false);
   const [text, setText] = useState("");
+  // Files picked to go with it, and a problem with one, said in the person's language.
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [fileProblem, setFileProblem] = useState<string | null>(null);
+  const picker = useRef<HTMLInputElement>(null);
+  const problemText = useProblem();
   const t = useTranslations("office");
   const common = useTranslations("common");
   const format = useFormatter();
@@ -1209,12 +1236,28 @@ function Colleague({
           className="flex flex-col gap-2"
           onSubmit={(event) => {
             event.preventDefault();
-            void onSend(text.trim()).then((ok) => {
-              if (ok) {
-                setText("");
-                setAsking(false);
+            void (async () => {
+              setUploading(true);
+              setFileProblem(null);
+              try {
+                const ids: string[] = [];
+                for (const file of files) {
+                  const id = await upload(file);
+                  if (typeof id !== "string") {
+                    setFileProblem(problemText(id.error));
+                    return;
+                  }
+                  ids.push(id);
+                }
+                if (await onSend(text.trim(), ids)) {
+                  setText("");
+                  setFiles([]);
+                  setAsking(false);
+                }
+              } finally {
+                setUploading(false);
               }
-            });
+            })();
           }}
         >
           <Textarea
@@ -1222,14 +1265,63 @@ function Colleague({
             placeholder={t("askPlaceholder", { name: member.card.name })}
             onChange={(e) => setText(e.target.value)}
           />
+          {files.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {files.map((file, index) => (
+                <li
+                  key={`${file.name}-${file.size}-${file.lastModified}`}
+                  className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground"
+                >
+                  <span className="min-w-0 truncate">
+                    {file.name} · {sizeText(file.size)}
+                  </span>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    onClick={() =>
+                      setFiles((all) => all.filter((_, at) => at !== index))
+                    }
+                  >
+                    {t("removeFile")}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {fileProblem && <p className="text-destructive">{fileProblem}</p>}
+          <input
+            ref={picker}
+            type="file"
+            multiple
+            hidden
+            onChange={(event) => {
+              const picked = [...(event.target.files ?? [])];
+              event.target.value = "";
+              const large = picked.find((file) => file.size > FILE_BYTES);
+              if (large) {
+                setFileProblem(t("fileTooLarge", { name: large.name }));
+                return;
+              }
+              setFileProblem(null);
+              setFiles((all) => [...all, ...picked].slice(0, 10));
+            }}
+          />
           <div className="flex gap-2">
             <Button
               type="submit"
               size="sm"
-              disabled={busy || !text.trim()}
-              loading={busy}
+              disabled={busy || uploading || !text.trim()}
+              loading={busy || uploading}
             >
               {common("send")}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={files.length >= 10}
+              onClick={() => picker.current?.click()}
+            >
+              {t("attach")}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setAsking(false)}>
               {common("cancel")}
