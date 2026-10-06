@@ -148,6 +148,36 @@ test("from the invite link to a connected computer, as a person does it: sign up
       redirect: "manual",
     });
     assert.equal(forged.status, 403);
+    // So is one a browser marks as from another site, whatever its Origin says.
+    const crossSite = await fetch(`${base}/i/${office.key}`, {
+      method: "POST",
+      headers: {
+        "sec-fetch-site": "cross-site",
+        origin: "null",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: "name=X&email=x%40example.com&password=xxxxxxxxxx",
+      redirect: "manual",
+    });
+    assert.equal(crossSite.status, 403);
+    // The page keeps its address from other sites, but not from its own forms.
+    assert.equal(page.headers.get("referrer-policy"), "same-origin");
+    // A browser posting the page's own form says so: it is let in.
+    const fromPage = await fetch(`${base}/i/${office.key}`, {
+      method: "POST",
+      headers: {
+        "sec-fetch-site": "same-origin",
+        origin: base,
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        name: "Cy",
+        email: "cy@example.com",
+        password: "a long password",
+      }),
+      redirect: "manual",
+    });
+    assert.equal(fromPage.status, 303);
 
     const made = await fetch(`${base}/i/${office.key}`, {
       method: "POST",
@@ -240,5 +270,89 @@ test("from the invite link to a connected computer, as a person does it: sign up
     await relay.close();
     await db.close();
     rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test("an office's owner decides who is in: removes people and keyed clones, adds owners, renames, makes a new link", async () => {
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  try {
+    const accounts = await Accounts.open(db, relay);
+    const office = await relay.office();
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    // Ben's computer is connected; Cy joined from an app with the key, with no account.
+    const { code } = await accounts.setupCode(ben.person.id, office.id);
+    const benClone = await accounts.claim(code);
+    const cy = await relay.join({
+      key: office.key,
+      card: { name: "Cy", description: "" },
+    });
+
+    const people = await accounts.people(office.id);
+    assert.deepEqual(
+      people.map((one) => [one.name, one.role, Boolean(one.clone)]),
+      [
+        ["Ana", "owner", false],
+        ["Ben", "member", true],
+      ],
+    );
+    assert.deepEqual(
+      (await accounts.keyedClones(office.id)).map((clone) => clone.name),
+      ["Cy"],
+    );
+
+    // Only an owner changes the office.
+    await assert.rejects(
+      accounts.removePerson(ben.person.id, office.id, ana.person.id),
+      /not-owner/,
+    );
+    await assert.rejects(
+      accounts.newInvite(ben.person.id, office.id),
+      /not-owner/,
+    );
+    await assert.rejects(
+      accounts.removePerson(ana.person.id, office.id, ana.person.id),
+      /not-yourself/,
+    );
+
+    await accounts.renameOffice(ana.person.id, office.id, "  Acme  ");
+    assert.equal((await accounts.places(ana.person.id))[0].name, "Acme");
+
+    // A new link: the old key no longer lets anyone in; those in stay in.
+    const key = await accounts.newInvite(ana.person.id, office.id);
+    assert.notEqual(key, office.key);
+    await assert.rejects(
+      relay.join({ key: office.key, card: { name: "Dee", description: "" } }),
+      /office-key-wrong|key/i,
+    );
+    assert.equal((await relay.members(office.id)).length, 2);
+
+    // Removing someone ends their clone's place at once; a keyed clone can be removed too.
+    await accounts.removePerson(ana.person.id, office.id, ben.person.id);
+    assert.deepEqual(
+      (await accounts.people(office.id)).map((one) => one.name),
+      ["Ana"],
+    );
+    assert.ok(
+      !(await relay.members(office.id)).some((m) => m.id === benClone.member),
+      "Ben's clone is out",
+    );
+    await accounts.removeClone(ana.person.id, office.id, cy.id);
+    assert.equal((await relay.members(office.id)).length, 0);
+    await assert.rejects(
+      accounts.setupCode(ben.person.id, office.id),
+      /not-in-office/,
+    );
+  } finally {
+    await db.close();
   }
 });

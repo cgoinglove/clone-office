@@ -40,6 +40,35 @@ const WORDS = {
     runTitle: "Run this on your computer",
     runWhat:
       "This link connects a computer to your office. Run it in a terminal on that computer:",
+    people: "People in this office",
+    peopleOwner:
+      "As an owner, you decide who is in, and you can make others owners too.",
+    owner: "Owner",
+    member: "Member",
+    you: "you",
+    cloneIn: "Clone connected, last seen {when}",
+    cloneOut: "No computer connected yet",
+    remove: "Remove",
+    removeTitle: "Remove {name} from this office?",
+    removeWhat:
+      "Their clone stops working here at once, and they can't make a new connect command. What they asked and answered stays.",
+    makeOwner: "Make owner",
+    ownerTitle: "Make {name} an owner?",
+    ownerWhat:
+      "Owners decide who is in the office, rename it and make new invite links. You stay an owner too.",
+    keyed: "Clones that joined with the link",
+    keyedWhat:
+      "These joined from someone's app with the invite link, without an account here.",
+    cloneTitle: "Remove {name}'s clone from this office?",
+    cloneWhat:
+      "It stops working here at once. What it asked and answered stays.",
+    newLink: "Make a new invite link",
+    newLinkTitle: "Make a new invite link?",
+    newLinkWhat:
+      "The link you sent before stops working. Everyone already in stays in.",
+    officeName: "Office name",
+    save: "Save",
+    cancel: "Cancel",
     errors: {
       "invite-wrong": "There is no such invite.",
       "name-missing": "Say your name.",
@@ -52,6 +81,8 @@ const WORDS = {
       "too-many-tries": "Too many tries. Wait a few minutes and try again.",
       "not-in-office": "You are not in this office.",
       "account-failed": "That did not work. Try again.",
+      "not-owner": "Only an owner of this office can do that.",
+      "not-yourself": "You can't remove yourself.",
     },
   },
   ko: {
@@ -87,6 +118,33 @@ const WORDS = {
     runTitle: "내 컴퓨터에서 실행하세요",
     runWhat:
       "이 링크는 컴퓨터를 내 오피스에 연결해요. 그 컴퓨터의 터미널에서 실행하세요:",
+    people: "이 오피스의 사람들",
+    peopleOwner:
+      "주인은 누가 들어와 있을지 정하고, 다른 사람도 주인으로 만들 수 있어요.",
+    owner: "주인",
+    member: "멤버",
+    you: "나",
+    cloneIn: "클론 연결됨, 마지막으로 본 때 {when}",
+    cloneOut: "아직 연결된 컴퓨터가 없어요",
+    remove: "내보내기",
+    removeTitle: "{name}님을 이 오피스에서 내보낼까요?",
+    removeWhat:
+      "클론이 여기서 바로 멈추고, 새 연결 명령도 만들 수 없어요. 주고받은 부탁은 남아요.",
+    makeOwner: "주인으로",
+    ownerTitle: "{name}님을 주인으로 만들까요?",
+    ownerWhat:
+      "주인은 누가 들어와 있을지 정하고, 오피스 이름을 바꾸고, 새 초대 링크를 만들어요. 나도 계속 주인이에요.",
+    keyed: "링크로 바로 들어온 클론",
+    keyedWhat: "여기 계정 없이, 앱에서 초대 링크로 바로 들어온 클론이에요.",
+    cloneTitle: "{name}님의 클론을 이 오피스에서 내보낼까요?",
+    cloneWhat: "여기서 바로 멈춰요. 주고받은 부탁은 남아요.",
+    newLink: "새 초대 링크 만들기",
+    newLinkTitle: "새 초대 링크를 만들까요?",
+    newLinkWhat:
+      "예전에 보낸 링크는 더 쓸 수 없어요. 이미 들어온 사람은 그대로예요.",
+    officeName: "오피스 이름",
+    save: "저장",
+    cancel: "취소",
     errors: {
       "invite-wrong": "없는 초대예요.",
       "name-missing": "이름을 적어 주세요.",
@@ -98,6 +156,8 @@ const WORDS = {
       "too-many-tries": "너무 여러 번 시도했어요. 몇 분 뒤 다시 해 주세요.",
       "not-in-office": "이 오피스에 들어와 있지 않아요.",
       "account-failed": "되지 않았어요. 다시 해 주세요.",
+      "not-owner": "이 오피스의 주인만 할 수 있어요.",
+      "not-yourself": "나 자신은 내보낼 수 없어요.",
     },
   },
 };
@@ -194,17 +254,59 @@ ${input.key ? `<input type="hidden" name="key" value="${escape(input.key)}">` : 
 }
 
 /** One's own page: one's office, the line that connects one's computer, and the team's invite link. */
+export interface HomePerson {
+  id: string;
+  name: string;
+  email: string;
+  role: "owner" | "member";
+  /** When their computer's clone was last heard from, as the reader reads a time. */
+  seen?: string;
+}
+
+export interface HomeClone {
+  id: string;
+  name: string;
+  role: string;
+  seen: string;
+}
+
 export function homePage(input: {
   lang: PageLanguage;
   name: string;
+  /** The reader's account id, to mark them in the list. */
+  me?: string;
   office?: { name: string; invite: string };
   computer?: { name: string; seen: string };
   command?: string;
   error?: string;
+  /** Everyone with an account in the office, and whether the reader owns it. */
+  people?: HomePerson[];
+  owner?: boolean;
+  /** Clones that joined with the key, shown to owners. */
+  clones?: HomeClone[];
 }): string {
   const { lang } = input;
   const title = say(lang, "hello", { name: input.name });
   const office = input.office;
+  const people = input.people ?? [];
+  const owner = Boolean(input.owner);
+  const personRow = (person: HomePerson) => {
+    const self = person.id === input.me;
+    const acts =
+      owner && !self
+        ? `<span class="acts">${
+            person.role === "member"
+              ? `<a class="small" href="/home/people/owner?user=${encodeURIComponent(person.id)}">${say(lang, "makeOwner")}</a>`
+              : ""
+          }<a class="small" href="/home/people/remove?user=${encodeURIComponent(person.id)}">${say(lang, "remove")}</a></span>`
+        : "";
+    return `<li><span class="who"><b>${escape(person.name)}</b><span class="tag">${say(lang, person.role === "owner" ? "owner" : "member")}</span>${self ? `<span class="tag">${say(lang, "you")}</span>` : ""}<small>${escape(person.email)} · ${
+      person.seen
+        ? say(lang, "cloneIn", { when: person.seen })
+        : say(lang, "cloneOut")
+    }</small></span>${acts}</li>`;
+  };
+  const clones = owner ? (input.clones ?? []) : [];
   return shell(
     lang,
     title,
@@ -235,10 +337,74 @@ ${
 <h2>${say(lang, "inviteTeam")}</h2>
 <p>${say(lang, "inviteWhat")}</p>
 <pre>${escape(office.invite)}</pre>
+${owner ? `<p><a href="/home/invite/new">${say(lang, "newLink")}</a></p>` : ""}
+</section>
+${
+  people.length
+    ? `<section>
+<h2>${say(lang, "people")}</h2>
+${owner ? `<p class="note">${say(lang, "peopleOwner")}</p>` : ""}
+<ul class="rows">${people.map(personRow).join("")}</ul>
 </section>`
+    : ""
+}
+${
+  clones.length
+    ? `<section>
+<h2>${say(lang, "keyed")}</h2>
+<p class="note">${say(lang, "keyedWhat")}</p>
+<ul class="rows">${clones
+        .map(
+          (clone) =>
+            `<li><span class="who"><b>${escape(clone.name)}</b><small>${escape(clone.role)}${clone.role ? " · " : ""}${say(lang, "cloneIn", { when: clone.seen })}</small></span><span class="acts"><a class="small" href="/home/clones/remove?member=${encodeURIComponent(clone.id)}">${say(lang, "remove")}</a></span></li>`,
+        )
+        .join("")}</ul>
+</section>`
+    : ""
+}
+${
+  owner
+    ? `<section>
+<h2>${say(lang, "officeName")}</h2>
+<form method="post" action="/home/office/name" class="inline"><input name="name" maxlength="80" value="${escape(office.name)}" aria-label="${say(lang, "officeName")}"><button type="submit">${say(lang, "save")}</button></form>
+</section>`
+    : ""
+}`
     : `<p>${errorWords(lang, "not-in-office")}</p>`
 }
 <form method="post" action="/logout"><button type="submit" class="quiet">${say(lang, "signOut")}</button></form>`,
+  );
+}
+
+/** One more look before something an owner can't take back: who it is about, and yes or cancel. */
+export function confirmPage(input: {
+  lang: PageLanguage;
+  what: "remove" | "owner" | "clone" | "newLink";
+  name?: string;
+  action: string;
+  fields?: Record<string, string>;
+}): string {
+  const { lang } = input;
+  const words = {
+    remove: ["removeTitle", "removeWhat", "remove"],
+    owner: ["ownerTitle", "ownerWhat", "makeOwner"],
+    clone: ["cloneTitle", "cloneWhat", "remove"],
+    newLink: ["newLinkTitle", "newLinkWhat", "newLink"],
+  } as const;
+  const [titleKey, whatKey, yesKey] = words[input.what];
+  const title = say(lang, titleKey, { name: input.name ?? "" });
+  const hidden = Object.entries(input.fields ?? {})
+    .map(
+      ([name, value]) =>
+        `<input type="hidden" name="${escape(name)}" value="${escape(value)}">`,
+    )
+    .join("");
+  return shell(
+    lang,
+    title,
+    `<h1>${title}</h1>
+<p>${say(lang, whatKey)}</p>
+<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit" class="${input.what === "owner" ? "" : "danger"}">${say(lang, yesKey)}</button><a href="/home">${say(lang, "cancel")}</a></div></form>`,
   );
 }
 

@@ -24,6 +24,28 @@ export interface Person {
   email: string;
 }
 
+/** A person with an account in an office, as its owners see them. */
+export interface OfficePerson {
+  id: string;
+  name: string;
+  email: string;
+  role: "owner" | "member";
+  joined: string;
+  /** Their computer's clone in the office, when one is connected. */
+  clone?: { id: string; seen: string };
+}
+
+/** A clone in the office that joined with the key, with no account behind it. */
+export interface KeyedClone {
+  id: string;
+  name: string;
+  role: string;
+  seen: string;
+}
+
+const when = (value: unknown) =>
+  value instanceof Date ? value.toISOString() : String(value ?? "");
+
 export interface Place {
   office: string;
   key: string;
@@ -253,6 +275,136 @@ export class Accounts {
       "SELECT o.id AS office, o.key, o.name, p.role FROM office_people p JOIN offices o ON o.id = p.office_id WHERE p.user_id = $1 ORDER BY p.joined",
       [user],
     );
+  }
+
+  /** Everyone with an account in an office, with their role and the clone their computer runs there. */
+  async people(office: string): Promise<OfficePerson[]> {
+    const rows = await this.db.query<{
+      id: string;
+      name: string;
+      email: string;
+      role: "owner" | "member";
+      joined: unknown;
+      member: string | null;
+      card: { name?: string } | null;
+      seen: unknown;
+    }>(
+      "SELECT u.id, u.name, u.email, p.role, p.joined, m.id AS member, m.card, m.seen FROM office_people p JOIN auth_users u ON u.id = p.user_id LEFT JOIN members m ON m.office_id = p.office_id AND m.user_id = p.user_id WHERE p.office_id = $1 ORDER BY p.joined, u.name",
+      [office],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      role: row.role === "owner" ? "owner" : "member",
+      joined: when(row.joined),
+      ...(row.member
+        ? { clone: { id: row.member, seen: when(row.seen) } }
+        : {}),
+    }));
+  }
+
+  /** Clones that joined with the office's key from someone's app, with no account behind them. */
+  async keyedClones(office: string): Promise<KeyedClone[]> {
+    const rows = await this.db.query<{
+      id: string;
+      card: { name?: string; description?: string } | null;
+      seen: unknown;
+    }>(
+      "SELECT id, card, seen FROM members WHERE office_id = $1 AND user_id IS NULL ORDER BY joined",
+      [office],
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.card?.name ?? "",
+      role: row.card?.description ?? "",
+      seen: when(row.seen),
+    }));
+  }
+
+  /** Throws unless the person owns the office: only an owner changes who is in it, its name or its link. */
+  private async mustOwn(user: string, office: string): Promise<void> {
+    const [row] = await this.db.query<{ role: string }>(
+      "SELECT role FROM office_people WHERE office_id = $1 AND user_id = $2",
+      [office, user],
+    );
+    if (row?.role !== "owner") throw new AccountError("not-owner");
+  }
+
+  /**
+   * Takes a person out of an office: their account leaves it and their clone's place there goes,
+   * so its token stops working at once. What they asked and answered stays in the office's past.
+   */
+  async removePerson(
+    owner: string,
+    office: string,
+    user: string,
+  ): Promise<void> {
+    await this.mustOwn(owner, office);
+    if (owner === user) throw new AccountError("not-yourself");
+    await this.db.transaction(async (tx) => {
+      await tx.query(
+        "DELETE FROM office_people WHERE office_id = $1 AND user_id = $2",
+        [office, user],
+      );
+      await tx.query(
+        "DELETE FROM members WHERE office_id = $1 AND user_id = $2",
+        [office, user],
+      );
+      await tx.query(
+        "DELETE FROM setup_codes WHERE office_id = $1 AND user_id = $2",
+        [office, user],
+      );
+    });
+  }
+
+  /** Takes a clone that joined with the key out of the office; its token stops working at once. */
+  async removeClone(
+    owner: string,
+    office: string,
+    member: string,
+  ): Promise<void> {
+    await this.mustOwn(owner, office);
+    await this.db.query(
+      "DELETE FROM members WHERE office_id = $1 AND id = $2 AND user_id IS NULL",
+      [office, member],
+    );
+  }
+
+  /** Makes another person in the office an owner too, so the office never rests on one person. */
+  async makeOwner(owner: string, office: string, user: string): Promise<void> {
+    await this.mustOwn(owner, office);
+    await this.db.query(
+      "UPDATE office_people SET role = 'owner' WHERE office_id = $1 AND user_id = $2",
+      [office, user],
+    );
+  }
+
+  /**
+   * A new invite link: the office's key changes, so links sent before stop working. Everyone already
+   * in stays, since a clone uses its own token after joining.
+   */
+  async newInvite(owner: string, office: string): Promise<string> {
+    await this.mustOwn(owner, office);
+    const key = randomBytes(9).toString("base64url");
+    await this.db.query("UPDATE offices SET key = $1 WHERE id = $2", [
+      key,
+      office,
+    ]);
+    return key;
+  }
+
+  /** Names the office, as its people see it on their pages and their clones' lobby. */
+  async renameOffice(
+    owner: string,
+    office: string,
+    name: string,
+  ): Promise<void> {
+    await this.mustOwn(owner, office);
+    await this.db.query("UPDATE offices SET name = $1 WHERE id = $2", [
+      name.trim().slice(0, 80),
+      office,
+    ]);
   }
 
   /** A setup code for one of the person's computers: it works once, for ten minutes. */

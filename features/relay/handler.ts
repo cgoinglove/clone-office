@@ -24,11 +24,15 @@
 //   POST /home/pair     a one-time setup code, shown as the line to run on one's computer
 //   GET  /p/:code       what a setup link shows in a browser: the line to run
 //   POST /pair/claim    {code} -> {office, member, token, name}   the computer's own token
+// An office's owners also, each a page to look at first (GET) and the change (POST):
+//   /home/people/remove?user=  /home/people/owner?user=  /home/clones/remove?member=
+//   /home/invite/new           POST /home/office/name {name}
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { AccountError, type Accounts } from "./accounts.ts";
 import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
 import {
+  confirmPage,
   connectCommand,
   homePage,
   runPage,
@@ -47,13 +51,15 @@ import {
 const INBOX_WAIT_MS = 25_000;
 
 // The link's page is someone's private request: kept out of caches, frames and search, and its
-// address (the link's key) is never sent on as a referrer.
+// address (the link's key) is never sent to another site as a referrer. Within this server the
+// referrer stays, because a browser told "no-referrer" names a form's origin as "null", and the
+// forms here are refused unless they say they come from here.
 const PAGE_HEADERS = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "no-store",
   "content-security-policy":
     "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
-  "referrer-policy": "no-referrer",
+  "referrer-policy": "same-origin",
   "x-content-type-options": "nosniff",
 };
 
@@ -191,8 +197,15 @@ export function relayHandler(
         "http";
       return `${proto === "https" ? "https" : "http"}://${request.headers.host ?? "relay"}`;
     };
-    /** A form posted from this server's own page: browsers name where a post comes from. */
+    /**
+     * A form posted from this server's own page. Browsers say where a request comes from: Fetch
+     * Metadata (Sec-Fetch-Site) first, else the Origin; a caller that names neither (a script or
+     * the app's own calls) is not a browser carrying someone's cookie from elsewhere.
+     */
     const fromHere = () => {
+      const site = request.headers["sec-fetch-site"];
+      if (typeof site === "string")
+        return site === "same-origin" || site === "none";
       const origin = request.headers.origin;
       if (!origin) return true;
       try {
@@ -320,11 +333,34 @@ export function relayHandler(
         const mine = place
           ? await relay.memberOf(place.office, person.id)
           : undefined;
+        const people = place ? await accounts.people(place.office) : [];
+        const owner =
+          people.find((one) => one.id === person.id)?.role === "owner";
+        const clones =
+          place && owner ? await accounts.keyedClones(place.office) : [];
+        const seen = (iso: string) => new Date(iso).toLocaleString(lang);
+        const failed = url.searchParams.get("error");
         html(
           200,
           homePage({
             lang,
             name: person.name,
+            me: person.id,
+            owner,
+            people: people.map((one) => ({
+              id: one.id,
+              name: one.name,
+              email: one.email,
+              role: one.role,
+              ...(one.clone ? { seen: seen(one.clone.seen) } : {}),
+            })),
+            clones: clones.map((clone) => ({
+              ...clone,
+              seen: seen(clone.seen),
+            })),
+            ...(failed && /^[a-z-]{2,40}$/.test(failed)
+              ? { error: failed }
+              : {}),
             ...(place
               ? {
                   office: {
@@ -344,6 +380,97 @@ export function relayHandler(
             ...(command ? { command } : {}),
           }),
         );
+        return true;
+      }
+      // An owner's changes to their office: a look first (GET), then the change itself (POST).
+      const admin =
+        /^\/home\/(people\/remove|people\/owner|clones\/remove|invite\/new|office\/name)$/.exec(
+          path,
+        );
+      if (admin && (request.method === "GET" || post)) {
+        const person = await accounts.person(cookie);
+        if (!person) {
+          redirect("/login");
+          return true;
+        }
+        const [place] = await accounts.places(person.id);
+        if (!place) {
+          redirect("/home");
+          return true;
+        }
+        const what = admin[1];
+        if (!post) {
+          const user = url.searchParams.get("user") ?? "";
+          const member = url.searchParams.get("member") ?? "";
+          const name =
+            what === "clones/remove"
+              ? (await accounts.keyedClones(place.office)).find(
+                  (clone) => clone.id === member,
+                )?.name
+              : (await accounts.people(place.office)).find(
+                  (one) => one.id === user,
+                )?.name;
+          if (what === "office/name" || (what !== "invite/new" && !name)) {
+            redirect("/home");
+            return true;
+          }
+          html(
+            200,
+            confirmPage({
+              lang,
+              what:
+                what === "people/remove"
+                  ? "remove"
+                  : what === "people/owner"
+                    ? "owner"
+                    : what === "clones/remove"
+                      ? "clone"
+                      : "newLink",
+              name,
+              action: path,
+              fields: what.startsWith("people/")
+                ? { user }
+                : what === "clones/remove"
+                  ? { member }
+                  : {},
+            }),
+          );
+          return true;
+        }
+        const fields = new URLSearchParams(await raw(request));
+        try {
+          if (what === "people/remove")
+            await accounts.removePerson(
+              person.id,
+              place.office,
+              fields.get("user") ?? "",
+            );
+          else if (what === "people/owner")
+            await accounts.makeOwner(
+              person.id,
+              place.office,
+              fields.get("user") ?? "",
+            );
+          else if (what === "clones/remove")
+            await accounts.removeClone(
+              person.id,
+              place.office,
+              fields.get("member") ?? "",
+            );
+          else if (what === "invite/new")
+            await accounts.newInvite(person.id, place.office);
+          else
+            await accounts.renameOffice(
+              person.id,
+              place.office,
+              fields.get("name") ?? "",
+            );
+          redirect("/home");
+        } catch (error) {
+          const code =
+            error instanceof AccountError ? error.code : "account-failed";
+          redirect(`/home?error=${encodeURIComponent(code)}`);
+        }
         return true;
       }
       const setup = /^\/p\/([\w-]{16,64})$/.exec(path);
