@@ -206,6 +206,18 @@
       "save": "Add",
       "remove": "Remove",
       "takes": "Takes: {list}"
+    },
+    "yourMiniMe": "Your mini-me",
+    "miniMe": "{name}'s mini-me",
+    "floor": {
+      "you": "{name} (you)",
+      "needsYou": "needs you",
+      "waitingOnDecision": "waiting on a decision",
+      "computerOff": "computer off",
+      "working": "working",
+      "away": "away, mini-me on duty",
+      "free": "free",
+      "onDesk": "{count} on the desk"
     }
   },
   "files": {

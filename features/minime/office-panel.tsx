@@ -228,6 +228,19 @@ export function OfficePanel({
               layout="plaza"
               sky="now"
               label={t("title")}
+              bubbles="all"
+              words={{
+                you: (name) => t("floor.you", { name }),
+                yourBot: t("yourMiniMe"),
+                bot: (name) => t("miniMe", { name }),
+                needsYou: t("floor.needsYou"),
+                waitingOnDecision: t("floor.waitingOnDecision"),
+                computerOff: t("floor.computerOff"),
+                working: t("floor.working"),
+                away: t("floor.away"),
+                free: t("floor.free"),
+                onDesk: (count) => t("floor.onDesk", { count }),
+              }}
             />
             <MyCard
               card={office.me.card}
@@ -305,13 +318,44 @@ export function OfficePanel({
 
 const FINAL_STATES: State[] = ["COMPLETED", "FAILED", "CANCELED", "REJECTED"];
 
+/** One line of a request, short enough for a bubble. */
+function clip(value: string, max: number): string {
+  const line = value.replace(/\s+/g, " ").trim();
+  return line.length > max ? `${line.slice(0, max - 1)}…` : line;
+}
+
+/** How long an answer stays in its bot's bubble. */
+const SAYS_FOR_MS = 2 * 60 * 1000;
+
 /**
  * The office as a floor: each member's bot at their desk, as their card's status says (a computer
- * not at the relay for two minutes is off), with the open requests on their desk, and a word from
- * the viewer's own bot when a request waits for them.
+ * not at the relay for two minutes is off), with the open requests on their desk, and what the
+ * bots are saying: the viewer's when a request waits for them, a request on its way in its
+ * asker's bubble, an answer for a while in its answerer's. Only requests the viewer is part of
+ * are known here; what colleagues ask each other stays between them.
  */
 function floor(t: Translate, office: Office, waiting: number): OfficePerson[] {
   const now = Date.now();
+  const names = new Map((office.members ?? []).map((m) => [m.id, m.card.name]));
+  const says = new Map<string, string>();
+  for (const task of office.tasks ?? []) {
+    const state = task.status.state;
+    const last = task.history.at(-1);
+    const text = (message?: Task["history"][number]) =>
+      message?.parts.map((part) => part.text).join(" ") ?? "";
+    if (state === "SUBMITTED" || state === "WORKING") {
+      if (!says.has(task.metadata.from))
+        says.set(
+          task.metadata.from,
+          `→ ${names.get(task.metadata.to) ?? ""}: ${clip(text(task.history[0]), 48)}`,
+        );
+    } else if (
+      last?.role === "agent" &&
+      now - Date.parse(task.status.timestamp) < SAYS_FOR_MS &&
+      !says.has(task.metadata.to)
+    )
+      says.set(task.metadata.to, clip(text(last), 64));
+  }
   return (office.members ?? []).map((member) => {
     const you = member.id === office.me?.id;
     const status = statusCode(member.card.status);
@@ -321,10 +365,12 @@ function floor(t: Translate, office: Office, waiting: number): OfficePerson[] {
         task.metadata.to === member.id &&
         !FINAL_STATES.includes(task.status.state),
     );
+    const line = you && waiting > 0 ? t("needsYou") : says.get(member.id);
     return {
       name: member.card.name,
       team: t("team"),
       you,
+      botName: you ? t("yourMiniMe") : t("miniMe", { name: member.card.name }),
       status:
         status === "off" || (gone && !you)
           ? "offline"
@@ -335,9 +381,8 @@ function floor(t: Translate, office: Office, waiting: number): OfficePerson[] {
       ...(open.some((task) => task.status.state === "WORKING")
         ? { mood: "working" as const }
         : {}),
-      ...(you && waiting > 0
-        ? { needsDecision: true, says: t("needsYou") }
-        : {}),
+      ...(you && waiting > 0 ? { needsDecision: true } : {}),
+      ...(line ? { says: line } : {}),
     };
   });
 }

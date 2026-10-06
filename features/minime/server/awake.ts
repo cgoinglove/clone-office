@@ -37,7 +37,9 @@ export function keepAwake(): () => void {
     const command = awakeCommand();
     if (command)
       try {
-        keeper = spawn(command[0], command[1], { stdio: "ignore" });
+        keeper = spawn(/*turbopackIgnore: true*/ command[0], command[1], {
+          stdio: "ignore",
+        });
         // Not installed or not allowed: the work goes on, only without the guard.
         keeper.on("error", () => {
           keeper = undefined;

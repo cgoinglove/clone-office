@@ -206,6 +206,18 @@
       "save": "더하기",
       "remove": "지우기",
       "takes": "받는 부탁: {list}"
+    },
+    "yourMiniMe": "내 미니미",
+    "miniMe": "{name}의 미니미",
+    "floor": {
+      "you": "{name} (나)",
+      "needsYou": "답이 필요해요",
+      "waitingOnDecision": "결정을 기다리는 중",
+      "computerOff": "컴퓨터 꺼짐",
+      "working": "일하는 중",
+      "away": "자리 비움, 미니미가 대신",
+      "free": "한가함",
+      "onDesk": "책상 위 {count}건"
     }
   },
   "files": {

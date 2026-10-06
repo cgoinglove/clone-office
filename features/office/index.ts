@@ -38,6 +38,8 @@ export {
   type WallClockProps,
 } from "./objects";
 export {
+  FLOOR_WORDS,
+  type FloorWords,
   floorCount,
   OfficeFloor,
   type OfficeFloorProps,

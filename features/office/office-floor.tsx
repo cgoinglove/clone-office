@@ -86,6 +86,10 @@ export interface OfficeFloorProps {
   assemble?: boolean;
   /** Name plates: "auto" shows yours, and others' when worth a look (off, working, a pile, a decision); hovering shows any. */
   plates?: "auto" | "all" | "none";
+  /** Bubbles: "auto" shows others' only when the floor is drawn large enough; "all" always. */
+  bubbles?: "auto" | "all";
+  /** The words on plates and bubbles, in the screen's language; English when left out. */
+  words?: Partial<FloorWords>;
   /** What the office screen shows; the people's moods and statuses fill in what is left out. */
   stats?: Partial<ScreenStats>;
   /** A fixed moment for the clock, calendar and "now" sky; live when left out. */
@@ -133,17 +137,44 @@ const moodOf = (p: OfficePerson): Mood =>
   p.mood ??
   (p.status === "offline" ? "sleep" : p.needsDecision ? "asking" : "idle");
 
-function plateOf(p: OfficePerson): [string, string] {
+/** The words the floor writes on name plates and bubbles; a screen passes its own language's. */
+export interface FloorWords {
+  you: (name: string) => string;
+  yourBot: string;
+  bot: (name: string) => string;
+  needsYou: string;
+  waitingOnDecision: string;
+  computerOff: string;
+  working: string;
+  away: string;
+  free: string;
+  onDesk: (count: number) => string;
+}
+
+export const FLOOR_WORDS: FloorWords = {
+  you: (name) => `${name} (you)`,
+  yourBot: "Your bot",
+  bot: (name) => `${name}'s bot`,
+  needsYou: "needs you",
+  waitingOnDecision: "waiting on a decision",
+  computerOff: "computer off",
+  working: "working",
+  away: "away, bot on duty",
+  free: "free",
+  onDesk: (count) => `${count} on the desk`,
+};
+
+function plateOf(p: OfficePerson, words: FloorWords): [string, string] {
   if (p.needsDecision)
     return [
-      p.you ? "needs you" : "waiting on a decision",
+      p.you ? words.needsYou : words.waitingOnDecision,
       p.you ? "mine" : "on",
     ];
-  const more = p.pile ? ` · ${p.pile} on the desk` : "";
-  if (p.status === "offline") return [`computer off${more}`, "off"];
-  if (moodOf(p) === "working") return [`working${more}`, "on"];
-  if (p.status === "away") return [`away, bot on duty${more}`, ""];
-  return [`free${more}`, ""];
+  const more = p.pile ? ` · ${words.onDesk(p.pile)}` : "";
+  if (p.status === "offline") return [`${words.computerOff}${more}`, "off"];
+  if (moodOf(p) === "working") return [`${words.working}${more}`, "on"];
+  if (p.status === "away") return [`${words.away}${more}`, ""];
+  return [`${words.free}${more}`, ""];
 }
 
 function teamsOf(people: OfficePerson[]): Teams {
@@ -170,6 +201,8 @@ export function OfficeFloor({
   floor = 0,
   assemble = true,
   plates = "auto",
+  bubbles = "auto",
+  words,
   stats,
   now,
   onSelect,
@@ -334,6 +367,7 @@ export function OfficeFloor({
 
   // name plates and bubbles float over the drawing, at each bot's head
   const detail = BODY_PX * scale >= 54;
+  const said = { ...FLOOR_WORDS, ...words };
   const overlays: ReactNode[] = [];
   for (const d of seats) {
     const p = byName.get(d.name as string) as OfficePerson;
@@ -342,7 +376,7 @@ export function OfficeFloor({
       left: `${r1(((fx - vb.x) / vb.w) * 100)}%`,
       top: `${r1(((fy - BODY_PX - 16 - vb.y) / vb.h) * 100)}%`,
     };
-    if (p.says && (detail || p.you)) {
+    if (p.says && (detail || p.you || bubbles === "all")) {
       overlays.push(
         <div
           key={`b-${p.name}`}
@@ -350,14 +384,14 @@ export function OfficeFloor({
           style={pos}
         >
           <span className="who">
-            {p.botName ?? (p.you ? "Your bot" : `${p.name}'s bot`)}
+            {p.botName ?? (p.you ? said.yourBot : said.bot(p.name))}
           </span>
           {p.says}
         </div>,
       );
       continue;
     }
-    const [line, cls] = plateOf(p);
+    const [line, cls] = plateOf(p, said);
     const notable =
       p.status === "offline" ||
       moodOf(p) === "working" ||
@@ -379,7 +413,7 @@ export function OfficeFloor({
         onClick={() => onSelect?.(p.name)}
       >
         <i />
-        <b>{p.you ? `${p.name} (you)` : p.name}</b>
+        <b>{p.you ? said.you(p.name) : p.name}</b>
         <span>{line}</span>
       </button>,
     );
