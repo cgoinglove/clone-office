@@ -111,6 +111,11 @@ test("injection, backdoors, secrets and invisible characters are refused; ordina
     ["hardcoded_secret"],
   );
   assert.deepEqual(scanForThreats("password = 'MYAPP_DB_PASSWORD'"), []);
+  assert.deepEqual(
+    scanForThreats("API_KEY: \"FAKEKEYABCDEFGHIJKLMNOPQRSTUVWX\""),
+    ["hardcoded_secret"],
+    "any case of the word, and a value in capitals that is no variable's name",
+  );
   assert.deepEqual(scanForThreats("Notes​here"), ["invisible_unicode_U+200B"]);
   assert.deepEqual(
     scanForThreats("You must review the plan before the team meeting"),

@@ -180,7 +180,7 @@ export function RequestsScreen() {
                           >
                             <Link
                               href={`/requests/${encodeURIComponent(task.id)}`}
-                              className="grid grid-cols-[minmax(0,1fr)_150px_112px_64px] items-center gap-4 rounded-lg px-3 py-3 transition-colors hover:bg-muted/50 max-md:grid-cols-[minmax(0,1fr)_auto]"
+                              className="grid grid-cols-[minmax(0,1fr)_150px_112px_76px] items-center gap-4 rounded-lg px-3 py-3 transition-colors hover:bg-muted/50 max-md:grid-cols-[minmax(0,1fr)_auto]"
                             >
                               <span className="flex min-w-0 flex-col gap-0.5">
                                 <span
@@ -224,7 +224,7 @@ export function RequestsScreen() {
                               <span>
                                 <PhaseChip phase={group} failed={failed} />
                               </span>
-                              <span className="text-right font-mono text-xs text-muted-foreground tabular-nums max-md:hidden">
+                              <span className="text-right text-xs whitespace-nowrap text-muted-foreground tabular-nums max-md:hidden">
                                 {format.relativeTime(
                                   new Date(task.status.timestamp),
                                   now,

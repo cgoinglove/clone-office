@@ -7,7 +7,7 @@ const FILLER = String.raw`(?:\w+\s+){0,8}`;
 const SECRET_VAR = String.raw`\$\{?\w*(?:KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL)S?\b`;
 const MODIFY = String.raw`(update|modify|edit|write|change|append|add\s+to)\s+[^\n]{0,2048}`;
 
-const PATTERNS: [string, string][] = [
+const PATTERNS: [source: string, id: string, flags?: string][] = [
   // Classic prompt injection.
   [
     String.raw`ignore\s+${FILLER}(previous|all|above|prior)\s+${FILLER}instructions`,
@@ -109,15 +109,18 @@ const PATTERNS: [string, string][] = [
     String.raw`${MODIFY}(?:AGENTS\.md|CLAUDE\.md|\.cursorrules|\.clinerules)`,
     "agent_config_mod",
   ],
-  // A hardcoded secret, unless the value is itself an environment variable's name.
+  // A hardcoded secret, unless the value is itself an environment variable's name. The name test
+  // is case-sensitive, so this one is matched without the "i" flag and spells its words in both
+  // cases (inline modifiers such as (?-i:) need Node 23).
   [
-    String.raw`(?:api[_-]?key|token|secret|password)\s*[=:]\s*["'](?!(?-i:[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+)["'])[A-Za-z0-9+/=_-]{20,}`,
+    String.raw`(?:[Aa][Pp][Ii][_-]?[Kk][Ee][Yy]|[Tt][Oo][Kk][Ee][Nn]|[Ss][Ee][Cc][Rr][Ee][Tt]|[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd])\s*[=:]\s*["'](?![A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+["'])[A-Za-z0-9+/=_-]{20,}`,
     "hardcoded_secret",
+    "",
   ],
 ];
 
 const COMPILED = PATTERNS.map(
-  ([source, id]) => [new RegExp(source, "i"), id] as const,
+  ([source, id, flags = "i"]) => [new RegExp(source, flags), id] as const,
 );
 
 /** Zero-width, word-joiner, invisible operator, BOM and bidirectional control characters. */
