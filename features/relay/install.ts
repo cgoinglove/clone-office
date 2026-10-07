@@ -148,7 +148,8 @@ export function npxLine(
   served = Boolean(servedPackage()),
 ): string {
   return served
-    ? `npx -y --package=${base}${PACKAGE_PATH} sub-office ${args}`
+    ? // quoted, as the link is: an IPv6 address's brackets are a pattern to zsh
+      `npx -y --package="${base}${PACKAGE_PATH}" sub-office ${args}`
     : `npx -y sub-office ${args}`;
 }
 

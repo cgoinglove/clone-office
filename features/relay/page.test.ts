@@ -78,7 +78,7 @@ test("the join line quotes the link and encodes what a shell would act on", () =
   // A relay serving the app's own package: the line takes the app from it.
   assert.equal(
     joinCommand({ base: "http://192.168.0.7:3200", key: "k1", served: true }),
-    'npx -y --package=http://192.168.0.7:3200/sub-office.tgz sub-office join "http://192.168.0.7:3200/i/k1"',
+    'npx -y --package="http://192.168.0.7:3200/sub-office.tgz" sub-office join "http://192.168.0.7:3200/i/k1"',
   );
   assert.equal(
     servedPackage({ SUB_OFFICE_PACKAGE_FILE: "/x/a.tgz" }),

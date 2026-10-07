@@ -12,17 +12,43 @@
 // The app listens on this computer only. Its port is the first free one from 4417, unless
 // --port says otherwise; --no-open leaves the browser alone. When the app is already running on
 // that port, it is opened instead of started twice.
+//
+// Run from a package of a team's own (npx --package=<file or address>, before the app is on npm or
+// for a fork), it says so when it tells how to start again, and a package file on this computer is
+// what an office opened here gives colleagues to install (features/relay/install.ts).
 
 import { spawn } from "node:child_process";
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  writeFileSync,
+} from "node:fs";
 import { createServer } from "node:net";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const HOST = "127.0.0.1";
 const FIRST_PORT = 4417;
+
+// What npx was asked for: the app by its npm name, or a package of a team's own.
+const fromNpx = process.env.npm_config_package?.trim();
+const ownBuild =
+  fromNpx && !/^sub-office(@|$)/.test(fromNpx) ? fromNpx : undefined;
+if (
+  ownBuild?.endsWith(".tgz") &&
+  !/^https?:/.test(ownBuild) &&
+  existsSync(resolve(ownBuild)) &&
+  !process.env.SUB_OFFICE_PACKAGE_FILE
+)
+  process.env.SUB_OFFICE_PACKAGE_FILE = resolve(ownBuild);
+/** The line that starts the app again, as it was started. */
+const again = ownBuild
+  ? `npx -y --package="${ownBuild}" sub-office`
+  : "npx -y sub-office";
 
 const [major, minor] = process.versions.node.split(".").map(Number);
 if (major < 22 || (major === 22 && minor < 13)) {
@@ -286,6 +312,6 @@ async function startApp() {
   }
   console.log(`Your clone is at ${url()}
 It runs on this computer only. Keep this window open; press Ctrl+C to stop.
-To start it again later, run: npx -y sub-office`);
+To start it again later, run: ${again}`);
   if (!args.includes("--no-open")) open(url());
 }
