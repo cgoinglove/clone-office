@@ -257,7 +257,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   machine with Docker. Members join with the office key and then use their own token; a clone
   waits at its inbox (long polling) because it sits on a personal computer out of reach. Shapes follow
   A2A v1.0.0: an AgentCard per member, a Task per request with a contextId, Messages with roles
-  user/agent and text parts, A2A's task states; `a2a.ts` is A2A v1.0 itself, its JSON-RPC binding,
+  user/agent and text parts, A2A's task states (a message the member's person wrote themselves, or a
+  guest by a link, carries `by: "person"` in its metadata, `messages.by_person`, and A2A clients see
+  it there); `a2a.ts` is A2A v1.0 itself, its JSON-RPC binding,
   in front of the same requests: every member is an agent at `/a2a/<member>` (its Agent Card at
   `.well-known/agent-card.json` under it, to the office's members only), and any A2A client with a
   member's token asks that clone (`SendMessage`, waiting for the answer or not; `GetTask`,
@@ -316,7 +318,16 @@ These words help discussion. They do not mandate separate services, tables or UI
   holds back goes to the person as a card: send, send a fixed answer, or hold), questions about a
   request the person does not answer within two minutes are kept in `state.ts` (`later`) and the
   colleague hears they will get back to them; answering one later goes on with the request
-  (`answerLater`), `menu.ts` (the
+  (`answerLater`). Stepping in, after Thursday's step-in: the person tells their clone something
+  about a request (`stepIn`; `state.ts` `handled[task].notes`, read before its next answer leaves,
+  wakes it when it waits, answers a question it waits on, taken back while unread, `takeBack`),
+  answers it themselves (`answerMyself`, sent with `by: "person"`; kept open, the request is theirs,
+  `handled[task].person`, and the colleague's next words wait for them as a `later` of kind `self`,
+  sent as their own), or hands it back (`handBack`, the clone goes on from `requestRecord`); a held
+  answer now takes the request over instead of closing it. Whatever the one asking writes while an
+  answer is made is read before it leaves (`lateWords`); a lost or overgrown session goes on from the
+  request's own record (`sessionLost`, `carryAt` in `brain/context.ts`); the request's words are
+  framed as a request to weigh, with who wrote them (`whoWrote`). `menu.ts` (the
   kinds of request the person takes, each with a trust level: auto, tell or ask; the kinds go on
   the card as A2A skills, the trust levels stay in `settings.json`. The brain names a request's
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role

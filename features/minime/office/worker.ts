@@ -35,6 +35,8 @@ interface Worker {
   language?: string;
   /** Requests being answered now, so one is never answered twice at once. */
   busy: Set<string>;
+  /** Requests the one asking wrote to again while being answered: looked at once more after. */
+  again?: Set<string>;
   abort?: AbortController;
   /** The last problem reaching the relay, for the screen. */
   problem?: string;
@@ -265,7 +267,12 @@ function onEvent(
     const fresh =
       event.type === "task" ||
       (task.status.state === "WORKING" && latest?.role === "user");
-    if (!fresh || worker.busy.has(task.id)) return;
+    if (!fresh) return;
+    // Words that come while it is answered are not dropped: the request is looked at again after.
+    if (worker.busy.has(task.id)) {
+      (worker.again ??= new Set()).add(task.id);
+      return;
+    }
     worker.busy.add(task.id);
     void handleRequest({
       office,
@@ -277,14 +284,25 @@ function onEvent(
       .catch((error) => {
         worker.problem = problemCode(error);
       })
-      .finally(() => worker.busy.delete(task.id));
+      .finally(async () => {
+        worker.busy.delete(task.id);
+        if (!worker.again?.delete(task.id) || worker.closing) return;
+        const now = await tasks(office)
+          .then((all) => all.tasks.find((t) => t.id === task.id))
+          .catch(() => undefined);
+        if (now)
+          onEvent(worker, office, { seq: 0, type: "task", task: now }, cards);
+      });
     return;
   }
-  // News of a request this mini-me sent: an answer goes back into its conversation.
+  // News of a request this mini-me sent: an answer goes back into its conversation, and so does
+  // whatever the colleague wrote themselves, even while their side is still working on it.
   const latest = task.history.at(-1);
   if (!latest || latest.role !== "agent") return;
   const state = task.status.state;
+  const byPerson = latest.metadata.by === "person";
   if (
+    !byPerson &&
     state !== "COMPLETED" &&
     state !== "INPUT_REQUIRED" &&
     state !== "REJECTED" &&
@@ -312,6 +330,7 @@ function onEvent(
       "office",
       `${name}: ${latest.parts.map((p) => p.text).join("\n")}${files}`,
       (taken ?? []).map((one) => one.path),
+      byPerson,
     );
   });
 }

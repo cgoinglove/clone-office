@@ -19,6 +19,7 @@ import { statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
 import { Mark, PhaseChip, phaseOf, StatusDot } from "./parts";
 import { askedText } from "./requests-screen";
+import { StepIn } from "./step-in";
 import { taskOf } from "./your-turn";
 
 export function RequestScreen({ id }: { id: string }) {
@@ -136,11 +137,17 @@ export function RequestScreen({ id }: { id: string }) {
                   )}
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <p className="text-[13px] font-semibold">
-                      {mine
-                        ? t("myClone")
-                        : t("theirClone", {
-                            name: office.names.get(author) ?? name,
-                          })}
+                      {message.metadata?.by === "person"
+                        ? mine
+                          ? t("myself")
+                          : t("themselves", {
+                              name: office.names.get(author) ?? name,
+                            })
+                        : mine
+                          ? t("myClone")
+                          : t("theirClone", {
+                              name: office.names.get(author) ?? name,
+                            })}
                     </p>
                     <p className="text-[15px] leading-relaxed whitespace-pre-wrap wrap-break-word">
                       {message.parts.map((part) => part.text).join("\n")}
@@ -183,7 +190,7 @@ export function RequestScreen({ id }: { id: string }) {
                   aria-hidden
                   className="size-1.5 rounded-full bg-waiting"
                 />
-                {t("yourTurn")}
+                {entry.self ? t("selfWaiting", { name }) : t("yourTurn")}
               </p>
               <AskCard
                 turn={{
@@ -199,6 +206,10 @@ export function RequestScreen({ id }: { id: string }) {
               />
             </div>
           ))}
+
+          {!sent && moving && !task.metadata.guest && (
+            <StepIn task={task.id} name={name} steps={data.steps?.[task.id]} />
+          )}
 
           {sent && moving && (
             <form

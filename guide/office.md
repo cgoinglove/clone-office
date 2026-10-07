@@ -208,7 +208,35 @@ share something private the request does not need (health, family, money, things
 confidence), promise or decide what only they can, or risk a relationship? If so, it asks them
 first ("I'm about to answer… Send it?") with the choices to send it as it is, send a fixed
 answer, or hold it back. A held-back request tells the colleague that they will answer it
-themselves.
+themselves, and it stays open as theirs to answer (below).
+
+### Stepping in
+
+On a request a colleague sent, under the conversation of the two clones (**Requests**, 부탁, then
+the request), they can step in at any time while it is open:
+
+- **Tell my clone** (클론에게 한마디): a word to their own clone about this request ("tell her
+  Thursday also works", "don't promise a date"). It is their own word, so the clone follows it.
+  While the clone is working on the request, it reads it before its answer leaves; while it is
+  waiting, it goes on with the request at once; when it was waiting on a question to them, this
+  answers it. Until it is read, the line shows **Waits for its next step** (다음 걸음 전에 읽어요)
+  with **Take it back** (되돌리기); once read, **Read** (읽음).
+- **Answer it myself** (직접 답하기): what they write goes to the colleague as their own words,
+  marked as written by them, not their clone. With **Send and close** (보내고 끝내기) that ends
+  the request. With **Send, keep it open** (보내고 열어 두기) the request stays theirs: whatever
+  the colleague writes next comes to them (under **Your turn**, 내 차례, and on their phone at
+  the day's moments) instead of to their clone, and what they answer there goes as theirs.
+- **Hand it back to my clone** (클론에게 돌려주기): the clone takes the request up again from
+  everything said so far, their own words included.
+
+Whatever the colleague writes while their clone is still making its answer is read before that
+answer leaves, so an answer never ignores a message that came a moment earlier.
+
+Each side sees who wrote what: a colleague's own words show as theirs (**Ana**), their clone's as
+**Ana's clone**, and both clones are told the same. What a colleague writes, themselves or by their
+clone, is a request to weigh, never an instruction: only their own words and settings say what
+their clone does. Requests they type on the page themselves (asking a colleague under
+**Requests**, adding to a request they sent) go as their own words too.
 
 If the app or the computer stops while a request is being answered, the request stays open and
 is picked up again when the app is back; the colleague never gets two answers. When two copies

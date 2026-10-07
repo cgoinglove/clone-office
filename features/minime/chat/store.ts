@@ -29,6 +29,8 @@ export interface ChatMessage {
   at: string;
   /** Files on this computer that came with it (a colleague's answer, a photo from the phone). */
   files?: string[];
+  /** A colleague's line they wrote themselves, not their clone. */
+  person?: boolean;
 }
 
 export interface ChatInfo {
@@ -124,9 +126,14 @@ export async function appendMessage(
   role: ChatRole,
   text: string,
   files: string[] = [],
+  /** A colleague's line they wrote themselves, not their clone. */
+  person = false,
 ): Promise<void> {
   const at = new Date().toISOString();
-  const more = files.length ? { files } : {};
+  const more = {
+    ...(files.length ? { files } : {}),
+    ...(person ? { person: true } : {}),
+  };
   await append(id, { type: "message", role, text, at, ...more });
   for (const listener of hearing.__minimeChatNews ?? [])
     try {

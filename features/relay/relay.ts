@@ -92,7 +92,11 @@ export interface Message {
   files?: FileRef[];
   taskId: string;
   contextId: string;
-  metadata: { from: string; at: string };
+  /**
+   * `by: "person"`: the member's person wrote it themselves (or a guest answering by a link), not
+   * their clone; it travels to A2A clients in the message's metadata as it is.
+   */
+  metadata: { from: string; at: string; by?: "person" };
 }
 
 export interface Task {
@@ -235,6 +239,8 @@ const MIGRATIONS: string[][] = [
     "CREATE TABLE meeting_posts (seq BIGSERIAL PRIMARY KEY, id TEXT UNIQUE NOT NULL, meeting_id TEXT NOT NULL REFERENCES meetings (id) ON DELETE CASCADE, from_member TEXT NOT NULL, round INT NOT NULL, reply_to TEXT, text TEXT NOT NULL, at TIMESTAMPTZ NOT NULL)",
     "CREATE UNIQUE INDEX meeting_posts_once ON meeting_posts (meeting_id, from_member, round)",
   ],
+  // Who wrote a message: the member's person themselves, or their clone (the default).
+  ["ALTER TABLE messages ADD COLUMN by_person BOOLEAN NOT NULL DEFAULT false"],
 ];
 
 /**
@@ -486,6 +492,8 @@ export class Relay {
     files: string[] = [],
     /** The conversation it belongs to, as an A2A client names it; a new one when none. */
     contextId?: string,
+    /** Written by the member's person themselves, not their clone. */
+    by?: "person",
   ): Promise<Task> {
     if (from.id === to)
       throw new RelayError(400, "A clone does not ask itself.", "bad-request");
@@ -519,6 +527,7 @@ export class Relay {
         text,
         now,
         await attach(tx, from, id, files, now),
+        by === "person",
       );
       await notify(tx, to, "task", id, now);
     });
@@ -749,7 +758,16 @@ export class Relay {
       );
       if (!closed.length)
         throw new RelayError(409, "That link is closed.", "request-closed");
-      await addMessage(tx, task.id, "agent", `guest:${name}`, text, at);
+      await addMessage(
+        tx,
+        task.id,
+        "agent",
+        `guest:${name}`,
+        text,
+        at,
+        [],
+        true,
+      );
       await notify(tx, task.metadata.from, "update", task.id, at);
     });
     this.wake(task.metadata.from);
@@ -760,7 +778,13 @@ export class Relay {
   async update(
     member: Caller,
     id: string,
-    change: { state?: TaskState; text?: string; files?: string[] },
+    change: {
+      state?: TaskState;
+      text?: string;
+      files?: string[];
+      /** Written by the member's person themselves, not their clone. */
+      by?: "person";
+    },
   ): Promise<Task> {
     const now = new Date().toISOString();
     const other = await this.db.transaction(async (tx) => {
@@ -783,6 +807,7 @@ export class Relay {
           change.text ?? "",
           now,
           files,
+          change.by === "person",
         );
       // The one asked moves the request along; the one asking can only answer a question or cancel.
       let state = row.state;
@@ -815,8 +840,9 @@ export class Relay {
       text: string;
       files: FileRef[] | string | null;
       at: unknown;
+      by_person: boolean | null;
     }>(
-      "SELECT id, role, from_member, text, files, at FROM messages WHERE task_id = $1 ORDER BY seq",
+      "SELECT id, role, from_member, text, files, at, by_person FROM messages WHERE task_id = $1 ORDER BY seq",
       [id],
     );
     const history = messages.map((m): Message => {
@@ -830,7 +856,11 @@ export class Relay {
         ...(files.length ? { files } : {}),
         taskId: id,
         contextId: row.context_id,
-        metadata: { from: m.from_member, at: iso(m.at) },
+        metadata: {
+          from: m.from_member,
+          at: iso(m.at),
+          ...(m.by_person ? { by: "person" as const } : {}),
+        },
       };
     });
     const last = history.at(-1);
@@ -1293,9 +1323,10 @@ async function addMessage(
   text: string,
   at: string,
   files: FileRef[] = [],
+  byPerson = false,
 ): Promise<void> {
   await tx.query(
-    "INSERT INTO messages (id, task_id, role, from_member, text, files, at) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)",
+    "INSERT INTO messages (id, task_id, role, from_member, text, files, at, by_person) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)",
     [
       randomUUID(),
       task,
@@ -1304,6 +1335,7 @@ async function addMessage(
       text.slice(0, 20_000),
       JSON.stringify(files),
       at,
+      byPerson,
     ],
   );
 }

@@ -677,6 +677,8 @@ export function relayHandler(
             String(input.to ?? ""),
             String(input.text ?? ""),
             fileIds(input.files),
+            undefined,
+            input.by === "person" ? "person" : undefined,
           ),
         });
       }
@@ -862,6 +864,7 @@ export function relayHandler(
                 : undefined,
             text: typeof input.text === "string" ? input.text : undefined,
             files: fileIds(input.files),
+            ...(input.by === "person" ? { by: "person" as const } : {}),
           }),
         });
       }

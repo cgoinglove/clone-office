@@ -36,6 +36,8 @@ export function checkPrompt(
   from?: string,
   ways: string[] = [],
   files: string[] = [],
+  /** The colleague wrote the request themselves, not their clone. */
+  byPerson = false,
 ): string {
   const asked = said.length
     ? `\nWhat your person themselves said while it was answered (theirs to give; a promise or decision in it may go):\n${said.map((s) => `- Asked: ${s.question}\n  They said: ${s.answer}`).join("\n")}\n`
@@ -45,7 +47,7 @@ export function checkPrompt(
     : "";
   return `Before this answer goes to a colleague's clone on your person's behalf, look at it once more, as your person would.
 
-The request${from ? ` (from the clone of ${from})` : ""}:
+The request${from ? ` (from ${byPerson ? `${from} themselves` : `the clone of ${from}`})` : ""}:
 ${request}
 ${asked}${told}
 The answer about to be sent:
@@ -108,6 +110,8 @@ export async function checkBeforeSending(options: {
   approve?: boolean;
   /** Who asked, as their card names them. */
   from?: string;
+  /** They wrote the request themselves, not their clone. */
+  byPerson?: boolean;
 }): Promise<CheckOutcome> {
   const check = await runSession({
     prompt: checkPrompt(
@@ -118,6 +122,7 @@ export async function checkBeforeSending(options: {
       options.from,
       options.ways,
       options.files,
+      options.byPerson,
     ),
     jsonSchema: CHECK_SCHEMA,
     language: options.language,

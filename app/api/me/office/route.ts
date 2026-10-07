@@ -18,7 +18,14 @@ import {
   updateCard,
   updateRequest,
 } from "@/features/minime/office/client";
-import { answerLater, laterQuestions } from "@/features/minime/office/handle";
+import {
+  answerLater,
+  answerMyself,
+  handBack,
+  laterQuestions,
+  stepIn,
+  takeBack,
+} from "@/features/minime/office/handle";
 import {
   closeHere,
   hostProblem,
@@ -108,12 +115,17 @@ export async function GET(request: Request) {
         task: entry.task,
         from: entry.from,
         at: entry.at,
+        // The person's to answer themselves: what they write goes as their own words.
+        ...(entry.kind === "self" ? { self: true } : {}),
         ask: {
           kind: "question",
           question: entry.question,
           ...(entry.choices?.length ? { choices: entry.choices } : {}),
         },
       })),
+      // Requests colleagues sent that the person stepped into: their notes to the clone, and the
+      // ones they answer themselves.
+      steps: await stepsFor(requests),
       problem: officeProblem(),
     });
   } catch (error) {
@@ -195,6 +207,26 @@ const Body = z.discriminatedUnion("action", [
     topic: z.string().trim().max(600).optional(),
     locale: z.string().max(35).default("en"),
   }),
+  // Stepping into a request a colleague sent: telling the clone something, taking it back while
+  // unread, answering it oneself, handing it back to the clone.
+  z.object({
+    action: z.literal("step-in"),
+    id: z.string().min(1).max(80),
+    text: z.string().trim().min(1).max(4000),
+  }),
+  z.object({
+    action: z.literal("take-back"),
+    id: z.string().min(1).max(80),
+    note: z.string().min(1).max(80),
+  }),
+  z.object({
+    action: z.literal("answer-myself"),
+    id: z.string().min(1).max(80),
+    text: z.string().trim().min(1).max(8000),
+    /** Done with it: the request closes; else it stays open, theirs to answer. */
+    close: z.boolean().default(true),
+  }),
+  z.object({ action: z.literal("hand-back"), id: z.string().min(1).max(80) }),
   z.object({
     action: z.literal("standup-time"),
     standup: z
@@ -206,6 +238,24 @@ const Body = z.discriminatedUnion("action", [
       .nullable(),
   }),
 ]);
+
+async function stepsFor(requests: { id: string }[]) {
+  const { handled } = await loadState();
+  const ids = new Set(requests.map((task) => task.id));
+  return Object.fromEntries(
+    Object.entries(handled)
+      .filter(
+        ([id, entry]) => ids.has(id) && (entry.person || entry.notes?.length),
+      )
+      .map(([id, entry]) => [
+        id,
+        {
+          ...(entry.person ? { person: entry.person.since } : {}),
+          notes: entry.notes ?? [],
+        },
+      ]),
+  );
+}
 
 export async function POST(request: Request) {
   const refused = refuse(request);
@@ -222,6 +272,28 @@ export async function POST(request: Request) {
       return draft
         ? Response.json(draft)
         : Response.json({ error: "no-draft" }, { status: 502 });
+    }
+    if (
+      input.action === "step-in" ||
+      input.action === "take-back" ||
+      input.action === "answer-myself" ||
+      input.action === "hand-back"
+    ) {
+      const options = {
+        gateUrl: new URL("/api/me/gate", request.url).toString(),
+        language: await personLanguage(undefined),
+      };
+      const done =
+        input.action === "step-in"
+          ? await stepIn(input.id, input.text, options)
+          : input.action === "take-back"
+            ? await takeBack(input.id, input.note)
+            : input.action === "answer-myself"
+              ? await answerMyself(input.id, input.text, input.close)
+              : await handBack(input.id, options);
+      return done
+        ? Response.json({ ok: true })
+        : Response.json({ error: "request-closed" }, { status: 409 });
     }
     if (input.action === "later") {
       const going = await answerLater(input.id, input.answer, {
@@ -301,11 +373,21 @@ export async function POST(request: Request) {
       });
     if (input.action === "send")
       return Response.json({
-        task: await sendRequest(office, input.to, input.text, input.files),
+        // Typed on the page by the person themselves.
+        task: await sendRequest(
+          office,
+          input.to,
+          input.text,
+          input.files,
+          "person",
+        ),
       });
     if (input.action === "reply")
       return Response.json({
-        task: await updateRequest(office, input.id, { text: input.text }),
+        task: await updateRequest(office, input.id, {
+          text: input.text,
+          by: "person",
+        }),
       });
     if (input.action === "cancel")
       return Response.json({

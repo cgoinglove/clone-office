@@ -18,7 +18,7 @@ export type Turn =
   | { id: number; kind: "minime"; text: string; live: boolean }
   | { id: number; kind: "saved"; text: string }
   | { id: number; kind: "note"; text: string }
-  | { id: number; kind: "office"; text: string }
+  | { id: number; kind: "office"; text: string; person?: boolean }
   | { id: number; kind: "told"; text: string }
   | { id: number; kind: "meeting"; text: string }
   | { id: number; kind: "flow"; text: string; at: string }
@@ -70,7 +70,7 @@ export function useChat(lang: string) {
     if (!response?.ok) return;
     const data = (await response.json()) as {
       id: string;
-      messages: { role: string; text: string; at: string }[];
+      messages: { role: string; text: string; at: string; person?: boolean }[];
     };
     const waiting = (await fetch(
       `/api/me/gate?chat=${encodeURIComponent(id)}`,
@@ -88,7 +88,8 @@ export function useChat(lang: string) {
         if (m.role === "minime")
           return { id, kind: "minime", text: m.text, live: false };
         if (m.role === "saved") return { id, kind: "saved", text: m.text };
-        if (m.role === "office") return { id, kind: "office", text: m.text };
+        if (m.role === "office")
+          return { id, kind: "office", text: m.text, person: m.person };
         if (m.role === "told") return { id, kind: "told", text: m.text };
         if (m.role === "meeting") return { id, kind: "meeting", text: m.text };
         if (m.role === "flow")

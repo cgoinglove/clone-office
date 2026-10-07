@@ -281,7 +281,8 @@
     "fromColleague": "부탁한 것의 답",
     "told": "대신 답했어요",
     "flowRan": "플로우 ‘{name}’ ({at})",
-    "fromMeeting": "회의에서 한 말"
+    "fromMeeting": "회의에서 한 말",
+    "fromColleagueThemselves": "동료가 직접 쓴 답"
   },
   "ask": {
     "needsYou": "답이 필요해요",
@@ -1214,7 +1215,10 @@
       "state": "지금 상태",
       "updated": "마지막으로 바뀐 때 {at}",
       "files": "파일",
-      "link": "답장 링크"
+      "link": "답장 링크",
+      "myself": "나",
+      "themselves": "{name} 님",
+      "selfWaiting": "{name} 님이 다시 썼어요. 직접 답해 주세요."
     },
     "meeting": {
       "standup": "아침 회의",
@@ -1293,6 +1297,20 @@
     },
     "trouble": {
       "open": "오피스 설정"
+    },
+    "stepIn": {
+      "title": "끼어들기",
+      "placeholder": "클론이 알아야 할 것을 적어 주세요. 다음 걸음 전에 읽어요.",
+      "tell": "클론에게 한마디",
+      "answer": "직접 답하기",
+      "waits": "다음 걸음 전에 읽어요",
+      "read": "읽음",
+      "takeBack": "되돌리기",
+      "yours": "이 부탁은 내가 직접 답하고 있어요. 클론은 손대지 않아요.",
+      "yoursPlaceholder": "{name} 님에게 직접 보낼 답",
+      "sendClose": "보내고 끝내기",
+      "sendOpen": "보내고 열어 두기",
+      "handBack": "클론에게 돌려주기"
     }
   }
 }

@@ -57,6 +57,8 @@ export interface Task {
     parts: { text: string }[];
     /** Files that went with it. */
     files?: { id: string; name: string; size: number }[];
+    /** by "person": the member's person wrote it themselves, not their clone. */
+    metadata?: { from: string; at: string; by?: "person" };
   }[];
   metadata: {
     from: string;
@@ -138,8 +140,27 @@ export interface Office {
     from?: string;
     at: string;
     ask: GateAsk;
+    /** The person's to answer themselves: what they write goes as their own words. */
+    self?: boolean;
   }[];
+  /** Requests colleagues sent that the person stepped into, by request. */
+  steps?: Record<string, Steps>;
   problem?: string;
+}
+
+/** One thing the person told their clone about a request; until it is read, it can be taken back. */
+export interface StepIn {
+  id: string;
+  text: string;
+  at: string;
+  read?: string;
+}
+
+/** The person's part in a request a colleague sent: their notes to the clone, or answering it. */
+export interface Steps {
+  /** Since when they answer it themselves. */
+  person?: string;
+  notes: StepIn[];
 }
 
 /** A question about a request, live at the gate or kept for later. */
@@ -154,6 +175,8 @@ export type Waiting = {
   from?: string;
   /** The request a kept one belongs to. */
   task?: string;
+  /** The person's to answer themselves: what they write goes as their own words. */
+  self?: boolean;
 };
 
 /** What the person told the app about themselves; their clone starts every session with it. */

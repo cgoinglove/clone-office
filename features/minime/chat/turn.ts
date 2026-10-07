@@ -7,6 +7,7 @@
 // conversation goes on from its own record instead. After the answer, the session is looked back on
 // (the review), and what it kept is recorded in the conversation as well.
 
+import { carryAt, sessionLost } from "../brain/context.ts";
 import { reviewSession } from "../brain/review.ts";
 import {
   runSession,
@@ -30,12 +31,6 @@ import {
 } from "./store.ts";
 
 export const SUMMARY_PROMPT = `This conversation will go on in a fresh session that sees only what you write now. Write it for yourself: what your person asked and decided, what you did and found, what is still open, and how they want it done. Be specific (names, numbers, places), write in their language, and keep it as short as that allows, at most about 300 words. Write only the summary itself, as plain sentences or short points, with no title and nothing about this request.`;
-
-/** Context, in tokens, past which a conversation is carried into a fresh session. */
-export function carryAt(): number {
-  const value = Number(process.env.SUB_OFFICE_CARRY_AT);
-  return Number.isFinite(value) && value > 0 ? value : 100_000;
-}
 
 export type TurnEvent =
   | { type: "chat"; id: string; title: string }
@@ -71,7 +66,9 @@ export function newsSince(messages: ChatMessage[]): string[] {
     .map((m) =>
       m.role === "told"
         ? `You answered a colleague for them: ${m.text}`
-        : m.text,
+        : m.person
+          ? `${m.text} (written by that colleague themselves, not their clone)`
+          : m.text,
     );
 }
 
@@ -99,16 +96,7 @@ function opening(summary: string | undefined, earlier: string, text: string) {
   return parts.length ? `${parts.join("\n\n")}\n\n---\n\n${text}` : text;
 }
 
-/**
- * The brain no longer has the session (it was deleted, the brain changed, or it grew past the
- * model's window). Only then does a conversation go on from its own record: a busy service, a time
- * out or a wrong key would fail the same way again, and the session it has is worth keeping.
- */
-export function sessionLost(error: string | undefined): boolean {
-  return /session-missing|no conversation found|prompt is too long|context.{0,20}(length|window|limit)|maximum context|too many tokens/i.test(
-    error ?? "",
-  );
-}
+export { sessionLost };
 
 export async function runTurn(options: {
   text: string;
@@ -137,7 +125,7 @@ export async function runTurn(options: {
 
   let session = info.session;
   let summary = info.summary;
-  if (session && (info.context ?? 0) > carryAt()) {
+  if (session && (info.context ?? 0) > (await carryAt())) {
     send({ type: "carrying" });
     // Keep what is worth keeping before the details are summed up, unless that was done already.
     if (info.reviewed !== session) await reviewSession(session, record);

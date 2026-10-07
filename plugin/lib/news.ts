@@ -24,7 +24,8 @@ export interface Message {
   role: "user" | "agent";
   parts: { text: string }[];
   files?: FileRef[];
-  metadata: { from: string; at: string };
+  /** by "person": the colleague wrote it themselves, not their clone. */
+  metadata: { from: string; at: string; by?: "person" };
 }
 
 export interface Task {
@@ -85,6 +86,8 @@ export interface News {
   /** The messages read once this is read. */
   seen: number;
   final: boolean;
+  /** The colleague wrote the new words themselves, not their clone. */
+  person?: boolean;
 }
 
 export const FINAL = new Set<TaskState>([
@@ -135,6 +138,9 @@ export function newsOf(task: Task, read: Read): News | undefined {
     files: fresh.flatMap((message) => message.files ?? []),
     seen: task.history.length,
     final: FINAL.has(state),
+    ...(fresh.some((message) => message.metadata.by === "person")
+      ? { person: true }
+      : {}),
   };
 }
 
@@ -155,7 +161,7 @@ const HEADS: Partial<Record<TaskState, string>> = {
 /** News as Claude Code reads it: the colleague's words quoted, apart from any instruction. */
 export function describe(news: News): string {
   const lines = [
-    `${news.name}'s clone ${HEADS[news.state] ?? "wrote"} on your request "${clip(news.asked, 140)}" (request ${news.id}):`,
+    `${news.person ? `${news.name} (themselves, not their clone)` : `${news.name}'s clone`} ${HEADS[news.state] ?? "wrote"} on your request "${clip(news.asked, 140)}" (request ${news.id}):`,
     "",
     news.text
       .split("\n")

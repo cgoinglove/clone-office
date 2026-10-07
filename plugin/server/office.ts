@@ -518,10 +518,10 @@ async function requests(office: Office, id?: string): Promise<ToolResult> {
       });
     const who = (message: Message) =>
       message.metadata.from === office.member
-        ? message.role === "user"
+        ? message.role === "user" || message.metadata.by === "person"
           ? "You"
           : "Your clone"
-        : `${name(message.metadata.from)}${message.role === "agent" ? "'s clone" : ""}`;
+        : `${name(message.metadata.from)}${message.metadata.by === "person" ? " (themselves)" : "'s clone"}`;
     return text(
       [
         `${mine ? `Sent to ${task.metadata.guest ?? name(task.metadata.to)}` : `From ${name(task.metadata.from)}`} · ${STATES[task.status.state]} · ${ago(task.status.timestamp)}`,

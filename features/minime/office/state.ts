@@ -18,6 +18,18 @@ export interface OfficeState {
       at: string;
       /** The process answering it now, so no other process answers it at the same time. */
       lease?: { pid: number; at: string };
+      /** How full the session's context was after its last run, in tokens. */
+      context?: number;
+      /**
+       * The person answers this one themselves (they held the clone's answer, or wrote their own):
+       * the clone leaves it to them until they hand it back.
+       */
+      person?: { since: string };
+      /**
+       * What the person told the clone about this request while it works (a step-in, as Thursday's):
+       * read before its next answer leaves; taken back while still unread.
+       */
+      notes?: StepIn[];
     }
   >;
   /** Requests sent from a conversation: which one. */
@@ -44,11 +56,24 @@ export interface OfficeState {
  * it, which then answers the colleague. "check" is an answer about to be sent that they see
  * first: they send it, send the fixed one, or hold it.
  */
+/** One thing the person told their clone about a request while it works. */
+export interface StepIn {
+  id: string;
+  text: string;
+  at: string;
+  /** When the clone read it; until then the person can take it back. */
+  read?: string;
+}
+
 export interface Later {
   task: string;
   /** Who asked, as their card names them. */
   from?: string;
-  kind: "question" | "check";
+  /**
+   * question: the clone asked the person; check: an answer the person sees before it goes; self:
+   * the request is the person's to answer themselves, and what they say goes as their own words.
+   */
+  kind: "question" | "check" | "self";
   question: string;
   choices?: string[];
   /** The question as it was first put to the person, live: an answer to that one still counts. */

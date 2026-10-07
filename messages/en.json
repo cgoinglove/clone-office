@@ -281,7 +281,8 @@
     "fromColleague": "An answer to your request",
     "told": "I answered for you",
     "flowRan": "{name}, on its own ({at})",
-    "fromMeeting": "Said in the meeting"
+    "fromMeeting": "Said in the meeting",
+    "fromColleagueThemselves": "Your colleague answered themselves"
   },
   "ask": {
     "needsYou": "Needs you",
@@ -1214,7 +1215,10 @@
       "state": "Where it is",
       "updated": "Last moved {at}",
       "files": "Files",
-      "link": "Reply link"
+      "link": "Reply link",
+      "myself": "You",
+      "themselves": "{name}",
+      "selfWaiting": "{name} wrote again. Answer it yourself:"
     },
     "meeting": {
       "standup": "Standup",
@@ -1293,6 +1297,20 @@
     },
     "trouble": {
       "open": "Office settings"
+    },
+    "stepIn": {
+      "title": "Step in",
+      "placeholder": "What should your clone know? It reads this before its next step.",
+      "tell": "Tell my clone",
+      "answer": "Answer it myself",
+      "waits": "Waits for its next step",
+      "read": "Read",
+      "takeBack": "Take it back",
+      "yours": "You're answering this one yourself; your clone leaves it to you.",
+      "yoursPlaceholder": "Your answer to {name}, as yourself",
+      "sendClose": "Send and close",
+      "sendOpen": "Send, keep it open",
+      "handBack": "Hand it back to my clone"
     }
   }
 }

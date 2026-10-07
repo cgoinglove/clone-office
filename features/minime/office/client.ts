@@ -226,11 +226,18 @@ export async function sendRequest(
   to: string,
   text: string,
   files: string[] = [],
+  /** The person wrote it themselves, not their clone. */
+  by?: "person",
 ): Promise<Task> {
   return (
     await call<{ task: Task }>(office.relay, "/tasks", {
       token: office.token,
-      body: { to, text, ...(files.length ? { files } : {}) },
+      body: {
+        to,
+        text,
+        ...(files.length ? { files } : {}),
+        ...(by ? { by } : {}),
+      },
     })
   ).task;
 }
@@ -293,7 +300,13 @@ export async function takeFile(
 export async function updateRequest(
   office: OfficeConfig,
   id: string,
-  change: { state?: TaskState; text?: string; files?: string[] },
+  change: {
+    state?: TaskState;
+    text?: string;
+    files?: string[];
+    /** The person wrote it themselves, not their clone. */
+    by?: "person";
+  },
 ): Promise<Task> {
   return (
     await call<{ task: Task }>(

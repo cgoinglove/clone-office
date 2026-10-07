@@ -227,7 +227,7 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
               <CornerDownRight className="size-3.5" />
             )}
             {turn.kind === "office"
-              ? tChat("fromColleague")
+              ? tChat(turn.person ? "fromColleagueThemselves" : "fromColleague")
               : turn.kind === "meeting"
                 ? tChat("fromMeeting")
                 : tChat("told")}
