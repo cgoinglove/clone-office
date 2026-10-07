@@ -49,13 +49,25 @@ export function ChatScreen() {
     })();
   }, [wanted, current, openChat, router]);
 
-  // Words handed over by another screen (asking by a link from the requests) go into the box.
+  // Words handed over by another screen (asking by a link from the requests) go into the box;
+  // what was asked from Home's box is asked at once, in a new conversation.
   const say = params.get("say");
   useEffect(() => {
     if (!say) return;
     requestAnimationFrame(() => insertRef.current(say));
     router.replace("/chat");
   }, [say, router]);
+  const send = params.get("send");
+  const ask = chat.ask;
+  const newChat = chat.newChat;
+  const sent = useRef<string | null>(null);
+  useEffect(() => {
+    if (!send || sent.current === send) return;
+    sent.current = send;
+    newChat();
+    router.replace("/chat");
+    void ask(send);
+  }, [send, ask, newChat, router]);
 
   const [rail, setRail] = useState(true);
   useEffect(() => {
@@ -111,13 +123,7 @@ export function ChatScreen() {
           name={app.name}
           draftRef={draft}
           placeholder={t("placeholder")}
-          empty={
-            <Welcome
-              onWrite={(text) =>
-                text ? insertRef.current(text) : draft.current?.focus()
-              }
-            />
-          }
+          empty={<Welcome />}
           tools={(insert) => {
             insertRef.current = insert;
             return <Helpers insert={insert} />;

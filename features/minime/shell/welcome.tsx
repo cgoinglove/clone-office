@@ -1,8 +1,8 @@
 "use client";
 
-// What an empty conversation shows: the clone says hello and what it is for, the first steps with
-// the app (each ticked when it is really done, from what the app keeps, never from a click on the
-// list), and a few things to say to it. Someone who opens the app should never wonder what to do.
+// What an empty conversation shows: the clone says hello and what it is for, and a few things to
+// say to it. The first steps with the app (each ticked when it is really done, from what the app
+// keeps, never from a click on the list) are here too, and Home shows them first.
 
 import { ArrowRight, Check, Clock, Sparkles, X } from "lucide-react";
 import Link from "next/link";
@@ -18,12 +18,7 @@ const HIDDEN = "sub-office.first-steps-hidden";
 
 type StepId = "ask" | "me" | "team" | "menu" | "phone";
 
-export function Welcome({
-  onWrite,
-}: {
-  /** Goes to the box to write, with words to start from when given. */
-  onWrite: (text?: string) => void;
-}) {
+export function Welcome() {
   const t = useTranslations("shell.welcome");
   const tHome = useTranslations("home");
   const app = useApp();
@@ -53,8 +48,6 @@ export function Welcome({
           </p>
         </div>
       </div>
-
-      <FirstSteps onWrite={onWrite} />
 
       <section aria-labelledby="w-try" className="flex flex-col gap-2">
         <h2 id="w-try" className="text-sm font-semibold">
@@ -102,7 +95,7 @@ export function Welcome({
  * The first steps with the app, after the getting-started lists of Linear and Notion: each says
  * why it matters and has one way to do it, and is ticked from what the app keeps.
  */
-function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
+export function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
   const t = useTranslations("shell.welcome.steps");
   const app = useApp();
   const [hidden, setHidden] = useState(true);

@@ -159,7 +159,7 @@ export function Onboarding() {
       method: "POST",
       headers: HEADERS,
     }).catch(() => undefined);
-    router.push("/chat");
+    router.push("/home");
   };
 
   return (

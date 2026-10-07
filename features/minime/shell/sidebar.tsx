@@ -1,7 +1,8 @@
 "use client";
 
 // The column on the left of every screen, kept short so the app reads at a glance: a new
-// conversation, the three places (talking to the clone, the requests between clones, the office),
+// conversation, the four places (Home, the requests between clones, talking to the clone, the
+// office),
 // what waits on the person (their turn, only when something does), their recent conversations,
 // and at the bottom their own clone with their status, and settings. Each waiting question takes
 // the person straight to where it is answered.
@@ -9,6 +10,7 @@
 import {
   Building2,
   Check,
+  House,
   ListChecks,
   MessageCircle,
   Settings,
@@ -36,11 +38,12 @@ import { askLine, type TurnItem, turnHref, yourTurn } from "./your-turn";
 
 const NAV: {
   href: string;
-  key: "chat" | "requests" | "office";
+  key: "home" | "chat" | "requests" | "office";
   icon: ComponentType<{ className?: string }>;
 }[] = [
-  { href: "/chat", key: "chat", icon: MessageCircle },
+  { href: "/home", key: "home", icon: House },
   { href: "/requests", key: "requests", icon: ListChecks },
+  { href: "/chat", key: "chat", icon: MessageCircle },
   { href: "/office", key: "office", icon: Building2 },
 ];
 
@@ -78,7 +81,7 @@ export function Sidebar() {
     >
       <div className="flex items-center gap-1 pl-2">
         <Link
-          href="/chat"
+          href="/home"
           className="flex min-w-0 flex-1 items-center gap-2 py-1"
         >
           <LogoMark className="size-[22px] shrink-0" />
@@ -117,6 +120,11 @@ export function Sidebar() {
             >
               <item.icon className="size-4 shrink-0" />
               <span className="flex-1">{t(`screens.${item.key}`)}</span>
+              {item.key === "home" && turns.length > 0 && (
+                <span className="rounded-md bg-waiting/10 px-1.5 font-mono text-[11px] font-medium text-waiting tabular-nums">
+                  {turns.length}
+                </span>
+              )}
               {item.key === "requests" && open > 0 && (
                 <span className="font-mono text-[11px] font-normal text-muted-foreground tabular-nums">
                   {open}

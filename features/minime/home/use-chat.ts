@@ -135,6 +135,7 @@ export function useChat(lang: string) {
   }, [openChat, loadChats]);
 
   const newChat = useCallback(() => {
+    chatRef.current = undefined;
     setChatId(undefined);
     setTurns([]);
   }, []);

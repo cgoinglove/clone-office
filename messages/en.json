@@ -1002,6 +1002,7 @@
   "shell": {
     "nav": "Main menu",
     "screens": {
+      "home": "Home",
       "chat": "Chat",
       "requests": "Requests",
       "office": "Office",
@@ -1215,6 +1216,54 @@
       "latest": "Last meeting",
       "close": "Close",
       "hint": "The clones speak from their people's own records, one thing a round. Afterwards each clone tells its person only what matters to them."
+    },
+    "home": {
+      "hello": {
+        "night": "Still up, {name}",
+        "morning": "Good morning, {name}",
+        "afternoon": "Good afternoon, {name}",
+        "evening": "Good evening, {name}"
+      },
+      "helloPlain": {
+        "night": "Still up",
+        "morning": "Good morning",
+        "afternoon": "Good afternoon",
+        "evening": "Good evening"
+      },
+      "summary": "{decide, plural, =0 {Nothing waits on you} one {# thing waits on you} other {# things wait on you}} · {moving, plural, =0 {no requests on their way} one {# request on its way} other {# requests on their way}} · {answered, plural, =0 {your clone has answered no one yet today} one {your clone answered # colleague today} other {your clone answered # colleagues today}}",
+      "askPlaceholder": "Ask your clone anything, or name a colleague to ask theirs…",
+      "askSend": "Ask",
+      "try": {
+        "yesterday": "What did I do yesterday?",
+        "waiting": "What is waiting on me?",
+        "know": "What do you know about how I work?"
+      },
+      "decide": "Decide now",
+      "decideHint": "Your clone brings you only what is yours to decide.",
+      "caughtUp": "Nothing waits on you. Your clone is handling the rest.",
+      "moving": "Requests on their way",
+      "allRequests": "All requests",
+      "to": "To {name}",
+      "from": "From {name}",
+      "movingEmpty": "No requests on their way. Ask a colleague's clone anything, as you would ask them.",
+      "movingAlone": "Nobody else is in your office yet. Ask anyone by a link (they install nothing), or bring your team in.",
+      "askByLink": "Ask by a link",
+      "invite": "Invite your team",
+      "setUpOffice": "Set up an office",
+      "linkStarter": "Make a link to ask someone: ",
+      "did": "What your clone did today",
+      "didHint": "Everything it answered for you, kept here so you can check it.",
+      "answered": "Answered {name}",
+      "meetingBack": "{kind}: what came back to you",
+      "flowRan": "Ran “{name}”",
+      "flowFailed": "“{name}” did not finish",
+      "didEmpty": "Nothing yet today. When a colleague asks you something, your clone answers first, and it shows up here.",
+      "today": "Today",
+      "standupAt": "The clones' standup",
+      "nothingToday": "Nothing set for today. Try a flow: “every weekday at 9, catch me up”.",
+      "flowStarter": "Every weekday at 9, tell me briefly what is waiting on me",
+      "in": "In",
+      "off": "Computer off"
     }
   }
 }
