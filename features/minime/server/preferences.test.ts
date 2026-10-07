@@ -20,6 +20,13 @@ test("preferences keep only what makes sense, and default to the careful way", (
   assert.deepEqual(kept.batchHours, [9, 17]);
   assert.equal(kept.review, true);
   assert.deepEqual(kept.quiet, { on: true, from: 23, to: 6 });
+  assert.equal(
+    kept.meetings,
+    false,
+    "the clone takes part in meetings only when asked",
+  );
+  assert.equal(cleanPreferences({ meetings: "yes" }).meetings, false);
+  assert.equal(cleanPreferences({ meetings: true }).meetings, true);
   assert.deepEqual(
     cleanPreferences({ batchHours: [] }).batchHours,
     [10, 14, 17],

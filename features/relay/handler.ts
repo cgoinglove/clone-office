@@ -12,6 +12,12 @@
 //   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
+//   POST /meetings      {kind, topic?, language?, scheduled?} -> {meeting}   the clones talk together
+//   GET  /meetings      -> {meetings}                   the office's latest meetings
+//   GET  /meetings/:id  -> {meeting}                    one, with what was said
+//   POST /meetings/:id/posts {round, text?, replyTo?} -> {meeting}   one's clone says its piece
+//   GET  /a2a/:member/.well-known/agent-card.json      a member as an A2A agent (a2a.ts)
+//   POST /a2a/:member   A2A v1.0 JSON-RPC: SendMessage, GetTask, ListTasks, CancelTask
 //   POST /links         {name, text} -> {task, link}    a request to someone without a mini-me
 //   GET  /r/:token      the link's page (HTML): who asks, what, and a box to answer; no token needed
 //   POST /r/:token      the answer, from the page's form
@@ -29,6 +35,7 @@
 //   /home/invite/new           POST /home/office/name {name}
 
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { A2A_ERRORS, a2aCall, agentCard } from "./a2a.ts";
 import { AccountError, type Accounts } from "./accounts.ts";
 import { isPrivateHost, joinCommand, osOf } from "./install.ts";
 import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
@@ -646,6 +653,113 @@ export function relayHandler(
           ),
         });
       }
+      if (request.method === "POST" && path === "/meetings") {
+        const me = await member(request);
+        const input = await body(request);
+        return send(200, {
+          meeting: await relay.openMeeting(me, {
+            kind: String(input.kind ?? ""),
+            topic: typeof input.topic === "string" ? input.topic : undefined,
+            language:
+              typeof input.language === "string" ? input.language : undefined,
+            scheduled: input.scheduled === true,
+          }),
+        });
+      }
+      if (request.method === "GET" && path === "/meetings") {
+        const me = await member(request);
+        // A round whose time is up ends here too, where no timer runs.
+        await relay.advanceMeetings();
+        return send(200, {
+          meetings: await relay.meetings(
+            me,
+            Number(url.searchParams.get("limit") ?? 10) || 10,
+          ),
+        });
+      }
+      const meetingPath = /^\/meetings\/([\w-]+)(\/posts)?$/.exec(path);
+      if (meetingPath && request.method === "GET" && !meetingPath[2]) {
+        const me = await member(request);
+        await relay.advanceMeetings();
+        return send(200, { meeting: await relay.meeting(me, meetingPath[1]) });
+      }
+      if (meetingPath && request.method === "POST" && meetingPath[2]) {
+        const me = await member(request);
+        const input = await body(request);
+        return send(200, {
+          meeting: await relay.postToMeeting(me, meetingPath[1], {
+            round: Number(input.round),
+            text: typeof input.text === "string" ? input.text : undefined,
+            replyTo:
+              typeof input.replyTo === "string" ? input.replyTo : undefined,
+          }),
+        });
+      }
+      const a2a =
+        /^\/a2a\/([\w-]{1,64})(\/\.well-known\/agent(?:-card)?\.json)?\/?$/.exec(
+          path,
+        );
+      if (a2a) {
+        // Office members only, the card too: who is in an office is the office's.
+        let me: Awaited<ReturnType<typeof member>>;
+        try {
+          me = await member(request);
+        } catch (error) {
+          if (a2a[2] || !(error instanceof RelayError)) throw error;
+          return send(error.status, {
+            jsonrpc: "2.0",
+            id: null,
+            error: { code: -32050, message: error.message },
+          });
+        }
+        const target = (await relay.members(me.office)).find(
+          (one) => one.id === a2a[1],
+        );
+        const endpoint = `${base()}/a2a/${a2a[1]}`;
+        if (a2a[2] && request.method === "GET") {
+          if (!target)
+            throw new RelayError(404, "No such member.", "not-found");
+          return send(200, agentCard(target, endpoint));
+        }
+        if (!a2a[2] && request.method === "POST") {
+          let call: unknown;
+          try {
+            call = JSON.parse(await raw(request));
+          } catch {
+            return send(200, {
+              jsonrpc: "2.0",
+              id: null,
+              error: { code: A2A_ERRORS.parse, message: "Not JSON." },
+            });
+          }
+          if (!target)
+            return send(200, {
+              jsonrpc: "2.0",
+              id: (call as { id?: unknown })?.id ?? null,
+              error: {
+                code: A2A_ERRORS.invalidParams,
+                message: "No such member in this office.",
+              },
+            });
+          if (target.id === me.id)
+            return send(200, {
+              jsonrpc: "2.0",
+              id: (call as { id?: unknown })?.id ?? null,
+              error: {
+                code: A2A_ERRORS.invalidParams,
+                message: "A clone does not ask itself.",
+              },
+            });
+          const version = request.headers["a2a-version"];
+          return send(
+            200,
+            await a2aCall(relay, me, target, call, {
+              base: base(),
+              version: typeof version === "string" ? version : undefined,
+            }),
+          );
+        }
+      }
       if (request.method === "POST" && path === "/files") {
         const me = await member(request);
         let name = "file";
@@ -667,9 +781,10 @@ export function relayHandler(
       let setting: RegExpExecArray | null = null;
       if (path.startsWith("/settings/"))
         try {
-          setting = /^\/settings\/(connector:[a-z0-9-]{1,40})$/.exec(
-            decodeURIComponent(path),
-          );
+          setting =
+            /^\/settings\/(connector:[a-z0-9-]{1,40}|meeting:standup)$/.exec(
+              decodeURIComponent(path),
+            );
         } catch {
           setting = null;
         }

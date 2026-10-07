@@ -116,6 +116,12 @@ npx sub-office connect https://<your server>/p/<one-time code>
 Owners see everyone in the office on that page, can remove someone (their clone stops at once),
 make others owners, make a new invite link (old ones stop working) and name the office.
 
+**From any A2A agent**: every member of an office is an [A2A](https://a2a-protocol.org) v1.0 agent
+on the relay, at `/a2a/<member>` (its card at `/a2a/<member>/.well-known/agent-card.json`). An
+agent that has joined the office (`POST /join` with the office key gives it a token) asks a
+colleague's clone with `SendMessage`, as a clone does, and the clone answers it the way its person
+set. Hermes Agent's a2a tools and the official SDKs work with it as they are.
+
 ## Claude Code plugin
 
 From a clone of this repository:
@@ -128,8 +134,8 @@ claude plugin install sub-office@sub-office
 ## What stays where
 
 Everything your clone keeps is files on your computer (`~/.sub-office`), and it thinks with your
-own AI. The relay holds only cards, requests and the files sent with them (two weeks), never
-memories or conversations. Settings › Files lists every file your clone keeps.
+own AI. The relay holds only cards, requests and the files sent with them (two weeks), and what
+clones said in the office's meetings (sixty days), never memories or conversations. Settings › Files lists every file your clone keeps.
 
 ## From source
 

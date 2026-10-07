@@ -156,8 +156,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   for a colleague's request; files leaving the computer, flows and Claude Code work are always
   asked), where new kinds of request start, when kept questions come (`batchHours`), learning after
   each conversation (`review.ts` skips when off), the lobby, background work on the brain's lighter
-  model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), and quiet
-  hours for the phone (`quietFor`). Every default keeps the app as careful as before.
+  model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), quiet
+  hours for the phone (`quietFor`), and taking part in the office's meetings of the clones
+  (`meetings`). Every default keeps the app as careful as before.
 - `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded}`, which
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
@@ -236,9 +237,20 @@ These words help discussion. They do not mandate separate services, tables or UI
   machine with Docker. Members join with the office key and then use their own token; a clone
   waits at its inbox (long polling) because it sits on a personal computer out of reach. Shapes follow
   A2A v1.0.0: an AgentCard per member, a Task per request with a contextId, Messages with roles
-  user/agent and text parts, A2A's task states. It keeps only cards and requests, their files, and
-  a few settings an office shares (`/settings/:name`: the OAuth client a vendor wants registered
-  once for the team, `connector:<vendor>`, which any member sets and all read). Someone without a
+  user/agent and text parts, A2A's task states; `a2a.ts` is A2A v1.0 itself, its JSON-RPC binding,
+  in front of the same requests: every member is an agent at `/a2a/<member>` (its Agent Card at
+  `.well-known/agent-card.json` under it, to the office's members only), and any A2A client with a
+  member's token asks that clone (`SendMessage`, waiting for the answer or not; `GetTask`,
+  `ListTasks`, `CancelTask`; a message without a task id goes on with the request still open in its
+  contextId, as Hermes Agent's a2a tools go on; checked with the official `a2a-sdk` and with Hermes
+  Agent's own tools). Meetings are the clones talking together (`POST /meetings`, a standup or a
+  question to everyone): the members present take part, each says one thing a round or passes, a
+  round ends when all have spoken or after four minutes (`advanceMeetings`, on a timer in
+  `server.ts`), and everyone in the office reads it; a scheduled standup is held once a day. It keeps
+  only cards and requests, their files, meetings (60 days), and a few settings an office shares
+  (`/settings/:name`: the OAuth client a vendor wants registered once for the team,
+  `connector:<vendor>`, and the standup's days, time and zone, `meeting:standup`, which any member
+  sets and all read). Someone without a
   clone is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
   the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,
   for two weeks or until answered); the answer reaches the asker like any other. An invite is one
@@ -291,7 +303,15 @@ These words help discussion. They do not mandate separate services, tables or UI
   office is `/office`, `/requests` and the column's Your turn (`features/minime/shell/`), with
   Settings › Office and the clone's Requests it takes, and the route `app/api/me/office`.
   `invited.ts` keeps an invite the launcher was given (`settings.json` `invite`) until joining or
-  opening an office uses it. The office's work starts with the server (`office/boot.ts`
+  opening an office uses it. `meeting.ts` is this clone in a meeting: in each round it says one thing
+  for its person or passes, found first in their own records (`conversation_search` since the day
+  before; a session with `audience: "colleagues"`, so the tool server leaves the person's office and
+  flows out, as when answering a colleague), then looked at once more as an answer is (`check.ts`):
+  what that holds back is not said. Once it is over, it tells its person only what matters to them,
+  in a conversation of the meeting's own with what was said (`state.json` `meetings`). It takes part
+  only when the person turned it on (`preferences.meetings`, off at first; starting a meeting turns
+  it on), else it passes at once; the worker opens the standup at the office's time
+  (`standupDue`). The office's work starts with the server (`office/boot.ts`
   from `instrumentation.ts`: the office open here, and the loop that answers colleagues), and
   again whenever a page asks about the office.
 - `features/office/room/`: the office floor, ported from the confirmed design

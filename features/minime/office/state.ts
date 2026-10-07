@@ -32,6 +32,10 @@ export interface OfficeState {
   }[];
   /** Questions about requests that wait for the person, by id; the request goes on when answered. */
   later: Record<string, Later>;
+  /** Meetings of the clones brought back to the person: when, and the conversation it went into. */
+  meetings: Record<string, { at: string; chat?: string }>;
+  /** The day (YYYY-MM-DD, the person's own) this clone last opened the scheduled standup. */
+  standup?: string;
 }
 
 /**
@@ -87,6 +91,10 @@ export async function loadState(): Promise<OfficeState> {
       approvals: parsed.approvals ?? {},
       outcomes: Array.isArray(parsed.outcomes) ? parsed.outcomes : [],
       later: parsed.later ?? {},
+      meetings: parsed.meetings ?? {},
+      ...(typeof parsed.standup === "string"
+        ? { standup: parsed.standup }
+        : {}),
     };
   } catch {
     return {
@@ -96,6 +104,7 @@ export async function loadState(): Promise<OfficeState> {
       approvals: {},
       outcomes: [],
       later: {},
+      meetings: {},
     };
   }
 }

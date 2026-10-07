@@ -6,6 +6,9 @@ import type {
   Card,
   FileRef,
   InboxEvent,
+  Meeting,
+  MeetingKind,
+  MeetingPost,
   Member,
   Task,
   TaskState,
@@ -14,7 +17,17 @@ import { withLock } from "../memory/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 
-export type { Card, FileRef, InboxEvent, Member, Task, TaskState };
+export type {
+  Card,
+  FileRef,
+  InboxEvent,
+  Meeting,
+  MeetingKind,
+  MeetingPost,
+  Member,
+  Task,
+  TaskState,
+};
 
 /** A failure at the relay, with the code the person's screen says in their language. */
 export class OfficeError extends Error {
@@ -292,6 +305,66 @@ export async function updateRequest(
       },
     )
   ).task;
+}
+
+/** Opens a meeting of the clones present now (the day's standup is joined if it is already on). */
+export async function openMeeting(
+  office: OfficeConfig,
+  input: {
+    kind: MeetingKind;
+    topic?: string;
+    language?: string;
+    scheduled?: boolean;
+  },
+): Promise<Meeting> {
+  return (
+    await call<{ meeting: Meeting }>(office.relay, "/meetings", {
+      token: office.token,
+      body: input,
+    })
+  ).meeting;
+}
+
+export async function meeting(
+  office: OfficeConfig,
+  id: string,
+): Promise<Meeting> {
+  return (
+    await call<{ meeting: Meeting }>(
+      office.relay,
+      `/meetings/${encodeURIComponent(id)}`,
+      { token: office.token },
+    )
+  ).meeting;
+}
+
+/** The office's latest meetings, newest first. */
+export async function meetings(
+  office: OfficeConfig,
+  limit = 10,
+): Promise<Meeting[]> {
+  return (
+    await call<{ meetings: Meeting[] }>(
+      office.relay,
+      `/meetings?limit=${limit}`,
+      { token: office.token },
+    )
+  ).meetings;
+}
+
+/** What this clone says in a meeting's round; no text is passing. */
+export async function postToMeeting(
+  office: OfficeConfig,
+  id: string,
+  post: { round: number; text?: string; replyTo?: string },
+): Promise<Meeting> {
+  return (
+    await call<{ meeting: Meeting }>(
+      office.relay,
+      `/meetings/${encodeURIComponent(id)}/posts`,
+      { token: office.token, body: post },
+    )
+  ).meeting;
 }
 
 export function inbox(

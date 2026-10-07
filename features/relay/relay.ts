@@ -18,6 +18,11 @@
 // Files go with a request's messages: a mini-me puts a file here first, then names it on the
 // message it sends. Only the one who put it and the two members of its request can take it; it is
 // kept two weeks, and one never named on a message one day.
+//
+// A meeting is the clones talking together, the office's standup or a question to everyone: the
+// clones present when it opens take part, each says one thing a round (or passes), a round ends
+// once all have spoken or its time is up, and after the last one each clone tells its person what
+// matters to them. Everyone in the office can read it; nobody's person needs to be there.
 
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { Database, Sql } from "./db.ts";
@@ -117,10 +122,65 @@ export interface Caller {
   card: Card;
 }
 
-export interface InboxEvent {
-  seq: number;
-  type: "task" | "update";
-  task: Task;
+export type InboxEvent =
+  | { seq: number; type: "task" | "update"; task: Task }
+  | { seq: number; type: "meeting"; meeting: Meeting };
+
+/** The office's standup, or one clone's question to everyone. */
+export type MeetingKind = "standup" | "question";
+
+/** How many rounds each kind has: a standup reports then answers; a question answers then follows up. */
+export const MEETING_ROUNDS: Record<MeetingKind, number> = {
+  standup: 2,
+  question: 2,
+};
+
+/** How long a round waits for the clones that have not spoken yet. */
+export const ROUND_MS = 4 * 60 * 1000;
+
+/** A member is present when its clone came to its inbox this recently (it waits there all along). */
+export const PRESENT_MS = 2 * 60 * 1000;
+
+/** A standup opened this recently is the day's: opening one again joins it instead. */
+const STANDUP_HOURS = 10;
+
+/** How much one post may say. */
+export const POST_CHARS = 2000;
+
+/** Meetings older than this are let go. */
+const MEETING_DAYS = 60;
+
+/** One thing a clone said in a meeting, or that it had nothing to say this round (empty text). */
+export interface MeetingPost {
+  id: string;
+  from: string;
+  round: number;
+  /** The post it answers, when it answers one. */
+  replyTo?: string;
+  text: string;
+  at: string;
+}
+
+export interface Meeting {
+  /** Also the A2A contextId of its posts. */
+  id: string;
+  kind: MeetingKind;
+  /** The standup's focus, or the question asked. */
+  topic: string;
+  /** The language the clones speak in it, as the one who opened it speaks (e.g. "Korean"). */
+  language: string;
+  /** The member who opened it. */
+  openedBy: string;
+  /** The members taking part: those present when it opened. */
+  members: string[];
+  round: number;
+  rounds: number;
+  state: "open" | "closed";
+  created: string;
+  /** When the round now under way ends, whoever has not spoken. */
+  roundEnds: string;
+  closed?: string;
+  posts: MeetingPost[];
 }
 
 /** Where every relay process hears that a member has news: the payload is the member's id. */
@@ -165,10 +225,21 @@ const MIGRATIONS: string[][] = [
     "CREATE TABLE setup_codes (code_hash TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, user_id TEXT NOT NULL, expires TIMESTAMPTZ NOT NULL, used TIMESTAMPTZ)",
     "CREATE TABLE server_settings (name TEXT PRIMARY KEY, value TEXT NOT NULL)",
   ],
+  // Meetings: the clones talking together.
+  [
+    "CREATE TABLE meetings (id TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, kind TEXT NOT NULL, topic TEXT NOT NULL, language TEXT NOT NULL, opened_by TEXT NOT NULL, members JSONB NOT NULL, round INT NOT NULL, rounds INT NOT NULL, state TEXT NOT NULL, created TIMESTAMPTZ NOT NULL, round_ends TIMESTAMPTZ NOT NULL, closed TIMESTAMPTZ)",
+    "CREATE INDEX meetings_office ON meetings (office_id, created DESC)",
+    "CREATE INDEX meetings_open ON meetings (state, round_ends)",
+    "CREATE TABLE meeting_posts (seq BIGSERIAL PRIMARY KEY, id TEXT UNIQUE NOT NULL, meeting_id TEXT NOT NULL REFERENCES meetings (id) ON DELETE CASCADE, from_member TEXT NOT NULL, round INT NOT NULL, reply_to TEXT, text TEXT NOT NULL, at TIMESTAMPTZ NOT NULL)",
+    "CREATE UNIQUE INDEX meeting_posts_once ON meeting_posts (meeting_id, from_member, round)",
+  ],
 ];
 
-/** What an office keeps for all its members: the OAuth client a vendor wants registered first. */
-const TEAM_SETTING = /^connector:[a-z0-9-]{1,40}$/;
+/**
+ * What an office keeps for all its members: the OAuth client a vendor wants registered first, and
+ * when the clones hold their standup.
+ */
+const TEAM_SETTING = /^(connector:[a-z0-9-]{1,40}|meeting:standup)$/;
 
 // Node runs this file without a build, so no TypeScript-only syntax such as parameter properties.
 // The code is what a mini-me's screen shows in its person's language; the message is for logs.
@@ -196,6 +267,25 @@ interface TaskRow {
   created: unknown;
   updated: unknown;
 }
+
+interface MeetingRow {
+  id: string;
+  office_id: string;
+  kind: MeetingKind;
+  topic: string;
+  language: string;
+  opened_by: string;
+  members: string[] | string;
+  round: number;
+  rounds: number;
+  state: "open" | "closed";
+  created: unknown;
+  round_ends: unknown;
+  closed: unknown;
+}
+
+const MEETING_COLUMNS =
+  "id, office_id, kind, topic, language, opened_by, members, round, rounds, state, created, round_ends, closed";
 
 export class Relay {
   private db: Database;
@@ -392,6 +482,8 @@ export class Relay {
     to: string,
     text: string,
     files: string[] = [],
+    /** The conversation it belongs to, as an A2A client names it; a new one when none. */
+    contextId?: string,
   ): Promise<Task> {
     if (from.id === to)
       throw new RelayError(400, "A clone does not ask itself.", "bad-request");
@@ -406,7 +498,16 @@ export class Relay {
     await this.db.transaction(async (tx) => {
       await tx.query(
         "INSERT INTO tasks (id, office_id, context_id, from_member, to_member, state, created, updated) VALUES ($1, $2, $3, $4, $5, 'SUBMITTED', $6, $6)",
-        [id, from.office, randomUUID(), from.id, to, now],
+        [
+          id,
+          from.office,
+          contextId && /^[\w.:-]{1,100}$/.test(contextId)
+            ? contextId
+            : randomUUID(),
+          from.id,
+          to,
+          now,
+        ],
       );
       await addMessage(
         tx,
@@ -811,29 +912,321 @@ export class Relay {
     return events;
   }
 
+  /**
+   * Waits until a request the member is part of comes to a state `done` accepts, or `ms` pass;
+   * answers the request as it is then. An A2A caller that asked to wait for the answer waits here.
+   */
+  async waitForTask(
+    member: Caller,
+    id: string,
+    done: (task: Task) => boolean,
+    ms: number,
+  ): Promise<Task> {
+    const deadline = Date.now() + ms;
+    let task = await this.taskFor(member, id);
+    while (!done(task) && Date.now() < deadline) {
+      await this.waitFor(
+        member.id,
+        Math.min(RECHECK_MS, deadline - Date.now()),
+      );
+      task = await this.taskFor(member, id);
+    }
+    return task;
+  }
+
+  /**
+   * Opens a meeting with the members present now. A standup still going is joined instead; and
+   * one opened at the office's set time (`scheduled`) is held once a day, so the clones that each
+   * open it at its time hold one together.
+   */
+  async openMeeting(
+    from: Caller,
+    input: {
+      kind: string;
+      topic?: string;
+      language?: string;
+      scheduled?: boolean;
+    },
+    now = new Date(),
+  ): Promise<Meeting> {
+    const kind = input.kind as MeetingKind;
+    if (!(kind in MEETING_ROUNDS))
+      throw new RelayError(400, "No such kind of meeting.", "bad-request");
+    const topic = String(input.topic ?? "")
+      .trim()
+      .slice(0, 600);
+    if (kind === "question" && !topic)
+      throw new RelayError(400, "A question needs its words.", "bad-request");
+    const language =
+      String(input.language ?? "")
+        .trim()
+        .slice(0, 40) || "English";
+    const at = now.toISOString();
+    const { id, opened } = await this.db.transaction(async (tx) => {
+      // One standup at a time per office: whoever opens it first, the others join.
+      await tx.query("SELECT pg_advisory_xact_lock(4174002)");
+      if (kind === "standup") {
+        const [today] = await tx.query<{ id: string; state: string }>(
+          "SELECT id, state FROM meetings WHERE office_id = $1 AND kind = 'standup' AND created > $2 ORDER BY created DESC LIMIT 1",
+          [
+            from.office,
+            new Date(
+              now.getTime() - STANDUP_HOURS * 60 * 60 * 1000,
+            ).toISOString(),
+          ],
+        );
+        if (today && (today.state === "open" || input.scheduled))
+          return { id: today.id, opened: [] as string[] };
+      }
+      const present = (
+        await tx.query<{ id: string }>(
+          "SELECT id FROM members WHERE office_id = $1 AND (seen > $2 OR id = $3) ORDER BY joined, id",
+          [
+            from.office,
+            new Date(now.getTime() - PRESENT_MS).toISOString(),
+            from.id,
+          ],
+        )
+      ).map((row) => row.id);
+      if (present.length < 2)
+        throw new RelayError(
+          409,
+          "Nobody else is in the office now.",
+          "meeting-alone",
+        );
+      const id = randomUUID();
+      await tx.query(
+        `INSERT INTO meetings (${MEETING_COLUMNS}) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, 1, $8, 'open', $9, $10, NULL)`,
+        [
+          id,
+          from.office,
+          kind,
+          topic,
+          language,
+          from.id,
+          JSON.stringify(present),
+          MEETING_ROUNDS[kind],
+          at,
+          new Date(now.getTime() + ROUND_MS).toISOString(),
+        ],
+      );
+      // The question is what the one who asked said first.
+      if (kind === "question")
+        await tx.query(
+          "INSERT INTO meeting_posts (id, meeting_id, from_member, round, reply_to, text, at) VALUES ($1, $2, $3, 0, NULL, $4, $5)",
+          [randomUUID(), id, from.id, topic, at],
+        );
+      for (const member of present) await notify(tx, member, "meeting", id, at);
+      return { id, opened: present };
+    });
+    for (const member of opened) this.wake(member);
+    return this.meetingById(id);
+  }
+
+  /** One meeting of the member's office, with what was said. */
+  async meeting(member: Caller, id: string): Promise<Meeting> {
+    const meeting = await this.meetingById(id).catch(() => undefined);
+    const [row] = meeting
+      ? await this.db.query<{ office_id: string }>(
+          "SELECT office_id FROM meetings WHERE id = $1",
+          [id],
+        )
+      : [];
+    if (!meeting || row?.office_id !== member.office)
+      throw new RelayError(404, "No such meeting.", "not-found");
+    return meeting;
+  }
+
+  /** The office's latest meetings, newest first. */
+  async meetings(member: Caller, limit = 10): Promise<Meeting[]> {
+    const rows = await this.db.query<{ id: string }>(
+      "SELECT id FROM meetings WHERE office_id = $1 ORDER BY created DESC LIMIT $2",
+      [member.office, Math.max(1, Math.min(limit, 50))],
+    );
+    const out: Meeting[] = [];
+    for (const row of rows) out.push(await this.meetingById(row.id));
+    return out;
+  }
+
+  /**
+   * What a member's clone says in a round (empty text: it passes). Once a round; a round already
+   * past still takes what was not said in it, while the meeting is open. The round ends as soon as
+   * everyone has spoken.
+   */
+  async postToMeeting(
+    member: Caller,
+    id: string,
+    input: { round: number; text?: string; replyTo?: string },
+    now = new Date(),
+  ): Promise<Meeting> {
+    const at = now.toISOString();
+    const woken = await this.db.transaction(async (tx) => {
+      const [row] = await tx.query<MeetingRow>(
+        `SELECT ${MEETING_COLUMNS} FROM meetings WHERE id = $1 FOR UPDATE`,
+        [id],
+      );
+      if (!row || row.office_id !== member.office)
+        throw new RelayError(404, "No such meeting.", "not-found");
+      const members = listOf(row.members);
+      if (!members.includes(member.id))
+        throw new RelayError(403, "Not in this meeting.", "meeting-not-in");
+      if (row.state !== "open")
+        throw new RelayError(409, "The meeting is over.", "meeting-closed");
+      const round = Number(input.round);
+      if (!Number.isInteger(round) || round < 1 || round > row.round)
+        throw new RelayError(
+          400,
+          "Not a round of this meeting.",
+          "bad-request",
+        );
+      const replyTo = input.replyTo ? String(input.replyTo) : undefined;
+      if (replyTo) {
+        const [found] = await tx.query(
+          "SELECT 1 FROM meeting_posts WHERE id = $1 AND meeting_id = $2",
+          [replyTo, id],
+        );
+        if (!found)
+          throw new RelayError(400, "No such post here.", "bad-request");
+      }
+      const [said] = await tx.query(
+        "SELECT 1 FROM meeting_posts WHERE meeting_id = $1 AND from_member = $2 AND round = $3",
+        [id, member.id, round],
+      );
+      if (said)
+        throw new RelayError(
+          409,
+          "Already said in this round.",
+          "meeting-said",
+        );
+      await tx.query(
+        "INSERT INTO meeting_posts (id, meeting_id, from_member, round, reply_to, text, at) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        [
+          randomUUID(),
+          id,
+          member.id,
+          round,
+          replyTo ?? null,
+          String(input.text ?? "")
+            .trim()
+            .slice(0, POST_CHARS),
+          at,
+        ],
+      );
+      if (round !== row.round) return [];
+      const spoke = new Set(
+        (
+          await tx.query<{ from_member: string }>(
+            "SELECT from_member FROM meeting_posts WHERE meeting_id = $1 AND round = $2",
+            [id, round],
+          )
+        ).map((post) => post.from_member),
+      );
+      const waiting = expected(row, members).filter((m) => !spoke.has(m));
+      return waiting.length ? [] : advance(tx, row, members, now);
+    });
+    for (const one of woken) this.wake(one);
+    return this.meetingById(id);
+  }
+
+  /** Ends the rounds whose time is up: the next begins, or the meeting closes. */
+  async advanceMeetings(now = new Date()): Promise<void> {
+    const due = await this.db.query<{ id: string }>(
+      "SELECT id FROM meetings WHERE state = 'open' AND round_ends <= $1",
+      [now.toISOString()],
+    );
+    for (const { id } of due) {
+      const woken = await this.db.transaction(async (tx) => {
+        const [row] = await tx.query<MeetingRow>(
+          `SELECT ${MEETING_COLUMNS} FROM meetings WHERE id = $1 FOR UPDATE`,
+          [id],
+        );
+        if (
+          !row ||
+          row.state !== "open" ||
+          Date.parse(iso(row.round_ends)) > now.getTime()
+        )
+          return [];
+        return advance(tx, row, listOf(row.members), now);
+      });
+      for (const one of woken) this.wake(one);
+    }
+  }
+
+  private async meetingById(id: string): Promise<Meeting> {
+    const [row] = await this.db.query<MeetingRow>(
+      `SELECT ${MEETING_COLUMNS} FROM meetings WHERE id = $1`,
+      [id],
+    );
+    if (!row) throw new RelayError(404, "No such meeting.", "not-found");
+    const posts = await this.db.query<{
+      id: string;
+      from_member: string;
+      round: number;
+      reply_to: string | null;
+      text: string;
+      at: unknown;
+    }>(
+      "SELECT id, from_member, round, reply_to, text, at FROM meeting_posts WHERE meeting_id = $1 ORDER BY seq",
+      [id],
+    );
+    return {
+      id: row.id,
+      kind: row.kind,
+      topic: row.topic,
+      language: row.language,
+      openedBy: row.opened_by,
+      members: listOf(row.members),
+      round: Number(row.round),
+      rounds: Number(row.rounds),
+      state: row.state,
+      created: iso(row.created),
+      roundEnds: iso(row.round_ends),
+      ...(row.closed ? { closed: iso(row.closed) } : {}),
+      posts: posts.map((post) => ({
+        id: post.id,
+        from: post.from_member,
+        round: Number(post.round),
+        ...(post.reply_to ? { replyTo: post.reply_to } : {}),
+        text: post.text,
+        at: iso(post.at),
+      })),
+    };
+  }
+
   /** Lets go of inbox news no one needs any more. */
   async tidy(now = new Date()): Promise<void> {
     await this.db.query("DELETE FROM events WHERE at < $1", [
       new Date(now.getTime() - EVENT_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+    ]);
+    await this.db.query("DELETE FROM meetings WHERE created < $1", [
+      new Date(
+        now.getTime() - MEETING_DAYS * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     ]);
   }
 
   private async events(member: string, after: number): Promise<InboxEvent[]> {
     const rows = await this.db.query<{
       seq: string | number;
-      type: "task" | "update";
+      type: "task" | "update" | "meeting";
       task_id: string;
     }>(
       "SELECT seq, type, task_id FROM events WHERE member = $1 AND seq > $2 ORDER BY seq LIMIT 50",
       [member, after],
     );
     const out: InboxEvent[] = [];
-    for (const row of rows)
-      out.push({
-        seq: Number(row.seq),
-        type: row.type,
-        task: await this.task(row.task_id),
-      });
+    for (const row of rows) {
+      const seq = Number(row.seq);
+      if (row.type === "meeting") {
+        // A meeting let go since is no news.
+        const meeting = await this.meetingById(row.task_id).catch(
+          () => undefined,
+        );
+        if (meeting) out.push({ seq, type: "meeting", meeting });
+        continue;
+      }
+      out.push({ seq, type: row.type, task: await this.task(row.task_id) });
+    }
     return out;
   }
 
@@ -952,7 +1345,7 @@ async function attach(
 async function notify(
   tx: Sql,
   member: string,
-  type: "task" | "update",
+  type: "task" | "update" | "meeting",
   task: string,
   at: string,
 ): Promise<void> {
@@ -999,4 +1392,38 @@ function cleanCard(card: Card): Card {
         }
       : {}),
   };
+}
+
+/** A JSONB list as it comes from either database. */
+function listOf(value: string[] | string): string[] {
+  return typeof value === "string" ? JSON.parse(value) : value;
+}
+
+/** Who is to speak in a meeting's round now: everyone, but not the one who asked a question first. */
+function expected(row: MeetingRow, members: string[]): string[] {
+  return row.kind === "question" && Number(row.round) === 1
+    ? members.filter((m) => m !== row.opened_by)
+    : members;
+}
+
+/** The next round begins, or the meeting closes; every member hears. Answers who to wake. */
+async function advance(
+  tx: Sql,
+  row: MeetingRow,
+  members: string[],
+  now: Date,
+): Promise<string[]> {
+  const at = now.toISOString();
+  if (Number(row.round) < Number(row.rounds))
+    await tx.query(
+      "UPDATE meetings SET round = round + 1, round_ends = $1 WHERE id = $2",
+      [new Date(now.getTime() + ROUND_MS).toISOString(), row.id],
+    );
+  else
+    await tx.query(
+      "UPDATE meetings SET state = 'closed', closed = $1 WHERE id = $2",
+      [at, row.id],
+    );
+  for (const member of members) await notify(tx, member, "meeting", row.id, at);
+  return members;
 }

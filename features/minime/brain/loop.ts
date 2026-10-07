@@ -298,7 +298,7 @@ export async function runLoop(
         env: {
           ...(cleanEnv() as Record<string, string>),
           SUB_OFFICE_HOME: minimeHome(),
-          ...toolServerEnv(actor, gate),
+          ...toolServerEnv(actor, gate, options.audience),
         },
       },
       connectors:

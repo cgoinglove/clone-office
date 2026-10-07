@@ -143,6 +143,11 @@ export interface SessionOptions {
    */
   standing?: { allow: string[]; deny: string[] };
   /**
+   * What the session writes goes to colleagues (a meeting of the clones): the person's own office
+   * and flows stay out of reach, as when answering a colleague's request.
+   */
+  audience?: "colleagues";
+  /**
    * The person's own work (their conversation, a flow): the services they connected are reached
    * too (connectors/), each tool asked first unless they allowed it. Never for a colleague's
    * request, so what is in their mail or documents does not go out to colleagues by itself.
@@ -174,7 +179,8 @@ export type SessionPurpose =
   | "request"
   | "check"
   | "card"
-  | "flow";
+  | "flow"
+  | "meeting";
 
 export interface SessionResult {
   ok: boolean;
@@ -241,8 +247,10 @@ const quoted = (path: string) => `"${path.replace(/"/g, '\\"')}"`;
 export function toolServerEnv(
   actor: "minime" | "review",
   gate?: SessionGate,
+  audience?: "colleagues",
 ): Record<string, string> {
   return {
+    ...(audience ? { MINIME_AUDIENCE: audience } : {}),
     MINIME_MEMORY_DIR: memoryDir(),
     MINIME_SKILLS_DIR: skillsDir(),
     MINIME_NOTES_DIR: notesDir(),
@@ -264,6 +272,7 @@ export function mcpConfig(
   actor: "minime" | "review",
   gate?: SessionGate,
   connectors: Connector[] = [],
+  audience?: "colleagues",
 ): string {
   return JSON.stringify({
     mcpServers: {
@@ -284,7 +293,7 @@ export function mcpConfig(
         // Node runs the TypeScript server as is (bundled in the package); warnings would only
         // clutter its stderr.
         args: ["--no-warnings", toolServerPath()],
-        env: toolServerEnv(actor, gate),
+        env: toolServerEnv(actor, gate, audience),
       },
     },
   });
@@ -372,6 +381,7 @@ export async function runSession(
       options.connectors && actor === "minime"
         ? await connectedConnectors().catch(() => [])
         : [],
+      options.audience,
     ),
     "--strict-mcp-config",
     "--tools",

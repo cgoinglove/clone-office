@@ -83,12 +83,12 @@ const server = new Server(
 // before each change: it sees the permission prompt and nothing of the mini-me's.
 const permissionOnly = process.env.MINIME_ROLE === "permission";
 
-// Answering a colleague's request: the person's own office, flows and settings stay out of it, so
-// nothing of other colleagues' requests can reach the answer, and a colleague's words never
-// change what the person set.
-const answering = (process.env.MINIME_CHAT_ID ?? "").startsWith(
-  "office-request-",
-);
+// Answering a colleague's request, or speaking in a meeting of the clones: the person's own office,
+// flows and settings stay out of it, so nothing of other colleagues' requests can reach what goes
+// to colleagues, and a colleague's words never change what the person set.
+const answering =
+  (process.env.MINIME_CHAT_ID ?? "").startsWith("office-request-") ||
+  process.env.MINIME_AUDIENCE === "colleagues";
 const PERSON_ONLY = new Set([
   "flows",
   "office_inbox",

@@ -41,6 +41,12 @@ const tidying = setInterval(
   60 * 60 * 1000,
 );
 tidying.unref();
+// A meeting's round ends when its time is up, whoever has not spoken.
+const meetingRounds = setInterval(
+  () => void relay.advanceMeetings().catch(() => {}),
+  5000,
+);
+meetingRounds.unref();
 
 const publicUrl = process.env.RELAY_PUBLIC_URL || undefined;
 const accounts = await Accounts.open(db, relay, { publicUrl });

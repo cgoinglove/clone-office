@@ -7,10 +7,14 @@ import {
   joinOffice,
   leaveOffice,
   loadOffice,
+  meetings,
   members,
+  openMeeting,
   problemCode,
   sendRequest,
+  setTeamSetting,
   tasks,
+  teamSetting,
   updateCard,
   updateRequest,
 } from "@/features/minime/office/client";
@@ -41,6 +45,10 @@ import {
 } from "@/features/minime/office/worker";
 import { refuse } from "@/features/minime/server/guard";
 import { personLanguage } from "@/features/minime/server/language";
+import {
+  readPreferences,
+  writePreferences,
+} from "@/features/minime/server/preferences";
 
 // The person's office as their screen sees it: who is there (their cards), the requests sent and
 // received, and the questions about those requests waiting for them. Asking also keeps this
@@ -67,10 +75,14 @@ export async function GET(request: Request) {
     ? { relay, network: Boolean(networkAddress()), problem: hostProblem() }
     : undefined;
   try {
-    const [{ members: everyone }, { tasks: requests }] = await Promise.all([
-      members(office),
-      tasks(office),
-    ]);
+    const [{ members: everyone }, { tasks: requests }, held, standup] =
+      await Promise.all([
+        members(office),
+        tasks(office),
+        // The office's latest meetings of the clones, and when its standup is.
+        meetings(office, 5).catch(() => []),
+        teamSetting(office, "meeting:standup").catch(() => undefined),
+      ]);
     return Response.json({
       joined: true,
       relay,
@@ -80,6 +92,14 @@ export async function GET(request: Request) {
       likeMe: like,
       members: everyone,
       tasks: requests,
+      meetings: held,
+      standup: standup?.value ?? null,
+      meetingsOn: (await readPreferences()).meetings,
+      meetingChats: Object.fromEntries(
+        Object.entries((await loadState()).meetings).flatMap(([id, back]) =>
+          back.chat ? [[id, back.chat]] : [],
+        ),
+      ),
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
       // Questions about requests kept for the person to answer when they can.
       later: (await laterQuestions(requests)).map((entry) => ({
@@ -166,6 +186,22 @@ const Body = z.discriminatedUnion("action", [
     action: z.literal("later"),
     id: z.string().uuid(),
     answer: z.string().trim().min(1).max(4000),
+  }),
+  z.object({
+    action: z.literal("meeting"),
+    kind: z.enum(["standup", "question"]),
+    topic: z.string().trim().max(600).optional(),
+    locale: z.string().max(35).default("en"),
+  }),
+  z.object({
+    action: z.literal("standup-time"),
+    standup: z
+      .object({
+        days: z.array(z.number().int().min(0).max(6)).min(1).max(7),
+        time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+        zone: z.string().min(1).max(64),
+      })
+      .nullable(),
   }),
 ]);
 
@@ -267,6 +303,22 @@ export async function POST(request: Request) {
       return Response.json({
         task: await updateRequest(office, input.id, { state: "CANCELED" }),
       });
+    if (input.action === "meeting") {
+      // Starting a meeting is taking part in it: the person's clone speaks for them from now on.
+      if (!(await readPreferences()).meetings)
+        await writePreferences({ meetings: true });
+      return Response.json({
+        meeting: await openMeeting(office, {
+          kind: input.kind,
+          topic: input.topic,
+          language: (await personLanguage(input.locale)) ?? "English",
+        }),
+      });
+    }
+    if (input.action === "standup-time") {
+      await setTeamSetting(office, "meeting:standup", input.standup);
+      return Response.json({ standup: input.standup });
+    }
     stopOffice();
     // Leaving the office open here closes it; what it keeps stays, for opening it again.
     if (await hostsOffice(office)) await closeHere();

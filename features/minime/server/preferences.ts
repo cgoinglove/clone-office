@@ -38,6 +38,12 @@ export interface Preferences {
    * kept and sent when they end. Replies to what they write from the phone still come.
    */
   quiet: { on: boolean; from: number; to: number };
+  /**
+   * Take part in the office's meetings of the clones (the standup, a question to everyone): the
+   * clone says what the person worked on, from their records, to every colleague. Off until they
+   * turn it on, or start a meeting themselves.
+   */
+  meetings: boolean;
 }
 
 /** The work that may go to the lighter model when the person wants it. */
@@ -56,6 +62,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   lobby: true,
   lightBackground: false,
   quiet: { on: false, from: 22, to: 7 },
+  meetings: false,
 };
 
 const hourOf = (value: unknown, fallback: number) =>
@@ -108,6 +115,10 @@ export function cleanPreferences(input: unknown): Preferences {
         to: hourOf(quiet.to, DEFAULT_PREFERENCES.quiet.to),
       };
     })(),
+    meetings:
+      typeof raw.meetings === "boolean"
+        ? raw.meetings
+        : DEFAULT_PREFERENCES.meetings,
   };
 }
 

@@ -121,7 +121,7 @@ export async function checkBeforeSending(options: {
     ),
     jsonSchema: CHECK_SCHEMA,
     language: options.language,
-    maxTurns: 2,
+    maxTurns: 4,
     purpose: "check",
   });
   const verdict = (check.structured ?? {}) as {
