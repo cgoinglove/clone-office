@@ -3,7 +3,13 @@
 // Thursday's reach draws one text in each service's marks, features/reach/chat-text.ts). A code block cut in two is
 // closed and opened again, so neither piece shows the other's code as words.
 
-const FENCE = /^\s*```/;
+// A fence is a line of its own: three backticks and an info string with none in it (CommonMark),
+// so "```js``` inline" stays a line of words with code in it.
+const FENCE = /^\s*```[^`]*$/;
+/** Inline code between equal runs of backticks, as CommonMark reads it: `a`, ``a ` b``, ```a```. */
+const CODE_SPAN = /(`+)(?!`)(.+?)(?<!`)\1(?!`)/g;
+/** Windows and old Mac line ends read as plain ones. */
+const lines = (text: string) => text.replace(/\r\n?/g, "\n").split("\n");
 
 /** Cuts a line too long for one piece where the reading breaks: at a space, else anywhere but inside a character. */
 function cutAt(line: string, room: number): number {
@@ -67,8 +73,8 @@ function marks(text: string): string {
     return `${kept.length - 1}`;
   };
   let drawn = text
-    .replace(/`([^`]+)`/g, (_, code: string) =>
-      keep(`<code>${escapeHtml(code)}</code>`),
+    .replace(CODE_SPAN, (_, _ticks: string, code: string) =>
+      keep(`<code>${escapeHtml(code.trim())}</code>`),
     )
     .replace(
       /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
@@ -105,7 +111,7 @@ export function telegramHtml(markdown: string): string {
     );
     code = undefined;
   };
-  for (const line of markdown.split("\n")) {
+  for (const line of lines(markdown)) {
     if (FENCE.test(line)) {
       if (code) closeCode();
       else code = { lang: line.trim().slice(3).trim(), lines: [] };
@@ -138,8 +144,8 @@ function slackMarks(text: string): string {
     return `${kept.length - 1}`;
   };
   let drawn = text
-    .replace(/`([^`]+)`/g, (_, code: string) =>
-      keep(`\`${escapeSlack(code)}\``),
+    .replace(CODE_SPAN, (_, _ticks: string, code: string) =>
+      keep(`\`${escapeSlack(code.trim())}\``),
     )
     .replace(
       /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
@@ -167,7 +173,7 @@ function slackMarks(text: string): string {
 export function slackMrkdwn(markdown: string): string {
   const out: string[] = [];
   let code = false;
-  for (const line of markdown.split("\n")) {
+  for (const line of lines(markdown)) {
     if (FENCE.test(line)) {
       code = !code;
       out.push("```");

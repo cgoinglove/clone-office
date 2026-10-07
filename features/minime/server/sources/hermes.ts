@@ -2,8 +2,12 @@
 // a `sessions` table that may name the folder each ran in and its title, and a `messages` table
 // with role "user" or "assistant". Structured content (text with images, say) is stored as JSON
 // after a "\0json:" mark. Sessions started by its scheduler or by another agent are not the person
-// typing. Messages the person rewound are left out, as Hermes' own search leaves them out; sessions
-// hidden from its lists (its bot chat is one) are kept, as its search keeps them.
+// typing, nor are those its board, its API server or a tool started. Messages the person rewound are
+// left out, as Hermes' own search leaves them out, and so are the rows nobody typed: scaffolding
+// shown only to the model (a `display_kind` other than a typed /steer), a merge of turns the model
+// reads as one (`model_only`), and the summary a compaction hands to the next context (flagged, or,
+// in older files, marked by its opening). Sessions hidden from its lists (its bot chat is one) are
+// kept, as its search keeps them.
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -12,6 +16,10 @@ import { hermesHome } from "../paths.ts";
 import { cleanPrompt, isoTime, type LineMessage } from "./common.ts";
 
 const JSON_MARK = "\u0000json:";
+/** Where sessions nobody typed in come from: its scheduler, sub-agents, its board, its API, tools. */
+const NOT_TYPED = ["cron", "subagent", "kanban", "api_server", "tool"];
+/** How Hermes opens the summary a compaction hands to the next context, now and before. */
+const SUMMARY_OPENINGS = ["[CONTEXT COMPACTION", "[CONTEXT SUMMARY]:"];
 
 export interface HermesSession {
   id: string;
@@ -64,14 +72,33 @@ function columnsOf(db: DatabaseSync, table: string): Set<string> {
   );
 }
 
-/** Rows still in the conversation: rewound ones (inactive, not compacted) are not. */
+/**
+ * Rows still in the conversation and typed or answered there: rewound ones (inactive, not
+ * compacted) are not, nor rows only the model reads. Older files have fewer of these columns.
+ */
 function kept(db: DatabaseSync, alias = ""): string {
   const columns = columnsOf(db, "messages");
-  if (!columns.has("active")) return "1";
-  return columns.has("compacted")
-    ? `(coalesce(${alias}active, 1) = 1 OR coalesce(${alias}compacted, 0) = 1)`
-    : `coalesce(${alias}active, 1) = 1`;
+  const terms: string[] = [];
+  if (columns.has("active"))
+    terms.push(
+      columns.has("compacted")
+        ? `(coalesce(${alias}active, 1) = 1 OR coalesce(${alias}compacted, 0) = 1)`
+        : `coalesce(${alias}active, 1) = 1`,
+    );
+  if (columns.has("display_kind"))
+    terms.push(`coalesce(${alias}display_kind, '') IN ('', 'steer')`);
+  if (columns.has("_compressed_summary"))
+    terms.push(`coalesce(${alias}_compressed_summary, 0) = 0`);
+  if (columns.has("display_metadata"))
+    terms.push(
+      `NOT (coalesce(json_valid(${alias}display_metadata), 0) AND coalesce(json_extract(CASE WHEN json_valid(${alias}display_metadata) THEN ${alias}display_metadata END, '$.model_only'), 0))`,
+    );
+  return terms.length ? terms.join(" AND ") : "1";
 }
+
+/** The summary a compaction handed on, in a file too old to flag it. */
+const isSummary = (text: string) =>
+  SUMMARY_OPENINGS.some((opening) => text.trimStart().startsWith(opening));
 
 /** Every session in which the person typed something, without reading its messages. */
 export function hermesSessions(path = hermesDbPath()): HermesSession[] {
@@ -85,13 +112,13 @@ export function hermesSessions(path = hermesDbPath()): HermesSession[] {
     const rows = db
       .prepare(
         `SELECT s.id AS id,
-                ${folder.length ? `coalesce(${folder.map((c) => `s.${c}`).join(", ")})` : "NULL"} AS folder,
+                ${folder.length > 1 ? `coalesce(${folder.map((c) => `s.${c}`).join(", ")})` : folder.length ? `s.${folder[0]}` : "NULL"} AS folder,
                 ${columns.has("title") ? "s.title" : "NULL"} AS title,
                 COUNT(m.id) AS count,
                 SUM(m.role = 'user') AS typed,
                 MAX(m.timestamp) AS last
            FROM sessions s JOIN messages m ON m.session_id = s.id
-          WHERE s.source NOT IN ('cron', 'subagent')
+          WHERE s.source NOT IN (${NOT_TYPED.map((source) => `'${source}'`).join(", ")})
             AND m.role IN ('user', 'assistant') AND ${kept(db, "m.")}
           GROUP BY s.id`,
       )
@@ -133,6 +160,7 @@ export function hermesMessages(path: string, id: string): LineMessage[] {
     for (const row of rows) {
       const raw = contentText(row.content);
       const at = isoTime(row.timestamp);
+      if (isSummary(raw)) continue;
       if (row.role === "user") {
         const text = cleanPrompt(raw);
         if (text.length >= 2) out.push({ role: "user", at, text });

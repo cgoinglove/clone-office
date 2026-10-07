@@ -65,3 +65,15 @@ test("markdown is drawn in Slack's mrkdwn, with &, < and > escaped", () => {
     "```\nif (a &lt; b) **x**\n```",
   );
 });
+
+test("inline backticks of any length are code, and Windows line ends do not leak into code", () => {
+  assert.equal(
+    telegramHtml("Use ```js``` inline, or ``a ` b``."),
+    "Use <code>js</code> inline, or <code>a ` b</code>.",
+  );
+  assert.equal(
+    telegramHtml("Steps:\r\n```\r\nnpm i\r\n```\r\nDone"),
+    "Steps:\n<pre><code>npm i</code></pre>\nDone",
+  );
+  assert.equal(slackMrkdwn("Run ```pnpm dev``` now"), "Run `pnpm dev` now");
+});

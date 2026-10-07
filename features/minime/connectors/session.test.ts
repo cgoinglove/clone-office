@@ -23,7 +23,7 @@ test("a session reaches each connected service through the helper, never with it
   const github = config.mcpServers.github;
   assert.equal(github.type, "http");
   assert.equal(github.url, "https://api.githubcopilot.com/mcp/");
-  assert.match(github.headersHelper, /headers\.ts" github$/);
+  assert.match(github.headersHelper, /headers\.ts" github "[^"]+"$/);
   assert.doesNotMatch(
     JSON.stringify(config),
     /github_pat_/,

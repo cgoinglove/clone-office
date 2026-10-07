@@ -275,7 +275,7 @@ export function mcpConfig(
           {
             type: "http",
             url: entry.url,
-            headersHelper: `${quoted(process.execPath)} --no-warnings ${quoted(connectorHeadersPath())} ${entry.id}`,
+            headersHelper: `${quoted(process.execPath)} --no-warnings ${quoted(connectorHeadersPath())} ${entry.id} ${quoted(minimeHome())}`,
           },
         ]),
       ),
