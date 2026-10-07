@@ -107,11 +107,7 @@ async function keepInvite(link) {
     await fetch(url, { signal: AbortSignal.timeout(15_000) });
   } catch {
     console.error(
-      `Could not reach the office at ${url.host}.${
-        isPrivateHost(url.hostname)
-          ? ` It runs on ${from || "a teammate"}'s computer: join from the same Wi-Fi or network, while their sub-office is open.`
-          : " Check the link, and that this computer is online."
-      }`,
+      `Could not reach the office at ${url.host}. If it runs on ${from || "a teammate"}'s computer, join from the same Wi-Fi or network while their sub-office is open; otherwise check the link, and that this computer is online.`,
     );
     process.exit(1);
   }
@@ -123,17 +119,6 @@ async function keepInvite(link) {
     settings.office
       ? "Your clone here is in an office already. To join this one instead, leave that one under Settings › Office; this link will be ready there."
       : `Invited to ${from ? `${from}'s office` : "an office"}. Your browser opens sub-office: after a few questions, your clone joins the office.`,
-  );
-}
-
-/** A private network's address: an office open on a teammate's computer. */
-function isPrivateHost(host) {
-  return (
-    host === "localhost" ||
-    /^(10|127)\./.test(host) ||
-    /^192\.168\./.test(host) ||
-    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
-    /^\[(fd|fe80)/i.test(host)
   );
 }
 
@@ -301,6 +286,6 @@ async function startApp() {
   }
   console.log(`Your clone is at ${url()}
 It runs on this computer only. Keep this window open; press Ctrl+C to stop.
-To start it again later, run: npx sub-office`);
+To start it again later, run: npx -y sub-office`);
   if (!args.includes("--no-open")) open(url());
 }

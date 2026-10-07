@@ -50,6 +50,8 @@ const server = createServer(
     trustProxy: process.env.RELAY_TRUST_PROXY === "1",
     accounts,
     publicUrl,
+    // Started by someone's app: the office lives on their computer, reached on their network.
+    onComputer: process.env.RELAY_WITH_PARENT === "1",
   }),
 );
 

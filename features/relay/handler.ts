@@ -150,6 +150,8 @@ export function relayHandler(
     accounts?: Accounts;
     /** The address people reach the server at, for the links and lines its pages give. */
     publicUrl?: string;
+    /** Run by someone's app: the office is on their computer, so others join from its network. */
+    onComputer?: boolean;
   } = {},
 ) {
   const accounts = options.accounts;
@@ -223,7 +225,8 @@ export function relayHandler(
       return {
         os: osOf(request.headers["user-agent"]),
         command: joinCommand({ base: at, key, from: who }),
-        local: isPrivateHost(new URL(at).hostname),
+        local:
+          Boolean(options.onComputer) || isPrivateHost(new URL(at).hostname),
       };
     };
     /**
@@ -585,7 +588,9 @@ export function relayHandler(
               key: invite[1],
               from: who || undefined,
             }),
-            local: isPrivateHost(new URL(origin).hostname),
+            local:
+              Boolean(options.onComputer) ||
+              isPrivateHost(new URL(origin).hostname),
           }),
         );
         return;
