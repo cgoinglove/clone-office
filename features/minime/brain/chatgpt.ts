@@ -278,22 +278,34 @@ export async function chatGptAccessToken(now = Date.now()): Promise<string> {
   });
 }
 
+/**
+ * The list hides models whose `minimal_client_version` is newer than the client asking, and asked
+ * with no version it answers a list frozen before GPT-6 Sol and Luna. So this app asks as the
+ * newest client, as Hermes Agent does, and falls back to the plain list should that be refused.
+ */
+const NEWEST_CLIENT = "99.0.0";
+
 /** The models the person's plan offers, as OpenAI lists them for this app. */
 export async function chatGptModels(): Promise<
   { id: string; label: string }[]
 > {
-  const response = await fetch(`${OPENAI.api}/models`, {
-    headers: { authorization: `Bearer ${await chatGptAccessToken()}` },
-    signal: AbortSignal.timeout(15_000),
-  }).catch(() => undefined);
-  if (!response?.ok) return [];
-  const body = (await response.json().catch(() => ({}))) as {
-    models?: { slug?: string; display_name?: string; visibility?: string }[];
-  };
-  return (body.models ?? [])
-    .filter((model) => model.slug && model.visibility === "list")
-    .map((model) => ({
-      id: model.slug as string,
-      label: model.display_name || (model.slug as string),
-    }));
+  const token = await chatGptAccessToken();
+  for (const query of [`?client_version=${NEWEST_CLIENT}`, ""]) {
+    const response = await fetch(`${OPENAI.api}/models${query}`, {
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(15_000),
+    }).catch(() => undefined);
+    if (!response?.ok) continue;
+    const body = (await response.json().catch(() => ({}))) as {
+      models?: { slug?: string; display_name?: string; visibility?: string }[];
+    };
+    const listed = (body.models ?? [])
+      .filter((model) => model.slug && model.visibility === "list")
+      .map((model) => ({
+        id: model.slug as string,
+        label: model.display_name || (model.slug as string),
+      }));
+    if (listed.length) return listed;
+  }
+  return [];
 }

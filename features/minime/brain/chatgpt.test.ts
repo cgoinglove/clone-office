@@ -36,23 +36,35 @@ before(async () => {
       response.end(JSON.stringify(data));
     };
     if (request.url === "/jwks") return json(200, { keys: [jwk] });
-    if (request.url === "/v1/models")
-      return request.headers.authorization === "Bearer access-2"
-        ? json(200, {
-            models: [
-              {
-                slug: "gpt-6.1-sol",
-                display_name: "GPT-6.1 Sol",
-                visibility: "list",
-              },
-              {
-                slug: "internal",
-                display_name: "Internal",
-                visibility: "hide",
-              },
-            ],
-          })
-        : json(401, {});
+    // As OpenAI answers: asked as a recent client, the whole list; asked with no version, a list
+    // frozen before the newer models.
+    if (request.url?.startsWith("/v1/models"))
+      return request.headers.authorization !== "Bearer access-2"
+        ? json(401, {})
+        : request.url === "/v1/models?client_version=99.0.0"
+          ? json(200, {
+              models: [
+                {
+                  slug: "gpt-6.1-sol",
+                  display_name: "GPT-6.1 Sol",
+                  visibility: "list",
+                },
+                {
+                  slug: "internal",
+                  display_name: "Internal",
+                  visibility: "hide",
+                },
+              ],
+            })
+          : json(200, {
+              models: [
+                {
+                  slug: "gpt-5.6-sol",
+                  display_name: "GPT-5.6-Sol",
+                  visibility: "list",
+                },
+              ],
+            });
     if (request.url === "/token") {
       const form = new URLSearchParams(body);
       forms.push(form);
@@ -149,7 +161,8 @@ test("Sign in with ChatGPT: registers this app for this computer once, checks wh
   );
   assert.ok(again.searchParams.get("id_token_hint"));
 
-  // The access token is renewed when it runs out; the plan's models are the listed ones.
+  // The access token is renewed when it runs out; the plan's models are the listed ones, asked
+  // for as a recent client so the newer ones come too.
   assert.equal(await chatgpt.chatGptAccessToken(), "access-1");
   assert.equal(
     await chatgpt.chatGptAccessToken(Date.now() + 2 * 3600_000),
