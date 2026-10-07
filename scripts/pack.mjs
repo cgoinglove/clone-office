@@ -4,7 +4,8 @@
 // no path of this computer is written into the build. There the dependencies are installed, the
 // app is built as a standalone server (next.config.ts, SUB_OFFICE_PACKAGE), and the mini-me's
 // tool server and the relay are bundled into one file each, since Node does not run TypeScript
-// from inside node_modules. The package is left in dist/; nothing is published.
+// from inside node_modules. Before it builds, the types and every language are checked, and a
+// language out of step stops it. The package is left in dist/; nothing is published.
 //
 //   node scripts/pack.mjs [--working]
 
@@ -74,6 +75,11 @@ try {
   );
 
   console.log("==> Building the app");
+  // Nothing is packed whose languages are out of step: every language with exactly English's lines
+  // (the type check, i18n/sync.ts) and the same values in each (i18n/messages.test.ts).
+  console.log("==> Checking types and languages");
+  run("pnpm", ["typecheck"], source);
+  run("pnpm", ["exec", "tsx", "--test", "i18n/messages.test.ts"], source);
   run("pnpm", ["exec", "next", "build"], source, {
     SUB_OFFICE_PACKAGE: "1",
     NEXT_TELEMETRY_DISABLED: "1",

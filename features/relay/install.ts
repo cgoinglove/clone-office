@@ -3,6 +3,7 @@
 // steps follow the computer the page was opened on (its User-Agent), with the others folded
 // away; a phone is told to open the link on a computer. Plain HTML like the relay's other pages.
 
+import type { AllInSync } from "../../i18n/sync.ts";
 import { escape, type PageLanguage } from "./page.ts";
 
 export type Os = "mac" | "windows" | "linux" | "phone";
@@ -88,6 +89,9 @@ const WORDS = {
       "sub-office를 이미 쓰고 있다면, 열어서 설정 › 오피스에 이 링크를 붙여 넣으세요.",
   },
 };
+// Each page language's guide says everything the English one says, and nothing more.
+const _wordsInStep: AllInSync<typeof WORDS> & Record<PageLanguage, unknown> =
+  WORDS;
 
 type Key = keyof (typeof WORDS)["en"];
 

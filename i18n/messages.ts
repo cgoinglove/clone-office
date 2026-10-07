@@ -2,7 +2,21 @@
 // them per request (request.ts); work with no page (the person's messenger) loads them here.
 
 import en from "../messages/en.json";
+import ko from "../messages/ko.json";
 import { DEFAULT_LOCALE, type Locale } from "./locales";
+import type { InSync } from "./sync";
+
+/** Each language's file, as it is. */
+const FILES = { en, ko };
+
+/**
+ * Every language the screen is written in, each with exactly English's keys: a language listed in
+ * locales.ts without its file in FILES, or a line missing or left over in one, is a type error that
+ * names it (`pnpm typecheck`, and the package build runs it).
+ */
+const LANGUAGES: {
+  [L in Locale]: InSync<(typeof FILES)[L], typeof en>;
+} = FILES;
 
 type Messages = Record<string, unknown>;
 
@@ -20,6 +34,5 @@ function withFallback(base: Messages, own: Messages): Messages {
 
 export async function loadMessages(locale: Locale): Promise<Messages> {
   if (locale === DEFAULT_LOCALE) return en;
-  const own = (await import(`../messages/${locale}.json`)).default as Messages;
-  return withFallback(en, own);
+  return withFallback(en, LANGUAGES[locale] as Messages);
 }

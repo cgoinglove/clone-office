@@ -102,7 +102,10 @@ These words help discussion. They do not mandate separate services, tables or UI
 - `features/`: a possible home for domain code when needed, not a required upfront structure.
 - `messages/<language>.json` and `i18n/`: every word a person reads, with next-intl and no
   language in the address. English is the source and the fallback; a language is one more file
-  (with every key of `en.json`) and its code in `i18n/locales.ts`. The screen's language is the
+  (with every key of `en.json`) and its code in `i18n/locales.ts`, added to `FILES` in
+  `i18n/messages.ts`: a line missing or left over in a language is a type error that names it
+  (`i18n/sync.ts`; the relay's own pages' words are held to English the same way), and the
+  package build stops on it. The screen's language is the
   one picked under Language (a cookie), else the first of the browser's languages it is written
   in. Routes answer with error codes the screen reads in its language (`useProblem`); a status or
   kind that is stored or sent to colleagues is a code, so each reads it in their own language.

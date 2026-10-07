@@ -3,6 +3,7 @@
 // language when the page is written in it (English otherwise), and everything a person wrote is
 // escaped before it is shown. Node runs this file as it is, like the rest of the relay.
 
+import type { AllInSync } from "../../i18n/sync.ts";
 import { installGuide, type Os } from "./install.ts";
 
 const WORDS = {
@@ -29,6 +30,9 @@ const WORDS = {
 };
 
 export type PageLanguage = keyof typeof WORDS;
+
+// Each language says everything English says, and nothing more: a type error names what is not.
+const _wordsInStep: AllInSync<typeof WORDS> = WORDS;
 
 /** The first of the reader's languages the page is written in, else English. */
 export function pageLanguage(acceptLanguage: string | undefined): PageLanguage {
@@ -146,6 +150,8 @@ const INVITE_WORDS = {
     keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
   },
 };
+const _inviteInStep: AllInSync<typeof INVITE_WORDS> &
+  Record<PageLanguage, unknown> = INVITE_WORDS;
 
 /** What an invite's page says first: who invites, and what an office is. */
 export function inviteHead(lang: PageLanguage, from?: string) {

@@ -4,6 +4,7 @@
 // written in it (English otherwise); everything a person typed is escaped before it is shown, and a
 // password is never put back into a page.
 
+import type { AllInSync } from "../../i18n/sync.ts";
 import { installGuide, npxLine, type Os } from "./install.ts";
 import { escape, type PageLanguage, shell } from "./page.ts";
 
@@ -162,6 +163,10 @@ const WORDS = {
     },
   },
 };
+
+// Each page language says everything English says, and nothing more.
+const _wordsInStep: AllInSync<typeof WORDS> & Record<PageLanguage, unknown> =
+  WORDS;
 
 type Words = (typeof WORDS)["en"];
 type Key = Exclude<keyof Words, "errors">;
