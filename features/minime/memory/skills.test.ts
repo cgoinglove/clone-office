@@ -297,3 +297,103 @@ test("a skill named like a category is refused, and a failed batch never takes t
   ]);
   assert.equal(inside.success, false, "a skill is never made inside another");
 });
+
+test("the skills the app ships come in once, follow new versions while untouched, and never come back once removed", async () => {
+  const shipped = fresh();
+  const write = (name: string, rule: string) =>
+    atomicWrite(join(shipped.dir, "work", name, "SKILL.md"), skill(name, rule));
+  await write("brief", "Short.");
+  await write("wrap", "Outcomes first.");
+  await atomicWrite(
+    join(shipped.dir, "work", "DESCRIPTION.md"),
+    "---\ndescription: Their own work.\n---\n",
+  );
+
+  const store = fresh();
+  assert.deepEqual(await store.syncBundled(shipped.dir), ["brief", "wrap"]);
+  assert.deepEqual(
+    (await store.list()).map((s) => `${s.category}/${s.name}`),
+    ["work/brief", "work/wrap"],
+  );
+  assert.equal((await store.categories()).work, "Their own work.");
+  assert.equal((await store.usage()).brief.created_by, "bundled");
+  assert.deepEqual(await store.syncBundled(shipped.dir), [], "nothing new");
+
+  // The clone adapts one to its person; a new version then leaves that one alone.
+  const review = new SkillStore(store.dir, "review");
+  await review.view("brief");
+  const adapted = await review.apply([
+    {
+      action: "patch",
+      name: "brief",
+      old_string: "Short.",
+      new_string: "Three lines.",
+    },
+  ]);
+  assert.ok(adapted.success);
+  const setAside = await review.apply([{ action: "delete", name: "wrap" }]);
+  assert.match(
+    !setAside.success ? setAside.error : "",
+    /only your person sets it aside/,
+  );
+  await write("brief", "Shorter.");
+  await write("wrap", "Outcomes first, then open items.");
+  assert.deepEqual(await store.syncBundled(shipped.dir), ["wrap"]);
+  assert.match(
+    readFileSync(join(store.dir, "work", "brief", "SKILL.md"), "utf8"),
+    /Three lines/,
+  );
+  assert.match(
+    readFileSync(join(store.dir, "work", "wrap", "SKILL.md"), "utf8"),
+    /then open items/,
+  );
+
+  // Set aside by the person, it stays set aside; a skill of theirs by a shipped name is theirs.
+  await store.archive("wrap");
+  await write("notes", "Theirs.");
+  const own = fresh();
+  await own.apply([
+    { action: "create", name: "notes", content: skill("notes", "Mine.") },
+  ]);
+  await own.syncBundled(shipped.dir);
+  assert.match(
+    readFileSync(join(own.dir, "notes", "SKILL.md"), "utf8"),
+    /Mine/,
+  );
+  assert.deepEqual(await store.syncBundled(shipped.dir), ["notes"]);
+  assert.deepEqual(
+    (await store.list()).map((s) => s.name),
+    ["brief", "notes"],
+  );
+
+  // The curator sets aside only what the clone made, never what the app shipped.
+  const usage = await store.usage();
+  const longAgo = new Date(
+    Date.now() - 400 * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  usage.notes = { ...usage.notes, created_at: longAgo };
+  await atomicWrite(join(store.dir, ".usage.json"), JSON.stringify(usage));
+  await runCurator(store, new Date());
+  assert.ok((await store.list()).some((s) => s.name === "notes"));
+});
+
+test("the skills in this repository load: each has a name, a short description and a category", async () => {
+  const store = new SkillStore(join(process.cwd(), "skills"));
+  const skills = await store.list();
+  assert.ok(skills.length >= 5);
+  for (const found of skills) {
+    assert.ok(found.category, `${found.name} sits in a category`);
+    assert.ok(
+      found.description.length <= 60,
+      `${found.name}'s description fits the index`,
+    );
+    const view = await store.view(found.name);
+    assert.ok("content" in view && /## When to Use/.test(view.content));
+  }
+  const categories = await store.categories();
+  for (const found of skills)
+    assert.ok(
+      categories[found.category ?? ""],
+      `${found.category} is described`,
+    );
+});

@@ -14,7 +14,8 @@
 // tools/skill_linter.py; MIT, Nous Research), with one difference: deleting archives instead of
 // removing, because this app never deletes what a person's mini-me has learned.
 
-import { mkdir, readdir, rename, rm } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { cp, mkdir, readdir, readFile, rename, rm } from "node:fs/promises";
 import { join, normalize, sep } from "node:path";
 import { atomicWrite, readText, withLock } from "./files.ts";
 import { threatMessage } from "./threats.ts";
@@ -38,6 +39,8 @@ export const SUPPORT_DIRS = [
   "assets",
 ] as const;
 const ARCHIVE = ".archive";
+/** The skills the app shipped here, each with the hash of the files it came with. */
+const BUNDLED = ".bundled.json";
 const USAGE = ".usage.json";
 
 /**
@@ -54,7 +57,8 @@ export interface SkillInfo {
 }
 
 export interface UsageRecord {
-  created_by: "minime" | "person" | null;
+  /** "bundled": one the app ships, which the clone adapts to its person and the curator leaves. */
+  created_by: "minime" | "person" | "bundled" | null;
   created_at: string;
   view_count: number;
   last_viewed_at: string | null;
@@ -315,6 +319,84 @@ export class SkillStore {
     return withLock(this.dir, () => this.applyLocked(operations));
   }
 
+  /**
+   * Bring in the skills the app ships (`source`, laid out as the store is), as Hermes Agent's
+   * skills_sync does: each is copied in once and its origin recorded in `.bundled.json`; a later
+   * version replaces it only while it is as it came (not adapted since); one the person set aside
+   * or removed is not brought back; a skill of theirs by the same name is never touched.
+   */
+  async syncBundled(source: string): Promise<string[]> {
+    const shipped = await new SkillStore(source).scan();
+    if (!shipped.length) return [];
+    return withLock(this.dir, async () => {
+      const manifestPath = join(/*turbopackIgnore: true*/ this.dir, BUNDLED);
+      let manifest: Record<string, string> = {};
+      try {
+        manifest = JSON.parse((await readText(manifestPath)).raw || "{}");
+      } catch {
+        manifest = {};
+      }
+      const changed: string[] = [];
+      const added: string[] = [];
+      for (const skill of shipped) {
+        const origin = await treeHash(skill.path);
+        const here = await this.find(skill.name);
+        const was = manifest[skill.name];
+        if (!was) {
+          if (here) continue;
+          const archived = await readText(
+            join(
+              /*turbopackIgnore: true*/ this.dir,
+              ARCHIVE,
+              skill.name,
+              "SKILL.md",
+            ),
+          );
+          if (archived.exists) continue;
+          const to = join(
+            /*turbopackIgnore: true*/ this.dir,
+            ...(skill.category ? [skill.category] : []),
+            skill.name,
+          );
+          await cp(skill.path, to, { recursive: true });
+          if (skill.category)
+            await this.copyDescription(source, skill.category);
+          manifest[skill.name] = origin;
+          added.push(skill.name);
+          changed.push(skill.name);
+          continue;
+        }
+        if (!here || was === origin) continue;
+        if ((await treeHash(here.path)) !== was) continue;
+        await rm(here.path, { recursive: true, force: true });
+        await cp(skill.path, here.path, { recursive: true });
+        manifest[skill.name] = origin;
+        changed.push(skill.name);
+      }
+      if (!changed.length) return [];
+      await atomicWrite(manifestPath, JSON.stringify(manifest, null, 2));
+      if (added.length)
+        await this.updateUsage((usage) => {
+          for (const name of added)
+            usage[name] = usage[name] ?? emptyRecord("bundled");
+        });
+      return changed;
+    });
+  }
+
+  private async copyDescription(source: string, category: string) {
+    const to = join(
+      /*turbopackIgnore: true*/ this.dir,
+      category,
+      "DESCRIPTION.md",
+    );
+    if ((await readText(to)).exists) return;
+    const from = await readText(
+      join(/*turbopackIgnore: true*/ source, category, "DESCRIPTION.md"),
+    );
+    if (from.exists) await atomicWrite(to, from.raw);
+  }
+
   /** Keep a skill from being set aside or changed by the review; for the person. */
   async pin(name: string, pinned: boolean): Promise<boolean> {
     const found = await this.find(name);
@@ -486,12 +568,14 @@ export class SkillStore {
         if (!found)
           throw new Error(`${at}: no skill named '${name}'. Use skills_list.`);
         const record = usage[found.name];
-        if (
-          this.actor === "review" &&
-          (record?.created_by !== "minime" || record.pinned)
-        )
+        // The review adapts what the clone made and the skills the app ships to how the person
+        // works; their own skills, pinned ones, and setting a shipped one aside are theirs.
+        const adaptable =
+          record?.created_by === "minime" ||
+          (record?.created_by === "bundled" && op.action !== "delete");
+        if (this.actor === "review" && (!adaptable || record?.pinned))
           throw new Error(
-            `${at}: '${found.name}' is ${record?.pinned ? "pinned" : "your person's own skill"}; it can be changed only in a session with them. Say what should change in your reply instead.`,
+            `${at}: '${found.name}' is ${record?.pinned ? "pinned" : record?.created_by === "bundled" ? "one the app ships; only your person sets it aside" : "your person's own skill"}; it can be changed only in a session with them. Say what should change in your reply instead.`,
           );
         if (op.action === "delete") {
           if (record?.pinned)
@@ -789,6 +873,17 @@ export class SkillStore {
     }
     return out;
   }
+}
+
+/** One hash over a skill's files (names and contents, hidden files left out), to tell if it changed. */
+async function treeHash(dir: string): Promise<string> {
+  const hash = createHash("sha256");
+  for (const file of (await listFiles(dir)).sort()) {
+    hash.update(`${file}\0`);
+    hash.update(await readFile(join(/*turbopackIgnore: true*/ dir, file)));
+    hash.update("\0");
+  }
+  return hash.digest("hex");
 }
 
 /** Files under `dir`, relative to it, recursively. */

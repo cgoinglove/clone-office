@@ -106,6 +106,7 @@ try {
     `${JSON.stringify({ private: true, type: "commonjs" }, null, 2)}\n`,
   );
   cpSync(join(source, "guide"), join(out, "guide"), { recursive: true });
+  cpSync(join(source, "skills"), join(out, "skills"), { recursive: true });
   cpSync(join(source, "bin"), join(out, "bin"), { recursive: true });
 
   for (const [entry, file] of [
@@ -142,7 +143,7 @@ try {
         description: own.description,
         bin: { "sub-office": "bin/sub-office.mjs" },
         engines: { node: ">=22.13" },
-        files: ["app", "bin", "dist", "guide"],
+        files: ["app", "bin", "dist", "guide", "skills"],
         dependencies: pick([
           "next",
           "react",

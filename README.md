@@ -53,11 +53,15 @@ window open while you use it; `npx -y sub-office` starts it again later.
 
 - **Learns how you work, and keeps only what lasts.** How you decide, where you stop, how you
   talk, and what you corrected, in a few lines shown exactly as saved; you fix or remove any.
-  Projects, plans, dates and files are looked up when needed, never stored.
+  Projects, plans, dates and files are looked up when needed, never stored. It also reads what you
+  do, what you look after and the tools you use, for you to confirm: your clone starts every
+  conversation knowing whose work it does, and colleagues' clones know when to come to you.
 - **Works for you.** Ask it anything you'd ask a teammate at the next desk. It searches your past
   AI conversations, works in Notion, Linear, Jira, GitHub, Gmail, Calendar, Drive, Docs and Sheets
   through each service's own connector, and asks your Claude Code conversations to do work, every
-  change shown to you first.
+  change shown to you first. It comes with skills for a morning brief, a day wrap, a weekly report,
+  a meeting follow-up, asking a colleague and writing as you write, and each becomes yours as you
+  correct it.
 - **Stands in for you with your team.** Your card says what people can ask you for; for each kind
   you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about a
   relationship always come to you, and a second look checks every answer before it leaves. The

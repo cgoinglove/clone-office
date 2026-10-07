@@ -11,6 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
+import { SkillStore } from "../memory/skills";
 import { keep } from "./learn";
 import { onlyRead, startOver } from "./reset";
 
@@ -91,10 +92,19 @@ test("when all it keeps came from a reading, starting over clears it without a b
   // The reading writes its record after the lines it keeps.
   await new Promise((resolve) => setTimeout(resolve, 20));
   writeFileSync(join(root, "learn.json"), '{"last":{}}');
+  // The skills the app ships are not theirs while nobody has changed them.
+  const shipped = mkdtempSync(join(tmpdir(), "minime-shipped-"));
+  mkdirSync(join(shipped, "work", "brief"), { recursive: true });
+  writeFileSync(
+    join(shipped, "work", "brief", "SKILL.md"),
+    "---\nname: brief\ndescription: Use when asked for a brief.\n---\n\nShort.",
+  );
+  await new SkillStore(join(root, "skills")).syncBundled(shipped);
+  rmSync(shipped, { recursive: true, force: true });
   assert.equal(await onlyRead(), true);
   const { backup, cleared } = await startOver();
   assert.equal(backup, undefined);
-  assert.deepEqual(cleared, ["memories", "learn.json"]);
+  assert.deepEqual(cleared, ["memories", "skills", "learn.json"]);
   assert.ok(!existsSync(join(root, "memories")));
   assert.equal(backups().length, before, "no backup made");
 

@@ -8,7 +8,8 @@
 // of theirs to keep: it is cleared instead, as a new reading brings it back.
 
 import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { basename, join } from "node:path";
+import { SkillStore } from "../memory/skills.ts";
 import { minimeHome } from "../server/paths.ts";
 
 const KEPT = ["memories", "skills", "notes", "learn.json"];
@@ -27,6 +28,26 @@ async function holds(
   return false;
 }
 
+/** Whether a skill is there besides those the app shipped and nobody has changed since. */
+async function ownSkills(dir: string): Promise<boolean> {
+  const usage = await new SkillStore(dir).usage();
+  const found: string[] = [];
+  const walk = async (at: string) => {
+    for (const entry of await readdir(at, { withFileTypes: true }).catch(
+      () => [],
+    )) {
+      const full = join(/*turbopackIgnore: true*/ at, entry.name);
+      if (entry.isDirectory()) await walk(full);
+      else if (entry.name === "SKILL.md") found.push(basename(at));
+    }
+  };
+  await walk(dir);
+  return found.some(
+    (name) =>
+      usage[name]?.created_by !== "bundled" || usage[name].patch_count > 0,
+  );
+}
+
 /**
  * Whether everything the mini-me keeps came from reading the person's records: no conversation
  * with it, no skill or note, and no memory written after the last reading (brought from another
@@ -35,7 +56,7 @@ async function holds(
 export async function onlyRead(home = minimeHome()): Promise<boolean> {
   const at = (name: string) => join(/*turbopackIgnore: true*/ home, name);
   if (await holds(at("chats"), (file) => file.endsWith(".jsonl"))) return false;
-  if (await holds(at("skills"), (file) => file === "SKILL.md")) return false;
+  if (await ownSkills(at("skills"))) return false;
   if (
     await holds(
       at("notes"),

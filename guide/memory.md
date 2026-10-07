@@ -8,7 +8,11 @@ The clone keeps four small things, all as plain text files on this computer:
 - **Their way of working**: lasting conventions that are written nowhere else. Also read every
   time, also short (about 2,200 characters).
 - **Skills**: how they want one kind of task done, such as a weekly report or a reply to a
-  client, with what they corrected. Opened only when that kind of task comes up.
+  client, with what they corrected. Opened only when that kind of task comes up. A few come with
+  the app, so there is something to ask for on the first day: a morning brief, a day wrap, a weekly
+  report, asking a colleague, a meeting follow-up, and writing a message as they write. The clone
+  changes them as they correct it, so each becomes theirs; one they changed is never replaced by a
+  later version of the app, and one set aside is not brought back.
 - **Notes**: one page per person they work with, opened only when that person comes up.
 
 Beside these is **About you** (나에 대해, on the clone's screen): their name, what they do, what
