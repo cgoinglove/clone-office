@@ -142,7 +142,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     return text(`Unknown tool: ${request.params.name}`, true);
   switch (request.params.name) {
     case MEMORY_TOOL.name: {
-      const result = await callMemoryTool(store, args);
+      const result = await callMemoryTool(store, args, actor === "review");
       return text(result, !result.success);
     }
     case SKILL_TOOLS.list.name:

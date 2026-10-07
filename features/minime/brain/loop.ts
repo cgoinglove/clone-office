@@ -347,8 +347,42 @@ export async function runLoop(
       } else if (part.type === "error") error = part.error;
     }
     if (error) throw error;
-    const answered = (await run.responseMessages) as ModelMessage[];
+    let answered = (await run.responseMessages) as ModelMessage[];
     let usage = await run.totalUsage;
+    // The steps ran out on a tool call, or the model said nothing: ask once more, without tools, for
+    // the answer the person reads (Hermes Agent asks the same when its iterations run out).
+    if (!options.jsonSchema && !text.trim()) {
+      const nudge: ModelMessage = {
+        role: "user",
+        content:
+          "Without calling any more tools, give your person your answer now: what you found and did, and what is left.",
+      };
+      const closing = streamText({
+        model,
+        instructions: system,
+        messages: [...messages, ...answered, nudge],
+        abortSignal: timeout,
+        providerOptions,
+      });
+      for await (const part of closing.fullStream) {
+        if (part.type === "text-delta") {
+          text += part.text;
+          options.onEvent?.({ type: "text", text: part.text });
+        } else if (part.type === "error") throw part.error;
+      }
+      answered = [
+        ...answered,
+        nudge,
+        ...((await closing.responseMessages) as ModelMessage[]),
+      ];
+      const more = await closing.totalUsage;
+      usage = {
+        ...usage,
+        inputTokens: (usage.inputTokens ?? 0) + (more.inputTokens ?? 0),
+        outputTokens: (usage.outputTokens ?? 0) + (more.outputTokens ?? 0),
+        totalTokens: (usage.totalTokens ?? 0) + (more.totalTokens ?? 0),
+      };
+    }
     let structured: unknown;
     let kept: ModelMessage[] = [...messages, ...answered];
     // A session that ends in a shape (a request's answer, what a reading kept) is asked for it last,

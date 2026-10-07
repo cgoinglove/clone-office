@@ -88,14 +88,29 @@ interface MemoryArgs {
 export async function callMemoryTool(
   store: MemoryStore,
   args: MemoryArgs,
+  /** The look-back after a conversation, with nobody there: it may only add (Hermes Agent #105921). */
+  unattended = false,
 ): Promise<WriteResult> {
   const target = args.target;
   if (target !== "user" && target !== "memory")
     return { success: false, error: "target must be 'user' or 'memory'." };
   const store_target: Target = target;
+  if (unattended) {
+    const ops =
+      Array.isArray(args.operations) && args.operations.length
+        ? args.operations
+        : [args];
+    if (ops.some((op) => op?.action === "replace" || op?.action === "remove"))
+      return {
+        success: false,
+        error:
+          "The look-back may only add memory entries: your person is not here to see an entry changed or removed. Say in your reply which entry should change, and how.",
+      };
+  }
   if (Array.isArray(args.operations) && args.operations.length)
     return store.batch(store_target, args.operations);
-  const content = args.content ?? args.new_text ?? "";
+  // An empty content falls back to new_text too (Hermes Agent #90468).
+  const content = args.content || args.new_text || "";
   switch (args.action) {
     case "add":
       return store.add(store_target, content);

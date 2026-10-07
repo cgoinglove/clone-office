@@ -325,6 +325,12 @@ const LOCAL_TOOLS: Record<
 export const mcpToolName = (server: string, tool: string) =>
   `mcp__${server}__${tool.replace(/[^a-zA-Z0-9_-]/g, "_")}`.slice(0, 64);
 
+/**
+ * The most of one tool's answer a turn takes: a connected service can answer a whole database, and
+ * a smaller model's window would fill at once. The cut says so, so the model can ask for less.
+ */
+export const RESULT_CHARS = 60_000;
+
 /** What a tool call answered, as text for the model. */
 function resultText(result: { content?: unknown; isError?: unknown }): string {
   const parts = Array.isArray(result.content) ? result.content : [];
@@ -340,7 +346,11 @@ function resultText(result: { content?: unknown; isError?: unknown }): string {
               : "",
     )
     .join("");
-  return result.isError ? `Error: ${text}` : text;
+  const kept =
+    text.length > RESULT_CHARS
+      ? `${text.slice(0, RESULT_CHARS)}\n\n[Cut: the answer was ${text.length} characters and only the first ${RESULT_CHARS} are shown. Ask for less, or for the next part.]`
+      : text;
+  return result.isError ? `Error: ${kept}` : kept;
 }
 
 export interface Servers {

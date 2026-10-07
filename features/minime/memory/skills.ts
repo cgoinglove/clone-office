@@ -424,6 +424,27 @@ export class SkillStore {
             category ?? "",
             name,
           );
+          // A folder there already (a category, or files someone put) is never written over, nor
+          // taken back on a failed batch; a skill is never made inside another skill (Hermes Agent
+          // lost whole categories this way).
+          const listed = await readdir(dir).then(
+            (entries) => entries,
+            (error: NodeJS.ErrnoException) =>
+              error.code === "ENOENT" ? undefined : ["?"],
+          );
+          if (listed?.length)
+            throw new Error(
+              `${at}: '${category ? `${category}/` : ""}${name}' is already a folder (a category or other files); choose another name.`,
+            );
+          if (
+            category &&
+            (
+              await readText(
+                join(/*turbopackIgnore: true*/ this.dir, category, "SKILL.md"),
+              )
+            ).exists
+          )
+            throw new Error(`${at}: '${category}' is a skill, not a category.`);
           if (category) {
             const describe = join(
               /*turbopackIgnore: true*/ this.dir,
@@ -441,7 +462,10 @@ export class SkillStore {
               await atomicWrite(describe, `---\ndescription: ${line}\n---\n`);
             }
           }
-          createdDirs.push(dir);
+          // An empty folder left behind is used, and left as it was on a failed batch.
+          if (listed)
+            await remember(join(/*turbopackIgnore: true*/ dir, "SKILL.md"));
+          else createdDirs.push(dir);
           await atomicWrite(
             join(/*turbopackIgnore: true*/ dir, "SKILL.md"),
             `${content}\n`,

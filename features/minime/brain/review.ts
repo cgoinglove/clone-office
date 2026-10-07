@@ -56,7 +56,7 @@ Preference order for skills — pick the earliest that fits:
   3. Add or extend a supporting file under that skill with write_file (references/<topic>.md, templates/, scripts/), and add a one-line pointer to it in SKILL.md.
   4. Only when nothing covers the class, create a new skill named at the class level ("weekly-report", "client-reply"), never after today's one-off; put it in an existing category when one fits.
 
-Where a lesson lives: in exactly ONE place. The skill that governs the task when one exists; USER.md only for preferences that cut across all tasks; a notes page for what is about one person or one piece of work — including how that one person likes things done (a client who wants tables goes on the client's page, not into the skill every task follows); never two of them. If a memory entry already says what now belongs in a skill or a page, move it there and remove the entry.
+Where a lesson lives: in exactly ONE place. The skill that governs the task when one exists; USER.md only for preferences that cut across all tasks; a notes page for what is about one person or one piece of work — including how that one person likes things done (a client who wants tables goes on the client's page, not into the skill every task follows); never two of them. If a memory entry already says what now belongs in a skill or a page, put it there and say in your reply which memory entry should go: you may only add memory entries here, since your person is not watching.
 
 Read before write is enforced: view a skill (skill_view), a skill's file (skill_view with file_path) or a page (note_view) in this review before changing it. Skills your person made or pinned are theirs — your writes to them will be refused; say in your reply what should change instead.
 

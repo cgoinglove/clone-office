@@ -118,10 +118,17 @@ In note, write one line for your person, in their language: who asked what, and 
 /** Waits before trying a failed run again, when the failure looks like it will pass. */
 export const RETRY_WAITS = [60_000, 180_000];
 
-/** A failure that usually passes by itself: the AI service busy or rate-limited, or a timeout. */
+/**
+ * A failure that usually passes by itself: the AI service busy or rate-limited, or the connection
+ * dropped. A run that used up its whole time is not tried again (it would repeat its tools and its
+ * questions to the person for as long again), nor is a refusal that only mentions being busy (a
+ * 401, 402 or 403 is about the account), as Hermes Agent learned.
+ */
 export function passing(error: string | undefined): boolean {
-  return /\b(529|503|429)\b|overloaded|rate.?limit|timed? ?out|did not finish in time|ECONNRESET|ETIMEDOUT|^ai-busy$|^timeout$/i.test(
-    error ?? "",
+  const text = error ?? "";
+  if (/\b(401|402|403)\b/.test(text)) return false;
+  return /\b(529|503|429)\b|overloaded|rate.?limit|ECONNRESET|ETIMEDOUT|socket hang up|^ai-busy$/i.test(
+    text,
   );
 }
 

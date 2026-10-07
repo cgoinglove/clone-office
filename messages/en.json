@@ -30,6 +30,7 @@
     "fix-failed": "I couldn't make that correction. Try again.",
     "import-failed": "I couldn't read what you pasted. Try again.",
     "task-failed": "I couldn't finish that. Try again, or ask it another way.",
+    "empty-answer": "Your clone finished without saying anything. Ask again, or ask it a smaller step at a time.",
     "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead.",
     "flow-failed": "The flow did not finish. Try Run now, or tell your clone what to change.",
     "too-many-tries": "Too many wrong office keys from here. Try again in a few minutes.",

@@ -42,6 +42,8 @@ export interface ChatInfo {
   context?: number;
   /** The mini-me's own summary of what came before, when the conversation was carried over. */
   summary?: string;
+  /** How many of the conversation's lines that summary covers; what follows it is said since. */
+  carriedFrom?: number;
   /** The last brain session that was looked back on (the review after an answer). */
   reviewed?: string;
 }
@@ -197,6 +199,7 @@ function parse(raw: string): {
       info.session = undefined;
       info.context = undefined;
       info.summary = line.summary;
+      info.carriedFrom = messages.length;
     }
   }
   return { info, messages };

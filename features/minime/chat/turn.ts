@@ -81,12 +81,33 @@ function withNews(news: string[], text: string): string {
     : text;
 }
 
+/**
+ * How a fresh session starts: the summary the conversation was carried over with, then what was said
+ * since. The summary is background; what the person says last is what to do now (as Hermes Agent's
+ * handoff says, so a fresh session does not pick up work that was already done).
+ */
 function opening(summary: string | undefined, earlier: string, text: string) {
+  const parts: string[] = [];
   if (summary)
-    return `Earlier in this conversation, in your own summary:\n${summary}\n\n---\n\n${text}`;
+    parts.push(
+      `Earlier in this conversation, in your own summary (background only: what was asked there is done or decided; what they say last is what to do now):\n${summary}`,
+    );
   if (earlier)
-    return `Earlier in this conversation:\n${earlier}\n\n---\n\n${text}`;
-  return text;
+    parts.push(
+      `${summary ? "Since then" : "Earlier in this conversation"}:\n${earlier}`,
+    );
+  return parts.length ? `${parts.join("\n\n")}\n\n---\n\n${text}` : text;
+}
+
+/**
+ * The brain no longer has the session (it was deleted, the brain changed, or it grew past the
+ * model's window). Only then does a conversation go on from its own record: a busy service, a time
+ * out or a wrong key would fail the same way again, and the session it has is worth keeping.
+ */
+export function sessionLost(error: string | undefined): boolean {
+  return /session-missing|no conversation found|prompt is too long|context.{0,20}(length|window|limit)|maximum context|too many tokens/i.test(
+    error ?? "",
+  );
 }
 
 export async function runTurn(options: {
@@ -165,10 +186,15 @@ export async function runTurn(options: {
       connectors: true,
       onEvent,
     });
-    if (!result.ok && session && !result.text) {
-      // The brain no longer has the session: go on from the conversation's own record.
+    if (!result.ok && session && !result.text && sessionLost(result.error)) {
+      // The brain no longer has the session: go on from the conversation's own record, the summary
+      // it was carried over with and what was said since.
       result = await runSession({
-        prompt: opening(summary, recap(before), said),
+        prompt: opening(
+          summary,
+          recap(summary ? before.slice(info.carriedFrom ?? 0) : before),
+          said,
+        ),
         language,
         maxTurns: 16,
         purpose: "task",
@@ -179,6 +205,10 @@ export async function runTurn(options: {
     }
   } finally {
     stop();
+  }
+  if (result.ok && !result.text.trim()) {
+    // Nothing to read is no answer: said as a failure, never kept as an empty line.
+    result = { ...result, ok: false, error: "empty-answer" };
   }
   if (!result.ok || !result.sessionId) {
     const message = result.error ?? "task-failed";

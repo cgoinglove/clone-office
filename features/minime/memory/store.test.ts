@@ -168,3 +168,48 @@ test("the tool takes one action or a batch, and names what is missing", async ()
     ["Owns the booking screens", "Ships on Fridays"],
   );
 });
+
+test("the look-back, with nobody there, may only add; an empty content falls back to new_text", async () => {
+  const store = fresh();
+  await store.add("user", "Keeps Friday mornings for focused work.");
+  const removed = await callMemoryTool(
+    store,
+    { action: "remove", target: "user", old_text: "Friday" },
+    true,
+  );
+  assert.equal(removed.success, false);
+  const batch = await callMemoryTool(
+    store,
+    {
+      target: "user",
+      operations: [
+        { action: "add", content: "Prefers tables." },
+        { action: "replace", old_text: "Friday", content: "x" },
+      ],
+    },
+    true,
+  );
+  assert.equal(
+    batch.success,
+    false,
+    "a batch that changes an entry is refused whole",
+  );
+  assert.deepEqual(await store.entries("user"), [
+    "Keeps Friday mornings for focused work.",
+  ]);
+  assert.ok(
+    (
+      await callMemoryTool(
+        store,
+        {
+          action: "add",
+          target: "user",
+          content: "",
+          new_text: "Prefers tables.",
+        },
+        true,
+      )
+    ).success,
+  );
+  assert.ok((await store.entries("user")).includes("Prefers tables."));
+});

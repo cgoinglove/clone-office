@@ -5,7 +5,12 @@ import { passing, requestPrompt } from "./handle";
 test("a busy or rate-limited AI service is waited out; other failures are not", () => {
   assert.ok(passing("API Error: 529 Overloaded. This is a server-side issue"));
   assert.ok(passing("429 rate_limit_error"));
-  assert.ok(passing("Claude Code did not finish in time."));
+  assert.ok(
+    !passing("Claude Code did not finish in time."),
+    "a run that used all its time would repeat its tools and questions",
+  );
+  assert.ok(!passing("403 Forbidden: account overloaded with requests"));
+  assert.ok(passing("fetch failed: ECONNRESET"));
   assert.ok(!passing("claude-missing"));
   assert.ok(!passing(undefined));
 });

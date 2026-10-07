@@ -53,6 +53,11 @@ test("a conversation keeps its messages, its brain session and what it was carri
     "a carried conversation starts a fresh session",
   );
   assert.equal(read.info.summary, "They decided three things.");
+  assert.equal(
+    read.info.carriedFrom,
+    2,
+    "the summary covers the lines before it",
+  );
   assert.deepEqual(
     read.messages.map((m) => m.text),
     ["Sum up what I decided this week", "Three things."],

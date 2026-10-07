@@ -263,3 +263,37 @@ test("the curator starts its clock first, then sets aside long-unused skills it 
   );
   assert.ok(CURATOR.archiveAfterDays > CURATOR.staleAfterDays);
 });
+
+test("a skill named like a category is refused, and a failed batch never takes the category away", async () => {
+  const store = fresh();
+  assert.ok(
+    (
+      await store.apply([
+        {
+          action: "create",
+          name: "email-style",
+          category: "writing",
+          content: skill("email-style", "Short subject lines."),
+        },
+      ])
+    ).success,
+  );
+  const result = await store.apply([
+    { action: "create", name: "writing", content: skill("writing", "x") },
+    { action: "patch", name: "nowhere", old_string: "a", new_string: "b" },
+  ]);
+  assert.match(!result.success ? result.error : "", /already a folder/);
+  assert.ok(
+    existsSync(join(store.dir, "writing", "email-style", "SKILL.md")),
+    "the category and its skill stay",
+  );
+  const inside = await store.apply([
+    {
+      action: "create",
+      name: "subject-lines",
+      category: "writing/email-style",
+      content: skill("subject-lines", "x"),
+    },
+  ]);
+  assert.equal(inside.success, false, "a skill is never made inside another");
+});

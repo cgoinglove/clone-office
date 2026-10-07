@@ -210,7 +210,7 @@ export class MemoryStore {
   async batch(target: Target, operations: BatchOp[]): Promise<WriteResult> {
     if (!operations.length) return fail("operations list is empty.");
     for (const [i, op] of operations.entries()) {
-      const content = op.content ?? op.new_text;
+      const content = op.content || op.new_text;
       if ((op.action === "add" || op.action === "replace") && content) {
         const blocked = threatMessage(content);
         if (blocked) return fail(`Operation ${i + 1}: ${blocked}`);
@@ -223,7 +223,7 @@ export class MemoryStore {
       const removed: Record<number, string> = {};
       for (const [i, op] of operations.entries()) {
         const action = op.action ?? "unknown";
-        const content = (op.content ?? op.new_text ?? "").trim();
+        const content = (op.content || op.new_text || "").trim();
         const oldText = (op.old_text ?? "").trim();
         const at = `Operation ${i + 1} (${action})`;
         if (action === "add") {

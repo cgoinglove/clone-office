@@ -69,6 +69,7 @@ const CODES = new Set([
   "fix-failed",
   "import-failed",
   "task-failed",
+  "empty-answer",
   "nothing-to-read",
   "flow-failed",
 ]);
