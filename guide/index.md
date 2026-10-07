@@ -30,19 +30,26 @@ Two things hold everywhere:
 
 ## Where things are
 
-- **The column on the left** is always there. At its top, **New chat** (새 대화), then the three
-  screens: **Chat** (대화), **Requests** (부탁) and **Office** (오피스). **Your turn** (내 차례)
-  appears below them only when something waits on them, one line each (a question about a
-  colleague's request, or one in a conversation); a click goes where it is answered. Then **Recent
-  chats** (최근 대화), with a dot where a question waits. At the bottom: their clone (how far it has
-  learned, or how like them it answers; it opens **Your clone**, 내 클론), their status in the
-  office once they are in one (working, in a meeting, away, off), and **Settings** (설정).
-- **Chat** (대화) is where the app opens: the conversation with their clone, and the box, **Ask your
-  clone anything** (클론에게 무엇이든 부탁하세요). A new chat starts with the clone's hello,
-  **Getting started** (시작하기) and things to try. Under the box, **Ask a colleague** (동료에게)
-  and **Every so often** (정해진 때마다) start the sentence for them. On a wide screen the right side
-  shows **The office now** (지금 오피스): the office, live; the requests in motion; today's flows.
-  The button at the top folds it away.
+- **The column on the left** is always there. At its top, **New chat** (새 대화), then the four
+  screens: **Home** (홈, with how many things wait on them), **Requests** (부탁), **Chat** (대화)
+  and **Office** (오피스). **Your turn** (내 차례) appears below them only when something waits on
+  them, one line each (a question about a colleague's request, or one in a conversation); a click
+  goes where it is answered. Then **Recent chats** (최근 대화), with a dot where a question waits.
+  At the bottom: their clone (how far it has learned, or how like them it answers; it opens **Your
+  clone**, 내 클론), their status in the office once they are in one (working, in a meeting, away,
+  off), and **Settings** (설정).
+- **Home** (홈) is where the app opens: what is happening, what waits on them, and what to do
+  about it. One box at the top asks their clone anything (name a colleague, and it asks theirs),
+  with a few things to try under it; **Getting started** (시작하기) while the app is new; **Decide
+  now** (정할 것), answered right there; **Requests on their way** (오가는 부탁), those waiting on
+  them first; **What your clone did today** (오늘 클론이 대신 한 일: whom it answered for them,
+  meetings it brought back, flows it ran); and **Today** (오늘: the clones' standup, today's flows,
+  their colleagues).
+- **Chat** (대화): the conversation with their clone, and the box, **Ask your clone anything**
+  (클론에게 무엇이든 부탁하세요). A new chat starts with the clone's hello and things to try. Under
+  the box, **Ask a colleague** (동료에게) and **Every so often** (정해진 때마다) start the sentence
+  for them. On a wide screen the right side shows **The office now** (지금 오피스): the office, live;
+  the requests in motion; today's flows. The button at the top folds it away.
 - **Requests** (부탁): what they and their colleagues asked each other, grouped as **Your turn**,
   **On its way**, **Waiting on them** and **Done** (내 차례, 처리 중, 답 기다림, 끝남), with **All**,
   **Received** and **Sent** (모두, 받은 부탁, 보낸 부탁), and **Ask a colleague** (동료에게
@@ -65,7 +72,7 @@ Two things hold everywhere:
 
 ## Getting started
 
-A new chat shows **Getting started** (시작하기), five steps that tick themselves off as they are
+Home shows **Getting started** (시작하기), five steps that tick themselves off as they are
 done: **Hand your clone a task** (클론에게 일 하나 맡기기), **Tell your clone about you** (클론에게
 나를 알려 주기, which starts the sentence "About me…" in the box; nothing else is needed, no AI
 records), **Bring in a colleague** (동료 부르기), **Choose what colleagues can ask** (동료가 부탁할
@@ -74,14 +81,17 @@ records), **Bring in a colleague** (동료 부르기), **Choose what colleagues 
 
 ## The first time
 
-Opened the first time, the app shows **Get started** (시작하기) beside the office playing a short
-scene. Four steps follow, each of which can be passed over: what it thinks with (`brain.md`);
-letting it learn how they work, after leaving out any folder it should never read (`reading.md`,
-`memory.md`; with no AI records on the computer, it simply learns as they work); what to call
-them and whether a team is in it (`office.md`; started from an invite, it says who invited them
-and joins that office); then the chat with their clone. **Set up later** (나중에 하기) goes
-straight there. The screen's language is at the top right of the first steps, and under
-Settings › General.
+Opened the first time, the app shows what a clone does in one scene (a colleague asks, the clone
+answers from their records, and only the call that is theirs comes to them) beside the office
+playing it out, and **Get started** (시작하기). Four steps follow: what it thinks with
+(`brain.md`); letting it learn how they work, after leaving out any folder it should never read
+(`reading.md`, `memory.md`): when it has read, it shows **What I understood about you** (제가 이해한
+당신), the lines it kept, and, under **If a colleague asks** (동료가 이렇게 물으면), what it would
+answer a colleague in their place (with no AI records on the computer, it simply learns as they
+work); what to call them and whether a team is in it (`office.md`; started from an invite, it says
+who invited them and joins that office); then Home. **Skip this step** (이 단계 건너뛰기) at the
+bottom passes over the step on screen only. The screen's language is at the top right of the first
+steps, and under Settings › General.
 
 ## Installing
 

@@ -11,6 +11,7 @@ import type { Routine } from "../routine.ts";
 import { errorCode } from "../server/ndjson.ts";
 import type { SourceReport } from "./gather.ts";
 import {
+  type Example,
   freshConversations,
   type LearnProgress,
   lastLearn,
@@ -28,6 +29,8 @@ export type LearnEvent =
       tasks: Task[];
       /** Things they do at a regular time, offered around that time. */
       routines: Routine[];
+      /** What the clone would answer a colleague in their place. */
+      example?: Example;
       at: string;
       /** Conversations with their AI tools since this learning, to offer reading again. */
       fresh?: number;
@@ -84,6 +87,7 @@ export function startLearn(options: {
               kept: result.kept,
               tasks: result.tasks,
               routines: result.routines,
+              ...(result.example ? { example: result.example } : {}),
               at: new Date().toISOString(),
             }
           : {
@@ -127,6 +131,7 @@ export async function savedLearn(): Promise<LearnEvent | undefined> {
     kept: last.kept ?? [],
     tasks: last.tasks ?? [],
     routines: last.routines ?? [],
+    ...(last.example ? { example: last.example } : {}),
     at: last.at,
     fresh: freshConversations(Date.parse(last.at)),
   };

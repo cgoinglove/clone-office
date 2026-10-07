@@ -111,12 +111,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   kind that is stored or sent to colleagues is a code, so each reads it in their own language.
   The clone's language is separate: the one picked, else the browser's, whatever it is.
 - The front door (`app/page.tsx`) sends someone new to the first steps (`app/start`,
-  `features/minime/start/onboarding.tsx`, after Thursday's first run: what a clone is beside the
-  office playing the app's loop with nobody real in it (`start/demo.ts`, data the office draws as
-  any day), then its brain, the first reading with the folders left out, who they are and their
+  `features/minime/start/onboarding.tsx`, after Thursday's first run: what a clone is, as one scene
+  (a colleague asks, the clone answers from its person's records, only their call comes to them),
+  beside the office playing the app's loop with nobody real in it (`start/demo.ts`, data the office
+  draws as any day), then its brain, the first reading with the folders left out (it ends on what
+  it understood and what it would answer a colleague, `learn.ts` `example`), who they are and their
   team (`server/profile.ts`, `settings.json` `profile`; an invite kept by the launcher is picked
-  already, `office/invited.ts`)) and everyone else to `/chat` (`/me`, the old page, sends there
-  too); `server/onboarded.ts` says which (`settings.json` `onboarded`, or anything already
+  already, `office/invited.ts`)) and everyone else to `/home` (`/me`, the old page, sends to `/chat`); `server/onboarded.ts` says which (`settings.json` `onboarded`, or anything already
   learned, kept or said).
 - The app's screens share one frame (`app/(app)/layout.tsx`, `features/minime/shell/`), after
   work apps with a short column on the left: `app-shell.tsx` holds what every screen shares
@@ -125,10 +126,15 @@ These words help discussion. They do not mandate separate services, tables or UI
   new chat, Chat, Requests, Office, **Your turn** when something waits (`your-turn.ts`: questions
   about colleagues' requests, live at the gate or kept for later, and those in conversations, each
   knowing where it is answered), recent chats, the clone with how far it learned or how like the
-  person it answers, their status, Settings) and Settings over them. `/chat` comes first
-  (`chat-screen.tsx`: one conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's
-  hello, getting started and things to try when it is new (`welcome.tsx`; its steps tick off from
-  what is there), helpers under the box that start a sentence, and on a wide screen the office
+  person it answers, their status, Settings) and Settings over them. `/home` comes first
+  (`home-screen.tsx`: what is happening, what waits on the person and what to do about it, after
+  Paperclip's rule and the agent apps that left a chat as home: one box that asks the clone and
+  starts that conversation (`/chat?send=`), the first steps while the app is new (`welcome.tsx`
+  `FirstSteps`; they tick off from what is there), what to decide now answered in place
+  (`turn-rows.tsx`, shared with the office's board), the requests on their way, what the clone did
+  today, and today's standup, flows and colleagues); `/chat` (`chat-screen.tsx`: one
+  conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's hello and things to try
+  when it is new, helpers under the box that start a sentence, and on a wide screen the office
   live beside it (`office-rail.tsx`: the floor small, requests in motion, today's flows));
   `/requests` (`requests-screen.tsx`: grouped by whose turn it is, from the A2A states) and
   `/requests/[id]` (`request-screen.tsx`: the clones' exchange, the person's turn answered in

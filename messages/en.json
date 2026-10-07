@@ -72,15 +72,23 @@
     "stepOf": "Step {at} of {count}",
     "next": "Continue",
     "back": "Back",
-    "later": "Set up later",
+    "later": "Skip this step",
     "hello": {
-      "title": "Send your clone.",
-      "body": "An AI that works the way you do. It does your everyday work, stands in for you with your team, and brings you only the calls that are yours.",
-      "work": "Does your everyday work, like an assistant",
-      "team": "Answers teammates and their clones for you",
-      "calls": "Brings you only what's yours to decide",
+      "title": "Your clone answers your colleagues first.",
+      "body": "It learns how you work from your own AI conversations, answers what a colleague asks you the way you would, and brings you only what is yours to decide. On your own, it does your everyday work like an assistant.",
       "go": "Get started",
-      "fine": "3 minutes · every step can wait · runs on this computer"
+      "fine": "3 minutes · runs on this computer · any step can be skipped",
+      "scene": {
+        "title": "What it looks like",
+        "ask": "Ben asks",
+        "askText": "Did the payment status values change?",
+        "clone": "Your clone answers, from your records",
+        "cloneText": "Yes: 'paid' is now 'succeeded'. From your payments conversations yesterday.",
+        "you": "Only this comes to you",
+        "youText": "Can you ship it by Thursday?",
+        "yes": "Yes",
+        "no": "Not yet"
+      }
     },
     "demo": {
       "you": "Alex",
@@ -118,15 +126,19 @@
       "pick": "Pick one, then press “Use this”."
     },
     "learn": {
-      "title": "Let it learn how you work",
-      "body": "It reads your conversations with your AI tools on this computer and keeps only a few lines that stay true: how you decide, where you stop, how you talk. Projects, plans and files are looked up when needed, never kept.",
+      "title": "Your clone learns how you work",
+      "body": "To answer colleagues the way you would, it needs to know how you work. It reads your conversations with your AI tools on this computer and keeps a few lines that stay true, then shows you what it would answer a colleague.",
       "none": "There are no AI conversations to read on this computer. Bring what your usual AI remembers about you instead:",
       "read": "Read and learn",
       "reading": "You can go on; it keeps reading.",
-      "done": "It learned how you work",
-      "doneHint": "It keeps learning as you work together.",
+      "done": "Here is what it understood",
+      "doneHint": "These lines are saved as its memory of you.",
       "skip": "Not now",
-      "leaveOut": "Leave folders out ({count})"
+      "leaveOut": "Leave folders out ({count})",
+      "understood": "What I understood about you",
+      "example": "If a colleague asks",
+      "exampleAnswer": "I'd answer for you",
+      "editLater": "Change or remove any line later under Your clone › What I know about you."
     },
     "you": {
       "title": "You and your team",
@@ -150,7 +162,7 @@
     },
     "ready": {
       "title": "Your clone is ready",
-      "body": "It's waiting for you in the chat, with a few first steps.",
+      "body": "Home shows what waits on you, the requests on their way and what your clone did for you, with your first steps.",
       "brain": "Thinks with",
       "claudeCode": "Claude Code",
       "learned": "Knows you",
@@ -162,7 +174,7 @@
       "joined": "Joined your team",
       "opened": "Open on this computer",
       "try": "Tell it what you need, as you would a colleague. It asks you before anything you have not allowed.",
-      "go": "Start chatting"
+      "go": "Open Home"
     }
   },
   "firstRun": {

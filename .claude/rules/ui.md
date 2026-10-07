@@ -32,9 +32,11 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
 
 ## The app's screens
 One frame around every screen (`app/(app)/layout.tsx`, `features/minime/shell/`): the column on the
-left (`sidebar.tsx`: new chat, Chat, Requests, Office, what waits on the person, recent chats, the
-clone, status, Settings) and the open screen: `/chat` first (`chat-screen.tsx`, with the office's
-live column `office-rail.tsx` and the getting-started list `welcome.tsx`), `/requests` and
+left (`sidebar.tsx`: new chat, Home, Requests, Chat, Office, what waits on the person, recent
+chats, the clone, status, Settings) and the open screen: `/home` first (`home-screen.tsx`: what
+waits on the person answered in place, the requests on their way, what the clone did today, today;
+the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`, with the
+office's live column `office-rail.tsx`), `/requests` and
 `/requests/[id]`, `/office` (the floor with the person's turn over it at the right, and the
 clones' meeting at the left while one goes on, `meeting.tsx`, started from its header), `/clone` (what it knows,
 the requests it takes, flows). What the screens share lives in `app-state.tsx` (`useApp`); the

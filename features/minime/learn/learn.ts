@@ -33,6 +33,8 @@ Keep nothing that can change or can be found again on their computer: projects a
 
 Then offer, in \`tasks\`, three things you can do for them right now with what you have — their past AI conversations, which you can search and read, your memory, this app's guide, the web, their files when they allow it, and their own Claude Code conversations, which you can ask — chosen from what they are actually doing: pulling together what they decided or left open, finding how they handled something before, drafting something the way they write it. When the material shows little of what they do, offer what you can do from what you know of them, such as drafting a message the way they write. Never suggest changing files, running commands or using another app; you cannot do those on your own. Each is a short label and why; the label is sent to you as their request when they tap it, so write it as that request.
 
+Then, in \`example\`, show them what you will do for their colleagues: one question a colleague might really ask them about their own current work, as the material shows it, and the short answer you would give in their place, in their language, saying in a few words where you found it ("from your conversations about the payments API yesterday"). Only from what the material shows; if it shows nothing a colleague would ask about, leave it out.
+
 Last, in \`routines\`, at most three things they do at a regular time, read from the times of what they asked (shown in their own time, with the weekday): planning the day on weekday mornings, a report on Friday afternoons. Give each as the request they would send (a label, as for tasks), the days (0 is Sunday, 6 is Saturday), the hour it usually starts, and why. Only when the same kind of request shows up at about the same time at least three times; otherwise give none.`;
 
 export const LEARN_SCHEMA = {
@@ -52,6 +54,14 @@ export const LEARN_SCHEMA = {
         properties: { label: { type: "string" }, why: { type: "string" } },
         required: ["label", "why"],
       },
+    },
+    example: {
+      type: "object",
+      properties: {
+        question: { type: "string" },
+        answer: { type: "string" },
+      },
+      required: ["question", "answer"],
     },
     routines: {
       type: "array",
@@ -79,6 +89,22 @@ export interface Task {
   why: string;
 }
 
+/** What the clone would answer a colleague in its person's place: shown so they see what it is for. */
+export interface Example {
+  question: string;
+  answer: string;
+}
+
+/** An example as the model gave it, or none when it is not one. */
+export function cleanExample(value: unknown): Example | undefined {
+  const raw = value as Partial<Example> | undefined;
+  const question = typeof raw?.question === "string" ? raw.question.trim() : "";
+  const answer = typeof raw?.answer === "string" ? raw.answer.trim() : "";
+  return question && answer
+    ? { question: question.slice(0, 400), answer: answer.slice(0, 800) }
+    : undefined;
+}
+
 export interface LearnResult {
   ok: boolean;
   error?: string;
@@ -87,6 +113,7 @@ export interface LearnResult {
   kept: string[];
   tasks: Task[];
   routines: Routine[];
+  example?: Example;
   sessionId?: string;
 }
 
@@ -98,6 +125,7 @@ interface LearnRecord {
     kept?: string[];
     tasks?: Task[];
     routines?: Routine[];
+    example?: Example;
   };
 }
 
@@ -232,9 +260,11 @@ export async function learn(options: {
     memory?: unknown[];
     tasks?: Task[];
     routines?: unknown;
+    example?: unknown;
   };
   const tasks = Array.isArray(structured.tasks) ? structured.tasks : [];
   const routines = cleanRoutines(structured.routines);
+  const example = cleanExample(structured.example);
   const kept =
     result.ok && Array.isArray(structured.memory)
       ? await keep(structured.memory, options.onEvent)
@@ -251,6 +281,7 @@ export async function learn(options: {
             kept,
             tasks,
             routines,
+            ...(example ? { example } : {}),
           },
         },
         null,
@@ -264,6 +295,7 @@ export async function learn(options: {
     kept,
     tasks,
     routines,
+    ...(example ? { example } : {}),
     sessionId: result.sessionId,
   };
 }

@@ -416,7 +416,7 @@ export function Onboarding() {
             <button
               type="button"
               disabled={busy}
-              onClick={() => void finish()}
+              onClick={() => go(STEPS[at + 1] ?? "ready")}
               className="justify-self-end rounded-md outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {t("later")}
@@ -428,31 +428,21 @@ export function Onboarding() {
   );
 }
 
-/** The first screen: what a clone is, in a few words, and the way in. */
+/** The first screen: what a clone is, in a few words and one scene of what it does, and the way in. */
 function Hello({ onStart }: { onStart: () => void }) {
   const t = useTranslations("start");
-  const points = ["work", "team", "calls"] as const;
   return (
     <div className="my-auto flex flex-col gap-8">
       <LogoMark className="size-14 animate-in duration-700 zoom-in-50 fade-in" />
       <div className="space-y-4">
-        <h1 className="animate-in text-[52px] leading-[1.02] font-semibold tracking-[-0.035em] text-balance delay-150 duration-700 fill-mode-backwards fade-in slide-in-from-bottom-2">
+        <h1 className="animate-in text-[40px] leading-[1.08] font-semibold tracking-[-0.03em] text-balance delay-150 duration-700 fill-mode-backwards fade-in slide-in-from-bottom-2">
           {t("hello.title")}
         </h1>
         <p className="max-w-[28rem] animate-in text-[17px] leading-relaxed text-muted-foreground delay-300 duration-700 fill-mode-backwards fade-in slide-in-from-bottom-2">
           {t("hello.body")}
         </p>
       </div>
-      <ul className="flex animate-in flex-col gap-2.5 delay-500 duration-700 fill-mode-backwards fade-in">
-        {points.map((point) => (
-          <li key={point} className="flex items-start gap-2.5 text-[15px]">
-            <span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-md bg-foreground text-background">
-              <Check className="size-3" />
-            </span>
-            {t(`hello.${point}`)}
-          </li>
-        ))}
-      </ul>
+      <Scene />
       <div className="flex animate-in flex-col items-start gap-3 delay-700 duration-700 fill-mode-backwards fade-in slide-in-from-bottom-2">
         <Button
           variant="brand"
@@ -467,6 +457,47 @@ function Hello({ onStart }: { onStart: () => void }) {
         </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * What a clone does, as one exchange: a colleague asks, the clone answers from its person's own
+ * records, and only the call that is theirs comes to them.
+ */
+function Scene() {
+  const t = useTranslations("start.hello.scene");
+  const row = "flex flex-col gap-1 rounded-xl px-3.5 py-2.5";
+  return (
+    <section
+      aria-label={t("title")}
+      className="flex animate-in flex-col gap-2 delay-500 duration-700 fill-mode-backwards fade-in"
+    >
+      <div className={cn(row, "bg-muted/60")}>
+        <span className="text-xs text-muted-foreground">{t("ask")}</span>
+        <span className="text-[14.5px]">{t("askText")}</span>
+      </div>
+      <div className={cn(row, "shadow-[inset_0_0_0_1px_var(--alpha-10)]")}>
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <LogoMark className="size-3.5" />
+          {t("clone")}
+        </span>
+        <span className="text-[14.5px]">{t("cloneText")}</span>
+      </div>
+      <div className={cn(row, "bg-waiting/8")}>
+        <span className="text-xs font-medium text-waiting">{t("you")}</span>
+        <span className="flex flex-wrap items-center justify-between gap-2 text-[14.5px] font-medium">
+          {t("youText")}
+          <span className="flex gap-1.5" aria-hidden>
+            <span className="rounded-lg bg-foreground px-2.5 py-0.5 text-xs text-background">
+              {t("yes")}
+            </span>
+            <span className="rounded-lg px-2.5 py-0.5 text-xs shadow-[inset_0_0_0_1px_var(--alpha-20)]">
+              {t("no")}
+            </span>
+          </span>
+        </span>
+      </div>
+    </section>
   );
 }
 
@@ -702,17 +733,39 @@ function LearnStep({
             </span>
           )}
           {learn.kept.length > 0 && (
-            <ul className="flex flex-col gap-1.5">
-              {learn.kept.map((line) => (
-                <li
-                  key={line}
-                  className="flex animate-in items-start gap-2 text-sm duration-500 fade-in slide-in-from-bottom-1"
-                >
-                  <Check className="mt-0.5 size-3.5 shrink-0" />
-                  {line}
-                </li>
-              ))}
-            </ul>
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-medium text-muted-foreground">
+                {t("learn.understood")}
+              </span>
+              <ul className="flex flex-col gap-1.5">
+                {learn.kept.map((line) => (
+                  <li
+                    key={line}
+                    className="flex animate-in items-start gap-2 text-sm duration-500 fade-in slide-in-from-bottom-1"
+                  >
+                    <Check className="mt-0.5 size-3.5 shrink-0" />
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {done && learn.example && (
+            <div className="flex animate-in flex-col gap-2 rounded-lg bg-muted/50 p-3 duration-500 fade-in">
+              <span className="text-xs text-muted-foreground">
+                {t("learn.example")}
+              </span>
+              <p className="text-sm font-medium">{learn.example.question}</p>
+              <span className="pt-1 text-xs text-muted-foreground">
+                {t("learn.exampleAnswer")}
+              </span>
+              <p className="text-sm leading-relaxed">{learn.example.answer}</p>
+            </div>
+          )}
+          {done && (
+            <p className="text-xs text-muted-foreground">
+              {t("learn.editLater")}
+            </p>
           )}
         </div>
       )}
