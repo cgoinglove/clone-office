@@ -1218,7 +1218,8 @@
       "link": "답장 링크",
       "myself": "나",
       "themselves": "{name} 님",
-      "selfWaiting": "{name} 님이 다시 썼어요. 직접 답해 주세요."
+      "selfWaiting": "{name} 님이 다시 썼어요. 직접 답해 주세요.",
+      "waitsFor": "{name} 님의 답을 기다리는 중이에요."
     },
     "meeting": {
       "standup": "아침 회의",
@@ -1310,7 +1311,9 @@
       "yoursPlaceholder": "{name} 님에게 직접 보낼 답",
       "sendClose": "보내고 끝내기",
       "sendOpen": "보내고 열어 두기",
-      "handBack": "클론에게 돌려주기"
+      "handBack": "클론에게 돌려주기",
+      "takeOver": "내가 맡기",
+      "answerClose": "직접 답하고 끝내기"
     }
   }
 }

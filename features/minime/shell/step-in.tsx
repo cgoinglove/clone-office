@@ -17,11 +17,14 @@ export function StepIn({
   task,
   name,
   steps,
+  closed = false,
 }: {
   task: string;
   /** The colleague who asked. */
   name: string;
   steps?: Steps;
+  /** The request is over: what the person said to their clone stays to read, nothing to send. */
+  closed?: boolean;
 }) {
   const t = useTranslations("shell.stepIn");
   const { office } = useApp();
@@ -79,84 +82,108 @@ export function StepIn({
         </ul>
       )}
 
-      {yours && (
-        <p className="text-[13px] text-muted-foreground">{t("yours")}</p>
+      {closed ? null : (
+        <>
+          {yours && (
+            <p className="text-[13px] text-muted-foreground">{t("yours")}</p>
+          )}
+          <Textarea
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            placeholder={
+              yours ? t("yoursPlaceholder", { name }) : t("placeholder")
+            }
+            aria-label={yours ? t("answer") : t("title")}
+            rows={2}
+          />
+          <div className="flex flex-wrap items-center justify-end gap-1.5">
+            {yours ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void post({ action: "hand-back" })}
+                  className="mr-auto"
+                >
+                  <Undo2 />
+                  {t("handBack")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={!words || busy}
+                  onClick={() =>
+                    void post({
+                      action: "answer-myself",
+                      text: words,
+                      close: false,
+                    })
+                  }
+                >
+                  {t("sendOpen")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="brand"
+                  disabled={!words || busy}
+                  loading={busy}
+                  onClick={() =>
+                    void post({
+                      action: "answer-myself",
+                      text: words,
+                      close: true,
+                    })
+                  }
+                >
+                  {t("sendClose")}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => void post({ action: "take-over" })}
+                  className="mr-auto"
+                >
+                  {t("takeOver")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={!words || busy}
+                  onClick={() =>
+                    void post({
+                      action: "answer-myself",
+                      text: words,
+                      close: true,
+                    })
+                  }
+                >
+                  {t("answerClose")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="brand"
+                  disabled={!words || busy}
+                  loading={busy}
+                  onClick={() => void post({ action: "step-in", text: words })}
+                >
+                  {t("tell")}
+                </Button>
+              </>
+            )}
+          </div>
+        </>
       )}
-      <Textarea
-        value={text}
-        onChange={(event) => setText(event.target.value)}
-        placeholder={yours ? t("yoursPlaceholder", { name }) : t("placeholder")}
-        aria-label={yours ? t("answer") : t("title")}
-        rows={2}
-      />
-      <div className="flex flex-wrap items-center justify-end gap-1.5">
-        {yours ? (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              disabled={busy}
-              onClick={() => void post({ action: "hand-back" })}
-              className="mr-auto"
-            >
-              <Undo2 />
-              {t("handBack")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!words || busy}
-              onClick={() =>
-                void post({
-                  action: "answer-myself",
-                  text: words,
-                  close: false,
-                })
-              }
-            >
-              {t("sendOpen")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="brand"
-              disabled={!words || busy}
-              loading={busy}
-              onClick={() =>
-                void post({ action: "answer-myself", text: words, close: true })
-              }
-            >
-              {t("sendClose")}
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!words || busy}
-              onClick={() =>
-                void post({ action: "answer-myself", text: words, close: true })
-              }
-            >
-              {t("answer")}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="brand"
-              disabled={!words || busy}
-              loading={busy}
-              onClick={() => void post({ action: "step-in", text: words })}
-            >
-              {t("tell")}
-            </Button>
-          </>
-        )}
-      </div>
     </section>
   );
 }

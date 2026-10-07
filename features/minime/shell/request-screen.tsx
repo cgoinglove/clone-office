@@ -179,7 +179,11 @@ export function RequestScreen({ id }: { id: string }) {
                 aria-hidden
                 className="size-1.5 animate-pulse rounded-full bg-brand motion-reduce:animate-none"
               />
-              {sent ? t("theyWork", { name }) : t("cloneWorks")}
+              {sent
+                ? t("theyWork", { name })
+                : task.status.state === "INPUT_REQUIRED"
+                  ? t("waitsFor", { name })
+                  : t("cloneWorks")}
             </p>
           )}
 
@@ -192,24 +196,34 @@ export function RequestScreen({ id }: { id: string }) {
                 />
                 {entry.self ? t("selfWaiting", { name }) : t("yourTurn")}
               </p>
-              <AskCard
-                turn={{
-                  id: 0,
-                  gate: entry.id,
-                  ask: entry.ask,
-                  state: office.answered[entry.id] ? "done" : "open",
-                  answer: office.answered[entry.id],
-                }}
-                onAnswer={(answer, always) =>
-                  void office.answer(entry, answer, always)
-                }
-              />
+              {/* Theirs to answer: the box below is where they write as themselves. */}
+              {!entry.self && (
+                <AskCard
+                  turn={{
+                    id: 0,
+                    gate: entry.id,
+                    ask: entry.ask,
+                    state: office.answered[entry.id] ? "done" : "open",
+                    answer: office.answered[entry.id],
+                  }}
+                  onAnswer={(answer, always) =>
+                    void office.answer(entry, answer, always)
+                  }
+                />
+              )}
             </div>
           ))}
 
-          {!sent && moving && !task.metadata.guest && (
-            <StepIn task={task.id} name={name} steps={data.steps?.[task.id]} />
-          )}
+          {!sent &&
+            !task.metadata.guest &&
+            (moving || Boolean(data.steps?.[task.id]?.notes.length)) && (
+              <StepIn
+                task={task.id}
+                name={name}
+                steps={data.steps?.[task.id]}
+                closed={!moving}
+              />
+            )}
 
           {sent && moving && (
             <form

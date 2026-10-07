@@ -25,6 +25,7 @@ import {
   laterQuestions,
   stepIn,
   takeBack,
+  takeItOver,
 } from "@/features/minime/office/handle";
 import {
   closeHere,
@@ -227,6 +228,7 @@ const Body = z.discriminatedUnion("action", [
     close: z.boolean().default(true),
   }),
   z.object({ action: z.literal("hand-back"), id: z.string().min(1).max(80) }),
+  z.object({ action: z.literal("take-over"), id: z.string().min(1).max(80) }),
   z.object({
     action: z.literal("standup-time"),
     standup: z
@@ -277,7 +279,8 @@ export async function POST(request: Request) {
       input.action === "step-in" ||
       input.action === "take-back" ||
       input.action === "answer-myself" ||
-      input.action === "hand-back"
+      input.action === "hand-back" ||
+      input.action === "take-over"
     ) {
       const options = {
         gateUrl: new URL("/api/me/gate", request.url).toString(),
@@ -290,7 +293,9 @@ export async function POST(request: Request) {
             ? await takeBack(input.id, input.note)
             : input.action === "answer-myself"
               ? await answerMyself(input.id, input.text, input.close)
-              : await handBack(input.id, options);
+              : input.action === "take-over"
+                ? await takeItOver(input.id)
+                : await handBack(input.id, options);
       return done
         ? Response.json({ ok: true })
         : Response.json({ error: "request-closed" }, { status: 409 });

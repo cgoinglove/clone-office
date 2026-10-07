@@ -958,6 +958,19 @@ export async function answerMyself(
   });
 }
 
+/** The person takes a request over without writing yet: their clone leaves it to them. */
+export async function takeItOver(id: string): Promise<boolean> {
+  const found = await openRequest(id);
+  if (!found) return false;
+  await takeOver(
+    found.office,
+    found.task,
+    await askerCard(found.office, found.task),
+    false,
+  );
+  return true;
+}
+
 /**
  * The person hands a request back to their clone: it answers it again from here, from the record of
  * what was said meanwhile, when the one asking spoke last.

@@ -221,11 +221,12 @@ the request), they can step in at any time while it is open:
   waiting, it goes on with the request at once; when it was waiting on a question to them, this
   answers it. Until it is read, the line shows **Waits for its next step** (다음 걸음 전에 읽어요)
   with **Take it back** (되돌리기); once read, **Read** (읽음).
-- **Answer it myself** (직접 답하기): what they write goes to the colleague as their own words,
-  marked as written by them, not their clone. With **Send and close** (보내고 끝내기) that ends
-  the request. With **Send, keep it open** (보내고 열어 두기) the request stays theirs: whatever
-  the colleague writes next comes to them (under **Your turn**, 내 차례, and on their phone at
-  the day's moments) instead of to their clone, and what they answer there goes as theirs.
+- **Answer myself and close** (직접 답하고 끝내기): what they write goes to the colleague as their
+  own words, marked as written by them, not their clone, and that ends the request.
+- **Take it over** (내가 맡기): the request becomes theirs. Their clone leaves it alone; whatever
+  the colleague writes next comes to them (under **Your turn**, 내 차례, and on their phone at the
+  day's moments), and they answer it in the same box: **Send and close** (보내고 끝내기) or
+  **Send, keep it open** (보내고 열어 두기), each as their own words.
 - **Hand it back to my clone** (클론에게 돌려주기): the clone takes the request up again from
   everything said so far, their own words included.
 

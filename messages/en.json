@@ -1218,7 +1218,8 @@
       "link": "Reply link",
       "myself": "You",
       "themselves": "{name}",
-      "selfWaiting": "{name} wrote again. Answer it yourself:"
+      "selfWaiting": "{name} wrote again. Answer it yourself:",
+      "waitsFor": "Waiting for {name} to answer."
     },
     "meeting": {
       "standup": "Standup",
@@ -1310,7 +1311,9 @@
       "yoursPlaceholder": "Your answer to {name}, as yourself",
       "sendClose": "Send and close",
       "sendOpen": "Send, keep it open",
-      "handBack": "Hand it back to my clone"
+      "handBack": "Hand it back to my clone",
+      "takeOver": "Take it over",
+      "answerClose": "Answer myself and close"
     }
   }
 }
