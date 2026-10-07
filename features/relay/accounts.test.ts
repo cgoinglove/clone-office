@@ -205,7 +205,7 @@ test("from the invite link to a connected computer, as a person does it: sign up
     const paired = await (
       await fetch(`${base}/home/pair`, { method: "POST", headers: { cookie } })
     ).text();
-    const line = /npx sub-office connect (http:\/\/[^\s<]+)/.exec(paired);
+    const line = /npx -y sub-office connect (http:\/\/[^\s<]+)/.exec(paired);
     assert.ok(line, "the line to run");
     const link = line[1];
     assert.match(await (await fetch(link)).text(), /Run this on your computer/);

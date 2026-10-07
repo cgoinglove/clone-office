@@ -257,7 +257,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   for two weeks or until answered); the answer reaches the asker like any other. An invite is one
   link, `/i/<office key>?from=<name>` (`GET /invite` gives it to a member): the relay's page guides
   setting up a clone with it (`install.ts`: Node.js, a terminal, then one line,
-  `npx -y sub-office join "<link>"`, the steps for the computer its User-Agent names and the
+  `npx -y sub-office join "<link>"`, or with the app taken from the relay itself when it serves its
+  own package, `SUB_OFFICE_PACKAGE_FILE` at `/sub-office.tgz`, for a team's own build or before
+  the app is on npm; the steps for the computer its User-Agent names and the
   others folded; on a phone, open it on a computer; on a private network, join from the same one),
   and the join form fills in the relay and key from it (`office/invite.ts`).
   People sign in on the server, after Paperclip (Better Auth) and OpenClaw (a one-time setup

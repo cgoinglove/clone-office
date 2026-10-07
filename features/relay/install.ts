@@ -126,10 +126,38 @@ export function isPrivateHost(host: string): boolean {
  * The line to paste: the invite link in double quotes, which every terminal takes (zsh would
  * otherwise read its "?" as a pattern), with the name's characters a shell might act on encoded.
  */
+/** Where a relay serves the app's own package, when it serves one. */
+export const PACKAGE_PATH = "/sub-office.tgz";
+
+/**
+ * The app's package this relay serves itself (`SUB_OFFICE_PACKAGE_FILE`, a .tgz `scripts/pack.mjs`
+ * built): a team's own build, or the app before it is on npm. Its lines then take the app from the
+ * relay they were opened on rather than from npm.
+ */
+export function servedPackage(
+  env: Record<string, string | undefined> = process.env,
+): string | undefined {
+  const file = env.SUB_OFFICE_PACKAGE_FILE?.trim();
+  return file?.endsWith(".tgz") ? file : undefined;
+}
+
+/** `npx` running the app: from npm, or from the package the relay at `base` serves. */
+export function npxLine(
+  base: string,
+  args: string,
+  served = Boolean(servedPackage()),
+): string {
+  return served
+    ? `npx -y --package=${base}${PACKAGE_PATH} sub-office ${args}`
+    : `npx -y sub-office ${args}`;
+}
+
 export function joinCommand(input: {
   base: string;
   key: string;
   from?: string;
+  /** The relay serves the app's package (by default, as `servedPackage` finds). */
+  served?: boolean;
 }): string {
   const from = input.from
     ? `?from=${encodeURIComponent(input.from).replace(
@@ -137,7 +165,11 @@ export function joinCommand(input: {
         (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
       )}`
     : "";
-  return `npx -y sub-office join "${input.base}/i/${encodeURIComponent(input.key)}${from}"`;
+  return npxLine(
+    input.base,
+    `join "${input.base}/i/${encodeURIComponent(input.key)}${from}"`,
+    input.served,
+  );
 }
 
 const TERMINAL = {

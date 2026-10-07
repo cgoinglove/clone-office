@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { isPrivateHost, joinCommand, osOf } from "./install";
+import { isPrivateHost, joinCommand, osOf, servedPackage } from "./install";
 import { escape, invitePage, pageLanguage, replyPage } from "./page";
 
 test("the link page is in the reader's language when it is written in it, else English", () => {
@@ -75,6 +75,20 @@ test("the join line quotes the link and encodes what a shell would act on", () =
     joinCommand({ base: "https://office.example.com", key: "k1" }),
     'npx -y sub-office join "https://office.example.com/i/k1"',
   );
+  // A relay serving the app's own package: the line takes the app from it.
+  assert.equal(
+    joinCommand({ base: "http://192.168.0.7:3200", key: "k1", served: true }),
+    'npx -y --package=http://192.168.0.7:3200/sub-office.tgz sub-office join "http://192.168.0.7:3200/i/k1"',
+  );
+  assert.equal(
+    servedPackage({ SUB_OFFICE_PACKAGE_FILE: "/x/a.tgz" }),
+    "/x/a.tgz",
+  );
+  assert.equal(
+    servedPackage({ SUB_OFFICE_PACKAGE_FILE: "/etc/passwd" }),
+    undefined,
+  );
+  assert.equal(servedPackage({}), undefined);
 });
 
 test("the guide follows the computer the page was opened on, and a phone is sent to a computer", () => {

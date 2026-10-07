@@ -23,6 +23,7 @@
 //   POST /r/:token      the answer, from the page's form
 //   GET  /invite        -> {path}                       one's office's invite link
 //   GET  /i/:key        the invite page (HTML): what the office is and how to join with the link
+//   GET  /sub-office.tgz the app's own package, when the relay serves one (SUB_OFFICE_PACKAGE_FILE)
 // With people's accounts (accounts.ts), the invite page makes an account instead, and:
 //   POST /i/:key        the account's form -> one's own page, signed in
 //   GET|POST /login     signing in;  POST /logout  signing out
@@ -34,10 +35,17 @@
 //   /home/people/remove?user=  /home/people/owner?user=  /home/clones/remove?member=
 //   /home/invite/new           POST /home/office/name {name}
 
+import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { A2A_ERRORS, a2aCall, agentCard } from "./a2a.ts";
 import { AccountError, type Accounts } from "./accounts.ts";
-import { isPrivateHost, joinCommand, osOf } from "./install.ts";
+import {
+  isPrivateHost,
+  joinCommand,
+  osOf,
+  PACKAGE_PATH,
+  servedPackage,
+} from "./install.ts";
 import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
 import {
   confirmPage,
@@ -352,6 +360,7 @@ export function relayHandler(
           place && path === "/home/pair"
             ? connectCommand(
                 `${base()}/p/${(await accounts.setupCode(person.id, place.office)).code}`,
+                base(),
               )
             : undefined;
         const mine = place
@@ -501,7 +510,10 @@ export function relayHandler(
       if (setup && request.method === "GET") {
         html(
           200,
-          runPage({ lang, command: connectCommand(`${base()}${path}`) }),
+          runPage({
+            lang,
+            command: connectCommand(`${base()}${path}`, base()),
+          }),
         );
         return true;
       }
@@ -600,6 +612,21 @@ export function relayHandler(
               isPrivateHost(new URL(origin).hostname),
           }),
         );
+        return;
+      }
+      // The app's own package, when this relay serves one: the invite's line takes it from here.
+      if (request.method === "GET" && path === PACKAGE_PATH) {
+        const file = servedPackage();
+        if (!file) return send(404, { error: "Not here.", code: "not-found" });
+        const content = await readFile(file).catch(() => undefined);
+        if (!content)
+          return send(404, { error: "Not here.", code: "not-found" });
+        response.writeHead(200, {
+          "content-type": "application/gzip",
+          "content-length": String(content.byteLength),
+          "cache-control": "no-store",
+        });
+        response.end(content);
         return;
       }
       if (request.method === "GET" && path === "/invite") {

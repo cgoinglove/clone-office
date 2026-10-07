@@ -4,7 +4,7 @@
 // written in it (English otherwise); everything a person typed is escaped before it is shown, and a
 // password is never put back into a page.
 
-import { installGuide, type Os } from "./install.ts";
+import { installGuide, npxLine, type Os } from "./install.ts";
 import { escape, type PageLanguage, shell } from "./page.ts";
 
 const WORDS = {
@@ -186,9 +186,9 @@ export function errorWords(lang: PageLanguage, code: string): string {
 const problem = (lang: PageLanguage, code?: string) =>
   code ? `<p class="error" role="alert">${errorWords(lang, code)}</p>` : "";
 
-/** The command that connects a computer, for a setup link. */
-export const connectCommand = (link: string) =>
-  `npx sub-office connect ${link}`;
+/** The command that connects a computer, for a setup link on the relay at `base`. */
+export const connectCommand = (link: string, base: string) =>
+  npxLine(base, `connect ${link}`);
 
 /**
  * An invite's page: what the office is and how to set up one's clone with the link (install.ts),
