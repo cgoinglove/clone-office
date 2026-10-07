@@ -73,13 +73,13 @@ export async function POST(request: Request) {
     }).catch(() => {});
     return Response.json({ started: true, chat });
   }
-  const now = new Date().toISOString();
   await changeFlow(id, (flow) =>
     action === "remove"
       ? undefined
       : action === "pause"
         ? { ...flow, paused: true }
-        : // Resuming starts from now: nothing missed while paused is made up.
+        : // Resuming keeps its place: a run missed while paused is made up only within its
+          // catch-up window (schedule.ts), as after the computer slept.
           { ...flow, paused: false },
   );
   return Response.json({ ok: true });
