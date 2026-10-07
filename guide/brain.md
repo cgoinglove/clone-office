@@ -27,7 +27,10 @@ computer** (이 컴퓨터에 있어요).
 A key is checked by asking the service for its list of models, which costs nothing. Keys and the
 ChatGPT sign-in are kept on this computer only, in files only they can read. Then they pick a
 model (small, mid, large; or type another name the service has); the one marked **Suggested**
-(추천) is picked to start with. **Use this** (이걸로 쓰기) makes it the clone's brain.
+(추천) is picked to start with. **Use this** (이걸로 쓰기) makes it the clone's brain. On the first
+steps, **Continue** (계속) first checks that it answers: whether Claude Code is there and signed
+in (which calls no model), then one word asked of it, a few seconds. If it does not answer, the
+step says why and what to do, with **Go on anyway** (그래도 계속).
 
 Settings › Brain can send the work in the background (looking back after a conversation,
 summaries, drafts) to the brain's smaller model, which uses less of a plan or a key (`index.md`,

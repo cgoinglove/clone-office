@@ -1,9 +1,12 @@
 # When something goes wrong
 
-- **"Claude Code isn't installed or signed in"**: the clone was set to think with their own
-  Claude Code. Install it and sign in once in a terminal, then reopen the app; or pick another
-  brain under Settings › **Brain** (두뇌): their ChatGPT plan, a key, or a model on their computer
-  (`brain.md`).
+- **"Claude Code is not on this computer"**: the clone was set to think with their own Claude
+  Code. Install it (claude.com/code), or pick another brain under Settings › **Brain** (두뇌):
+  their ChatGPT plan, a key, or a model on their computer (`brain.md`).
+- **"Claude Code is not signed in"**: open a terminal, run `claude` and sign in once, then try
+  again. Nothing in sub-office signs in for them.
+- **"The brain did not answer"**: what the service said is shown under it, as it said it (a model
+  their plan does not include, a limit reached). Try again, or pick another model under **Brain**.
 - **"The service did not accept that key"** or **"needs a key"**: the key was mistyped, removed or
   ran out of credit at the service. Make a new one there and paste it under **Brain** (두뇌).
 - **Learning takes long**: with years of AI conversations the first reading can take a minute;

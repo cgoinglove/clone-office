@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
@@ -117,6 +117,40 @@ export function Onboarding() {
   );
   const demo = useDemoRoom(words, wide);
   const at = step === "hello" ? -1 : STEPS.indexOf(step);
+
+  const [probe, setProbe] = useState<{
+    ok: boolean;
+    problem?: string;
+    detail?: string;
+  } | null>(null);
+  const [probing, setProbing] = useState(false);
+  // Stable, as the chooser reloads whenever it changes.
+  const pickBrain = useCallback((next: BrainState) => {
+    setBrain(next);
+    setProbe(null);
+  }, []);
+  /** Asks the picked brain one word; on to the reading when it answers. */
+  const probeThenGo = async () => {
+    setProbing(true);
+    setProbe(null);
+    try {
+      const response = await fetch("/api/me/brain", {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ action: "probe" }),
+      }).catch(() => undefined);
+      const data = await response?.json().catch(() => undefined);
+      if (response?.ok && data?.ok) go("learn");
+      else
+        setProbe({
+          ok: false,
+          problem: data?.problem ?? data?.error ?? "brain-no-answer",
+          detail: data?.detail,
+        });
+    } finally {
+      setProbing(false);
+    }
+  };
 
   const go = (next: "hello" | Step) => {
     setProblem(null);
@@ -233,11 +267,33 @@ export function Onboarding() {
 
               {step === "brain" && (
                 <>
-                  <BrainChooser onChange={setBrain} />
+                  <BrainChooser onChange={pickBrain} />
+                  {probe && !probe.ok && (
+                    <div role="alert" className="flex flex-col gap-1.5">
+                      <p className="text-sm text-destructive">
+                        {problemText(probe.problem ?? "brain-no-answer")}
+                      </p>
+                      {probe.detail && (
+                        <p className="text-xs break-words text-muted-foreground">
+                          {probe.detail}
+                        </p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => go("learn")}
+                        className="self-start text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                      >
+                        {t("brain.anyway")}
+                      </button>
+                    </div>
+                  )}
                   <Next
-                    // Picked by the person, never a vendor on its own.
+                    // Picked by the person, never a vendor on its own; asked one word before
+                    // anything relies on it.
                     disabled={!brainReady(brain) || !brain?.chosen}
-                    onClick={() => go("learn")}
+                    busy={probing}
+                    label={probing ? t("brain.probing") : undefined}
+                    onClick={() => void probeThenGo()}
                     hint={!brain?.chosen ? t("brain.pick") : undefined}
                   />
                 </>

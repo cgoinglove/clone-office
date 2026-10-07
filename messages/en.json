@@ -11,7 +11,7 @@
   },
   "errors": {
     "generic": "Something went wrong: {detail}",
-    "claude-missing": "Claude Code is not installed or signed in on this computer. Set it up, or pick another brain under Brain.",
+    "claude-missing": "Claude Code is not on this computer. Install it (claude.com/code), or pick another brain under Brain.",
     "bad-request": "The page sent something the app didn't expect. Reload the page and try again.",
     "forbidden": "Only this app's own page can talk to your clone. Open it from the app's address.",
     "busy": "Your clone is still working on something else. Try again in a moment.",
@@ -65,7 +65,9 @@
     "meeting-alone": "Nobody else is in the office now, so there is no one to meet.",
     "meeting-closed": "That meeting is already over.",
     "meeting-said": "Your clone already spoke in this round.",
-    "meeting-not-in": "Your clone isn't in that meeting."
+    "meeting-not-in": "Your clone isn't in that meeting.",
+    "claude-signed-out": "Claude Code is not signed in. Open a terminal, run claude, and sign in; then try again.",
+    "brain-no-answer": "The brain did not answer. What it said is below; try again, or pick another model."
   },
   "start": {
     "title": "Get started",
@@ -123,7 +125,9 @@
     "brain": {
       "title": "What should it think with?",
       "body": "It needs an AI to think with: your ChatGPT or Claude subscription, a key for one of these services, or a model running on this computer. Pick one; you can change it any time.",
-      "pick": "Pick one, then press “Use this”."
+      "pick": "Pick one, then press “Use this”.",
+      "probing": "Checking that it answers",
+      "anyway": "Go on anyway"
     },
     "learn": {
       "title": "Your clone learns how you work",

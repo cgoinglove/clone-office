@@ -60,6 +60,8 @@ export function languageName(tag: string | undefined): string | undefined {
 /** Failures the screen says in the person's language (messages/*.json, "errors"). */
 const CODES = new Set([
   "claude-missing",
+  "claude-signed-out",
+  "brain-no-answer",
   "brain-key-missing",
   "brain-key-wrong",
   "brain-chatgpt-signed-out",
@@ -85,5 +87,8 @@ export function errorCode(message: string | undefined): string | undefined {
   if (/\b(529|503|429)\b|overloaded|rate.?limit/i.test(message))
     return "ai-busy";
   if (/timed? ?out|did not finish in time/i.test(message)) return "timeout";
+  // Claude Code's own words when its sign-in is gone.
+  if (/please run \/login|not logged in/i.test(message))
+    return "claude-signed-out";
   return undefined;
 }

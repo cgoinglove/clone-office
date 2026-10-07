@@ -197,7 +197,9 @@ export type SessionPurpose =
   | "check"
   | "card"
   | "flow"
-  | "meeting";
+  | "meeting"
+  /** One word asked of the brain the person picked, to see that it answers (`probe.ts`). */
+  | "probe";
 
 export interface SessionResult {
   ok: boolean;
