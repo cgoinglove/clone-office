@@ -12,10 +12,10 @@
 - **It said something out of date**: anything it kept about changing things may be stale. Tell it
   ("that's not true anymore"); it checks their computer and corrects what it kept.
 - **It got them wrong**: use **Correct** (고치기) or **Remove** (지우기) on that line under **What it
-  remembers** (기억하는 것) in Settings › Your clone, or just tell it.
+  remembers** (기억하는 것) in **Your clone** (내 클론) › What it knows, or just tell it.
 - **Bringing from another AI kept nothing**: the other AI's answer held only things that change or
   are private, or what the clone already keeps. That is expected; nothing was stored.
-- **Read again**: **Read my AI records again** (내 AI 기록 다시 읽기) under Settings › Your clone reads
+- **Read again**: **Read my AI records again** (내 AI 기록 다시 읽기) under **Your clone** › What it knows reads
   only what is new since the last time.
 - **It seems to have forgotten the start of a long conversation**: long conversations go on from
   a summary. Ask it to look the detail up; it can search the whole conversation.

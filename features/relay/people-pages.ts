@@ -4,6 +4,7 @@
 // written in it (English otherwise); everything a person typed is escaped before it is shown, and a
 // password is never put back into a page.
 
+import { installGuide, type Os } from "./install.ts";
 import { escape, type PageLanguage, shell } from "./page.ts";
 
 const WORDS = {
@@ -11,15 +12,15 @@ const WORDS = {
     inviteTitle: "{from} invites you to their office",
     inviteTitleNobody: "You are invited to an office",
     what: "In this office, everyone's clone (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
-    makeAccount: "Make your account",
+    accountInstead: "Or make an account on this office's server",
+    accountWhy:
+      "With an account you sign in here, see who is in the office, and connect your computer under your name.",
     name: "Your name",
     email: "Email",
     password: "Password (8 characters or more)",
     create: "Make my account",
     haveAccount: "Already have an account?",
     signInLink: "Sign in",
-    orApp:
-      "Already running sub-office on your computer? You can paste this link under Office there instead.",
     keep: "Anyone with this link can join this office; keep it within your team.",
     signInTitle: "Sign in to your office",
     signIn: "Sign in",
@@ -88,16 +89,16 @@ const WORDS = {
   ko: {
     inviteTitle: "{from}님이 오피스에 초대했어요",
     inviteTitleNobody: "오피스에 초대받았어요",
-    what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)가 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
-    makeAccount: "내 계정 만들기",
+    what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)이 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
+    accountInstead: "또는 이 오피스 서버에 계정 만들기",
+    accountWhy:
+      "계정이 있으면 여기 로그인해서 오피스에 누가 있는지 보고, 내 이름으로 컴퓨터를 연결할 수 있어요.",
     name: "이름",
     email: "이메일",
     password: "비밀번호 (8자 이상)",
     create: "계정 만들기",
     haveAccount: "계정이 이미 있나요?",
     signInLink: "로그인",
-    orApp:
-      "이미 내 컴퓨터에서 sub-office를 쓰고 있다면, 거기 오피스 칸에 이 링크를 붙여 넣어도 돼요.",
     keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
     signInTitle: "내 오피스에 로그인",
     signIn: "로그인",
@@ -189,12 +190,18 @@ const problem = (lang: PageLanguage, code?: string) =>
 export const connectCommand = (link: string) =>
   `npx sub-office connect ${link}`;
 
-/** An invite's page: what the office is, and an account to make (or sign in with). */
+/**
+ * An invite's page: what the office is and how to set up one's clone with the link (install.ts),
+ * then, folded away, an account to make here (or sign in with).
+ */
 export function signUpPage(input: {
   lang: PageLanguage;
   from?: string;
   key: string;
   link: string;
+  os: Os;
+  command: string;
+  local?: boolean;
   error?: string;
   name?: string;
   email?: string;
@@ -208,8 +215,10 @@ export function signUpPage(input: {
     title,
     `<h1>${title}</h1>
 <p>${say(lang, "what")}</p>
+${installGuide(input)}
+<details${input.error ? " open" : ""}><summary>${say(lang, "accountInstead")}</summary>
 <section>
-<h2>${say(lang, "makeAccount")}</h2>
+<p class="note">${say(lang, "accountWhy")}</p>
 ${problem(lang, input.error)}
 <form method="post">
 <label for="name">${say(lang, "name")}</label>
@@ -222,8 +231,7 @@ ${problem(lang, input.error)}
 </form>
 <p class="note">${say(lang, "haveAccount")} <a href="/login?key=${encodeURIComponent(input.key)}">${say(lang, "signInLink")}</a></p>
 </section>
-<p class="note">${say(lang, "orApp")}</p>
-<pre>${escape(input.link)}</pre>
+</details>
 <footer>${say(lang, "keep")}</footer>`,
   );
 }

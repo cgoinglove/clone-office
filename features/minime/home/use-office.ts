@@ -75,6 +75,8 @@ export interface Member {
 
 export interface Office {
   joined: boolean;
+  /** An invite the launcher kept for joining, while the person is in no office. */
+  invite?: { link: string; from?: string };
   /** The relay's address as others reach it, for the links it makes. */
   relay?: string;
   /** The office is open on this computer: where teammates reach it, and what keeps it from opening. */
@@ -108,6 +110,8 @@ export type Waiting = {
   /** When it was kept, for a kept one. */
   at?: string;
   from?: string;
+  /** The request a kept one belongs to. */
+  task?: string;
 };
 
 /** What the person told the app about themselves, used while they are in no office. */

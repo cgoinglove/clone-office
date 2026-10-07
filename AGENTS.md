@@ -111,29 +111,43 @@ These words help discussion. They do not mandate separate services, tables or UI
   `features/minime/start/onboarding.tsx`, after Thursday's first run: what a clone is beside the
   office playing the app's loop with nobody real in it (`start/demo.ts`, data the office draws as
   any day), then its brain, the first reading with the folders left out, who they are and their
-  team (`server/profile.ts`, `settings.json` `profile`), and the office's lobby) and everyone else
-  to `/office` (`/me`, the old page, sends there too); `server/onboarded.ts` says which
-  (`settings.json` `onboarded`, or anything already learned, kept or said).
-- The app is one screen around the office (`app/office`, `features/minime/home/`): `home.tsx`
-  lays the office (full screen, its lobby once a day) under a bar (`top-bar.tsx`: the name, the
-  person's status, what waits on them, settings, the clone's face), the office's own box to ask,
-  and a side panel the office makes room for (`setInset`), with the conversation
-  (`chat-view.tsx`, `use-chat.ts`: one conversation's turns as they stream, the gate's cards in
-  place, past conversations) and the office's requests (`requests-view.tsx`, `use-office.ts`:
-  questions waiting, colleagues with Ask and files, requests sent and received); the office's
-  panel about a person and this one close each other (`onPanel`). `use-learn.ts` follows a reading
-  wherever it started. Settings is one dialog (`features/minime/settings/`, after Thursday's):
-  sections grouped and marked (`settings.tsx`; an ember dot where something wants the person, red
-  where something is broken), each laid out with `parts.tsx`: Your clone (`clone-section.tsx`:
-  about them, the memory as saved with each line correctable or removable, reading again,
-  bringing what their usual AI remembers (Claude's memory import), starting over), Preferences
-  (`preferences-section.tsx`, below), Brain, Requests you take (`requests-section.tsx`: the menu,
-  trust levels, the like-me score, ME.md lines), Flows, Connectors, Phone, Permissions
-  (`permissions-section.tsx`: rules taken back, folders left out), Office (`office-section.tsx`:
-  open here, join, invite, people, leave), Files (`server/stored.ts`) and General (language,
-  theme, version). Keys: ⌘, Settings, ⌘1–9 a section, / the box, Esc the panel; the tab's title
-  carries what waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at
-  rest, also `app/icon.svg`) and the services' and AI vendors' marks (`marks.ts`, generated from
+  team (`server/profile.ts`, `settings.json` `profile`; an invite kept by the launcher is picked
+  already, `office/invited.ts`)) and everyone else to `/chat` (`/me`, the old page, sends there
+  too); `server/onboarded.ts` says which (`settings.json` `onboarded`, or anything already
+  learned, kept or said).
+- The app's screens share one frame (`app/(app)/layout.tsx`, `features/minime/shell/`), after
+  work apps with a short column on the left: `app-shell.tsx` holds what every screen shares
+  (`app-state.tsx`, `useApp`: the conversation, the office, the reading, preferences, the
+  profile, the questions waiting in the person's own conversations), the column (`sidebar.tsx`:
+  new chat, Chat, Requests, Office, **Your turn** when something waits (`your-turn.ts`: questions
+  about colleagues' requests, live at the gate or kept for later, and those in conversations, each
+  knowing where it is answered), recent chats, the clone with how far it learned or how like the
+  person it answers, their status, Settings) and Settings over them. `/chat` comes first
+  (`chat-screen.tsx`: one conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's
+  hello, getting started and things to try when it is new (`welcome.tsx`; its steps tick off from
+  what is there), helpers under the box that start a sentence, and on a wide screen the office
+  live beside it (`office-rail.tsx`: the floor small, requests in motion, today's flows));
+  `/requests` (`requests-screen.tsx`: grouped by whose turn it is, from the A2A states) and
+  `/requests/[id]` (`request-screen.tsx`: the clones' exchange, the person's turn answered in
+  place, files, the colleague); `/office` (`office-screen.tsx`: the floor, its lobby once a day,
+  with the person's turn laid over it to answer there); `/clone` (`clone-screen.tsx`: what it
+  knows, the requests it takes, flows). `parts.tsx` holds the screens' own marks (`PhaseChip`,
+  `DoneStamp`, the split-flap `Flap`). `use-office.ts` is the office as the screens read it;
+  `home/colleague.tsx` asks a colleague with files. `use-learn.ts` follows a reading wherever it
+  started. Settings is one dialog of six sections (`features/minime/settings/`, after
+  Thursday's; an ember dot where something wants the person, red where something is broken),
+  each laid out with `parts.tsx`: Brain (the brain, learning after each conversation, the lighter
+  model), Permissions (`permissions-section.tsx`: how much it does alone, rules taken back,
+  folders left out), Connectors, Notifications & phone (the messenger, kept questions' hours,
+  quiet hours), Office (`office-section.tsx`: open here, join, invite, people, leave, the lobby)
+  and General (language, theme, version, Files from `server/stored.ts`). The clone's screen
+  reuses `clone-section.tsx` (about them, the memory as saved with each line correctable or
+  removable, reading again, bringing what their usual AI remembers, starting over),
+  `requests-section.tsx` (the menu, trust levels, the like-me score, ME.md lines) and the flows;
+  `preferences-section.tsx` draws the preferences' parts wherever they belong (`parts`). Keys:
+  ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, / the box; the tab's title carries what
+  waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at rest, also
+  `app/icon.svg`) and the services' and AI vendors' marks (`marks.ts`, generated from
   lobe-icons (MIT) and simple-icons (CC0), drawn by `brand-mark.tsx`).
 - Preferences (`server/preferences.ts`, `settings.json` `preferences`, `app/api/me/preferences`):
   how much the clone does on its own in the person's own work (`gate/autonomy.ts`: `ask`, `reads`,
@@ -228,8 +242,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   clone is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
   the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,
   for two weeks or until answered); the answer reaches the asker like any other. An invite is one
-  link, `/i/<office key>?from=<name>` (`GET /invite` gives it to a member): the relay's page says
-  how to join, and the join form fills in the relay and key from it (`office/invite.ts`).
+  link, `/i/<office key>?from=<name>` (`GET /invite` gives it to a member): the relay's page guides
+  setting up a clone with it (`install.ts`: Node.js, a terminal, then one line,
+  `npx -y sub-office join "<link>"`, the steps for the computer its User-Agent names and the
+  others folded; on a phone, open it on a computer; on a private network, join from the same one),
+  and the join form fills in the relay and key from it (`office/invite.ts`).
   People sign in on the server, after Paperclip (Better Auth) and OpenClaw (a one-time setup
   link): `accounts.ts` runs Better Auth over the relay's own database (pg's pool, or PGlite through
   a small Kysely dialect of its own, `pglite-dialect.ts`, without Kysely's transactions, which
@@ -246,8 +263,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   clone's place goes at once, what they asked stays) or clones that joined with the bare key,
   make others owners, make a new invite link (the office key changes; those in stay) and name the
   office (`Accounts` `removePerson`, `removeClone`, `makeOwner`, `newInvite`, `renameOffice`),
-  each looked at once on its own page first (`confirmPage`). `npx sub-office connect <link>`
-  (`bin/sub-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
+  each looked at once on its own page first (`confirmPage`); the invite's page folds the account
+  away below the guide. `npx sub-office connect <link>` (`bin/sub-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
   office this computer hosted), and starts the app. `RELAY_PUBLIC_URL` is the address people reach
   a server at behind a proxy.
 - `features/minime/office/`: the clone's side. `client.ts` (where its relay is and who it is
@@ -270,12 +287,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   the card as A2A skills, the trust levels stay in `settings.json`. The brain names a request's
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role
   `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the clone's own key, so it works in flows too), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind), `files.ts` (files between clones: what goes is checked first, a full path, not in a folder kept out, 25 MB at most, then put at the relay and named on the message; what comes is taken once into `office/files/<request>/` with an index, owner-only, and the request's session may read that folder alone; `ask_colleague` takes `files`, shown on its card (`ask-text.ts` `changeOf`) and asked every time, even when asking colleagues was allowed from now on (the tool server asks again, `seen`); an answer's `files` go only after the person saw them, through the check with `approve`; the page saves one through `app/api/me/office/file`, always as an attachment). In a
-  conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screen's
-  office is the main screen (`features/minime/home/`) and Settings › Office and Requests you take,
-  with the route `app/api/me/office`. The office's work starts with the server (`office/boot.ts`
+  conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screens'
+  office is `/office`, `/requests` and the column's Your turn (`features/minime/shell/`), with
+  Settings › Office and the clone's Requests it takes, and the route `app/api/me/office`.
+  `invited.ts` keeps an invite the launcher was given (`settings.json` `invite`) until joining or
+  opening an office uses it. The office's work starts with the server (`office/boot.ts`
   from `instrumentation.ts`: the office open here, and the loop that answers colleagues), and
   again whenever a page asks about the office.
-- `features/office/room/`: the office floor, the app's main screen, ported from the confirmed design
+- `features/office/room/`: the office floor, ported from the confirmed design
   (`docs/office-room.local.d/`, v13). Plain ES modules that build SVG as strings: `core.mjs` (the
   clone mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks,
   commons, lift, the departures board, the floor sign), `floor.mjs` (the library plan, walking
@@ -283,7 +302,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   its lift ride, once a day; `setInset` keeps room at the sides for what the page lays over it,
   `onPanel` and `closePanel` let the page's own panel and the office's take turns), `looks.mjs`
   (each clone's colour and shape, for lists outside the floor). Full screen (`of-full`) it fills
-  its frame and leaves the top to the page's bar. Its performance shape
+  its frame; `of-pane` fills the office screen and `of-mini` is the chat's small live view, with
+  no controls. Its performance shape
   is the point: the board, the still drawing and each mover on separate SVG sheets, copies of what
   stands in front of a mover cut to its outline, merged lines, half-rate frames, stopped off
   screen. `office-room.tsx` is the React box with the screen's words; `room.css` maps the design
@@ -424,7 +444,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   `dist/*.mjs` (Node does not run TypeScript inside node_modules), the guide, and the launcher;
   next, react and the relay's pg and PGlite come from npm. It leaves `dist/sub-office-<version>.tgz` and publishes nothing.
   The launcher (`npx sub-office`) starts the app on 127.0.0.1 from port 4417 and opens `/`;
-  `npx sub-office relay` starts a relay. In the package, `SUB_OFFICE_APP_DIR` tells the app where
+  `npx sub-office relay` starts a relay; `npx sub-office join <invite link>` keeps the invite in
+  `settings.json` (`invite`, after checking the office answers) and starts the app, whose first
+  steps or Settings › Office join with it (`connect` and `join` each take either link). In the package, `SUB_OFFICE_APP_DIR` tells the app where
   its guide and tool server are (`server/paths.ts` `appDir`, `toolServerPath`).
 
 `pnpm dev` serves on loopback. This is Next.js 16; consult the installed Next documentation

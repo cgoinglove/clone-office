@@ -3,6 +3,8 @@
 // language when the page is written in it (English otherwise), and everything a person wrote is
 // escaped before it is shown. Node runs this file as it is, like the rest of the relay.
 
+import { installGuide, type Os } from "./install.ts";
+
 const WORDS = {
   en: {
     title: "{asker} asks you",
@@ -97,6 +99,16 @@ details[open] > summary { margin-bottom: .4rem; }
 .danger { background: var(--danger); }
 .inline { display: flex; gap: .5rem; align-items: flex-start; }
 .inline input { margin: 0; flex: 1; }
+:lang(ko) { word-break: keep-all; overflow-wrap: anywhere; }
+.guide { gap: .75rem; }
+.guide p { margin: 0; }
+ol.steps { list-style: none; counter-reset: step; margin: .25rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 1.1rem; }
+ol.steps > li { counter-increment: step; position: relative; padding-left: 2.4rem; display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; }
+ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 1.6rem; height: 1.6rem; border-radius: 8px; background: var(--fg); color: var(--bg); font-weight: 600; font-size: .85rem; display: grid; place-items: center; }
+ol.steps > li > pre { align-self: stretch; }
+ol.steps small, .others { color: var(--muted); font-size: .85rem; }
+.others { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .4rem; }
+a.button { display: inline-block; color: #fff; background: var(--brand); text-decoration: none; font-weight: 600; border-radius: 10px; padding: .45rem 1rem; }
 .inline button { margin: 0; }
 .small { font-size: .85rem; }
 `;
@@ -125,38 +137,46 @@ const INVITE_WORDS = {
     title: "{from} invites you to their office",
     titleNobody: "You are invited to an office",
     what: "In this office, everyone's clone (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
-    how: "To join: open sub-office on your computer, open Office, paste this link where the relay goes, and join.",
     keep: "Anyone with this link can join this office; keep it within your team.",
   },
   ko: {
     title: "{from}님이 오피스에 초대했어요",
     titleNobody: "오피스에 초대받았어요",
-    what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)가 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
-    how: "들어오는 법: 내 컴퓨터에서 sub-office를 열고, 오피스에서 릴레이 칸에 이 링크를 붙여 넣은 뒤 들어가기를 누르세요.",
+    what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)이 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
     keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
   },
 };
 
-/** The page an office invite opens: who invites, what an office is, and how to join with the link. */
+/** What an invite's page says first: who invites, and what an office is. */
+export function inviteHead(lang: PageLanguage, from?: string) {
+  const words = INVITE_WORDS[lang];
+  const title = escape(
+    from ? words.title.replaceAll("{from}", from) : words.titleNobody,
+  );
+  return {
+    title,
+    what: escape(words.what),
+    keep: escape(words.keep),
+  };
+}
+
+/** The page an office invite opens: who invites, what an office is, and how to set up and join. */
 export function invitePage(input: {
   lang: PageLanguage;
   from?: string;
   link: string;
+  os: Os;
+  command: string;
+  local?: boolean;
 }): string {
-  const words = INVITE_WORDS[input.lang];
-  const title = escape(
-    input.from
-      ? words.title.replaceAll("{from}", input.from)
-      : words.titleNobody,
-  );
+  const head = inviteHead(input.lang, input.from);
   return shell(
     input.lang,
-    title,
-    `<h1>${title}</h1>
-<p>${escape(words.what)}</p>
-<p>${escape(words.how)}</p>
-<p class="request">${escape(input.link)}</p>
-<footer>${escape(words.keep)}</footer>`,
+    head.title,
+    `<h1>${head.title}</h1>
+<p>${head.what}</p>
+${installGuide(input)}
+<footer>${head.keep}</footer>`,
   );
 }
 

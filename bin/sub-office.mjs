@@ -3,8 +3,11 @@
 //
 //   npx sub-office              the app, at http://127.0.0.1:<port>/, opened in the browser
 //   npx sub-office relay [...]  a relay for an office (--port, --host, --database, --key)
+//   npx sub-office join <invite link>     starts the app with the invite kept: its first steps (or
+//                               Settings › Office) join that office with it
 //   npx sub-office connect <setup link>   this computer's mini-me joins one's office, then starts
 //                               (the link is the one-time line one's page on the office server gives)
+// `join` and `connect` each take either link.
 //
 // The app listens on this computer only. Its port is the first free one from 4417, unless
 // --port says otherwise; --no-open leaves the browser alone. When the app is already running on
@@ -39,18 +42,99 @@ if (args[0] === "relay") {
   );
   passSignals(relay);
   relay.on("exit", (code) => process.exit(code ?? 0));
-} else if (args[0] === "connect") {
-  await connect(args[1]);
+} else if (args[0] === "connect" || args[0] === "join") {
+  if (isInvite(args[1])) await keepInvite(args[1]);
+  else await connect(args[1]);
   if (!args.includes("--no-start")) await startApp();
 } else if (args.includes("--help") || args.includes("-h")) {
   console.log(`Usage:
   sub-office [--port <n>] [--no-open]   start the app on this computer
   sub-office relay [--port <n>] [--host <address>] [--database <postgres url | folder>] [--key <office key>]
                                         start a relay for an office
+  sub-office join <invite link> [--no-start]
+                                        start, ready to join the office that invited you
   sub-office connect <setup link> [--no-start]
                                         join your office with the line from your page there, then start`);
 } else {
   await startApp();
+}
+
+/** An office's invite link: its relay's page at /i/<office key> (features/minime/office/invite.ts). */
+function isInvite(link) {
+  try {
+    const url = new URL(String(link ?? ""));
+    return (
+      /^https?:$/.test(url.protocol) &&
+      /\/i\/[\w-]{4,128}\/?$/.test(url.pathname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function readSettings(path) {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+/** Written for its person alone, whole or not at all. */
+function writeSettings(path, settings) {
+  const temp = `${path}.${process.pid}.tmp`;
+  writeFileSync(temp, `${JSON.stringify(settings, null, 2)}\n`, {
+    mode: 0o600,
+  });
+  renameSync(temp, path);
+}
+
+function settingsFile() {
+  const home = process.env.SUB_OFFICE_HOME || join(homedir(), ".sub-office");
+  mkdirSync(home, { recursive: true });
+  return join(home, "settings.json");
+}
+
+/**
+ * Keeps an invite for the app to join with: its first steps offer it, or Settings › Office when the
+ * person is set up already. The office is looked at first, so a link this computer can't reach says
+ * so here rather than at the end of the first steps.
+ */
+async function keepInvite(link) {
+  const url = new URL(link);
+  const from = url.searchParams.get("from");
+  try {
+    await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  } catch {
+    console.error(
+      `Could not reach the office at ${url.host}.${
+        isPrivateHost(url.hostname)
+          ? ` It runs on ${from || "a teammate"}'s computer: join from the same Wi-Fi or network, while their sub-office is open.`
+          : " Check the link, and that this computer is online."
+      }`,
+    );
+    process.exit(1);
+  }
+  const path = settingsFile();
+  const settings = readSettings(path);
+  settings.invite = { link: url.toString(), at: new Date().toISOString() };
+  writeSettings(path, settings);
+  console.log(
+    settings.office
+      ? "Your clone here is in an office already. To join this one instead, leave that one under Settings › Office; this link will be ready there."
+      : `Invited to ${from ? `${from}'s office` : "an office"}. Your browser opens sub-office: after a few questions, your clone joins the office.`,
+  );
+}
+
+/** A private network's address: an office open on a teammate's computer. */
+function isPrivateHost(host) {
+  return (
+    host === "localhost" ||
+    /^(10|127)\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+    /^\[(fd|fe80)/i.test(host)
+  );
 }
 
 /**
@@ -64,14 +148,14 @@ async function connect(link) {
     url = new URL(String(link ?? ""));
   } catch {
     console.error(
-      "Usage: sub-office connect <the link your office's page gave you>",
+      "Usage: sub-office join <the invite link a teammate sent you>",
     );
     process.exit(1);
   }
   const code = /^\/p\/([\w-]{16,64})$/.exec(url.pathname)?.[1];
   if (!code || !/^https?:$/.test(url.protocol)) {
     console.error(
-      "That is not a connect link. Make one on your page at your office's server.",
+      "That is not an invite link. Copy the line from your invite's page, or ask your teammate for the link again.",
     );
     process.exit(1);
   }
@@ -99,15 +183,8 @@ async function connect(link) {
     );
     process.exit(1);
   }
-  const home = process.env.SUB_OFFICE_HOME || join(homedir(), ".sub-office");
-  mkdirSync(home, { recursive: true });
-  const path = join(home, "settings.json");
-  let settings = {};
-  try {
-    settings = JSON.parse(readFileSync(path, "utf8"));
-  } catch {
-    // A first run: nothing kept yet.
-  }
+  const path = settingsFile();
+  const settings = readSettings(path);
   const was = settings.office;
   if (settings.host?.on)
     settings.host = {
@@ -123,11 +200,7 @@ async function connect(link) {
     token: answer.token,
     card: { name: answer.name, description: "" },
   };
-  const temp = `${path}.${process.pid}.tmp`;
-  writeFileSync(temp, `${JSON.stringify(settings, null, 2)}\n`, {
-    mode: 0o600,
-  });
-  renameSync(temp, path);
+  writeSettings(path, settings);
   console.log(
     `Connected: your clone is ${answer.name} in ${answer.office?.name || "your office"}.`,
   );
@@ -227,6 +300,7 @@ async function startApp() {
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
   console.log(`Your clone is at ${url()}
-It runs on this computer only. Keep this window open; press Ctrl+C to stop.`);
+It runs on this computer only. Keep this window open; press Ctrl+C to stop.
+To start it again later, run: npx sub-office`);
   if (!args.includes("--no-open")) open(url());
 }

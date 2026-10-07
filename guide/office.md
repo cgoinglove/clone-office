@@ -25,26 +25,42 @@ In the first steps (**You and your team**, 나와 우리 팀), or any time under
 
 Either way they give their name and what they do in a line. **Draft it for me** (초안 써 줘) has
 the clone write that line from what it knows of them; they correct it before going in, and
-nothing is shared until then. Colleagues who join appear at their desks in the office, under
-**Colleagues** (동료) in the side panel's Requests tab, and under **People** (사람들) in Settings ›
-Office.
+nothing is shared until then. Colleagues who join appear at their desks in the office, in **Ask a colleague**
+(동료에게 부탁) on the Chat and Requests screens, and under **People** (사람들) in Settings › Office.
 
 Anyone in the office can copy the invite link in Settings › Office and send it. Anyone with the
 link can join, so it goes only to the team.
 
 ### From the invite link, in a browser
 
-Opened in a browser, the invite link is the office server's page for making an account there
-(**Make your account**, 내 계정 만들기: name, email, a password of 8 characters or more), or
-signing in with one they have. Their own page on the server then has:
+Opened in a browser, the invite link shows **Set up your clone** (내 클론 만들기): the steps for the
+computer it was opened on (Mac, Windows or Linux; the others under **On another kind of
+computer?**, 다른 컴퓨터인가요?), about five minutes and no coding.
+
+1. **Install Node.js** (Node.js 설치), with the button to nodejs.org; skipped when they have
+   Node.js 22.13 or later.
+2. **Open Terminal** (터미널 열기; Command Prompt, 명령 프롬프트, on Windows).
+3. Paste one line, `npx -y sub-office join "<the invite link>"`, and press Enter. The first time
+   takes a minute or two.
+4. Their browser opens sub-office. The first steps already say who invited them, and their clone
+   joins that office at the end. Someone set up already finds Settings › Office open with the link
+   in place.
+
+When the office is open on a teammate's computer, the page says to join from the same Wi-Fi or
+network while that teammate's app is open; the line says the same if it cannot reach it. Opened on
+a phone, the page asks them to open the link on their computer, since the clone runs there.
+Someone who cannot install now can still answer a colleague's clone by the reply link it sends.
+
+Below the steps, **Or make an account on this office's server** (또는 이 오피스 서버에 계정 만들기)
+makes an account there instead (name, email, a password of 8 characters or more), or signs in with
+one they have. Their own page on the server then has:
 
 - **Connect your computer** (내 컴퓨터 연결): **Make my connect command** (연결 명령 만들기) gives
   one line, `npx sub-office connect <link>`, to run once in a terminal on the computer their
-  clone should live on (it needs Node.js 22 or later, from nodejs.org). It works once, for ten
-  minutes; a new one can be made any time. Run, it puts their clone in the office under their
-  account and opens the app there. Their page on the server then says which clone is connected.
-  One person has one clone: connecting another computer moves it there, and the one before
-  leaves the office.
+  clone should live on. It works once, for ten minutes; a new one can be made any time. Run, it
+  puts their clone in the office under their account and opens the app there. Their page on the
+  server then says which clone is connected. One person has one clone: connecting another
+  computer moves it there, and the one before leaves the office.
 - **Invite a teammate** (동료 초대): the office's invite link, to send on.
 - **People in this office** (이 오피스의 사람들): everyone with an account there, owner or member,
   and whether their computer is connected.
@@ -55,10 +71,8 @@ The first account made in an office owns it. An owner also sees, on that page: *
 answered stays), **Make owner** (주인으로), clones that joined with the link without an account,
 **Make a new invite link** (새 초대 링크 만들기; the old link stops working, everyone in stays in),
 and **Office name** (오피스 이름). Each change is shown once more on its own page before it is
-made. The server keeps their password only hashed and
-their session in a cookie; the line's code is kept only hashed and ends once used. Someone who
-already runs sub-office can still paste the invite link under Settings › Office in the app
-instead.
+made. The server keeps their password only hashed and their session in a cookie; the line's code
+is kept only hashed and ends once used.
 
 ## What goes to the relay, and what never does
 
@@ -102,7 +116,7 @@ or the command), and then tells the colleague what was done.
 
 ## How to work with them (ME.md)
 
-Under Settings › **Requests you take** (받는 부탁), **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
+Under **Your clone** (내 클론) › **Requests it takes** (받는 부탁), **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
 clones read: how they like to be asked, when to expect an answer, what to bring them early.
 **Draft it for me** (초안 써 줘) has the clone write a few from what it knows of them, leaving out
 anything private; a line goes on the card only when they press **Add** (더하기), and **Remove**
@@ -112,8 +126,8 @@ Colleagues' cards show theirs the same way, and the clone follows them when it a
 
 ## Requests they take, and how much their clone does alone
 
-Settings › **Requests you take** (받는 부탁) lists the kinds of request colleagues' clones can bring
-them, each with how much their clone does alone (a new kind starts where Settings › Preferences
+**Your clone** (내 클론) › **Requests it takes** (받는 부탁) lists the kinds of request colleagues' clones can bring
+them, each with how much their clone does alone (a new kind starts where the same tab
 says, **Tell me** unless they changed it):
 
 - **On its own** (알아서): it answers and sends, without telling them.
@@ -213,8 +227,8 @@ is open.
 
 ## The office floor
 
-The office is the app's main screen. The first time each day it opens at the lobby (Settings ›
-Preferences can turn that off): the company's
+**Office** (오피스) in the column on the left opens the office floor. The first time each day it
+opens at the lobby (Settings › Office can turn that off): the company's
 building, their floor marked on it, and a card with who is already in and what is waiting for
 them. **Clock in** (출근하기), or Enter, rides the lift up to their floor, where their clone steps
 out to its desk. The rest of the day it opens straight at the office.
@@ -231,7 +245,9 @@ clone takes it up and works at its laptop; the answer is carried back, and **DON
 stamped on the floor. Only requests they are part of are shown: what colleagues ask each other
 stays between them. When something waits for them, their clone asks over its head with
 **Answer** (답하기), which brings them to the question, and **YOUR TURN** (내 차례) is written on
-the floor.
+the floor. **Your turn** (내 차례) also lies over the office's top right, **Answer right here**
+(여기서 바로 답해요): a permission or a question with a few choices is answered with its buttons
+there, and **Open** (열기) takes them to the request.
 
 Behind the wall stands the office board: everyone, those a decision waits on first, with what
 they are on and how much is on their desk. **My desk** (내 자리), **Board** (보드) and **Office**
@@ -249,7 +265,7 @@ conversation, and a morning flow can catch them up (`flows.md`).
 ## Status and leaving
 
 Their status (**Working**, **In a meeting**, **Away**, **Off**) shows on their card; they change
-it from the bar at the top of the office, beside the app's name. **Leave** (오피스 나가기), at the
+it at the bottom of the column on the left, under their clone. **Leave** (오피스 나가기), at the
 end of Settings › Office, forgets the relay on this computer; past requests stay on the relay.
 When the office is open on their computer, it reads **Close the office on this computer** (이
 컴퓨터의 오피스 닫기) and asks once, since teammates cannot reach the office until it is opened

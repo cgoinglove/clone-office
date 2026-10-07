@@ -1,81 +1,53 @@
 "use client";
 
-// Settings, as one dialog over the office (after Thursday's): the sections down the left, grouped
-// by what they are about, each with its own mark; the open one on the right under its name and a
-// line saying what it is for. Everything about the clone that is not the daily work lives here:
-// what it knows and thinks with, what colleagues may ask, the person's flows, connected services,
-// phone, permissions, the office, the files it keeps, and the screen's language and theme.
+// Settings, as one dialog over the app (after Thursday's): six sections down the left, each with
+// its own mark; the open one on the right under its name and a line saying what it is for. What
+// the clone thinks with, how much it does on its own, the services it works in, the phone and when
+// it calls, the office, and the app itself. Who the clone is (its memory, the requests it takes,
+// its flows) has its own screen.
 
 import {
   Building2,
-  FolderOpen,
-  Inbox,
   Plug,
-  Repeat,
   Settings2,
   ShieldCheck,
-  SlidersHorizontal,
   Smartphone,
   Sparkles,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import {
-  type ComponentType,
-  Fragment,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ComponentType, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { LogoMark } from "@/features/brand/logo";
 import { cn } from "@/lib/utils";
 import { BrainPanel, brainReady } from "../brain-panel";
 import { ConnectorsPanel } from "../connectors-panel";
-import { FlowsPanel } from "../flows-panel";
-import type { Learn } from "../home/use-learn";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import type { Preferences } from "../home/use-preferences";
 import { MessengerPanel } from "../messenger-panel";
-import { CloneSection } from "./clone-section";
 import { FilesSection } from "./files-section";
 import { GeneralSection } from "./general-section";
 import { OfficeSection } from "./office-section";
 import { PermissionsSection } from "./permissions-section";
 import { PreferencesSection } from "./preferences-section";
-import { RequestsSection } from "./requests-section";
 
 export type SectionId =
-  | "clone"
-  | "preferences"
   | "brain"
-  | "requests"
-  | "flows"
+  | "permissions"
   | "connectors"
   | "phone"
-  | "permissions"
   | "office"
-  | "files"
   | "general";
-
-const GROUPS = ["clone", "work", "team", "app"] as const;
 
 const SECTIONS: {
   id: SectionId;
-  group: (typeof GROUPS)[number];
   icon: ComponentType<{ className?: string }>;
 }[] = [
-  { id: "clone", group: "clone", icon: LogoMark },
-  { id: "preferences", group: "clone", icon: SlidersHorizontal },
-  { id: "brain", group: "clone", icon: Sparkles },
-  { id: "requests", group: "clone", icon: Inbox },
-  { id: "flows", group: "work", icon: Repeat },
-  { id: "connectors", group: "work", icon: Plug },
-  { id: "phone", group: "work", icon: Smartphone },
-  { id: "permissions", group: "work", icon: ShieldCheck },
-  { id: "office", group: "team", icon: Building2 },
-  { id: "files", group: "app", icon: FolderOpen },
-  { id: "general", group: "app", icon: Settings2 },
+  { id: "brain", icon: Sparkles },
+  { id: "permissions", icon: ShieldCheck },
+  { id: "connectors", icon: Plug },
+  { id: "phone", icon: Smartphone },
+  { id: "office", icon: Building2 },
+  { id: "general", icon: Settings2 },
 ];
 
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
@@ -85,30 +57,18 @@ export function SettingsDialog({
   onSection,
   lang,
   office,
-  learn,
   profile,
-  onProfile,
   preferences,
   onPreferences,
-  onOpenChat,
-  onAsk,
-  onNews,
 }: {
   /** The section open, or null when settings are closed. */
   section: SectionId | null;
   onSection: (section: SectionId | null) => void;
   lang: string;
   office: OfficeState;
-  learn: Learn;
   profile: Profile;
-  onProfile: (profile: Profile) => void;
   preferences: Preferences | null;
   onPreferences: (next: Partial<Preferences>) => Promise<boolean>;
-  /** Opens a conversation (a flow's) in the side panel, closing settings. */
-  onOpenChat: (id: string) => void;
-  /** Says something to the clone in the side panel, closing settings. */
-  onAsk: (text: string) => void;
-  onNews: () => void;
 }) {
   const t = useTranslations("settings");
   const current = SECTIONS.find((entry) => entry.id === section) ?? SECTIONS[0];
@@ -195,50 +155,42 @@ export function SettingsDialog({
             <span className="px-2.5 pt-1 pb-3 text-sm font-semibold max-sm:hidden">
               {t("title")}
             </span>
-            {GROUPS.map((group) => (
-              <Fragment key={group}>
-                <span className="px-2.5 pt-3 pb-1 font-mono text-[10px] tracking-wide text-muted-foreground uppercase max-sm:hidden">
-                  {t(`groups.${group}`)}
-                </span>
-                {SECTIONS.filter((item) => item.group === group).map((item) => {
-                  const picked = item.id === current.id;
-                  return (
-                    <Button
-                      key={item.id}
-                      data-section={item.id}
-                      tabIndex={picked ? 0 : -1}
-                      aria-current={picked ? "page" : undefined}
-                      variant="ghost"
-                      onClick={() => onSection(item.id)}
-                      className={cn(
-                        "h-8 justify-start gap-2.5 px-2.5 font-normal max-sm:shrink-0",
-                        picked
-                          ? "bg-[color-mix(in_oklch,var(--muted),var(--foreground)_6%)] text-foreground"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      <item.icon className="size-4" />
-                      <span className="truncate text-sm">
-                        {t(`sections.${item.id}.label`)}
-                      </span>
-                      {((item.id === "office" && office.due.length > 0) ||
-                        (item.id === "brain" && marks.brain)) && (
-                        <span
-                          aria-hidden
-                          className="ml-auto size-1.5 rounded-full bg-waiting"
-                        />
-                      )}
-                      {item.id === "phone" && marks.phone && (
-                        <span
-                          aria-hidden
-                          className="ml-auto size-1.5 rounded-full bg-destructive"
-                        />
-                      )}
-                    </Button>
-                  );
-                })}
-              </Fragment>
-            ))}
+            {SECTIONS.map((item) => {
+              const picked = item.id === current.id;
+              return (
+                <Button
+                  key={item.id}
+                  data-section={item.id}
+                  tabIndex={picked ? 0 : -1}
+                  aria-current={picked ? "page" : undefined}
+                  variant="ghost"
+                  onClick={() => onSection(item.id)}
+                  className={cn(
+                    "h-8 justify-start gap-2.5 px-2.5 font-normal max-sm:shrink-0",
+                    picked
+                      ? "bg-[color-mix(in_oklch,var(--muted),var(--foreground)_6%)] text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <item.icon className="size-4" />
+                  <span className="truncate text-sm">
+                    {t(`sections.${item.id}.label`)}
+                  </span>
+                  {item.id === "brain" && marks.brain && (
+                    <span
+                      aria-hidden
+                      className="ml-auto size-1.5 rounded-full bg-waiting"
+                    />
+                  )}
+                  {item.id === "phone" && marks.phone && (
+                    <span
+                      aria-hidden
+                      className="ml-auto size-1.5 rounded-full bg-destructive"
+                    />
+                  )}
+                </Button>
+              );
+            })}
             {APP_VERSION && (
               <span className="mt-auto px-2.5 pt-4 font-mono text-[10px] text-muted-foreground max-sm:hidden">
                 sub-office v{APP_VERSION}
@@ -265,49 +217,57 @@ export function SettingsDialog({
               className="min-h-0 flex-1 overflow-y-auto px-8 pb-10 max-sm:px-5"
             >
               <div className="mx-auto w-full max-w-[42rem]">
-                {current.id === "clone" && (
-                  <CloneSection
-                    lang={lang}
-                    learn={learn}
-                    profile={profile}
-                    onProfile={onProfile}
-                    office={office}
-                  />
+                {current.id === "brain" && (
+                  <div className="flex flex-col gap-10">
+                    <BrainPanel />
+                    <PreferencesSection
+                      preferences={preferences}
+                      onChange={onPreferences}
+                      parts={["learning", "models"]}
+                    />
+                  </div>
                 )}
-                {current.id === "preferences" && (
-                  <PreferencesSection
-                    preferences={preferences}
-                    onChange={onPreferences}
-                  />
-                )}
-                {current.id === "brain" && <BrainPanel />}
-                {current.id === "requests" && (
-                  <RequestsSection
-                    lang={lang}
-                    office={office}
-                    defaultTrust={preferences?.defaultTrust ?? "tell"}
-                    onOpenOffice={() => onSection("office")}
-                  />
-                )}
-                {current.id === "flows" && (
-                  <FlowsPanel
-                    onOpenChat={onOpenChat}
-                    onNews={onNews}
-                    onAsk={onAsk}
-                  />
+                {current.id === "permissions" && (
+                  <div className="flex flex-col gap-10">
+                    <PreferencesSection
+                      preferences={preferences}
+                      onChange={onPreferences}
+                      parts={["autonomy"]}
+                    />
+                    <PermissionsSection />
+                  </div>
                 )}
                 {current.id === "connectors" && <ConnectorsPanel />}
-                {current.id === "phone" && <MessengerPanel />}
-                {current.id === "permissions" && <PermissionsSection />}
-                {current.id === "office" && (
-                  <OfficeSection
-                    lang={lang}
-                    office={office}
-                    profile={profile}
-                  />
+                {current.id === "phone" && (
+                  <div className="flex flex-col gap-10">
+                    <MessengerPanel />
+                    <PreferencesSection
+                      preferences={preferences}
+                      onChange={onPreferences}
+                      parts={["batch", "phone"]}
+                    />
+                  </div>
                 )}
-                {current.id === "files" && <FilesSection />}
-                {current.id === "general" && <GeneralSection />}
+                {current.id === "office" && (
+                  <div className="flex flex-col gap-10">
+                    <OfficeSection
+                      lang={lang}
+                      office={office}
+                      profile={profile}
+                    />
+                    <PreferencesSection
+                      preferences={preferences}
+                      onChange={onPreferences}
+                      parts={["office"]}
+                    />
+                  </div>
+                )}
+                {current.id === "general" && (
+                  <div className="flex flex-col gap-10">
+                    <GeneralSection />
+                    <FilesSection />
+                  </div>
+                )}
               </div>
             </div>
           </div>

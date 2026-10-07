@@ -29,9 +29,9 @@ ChatGPT sign-in are kept on this computer only, in files only they can read. The
 model (small, mid, large; or type another name the service has); the one marked **Suggested**
 (추천) is picked to start with. **Use this** (이걸로 쓰기) makes it the clone's brain.
 
-Settings › Preferences can send the work in the background (looking back after a conversation,
+Settings › Brain can send the work in the background (looking back after a conversation,
 summaries, drafts) to the brain's smaller model, which uses less of a plan or a key (`index.md`,
-"Preferences"); conversations, flows and every answer to colleagues stay on the model they
+"Settings"); conversations, flows and every answer to colleagues stay on the model they
 picked.
 
 Except with Claude Code, the clone runs its own loop the way Claude Code would: it reads their

@@ -20,22 +20,34 @@ yours.
 
 ## Get started
 
-You need [Node.js](https://nodejs.org) 22.18 or later.
+sub-office runs on your own computer: that is where your clone learns how you work, uses your files
+and tools, and keeps what it learns. Setting it up takes about five minutes, with no coding.
 
-```sh
-npx sub-office
-```
+1. **Install Node.js** 22.13 or later: the installer for your system from
+   [nodejs.org](https://nodejs.org/en/download). Have it already? Skip this.
+2. **Open a terminal**: on a Mac, press ⌘ Space, type *Terminal* and press Return; on Windows,
+   press the Windows key, type *cmd* and press Enter; on Linux, Ctrl+Alt+T on most systems.
+3. **Paste this line and press Enter:**
+
+   ```sh
+   npx -y sub-office
+   ```
+
+Invited by a teammate? Open the link they sent you: its page shows these steps for your computer,
+with a line that also joins their office (`npx -y sub-office join "<invite link>"`).
 
 It opens in your browser. The first steps take about three minutes, and each can wait:
 
 1. **Pick what it thinks with**: your ChatGPT plan, your Claude subscription, an API key, or a
    model on your computer.
 2. **Let it learn how you work** from the AI conversations already on your computer, leaving out
-   any folders you like, or bring what ChatGPT, Claude or Gemini remembers about you.
+   any folders you like, or bring what ChatGPT, Claude or Gemini remembers about you. No AI
+   records? Skip it: it learns as you work, and you can just tell it about yourself.
 3. **Say who you are and whether there is a team**: on your own for now, join your team's office
    with an invite link, or open one on this computer.
 
-Then you clock in at your office's lobby, and your clone is at its desk.
+Then your clone is waiting in the chat, with a short list of first things to do. Keep the terminal
+window open while you use it; `npx -y sub-office` starts it again later.
 
 ## What it does
 
@@ -50,8 +62,8 @@ Then you clock in at your office's lobby, and your clone is at its desk.
   you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about a
   relationship always come to you, and a second look checks every answer before it leaves. The
   like-me score tells you how often you send its answers as they were.
-- **Brings you only your calls.** What waits on you shows at the top of the office, on your
-  phone (Discord, Telegram or Slack) while you are away, and three times a day when you are busy.
+- **Brings you only your calls.** What waits on you shows under **Your turn** on the left of every
+  screen, over the office, on your phone (Discord, Telegram or Slack) while you are away, and three times a day when you are busy.
 - **Flows.** "Every weekday at 9, catch me up." You say it; it shows you the flow before making it.
 - **For developers.** With the Claude Code plugin, your teammates' clones are tools in your Claude
   Code, and an answer that comes later lands in your idle session by itself.
@@ -78,8 +90,8 @@ Same memory, same permission cards, whichever you pick; you can change it any ti
 
 **On the same network**: in Settings › Office, open the office on your computer. The app runs
 the relay that carries requests between clones (Postgres inside the process, nothing to install)
-and gives you an invite link with your computer's address. Teammates paste it when they start, or
-in Settings › Office. The office rests while your computer sleeps.
+and gives you an invite link with your computer's address. Teammates open it: its page walks them
+through setting up with one line that joins your office. The office rests while your computer sleeps.
 
 **Anywhere**: run the team's server, with Docker and Postgres:
 
@@ -92,9 +104,10 @@ or by hand with a Postgres you have: `DATABASE_URL=postgres://… npx sub-office
 0.0.0.0` (without one it keeps the office in a folder). On the internet, put it behind HTTPS (Caddy
 or nginx) and set `RELAY_TRUST_PROXY=1` and `RELAY_PUBLIC_URL`.
 
-Open the invite link first and make your account: the first account owns the office. Send the same
-link to your team; each person makes an account, and their page on the server gives them one line
-that connects their computer:
+Open the invite link first and make your account (under the setup steps): the first account owns
+the office. Send the same link to your team. Each person can follow the steps on its page, which
+join with the link alone, or make an account there too; their page on the server then gives them
+one line that connects their computer under their name:
 
 ```sh
 npx sub-office connect https://<your server>/p/<one-time code>

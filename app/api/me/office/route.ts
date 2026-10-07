@@ -24,6 +24,7 @@ import {
   publicRelay,
   resumeHosting,
 } from "@/features/minime/office/host";
+import { clearInvite, readInvite } from "@/features/minime/office/invited";
 import { likeMe } from "@/features/minime/office/likeme";
 import { writeMe } from "@/features/minime/office/me";
 import {
@@ -50,7 +51,9 @@ export async function GET(request: Request) {
   await resumeHosting();
   const office = await loadOffice();
   const menu = await loadMenu();
-  if (!office) return Response.json({ joined: false, menu });
+  // An invite the launcher kept (`sub-office join <link>`) waits here until it is used.
+  if (!office)
+    return Response.json({ joined: false, menu, invite: await readInvite() });
   // Of the answers the person saw first, how many they sent as they were.
   const like = likeMe((await loadState()).outcomes);
   const url = new URL(request.url);
@@ -230,6 +233,7 @@ export async function POST(request: Request) {
           ? await openHere(card)
           : await joinOffice(input.relay, input.key, card);
       await writeMe(office.card, menu);
+      await clearInvite();
       return Response.json({
         joined: true,
         me: { id: office.member, card: office.card },

@@ -34,6 +34,9 @@ export function ChatView({
   mood,
   name,
   draftRef,
+  empty,
+  tools,
+  placeholder,
 }: {
   chat: Chat;
   /** What the clone offered to do after its last reading. */
@@ -44,6 +47,11 @@ export function ChatView({
   name?: string;
   /** The box the person types in, for the page to focus. */
   draftRef?: React.RefObject<HTMLTextAreaElement | null>;
+  /** What an empty conversation shows instead of the clone's own hello. */
+  empty?: React.ReactNode;
+  /** Helpers under the box, each able to put words in it. */
+  tools?: (insert: (text: string) => void) => React.ReactNode;
+  placeholder?: string;
 }) {
   const t = useTranslations("home");
   const bottom = useRef<HTMLDivElement>(null);
@@ -57,25 +65,35 @@ export function ChatView({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-5 pb-3">
-        {chat.turns.length === 0 ? (
-          <Empty
-            chat={chat}
-            tasks={tasks}
-            routines={routines}
-            mood={mood}
-            name={name}
-          />
-        ) : (
-          <ol className="flex flex-col gap-4">
-            {chat.turns.map((turn) => (
-              <TurnRow key={turn.id} turn={turn} chat={chat} />
-            ))}
-          </ol>
-        )}
-        <div ref={bottom} />
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-6 pb-3">
+        <div className="mx-auto flex min-h-full w-full max-w-180 flex-col">
+          {chat.turns.length === 0 ? (
+            (empty ?? (
+              <Empty
+                chat={chat}
+                tasks={tasks}
+                routines={routines}
+                mood={mood}
+                name={name}
+              />
+            ))
+          ) : (
+            <ol className="flex flex-col gap-5">
+              {chat.turns.map((turn) => (
+                <TurnRow key={turn.id} turn={turn} chat={chat} />
+              ))}
+            </ol>
+          )}
+          <div ref={bottom} />
+        </div>
       </div>
-      <Composer chat={chat} draftRef={draftRef} placeholder={t("composer")} />
+      <Composer
+        chat={chat}
+        draftRef={draftRef}
+        placeholder={placeholder ?? t("composer")}
+        tools={tools}
+        className="mx-auto w-full max-w-3xl px-6 pb-5"
+      />
     </div>
   );
 }
@@ -260,20 +278,35 @@ export function Composer({
   chat,
   placeholder,
   draftRef,
+  tools,
   className,
 }: {
   chat: Chat;
   placeholder: string;
   draftRef?: React.RefObject<HTMLTextAreaElement | null>;
+  /** Helpers under the box, each able to put words in it. */
+  tools?: (insert: (text: string) => void) => React.ReactNode;
   className?: string;
 }) {
   const t = useTranslations("home");
   const [draft, setDraft] = useState("");
+  const own = useRef<HTMLTextAreaElement>(null);
+  const box = draftRef ?? own;
   const send = () => {
     const text = draft.trim();
     if (!text || chat.busy) return;
     setDraft("");
     void chat.ask(text);
+  };
+  // A helper puts its words at the start of the box and leaves the caret after them.
+  const insert = (text: string) => {
+    setDraft((was) => (was.trim() ? `${text}${was}` : text));
+    requestAnimationFrame(() => {
+      const field = box.current;
+      if (!field) return;
+      field.focus();
+      field.setSelectionRange(field.value.length, field.value.length);
+    });
   };
   return (
     <form
@@ -283,9 +316,16 @@ export function Composer({
         send();
       }}
     >
-      <div className="flex items-end gap-2 rounded-2xl bg-background px-3.5 py-2 shadow-[0_0_0_1px_var(--alpha-12),0_6px_20px_var(--alpha-05)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_6px_20px_var(--alpha-08)]">
+      <div
+        className={cn(
+          "flex gap-2 rounded-2xl bg-background shadow-[0_0_0_1px_var(--alpha-12),0_6px_20px_var(--alpha-05)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_6px_20px_var(--alpha-08)]",
+          tools
+            ? "flex-wrap items-center px-4 pt-3 pb-2.5"
+            : "items-end px-3.5 py-2",
+        )}
+      >
         <textarea
-          ref={draftRef}
+          ref={box}
           value={draft}
           rows={1}
           placeholder={placeholder}
@@ -303,8 +343,16 @@ export function Composer({
               event.currentTarget.blur();
             }
           }}
-          className="field-sizing-content max-h-40 min-h-6 flex-1 resize-none bg-transparent py-1 text-[14.5px] leading-relaxed outline-none placeholder:text-muted-foreground"
+          className={cn(
+            "field-sizing-content max-h-40 resize-none bg-transparent py-1 text-[14.5px] leading-relaxed outline-none placeholder:text-muted-foreground",
+            tools ? "min-h-12 w-full basis-full" : "min-h-6 flex-1",
+          )}
         />
+        {tools && (
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            {tools(insert)}
+          </div>
+        )}
         <Button
           type="submit"
           size="icon-sm"

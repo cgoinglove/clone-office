@@ -59,6 +59,7 @@ export function OfficeSection({
           lang={lang}
           busy={office.busy}
           profile={profile}
+          invite={data.invite?.link}
           onJoin={(body) => office.post(body)}
         />
         {office.error && (
@@ -164,17 +165,20 @@ function Join({
   lang,
   busy,
   profile,
+  invite: kept,
   onJoin,
 }: {
   lang: string;
   busy: boolean;
   profile: Profile;
+  /** The invite the launcher kept, ready to join with. */
+  invite?: string;
   onJoin: (body: unknown) => Promise<boolean>;
 }) {
   const t = useTranslations("office");
   const tS = useTranslations("settings.office");
-  const [way, setWay] = useState<"here" | "join">("here");
-  const [link, setLink] = useState("");
+  const [way, setWay] = useState<"here" | "join">(kept ? "join" : "here");
+  const [link, setLink] = useState(kept ?? "");
   const [byHand, setByHand] = useState(false);
   const [relay, setRelay] = useState("http://127.0.0.1:3200");
   const [key, setKey] = useState("");

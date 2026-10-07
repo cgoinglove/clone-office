@@ -2024,3 +2024,27 @@
 [data-side="open"] .of-wrap.of-full .composer {
   display: none;
 }
+/* The office as one screen of the app, under the screen's own heading: no bar above to keep
+   clear of. */
+.of-wrap.of-full.of-pane .hud.tl {
+  top: 16px;
+}
+.of-wrap.of-full.of-pane .panel {
+  top: 16px;
+}
+/* A small live view of the office beside the conversation: the drawing alone, larger than its
+   frame so the desks show, with no controls; the frame around it takes the click. */
+.of-wrap.of-mini {
+  position: absolute;
+  left: -46%;
+  top: -40%;
+  width: 192%;
+  height: 192%;
+  border-radius: 0;
+  box-shadow: none;
+  pointer-events: none;
+  cursor: default;
+}
+.of-wrap.of-mini :is(.hud, .composer, .over, .panel) {
+  display: none;
+}

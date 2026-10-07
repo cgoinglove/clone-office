@@ -5,5 +5,5 @@ import { isOnboarded } from "@/features/minime/server/onboarded";
 export const dynamic = "force-dynamic";
 
 export default function Home() {
-  redirect(isOnboarded() ? "/office" : "/start");
+  redirect(isOnboarded() ? "/chat" : "/start");
 }

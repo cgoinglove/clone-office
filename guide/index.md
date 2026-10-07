@@ -30,59 +30,88 @@ Two things hold everywhere:
 
 ## Where things are
 
-- **The office** (오피스) is the main screen: their clone at its desk, colleagues' clones at
-  theirs, requests carried between desks, and the board on the back wall. **My desk**, **Board**
-  and **Office** (내 자리, 보드, 오피스) at the bottom left move the view. The first time each day
-  it opens at the building's lobby, where **Clock in** (출근하기) takes the lift up; Settings ›
-  Preferences can turn the lobby off.
-- **The box at the bottom**, **Ask your clone anything…** (클론에게 무엇이든 부탁하세요…), asks
-  their clone; the answer opens in the side panel.
-- **The side panel** on the right has two tabs. **Chat** (대화): the conversation with their
-  clone, with **New conversation** (새 대화) and **Past conversations** (이전 대화) at its top.
-  **Requests** (부탁): what waits on them about colleagues' requests, their colleagues with
-  **Ask** (부탁하기) beside each, and the requests sent and received.
-- **The bar at the top**: their status in the office (working, in a meeting, away, off), what
-  waits on them (**N waiting on you**, N개가 나를 기다려요), Requests, **Settings** (설정), and
-  their clone's face, which opens the chat.
-- **Settings** (설정) holds everything else, one section each: **Your clone** (내 클론: about
-  them, what it remembers, reading again, bringing it from another AI, starting over),
-  **Preferences** (개인 설정), **Brain** (두뇌), **Requests you take** (받는 부탁), **Flows**
-  (플로우), **Connectors** (도구 연결), **Phone** (휴대폰), **Permissions** (권한: what it does
-  without asking, folders left out), **Office** (오피스), **Files** (파일), **General** (일반:
-  language, theme).
-- Keys: ⌘, (Ctrl+, on Windows and Linux) opens Settings, ⌘1–9 jumps to a section there, / goes to
-  the box, and Esc closes the side panel.
+- **The column on the left** is always there. At its top, **New chat** (새 대화), then the three
+  screens: **Chat** (대화), **Requests** (부탁) and **Office** (오피스). **Your turn** (내 차례)
+  appears below them only when something waits on them, one line each (a question about a
+  colleague's request, or one in a conversation); a click goes where it is answered. Then **Recent
+  chats** (최근 대화), with a dot where a question waits. At the bottom: their clone (how far it has
+  learned, or how like them it answers; it opens **Your clone**, 내 클론), their status in the
+  office once they are in one (working, in a meeting, away, off), and **Settings** (설정).
+- **Chat** (대화) is where the app opens: the conversation with their clone, and the box, **Ask your
+  clone anything** (클론에게 무엇이든 부탁하세요). A new chat starts with the clone's hello,
+  **Getting started** (시작하기) and things to try. Under the box, **Ask a colleague** (동료에게)
+  and **Every so often** (정해진 때마다) start the sentence for them. On a wide screen the right side
+  shows **The office now** (지금 오피스): the office, live; the requests in motion; today's flows.
+  The button at the top folds it away.
+- **Requests** (부탁): what they and their colleagues asked each other, grouped as **Your turn**,
+  **On its way**, **Waiting on them** and **Done** (내 차례, 처리 중, 답 기다림, 끝남), with **All**,
+  **Received** and **Sent** (모두, 받은 부탁, 보낸 부탁), and **Ask a colleague** (동료에게
+  부탁하기) at the top. A request opens on its own page: the clones' exchange, what waits on them
+  (answered right there), its files, and who it is with.
+- **Office** (오피스): the office floor (`office.md`), with what waits on them laid over it to
+  answer right there.
+- **Your clone** (내 클론): how like them it answers, and three tabs. **What it knows** (아는 것:
+  about them, what it remembers, reading again, bringing it from another AI, starting over),
+  **Requests it takes** (받는 부탁: the kinds colleagues can ask, how much it does alone for each,
+  where a new kind starts) and **Flows** (플로우).
+- **Settings** (설정) has six sections. **Brain** (두뇌: what it thinks with, learning after each
+  conversation, the lighter model for background work), **Permissions** (권한: how much it does on
+  its own, what it does without asking, folders left out), **Connectors** (도구 연결),
+  **Notifications & phone** (알림과 휴대폰: the phone, when kept questions come, quiet hours),
+  **Office** (오피스: open one, join, invite, people, the morning lobby) and **General** (일반:
+  language, theme, the files it keeps, this app).
+- Keys: ⌘, (Ctrl+, on Windows and Linux) opens Settings, ⌘⇧N starts a new chat, and / goes to the
+  box.
+
+## Getting started
+
+A new chat shows **Getting started** (시작하기), five steps that tick themselves off as they are
+done: **Hand your clone a task** (클론에게 일 하나 맡기기), **Tell your clone about you** (클론에게
+나를 알려 주기, which starts the sentence "About me…" in the box; nothing else is needed, no AI
+records), **Bring in a colleague** (동료 부르기), **Choose what colleagues can ask** (동료가 부탁할
+수 있는 것 정하기) and **Get what needs you on your phone** (나를 기다리는 일을 폰으로 받기).
+**Hide getting started** (시작하기 숨기기) folds it away.
 
 ## The first time
 
 Opened the first time, the app shows **Get started** (시작하기) beside the office playing a short
 scene. Four steps follow, each of which can be passed over: what it thinks with (`brain.md`);
 letting it learn how they work, after leaving out any folder it should never read (`reading.md`,
-`memory.md`); what to call them and whether a team is in it (`office.md`); then **Go to my office**
-(내 오피스로 가기), which opens the office at its lobby. **Set up later** (나중에 하기) goes straight
-to the office. The screen's language is at the top right of the first steps, and under Settings ›
-General.
+`memory.md`; with no AI records on the computer, it simply learns as they work); what to call
+them and whether a team is in it (`office.md`; started from an invite, it says who invited them
+and joins that office); then the chat with their clone. **Set up later** (나중에 하기) goes
+straight there. The screen's language is at the top right of the first steps, and under
+Settings › General.
 
-## Preferences
+## Installing
 
-Settings › **Preferences** (개인 설정) sets how the clone behaves in their own work:
+sub-office runs on their own computer, so their clone can learn from what is there and work with
+their files and tools; what it keeps stays there. It needs Node.js 22.13 or later (nodejs.org).
+In a terminal, `npx -y sub-office` starts it and opens it in the browser; the window stays open while it
+runs, and the same line starts it again later. Invited by a teammate, the invite link's page shows
+the same steps with the one line that also joins their office (`office.md`).
 
-- **How much it does on its own** (혼자 해도 되는 정도): **Ask me first** (먼저 묻기, the default)
-  asks before reading a file, opening a web page or using a connected service; **Read on its own**
-  (읽기는 알아서) reads files (never in folders left out), web pages and connected services without
-  asking, and still asks before anything that changes something; **Do it, then tell me** (하고 나서
-  알려 주기) also acts in connected services and asks colleagues without asking first. In every
-  mode, files leaving the computer, flows, and work in their Claude Code conversations are shown
-  to them first, and colleagues' requests never use this: there, each kind of request has its own
-  trust level under Requests you take.
-- **New kinds of request start at** (새로 받는 부탁의 기본값): on its own, tell me, or ask me first.
-- **When kept questions come** (미뤄 둔 질문을 받을 때): the hours questions kept for later come
-  together, 10:00, 14:00 and 17:00 unless they choose others.
-- **Learn after each conversation** (대화가 끝나면 배우기): on by default; off, it learns only what
-  they tell it to remember.
-- **Lighter model for background work** (뒤에서 도는 일은 가벼운 모델로): looking back, summaries and
-  drafts on the brain's smaller model; off by default.
-- **Quiet hours** (방해 금지 시간) for the phone, and **Clock in at the lobby** (로비에서 출근하기).
+## Settings in more detail
+
+- **How much it does on its own** (혼자 해도 되는 정도, Settings › Permissions): **Ask me first**
+  (먼저 묻기, the default) asks before reading a file, opening a web page or using a connected
+  service; **Read on its own** (읽기는 알아서) reads files (never in folders left out), web pages and
+  connected services without asking, and still asks before anything that changes something; **Do
+  it, then tell me** (하고 나서 알려 주기) also acts in connected services and asks colleagues
+  without asking first. In every mode, files leaving the computer, flows, and work in their Claude
+  Code conversations are shown to them first, and colleagues' requests never use this: there,
+  each kind of request has its own trust level under Your clone › Requests it takes.
+- **New kinds of request start at** (새로 받는 부탁의 기본값, Your clone › Requests it takes): on its
+  own, tell me, or ask me first.
+- **When kept questions come** (미뤄 둔 질문을 받을 때, Settings › Notifications & phone): the hours
+  questions kept for later come to the phone together, 10:00, 14:00 and 17:00 unless they choose
+  others. On screen, they are under **Your turn** all the time.
+- **Learn after each conversation** (대화가 끝나면 배우기, Settings › Brain): on by default; off, it
+  learns only what they tell it to remember.
+- **Lighter model for background work** (뒤에서 도는 일은 가벼운 모델로, Settings › Brain): looking
+  back, summaries and drafts on the brain's smaller model; off by default.
+- **Quiet hours** (방해 금지 시간, Settings › Notifications & phone) for the phone, and **Clock in at
+  the lobby** (로비에서 출근하기, Settings › Office).
 
 ## What it can do now
 

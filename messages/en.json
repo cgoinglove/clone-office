@@ -139,11 +139,13 @@
       "link": "Invite link",
       "joinGo": "Join and continue",
       "openGo": "Open and continue",
-      "notLink": "That doesn't look like an invite link. Copy the whole link your teammate sent."
+      "notLink": "That doesn't look like an invite link. Copy the whole link your teammate sent.",
+      "invited": "{from} invited you to their office: your clone joins it when you go on.",
+      "invitedNobody": "You were invited to an office: your clone joins it when you go on."
     },
     "ready": {
       "title": "Your clone is ready",
-      "body": "Clock in at your office's lobby, and your clone is at its desk.",
+      "body": "It's waiting for you in the chat, with a few first steps.",
       "brain": "Thinks with",
       "claudeCode": "Claude Code",
       "learned": "Knows you",
@@ -155,7 +157,7 @@
       "joined": "Joined your team",
       "opened": "Open on this computer",
       "try": "Tell it what you need, as you would a colleague. It asks you before anything you have not allowed.",
-      "go": "Go to my office"
+      "go": "Start chatting"
     }
   },
   "firstRun": {
@@ -827,7 +829,7 @@
       },
       "brain": {
         "label": "Brain",
-        "hint": "What your clone thinks with: your subscription, an API key, or a model on this computer."
+        "hint": "What your clone thinks with, and how it learns."
       },
       "requests": {
         "label": "Requests you take",
@@ -842,12 +844,12 @@
         "hint": "Services your clone can work in, each through its maker's own connector."
       },
       "phone": {
-        "label": "Phone",
-        "hint": "Talk to your clone from Discord, Telegram or Slack, and get what waits on you there."
+        "label": "Notifications & phone",
+        "hint": "Get what waits on you on Discord, Telegram or Slack, and choose when it comes."
       },
       "permissions": {
         "label": "Permissions",
-        "hint": "What it may do without asking, and the folders it never reads."
+        "hint": "How much your clone does on its own, what it may do without asking, and the folders it never reads."
       },
       "office": {
         "label": "Office",
@@ -859,7 +861,7 @@
       },
       "general": {
         "label": "General",
-        "hint": "Language, theme, and this app."
+        "hint": "Language, theme, everything your clone keeps on this computer, and this app."
       }
     },
     "groups": {
@@ -973,6 +975,196 @@
       "quietHint": "Nothing goes to your phone in these hours; what waits is kept and comes when they end. Replies to what you write from your phone still come.",
       "quietFrom": "From",
       "quietTo": "to"
+    }
+  },
+  "shell": {
+    "nav": "Main menu",
+    "screens": {
+      "chat": "Chat",
+      "requests": "Requests",
+      "office": "Office",
+      "clone": "Your clone"
+    },
+    "chat": {
+      "new": "New chat",
+      "untitled": "Chat",
+      "hideRail": "Hide the office panel",
+      "showRail": "Show the office panel",
+      "placeholder": "Ask your clone anything. Name a colleague to ask their clone.",
+      "askColleague": "Ask a colleague",
+      "askWho": "Who should your clone ask?",
+      "askStarter": "Ask {name}: ",
+      "byLink": "Someone without a clone (by link)",
+      "linkStarter": "Make a reply link and ask: ",
+      "askSomeone": "Ask someone",
+      "everyTime": "Every so often",
+      "flowStarter": "Every weekday at 9am, "
+    },
+    "requests": {
+      "title": "Requests",
+      "hint": "What you and your colleagues ask each other. Your clone handles them and brings you only what's yours to decide.",
+      "hintHandled": "Of {count, plural, one {the # request} other {the # requests}} you received, your clone finished {handled} on its own.",
+      "ask": "Ask a colleague",
+      "side": "Which requests",
+      "all": "All",
+      "received": "Received",
+      "sent": "Sent",
+      "groups": {
+        "yours": "Your turn",
+        "working": "On its way",
+        "waiting": "Waiting on them",
+        "done": "Done"
+      },
+      "noAnswerYet": "No answer yet",
+      "notAnsweredYet": "Your clone is on it",
+      "sentTo": "You asked",
+      "receivedFrom": "They asked",
+      "askTitle": "Ask a colleague",
+      "askHint": "Your clone takes it to theirs. Files go only after you've seen them.",
+      "linkStarter": "Make a reply link and ask: ",
+      "empty": {
+        "title": "No requests yet",
+        "body": "When you or a colleague ask something, it lands here: your clone answers what it can and brings you only what's yours to decide.",
+        "bodyAlone": "Requests travel between clones. Until a colleague joins, you can ask anyone by a link: they answer on a page, nothing to install.",
+        "byLink": "Ask by a link",
+        "ask": "Ask a colleague",
+        "invite": "Invite a colleague"
+      }
+    },
+    "office": {
+      "title": "Office",
+      "line": "{count, plural, one {# person in} other {# people in}} · {moving, plural, =0 {nothing on its way} one {# request on its way} other {# requests on their way}}",
+      "alone": "Just you so far",
+      "invite": "Invite",
+      "setUp": "Set up your office",
+      "yourTurn": "Your turn",
+      "answerHere": "Answer right here",
+      "fromColleague": "{name}'s clone asks",
+      "fromClone": "Your clone asks",
+      "open": "Open"
+    },
+    "clone": {
+      "title": "Your clone",
+      "of": "{name}'s clone",
+      "hint": "Works the way you do",
+      "likeMe": "like you, last 30 days",
+      "views": "Views of your clone",
+      "tabs": {
+        "memory": "What it knows",
+        "menu": "Requests it takes",
+        "flows": "Flows"
+      }
+    },
+    "newChat": "New chat",
+    "yourTurn": "Your turn",
+    "yourTurnCount": "{count, plural, one {# waits on you} other {# wait on you}}",
+    "recentChats": "Recent chats",
+    "noChats": "Your conversations with your clone show up here.",
+    "chatWaits": "A question waits in this chat",
+    "cloneOf": "{name}'s clone",
+    "yourClone": "Your clone",
+    "learning": "Learning how you work · {percent}%",
+    "likeMe": "{percent}% like you",
+    "cloneHint": "Open your clone",
+    "statusLabel": "Your status: {status}",
+    "statusTitle": "Your status in the office",
+    "settings": "Settings",
+    "phase": {
+      "yours": "Your turn",
+      "working": "Working",
+      "waiting": "Waiting on them",
+      "done": "Done",
+      "failed": "Didn't go through"
+    },
+    "welcome": {
+      "hello": "Hi. I'm your clone.",
+      "helloName": "Hi {name}. I'm your clone.",
+      "body": "I take work off your hands the way you'd do it, and I answer colleagues for you. Anything that's yours to decide, I ask you first.",
+      "suggested": "Things I can do for you now",
+      "tryAsking": "Try asking",
+      "starter": {
+        "today": "Sum up what I worked on yesterday",
+        "help": "What can you do for me here?",
+        "know": "What do you know about how I work?",
+        "flow": "Every weekday at 9am, brief me on what needs me"
+      },
+      "steps": {
+        "title": "Getting started",
+        "hide": "Hide getting started",
+        "done": "Done",
+        "ask": {
+          "title": "Hand your clone a task",
+          "why": "Just say it, the way you'd ask a teammate.",
+          "do": "Write it"
+        },
+        "me": {
+          "title": "Tell your clone about you",
+          "why": "A few lines on how you work, so it answers colleagues like you would.",
+          "do": "Tell it",
+          "starter": "About me, so you can work the way I do: "
+        },
+        "team": {
+          "title": "Bring in a colleague",
+          "why": "Send an invite, or ask someone by a link with nothing to install.",
+          "do": "Invite"
+        },
+        "menu": {
+          "title": "Choose what colleagues can ask",
+          "why": "And how much your clone handles on its own for each kind.",
+          "do": "Choose"
+        },
+        "phone": {
+          "title": "Get what needs you on your phone",
+          "why": "Telegram, Discord or Slack, for when you're away from the screen.",
+          "do": "Connect"
+        }
+      }
+    },
+    "rail": {
+      "label": "The office now",
+      "office": "Office now",
+      "open": "Open",
+      "openOffice": "Open the office",
+      "someone": "someone",
+      "goingTo": "Your clone is taking a request to {name}",
+      "comingFrom": "{name}'s clone came by with a request",
+      "quiet": "Quiet for now",
+      "aloneTitle": "Ask anyone, even on your own",
+      "aloneBody": "Your clone can ask someone who has no clone by a link. They answer on the page, nothing to install, and the answer comes back here.",
+      "linkStarter": "Make a reply link and ask: ",
+      "linkAsk": "Ask by a link",
+      "invite": "Invite a colleague",
+      "setUp": "Set up your office",
+      "moving": "In motion",
+      "noneMoving": "Nothing on its way right now.",
+      "to": "To {name}",
+      "from": "From {name}",
+      "flows": "Today's flows",
+      "all": "All",
+      "noFlows": "Nothing scheduled today. Make one",
+      "flowStarter": "Every weekday at 9am, "
+    },
+    "request": {
+      "loading": "Loading…",
+      "gone": "This request is no longer in your office.",
+      "back": "Requests",
+      "sentTo": "You asked {name}",
+      "from": "{name} asked you",
+      "myClone": "Your clone",
+      "theirClone": "{name}'s clone",
+      "theyWork": "{name}'s clone is on it.",
+      "cloneWorks": "Your clone is on it.",
+      "yourTurn": "Your turn",
+      "addPlaceholder": "Add something for {name}'s clone",
+      "add": "Add",
+      "about": "About this request",
+      "to": "To",
+      "fromLabel": "From",
+      "takes": "What {name} takes",
+      "state": "Where it is",
+      "updated": "Last moved {at}",
+      "files": "Files",
+      "link": "Reply link"
     }
   }
 }

@@ -31,10 +31,16 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
   `Rows`, `Empty`); a new section uses them, so every section reads the same.
 
 ## The app's screens
-One screen around the office (`app/office`, `features/minime/home/`): the office full screen, a bar
-over its top, the box to ask the clone at its bottom, and a side panel (Chat, Requests). Everything
-else is a section of Settings (`features/minime/settings/settings.tsx`). The first steps are
-`app/start`. A new feature finds its place in one of these, not a page of its own.
+One frame around every screen (`app/(app)/layout.tsx`, `features/minime/shell/`): the column on the
+left (`sidebar.tsx`: new chat, Chat, Requests, Office, what waits on the person, recent chats, the
+clone, status, Settings) and the open screen: `/chat` first (`chat-screen.tsx`, with the office's
+live column `office-rail.tsx` and the getting-started list `welcome.tsx`), `/requests` and
+`/requests/[id]`, `/office` (the floor with the person's turn over it), `/clone` (what it knows,
+the requests it takes, flows). What the screens share lives in `app-state.tsx` (`useApp`); the
+shared parts of these screens are `parts.tsx` (`PageHeader`, `Mark`, `PhaseChip`, `DoneStamp`,
+`Flap`). Settings is one dialog of six sections (`features/minime/settings/settings.tsx`). The
+first steps are `app/start`. A new feature finds its place in one of these before it asks for a
+screen of its own, and the left column stays short.
 
 ## How it fits
 `components/ui` is shadcn in its Base UI style (`components.json`) plus the app's own parts; add a

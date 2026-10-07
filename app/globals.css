@@ -202,6 +202,11 @@
   html {
     @apply font-sans;
   }
+  /* Korean breaks a line between words, as it is read, never inside one. */
+  :lang(ko) {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
 
   button {
     @apply cursor-pointer;

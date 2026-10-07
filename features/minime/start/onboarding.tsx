@@ -63,6 +63,19 @@ export function Onboarding() {
   const [role, setRole] = useState("");
   const [team, setTeam] = useState<Team>("alone");
   const [invite, setInvite] = useState("");
+  // Started with `sub-office join <link>`: the invite is kept, and joining it is the way in.
+  const [invited, setInvited] = useState<{ from?: string } | null>(null);
+  useEffect(() => {
+    void fetch("/api/me/office", { headers: HEADERS })
+      .then((response) => response.json())
+      .then((data) => {
+        if (typeof data?.invite?.link !== "string") return;
+        setTeam("join");
+        setInvite(data.invite.link);
+        setInvited({ from: data.invite.from });
+      })
+      .catch(() => undefined);
+  }, []);
   const [office, setOffice] = useState<"alone" | "joined" | "opened">("alone");
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
@@ -146,7 +159,7 @@ export function Onboarding() {
       method: "POST",
       headers: HEADERS,
     }).catch(() => undefined);
-    router.push("/office");
+    router.push("/chat");
   };
 
   return (
@@ -247,6 +260,13 @@ export function Onboarding() {
                     aria-label={t("you.team")}
                   >
                     <span className="text-sm font-medium">{t("you.team")}</span>
+                    {invited && team === "join" && (
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {invited.from
+                          ? t("you.invited", { from: invited.from })
+                          : t("you.invitedNobody")}
+                      </p>
+                    )}
                     {(
                       [
                         ["alone", UserRound],

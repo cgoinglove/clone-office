@@ -7,7 +7,7 @@ they disconnect and set up the other.
 
 ## Setting it up, once
 
-Under Settings › **Phone** (휴대폰) they pick Discord, Telegram or Slack.
+Under Settings › **Notifications & phone** (알림과 휴대폰) they pick Discord, Telegram or Slack.
 
 With Telegram (no server needed):
 

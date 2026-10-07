@@ -30,6 +30,7 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { AccountError, type Accounts } from "./accounts.ts";
+import { isPrivateHost, joinCommand, osOf } from "./install.ts";
 import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
 import {
   confirmPage,
@@ -216,6 +217,15 @@ export function relayHandler(
     };
     const url = new URL(request.url ?? "/", "http://relay");
     const path = url.pathname;
+    /** How the invite's page guides someone to set up with its link, on the computer they opened it on. */
+    const guide = (key: string, who?: string) => {
+      const at = base();
+      return {
+        os: osOf(request.headers["user-agent"]),
+        command: joinCommand({ base: at, key, from: who }),
+        local: isPrivateHost(new URL(at).hostname),
+      };
+    };
     /**
      * The pages and calls of people with accounts. Answers whether it handled the request; an
      * invite's page without accounts is left to the plain invite page.
@@ -246,7 +256,10 @@ export function relayHandler(
             redirect("/home");
             return true;
           }
-          html(200, signUpPage({ lang, from: who, key, link }));
+          html(
+            200,
+            signUpPage({ lang, from: who, key, link, ...guide(key, who) }),
+          );
           return true;
         }
         const fields = new URLSearchParams(await raw(request));
@@ -268,6 +281,7 @@ export function relayHandler(
               from: who,
               key,
               link,
+              ...guide(key, who),
               error: code,
               name: filled.name,
               email: filled.email,
@@ -558,12 +572,20 @@ export function relayHandler(
         const proto =
           String(request.headers["x-forwarded-proto"] ?? "").split(",")[0] ||
           "http";
+        const origin = `${proto === "https" ? "https" : "http"}://${host}`;
         response.writeHead(200, PAGE_HEADERS);
         response.end(
           invitePage({
             lang,
             from: who || undefined,
-            link: `${proto === "https" ? "https" : "http"}://${host}${path}${url.search}`,
+            link: `${origin}${path}${url.search}`,
+            os: osOf(request.headers["user-agent"]),
+            command: joinCommand({
+              base: origin,
+              key: invite[1],
+              from: who || undefined,
+            }),
+            local: isPrivateHost(new URL(origin).hostname),
           }),
         );
         return;

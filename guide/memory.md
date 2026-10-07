@@ -33,13 +33,13 @@ the clone still keeps what it learns, and asks them, in theirs.
   Claude, Gemini or another. It asks that AI for everything it remembers; the clone sorts it. They
   paste that AI's answer back and press **Add to memory** (기억에 추가). The clone keeps only what
   will still be true in months (at most five lines each time) and never stores the pasted text. It
-  can be done during the first steps, or any time later under Settings › Your clone.
+  can be done during the first steps, or any time later under **Your clone** (내 클론) › What it knows.
 - **While working**: when they correct it ("shorter", "always ask before sending"), it keeps the
   correction in the skill for that kind of task, or in the lines about them when it applies to
   everything.
 - **After a piece of work**: it looks back over the conversation once and keeps what is worth
   keeping. Each thing it keeps shows as a **Kept:** (기억함:) line in the conversation. Settings ›
-  Preferences can turn this off (**Learn after each conversation**, 대화가 끝나면 배우기).
+  Brain can turn this off (**Learn after each conversation**, 대화가 끝나면 배우기).
 - **After a colleague's request they answered in**: their own words about it ("not Friday
   mornings, I keep them for focused work") are looked back on the same way; only what stays true
   is kept (never the date), shown as a **Kept:** line in their latest conversation.
@@ -47,25 +47,25 @@ the clone still keeps what it learns, and asks them, in theirs.
   before and goes on from that summary, as Claude Code compacts a long conversation. The line
   "I summed up what came before" (앞의 대화를 정리해 두었어요) shows when it happens. The whole
   conversation stays in its record and can still be searched.
-- **When they have used their AI tools a lot since it last read**: Settings › Your clone says how
+- **When they have used their AI tools a lot since it last read**: **Your clone** › What it knows says how
   many conversations are new, and **Read my AI records again** (내 AI 기록 다시 읽기) reads only
   those, keeping only what lasts, as the first time.
 - **Once a week**: skills it made and has not used for a month are set aside, never deleted.
 
 ## Seeing and changing it
 
-- **What it remembers** (기억하는 것) under Settings › **Your clone** (내 클론) shows every line it
+- **What it remembers** (기억하는 것) under **Your clone** (내 클론) › **What it knows** (아는 것) shows every line it
   keeps about them, exactly as saved. The pencil (**Correct**, 고치기) lets them write a line the
   way it should read; the clone then fixes it, in their words. The bin (**Remove**, 지우기) removes
   the line after one more press.
 - In the conversation they can simply say so: "forget that", "that's no longer true", "from now
   on, always…".
-- **Start over** (처음부터 다시), at the end of Settings › Your clone, moves everything it keeps into
+- **Start over** (처음부터 다시), at the end of **Your clone** › What it knows, moves everything it keeps into
   a backup folder and begins again from the first steps; folders they left out stay left out. When all it
   keeps came from reading their records (they have not talked with it, taught it or brought
   anything from another AI yet), there is nothing of theirs to keep, so it clears that instead of
   making a backup, and says so before they confirm; reading again brings it back.
-- Settings › **Files** (파일) lists every file the clone keeps on the computer, grouped by kind,
+- Settings › **General** (일반), under **Files** (파일), lists every file the clone keeps on the computer, grouped by kind,
   and opens each text file in place.
 - The files are theirs to read and edit with any text editor, in the `.sub-office` folder in their
   home folder.
@@ -78,8 +78,8 @@ the clone still keeps what it learns, and asks them, in theirs.
   one of their files or folders, and opening a web page. **Allow** (허락) or **Don't** (거절). With
   **Don't ask again for this** (앞으로 이런 건 묻지 않기), it reads that folder (or opens that site)
   alone from then on. Folders they left out stay out whatever they answer. Settings ›
-  Preferences can let it read on its own, or also act, without these cards (`index.md`,
-  "Preferences").
+  Permissions can let it read on its own, or also act, without these cards (`index.md`,
+  "Settings in more detail").
 - **It never does now**: changing their files, running programs, or sending anything to anyone.
 - **When only they can decide**, it asks with a card (**Needs you**, 답이 필요해요), with choices or
   their own answer, and waits up to ten minutes; without an answer it does not guess.
