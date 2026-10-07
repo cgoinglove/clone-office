@@ -64,19 +64,25 @@ How sub-office works for your person — what you can do for them now, what you 
 What your memory, skills and notes say about things that change may be out of date. When it matters, check the source (their files, conversation_search) and trust it over what you kept; then correct or remove what you kept.`;
 
 /** The skill index a session starts with: category, name and one-line description, as in Hermes. */
-/** The skills the app ships, brought into each skills folder once per process, before it is listed. */
+/** The skills the app ships, brought into each skills folder once per process. */
 const shippedSkills = new Map<string, Promise<unknown>>();
+
+/** Brings in the skills the app ships: when the server starts, and before a session lists them. */
+export function bringShippedSkills(): Promise<unknown> {
+  const store = new SkillStore(skillsDir());
+  let done = shippedSkills.get(store.dir);
+  if (!done) {
+    done = store
+      .syncBundled(join(/*turbopackIgnore: true*/ appDir(), "skills"))
+      .catch(() => undefined);
+    shippedSkills.set(store.dir, done);
+  }
+  return done;
+}
 
 async function skillIndex(): Promise<string> {
   const store = new SkillStore(skillsDir());
-  if (!shippedSkills.has(store.dir))
-    shippedSkills.set(
-      store.dir,
-      store
-        .syncBundled(join(/*turbopackIgnore: true*/ appDir(), "skills"))
-        .catch(() => undefined),
-    );
-  await shippedSkills.get(store.dir);
+  await bringShippedSkills();
   const index = await store.index();
   return `${SKILLS_GUIDANCE}\n${index || "(none yet)"}`;
 }
