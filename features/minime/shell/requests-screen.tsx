@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { Colleague } from "../home/colleague";
 import type { Task } from "../home/use-office";
 import { useApp } from "./app-state";
+import { OfficeTrouble } from "./office-trouble";
 import { Mark, PageHeader, type Phase, PhaseChip, phaseOf } from "./parts";
 import { taskOf } from "./your-turn";
 
@@ -88,6 +89,7 @@ export function RequestsScreen() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-8 pt-8 pb-12">
+        <OfficeTrouble />
         <PageHeader
           title={t("title")}
           hint={

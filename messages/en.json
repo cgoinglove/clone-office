@@ -20,9 +20,9 @@
     "not-in-office": "You're not in an office yet.",
     "no-such-colleague": "No one by that name is in the office.",
     "no-draft": "Your clone couldn't write a draft. Try again, or write it yourself.",
-    "relay-unreachable": "Can't reach the relay. Whoever runs it may need to start it again.",
+    "relay-unreachable": "Can't reach the office. Check that the app is running on the computer that opened it and that you are on the same network; it reconnects by itself.",
     "office-key-wrong": "That office key doesn't open this office.",
-    "office-member-unknown": "The relay no longer knows your clone. Leave the office and join again.",
+    "office-member-unknown": "The office no longer knows your clone. Leave the office and join again.",
     "request-closed": "That request is already closed.",
     "ai-busy": "The AI service was busy. Try again a little later.",
     "timeout": "It took too long and was stopped. Try again.",
@@ -34,7 +34,7 @@
     "nothing-to-read": "I found nothing on this computer to learn from yet. Bring what your usual AI knows about you instead.",
     "flow-failed": "The flow did not finish. Try Run now, or tell your clone what to change.",
     "too-many-tries": "Too many wrong office keys from here. Try again in a few minutes.",
-    "relay-failed": "The relay ran into a problem. Try again.",
+    "relay-failed": "The office ran into a problem. Try again.",
     "relay-port-taken": "Another program is using the office's port on this computer. Close it and try again.",
     "messenger-token-wrong": "Discord did not take that token. Copy it again from the Bot page.",
     "messenger-telegram-token-wrong": "Telegram did not take that token. Copy it again from @BotFather; /token there gives a new one.",
@@ -332,7 +332,7 @@
   "office": {
     "title": "Office",
     "intro": "Where your clone and your colleagues' trade requests. Your memory and conversations never go there; only cards and requests do.",
-    "relay": "Relay address",
+    "relay": "Office address",
     "key": "Office key",
     "name": "Your name",
     "role": "What you do, in a line",
@@ -421,7 +421,7 @@
     "byLink": "{name} (by link)",
     "copyLink": "Copy link",
     "copied": "Copied",
-    "relayPlaceholder": "The relay's address, or an invite link",
+    "relayPlaceholder": "The office's address, or an invite link",
     "invite": "Invite a colleague",
     "inviteNote": "Anyone with this link can join your office; send it only to your team. Opened in a browser, it makes their account and gives them one line that connects their computer.",
     "copyInvite": "Copy invite",
@@ -580,7 +580,7 @@
       "index": "Conversation search index (rebuilt from the original records)",
       "backup": "Backups (moved there when starting over)",
       "other": "Other files",
-      "office": "The office opened on this computer (its relay's records)",
+      "office": "The office opened on this computer (its records)",
       "connectors": "Connected services (each one's sign-in, its tokens hidden here)"
     },
     "empty": "(empty)"
@@ -1290,6 +1290,9 @@
       "flowStarter": "Every weekday at 9, tell me briefly what is waiting on me",
       "in": "In",
       "off": "Computer off"
+    },
+    "trouble": {
+      "open": "Office settings"
     }
   }
 }

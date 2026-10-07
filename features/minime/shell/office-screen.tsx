@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { OfficeRoom } from "@/features/office/room/office-room";
 import { useApp } from "./app-state";
 import { MeetingPanel, MeetingStart, useMeetings } from "./meeting";
+import { OfficeTrouble } from "./office-trouble";
 import { Flap, twoDigits } from "./parts";
 import { TurnRows } from "./turn-rows";
 import { type TurnItem, turnHref, yourTurn } from "./your-turn";
@@ -114,6 +115,7 @@ export function OfficeScreen() {
           </Button>
         </div>
       </header>
+      <OfficeTrouble className="mx-6 mt-3 shrink-0" />
       <div className="relative min-h-0 flex-1">
         {office.room && preferences && (
           <OfficeRoom

@@ -9,6 +9,11 @@
   their plan does not include, a limit reached). Try again, or pick another model under **Brain**.
 - **"The service did not accept that key"** or **"needs a key"**: the key was mistyped, removed or
   ran out of credit at the service. Make a new one there and paste it under **Brain** (두뇌).
+- **"Can't reach the office"** (오피스에 닿지 않아요), at the top of Home, Requests and Office: the
+  computer that opened the office is off, its app is closed, or they are on another network (an
+  office opened on a computer is reached on the same Wi-Fi). Once it answers again, everything
+  reconnects by itself; what came meanwhile waits there. **Office settings** (오피스 설정) shows the
+  office's address and, for an office opened on this computer, what went wrong.
 - **Learning takes long**: with years of AI conversations the first reading can take a minute;
   the page shows what it is doing and roughly how far along it is. It keeps going if they close
   or reload the page, and the page picks it up again when reopened.

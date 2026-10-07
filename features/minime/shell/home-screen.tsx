@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { HEADERS, statusText, type Task } from "../home/use-office";
 import { statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
+import { OfficeTrouble } from "./office-trouble";
 import { Mark, PhaseChip, phaseOf } from "./parts";
 import { askedText } from "./requests-screen";
 import { TurnRows } from "./turn-rows";
@@ -199,6 +200,7 @@ export function HomeScreen() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-8 pt-8 pb-14">
+        <OfficeTrouble />
         <header className="flex flex-col gap-1.5">
           <h1 className="text-[24px] leading-tight font-semibold tracking-tight text-balance">
             {app.name
