@@ -150,3 +150,21 @@ test("what was allowed from now on reads as the person would say it, and can be 
     rmSync(home, { recursive: true, force: true });
   }
 });
+
+test("'from now on' never covers the whole home or disk, a flow, or Claude Code work", () => {
+  const home = homedir();
+  assert.equal(ruleFor("Read", { file_path: join(home, ".zshrc") }), undefined);
+  assert.equal(ruleFor("Grep", { pattern: "x", path: "/" }), undefined);
+  assert.equal(
+    ruleFor("mcp__minime__flow_manage", { action: "create", name: "brief" }),
+    undefined,
+  );
+  assert.equal(
+    ruleFor("mcp__minime__work_session", { session: "api" }),
+    undefined,
+  );
+  assert.equal(
+    ruleFor("mcp__minime__ask_colleague", { to: "ana", text: "?" }),
+    "mcp__minime__ask_colleague",
+  );
+});

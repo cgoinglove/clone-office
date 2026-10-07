@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       : action === "pause"
         ? { ...flow, paused: true }
         : // Resuming starts from now: nothing missed while paused is made up.
-          { ...flow, paused: false, seen: now },
+          { ...flow, paused: false },
   );
   return Response.json({ ok: true });
 }

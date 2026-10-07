@@ -2,10 +2,11 @@
 // colleague's request of a kind comes in (then its request is how the person wants those handled,
 // and it is read while answering, never on a clock). The mini-me turns the person's words into
 // this shape (the code never reads their words), and times are the person's own, by this
-// computer's clock. A run missed while the computer slept or the app
-// was closed is caught up within half its period, at least 2 minutes and at most 2 hours (Hermes
-// Agent's catch-up window); later than that, it is noted as missed and the flow waits for its next
-// time.
+// computer's clock. A run missed while the computer slept or the app was closed is made up once,
+// as Hermes Agent makes up missed runs: on days at a time up to 12 hours late, every so many
+// minutes within half the period (2 hours at most), once within 2 minutes; later than that, it is
+// noted as missed and the flow waits for its next time. Resuming a paused flow keeps where it was,
+// so a time passed while it was paused follows the same rule.
 
 export type When =
   /** 0 is Sunday, 6 is Saturday; time is "HH:MM". Every day is all seven. */
@@ -133,9 +134,13 @@ export function nextRun(
 /** How late a missed run may still be made up: half its period, between 2 minutes and 2 hours. */
 export function catchUpMs(when: When): number {
   if (when.kind === "once" || when.kind === "request") return 2 * MINUTE;
-  const half =
-    when.kind === "every" ? (when.minutes * MINUTE) / 2 : 12 * 60 * MINUTE;
-  return Math.min(120 * MINUTE, Math.max(2 * MINUTE, half));
+  // On days at a time, the day's run is still made up to 12 hours late (a morning briefing when
+  // the laptop opens at eleven); every so many minutes, within half the period.
+  const window =
+    when.kind === "every"
+      ? Math.min(120 * MINUTE, (when.minutes * MINUTE) / 2)
+      : 12 * 60 * MINUTE;
+  return Math.max(2 * MINUTE, window);
 }
 
 export type Decision =

@@ -11,8 +11,10 @@ first (its name, when it runs and what it will do), and makes it only when they 
 On some days at a time, every so many hours or minutes (half an hour at the least, since each
 run uses their AI), or once. Times are their computer's clock. Flows run while the app is open:
 a run missed because the computer slept or the app was closed is made up when the app comes
-back, if it is not much later (up to two hours for a daily flow); otherwise it is noted as
-missed and the flow waits for its next time.
+back, once, if it is not much later (the same day, up to twelve hours, for a flow on set days;
+half the gap for one every so many minutes); otherwise it is noted as missed and the flow waits
+for its next time. Resuming a paused flow follows the same rule for a time passed while it was
+paused.
 
 ## When a colleague asks
 

@@ -75,20 +75,28 @@ test("the next time: on the listed days, by periods from when it was made, or on
   assert.equal(nextRun(once, at(2026, 10, 6, 15)), undefined);
 });
 
-test("a missed run is made up within half its period, at most two hours; later it is missed", () => {
+test("a missed run is made up within its window (a day's run 12 hours late); later it is missed", () => {
   const daily: When = {
     kind: "weekly",
     days: [0, 1, 2, 3, 4, 5, 6],
     time: "09:00",
   };
-  assert.equal(catchUpMs(daily), 2 * 60 * 60 * 1000);
+  assert.equal(catchUpMs(daily), 12 * 60 * 60 * 1000);
   assert.equal(catchUpMs({ kind: "every", minutes: 30 }), 15 * 60 * 1000);
   const made = at(2026, 10, 1, 12);
   // Opened at 09:40: made up.
   const late = decide(daily, made, at(2026, 10, 5, 9), at(2026, 10, 6, 9, 40));
   assert.ok(late.run && localStamp(late.slot) === "2026-10-06T09:00");
-  // Opened at 15:00: missed, and only today's slot counts.
-  const missed = decide(daily, made, at(2026, 10, 3, 9), at(2026, 10, 6, 15));
+  // Opened at 15:00: still made up the same day.
+  const afternoon = decide(
+    daily,
+    made,
+    at(2026, 10, 5, 9),
+    at(2026, 10, 6, 15),
+  );
+  assert.ok(afternoon.run);
+  // Opened at 22:00: missed, and only today's slot counts.
+  const missed = decide(daily, made, at(2026, 10, 3, 9), at(2026, 10, 6, 22));
   assert.ok(!missed.run && "missed" in missed);
   assert.equal(localStamp(missed.missed), "2026-10-06T09:00");
   // Already handled today: nothing.

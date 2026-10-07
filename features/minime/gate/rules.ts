@@ -25,11 +25,24 @@ async function readSettings(): Promise<Record<string, unknown>> {
   }
 }
 
+/**
+ * The clone's own tools asked every time, whatever was answered before: making or changing a flow,
+ * and work in a Claude Code conversation. "From now on" is never offered for them (Hermes Agent
+ * offers no lasting scope on a gate that asks every time either).
+ */
+export const ALWAYS_ASKED = new Set([
+  "mcp__minime__flow_manage",
+  "mcp__minime__work_session",
+]);
+
 export async function loadTrust(): Promise<string[]> {
   const settings = await readSettings();
   const allow = (settings.trust as { allow?: unknown } | undefined)?.allow;
   return Array.isArray(allow)
-    ? allow.filter((rule): rule is string => typeof rule === "string")
+    ? allow.filter(
+        (rule): rule is string =>
+          typeof rule === "string" && !ALWAYS_ASKED.has(rule),
+      )
     : [];
 }
 
@@ -74,10 +87,20 @@ export function ruleFor(
   tool: string,
   input: Record<string, unknown>,
 ): string | undefined {
-  if (tool === "Read" && typeof input.file_path === "string")
-    return `Read(${pathRule(dirname(input.file_path))}/**)`;
-  if ((tool === "Glob" || tool === "Grep") && typeof input.path === "string")
-    return `Read(${pathRule(input.path)}/**)`;
+  if (ALWAYS_ASKED.has(tool)) return undefined;
+  // A folder rule is never the whole home folder or the whole disk: a file there is asked each time.
+  const folder = (path: string) => {
+    const rule = pathRule(path);
+    return rule === "~" || rule === "//" || rule === "/" ? undefined : rule;
+  };
+  if (tool === "Read" && typeof input.file_path === "string") {
+    const at = folder(dirname(input.file_path));
+    return at ? `Read(${at}/**)` : undefined;
+  }
+  if ((tool === "Glob" || tool === "Grep") && typeof input.path === "string") {
+    const at = folder(input.path);
+    return at ? `Read(${at}/**)` : undefined;
+  }
   if (tool === "WebFetch" && typeof input.url === "string") {
     try {
       return `WebFetch(domain:${new URL(input.url).hostname})`;
@@ -90,8 +113,10 @@ export function ruleFor(
   if (
     (tool === "Edit" || tool === "Write" || tool === "NotebookEdit") &&
     typeof (input.file_path ?? input.notebook_path) === "string"
-  )
-    return `Edit(${pathRule(dirname(String(input.file_path ?? input.notebook_path)))}/**)`;
+  ) {
+    const at = folder(dirname(String(input.file_path ?? input.notebook_path)));
+    return at ? `Edit(${at}/**)` : undefined;
+  }
   // The mini-me's own tools that reach out, such as asking a colleague: the tool itself. Files
   // leaving this computer are asked every time.
   if (Array.isArray(input.files) && input.files.length) return undefined;

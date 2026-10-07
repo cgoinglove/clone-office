@@ -263,6 +263,10 @@ export async function accessToken(
           ...(again.server.resource
             ? { resource: new URL(again.server.resource) }
             : {}),
+          // Done well inside the lock's time, so another process never takes the lock and spends
+          // the same one-time refresh token (the loser would be signed out; Hermes Agent saw it).
+          fetchFn: (url, init) =>
+            fetch(url, { ...init, signal: AbortSignal.timeout(8_000) }),
         },
       ).catch(() => {
         throw new ConnectorError("connector-signed-out");

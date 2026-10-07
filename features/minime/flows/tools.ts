@@ -4,6 +4,7 @@
 // complete on its own, and changing a flow the person has rather than making a near-copy. A flow
 // may also be how the person wants a kind of colleague's request handled, read while answering one.
 
+import { threatMessage } from "../memory/threats.ts";
 import { loadMenu } from "../office/menu.ts";
 import { cleanWhen, localStamp, nextRun, type When } from "./schedule.ts";
 import {
@@ -159,6 +160,12 @@ export async function callFlowTool(
         "Too long to keep: a flow's name takes 80 characters and its request 4,000. Make it shorter and ask again.",
       isError: true,
     };
+  // What runs later with nobody watching is checked as memory is: no hidden instructions, no
+  // invisible characters behind what the card showed (Hermes Agent scans its jobs the same way).
+  const threat = threatMessage(
+    `${text(args.name, 80)}\n${text(args.what, 4000)}`,
+  );
+  if (threat) return { result: threat, isError: true };
   if (action === "create") {
     const flowName = text(args.name, 80);
     const what = text(args.what, 4000);
@@ -188,8 +195,7 @@ export async function callFlowTool(
   const changed = await changeFlow(id, (flow) => {
     if (action === "remove") return undefined;
     if (action === "pause") return { ...flow, paused: true };
-    if (action === "resume")
-      return { ...flow, paused: false, seen: now.toISOString() };
+    if (action === "resume") return { ...flow, paused: false };
     if (action === "update") {
       const when =
         args.when === undefined ? flow.when : cleanWhen(args.when, now);

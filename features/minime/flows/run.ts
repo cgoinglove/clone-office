@@ -21,7 +21,7 @@ import { tryLock } from "../memory/files.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { personLanguage } from "../server/language.ts";
 import { errorCode } from "../server/ndjson.ts";
-import { decide } from "./schedule.ts";
+import { type Decision, decide } from "./schedule.ts";
 import {
   changeFlow,
   type Flow,
@@ -124,27 +124,33 @@ export async function tick(
   if (!release) return [];
   const ran: string[] = [];
   try {
-    for (const flow of await listFlows()) {
-      if (flow.paused) continue;
-      const decision = decide(
-        flow.when,
-        new Date(flow.created),
-        flow.seen ? new Date(flow.seen) : undefined,
-        now,
-      );
-      const slot = decision.run
-        ? decision.slot
-        : "missed" in decision
-          ? decision.missed
-          : undefined;
-      if (!slot) continue;
-      await changeFlow(flow.id, (f) => ({
-        ...f,
-        seen: slot.toISOString(),
-        ...(decision.run
-          ? {}
-          : { last: { at: slot.toISOString(), ok: false, missed: true } }),
-      }));
+    for (const { id } of await listFlows()) {
+      // Decided and claimed on the flow as it is now, under its lock: another look that took the
+      // same time already (after a sleep outlived this one's lock, say) leaves nothing to run.
+      let decision: Decision = { run: false };
+      await changeFlow(id, (f) => {
+        if (f.paused) return f;
+        decision = decide(
+          f.when,
+          new Date(f.created),
+          f.seen ? new Date(f.seen) : undefined,
+          now,
+        );
+        const slot = decision.run
+          ? decision.slot
+          : "missed" in decision
+            ? decision.missed
+            : undefined;
+        if (!slot) return f;
+        return {
+          ...f,
+          seen: slot.toISOString(),
+          ...(decision.run
+            ? {}
+            : { last: { at: slot.toISOString(), ok: false, missed: true } }),
+        };
+      });
+      const flow = { id };
       if (!decision.run) continue;
       // One run failing never holds up the others due now.
       try {
