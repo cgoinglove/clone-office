@@ -49,6 +49,7 @@ import {
   readPreferences,
   writePreferences,
 } from "@/features/minime/server/preferences";
+import { readProfile } from "@/features/minime/server/profile";
 
 // The person's office as their screen sees it: who is there (their cards), the requests sent and
 // received, and the questions about those requests waiting for them. Asking also keeps this
@@ -136,6 +137,7 @@ const Card = z.object({
   name: z.string().trim().min(1).max(80),
   description: z.string().trim().max(600).default(""),
   status: z.string().trim().max(60).optional(),
+  owns: z.array(z.string().trim().min(1).max(80)).max(6).optional(),
   howToWork: z.array(z.string().trim().min(1).max(240)).max(12).optional(),
 });
 
@@ -216,9 +218,9 @@ export async function POST(request: Request) {
     if (input.action === "draft") {
       const problem = await brainProblem();
       if (problem) return Response.json({ error: problem }, { status: 409 });
-      const description = await draftCard(await personLanguage(input.locale));
-      return description
-        ? Response.json({ description })
+      const draft = await draftCard(await personLanguage(input.locale));
+      return draft
+        ? Response.json(draft)
         : Response.json({ error: "no-draft" }, { status: 502 });
     }
     if (input.action === "later") {
@@ -263,7 +265,13 @@ export async function POST(request: Request) {
     }
     if (input.action === "join" || input.action === "open") {
       const menu = await loadMenu();
-      const card = { ...input.card, skills: menuSkills(menu) };
+      // What they look after comes from their profile unless the page sent it.
+      const owns = input.card.owns ?? (await readProfile()).owns;
+      const card = {
+        ...input.card,
+        ...(owns?.length ? { owns } : {}),
+        skills: menuSkills(menu),
+      };
       const office =
         input.action === "open"
           ? await openHere(card)

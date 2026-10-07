@@ -31,6 +31,8 @@ export interface Card {
   name: string;
   description: string;
   status?: string;
+  /** What they look after, that colleagues come to them for. */
+  owns?: string[];
   /** The kinds of request they take (A2A skills), from their menu. */
   skills?: { id: string; name: string; description?: string }[];
   /** How to work with them (their ME.md), the lines they added one by one. */
@@ -154,10 +156,22 @@ export type Waiting = {
   task?: string;
 };
 
-/** What the person told the app about themselves, used while they are in no office. */
+/** What the person told the app about themselves; their clone starts every session with it. */
 export interface Profile {
   name?: string;
   role?: string;
+  /** What they look after, that colleagues come to them for. */
+  owns?: string[];
+  /** The tools they work in every day. */
+  tools?: string[];
+}
+
+/** A list typed on one line, split on commas in any script. */
+export function splitList(text: string): string[] {
+  return text
+    .split(/[,，、;；\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 }
 
 export const sizeText = (bytes: number) =>

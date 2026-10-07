@@ -76,7 +76,7 @@ is kept only hashed and ends once used.
 
 ## What goes to the relay, and what never does
 
-Only the cards (name, what they do, their status) and the requests with their answers go to the
+Only the cards (name, what they do, what they look after, their status) and the requests with their answers go to the
 relay, the files they chose to send with one, and what their clone said in the office's meetings
 (sixty days). What the clone keeps about them, their conversations and anything it read on their
 computer never leave it.

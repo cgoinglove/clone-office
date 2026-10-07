@@ -138,11 +138,16 @@
       "understood": "제가 이해한 당신",
       "example": "동료가 이렇게 물으면",
       "exampleAnswer": "저는 당신 대신 이렇게 답해요",
-      "editLater": "줄은 나중에 내 클론 › 제가 아는 당신에서 언제든 고치거나 지울 수 있어요."
+      "editLater": "줄은 나중에 내 클론 › 제가 아는 당신에서 언제든 고치거나 지울 수 있어요.",
+      "about": "제가 본 당신의 일",
+      "aboutRole": "하는 일",
+      "aboutOwns": "맡는 것",
+      "aboutTools": "쓰는 도구",
+      "aboutNext": "다음 단계에서 고칠 수 있어요."
     },
     "you": {
       "title": "나와 우리 팀",
-      "body": "클론이 나를 뭐라고 부를지, 함께할 팀이 있는지 알려 주세요.",
+      "body": "클론이 읽은 내 일을 확인하고, 함께할 팀이 있는지 알려 주세요.",
       "name": "이름",
       "role": "하는 일, 한 줄로",
       "rolePlaceholder": "예: 프로덕트 디자이너",
@@ -550,7 +555,12 @@
     "byLinkInstead": "초대 링크로 들어가기",
     "attach": "파일 붙이기",
     "removeFile": "빼기",
-    "fileTooLarge": "{name}은(는) 25MB가 넘어요."
+    "fileTooLarge": "{name}은(는) 25MB가 넘어요.",
+    "owns": "맡는 것",
+    "ownsPlaceholder": "예: 결제 API, 배포",
+    "tools": "쓰는 도구",
+    "toolsPlaceholder": "예: Figma, Notion, Claude Code",
+    "listHint": "쉼표로 나눠 적어요."
   },
   "files": {
     "title": "저장된 파일 전체",
@@ -909,8 +919,8 @@
       "importHint": "ChatGPT·Claude·Gemini에 글 하나를 보내고, 답을 여기 붙여 넣어요.",
       "bring": "가져오기",
       "about": "나에 대해",
-      "aboutHint": "클론이 나를 부르는 이름과 내가 하는 일. 오피스의 내 책상 이름이 돼요.",
-      "aboutInOffice": "동료들이 내 명함에서 보는 내용이에요.",
+      "aboutHint": "클론이 나를 부르는 이름, 하는 일, 맡는 것, 쓰는 도구. 클론은 모든 대화를 이걸 알고 시작해요.",
+      "aboutInOffice": "이름, 하는 일, 맡는 것은 동료가 보는 명함에 올라가요. 클론은 모든 대화를 이걸 다 알고 시작해요.",
       "save": "저장",
       "saved": "저장했어요",
       "startOver": "처음부터 다시",

@@ -22,3 +22,10 @@ test("the first reading also shows what the clone would answer a colleague, from
     800,
   );
 });
+
+test("the first reading says who they are at work, for them to confirm, not to keep as memory", () => {
+  assert.ok("about" in LEARN_SCHEMA.properties);
+  assert.ok(!LEARN_SCHEMA.required.includes("about"));
+  assert.match(LEARN_PROMPT, /this is not memory/);
+  assert.match(LEARN_PROMPT, /never a task in progress or its status/);
+});

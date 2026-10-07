@@ -116,7 +116,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   beside the office playing the app's loop with nobody real in it (`start/demo.ts`, data the office
   draws as any day), then its brain, the first reading with the folders left out (it ends on what
   it understood and what it would answer a colleague, `learn.ts` `example`), who they are and their
-  team (`server/profile.ts`, `settings.json` `profile`; an invite kept by the launcher is picked
+  team (`server/profile.ts`, `settings.json` `profile`: name, what they do, what they look after
+  and the tools they work in, filled in from what the reading saw (`learn.ts` `about`) for them to
+  correct, never memory; every session starts with it (`session.ts` `systemPrompt`,
+  `profileBlock`), and what they look after goes on the card as `owns`, which colleagues' clones
+  route by; an invite kept by the launcher is picked
   already, `office/invited.ts`)) and everyone else to `/home` (`/me`, the old page, sends to `/chat`); `server/onboarded.ts` says which (`settings.json` `onboarded`, or anything already
   learned, kept or said).
 - The app's screens share one frame (`app/(app)/layout.tsx`, `features/minime/shell/`), after

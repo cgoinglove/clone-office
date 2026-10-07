@@ -37,7 +37,7 @@ import {
 } from "../brain-panel";
 import { type Folder, FolderList, type LeftOut } from "../folder-list";
 import { useLearn } from "../home/use-learn";
-import { HEADERS } from "../home/use-office";
+import { HEADERS, splitList } from "../home/use-office";
 import { LanguageSwitch } from "../language-switch";
 import { parseInvite } from "../office/invite";
 import { BringFromAnotherAi } from "../settings/clone-section";
@@ -52,6 +52,7 @@ const COLUMN = 600;
 
 export function Onboarding() {
   const t = useTranslations("start");
+  const tOffice = useTranslations("office");
   const problemText = useProblem();
   const router = useRouter();
   const [step, setStep] = useState<"hello" | Step>("hello");
@@ -61,6 +62,16 @@ export function Onboarding() {
   const learn = useLearn(lang);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
+  const [owns, setOwns] = useState("");
+  const [tools, setTools] = useState("");
+  // What the reading saw of their work fills in what they have not typed, for them to correct.
+  const about = learn.about;
+  useEffect(() => {
+    if (!about) return;
+    setRole((was) => was || about.role);
+    setOwns((was) => was || about.owns.join(", "));
+    setTools((was) => was || about.tools.join(", "));
+  }, [about]);
   const [team, setTeam] = useState<Team>("alone");
   const [invite, setInvite] = useState("");
   // Started with `sub-office join <link>`: the invite is kept, and joining it is the way in.
@@ -125,10 +136,19 @@ export function Onboarding() {
       await fetch("/api/me/profile", {
         method: "POST",
         headers: HEADERS,
-        body: JSON.stringify({ name: name.trim(), role: role.trim() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          role: role.trim(),
+          owns: splitList(owns),
+          tools: splitList(tools),
+        }),
       }).catch(() => undefined);
       if (team !== "alone") {
-        const card = { name: name.trim(), description: role.trim() };
+        const card = {
+          name: name.trim(),
+          description: role.trim(),
+          owns: splitList(owns),
+        };
         const response = await fetch("/api/me/office", {
           method: "POST",
           headers: HEADERS,
@@ -252,6 +272,31 @@ export function Onboarding() {
                         placeholder={t("you.rolePlaceholder")}
                         onChange={(event) => setRole(event.target.value)}
                       />
+                    </label>
+                    <label className="flex flex-col gap-1.5 sm:col-span-2">
+                      <span className="text-xs text-muted-foreground">
+                        {tOffice("owns")}
+                      </span>
+                      <Input
+                        value={owns}
+                        maxLength={400}
+                        placeholder={tOffice("ownsPlaceholder")}
+                        onChange={(event) => setOwns(event.target.value)}
+                      />
+                    </label>
+                    <label className="flex flex-col gap-1.5 sm:col-span-2">
+                      <span className="text-xs text-muted-foreground">
+                        {tOffice("tools")}
+                      </span>
+                      <Input
+                        value={tools}
+                        maxLength={400}
+                        placeholder={tOffice("toolsPlaceholder")}
+                        onChange={(event) => setTools(event.target.value)}
+                      />
+                      <span className="text-xs text-muted-foreground">
+                        {tOffice("listHint")}
+                      </span>
                     </label>
                   </div>
                   <div
@@ -748,6 +793,34 @@ function LearnStep({
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+          {done && learn.about && (
+            <div className="flex animate-in flex-col gap-2 duration-500 fade-in">
+              <span className="text-xs font-medium text-muted-foreground">
+                {t("learn.about")}
+              </span>
+              <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-sm">
+                {(
+                  [
+                    ["aboutRole", learn.about.role],
+                    ["aboutOwns", learn.about.owns.join(", ")],
+                    ["aboutTools", learn.about.tools.join(", ")],
+                  ] as const
+                )
+                  .filter(([, value]) => value)
+                  .map(([key, value]) => (
+                    <div key={key} className="contents">
+                      <dt className="text-muted-foreground">
+                        {t(`learn.${key}`)}
+                      </dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+              </dl>
+              <span className="text-xs text-muted-foreground">
+                {t("learn.aboutNext")}
+              </span>
             </div>
           )}
           {done && learn.example && (

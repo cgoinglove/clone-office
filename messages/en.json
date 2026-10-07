@@ -138,11 +138,16 @@
       "understood": "What I understood about you",
       "example": "If a colleague asks",
       "exampleAnswer": "I'd answer for you",
-      "editLater": "Change or remove any line later under Your clone › What I know about you."
+      "editLater": "Change or remove any line later under Your clone › What I know about you.",
+      "about": "Your work, as I read it",
+      "aboutRole": "What you do",
+      "aboutOwns": "What you look after",
+      "aboutTools": "Tools you work in",
+      "aboutNext": "You can change these on the next step."
     },
     "you": {
       "title": "You and your team",
-      "body": "What should your clone call you, and is there a team to join?",
+      "body": "Check what your clone read about your work, and say whether there is a team to join.",
       "name": "Your name",
       "role": "What you do, in a line",
       "rolePlaceholder": "e.g. Product designer",
@@ -550,7 +555,12 @@
     "byLinkInstead": "Join with an invite link instead",
     "attach": "Attach files",
     "removeFile": "Remove",
-    "fileTooLarge": "{name} is larger than 25 MB."
+    "fileTooLarge": "{name} is larger than 25 MB.",
+    "owns": "What you look after",
+    "ownsPlaceholder": "e.g. payments API, releases",
+    "tools": "Tools you work in",
+    "toolsPlaceholder": "e.g. Figma, Notion, Claude Code",
+    "listHint": "Separate with commas."
   },
   "files": {
     "title": "All files I keep",
@@ -909,8 +919,8 @@
       "importHint": "Send one prompt to ChatGPT, Claude or Gemini, and paste the answer here.",
       "bring": "Bring",
       "about": "About you",
-      "aboutHint": "What your clone calls you, and what you do. It names your desk in the office.",
-      "aboutInOffice": "Colleagues see this on your card.",
+      "aboutHint": "What your clone calls you, what you do, what you look after and the tools you work in. Your clone starts every conversation knowing this.",
+      "aboutInOffice": "Your name, what you do and what you look after are on the card colleagues see. Your clone starts every conversation knowing all of it.",
       "save": "Save",
       "saved": "Saved",
       "startOver": "Start over",

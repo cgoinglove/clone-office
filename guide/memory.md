@@ -11,6 +11,12 @@ The clone keeps four small things, all as plain text files on this computer:
   client, with what they corrected. Opened only when that kind of task comes up.
 - **Notes**: one page per person they work with, opened only when that person comes up.
 
+Beside these is **About you** (나에 대해, on the clone's screen): their name, what they do, what
+they look after and the tools they work in. It is not memory: they set it themselves, on the first
+steps or there (**Draft it for me**, 초안 써 줘, fills it in from their records), and change it
+whenever it stops being true. Every conversation starts with it, so the clone knows whose work it
+does; their name, what they do and what they look after also go on their card in the office.
+
 ## What it never keeps
 
 - **Anything that changes or can be found again on the computer**: projects and how far along

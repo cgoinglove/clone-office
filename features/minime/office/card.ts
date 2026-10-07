@@ -1,21 +1,35 @@
 // A first draft of the person's card for their office, so they correct a line instead of writing
-// it from nothing (product 2.2): what they do and look after, in a line, so a colleague's mini-me
-// knows when to come to them. The mini-me writes it from what it knows of them and their recent
+// it from nothing (product 2.2): what they do, what they look after and the tools they work in, so a
+// colleague's clone knows when to come to them. The mini-me writes it from what it knows of them and their recent
 // conversations; nothing is shared until the person joins with the line they settled on.
 
 import { runSession } from "../brain/session.ts";
+import { cleanAbout } from "../server/profile.ts";
 
 export const CARD_SCHEMA = {
   type: "object",
-  properties: { description: { type: "string" } },
-  required: ["description"],
+  properties: {
+    description: { type: "string" },
+    owns: { type: "array", items: { type: "string" }, maxItems: 4 },
+    tools: { type: "array", items: { type: "string" }, maxItems: 6 },
+  },
+  required: ["description", "owns", "tools"],
 };
 
-export const CARD_PROMPT = `Your person is joining their team's office, where colleagues' clones find whom to ask by each person's card. Draft the one line on their card: what they do and what they look after, so a colleague's clone knows when to come to them. Use what you know of them and their recent conversations (search them). Write it in their language, in plain words, at most about 100 characters, in the first person as they would put it. Leave out anything private and anything they would be surprised to see shared.`;
+/** What a teammate would read about the person, as both the first reading and a draft ask it. */
+export const ABOUT_WORDS = `\`description\` is the one line on their card: what they do, as they would put it ("Backend developer on the payments team", "Freelance illustrator"), at most about 100 characters. \`owns\` is up to four things they look after that colleagues would come to them for: a system, a product area, a kind of work ("payments API", "Android releases", "client contracts"), never a task in progress or its status. \`tools\` is up to six tools they work in every day, by name (apps, services, AI tools). Only what you can see clearly; leave a list empty rather than guess.`;
+
+export const CARD_PROMPT = `Your person's colleagues, and their clones, find whom to ask by each person's card. Draft what goes on theirs, from what you know of them and their recent conversations (search them). ${ABOUT_WORDS} Write in their language, in plain words, in the first person for the line. Leave out anything private and anything they would be surprised to see shared.`;
+
+export interface CardDraft {
+  description: string;
+  owns: string[];
+  tools: string[];
+}
 
 export async function draftCard(
   language?: string,
-): Promise<string | undefined> {
+): Promise<CardDraft | undefined> {
   const result = await runSession({
     prompt: CARD_PROMPT,
     jsonSchema: CARD_SCHEMA,
@@ -23,9 +37,15 @@ export async function draftCard(
     maxTurns: 8,
     purpose: "card",
   });
-  const draft = (result.structured as { description?: string } | undefined)
-    ?.description;
-  return result.ok && draft?.trim() ? draft.trim().slice(0, 200) : undefined;
+  if (!result.ok) return undefined;
+  const about = cleanAbout({
+    ...(result.structured as Record<string, unknown> | undefined),
+    role: (result.structured as { description?: unknown } | undefined)
+      ?.description,
+  });
+  return about
+    ? { description: about.role, owns: about.owns, tools: about.tools }
+    : undefined;
 }
 
 export const WAYS_SCHEMA = {

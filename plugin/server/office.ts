@@ -75,7 +75,7 @@ export const TOOLS: Tool[] = [
   {
     name: "colleagues",
     description:
-      "Who is in your person's office: each colleague's clone, with what that colleague does, the kinds of request they take, how they like to be worked with (follow it when asking them), their status, and whether their clone is around now. Look here before asking someone.",
+      "Who is in your person's office: each colleague's clone, with what that colleague does, what they look after (ask whoever looks after the thing in question), the kinds of request they take, how they like to be worked with (follow it when asking them), their status, and whether their clone is around now. Look here before asking someone.",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -391,8 +391,9 @@ async function colleagues(office: Office): Promise<ToolResult> {
               : skill.name,
           )
           .join("; ");
+        const owns = (m.card.owns ?? []).join("; ");
         const ways = (m.card.howToWork ?? []).join("; ");
-        return `- ${m.card.name} (${m.id}): ${m.card.description || "no description"}${status} · ${around}${takes ? `\n  takes: ${takes}` : ""}${ways ? `\n  how to work with them: ${ways}` : ""}`;
+        return `- ${m.card.name} (${m.id}): ${m.card.description || "no description"}${status} · ${around}${owns ? `\n  looks after: ${owns}` : ""}${takes ? `\n  takes: ${takes}` : ""}${ways ? `\n  how to work with them: ${ways}` : ""}`;
       })
       .join("\n"),
   );

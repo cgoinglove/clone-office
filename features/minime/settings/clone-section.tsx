@@ -23,7 +23,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import type { Learn } from "../home/use-learn";
-import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
+import {
+  HEADERS,
+  type OfficeState,
+  type Profile,
+  splitList,
+} from "../home/use-office";
 import { EXPORT_PROMPT } from "../learn/export-prompt";
 import { stream } from "../stream";
 import { Empty, Group, Groups, Rows } from "./parts";
@@ -186,16 +191,31 @@ function AboutYou({
   const card = office.office?.joined ? office.office.me?.card : undefined;
   const [name, setName] = useState(card?.name ?? profile.name ?? "");
   const [role, setRole] = useState(card?.description ?? profile.role ?? "");
+  const ownsNow = (card?.owns ?? profile.owns ?? []).join(", ");
+  const toolsNow = (profile.tools ?? []).join(", ");
+  const [owns, setOwns] = useState(ownsNow);
+  const [tools, setTools] = useState(toolsNow);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   useEffect(() => {
     setName(card?.name ?? profile.name ?? "");
     setRole(card?.description ?? profile.role ?? "");
-  }, [card?.name, card?.description, profile.name, profile.role]);
+    setOwns(ownsNow);
+    setTools(toolsNow);
+  }, [
+    card?.name,
+    card?.description,
+    profile.name,
+    profile.role,
+    ownsNow,
+    toolsNow,
+  ]);
   const changed =
     name.trim() !== (card?.name ?? profile.name ?? "") ||
-    role.trim() !== (card?.description ?? profile.role ?? "");
+    role.trim() !== (card?.description ?? profile.role ?? "") ||
+    splitList(owns).join(", ") !== ownsNow ||
+    splitList(tools).join(", ") !== toolsNow;
 
   const draft = async () => {
     setDrafting(true);
@@ -206,8 +226,13 @@ function AboutYou({
         body: JSON.stringify({ action: "draft", locale: lang }),
       });
       const data = await response.json().catch(() => ({}));
-      if (response.ok && typeof data.description === "string")
-        setRole(data.description);
+      if (!response.ok) return;
+      if (typeof data.description === "string") setRole(data.description);
+      // A draft fills in only what is still empty: what they typed stays theirs.
+      if (Array.isArray(data.owns))
+        setOwns((was) => was.trim() || data.owns.join(", "));
+      if (Array.isArray(data.tools))
+        setTools((was) => was.trim() || data.tools.join(", "));
     } finally {
       setDrafting(false);
     }
@@ -219,14 +244,24 @@ function AboutYou({
       const response = await fetch("/api/me/profile", {
         method: "POST",
         headers: HEADERS,
-        body: JSON.stringify({ name: name.trim(), role: role.trim() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          role: role.trim(),
+          owns: splitList(owns),
+          tools: splitList(tools),
+        }),
       });
       if (response.ok) onProfile(await response.json());
       // In an office, the card colleagues see changes with it.
       if (card && name.trim())
         await office.post({
           action: "card",
-          card: { ...card, name: name.trim(), description: role.trim() },
+          card: {
+            ...card,
+            name: name.trim(),
+            description: role.trim(),
+            owns: splitList(owns),
+          },
         });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -280,6 +315,33 @@ function AboutYou({
               {tOffice("draft")}
             </Button>
           </div>
+        </label>
+        <label className="flex flex-col gap-1.5 sm:col-span-2">
+          <span className="text-xs text-muted-foreground">
+            {tOffice("owns")}
+          </span>
+          <Input
+            value={owns}
+            maxLength={400}
+            placeholder={tOffice("ownsPlaceholder")}
+            disabled={drafting}
+            onChange={(e) => setOwns(e.target.value)}
+          />
+        </label>
+        <label className="flex flex-col gap-1.5 sm:col-span-2">
+          <span className="text-xs text-muted-foreground">
+            {tOffice("tools")}
+          </span>
+          <Input
+            value={tools}
+            maxLength={400}
+            placeholder={tOffice("toolsPlaceholder")}
+            disabled={drafting}
+            onChange={(e) => setTools(e.target.value)}
+          />
+          <span className="text-xs text-muted-foreground">
+            {tOffice("listHint")}
+          </span>
         </label>
         <div className="flex items-center gap-2 sm:col-span-2">
           <Button type="submit" disabled={busy || !changed} loading={busy}>

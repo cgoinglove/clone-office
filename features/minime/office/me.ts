@@ -17,6 +17,13 @@ export function mePath(): string {
 export function meMarkdown(card: Card, menu: MenuItem[]): string {
   const lines = [`# ${card.name}`, ""];
   if (card.description) lines.push(card.description, "");
+  if (card.owns?.length)
+    lines.push(
+      "## What I look after",
+      "",
+      ...card.owns.map((area) => `- ${area}`),
+      "",
+    );
   if (card.howToWork?.length)
     lines.push(
       "## How to work with me",

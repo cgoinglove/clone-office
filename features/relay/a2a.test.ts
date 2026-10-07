@@ -35,6 +35,7 @@ async function join(name: string, key = "a2a-key") {
         { id: "review", name: "Code review", description: "Looks at a change" },
       ],
       howToWork: ["Short questions first"],
+      owns: ["Receipts service"],
     },
   });
   return { token, ...(await relay.memberByToken(token)) } as Caller & {
@@ -90,6 +91,7 @@ test("a member is an A2A agent: its card, to office members only", async () => {
   const shown = (await card.json()) as Record<string, any>;
   assert.equal(shown.name, "Ben");
   assert.match(shown.description, /Short questions first/);
+  assert.match(shown.description, /Looks after: Receipts service/);
   assert.deepEqual(shown.supportedInterfaces, [
     {
       url: `${base}/a2a/${ben.id}`,

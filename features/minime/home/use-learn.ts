@@ -35,6 +35,8 @@ export interface LearnState {
   routines: Routine[];
   /** What the clone would answer a colleague in the person's place, from the last reading. */
   example?: { question: string; answer: string };
+  /** Who they are at work, as the last reading saw it, for them to confirm. */
+  about?: { role: string; owns: string[]; tools: string[] };
   /** How many new conversations are worth reading again, when it has been a while. */
   fresh: number;
   problem: string | null;
@@ -90,6 +92,7 @@ export function useLearn(lang: string, onDone?: () => void) {
           tasks: (event.tasks as LearnState["tasks"]) ?? [],
           routines: (event.routines as Routine[] | undefined) ?? [],
           example: event.example as LearnState["example"],
+          about: event.about as LearnState["about"],
         }));
         done.current?.();
         break;

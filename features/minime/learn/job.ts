@@ -9,6 +9,7 @@ import type { SessionEvent } from "../brain/session.ts";
 import { catchUpIndex } from "../history/indexer.ts";
 import type { Routine } from "../routine.ts";
 import { errorCode } from "../server/ndjson.ts";
+import type { About } from "../server/profile.ts";
 import type { SourceReport } from "./gather.ts";
 import {
   type Example,
@@ -31,6 +32,8 @@ export type LearnEvent =
       routines: Routine[];
       /** What the clone would answer a colleague in their place. */
       example?: Example;
+      /** Who they are at work, as the reading saw it, for them to confirm. */
+      about?: About;
       at: string;
       /** Conversations with their AI tools since this learning, to offer reading again. */
       fresh?: number;
@@ -88,6 +91,7 @@ export function startLearn(options: {
               tasks: result.tasks,
               routines: result.routines,
               ...(result.example ? { example: result.example } : {}),
+              ...(result.about ? { about: result.about } : {}),
               at: new Date().toISOString(),
             }
           : {
@@ -132,6 +136,7 @@ export async function savedLearn(): Promise<LearnEvent | undefined> {
     tasks: last.tasks ?? [],
     routines: last.routines ?? [],
     ...(last.example ? { example: last.example } : {}),
+    ...(last.about ? { about: last.about } : {}),
     at: last.at,
     fresh: freshConversations(Date.parse(last.at)),
   };

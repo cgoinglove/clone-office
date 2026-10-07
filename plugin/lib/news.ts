@@ -46,6 +46,8 @@ export interface Member {
     name: string;
     description: string;
     status?: string;
+    /** What they look after, that colleagues come to them for. */
+    owns?: string[];
     /** The kinds of request they take (A2A skills). */
     skills?: { id: string; name: string; description?: string }[];
     /** How to work with them (their ME.md lines). */

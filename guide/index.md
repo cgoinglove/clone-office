@@ -86,9 +86,10 @@ answers from their records, and only the call that is theirs comes to them) besi
 playing it out, and **Get started** (시작하기). Four steps follow: what it thinks with
 (`brain.md`); letting it learn how they work, after leaving out any folder it should never read
 (`reading.md`, `memory.md`): when it has read, it shows **What I understood about you** (제가 이해한
-당신), the lines it kept, and, under **If a colleague asks** (동료가 이렇게 물으면), what it would
-answer a colleague in their place (with no AI records on the computer, it simply learns as they
-work); what to call them and whether a team is in it (`office.md`; started from an invite, it says
+당신), the lines it kept, **Your work, as I read it** (제가 본 당신의 일: what they do, what they
+look after, the tools they work in), and, under **If a colleague asks** (동료가 이렇게 물으면), what
+it would answer a colleague in their place (with no AI records on the computer, it simply learns as
+they work); who they are (name, and their work as it read it, to correct) and whether a team is in it (`office.md`; started from an invite, it says
 who invited them and joins that office); then Home. **Skip this step** (이 단계 건너뛰기) at the
 bottom passes over the step on screen only. The screen's language is at the top right of the first
 steps, and under Settings › General.

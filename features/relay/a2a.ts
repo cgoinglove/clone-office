@@ -71,12 +71,15 @@ export function agentCard(
   url: string,
 ): Record<string, unknown> {
   const card: Card = member.card;
+  const owns = card.owns?.length
+    ? `\n\nLooks after: ${card.owns.join("; ")}`
+    : "";
   const ways = card.howToWork?.length
     ? `\n\nHow to work with them:\n${card.howToWork.map((line) => `- ${line}`).join("\n")}`
     : "";
   return {
     name: card.name,
-    description: `${card.description || `${card.name}'s clone`}${ways}`,
+    description: `${card.description || `${card.name}'s clone`}${owns}${ways}`,
     supportedInterfaces: [
       { url, protocolBinding: "JSONRPC", protocolVersion: PROTOCOL_VERSION },
     ],

@@ -68,6 +68,8 @@ export interface Card {
     description: string;
     examples?: string[];
   }[];
+  /** What the person looks after, that colleagues come to them for: how a clone finds whom to ask. */
+  owns?: string[];
   /** Working, in a meeting, off: what the person is doing now, as they set it. */
   status?: string;
   /** How to work with the person (their ME.md), in lines they confirmed one by one. */
@@ -1380,6 +1382,14 @@ function cleanCard(card: Card): Card {
                 }
               : {}),
           })),
+        }
+      : {}),
+    ...(Array.isArray(card.owns)
+      ? {
+          owns: card.owns
+            .slice(0, 6)
+            .map((area) => String(area).trim().slice(0, 80))
+            .filter(Boolean),
         }
       : {}),
     ...(card.status ? { status: String(card.status).slice(0, 60) } : {}),

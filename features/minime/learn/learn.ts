@@ -5,7 +5,8 @@
 // stale copy is worse than none, and the conversation index and the files are there to search when
 // needed (Claude Code's auto memory skips what can be derived; Hermes keeps short-lived facts in
 // session history, not memory). Notes and skills are learned later, while working together. The
-// session also offers three things to do together right away, so the first experience is doing
+// session also says who they are at work (what they do, look after and work in) for them to confirm
+// onto their profile, which is theirs to change and not memory, and offers three things to do together right away, so the first experience is doing
 // work, not filling in a form; the screen shows the memory itself, as it is saved.
 // What was read and when is recorded, so the next learning reads only what is new (f6).
 
@@ -19,8 +20,10 @@ import {
 import { openHistoryForRead } from "../history/db.ts";
 import { atomicWrite, readText } from "../memory/files.ts";
 import { MemoryStore } from "../memory/store.ts";
+import { ABOUT_WORDS, CARD_SCHEMA } from "../office/card.ts";
 import { cleanRoutines, type Routine } from "../routine.ts";
 import { minimeHome } from "../server/paths.ts";
+import { type About, cleanAbout } from "../server/profile.ts";
 import { gather, type Material } from "./gather.ts";
 
 const LEARN_FILE = "learn.json";
@@ -32,6 +35,8 @@ Keep only a few short memory entries that the material shows clearly and that wi
 Keep nothing that can change or can be found again on their computer: projects and their status, goals, plans, dates, versions, folders and files, tools, who is doing what. A saved copy of those goes stale and misleads you later; you can always look them up when you need them. Make no notes and no skills now — you will learn those while working with them. When unsure, keep nothing.
 
 Then offer, in \`tasks\`, three things you can do for them right now with what you have — their past AI conversations, which you can search and read, your memory, this app's guide, the web, their files when they allow it, and their own Claude Code conversations, which you can ask — chosen from what they are actually doing: pulling together what they decided or left open, finding how they handled something before, drafting something the way they write it. When the material shows little of what they do, offer what you can do from what you know of them, such as drafting a message the way they write. Never suggest changing files, running commands or using another app; you cannot do those on your own. Each is a short label and why; the label is sent to you as their request when they tap it, so write it as that request.
+
+Then, in \`about\`, say who they are at work, for them to confirm and put on their profile (this is not memory; they keep or change it). ${ABOUT_WORDS}
 
 Then, in \`example\`, show them what you will do for their colleagues: one question a colleague might really ask them about their own current work, as the material shows it, and the short answer you would give in their place, in their language, saying in a few words where you found it ("from your conversations about the payments API yesterday"). Only from what the material shows; if it shows nothing a colleague would ask about, leave it out.
 
@@ -54,6 +59,11 @@ export const LEARN_SCHEMA = {
         properties: { label: { type: "string" }, why: { type: "string" } },
         required: ["label", "why"],
       },
+    },
+    about: {
+      type: "object",
+      properties: CARD_SCHEMA.properties,
+      required: CARD_SCHEMA.required,
     },
     example: {
       type: "object",
@@ -114,6 +124,8 @@ export interface LearnResult {
   tasks: Task[];
   routines: Routine[];
   example?: Example;
+  /** Who they are at work, as the reading saw it, for them to confirm (not memory). */
+  about?: About;
   sessionId?: string;
 }
 
@@ -126,6 +138,7 @@ interface LearnRecord {
     tasks?: Task[];
     routines?: Routine[];
     example?: Example;
+    about?: About;
   };
 }
 
@@ -261,10 +274,15 @@ export async function learn(options: {
     tasks?: Task[];
     routines?: unknown;
     example?: unknown;
+    about?: { description?: unknown };
   };
   const tasks = Array.isArray(structured.tasks) ? structured.tasks : [];
   const routines = cleanRoutines(structured.routines);
   const example = cleanExample(structured.example);
+  const about = cleanAbout({
+    ...structured.about,
+    role: structured.about?.description,
+  });
   const kept =
     result.ok && Array.isArray(structured.memory)
       ? await keep(structured.memory, options.onEvent)
@@ -282,6 +300,7 @@ export async function learn(options: {
             tasks,
             routines,
             ...(example ? { example } : {}),
+            ...(about ? { about } : {}),
           },
         },
         null,
@@ -296,6 +315,7 @@ export async function learn(options: {
     tasks,
     routines,
     ...(example ? { example } : {}),
+    ...(about ? { about } : {}),
     sessionId: result.sessionId,
   };
 }
