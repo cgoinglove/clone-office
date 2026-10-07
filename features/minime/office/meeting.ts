@@ -9,7 +9,7 @@
 // never instructions.
 
 import { runSession } from "../brain/session.ts";
-import { appendMessage, createChat } from "../chat/store.ts";
+import { appendMessage, createChat, setSession } from "../chat/store.ts";
 import { readPreferences } from "../server/preferences.ts";
 import { CHECK_SCHEMA, checkPrompt } from "./check.ts";
 import {
@@ -277,11 +277,14 @@ export async function bringBack(
     if (post.text.trim())
       await appendMessage(
         chat.id,
-        "office",
+        "meeting",
         `${post.from === me ? office.card.name : nameOf(names, post.from)}: ${post.text.trim()}`,
       );
   if (result.ok && digest.note?.trim())
     await appendMessage(chat.id, "minime", digest.note.trim());
+  // Asked about it later, the clone goes on from the session that read the whole meeting.
+  if (result.ok && result.sessionId)
+    await setSession(chat.id, result.sessionId, result.context);
   await changeState((state) => {
     state.meetings[meeting.id] = {
       ...state.meetings[meeting.id],

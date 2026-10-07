@@ -11,6 +11,7 @@ import { minimeHome } from "../server/paths.ts";
  * "office": an answer from a colleague's mini-me to a request sent from this conversation.
  * "told": what the mini-me answered a colleague for the person, told to them ("do it and tell me").
  * "flow": one of the person's flows ran (its name); the mini-me's answer follows.
+ * "meeting": what a clone said in a meeting of the office's clones, its person's name first.
  */
 export type ChatRole =
   | "me"
@@ -19,7 +20,8 @@ export type ChatRole =
   | "error"
   | "office"
   | "told"
-  | "flow";
+  | "flow"
+  | "meeting";
 
 export interface ChatMessage {
   role: ChatRole;

@@ -130,7 +130,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   `/requests` (`requests-screen.tsx`: grouped by whose turn it is, from the A2A states) and
   `/requests/[id]` (`request-screen.tsx`: the clones' exchange, the person's turn answered in
   place, files, the colleague); `/office` (`office-screen.tsx`: the floor, its lobby once a day,
-  with the person's turn laid over it to answer there); `/clone` (`clone-screen.tsx`: what it
+  with the person's turn laid over it to answer there, and the clones' meeting beside it while one
+  goes on, round by round, started from its header: `meeting.tsx`); `/clone` (`clone-screen.tsx`: what it
   knows, the requests it takes, flows). `parts.tsx` holds the screens' own marks (`PhaseChip`,
   `DoneStamp`, the split-flap `Flap`). `use-office.ts` is the office as the screens read it;
   `home/colleague.tsx` asks a colleague with files. `use-learn.ts` follows a reading wherever it
@@ -319,7 +320,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   clone mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks,
   commons, lift, the departures board, the floor sign), `floor.mjs` (the library plan, walking
   on a grid), `office.mjs` (`createOffice`: sheets, scenes, camera, panel, and the lobby with
-  its lift ride, once a day; `setInset` keeps room at the sides for what the page lays over it,
+  its lift ride, once a day; a meeting of the clones (`RoomData.meeting`) gathers its members round
+  the reading corner's low table, where they take turns, what each said over its head, and go back
+  once the last word is read; `setInset` keeps room at the sides for what the page lays over it,
   `onPanel` and `closePanel` let the page's own panel and the office's take turns), `looks.mjs`
   (each clone's colour and shape, for lists outside the floor). Full screen (`of-full`) it fills
   its frame; `of-pane` fills the office screen and `of-mini` is the chat's small live view, with

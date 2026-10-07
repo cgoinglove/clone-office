@@ -61,7 +61,11 @@
     "brain-unreachable": "서비스에 닿지 않았어요. 잠시 뒤 다시 해 주세요.",
     "brain-local-unreachable": "그 주소에서 아무것도 답하지 않아요. Ollama나 LM Studio가 켜져 있나요?",
     "brain-chatgpt-signed-out": "클론이 내 ChatGPT 요금제로 생각해요. \"두뇌\"에서 다시 로그인해 주세요.",
-    "chatgpt-unreachable": "OpenAI에 닿지 않았어요. 잠시 뒤 다시 해 주세요."
+    "chatgpt-unreachable": "OpenAI에 닿지 않았어요. 잠시 뒤 다시 해 주세요.",
+    "meeting-alone": "지금 오피스에 다른 사람이 없어서 회의를 열 수 없어요.",
+    "meeting-closed": "이미 끝난 회의예요.",
+    "meeting-said": "내 클론은 이번 회차에 이미 말했어요.",
+    "meeting-not-in": "내 클론은 이 회의에 들어 있지 않아요."
   },
   "start": {
     "title": "시작하기",
@@ -255,7 +259,8 @@
     "turns": "{count}번 말함",
     "fromColleague": "부탁한 것의 답",
     "told": "대신 답했어요",
-    "flowRan": "플로우 ‘{name}’ ({at})"
+    "flowRan": "플로우 ‘{name}’ ({at})",
+    "fromMeeting": "회의에서 한 말"
   },
   "ask": {
     "needsYou": "답이 필요해요",
@@ -510,6 +515,9 @@
         "foot": "클론은 이 컴퓨터에서 일해요.",
         "floors": "1–{count}층",
         "yourFloor": "우리 층"
+      },
+      "meeting": {
+        "on": "회의 중"
       }
     },
     "openHere": "이 컴퓨터에서 열기",
@@ -906,7 +914,20 @@
       "off": "꺼짐",
       "in": "출근",
       "startTitle": "오피스 시작하기",
-      "leaveHint": "내 클론이 이 오피스에서 나가요. 동료가 더는 부탁할 수 없어요. 초대 링크로 다시 들어올 수 있어요."
+      "leaveHint": "내 클론이 이 오피스에서 나가요. 동료가 더는 부탁할 수 없어요. 초대 링크로 다시 들어올 수 있어요.",
+      "meetings": {
+        "title": "클론 회의",
+        "hint": "내 클론이 아침 회의나 모두에게 묻기에서 동료의 클론들과 만나요. 내 기록에서 찾은 내 일을 말하고, 나와 관련된 것만 가져와요.",
+        "take": "내 클론 참여시키기",
+        "takeHint": "말한 내용은 오피스 사람 모두가 봐요. 회의를 직접 열면 저절로 켜져요.",
+        "daily": "매일 아침 회의",
+        "dailyHint": "오피스 전체에 적용돼요. 정한 요일, 정한 시각에 오피스에 있는 클론들이 하루 한 번 모여요.",
+        "time": "시각",
+        "save": "저장",
+        "none": "매일 회의 없음",
+        "set": "{days} {time}",
+        "remove": "매일 회의 그만하기"
+      }
     },
     "requests": {
       "toOffice": "오피스 준비하기",
@@ -1143,7 +1164,8 @@
       "flows": "오늘의 플로우",
       "all": "모두",
       "noFlows": "오늘 정해진 일이 없어요. 만들기",
-      "flowStarter": "평일 아침 9시마다 "
+      "flowStarter": "평일 아침 9시마다 ",
+      "meeting": "회의 중 · {rounds}회차 중 {round}회차"
     },
     "request": {
       "loading": "불러오는 중…",
@@ -1166,6 +1188,33 @@
       "updated": "마지막으로 바뀐 때 {at}",
       "files": "파일",
       "link": "답장 링크"
+    },
+    "meeting": {
+      "standup": "아침 회의",
+      "question": "모두에게 묻기",
+      "start": "아침 회의 시작",
+      "ask": "모두에게 묻기",
+      "askPlaceholder": "모두의 클론에게 무엇을 물을까요?",
+      "askSend": "묻기",
+      "on": "진행 중 · {rounds}회차 중 {round}회차",
+      "over": "끝남 · {time}",
+      "roundStandup1": "1회차 · 한 일, 할 일, 필요한 것",
+      "roundStandup2": "2회차 · 내 일과 닿는 것만",
+      "roundQuestion1": "1회차 · 답",
+      "roundQuestion2": "2회차 · 덧붙임",
+      "asks": "{name}의 클론이 묻습니다",
+      "cloneOf": "{name}의 클론",
+      "yours": "내 클론",
+      "to": "{name}에게",
+      "passed": "덧붙일 것 없음: {names}",
+      "waiting": "클론 {count}명을 기다리는 중",
+      "nothingYet": "클론들이 각자 기록을 찾아보는 중이에요…",
+      "back": "나에게 온 정리",
+      "sittingOut": "내 클론은 이번 회의에 빠져 있어요.",
+      "letIn": "참여하게 하기",
+      "latest": "지난 회의",
+      "close": "닫기",
+      "hint": "클론들은 각자 사람의 실제 기록을 보고 회차마다 한 마디씩 말해요. 끝나면 각자 자기 사람에게 관련된 것만 가져가요."
     }
   }
 }

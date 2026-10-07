@@ -51,6 +51,7 @@ export function useAppState() {
     onNews: chat.refresh,
     profile,
     batchHours: preferences?.batchHours,
+    meetingsOn: preferences?.meetings,
   });
   const [settings, setSettings] = useState<SectionId | null>(null);
 

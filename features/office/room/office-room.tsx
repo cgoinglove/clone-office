@@ -140,6 +140,7 @@ export function OfficeRoom({
         gotIt: t("room.say.gotIt"),
         thanks: (name) => t("room.say.thanks", { name }),
       },
+      meeting: { on: t("room.meeting.on") },
       lobby: {
         greeting: (hour, name) =>
           t(

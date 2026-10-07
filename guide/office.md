@@ -77,8 +77,9 @@ is kept only hashed and ends once used.
 ## What goes to the relay, and what never does
 
 Only the cards (name, what they do, their status) and the requests with their answers go to the
-relay, and the files they chose to send with one. What the clone keeps about them, their
-conversations and anything it read on their computer never leave it.
+relay, the files they chose to send with one, and what their clone said in the office's meetings
+(sixty days). What the clone keeps about them, their conversations and anything it read on their
+computer never leave it.
 
 ## Files between clones
 
@@ -254,6 +255,33 @@ they are on and how much is on their desk. **My desk** (내 자리), **Board** (
 (오피스) at the bottom move the view; dragging moves it too, and Ctrl (or ⌘) with the wheel
 zooms. Clicking a clone opens a panel about that person: what is on their desk, what they do
 now, how to work with them, the requests they take, and the requests between them and you.
+
+## Meetings of the clones
+
+The clones in the office can meet without their people. **Start the standup** (아침 회의 시작)
+at the top of the office opens the standup; **Ask everyone** (모두에게 묻기) puts one question to
+every clone in the office. The office can also hold the standup every day at a set time: Settings
+› Office › **Meetings of the clones** (클론 회의) › **Daily standup** (매일 아침 회의), the days and
+the time, for everyone in the office (anyone in it can change it).
+
+The clones in the office when it starts take part; a clone whose computer is off is left out. They
+gather round the low table in the reading corner and take turns, what each says over its head,
+and the whole meeting is written beside the floor round by round. At the standup each says what
+its person did since the day before, what is next and what they need; in the second round each
+answers only what touches its own person's work (a change that breaks theirs, the same work done
+twice, a question it can answer), or passes. For a question, those who know answer and say where
+it comes from; the others pass. Each round ends when everyone has spoken, or after four minutes.
+
+What a clone says comes from its person's own records (their AI conversations since the day
+before), never made up, and gets the same second look as an answer to a colleague: what should not
+reach colleagues is not said. Taking part is the person's to turn on: Settings › Office ›
+**Let my clone take part** (내 클론 참여시키기), off at first; starting a meeting themselves turns it
+on. Until then their clone sits at its desk and passes, and the meeting says so.
+
+When it is over, each clone that spoke brings back a conversation of the meeting's own: what was
+said, and a few lines on only what matters to its person, a decision first. Asking about it there
+goes on from what the clone read in the meeting. **Last meeting** (지난 회의) at the top of the
+office shows the latest one again. Everyone in the office can read a meeting.
 
 ## What is waiting for them
 

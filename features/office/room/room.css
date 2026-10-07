@@ -931,6 +931,12 @@
   font-size: 12.5px;
   border-radius: 12px;
 }
+/* what a mini-me says in a meeting: read from afar, so a little smaller */
+.of-wrap .bub.meet {
+  max-width: 230px;
+  padding: 7px 11px 8px;
+  font-size: 12.5px;
+}
 .of-wrap .bub.small .who {
   display: none;
 }

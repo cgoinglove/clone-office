@@ -11,6 +11,7 @@ import {
   CircleAlert,
   Clock,
   CornerDownRight,
+  MessagesSquare,
   Sparkles,
   Users,
 } from "lucide-react";
@@ -214,15 +215,22 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
       );
     case "office":
     case "told":
+    case "meeting":
       return (
         <li className="flex flex-col gap-1.5 rounded-xl border border-border bg-background px-3.5 py-3 text-[14.5px]">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             {turn.kind === "office" ? (
               <Users className="size-3.5" />
+            ) : turn.kind === "meeting" ? (
+              <MessagesSquare className="size-3.5" />
             ) : (
               <CornerDownRight className="size-3.5" />
             )}
-            {turn.kind === "office" ? tChat("fromColleague") : tChat("told")}
+            {turn.kind === "office"
+              ? tChat("fromColleague")
+              : turn.kind === "meeting"
+                ? tChat("fromMeeting")
+                : tChat("told")}
           </span>
           <span className="whitespace-pre-wrap wrap-break-word">
             {turn.text}

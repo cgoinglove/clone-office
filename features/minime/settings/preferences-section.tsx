@@ -231,7 +231,7 @@ export function PreferencesSection({
   );
 }
 
-function Toggle({
+export function Toggle({
   icon,
   title,
   body,

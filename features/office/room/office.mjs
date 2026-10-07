@@ -456,11 +456,13 @@ export function createOffice(
         add(th.x0 - 0.6, th.y, th.x1 + 0.6, th.y + 6.2, 6.2, t0, (t) =>
           sofaSvg(th.x0, th.y, th.x1, t),
         );
-      else if (th.kind === "lowtable")
+      else if (th.kind === "lowtable") {
         add(th.x0, th.y0, th.x1, th.y1, 4, t0, (t) =>
           lowTableSvg(th.x0, th.y0, th.x1, th.y1, t),
         );
-      else if (th.kind === "plant")
+        // the reading corner's low table is where a meeting of the mini-mes gathers
+        fl.meetAt = [(th.x0 + th.x1) / 2, (th.y0 + th.y1) / 2];
+      } else if (th.kind === "plant")
         add(
           th.x - 2.4,
           th.y - 2.4,
@@ -835,7 +837,8 @@ export function createOffice(
           ? "away"
           : p.mood === "working" ||
               p.doing?.kind === "ask" ||
-              p.doing?.kind === "answer"
+              p.doing?.kind === "answer" ||
+              p.doing?.kind === "meeting"
             ? "work"
             : "free";
   const RANK = { ask: 0, work: 1, free: 2, away: 3, off: 4 };
@@ -844,6 +847,7 @@ export function createOffice(
     const d = p.doing;
     if (d && (d.kind === "ask" || d.kind === "answer"))
       return W.board.to(d.who.name);
+    if (d?.kind === "meeting") return W.meeting.on;
     if (p.task) return p.task;
     if (p.waitOn) return W.board.wait(p.waitOn);
     return "";
@@ -1880,6 +1884,161 @@ export function createOffice(
     }
   }
 
+  // ---- a meeting of the mini-mes: those in it gather round the reading corner's low table, each
+  // says its piece over its head as it comes in, and they go back to their desks once it is over
+  let meet = null;
+  /** Places round the low table for `n` mini-mes, on the side away from the shelf. */
+  function meetSeats(fl, n) {
+    const c = fl.meetAt;
+    if (!c) return [];
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const ring = Math.floor(i / 8),
+        inRing = Math.min(8, n - ring * 8),
+        a = -0.12 * Math.PI + (1.24 * Math.PI * ((i % 8) + 0.5)) / inRing;
+      out.push([
+        c[0] + Math.cos(a) * (12 + ring * 6),
+        c[1] + Math.sin(a) * (8 + ring * 5),
+      ]);
+    }
+    return out;
+  }
+  async function joinMeeting(p, seat, center) {
+    await until(() => !p.busy);
+    if (!meet?.open || !meet.members.has(p.id) || !here(p)) return;
+    p.busy = true;
+    p.doing = { kind: "meeting" };
+    meet.going.add(p.id);
+    try {
+      if (p.seated) await wait(200);
+      await walkTo(p, seat);
+      lookAt(p, { pos: center });
+      meet.at.add(p.id);
+      const said = meet.waiting.get(p.id);
+      if (said) {
+        meet.waiting.delete(p.id);
+        speak(p, said);
+      }
+      if (!meet.open) await leaveMeeting(p);
+    } catch (e) {
+      p.busy = false;
+      p.doing = null;
+      throw e;
+    }
+  }
+  async function leaveMeeting(p) {
+    if (p.doing?.kind !== "meeting") return;
+    try {
+      await wait(400 + Math.random() * 900);
+      await walkTo(p, p.desk.seat);
+      p.seated = true;
+      p.pos = [...p.desk.seat];
+      leap(p, "tap");
+    } finally {
+      p.busy = false;
+      p.doing = null;
+      p.bot.gaze = null;
+      settle(p);
+    }
+  }
+  /**
+   * One post said over its mini-me's head. The meeting has one floor: each waits for the one
+   * before to be read, as people take turns, and an answer looks at whom it answers.
+   */
+  function speak(p, post) {
+    const m = meet;
+    if (!m) return;
+    m.queue.push([p, post]);
+    if (!m.speaking)
+      spawn(async () => {
+        m.speaking = true;
+        try {
+          while (m.queue.length) {
+            const [who, said] = m.queue.shift();
+            const to = said.replyTo && m.posts.get(said.replyTo);
+            const other = to && people.get(to.from);
+            if (other && other !== who && here(other)) lookAt(who, other);
+            leap(who, "bounce");
+            const ms = 5500 + Math.min(4500, said.text.length * 28);
+            say(who, clip(said.text, 96), ms, "say meet");
+            await wait(ms - 400);
+          }
+        } finally {
+          m.speaking = false;
+        }
+      });
+  }
+  /** Brings the floor in line with the office's meeting: who gathers, who speaks, when they go back. */
+  function syncMeeting(m) {
+    if (!m) {
+      if (meet?.open) endMeeting();
+      meet = null;
+      return;
+    }
+    if (!meet || meet.id !== m.id) {
+      if (meet?.open) endMeeting();
+      // what was said before this view saw the meeting is not said again, but its last words are
+      const before = new Set(m.posts.slice(0, -1).map((post) => post.id));
+      meet = {
+        id: m.id,
+        open: false,
+        members: new Set(m.members),
+        going: new Set(),
+        at: new Set(),
+        said: before,
+        waiting: new Map(),
+        posts: new Map(),
+        queue: [],
+        speaking: false,
+      };
+    }
+    for (const post of m.posts) meet.posts.set(post.id, post);
+    if (m.state === "open" && !meet.open && plan) {
+      meet.open = true;
+      const fl = floors[plan.index],
+        center = fl.meetAt,
+        gathering = m.members
+          .map((id) => people.get(id))
+          .filter(
+            (p) =>
+              p &&
+              p.present &&
+              p.floor === plan.index &&
+              !(p.mine && m.mineOut),
+          ),
+        seats = meetSeats(fl, gathering.length);
+      if (center)
+        gathering.forEach((p, i) =>
+          spawn(() => joinMeeting(p, seats[i], center)),
+        );
+    }
+    for (const post of m.posts) {
+      if (meet.said.has(post.id)) continue;
+      meet.said.add(post.id);
+      const p = people.get(post.from);
+      if (!p || !post.text.trim() || !here(p)) continue;
+      // one still on its way says it once it sits down
+      if (meet.going.has(p.id) && !meet.at.has(p.id))
+        meet.waiting.set(p.id, post);
+      else speak(p, post);
+    }
+    if (m.state === "closed" && meet.open) endMeeting();
+  }
+  function endMeeting() {
+    const m = meet;
+    if (!m) return;
+    m.open = false;
+    // everyone stays until the last word is read, then goes back to their desk
+    spawn(async () => {
+      await until(() => !m.speaking && !m.queue.length);
+      await wait(1200);
+      for (const id of m.at) {
+        const p = people.get(id);
+        if (p) spawn(() => leaveMeeting(p));
+      }
+    });
+  }
+
   // ---- camera
   function screenBounds(bx) {
     let a0 = Infinity,
@@ -2055,11 +2214,13 @@ export function createOffice(
       now =
         d && (d.kind === "ask" || d.kind === "answer")
           ? W.plate.goingTo(d.who.name)
-          : p.taskFull
-            ? W.panel.workingOn(p.taskFull)
-            : p.waitOn
-              ? W.panel.waitingFor(p.waitOn)
-              : "";
+          : d?.kind === "meeting"
+            ? W.meeting.on
+            : p.taskFull
+              ? W.panel.workingOn(p.taskFull)
+              : p.waitOn
+                ? W.panel.waitingFor(p.waitOn)
+                : "";
     body += `<div class="pblock"><small>${esc(W.panel.now)}</small><ul class="rows">${now ? `<li><i></i>${esc(now)}</li>` : `<li class="none">${esc(p.status === "offline" ? W.panel.notIn(p.name) : W.panel.free)}</li>`}</ul></div>`;
     if (!p.mine && p.ways?.length)
       body += `<div class="pblock"><small>${esc(W.panel.ways(p.name))}</small><ul class="rows">${p.ways
@@ -2533,6 +2694,7 @@ export function createOffice(
     const d = p.doing;
     if (d && (d.kind === "ask" || d.kind === "answer"))
       return [W.plate.goingTo(d.who.name), "on"];
+    if (d?.kind === "meeting") return [W.meeting.on, "on"];
     if (p.mood === "working") return [`${W.plate.working}${more}`, "on"];
     if (p.status === "away") return [`${W.plate.away}${more}`, ""];
     return [`${W.plate.free}${more}`, ""];
@@ -2554,7 +2716,11 @@ export function createOffice(
           onFloor &&
           inside &&
           simT >= p.popAt + 0.6 &&
-          (detail || p.mine || b.kind.includes("mine"));
+          // a meeting is watched from afar too: what the mini-mes say there always shows
+          (detail ||
+            p.mine ||
+            b.kind.includes("mine") ||
+            b.kind.includes("meet"));
         if (b.el.hidden === show) b.el.hidden = !show;
         if (show)
           b.el.style.transform = `translate(${r1(hx)}px, ${r1(hy - 4)}px) translate(-50%, -100%)`;
@@ -3138,6 +3304,8 @@ export function createOffice(
         next.requests.map((r) => [r.id, r.state + (r.held ? "+" : "")]),
       );
       reset(roster);
+      meet = null;
+      syncMeeting(next.meeting);
       return;
     }
     const animate = !!before && inView && opened && !REDUCED;
@@ -3159,6 +3327,7 @@ export function createOffice(
         queue(r.id, () => answerBack(r));
     }
     applyData();
+    syncMeeting(next.meeting);
     if (lobbyOn) fillCard();
   }
   function tick(dt, now) {

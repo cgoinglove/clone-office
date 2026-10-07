@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { roomData, statusCode } from "./room-data";
+import { currentMeeting, roomData, statusCode } from "./room-data";
 
 const now = Date.parse("2026-10-06T12:00:00Z");
 const seen = (ago: number) => new Date(now - ago).toISOString();
@@ -110,4 +110,49 @@ test("requests between members carry their words, their answer, and whether the 
     count: 2,
     text: "Share the invoices with Ben?",
   });
+});
+
+test("the floor shows a meeting while it goes on and a little after, the viewer's clone at its desk when it sits out", () => {
+  const now = Date.parse("2026-10-07T09:40:00Z");
+  const meeting = (state: "open" | "closed", closed?: string) => ({
+    id: "meet",
+    state,
+    members: ["me", "ana"],
+    ...(closed ? { closed } : {}),
+    posts: [
+      { id: "p1", from: "ana", round: 1, text: "Shipped the retry." },
+      { id: "p2", from: "me", round: 1, text: "" },
+    ],
+  });
+  const office = (meetings: ReturnType<typeof meeting>[]) => ({
+    me: { id: "me" },
+    members: [],
+    meetings,
+  });
+  assert.equal(currentMeeting(office([]), now), undefined);
+  assert.equal(currentMeeting(office([meeting("open")]), now)?.id, "meet");
+  assert.equal(
+    currentMeeting(office([meeting("closed", "2026-10-07T09:39:00Z")]), now)
+      ?.id,
+    "meet",
+  );
+  assert.equal(
+    currentMeeting(office([meeting("closed", "2026-10-07T09:30:00Z")]), now),
+    undefined,
+  );
+  const shown = roomData(office([meeting("open")]), 0, undefined, now, true);
+  assert.deepEqual(shown.meeting, {
+    id: "meet",
+    state: "open",
+    members: ["me", "ana"],
+    posts: [
+      { id: "p1", from: "ana", round: 1, text: "Shipped the retry." },
+      { id: "p2", from: "me", round: 1, text: "" },
+    ],
+    mineOut: true,
+  });
+  assert.equal(
+    roomData(office([meeting("open")]), 0, undefined, now).meeting?.mineOut,
+    undefined,
+  );
 });

@@ -17,6 +17,8 @@ export interface Preferences {
   lobby: boolean;
   lightBackground: boolean;
   quiet: { on: boolean; from: number; to: number };
+  /** Take part in the office's meetings of the clones. */
+  meetings: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -27,6 +29,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   lobby: true,
   lightBackground: false,
   quiet: { on: false, from: 22, to: 7 },
+  meetings: false,
 };
 
 export function usePreferences() {

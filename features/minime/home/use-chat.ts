@@ -20,6 +20,7 @@ export type Turn =
   | { id: number; kind: "note"; text: string }
   | { id: number; kind: "office"; text: string }
   | { id: number; kind: "told"; text: string }
+  | { id: number; kind: "meeting"; text: string }
   | { id: number; kind: "flow"; text: string; at: string }
   | {
       id: number;
@@ -89,6 +90,7 @@ export function useChat(lang: string) {
         if (m.role === "saved") return { id, kind: "saved", text: m.text };
         if (m.role === "office") return { id, kind: "office", text: m.text };
         if (m.role === "told") return { id, kind: "told", text: m.text };
+        if (m.role === "meeting") return { id, kind: "meeting", text: m.text };
         if (m.role === "flow")
           return { id, kind: "flow", text: m.text, at: m.at };
         return { id, kind: "error", text: m.text };

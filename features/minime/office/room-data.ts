@@ -1,6 +1,7 @@
-// What the office room draws, from what the relay says: the members at their desks and the
-// requests between them that the viewer is part of. What colleagues ask each other stays between
-// them; a request asked by a link (someone without a mini-me) has no desk to go to.
+// What the office room draws, from what the relay says: the members at their desks, the requests
+// between them that the viewer is part of, and the office's meeting of the clones while it goes
+// on. What colleagues ask each other stays between them; a request asked by a link (someone
+// without a mini-me) has no desk to go to.
 
 import type { RoomData } from "@/features/office/room/office.mjs";
 
@@ -50,6 +51,54 @@ export interface OfficeLook {
     history: Message[];
     metadata: { from: string; to: string };
   }[];
+  /** The office's latest meetings of the clones, newest first. */
+  meetings?: {
+    id: string;
+    state: "open" | "closed";
+    members: string[];
+    closed?: string;
+    posts: {
+      id: string;
+      from: string;
+      round: number;
+      replyTo?: string;
+      text: string;
+    }[];
+  }[];
+}
+
+/** A meeting just over stays on the floor this long, so its last words are read. */
+const MEETING_AFTER_MS = 90 * 1000;
+
+/** The meeting the floor shows: one going on, or one just over. */
+export function currentMeeting(
+  office: Pick<OfficeLook, "meetings">,
+  now = Date.now(),
+) {
+  const latest = office.meetings?.[0];
+  if (!latest) return undefined;
+  if (latest.state === "open") return latest;
+  return latest.closed && now - Date.parse(latest.closed) < MEETING_AFTER_MS
+    ? latest
+    : undefined;
+}
+
+/** A meeting as the floor draws it. */
+function roomMeeting(
+  meeting: NonNullable<OfficeLook["meetings"]>[number],
+): NonNullable<RoomData["meeting"]> {
+  return {
+    id: meeting.id,
+    state: meeting.state,
+    members: meeting.members,
+    posts: meeting.posts.map((post) => ({
+      id: post.id,
+      from: post.from,
+      round: post.round,
+      text: post.text,
+      ...(post.replyTo ? { replyTo: post.replyTo } : {}),
+    })),
+  };
 }
 
 /** A computer not heard from at the relay for this long is off. */
@@ -67,9 +116,12 @@ export function roomData(
   waiting: number,
   line?: string,
   now = Date.now(),
+  /** The viewer's clone does not take part in meetings: it stays at its desk. */
+  mineOut = false,
 ): RoomData {
   const members = office.members ?? [];
   const ids = new Set(members.map((m) => m.id));
+  const meeting = currentMeeting(office, now);
   return {
     people: members.map((member) => {
       const mine = member.id === office.me?.id;
@@ -111,5 +163,10 @@ export function roomData(
         };
       }),
     waiting: { count: waiting, ...(line ? { text: line } : {}) },
+    ...(meeting
+      ? {
+          meeting: { ...roomMeeting(meeting), ...(mineOut ? { mineOut } : {}) },
+        }
+      : {}),
   };
 }

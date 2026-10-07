@@ -2,8 +2,9 @@
 
 // Settings › Office: the team the clone works with. In none yet: open one on this computer (teammates
 // on the same network join by its invite link) or join a teammate's with theirs; a relay run by
-// hand takes its address and key. In one: where it is, the invite link to copy, who is in it, and
-// leaving it (or closing it, for the one open here).
+// hand takes its address and key. In one: where it is, the invite link to copy, who is in it, the
+// clones' meetings (taking part, and the office's daily standup), and leaving it (or closing it,
+// for the one open here).
 
 import {
   Building2,
@@ -12,10 +13,11 @@ import {
   Link2,
   LogOut,
   Pencil,
+  Users,
   Wifi,
   WifiOff,
 } from "lucide-react";
-import { useFormatter, useNow, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +30,14 @@ import {
   HEADERS,
   type OfficeState,
   type Profile,
+  type StandupTime,
   statusText,
 } from "../home/use-office";
 import { parseInvite } from "../office/invite";
 import { statusCode } from "../office/room-data";
+import { useApp } from "../shell/app-state";
 import { Group, Groups, Rows } from "./parts";
+import { Toggle } from "./preferences-section";
 
 export function OfficeSection({
   lang,
@@ -139,6 +144,14 @@ export function OfficeSection({
           })}
         </Rows>
       </Group>
+
+      <Meetings
+        standup={data.standup ?? undefined}
+        busy={office.busy}
+        onStandup={(standup) =>
+          void office.post({ action: "standup-time", standup })
+        }
+      />
 
       {data.problem && (
         <p className="text-destructive">{problemText(data.problem)}</p>
@@ -514,6 +527,136 @@ function Leave({
           </Button>
         </div>
       )}
+    </Group>
+  );
+}
+
+/**
+ * The clones' meetings: whether this clone takes part (the person's own), and the office's daily
+ * standup (the office's, set by anyone in it, in their time zone).
+ */
+function Meetings({
+  standup,
+  busy,
+  onStandup,
+}: {
+  standup?: StandupTime;
+  busy: boolean;
+  onStandup: (standup: StandupTime | null) => void;
+}) {
+  const t = useTranslations("settings.office.meetings");
+  const locale = useLocale();
+  const app = useApp();
+  const [days, setDays] = useState<number[]>(standup?.days ?? [1, 2, 3, 4, 5]);
+  const [time, setTime] = useState(standup?.time ?? "09:30");
+  useEffect(() => {
+    if (!standup) return;
+    setDays(standup.days);
+    setTime(standup.time);
+  }, [standup]);
+  // The week as the screen's language writes it, Monday first.
+  const week = [1, 2, 3, 4, 5, 6, 0].map((day) => ({
+    day,
+    name: new Intl.DateTimeFormat(locale, { weekday: "short" }).format(
+      new Date(2026, 9, 4 + day),
+    ),
+  }));
+  const daysText = (list: number[]) =>
+    week
+      .filter((entry) => list.includes(entry.day))
+      .map((entry) => entry.name)
+      .join(" ");
+  const changed =
+    !standup ||
+    standup.time !== time ||
+    standup.days.join() !== [...days].sort().join();
+  return (
+    <Group title={t("title")} hint={t("hint")}>
+      <Toggle
+        icon={<Users className="size-4" />}
+        title={t("take")}
+        body={t("takeHint")}
+        checked={Boolean(app.preferences?.meetings)}
+        onChange={(meetings) => void app.changePreferences({ meetings })}
+      />
+      <div className="flex flex-col gap-3 rounded-xl border border-border px-4 py-3">
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium">{t("daily")}</span>
+          <span className="text-[13px] leading-relaxed text-muted-foreground">
+            {t("dailyHint")}
+          </span>
+          <span className="pt-1 text-[13px]">
+            {standup
+              ? t("set", { days: daysText(standup.days), time: standup.time })
+              : t("none")}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          {week.map((entry) => {
+            const on = days.includes(entry.day);
+            return (
+              <button
+                key={entry.day}
+                type="button"
+                aria-pressed={on}
+                onClick={() =>
+                  setDays((list) =>
+                    on
+                      ? list.filter((day) => day !== entry.day)
+                      : [...list, entry.day],
+                  )
+                }
+                className={cn(
+                  "h-8 min-w-9 rounded-lg px-2 text-[13px] transition-colors",
+                  on
+                    ? "bg-foreground text-background"
+                    : "shadow-[inset_0_0_0_1px_var(--alpha-15)] hover:bg-muted",
+                )}
+              >
+                {entry.name}
+              </button>
+            );
+          })}
+          <label className="ml-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            {t("time")}
+            <Input
+              id="standup-time"
+              type="time"
+              value={time}
+              onChange={(event) => setTime(event.target.value)}
+              className="h-8 w-[140px]"
+            />
+          </label>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            size="sm"
+            variant="brand"
+            disabled={
+              busy || !days.length || !/^\d\d:\d\d$/.test(time) || !changed
+            }
+            onClick={() =>
+              onStandup({
+                days: [...days].sort(),
+                time,
+                zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              })
+            }
+          >
+            {t("save")}
+          </Button>
+          {standup && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={busy}
+              onClick={() => onStandup(null)}
+            >
+              {t("remove")}
+            </Button>
+          )}
+        </div>
+      </div>
     </Group>
   );
 }

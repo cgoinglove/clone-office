@@ -35,7 +35,8 @@ One frame around every screen (`app/(app)/layout.tsx`, `features/minime/shell/`)
 left (`sidebar.tsx`: new chat, Chat, Requests, Office, what waits on the person, recent chats, the
 clone, status, Settings) and the open screen: `/chat` first (`chat-screen.tsx`, with the office's
 live column `office-rail.tsx` and the getting-started list `welcome.tsx`), `/requests` and
-`/requests/[id]`, `/office` (the floor with the person's turn over it), `/clone` (what it knows,
+`/requests/[id]`, `/office` (the floor with the person's turn over it at the right, and the
+clones' meeting at the left while one goes on, `meeting.tsx`, started from its header), `/clone` (what it knows,
 the requests it takes, flows). What the screens share lives in `app-state.tsx` (`useApp`); the
 shared parts of these screens are `parts.tsx` (`PageHeader`, `Mark`, `PhaseChip`, `DoneStamp`,
 `Flap`). Settings is one dialog of six sections (`features/minime/settings/settings.tsx`). The

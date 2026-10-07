@@ -2,9 +2,11 @@
 
 // The office, as its own screen: the drawing fills it, its lobby once a day as the person clocks
 // in. What waits on the person hangs over it as the office's own board, and the simple ones are
-// answered right there (yes or no, allow or not); anything longer opens where it belongs.
+// answered right there (yes or no, allow or not); anything longer opens where it belongs. The
+// clones' meetings start from its header; while one goes on, the clones gather on the floor and
+// what they say is read beside it.
 
-import { ChevronRight, UserPlus } from "lucide-react";
+import { ChevronRight, MessagesSquare, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -14,6 +16,7 @@ import { Bot } from "@/features/office";
 import { OfficeRoom } from "@/features/office/room/office-room";
 import { cn } from "@/lib/utils";
 import { useApp } from "./app-state";
+import { MeetingPanel, MeetingStart, useMeetings } from "./meeting";
 import { Flap, Mark, twoDigits } from "./parts";
 import { askLine, type TurnItem, turnHref, yourTurn } from "./your-turn";
 
@@ -36,11 +39,13 @@ function rememberClockIn(): void {
   } catch {}
 }
 
-/** The board's width, which the office keeps clear at its right. */
+/** The board's width, which the office keeps clear at its right; the meeting's, at its left. */
 const BOARD = 340;
+const MEETING = 340;
 
 export function OfficeScreen() {
   const t = useTranslations("shell.office");
+  const tMeeting = useTranslations("shell.meeting");
   const app = useApp();
   const router = useRouter();
   const { office, preferences } = app;
@@ -59,6 +64,17 @@ export function OfficeScreen() {
   const inToday = members.filter(
     (member) => Date.now() - Date.parse(member.seen) < 120_000,
   ).length;
+  // A meeting going on (or just over) shows beside the floor; the last one, when asked for.
+  const { current, latest } = useMeetings();
+  const [closedId, setClosedId] = useState<string>();
+  const [showLatest, setShowLatest] = useState(false);
+  const shown =
+    current && current.id !== closedId
+      ? current
+      : showLatest
+        ? latest
+        : undefined;
+  const meets = app.joined && members.length > 1 && !atLobby;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -71,15 +87,34 @@ export function OfficeScreen() {
             {app.joined ? t("line", { count: inToday, moving }) : t("alone")}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-auto"
-          onClick={() => app.setSettings("office")}
-        >
-          <UserPlus />
-          {app.joined ? t("invite") : t("setUp")}
-        </Button>
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          {meets && (
+            <MeetingStart
+              onStarted={() => {
+                setClosedId(undefined);
+                setShowLatest(false);
+              }}
+            />
+          )}
+          {meets && latest && !shown && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowLatest(true)}
+            >
+              <MessagesSquare />
+              {tMeeting("latest")}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => app.setSettings("office")}
+          >
+            <UserPlus />
+            {app.joined ? t("invite") : t("setUp")}
+          </Button>
+        </div>
       </header>
       <div className="relative min-h-0 flex-1">
         {office.room && preferences && (
@@ -89,6 +124,7 @@ export function OfficeScreen() {
             data={office.room}
             lobby={lobby && preferences.lobby}
             inset={turns.length && !atLobby ? BOARD + 32 : 0}
+            insetLeft={shown && meets ? MEETING + 32 : 0}
             onClockIn={() => {
               rememberClockIn();
               setClocked(true);
@@ -104,6 +140,16 @@ export function OfficeScreen() {
         )}
         {turns.length > 0 && !atLobby && (
           <Board turns={turns} members={members.map((m) => m.id)} />
+        )}
+        {shown && meets && (
+          <MeetingPanel
+            meeting={shown}
+            width={MEETING}
+            onClose={() => {
+              setClosedId(shown.id);
+              setShowLatest(false);
+            }}
+          />
         )}
       </div>
     </div>

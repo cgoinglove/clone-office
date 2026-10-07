@@ -41,11 +41,33 @@ export interface RoomRequest {
   at: number;
 }
 
+/** One thing a mini-me said in a meeting (empty text: it passed). */
+export interface RoomPost {
+  id: string;
+  from: string;
+  round: number;
+  /** The post it answers. */
+  replyTo?: string;
+  text: string;
+}
+
+/** The office's meeting of the mini-mes now, or just over: its members gather and speak. */
+export interface RoomMeeting {
+  id: string;
+  state: "open" | "closed";
+  members: string[];
+  posts: RoomPost[];
+  /** The viewer's own clone sits this one out: it stays at its desk. */
+  mineOut?: boolean;
+}
+
 export interface RoomData {
   people: RoomPerson[];
   requests: RoomRequest[];
   /** Questions waiting for the viewer, and the first of them in a line. */
   waiting: { count: number; text?: string };
+  /** A meeting of the mini-mes going on, or just over. */
+  meeting?: RoomMeeting;
 }
 
 type Name = (name: string) => string;
@@ -116,6 +138,10 @@ export interface RoomWords {
     leftOnDesk: Name;
     gotIt: string;
     thanks: Name;
+  };
+  meeting: {
+    /** What a mini-me in the meeting is on, for its plate, the board and its panel. */
+    on: string;
   };
   lobby: {
     /** "Good afternoon, Ada", by the hour. */
