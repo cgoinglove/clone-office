@@ -54,9 +54,17 @@ the clone still keeps what it learns, and asks them, in theirs.
   mornings, I keep them for focused work") are looked back on the same way; only what stays true
   is kept (never the date), shown as a **Kept:** line in their latest conversation.
 - **When a conversation gets long**: it first keeps what is worth keeping, then sums up what came
-  before and goes on from that summary, as Claude Code compacts a long conversation. The line
-  "I summed up what came before" (앞의 대화를 정리해 두었어요) shows when it happens. The whole
-  conversation stays in its record and can still be searched.
+  before (the goal, what was settled and every correction, what was done, what is open, and what it
+  relies on, by name) and goes on from that summary, with their own messages added word for word,
+  as Claude Code compacts a long conversation. "Long" follows what its brain can hold: earlier for
+  a model on their computer than for a cloud one. The line "I summed up what came before" (앞의
+  대화를 정리해 두었어요) shows when it happens. If no summary can be written, it goes on from the
+  end of the conversation's own record instead. The whole conversation stays in its record and can
+  still be searched. In one long piece of work, older results of what it looked up are cut short
+  once its brain's room runs low, and it looks them up again when it needs them; a long file is read
+  in parts.
+- **A colleague's request that goes on long** goes on in a fresh session from the request's own
+  record, every message in it, rather than failing.
 - **When they have used their AI tools a lot since it last read**: **Your clone** › What it knows says how
   many conversations are new, and **Read my AI records again** (내 AI 기록 다시 읽기) reads only
   those, keeping only what lasts, as the first time.

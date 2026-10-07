@@ -102,6 +102,8 @@ const GREP_MATCHES = 100;
 const GREP_MS = 15_000;
 const SKIPPED = new Set([".git", "node_modules", ".next", "dist", "build"]);
 const PAGE_CHARS = 40_000;
+/** The most one Read gives at once (2,000 lines of 2,000 characters would be four million). */
+const READ_CHARS = 60_000;
 
 async function readTool(input: Record<string, unknown>): Promise<string> {
   const path = fullPath(input.file_path);
@@ -116,16 +118,21 @@ async function readTool(input: Record<string, unknown>): Promise<string> {
   const lines = buffer.toString("utf8").split("\n");
   const start = Math.max(0, Number(input.offset ?? 1) - 1 || 0);
   const count = Math.max(1, Number(input.limit ?? READ_LINES) || READ_LINES);
-  const shown = lines.slice(start, start + count);
+  const shown: string[] = [];
+  let used = 0;
+  for (const [i, line] of lines.slice(start, start + count).entries()) {
+    const numbered = `${String(start + i + 1).padStart(6)}\t${line.length > LINE_CHARS ? `${line.slice(0, LINE_CHARS)}…` : line}`;
+    // A long file is read in parts, so one read never fills a smaller model's window.
+    if (used + numbered.length > READ_CHARS && shown.length) break;
+    shown.push(numbered);
+    used += numbered.length + 1;
+  }
   const rest = lines.length - start - shown.length;
-  return `${shown
-    .map(
-      (line, i) =>
-        `${String(start + i + 1).padStart(6)}\t${line.length > LINE_CHARS ? `${line.slice(0, LINE_CHARS)}…` : line}`,
-    )
-    .join(
-      "\n",
-    )}${rest > 0 ? `\n… ${rest} more lines (read on with offset)` : ""}`;
+  return `${shown.join("\n")}${
+    rest > 0
+      ? `\n… ${rest} more lines (read on with offset ${start + shown.length + 1})`
+      : ""
+  }`;
 }
 
 async function globTool(input: Record<string, unknown>): Promise<string> {

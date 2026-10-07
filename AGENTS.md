@@ -224,9 +224,15 @@ These words help discussion. They do not mandate separate services, tables or UI
 - `features/minime/chat/`: the conversations with the clone, kept by the app itself
   (`store.ts`, one append-only JSON-lines file per conversation under `chats/`), so a conversation
   outlives any brain session. `turn.ts` runs one turn: it resumes the brain's session, carries a
-  long conversation into a fresh session first (look back, then a summary, as Claude Code compacts
-  and Hermes compresses), goes on from the conversation's own record when the brain lost its
-  session, and looks back after the answer. Conversations are searchable like the person's other
+  long conversation into a fresh session first (look back, then a summary under Hermes' headings,
+  `SUMMARY_PROMPT`, with the person's own messages added by code, `theirWords`; no summary, and it
+  goes on from the record), goes on from the conversation's own record when the brain lost its
+  session, and looks back after the answer. When to carry follows the brain's window
+  (`brain/context.ts`: `contextWindow`, `carryPoint`, three quarters of it and at most 100K;
+  `sessionLost` knows the services' words for a full window). Inside one turn on the app's own loop,
+  earlier tool results are cut once half the window is used (`brain/prune.ts`, Hermes' first phase,
+  through the AI SDK's `prepareStep`, and the session is kept cut), and Read gives at most 60,000
+  characters at once. Conversations are searchable like the person's other
   AI conversations.
 - `features/minime/gate/`: the trust gate. Code decides what goes to the person; the brain only
   proposes. In a conversation the clone may also read (files, the web), and Claude Code asks

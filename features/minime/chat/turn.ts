@@ -30,7 +30,39 @@ import {
   setSession,
 } from "./store.ts";
 
-export const SUMMARY_PROMPT = `This conversation will go on in a fresh session that sees only what you write now. Write it for yourself: what your person asked and decided, what you did and found, what is still open, and how they want it done. Be specific (names, numbers, places), write in their language, and keep it as short as that allows, at most about 300 words. Write only the summary itself, as plain sentences or short points, with no title and nothing about this request.`;
+/**
+ * What the mini-me writes itself before a long conversation goes on in a fresh session, after the
+ * sections Hermes Agent's compressor asks for and what Claude Code's compaction keeps: the goal,
+ * what was settled and corrected (quoted), what was done as past facts, what is open, and what it
+ * relies on by name so it can open it again. The person's own words are added by code, as said.
+ */
+export const SUMMARY_PROMPT = `This conversation will go on in a fresh session that sees only what you write now, with your person's own messages added word for word after it. Write it for yourself, in their language, under these headings, leaving out any with nothing under it:
+
+Goal: what they are after in this conversation.
+Settled: what they decided and why, and every correction or preference they gave, quoted.
+Done: what you did and found, as past facts, with the names, numbers, places, paths and links.
+Open: what is still to do or answer, and what you were in the middle of.
+In use: what this relies on, by name, so you can open it again: files, colleagues and their requests, flows, their Claude Code conversations, skills.
+
+If this conversation began from an earlier summary, keep everything in it that still matters. Be specific and as short as that allows, at most about 500 words. Write only the summary, with nothing about this request.`;
+
+/** The person's own messages in a stretch of conversation, word for word, newest kept first. */
+export function theirWords(
+  messages: ChatMessage[],
+  max = 6000,
+  each = 1500,
+): string {
+  const lines: string[] = [];
+  let used = 0;
+  for (const message of [...messages].reverse()) {
+    if (message.role !== "me") continue;
+    const line = `- ${message.text.length > each ? `${message.text.slice(0, each)}…` : message.text}`;
+    if (used + line.length > max) break;
+    lines.unshift(line);
+    used += line.length;
+  }
+  return lines.join("\n");
+}
 
 export type TurnEvent =
   | { type: "chat"; id: string; title: string }
@@ -87,7 +119,7 @@ function opening(summary: string | undefined, earlier: string, text: string) {
   const parts: string[] = [];
   if (summary)
     parts.push(
-      `Earlier in this conversation, in your own summary (background only: what was asked there is done or decided; what they say last is what to do now):\n${summary}`,
+      `Earlier in this conversation, in your own summary (reference only: what was asked there is done or decided, and what they say last is what to do now; where it differs from your memory or their profile, those are right):\n${summary}`,
     );
   if (earlier)
     parts.push(
@@ -137,12 +169,22 @@ export async function runTurn(options: {
       maxTurns: 1,
       purpose: "summary",
     });
-    if (written.ok && written.text.trim()) {
-      summary = written.text.trim();
-      await carryOver(info.id, summary);
-      session = undefined;
-      send({ type: "carried" });
-    }
+    const since = before.slice(info.carriedFrom ?? 0);
+    const words = theirWords(since);
+    // No summary came (the session may be too full to write one): it goes on from the record
+    // instead, the earlier summary and the end of what was said, as Hermes hands off without one.
+    summary =
+      written.ok && written.text.trim()
+        ? `${written.text.trim()}${words ? `\n\nWhat they said in it, word for word, oldest first:\n${words}` : ""}`
+        : [
+            info.summary,
+            `What was said, oldest first:\n${recap(since, 12_000)}`,
+          ]
+            .filter(Boolean)
+            .join("\n\n");
+    await carryOver(info.id, summary);
+    session = undefined;
+    send({ type: "carried" });
   }
 
   // The person's questions for this conversation go to its screen while the answer is made.

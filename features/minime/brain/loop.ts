@@ -34,9 +34,11 @@ import { cleanEnv } from "../server/brain.ts";
 import { minimeHome, toolServerPath } from "../server/paths.ts";
 import { chatGptAccessToken, OPENAI } from "./chatgpt.ts";
 import { type BrainChoice, providerKey } from "./choice.ts";
+import { contextWindow } from "./context.ts";
 import { reportKept, WATCHED } from "./events.ts";
 import { connectServers, type Guard, loopTools } from "./loop-tools.ts";
 import { provider } from "./providers.ts";
+import { pruneToolResults, underPressure } from "./prune.ts";
 import { logRun } from "./runlog.ts";
 import {
   ALLOWED_TOOLS,
@@ -326,6 +328,8 @@ export async function runLoop(
     const timeout = AbortSignal.timeout(
       options.timeoutMs ?? (gate ? 15 * 60_000 : 180_000),
     );
+    // When the window fills, earlier tool results are cut before the next step (prune.ts).
+    const window = contextWindow(choice);
     const run = streamText({
       model,
       instructions: system,
@@ -334,6 +338,10 @@ export async function runLoop(
       stopWhen: stepCountIs(options.maxTurns ?? 6),
       abortSignal: timeout,
       providerOptions,
+      prepareStep: ({ messages: going, steps }) =>
+        underPressure(going, window, steps.at(-1)?.usage.inputTokens)
+          ? { messages: pruneToolResults(going) }
+          : undefined,
     });
     let error: unknown;
     let turns = 0;
@@ -429,7 +437,10 @@ export async function runLoop(
       await saveSession({
         id,
         system,
-        messages: kept,
+        // Kept as small as it went: a session that filled its window goes on cut, not whole.
+        messages: underPressure(kept, contextWindow(choice))
+          ? pruneToolResults(kept)
+          : kept,
         provider: choice.provider,
         model: choice.model,
         at: new Date().toISOString(),
