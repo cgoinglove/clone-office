@@ -337,10 +337,16 @@ export async function runLoop(
     });
     let error: unknown;
     let turns = 0;
+    let stepped = false;
     for await (const part of run.fullStream) {
       if (part.type === "text-delta") {
-        text += part.text;
-        options.onEvent?.({ type: "text", text: part.text });
+        // What one step said and what the next says after its tools are paragraphs, not one run-on.
+        const gap = stepped && text && !text.endsWith("\n") ? "\n\n" : "";
+        stepped = false;
+        text += gap + part.text;
+        options.onEvent?.({ type: "text", text: gap + part.text });
+      } else if (part.type === "start-step") {
+        stepped = true;
       } else if (part.type === "finish-step") {
         turns++;
         context = part.usage.inputTokens;

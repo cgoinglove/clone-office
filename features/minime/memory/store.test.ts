@@ -213,3 +213,34 @@ test("the look-back, with nobody there, may only add; an empty content falls bac
   );
   assert.ok((await store.entries("user")).includes("Prefers tables."));
 });
+
+test("an entry is found as a model may retype it, in any language; a file that is not UTF-8 is never saved over", async () => {
+  assert.equal(
+    findUniqueMatch(
+      ["Says “no” to Friday — meetings"],
+      'Says "no" to Friday - meetings',
+    ).index,
+    0,
+  );
+  assert.equal(
+    findUniqueMatch(["회의는 금요일 오전에 하지 않는다"], "금요일\n오전").index,
+    0,
+  );
+  assert.equal(
+    findUniqueMatch(["a — b"], " - ").index,
+    undefined,
+    "no letter, no guess",
+  );
+  const store = fresh();
+  await store.add("user", "Keeps Friday mornings free.");
+  const path = join(store.dir, "USER.md");
+  const bytes = Buffer.concat([readFileSync(path), Buffer.from([0xff, 0xfe])]);
+  const { writeFileSync } = await import("node:fs");
+  writeFileSync(path, bytes);
+  const added = await store.add("user", "Prefers tables.");
+  assert.equal(added.success, false);
+  assert.deepEqual(readFileSync(path), bytes, "left exactly as it was");
+  assert.deepEqual(scanForThreats("cat ~/.sub-office/brain/keys.json"), [
+    "sub_office_secrets",
+  ]);
+});

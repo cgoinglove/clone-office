@@ -35,7 +35,12 @@ export async function readText(
   path: string,
 ): Promise<{ ok: boolean; raw: string; exists: boolean }> {
   try {
-    return { ok: true, raw: await readFile(path, "utf8"), exists: true };
+    // Read strictly: a file with bytes that are not UTF-8 is not read as text with stand-ins, or the
+    // next save would write the stand-ins over it (Hermes Agent treats it as unreadable too).
+    const raw = new TextDecoder("utf-8", { fatal: true }).decode(
+      await readFile(path),
+    );
+    return { ok: true, raw, exists: true };
   } catch (error) {
     return (error as NodeJS.ErrnoException).code === "ENOENT"
       ? { ok: true, raw: "", exists: false }

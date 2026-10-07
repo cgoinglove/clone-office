@@ -86,15 +86,39 @@ export function parseEntries(raw: string): string[] {
   ];
 }
 
+/**
+ * Text as a model may retype it: curly quotes and backticks as one quote, dashes as one hyphen,
+ * a written "\\n" and any run of spaces or line breaks as one space (Hermes Agent saw a third of
+ * replace and remove calls miss on these alone).
+ */
+const fold = (text: string) =>
+  text
+    .replaceAll("\\n", " ")
+    .replace(/["`\u2018-\u201F]/g, "'")
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .split(/\s+/)
+    .filter(Boolean)
+    .join(" ");
+
+/** The entries `oldText` appears in: as written, else as retyped, if it holds a letter or digit. */
+export function substringMatches(entries: string[], oldText: string): number[] {
+  const exact = entries.flatMap((entry, i) =>
+    entry.includes(oldText) ? [i] : [],
+  );
+  if (exact.length) return exact;
+  const needle = fold(oldText);
+  return /[\p{L}\p{N}]/u.test(needle)
+    ? entries.flatMap((entry, i) => (fold(entry).includes(needle) ? [i] : []))
+    : [];
+}
+
 /** The entry `oldText` selects: an exact whole entry first, else one distinct substring match. */
 export function findUniqueMatch(
   entries: string[],
   oldText: string,
 ): { index?: number; ambiguous: boolean } {
   const exact = entries.flatMap((entry, i) => (entry === oldText ? [i] : []));
-  const matches = exact.length
-    ? exact
-    : entries.flatMap((entry, i) => (entry.includes(oldText) ? [i] : []));
+  const matches = exact.length ? exact : substringMatches(entries, oldText);
   if (new Set(matches.map((i) => entries[i])).size > 1)
     return { ambiguous: true };
   return { index: matches[0], ambiguous: false };
@@ -325,8 +349,8 @@ export class MemoryStore {
         return fail(
           `Multiple entries matched '${oldText}'. Be more specific.`,
           {
-            matches: entries
-              .filter((entry) => entry.includes(oldText))
+            matches: substringMatches(entries, oldText)
+              .map((i) => entries[i])
               .map((entry) =>
                 entry.length > 80 ? `${entry.slice(0, 80)}...` : entry,
               ),
