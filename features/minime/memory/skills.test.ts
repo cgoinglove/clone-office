@@ -387,8 +387,12 @@ test("the skills in this repository load: each has a name, a short description a
       found.description.length <= 60,
       `${found.name}'s description fits the index`,
     );
-    const view = await store.view(found.name);
-    assert.ok("content" in view && /## When to Use/.test(view.content));
+    // Read as files: viewing through the store would count a view in this repository.
+    const content = readFileSync(
+      join(store.dir, found.category ?? "", found.name, "SKILL.md"),
+      "utf8",
+    );
+    assert.match(content, /## When to Use/);
   }
   const categories = await store.categories();
   for (const found of skills)

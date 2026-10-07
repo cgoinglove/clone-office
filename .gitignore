@@ -34,3 +34,6 @@ ds-bundle/
 
 # a relay started from this folder keeps its office here (PGlite)
 /relay-data/
+
+# What a clone writes beside skills it uses; never part of the shipped skills.
+skills/.*.json

@@ -95,6 +95,8 @@ try {
   // Next's file tracing copies the rule files a path pattern in them names (`.claude/rules`);
   // they are notes for whoever works on the code, never part of the app.
   rmSync(join(out, "app", ".claude"), { recursive: true, force: true });
+  // The skills the app ships are read from the package's own skills/ (below), not a traced copy.
+  rmSync(join(out, "app", "skills"), { recursive: true, force: true });
   cpSync(
     join(source, ".next-package", "static"),
     join(out, "app", ".next-package", "static"),
