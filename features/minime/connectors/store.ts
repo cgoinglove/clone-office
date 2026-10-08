@@ -11,6 +11,12 @@ import type { AuthorizationServerMetadata } from "@modelcontextprotocol/sdk/shar
 import { atomicWrite, readText, withLock } from "../memory/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
+import {
+  open,
+  readSecretJson,
+  seal,
+  writeSecretJson,
+} from "../server/secret.ts";
 
 export interface Tokens {
   access_token: string;
@@ -81,12 +87,9 @@ function keptPath(id: string): string {
 const pendingPath = () =>
   join(/*turbopackIgnore: true*/ connectorsDir(), "pending.json");
 
+/** Sealed (server/secret.ts); a file written before sealing began is read as it is. */
 export async function loadKept(id: string): Promise<Kept> {
-  try {
-    return JSON.parse(await readFile(keptPath(id), "utf8")) as Kept;
-  } catch {
-    return {};
-  }
+  return (await readSecretJson<Kept>(keptPath(id))) ?? {};
 }
 
 /** Changes what is kept for one service, one writer at a time. */
@@ -96,10 +99,7 @@ export async function changeKept(
 ): Promise<Kept | undefined> {
   return withLock(await ownDir(), async () => {
     const next = change(await loadKept(id));
-    if (next)
-      await atomicWrite(keptPath(id), JSON.stringify(next, null, 2), {
-        mode: 0o600,
-      });
+    if (next) await writeSecretJson(keptPath(id), next);
     else await unlink(keptPath(id)).catch(() => {});
     return next;
   });
@@ -110,34 +110,24 @@ export async function addPending(
   pending: Pending,
 ): Promise<void> {
   await withLock(await ownDir(), async () => {
-    const read = await readText(pendingPath());
-    let all: Record<string, Pending> = {};
-    try {
-      all = read.raw ? JSON.parse(read.raw) : {};
-    } catch {
-      all = {};
-    }
+    const all =
+      (await readSecretJson<Record<string, Pending>>(pendingPath())) ?? {};
     // Ones left unfinished go after their ten minutes.
     for (const [key, one] of Object.entries(all))
       if (Date.now() - one.at > PENDING_MS) delete all[key];
     all[state] = pending;
-    await atomicWrite(pendingPath(), JSON.stringify(all), { mode: 0o600 });
+    await writeSecretJson(pendingPath(), all);
   });
 }
 
 /** The sign-in a callback's state names, taken (once) if it is still waiting. */
 export async function takePending(state: string): Promise<Pending | undefined> {
   return withLock(await ownDir(), async () => {
-    const read = await readText(pendingPath());
-    let all: Record<string, Pending> = {};
-    try {
-      all = read.raw ? JSON.parse(read.raw) : {};
-    } catch {
-      return undefined;
-    }
+    const all = await readSecretJson<Record<string, Pending>>(pendingPath());
+    if (!all) return undefined;
     const found = all[state];
     delete all[state];
-    await atomicWrite(pendingPath(), JSON.stringify(all), { mode: 0o600 });
+    await writeSecretJson(pendingPath(), all);
     return found && Date.now() - found.at <= PENDING_MS ? found : undefined;
   });
 }
@@ -158,7 +148,11 @@ export async function ownClient(
     | { clients?: Record<string, TeamClient> }
     | undefined;
   const client = connectors?.clients?.[provider];
-  return client?.client_id ? client : undefined;
+  if (!client?.client_id) return undefined;
+  // Its secret is sealed in settings.json (server/secret.ts).
+  return client.client_secret
+    ? { ...client, client_secret: await open(client.client_secret) }
+    : client;
 }
 
 export async function saveOwnClient(
@@ -171,7 +165,10 @@ export async function saveOwnClient(
       clients?: Record<string, TeamClient>;
     };
     const clients = { ...(connectors.clients ?? {}) };
-    if (client) clients[provider] = client;
+    if (client)
+      clients[provider] = client.client_secret
+        ? { ...client, client_secret: await seal(client.client_secret) }
+        : client;
     else delete clients[provider];
     await writeSettings(
       `${JSON.stringify({ ...settings, connectors: { ...connectors, clients } }, null, 2)}\n`,

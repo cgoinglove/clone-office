@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { atomicWrite, readText, withLock } from "../memory/files.ts";
 import { minimeHome } from "../server/paths.ts";
+import { readSecretJson, writeSecretJson } from "../server/secret.ts";
 
 /** Where OpenAI's sign-in and API are; tests stand in for both. */
 export const OPENAI = {
@@ -66,21 +67,15 @@ const keptPath = () =>
   join(/*turbopackIgnore: true*/ minimeHome(), "brain", "chatgpt.json");
 const lockDir = () => join(/*turbopackIgnore: true*/ minimeHome(), "brain");
 
+/** Sealed (server/secret.ts); a file written before sealing began is read as it is. */
 async function load(): Promise<Kept> {
-  const read = await readText(keptPath());
-  try {
-    return read.raw ? (JSON.parse(read.raw) as Kept) : {};
-  } catch {
-    return {};
-  }
+  return (await readSecretJson<Kept>(keptPath())) ?? {};
 }
 
 async function change(update: (kept: Kept) => Kept): Promise<Kept> {
   return withLock(lockDir(), async () => {
     const next = update(await load());
-    await atomicWrite(keptPath(), JSON.stringify(next, null, 2), {
-      mode: 0o600,
-    });
+    await writeSecretJson(keptPath(), next);
     return next;
   });
 }

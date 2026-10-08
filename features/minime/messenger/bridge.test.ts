@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
 import type { runTurn } from "../chat/turn";
+import { isSealed, open } from "../server/secret";
 import type { watching } from "../server/presence";
 import type { Bot } from "./bridge";
 import type { Choice, Listener, Person, Press } from "./discord";
@@ -140,7 +141,8 @@ test("the person's own bot: the first to write is let in by the code their phone
   assert.equal((await bridge.status()).state, "on");
   assert.equal((await bridge.status()).bot, "Mini");
   const kept = JSON.parse(readFileSync(join(root, "settings.json"), "utf8"));
-  assert.equal(kept.messenger.token, "right-token-right-token");
+  assert.ok(isSealed(kept.messenger.token), "the token is kept sealed");
+  assert.equal(await open(kept.messenger.token), "right-token-right-token");
   assert.equal(kept.messenger.service, "discord");
   if (process.platform !== "win32")
     assert.equal(
@@ -493,7 +495,11 @@ test("Slack's two tokens are told apart by how they start, and both are needed",
   );
   const kept = JSON.parse(readFileSync(join(home, "settings.json"), "utf8"));
   assert.deepEqual(
-    [kept.messenger.service, kept.messenger.token, kept.messenger.appToken],
+    [
+      kept.messenger.service,
+      await open(kept.messenger.token),
+      await open(kept.messenger.appToken),
+    ],
     ["slack", "xoxb-1234567890-bot-token", "xapp-1-A1-1234567890-app-level"],
   );
   assert.deepEqual(made.at(-1), {

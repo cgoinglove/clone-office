@@ -35,6 +35,7 @@ import { personLanguage } from "../server/language.ts";
 import { minimeHome } from "../server/paths.ts";
 import { quietFor, readPreferences } from "../server/preferences.ts";
 import { watching } from "../server/presence.ts";
+import { isSealed, open, seal } from "../server/secret.ts";
 import {
   type Choice,
   DiscordBot,
@@ -168,8 +169,38 @@ function asMessenger(value: unknown): MessengerSettings | undefined {
     : undefined;
 }
 
+/** The bot's tokens are sealed in settings.json (server/secret.ts); the rest is plain. */
+async function opened(
+  messenger: MessengerSettings | undefined,
+): Promise<MessengerSettings | undefined> {
+  if (!messenger) return undefined;
+  try {
+    return {
+      ...messenger,
+      token: await open(messenger.token),
+      ...(messenger.appToken
+        ? { appToken: await open(messenger.appToken) }
+        : {}),
+    };
+  } catch (error) {
+    // Sealed under a key this folder no longer has: connected again from the page.
+    console.error(`messenger: ${(error as Error).message}`);
+    return undefined;
+  }
+}
+
+async function sealed(
+  messenger: MessengerSettings,
+): Promise<MessengerSettings> {
+  return {
+    ...messenger,
+    token: await seal(messenger.token),
+    ...(messenger.appToken ? { appToken: await seal(messenger.appToken) } : {}),
+  };
+}
+
 async function loadMessenger(): Promise<MessengerSettings | undefined> {
-  return asMessenger((await readSettings()).messenger);
+  return opened(asMessenger((await readSettings()).messenger));
 }
 
 async function saveMessenger(
@@ -177,9 +208,9 @@ async function saveMessenger(
 ): Promise<void> {
   await withLock(minimeHome(), async () => {
     const { messenger, ...others } = await readSettings();
-    const next = change(asMessenger(messenger));
+    const next = change(await opened(asMessenger(messenger)));
     await writeSettings(
-      `${JSON.stringify(next ? { ...others, messenger: next } : others, null, 2)}\n`,
+      `${JSON.stringify(next ? { ...others, messenger: await sealed(next) } : others, null, 2)}\n`,
     );
   });
 }
@@ -935,6 +966,7 @@ export class Bridge {
       this.endings = [];
       return;
     }
+
     // The person's quiet hours: what waits is kept, and goes when they end.
     const quiet = quietFor((await readPreferences()).quiet);
     if (quiet > 0) return this.lookSoon(quiet + 1000);
@@ -992,7 +1024,12 @@ export class Bridge {
       this.told.set(one.id, Date.now());
       await this.office.phoned(one.id).catch(() => {});
     }
-    // Finished work nobody has seen.
+    // Finished work nobody has seen. Asked again: the page may have come into view during the
+    // steps above, and then it was seen there.
+    if (this.presence().state === "watching") {
+      this.endings = [];
+      return;
+    }
     while (this.endings.length) {
       await this.bot?.send(channel, this.endingText(this.endings[0], w));
       this.endings.shift();
@@ -1047,6 +1084,10 @@ export function messenger(): Bridge {
 
 /** Connects the person's messenger if they set one up: when the app starts, and when the page asks. */
 export async function startMessenger(): Promise<void> {
+  // A token kept before sealing began is sealed now rather than at its next change.
+  const kept = asMessenger((await readSettings()).messenger);
+  if (kept && !isSealed(kept.token))
+    await saveMessenger((was) => was).catch(() => {});
   await messenger()
     .start()
     .catch((error) => console.error(`messenger: ${(error as Error).message}`));

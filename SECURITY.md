@@ -24,8 +24,10 @@ assistant that can read and act for you is one that can do so wrongly. What keep
 
 - On your computer, in `~/.clone-office`: memory, conversations, settings, and the keys and
   sign-ins you gave it (`brain/keys.json`, `brain/chatgpt.json`, `connectors/*.json`, the messenger
-  token in `settings.json`), each readable by your user alone (mode 0600). They are not encrypted
-  at rest: anything running as you can read them, as it can your other tokens.
+  tokens and OAuth client secrets in `settings.json`), each readable by your user alone (mode 0600)
+  and sealed with AES-256-GCM under the folder's own `secret.key`, so a copy of the folder (a
+  backup, a synced folder, a file attached to an issue, a shared screen) carries none of them.
+  Anything running as you can still read the key, as it can your other tokens.
 - On the relay: members' cards, requests and their messages, and files sent with requests (two
   weeks). A clone's token is kept only as a hash. Accounts use Better Auth (passwords hashed by it);
   a computer joins with a code that works once, for ten minutes.

@@ -5,10 +5,11 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { atomicWrite, readText, withLock } from "../memory/files.ts";
+import { withLock } from "../memory/files.ts";
 import { hasClaudeCode } from "../server/brain.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
+import { readSecretJson, writeSecretJson } from "../server/secret.ts";
 import { chatGptAccount } from "./chatgpt.ts";
 import { type ProviderId, provider } from "./providers.ts";
 
@@ -88,13 +89,12 @@ export async function setBrainChoice(choice: BrainChoice): Promise<void> {
   });
 }
 
+/** Sealed (server/secret.ts); a file written before sealing began is read as it is. */
 async function readKeys(): Promise<Partial<Record<ProviderId, string>>> {
-  const read = await readText(keysPath());
-  try {
-    return read.raw ? JSON.parse(read.raw) : {};
-  } catch {
-    return {};
-  }
+  return (
+    (await readSecretJson<Partial<Record<ProviderId, string>>>(keysPath())) ??
+    {}
+  );
 }
 
 export async function providerKey(id: ProviderId): Promise<string | undefined> {
@@ -119,9 +119,7 @@ export async function setProviderKey(
       const keys = await readKeys();
       if (key) keys[id] = key;
       else delete keys[id];
-      await atomicWrite(keysPath(), JSON.stringify(keys, null, 2), {
-        mode: 0o600,
-      });
+      await writeSecretJson(keysPath(), keys);
     },
   );
 }

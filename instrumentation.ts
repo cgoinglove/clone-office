@@ -9,7 +9,10 @@ export async function register() {
   const { bringShippedSkills } = await import(
     "./features/minime/brain/session"
   );
+  const { sealKeptFiles } = await import("./features/minime/server/secret");
+  const { keysPath } = await import("./features/minime/brain/choice");
   // Not waited for: the server answers pages meanwhile.
+  void sealKeptFiles([keysPath()]).catch(() => {});
   void startMessenger();
   void startOfficeOnBoot();
   void bringShippedSkills();

@@ -179,7 +179,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
-  Everything lives under `~/.clone-office` (`CLONE_OFFICE_HOME` moves it). `server/sources/` reads
+  Everything lives under `~/.clone-office` (`CLONE_OFFICE_HOME` moves it); its secrets (vendors' keys, the
+  ChatGPT sign-in, connected services' tokens and clients, the messenger's tokens) are sealed with
+  AES-256-GCM under the folder's own `secret.key` (`server/secret.ts` on `lib/seal.ts`, after
+  Thursday's), a file kept plain before that read as it is and sealed when the server starts or at
+  its next write. `server/sources/` reads
   each AI tool's local records (Claude Code and Codex session files; Cursor's and Hermes Agent's
   own SQLite files, where a changed chat is read again whole and a deleted one leaves the index),
   plus notes about the person; `server/apps.ts` reads app usage from
