@@ -85,6 +85,24 @@ jobs:
           path: dist
       - run: node scripts/smoke.mjs
 
+  # The relay's own image (Dockerfile.relay), as a team runs it with docker compose: it must start
+  # with only the files it copies, and answer.
+  relay-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: docker build -f Dockerfile.relay -t clone-office-relay .
+      - name: Starts and answers
+        run: |
+          docker run -d --name relay -p 3200:3200 clone-office-relay
+          for i in $(seq 1 30); do
+            code="$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3200/members || true)"
+            [ "$code" = "401" ] && break
+            sleep 1
+          done
+          docker logs relay
+          [ "$code" = "401" ]
+
   # What a Node the app does not take is told. Ubuntu 22.04 and Debian 11 install Node 12, and
   # an ES module dies on what an older Node lacks before any check in it runs; the CommonJS
   # entry (bin/clone-office.cjs) says what to do instead. Nothing is installed.
