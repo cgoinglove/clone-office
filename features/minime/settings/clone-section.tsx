@@ -14,7 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,9 +33,17 @@ import { EXPORT_PROMPT } from "../learn/export-prompt";
 import { stream } from "../stream";
 import { Empty, Group, Groups, Rows } from "./parts";
 
+/** Where a line came from (memory/store.ts Source), as the route words it. */
+interface Source {
+  from: string;
+  at: string;
+  title?: string;
+}
+
 interface Memory {
   user: string[];
   memory: string[];
+  sources?: { user: Record<string, Source>; memory: Record<string, Source> };
   skills: number;
   notes: number;
   dir: string;
@@ -147,6 +155,7 @@ export function CloneSection({
                 key={`${entry.target}-${entry.text}`}
                 index={index}
                 entry={entry}
+                source={memory.sources?.[entry.target]?.[entry.text]}
                 fresh={learn.kept.includes(entry.text)}
                 onFix={(fixed) => fix(entry, fixed)}
                 onRemove={() => remove(entry)}
@@ -552,15 +561,43 @@ function StepNumber({ n }: { n: number }) {
   );
 }
 
+const SOURCES = [
+  "task",
+  "review",
+  "reading",
+  "import",
+  "request",
+  "flow",
+  "fix",
+  "meeting",
+] as const;
+
+/** Where a line came from and when, in one dim line: "where did you get that?" answered. */
+function SourceLine({ source }: { source: Source }) {
+  const t = useTranslations("settings.clone.source");
+  const format = useFormatter();
+  const from = (SOURCES as readonly string[]).includes(source.from)
+    ? (source.from as (typeof SOURCES)[number])
+    : "other";
+  return (
+    <span className="block text-xs text-muted-foreground">
+      {t(from, { title: source.title ?? "none" })} ·{" "}
+      {format.dateTime(new Date(source.at), { month: "short", day: "numeric" })}
+    </span>
+  );
+}
+
 function MemoryRow({
   index,
   entry,
+  source,
   fresh,
   onFix,
   onRemove,
 }: {
   index: number;
   entry: Entry;
+  source?: Source;
   fresh: boolean;
   onFix: (fix: string) => Promise<void>;
   onRemove: () => Promise<void>;
@@ -583,6 +620,7 @@ function MemoryRow({
               {t("memory.isNew")}
             </span>
           )}
+          {source && <SourceLine source={source} />}
         </span>
         {state === "open" && (
           <span className="flex shrink-0 gap-0.5 opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">

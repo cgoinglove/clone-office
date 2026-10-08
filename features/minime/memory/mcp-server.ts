@@ -53,6 +53,14 @@ const actor: Actor =
 // that ends a consolidation loop, and what has been read before a write, are per session.
 const store = new MemoryStore(
   process.env.MINIME_MEMORY_DIR ?? join(home, "memories"),
+  undefined,
+  // Where what this session keeps came from (brain/session.ts sessionOrigin).
+  {
+    from: process.env.MINIME_ORIGIN ?? actor,
+    ...(process.env.MINIME_ORIGIN_CHAT
+      ? { chat: process.env.MINIME_ORIGIN_CHAT }
+      : {}),
+  },
 );
 const skills = new SkillStore(
   process.env.MINIME_SKILLS_DIR ?? join(home, "skills"),

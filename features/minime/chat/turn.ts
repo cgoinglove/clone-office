@@ -193,7 +193,8 @@ export async function runTurn(options: {
     if (session && (info.context ?? 0) > (await carryAt())) {
       send({ type: "carrying" });
       // Keep what is worth keeping before the details are summed up, unless that was done already.
-      if (info.reviewed !== session) await reviewSession(session, record);
+      if (info.reviewed !== session)
+        await reviewSession(session, record, undefined, info.id);
       const written = await runSession({
         resume: session,
         fork: true,
@@ -313,6 +314,7 @@ export async function runTurn(options: {
       result.sessionId,
       record,
       result.systemPrompt,
+      info.id,
     );
     if (review.ok) await markReviewed(info.id, result.sessionId);
     send({ type: "reviewed", ok: review.ok });

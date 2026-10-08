@@ -267,3 +267,29 @@ test("an entry is found as a model may retype it, in any language; a file that i
     "app_secrets",
   ]);
 });
+
+test("each line keeps where it came from; a fix moves it and a removal lets it go", async () => {
+  const dir = fresh().dir;
+  const talk = new MemoryStore(dir, undefined, { from: "task", chat: "c-1" });
+  await talk.add("user", "Answers in short bullet points");
+  const sources = await talk.sources("user");
+  assert.equal(sources["Answers in short bullet points"]?.from, "task");
+  assert.equal(sources["Answers in short bullet points"]?.chat, "c-1");
+
+  // Corrected by the person: the line's source is now their correction.
+  const fix = new MemoryStore(dir, undefined, { from: "fix" });
+  await fix.replace(
+    "user",
+    "short bullet",
+    "Answers in short bullet points, newest first",
+  );
+  const fixed = await fix.sources("user");
+  assert.deepEqual(Object.keys(fixed), [
+    "Answers in short bullet points, newest first",
+  ]);
+  assert.equal(fixed["Answers in short bullet points, newest first"]?.from, "fix");
+
+  // Removed on the screen, with no origin of its own: the source goes with the line.
+  await new MemoryStore(dir).remove("user", "newest first");
+  assert.deepEqual(await talk.sources("user"), {});
+});

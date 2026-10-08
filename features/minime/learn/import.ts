@@ -47,6 +47,8 @@ export async function importMemory(options: {
     ?.memory;
   return {
     ok: true,
-    kept: Array.isArray(memory) ? await keep(memory, options.onEvent) : [],
+    kept: Array.isArray(memory)
+      ? await keep(memory, options.onEvent, "import")
+      : [],
   };
 }

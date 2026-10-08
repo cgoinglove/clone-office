@@ -950,7 +950,18 @@
       "save": "保存",
       "saved": "已保存",
       "startOver": "重新开始",
-      "startOverHint": "把它保存的内容移到备份里（不删除任何东西），然后从入门步骤重新开始。"
+      "startOverHint": "把它保存的内容移到备份里（不删除任何东西），然后从入门步骤重新开始。",
+      "source": {
+        "task": "{title, select, none {在和你的对话中} other {在对话“{title}”中}}",
+        "review": "{title, select, none {回顾一次对话后学到} other {回顾对话“{title}”后学到}}",
+        "reading": "首次读取你的 AI 记录时",
+        "import": "来自另一个 AI 对你的记忆",
+        "request": "回复同事的请求时",
+        "flow": "{title, select, none {运行自动流程时} other {运行自动流程“{title}”时}}",
+        "fix": "你的更正",
+        "meeting": "在分身会议中",
+        "other": "分身记下的"
+      }
     },
     "office": {
       "thisOffice": "这个办公室",

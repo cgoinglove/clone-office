@@ -163,8 +163,10 @@ export async function lastLearn(): Promise<LearnRecord["last"]> {
 export async function keep(
   entries: unknown[],
   onEvent?: (event: SessionEvent) => void,
+  /** What kept them, recorded beside each line: the first reading, or another AI's memory. */
+  from: "reading" | "import" = "reading",
 ): Promise<string[]> {
-  const store = new MemoryStore(memoryDir());
+  const store = new MemoryStore(memoryDir(), undefined, { from });
   const added: string[] = [];
   for (const entry of entries) {
     if (typeof entry !== "string" || !entry.trim()) continue;

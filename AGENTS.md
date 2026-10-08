@@ -192,7 +192,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   they gave. Anything that changes or can be found again on their computer (projects and their
   status, plans, dates, files) is looked up when needed, never stored; a stale copy misleads.
 - `features/minime/memory/`: the clone's memory, following Hermes Agent's layout and learning
-  loop. `store.ts` keeps `memories/USER.md` and `MEMORY.md` (small, capped, read every session);
+  loop. `store.ts` keeps `memories/USER.md` and `MEMORY.md` (small, capped, read every session),
+  with each line's source beside them in `.sources.json`, never in a prompt (what kept it, from
+  the session's purpose, and its conversation: `session.ts` `sessionOrigin`, after OpenClaw's
+  memory provenance);
   `skills.ts` keeps `skills/<category>/<name>/SKILL.md` packages with `references/`, `templates/`,
   `scripts/`, `assets/`, a usage sidecar and an archive that is never deleted; `curator.ts` sets
   aside long-unused skills weekly; `notes.ts` keeps one page per person, piece of work or topic

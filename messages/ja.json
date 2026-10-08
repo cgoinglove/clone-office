@@ -950,7 +950,18 @@
       "save": "保存",
       "saved": "保存しました",
       "startOver": "最初からやり直す",
-      "startOverHint": "保存している内容をバックアップに移し（何も削除しません）、最初のステップからやり直します。"
+      "startOverHint": "保存している内容をバックアップに移し（何も削除しません）、最初のステップからやり直します。",
+      "source": {
+        "task": "{title, select, none {あなたとの会話で} other {会話「{title}」で}}",
+        "review": "{title, select, none {会話をふり返って学んだこと} other {会話「{title}」をふり返って学んだこと}}",
+        "reading": "AI の記録を最初に読んだとき",
+        "import": "別の AI が覚えていたことから",
+        "request": "同僚の依頼に答えているとき",
+        "flow": "{title, select, none {フローの実行中に} other {フロー「{title}」の実行中に}}",
+        "fix": "あなたの訂正",
+        "meeting": "クローンの会議で",
+        "other": "クローンが覚えたこと"
+      }
     },
     "office": {
       "thisOffice": "このオフィス",

@@ -950,7 +950,18 @@
       "save": "Guardar",
       "saved": "Guardado",
       "startOver": "Empezar de nuevo",
-      "startOverHint": "Pasa lo que guarda a una copia de seguridad (no se borra nada) y vuelve a empezar desde los primeros pasos."
+      "startOverHint": "Pasa lo que guarda a una copia de seguridad (no se borra nada) y vuelve a empezar desde los primeros pasos.",
+      "source": {
+        "task": "{title, select, none {En una conversación contigo} other {En tu conversación «{title}»}}",
+        "review": "{title, select, none {Aprendido tras una conversación} other {Aprendido tras tu conversación «{title}»}}",
+        "reading": "De la primera lectura de tus registros de IA",
+        "import": "De lo que otra IA recordaba de ti",
+        "request": "Al responder a un compañero",
+        "flow": "{title, select, none {Durante una de tus rutinas} other {Durante tu rutina «{title}»}}",
+        "fix": "Tu corrección",
+        "meeting": "En una reunión de los clones",
+        "other": "Guardado por tu clon"
+      }
     },
     "office": {
       "thisOffice": "Esta oficina",

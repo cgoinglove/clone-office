@@ -46,6 +46,7 @@ import {
   ALLOWED_TOOLS,
   type SessionOptions,
   type SessionResult,
+  sessionOrigin,
   skillsDir,
   systemPrompt,
   toolServerEnv,
@@ -338,7 +339,13 @@ export async function runLoop(
         env: {
           ...(cleanEnv() as Record<string, string>),
           CLONE_OFFICE_HOME: minimeHome(),
-          ...toolServerEnv(actor, gate, options.audience),
+          ...toolServerEnv(
+            actor,
+            gate,
+            options.audience,
+            [],
+            sessionOrigin(options),
+          ),
         },
       },
       connectors:

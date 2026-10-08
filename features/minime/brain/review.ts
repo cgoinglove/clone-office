@@ -77,6 +77,8 @@ export async function reviewSession(
   sessionId: string,
   onEvent?: (event: SessionEvent) => void,
   systemPrompt?: string,
+  /** The conversation looked back on: kept beside each memory line the review writes. */
+  chat?: string,
 ): Promise<SessionResult> {
   // The person can turn the learning after each conversation off (Settings › Preferences).
   if (!(await readPreferences()).review)
@@ -89,6 +91,7 @@ export async function reviewSession(
     systemPrompt,
     maxTurns: 12,
     purpose: "review",
+    ...(chat ? { originChat: chat } : {}),
     onEvent,
   });
 }

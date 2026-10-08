@@ -644,7 +644,11 @@ async function answer(options: {
     await finish(office, task, outcome, sending);
     // The person answered while it was handled: their own words teach the mini-me most.
     if (said.length)
-      await learnFromRequest(result.sessionId, result.systemPrompt);
+      await learnFromRequest(
+        result.sessionId,
+        result.systemPrompt,
+        requestChat(task),
+      );
   } finally {
     stop();
   }
@@ -658,6 +662,8 @@ async function answer(options: {
 async function learnFromRequest(
   sessionId: string | undefined,
   prompt?: string,
+  /** The request's own conversation id, kept beside each line it teaches. */
+  origin?: string,
 ): Promise<void> {
   if (!sessionId) return;
   const kept: string[] = [];
@@ -668,6 +674,7 @@ async function learnFromRequest(
       if (line) kept.push(line);
     },
     prompt,
+    origin,
   );
   if (!kept.length) return;
   const chat =

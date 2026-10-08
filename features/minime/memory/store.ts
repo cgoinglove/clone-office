@@ -161,16 +161,88 @@ export function findUniqueMatch(
   return { index: matches[0], ambiguous: false };
 }
 
+/**
+ * Where a memory line came from, kept beside the files and never put in a prompt, so "where did you
+ * get that?" has an answer (OpenClaw's memory provenance): what kept it (a conversation, the look
+ * back after one, the first reading, what another AI remembered, a colleague's request, a flow, or
+ * the person on their screen), the conversation it came from, and when.
+ */
+export interface Source {
+  from: string;
+  chat?: string;
+  at: string;
+}
+
+/** Who writes through this store, recorded with each line it keeps. */
+export interface Origin {
+  from: string;
+  chat?: string;
+}
+
+const SOURCES_FILE = ".sources.json";
+
 export class MemoryStore {
   private failures = 0;
   readonly changes: Change[] = [];
 
   readonly dir: string;
   readonly limits: Record<Target, number>;
+  readonly origin?: Origin;
 
-  constructor(dir: string, limits: Record<Target, number> = DEFAULT_LIMITS) {
+  constructor(
+    dir: string,
+    limits: Record<Target, number> = DEFAULT_LIMITS,
+    origin?: Origin,
+  ) {
     this.dir = dir;
     this.limits = limits;
+    this.origin = origin;
+  }
+
+  /** Each line's source, as far as it was kept (lines from before sources were kept have none). */
+  async sources(target: Target): Promise<Record<string, Source>> {
+    return (await this.readSources())[target] ?? {};
+  }
+
+  private async readSources(): Promise<
+    Partial<Record<Target, Record<string, Source>>>
+  > {
+    const read = await readText(
+      join(/*turbopackIgnore: true*/ this.dir, SOURCES_FILE),
+    );
+    try {
+      return read.raw ? JSON.parse(read.raw) : {};
+    } catch {
+      return {};
+    }
+  }
+
+  /** The sources after a write: the lines it kept get this store's origin; lines gone go too. */
+  private async noteSources(
+    target: Target,
+    entries: string[],
+    changes: Change[],
+  ): Promise<void> {
+    const all = await this.readSources();
+    const mine: Record<string, Source> = { ...(all[target] ?? {}) };
+    const at = new Date().toISOString();
+    for (const change of changes) {
+      if (change.previous) delete mine[change.previous];
+      if (change.action === "remove") delete mine[change.entry];
+      else if (this.origin)
+        mine[change.entry] = {
+          from: this.origin.from,
+          ...(this.origin.chat ? { chat: this.origin.chat } : {}),
+          at,
+        };
+    }
+    const kept = new Set(entries);
+    for (const entry of Object.keys(mine))
+      if (!kept.has(entry)) delete mine[entry];
+    await atomicWrite(
+      join(/*turbopackIgnore: true*/ this.dir, SOURCES_FILE),
+      `${JSON.stringify({ ...all, [target]: mine }, null, 2)}\n`,
+    );
   }
 
   path(target: Target): string {
@@ -525,6 +597,10 @@ export class MemoryStore {
       await atomicWrite(
         this.path(target),
         result.entries.join(ENTRY_DELIMITER),
+      );
+      // Where each line came from; never worth failing the write for.
+      await this.noteSources(target, result.entries, result.changes).catch(
+        () => {},
       );
       this.changes.push(...result.changes);
       return this.success(target, result.entries, result.message, result.extra);

@@ -950,7 +950,18 @@
       "save": "Save",
       "saved": "Saved",
       "startOver": "Start over",
-      "startOverHint": "Moves what it keeps into a backup (nothing is deleted) and starts again from the first steps."
+      "startOverHint": "Moves what it keeps into a backup (nothing is deleted) and starts again from the first steps.",
+      "source": {
+        "task": "{title, select, none {In a conversation with you} other {In your conversation “{title}”}}",
+        "review": "{title, select, none {Learned after a conversation} other {Learned after your conversation “{title}”}}",
+        "reading": "From the first reading of your AI records",
+        "import": "From what another AI remembered about you",
+        "request": "While answering a colleague",
+        "flow": "{title, select, none {During one of your flows} other {During your flow “{title}”}}",
+        "fix": "Your correction",
+        "meeting": "In a meeting of the clones",
+        "other": "Kept by your clone"
+      }
     },
     "office": {
       "thisOffice": "This office",

@@ -163,6 +163,11 @@ export interface SessionOptions {
   /** What the session is for, as the run log records it. */
   purpose?: SessionPurpose;
   /**
+   * The conversation this session is for, when no gate names it (the look back after one, a
+   * colleague's request): kept beside each memory line it writes.
+   */
+  originChat?: string;
+  /**
    * In a conversation with the person, the trust gate: the mini-me may then also read (their files,
    * the web), and whatever they have not let it do alone is asked on their screen.
    */
@@ -292,8 +297,12 @@ export function toolServerEnv(
   audience?: "colleagues",
   /** A colleague's request's services, whose tools the prompt refuses outright (gate/tools.ts). */
   readsOnly: string[] = [],
+  /** What runs this session and the conversation it is for: kept beside each memory line it writes. */
+  origin?: { from: string; chat?: string },
 ): Record<string, string> {
   return {
+    ...(origin ? { MINIME_ORIGIN: origin.from } : {}),
+    ...(origin?.chat ? { MINIME_ORIGIN_CHAT: origin.chat } : {}),
     ...(audience ? { MINIME_AUDIENCE: audience } : {}),
     ...(readsOnly.length ? { MINIME_READS_ONLY: readsOnly.join(",") } : {}),
     MINIME_MEMORY_DIR: memoryDir(),
@@ -312,6 +321,20 @@ export function toolServerEnv(
   };
 }
 
+/** What a session's memory lines are recorded as coming from. */
+export function sessionOrigin(options: {
+  purpose?: SessionPurpose;
+  actor?: "minime" | "review";
+  gate?: SessionGate;
+  originChat?: string;
+}): { from: string; chat?: string } {
+  const chat = options.originChat ?? options.gate?.chat;
+  return {
+    from: options.purpose ?? (options.actor === "review" ? "review" : "task"),
+    ...(chat ? { chat } : {}),
+  };
+}
+
 /** The session's MCP servers: its own tools, and the services the person connected. */
 export function mcpConfig(
   actor: "minime" | "review",
@@ -319,6 +342,7 @@ export function mcpConfig(
   connectors: Connector[] = [],
   audience?: "colleagues",
   readsOnly: string[] = [],
+  origin?: { from: string; chat?: string },
 ): string {
   return JSON.stringify({
     mcpServers: {
@@ -339,7 +363,7 @@ export function mcpConfig(
         // Node runs the TypeScript server as is (bundled in the package); warnings would only
         // clutter its stderr.
         args: ["--no-warnings", toolServerPath()],
-        env: toolServerEnv(actor, gate, audience, readsOnly),
+        env: toolServerEnv(actor, gate, audience, readsOnly, origin),
       },
     },
   });
@@ -436,6 +460,7 @@ export async function runSession(
         : colleague,
       options.audience,
       colleagueRule.services,
+      sessionOrigin(options),
     ),
     "--strict-mcp-config",
     "--tools",

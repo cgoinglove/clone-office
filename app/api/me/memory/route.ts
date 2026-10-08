@@ -5,24 +5,59 @@ import {
   notesDir,
   skillsDir,
 } from "@/features/minime/brain/session";
+import { readChat } from "@/features/minime/chat/store";
 import { NoteStore } from "@/features/minime/memory/notes";
 import { SkillStore } from "@/features/minime/memory/skills";
-import { MemoryStore } from "@/features/minime/memory/store";
+import { MemoryStore, type Source } from "@/features/minime/memory/store";
 import { refuse } from "@/features/minime/server/guard";
+
+/** A line's source as the screen says it: what kept it, and the conversation's title when there is one. */
+async function shown(
+  sources: Record<string, Source>,
+): Promise<Record<string, { from: string; at: string; title?: string }>> {
+  const titles = new Map<string, string | undefined>();
+  const out: Record<string, { from: string; at: string; title?: string }> = {};
+  for (const [entry, source] of Object.entries(sources)) {
+    let title: string | undefined;
+    // A colleague's request has no conversation of its own to name.
+    if (source.chat && !source.chat.startsWith("office-request-")) {
+      if (!titles.has(source.chat))
+        titles.set(
+          source.chat,
+          (await readChat(source.chat).catch(() => undefined))?.info.title,
+        );
+      title = titles.get(source.chat);
+    }
+    out[entry] = {
+      from: source.from,
+      at: source.at,
+      ...(title ? { title } : {}),
+    };
+  }
+  return out;
+}
 
 /** Everything the mini-me keeps, as it is saved: both memory files' entries and how many skills and notes. */
 async function snapshot() {
   const store = new MemoryStore(memoryDir());
-  const [user, memory, skills, notes] = await Promise.all([
-    store.entries("user"),
-    store.entries("memory"),
-    new SkillStore(skillsDir()).list().catch(() => []),
-    new NoteStore(notesDir()).pages().catch(() => []),
-  ]);
+  const [user, memory, skills, notes, userSources, memorySources] =
+    await Promise.all([
+      store.entries("user"),
+      store.entries("memory"),
+      new SkillStore(skillsDir()).list().catch(() => []),
+      new NoteStore(notesDir()).pages().catch(() => []),
+      store.sources("user").catch(() => ({})),
+      store.sources("memory").catch(() => ({})),
+    ]);
   const home = homedir();
   return {
     user,
     memory,
+    // Where each line came from, as far as it was kept: what kept it, its conversation, when.
+    sources: {
+      user: await shown(userSources),
+      memory: await shown(memorySources),
+    },
     skills: skills.length,
     notes: notes.length,
     dir: memoryDir().startsWith(home)

@@ -950,7 +950,18 @@
       "save": "저장",
       "saved": "저장했어요",
       "startOver": "처음부터 다시",
-      "startOverHint": "지금까지 저장한 것을 보관함으로 옮기고(지우지 않아요), 첫 단계부터 다시 시작해요."
+      "startOverHint": "지금까지 저장한 것을 보관함으로 옮기고(지우지 않아요), 첫 단계부터 다시 시작해요.",
+      "source": {
+        "task": "{title, select, none {나와 나눈 대화에서} other {“{title}” 대화에서}}",
+        "review": "{title, select, none {대화를 돌아보며 배움} other {“{title}” 대화를 돌아보며 배움}}",
+        "reading": "내 AI 기록을 처음 읽을 때",
+        "import": "다른 AI가 기억하던 것에서",
+        "request": "동료 부탁에 답하면서",
+        "flow": "{title, select, none {플로우를 돌 때} other {“{title}” 플로우를 돌 때}}",
+        "fix": "내가 고쳐 준 것",
+        "meeting": "클론 회의에서",
+        "other": "클론이 기억한 것"
+      }
     },
     "office": {
       "thisOffice": "이 오피스",
