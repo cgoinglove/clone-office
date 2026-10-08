@@ -363,19 +363,6 @@ export async function openMeeting(
   ).meeting;
 }
 
-export async function meeting(
-  office: OfficeConfig,
-  id: string,
-): Promise<Meeting> {
-  return (
-    await call<{ meeting: Meeting }>(
-      office.relay,
-      `/meetings/${encodeURIComponent(id)}`,
-      { token: office.token },
-    )
-  ).meeting;
-}
-
 /** The office's latest meetings, newest first. */
 export async function meetings(
   office: OfficeConfig,

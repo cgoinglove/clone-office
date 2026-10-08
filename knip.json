@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "features/minime/memory/mcp-server.ts",
+    "features/minime/connectors/headers.ts",
+    "features/relay/server.ts",
+    "plugin/server/main.ts",
+    "plugin/hooks/office.ts",
+    "scripts/*.mjs",
+    "bin/clone-office.cjs",
+    "bin/clone-office.mjs"
+  ],
+  "ignore": [
+    ".design-sync/**",
+    "components/ui/**",
+    "skills/**",
+    "plugin/.claude-plugin/types/**"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "ignoreDependencies": ["claude-code", "postcss", "cmdk"]
+}

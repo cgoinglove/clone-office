@@ -89,10 +89,6 @@ export function codexHome(): string {
   return process.env.CODEX_HOME ?? join(homedir(), ".codex");
 }
 
-export function geminiHome(): string {
-  return join(homedir(), ".gemini");
-}
-
 export function hermesHome(): string {
   return process.env.HERMES_HOME ?? join(homedir(), ".hermes");
 }

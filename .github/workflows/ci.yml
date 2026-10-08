@@ -37,6 +37,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm lint
+      # Files, exports and dependencies nothing uses any more (after Thursday's CI). It reports and
+      # never fails the run: the old office drawing waits for the design system's next export.
+      - run: pnpm knip
+        continue-on-error: true
       # Every AI service, relay and Claude Code is stood in for; none of these reaches the network.
       - run: pnpm test
       # The only check that catches a client component importing something server-only.

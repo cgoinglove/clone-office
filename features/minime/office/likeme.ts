@@ -7,7 +7,7 @@ import { changeState, type OfficeState } from "./state.ts";
 
 export type Outcome = "as-is" | "changed" | "held";
 
-export interface Recorded {
+interface Recorded {
   at: string;
   /** The menu kind it was answered as. */
   menu?: string;

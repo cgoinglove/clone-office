@@ -245,26 +245,3 @@ export async function codexRolloutFiles(): Promise<
   }
   return out;
 }
-
-export async function codexConversations(): Promise<Conversation[]> {
-  const home = codexHome();
-  const [files, imported] = await Promise.all([
-    rollouts(home),
-    importedIds(home),
-  ]);
-  const out: Conversation[] = [];
-  for (const file of files) {
-    const meta = await sessionMeta(file);
-    if (!meta) continue;
-    if (meta.id && imported.has(meta.id)) continue;
-    // `codex exec` runs and sub-agents are started by programs, not typed by the person.
-    if (meta.source === "exec" || typeof meta.source === "object") continue;
-    out.push({
-      tool: TOOL,
-      cwd: typeof meta.cwd === "string" ? meta.cwd : undefined,
-      updatedMs: (await stat(file)).mtimeMs,
-      turns: () => rolloutTurns(streamLines(file)),
-    });
-  }
-  return out;
-}

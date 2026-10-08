@@ -183,14 +183,3 @@ export async function projectDirs(): Promise<ProjectDir[]> {
   }
   return out;
 }
-
-export async function claudeCodeConversations(): Promise<Conversation[]> {
-  return (await projectDirs()).flatMap(({ cwd, files }) =>
-    files.map((file) => ({
-      tool: TOOL,
-      cwd,
-      updatedMs: file.mtimeMs,
-      turns: () => sessionTurns(streamLines(file.path)),
-    })),
-  );
-}
