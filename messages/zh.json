@@ -1076,6 +1076,12 @@
       "failed": "{count} 次失败",
       "tokens": "{tokens} 个 token",
       "cost": "按模型报告的 API 价格约为 {cost}。如果是订阅，不会额外付费。"
+    },
+    "notices": {
+      "title": "在这个浏览器中",
+      "toggle": "在这里通知我",
+      "body": "当你没在看这个标签页时，每有一件新的待你处理的事就通知你。",
+      "blocked": "这个浏览器屏蔽了 Clone Office 的通知，请在浏览器的网站设置中允许。"
     }
   },
   "shell": {

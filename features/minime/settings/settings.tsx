@@ -24,6 +24,7 @@ import { ConnectorsPanel } from "../connectors-panel";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import type { Preferences } from "../home/use-preferences";
 import { MessengerPanel } from "../messenger-panel";
+import { BrowserNotices } from "./browser-notices";
 import { FilesSection } from "./files-section";
 import { GeneralSection } from "./general-section";
 import { OfficeSection } from "./office-section";
@@ -242,6 +243,7 @@ export function SettingsDialog({
                 {current.id === "connectors" && <ConnectorsPanel />}
                 {current.id === "phone" && (
                   <div className="flex flex-col gap-10">
+                    <BrowserNotices />
                     <MessengerPanel />
                     <PreferencesSection
                       preferences={preferences}

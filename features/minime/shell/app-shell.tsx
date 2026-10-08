@@ -11,6 +11,7 @@ import { type ReactNode, useEffect, useRef } from "react";
 import { SettingsDialog } from "../settings/settings";
 import { AppProvider, useApp, useAppState } from "./app-state";
 import { Sidebar } from "./sidebar";
+import { useTurnNotices } from "./turn-notices";
 import { yourTurn } from "./your-turn";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ function Frame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const waiting = yourTurn(app.office, app.chatAsks).length;
+  useTurnNotices(app.office, app.chatAsks);
 
   const screen = pathname.split("/")[1] || "chat";
   const title = t(

@@ -1076,6 +1076,12 @@
       "failed": "{count} failed",
       "tokens": "{tokens} tokens",
       "cost": "About {cost} at API prices, as the model reports it. On a subscription nothing more is paid."
+    },
+    "notices": {
+      "title": "In this browser",
+      "toggle": "Notify me here",
+      "body": "A notice for each new thing that waits on you while this tab is not in view.",
+      "blocked": "This browser blocks notices from Clone Office; allow them in the browser's site settings."
     }
   },
   "shell": {

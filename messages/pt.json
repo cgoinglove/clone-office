@@ -1076,6 +1076,12 @@
       "failed": "{count} falharam",
       "tokens": "{tokens} tokens",
       "cost": "Cerca de {cost} pelos preços da API, como o modelo informa. Em uma assinatura, nada a mais é pago."
+    },
+    "notices": {
+      "title": "Neste navegador",
+      "toggle": "Me avisar aqui",
+      "body": "Um aviso para cada coisa nova esperando por você enquanto esta aba não está à vista.",
+      "blocked": "Este navegador bloqueia os avisos do Clone Office; permita nas configurações do site no navegador."
     }
   },
   "shell": {
