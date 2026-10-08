@@ -221,6 +221,22 @@ export async function task(office: OfficeConfig, id: string): Promise<Task> {
 }
 
 /**
+ * One request by its id however old it is, or none when the relay has no such request for this
+ * mini-me. Any other failure throws, so a relay out of reach is never taken for a request gone.
+ */
+export async function findTask(
+  office: OfficeConfig,
+  id: string,
+): Promise<Task | undefined> {
+  try {
+    return await task(office, id);
+  } catch (error) {
+    if (error instanceof OfficeError && error.code === "not-found") return;
+    throw error;
+  }
+}
+
+/**
  * A request to someone without a mini-me: the relay makes a link whose page they answer on. The
  * full link is returned to give to the person, who sends it themselves. Links are made on `base`,
  * the relay's address as others reach it (host.ts `publicRelay`).

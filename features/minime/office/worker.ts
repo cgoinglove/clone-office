@@ -10,6 +10,7 @@ import { personLanguage } from "../server/language.ts";
 import { readPreferences } from "../server/preferences.ts";
 import {
   type Card,
+  findTask,
   type InboxEvent,
   inbox,
   loadOffice,
@@ -287,9 +288,7 @@ function onEvent(
       .finally(async () => {
         worker.busy.delete(task.id);
         if (!worker.again?.delete(task.id) || worker.closing) return;
-        const now = await tasks(office)
-          .then((all) => all.tasks.find((t) => t.id === task.id))
-          .catch(() => undefined);
+        const now = await findTask(office, task.id).catch(() => undefined);
         if (now)
           onEvent(worker, office, { seq: 0, type: "task", task: now }, cards);
       });

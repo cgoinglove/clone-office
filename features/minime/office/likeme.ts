@@ -7,13 +7,6 @@ import { changeState, type OfficeState } from "./state.ts";
 
 export type Outcome = "as-is" | "changed" | "held";
 
-interface Recorded {
-  at: string;
-  /** The menu kind it was answered as. */
-  menu?: string;
-  outcome: Outcome;
-}
-
 const KEEP = 500;
 const DAY = 24 * 60 * 60 * 1000;
 

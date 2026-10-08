@@ -84,6 +84,35 @@ test("questions kept for later wait while their request is open, and go when it 
   );
 });
 
+test("a question kept about an older request is looked up on its own, and stays while the relay cannot say", async () => {
+  const { changeState, loadState } = await import("./state");
+  const { laterQuestions } = await import("./handle");
+  await changeState((s) => {
+    s.later = {
+      old: { task: "t-old", kind: "question", question: "Q1", at: "x" },
+      gone: { task: "t-gone", kind: "question", question: "Q2", at: "x" },
+      unsure: { task: "t-unsure", kind: "question", question: "Q3", at: "x" },
+    };
+  });
+  const open = {
+    id: "t-old",
+    status: { state: "INPUT_REQUIRED", timestamp: "" },
+    history: [],
+    metadata: { from: "", to: "", created: "" },
+    contextId: "",
+  } as never;
+  const kept = await laterQuestions([], async (id) => {
+    if (id === "t-old") return open;
+    if (id === "t-unsure") throw new Error("relay-unreachable");
+    return undefined;
+  });
+  assert.deepEqual(kept.map((q) => q.id).sort(), ["old", "unsure"]);
+  assert.deepEqual(Object.keys((await loadState()).later).sort(), [
+    "old",
+    "unsure",
+  ]);
+});
+
 test("a request tells the brain to wait for the person rather than guess", async () => {
   const { requestPrompt } = await import("./handle");
   assert.match(

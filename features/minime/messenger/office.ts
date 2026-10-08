@@ -3,7 +3,7 @@
 // tests need no relay.
 
 import { FINAL } from "../../relay/relay.ts";
-import { loadOffice, members, personAway, tasks } from "../office/client.ts";
+import { findTask, loadOffice, members, personAway } from "../office/client.ts";
 import { answerLater } from "../office/handle.ts";
 import { changeState, loadState } from "../office/state.ts";
 import { personLanguage } from "../server/language.ts";
@@ -59,11 +59,10 @@ export function officeSide(gateUrl: () => string): OfficeSide {
     async about(task) {
       const office = await loadOffice();
       if (!office) return undefined;
-      const [{ tasks: all }, { members: everyone }] = await Promise.all([
-        tasks(office),
+      const [found, { members: everyone }] = await Promise.all([
+        findTask(office, task),
         members(office),
       ]);
-      const found = all.find((one) => one.id === task);
       if (!found) return undefined;
       const from =
         everyone.find((member) => member.id === found.metadata.from)?.card

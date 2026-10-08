@@ -10,7 +10,7 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { createRemoteJWKSet, jwtVerify } from "jose";
-import { atomicWrite, readText, withLock } from "../memory/files.ts";
+import { withLock } from "../memory/files.ts";
 import { minimeHome } from "../server/paths.ts";
 import {
   readSecretJson,

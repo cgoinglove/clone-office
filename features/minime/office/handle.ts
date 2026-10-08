@@ -22,11 +22,11 @@ import { loadExcludes } from "../server/exclude.ts";
 import { type CheckOutcome, checkBeforeSending, decideCheck } from "./check.ts";
 import {
   type Card,
+  findTask,
   loadOffice,
   members,
   type OfficeConfig,
   type Task,
-  tasks,
   updateRequest,
 } from "./client.ts";
 import {
@@ -162,7 +162,7 @@ export async function handleRequest(options: {
   if (!(await takeLease(task.id))) return;
   try {
     // It may have been answered since this process heard of it: look at the relay again.
-    const now = (await tasks(office)).tasks.find((t) => t.id === task.id);
+    const now = await findTask(office, task.id);
     const open =
       now &&
       (now.status.state === "SUBMITTED" || now.status.state === "WORKING") &&
@@ -274,9 +274,7 @@ async function lateWords(
   seen: number,
   from: Card | undefined,
 ): Promise<{ text: string; seen: number; notes: StepIn[] }> {
-  const now = (
-    await tasks(office).catch(() => ({ tasks: [] as Task[] }))
-  ).tasks.find((t) => t.id === id);
+  const now = await findTask(office, id).catch(() => undefined);
   const theirs = now?.history.filter((m) => m.role === "user") ?? [];
   const added = theirs.slice(seen);
   const notes = await takeNotes(id);
@@ -746,16 +744,38 @@ async function park(
   });
 }
 
-/** Questions about requests that wait for the person, for their screen; closed requests drop out. */
+/**
+ * Questions about requests that wait for the person, for their screen; closed requests drop out.
+ * `listed` is the office's latest requests; one kept about an older request is looked up on its
+ * own (`lookUp`), and stays while the relay cannot say.
+ */
 export async function laterQuestions(
-  open: Task[],
+  listed: Task[],
+  lookUp?: (task: string) => Promise<Task | undefined>,
 ): Promise<(Later & { id: string })[]> {
-  const openIds = new Set(
-    open.filter((t) => !FINAL_STATES.includes(t.status.state)).map((t) => t.id),
-  );
+  const known = new Map(listed.map((t) => [t.id, t]));
   const { later } = await loadState();
+  const closed = async (task: string): Promise<boolean> => {
+    if (known.has(task))
+      return FINAL_STATES.includes(known.get(task)?.status.state ?? "");
+    if (!lookUp) return false;
+    try {
+      const found = await lookUp(task);
+      return !found || FINAL_STATES.includes(found.status.state);
+    } catch {
+      return false;
+    }
+  };
+  const tasksKept = [...new Set(Object.values(later).map((e) => e.task))];
+  const shut = new Set(
+    (
+      await Promise.all(
+        tasksKept.map(async (task) => ((await closed(task)) ? task : "")),
+      )
+    ).filter(Boolean),
+  );
   const gone = Object.entries(later)
-    .filter(([, entry]) => !openIds.has(entry.task))
+    .filter(([, entry]) => shut.has(entry.task))
     .map(([id]) => id);
   if (gone.length)
     await changeState((s) => {
@@ -776,18 +796,30 @@ export async function answerLater(
   given: string,
   options: { gateUrl: string; language?: string },
 ): Promise<boolean> {
+  const office = await loadOffice();
+  if (!office) return false;
   let entry: Later | undefined;
   await changeState((s) => {
     entry = s.later[id];
     delete s.later[id];
   });
-  const office = await loadOffice();
   const kept = entry;
-  if (!kept || !office) return false;
+  if (!kept) return false;
+  // Not carried on (another process holds the request, or the relay is out of reach): the
+  // question waits again rather than the answer being lost.
+  const keepAgain = () =>
+    changeState((s) => {
+      s.later[id] ??= kept;
+    });
   void (async () => {
-    if (!(await takeLease(kept.task))) return;
+    if (!(await takeLease(kept.task))) return keepAgain();
     try {
-      const task = (await tasks(office)).tasks.find((t) => t.id === kept.task);
+      let task: Task | undefined;
+      try {
+        task = await findTask(office, kept.task);
+      } catch {
+        return keepAgain();
+      }
       if (!task || FINAL_STATES.includes(task.status.state)) return;
       // Theirs to answer: what they wrote goes as their own words, and that answers it.
       if (kept.kind === "self") {
@@ -849,10 +881,10 @@ const OPEN_STATES = ["SUBMITTED", "WORKING", "INPUT_REQUIRED"];
 async function openRequest(id: string) {
   const office = await loadOffice();
   if (!office) return undefined;
-  const task = (await tasks(office)).tasks.find(
-    (t) => t.id === id && t.metadata.to === office.member,
-  );
-  return task && OPEN_STATES.includes(task.status.state)
+  const task = await findTask(office, id);
+  return task &&
+    task.metadata.to === office.member &&
+    OPEN_STATES.includes(task.status.state)
     ? { office, task }
     : undefined;
 }

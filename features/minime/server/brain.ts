@@ -2,8 +2,7 @@
 // signed in to. We run it with documented options only and never touch its login. Here: where it
 // is, the model it starts on, and the environment it runs in (sessions run in brain/session.ts).
 
-import { spawn } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { findOnPath } from "./which.ts";

@@ -20,7 +20,9 @@ import {
   type Message,
   type Relay,
   RelayError,
+  TASK_STATES,
   type Task,
+  type TaskState,
 } from "./relay.ts";
 
 export const PROTOCOL_VERSION = "1.0";
@@ -355,13 +357,7 @@ export async function a2aCall(
         typeof message.taskId === "string" && message.taskId
           ? message.taskId
           : contextId
-            ? (await relay.tasks(caller, 200)).find(
-                (task) =>
-                  task.contextId === contextId &&
-                  task.metadata.from === caller.id &&
-                  task.metadata.to === target.id &&
-                  !FINAL.includes(task.status.state),
-              )?.id
+            ? await relay.openIn(caller, target.id, contextId)
             : undefined;
       let task: Task;
       if (taskId) {
@@ -412,18 +408,23 @@ export async function a2aCall(
         Math.min(Number(params.pageSize) || 50, 100),
       );
       const offset = Math.max(0, Number(params.pageToken) || 0);
-      const all = (await relay.tasks(caller, 200)).filter((task) => {
-        const other =
-          task.metadata.from === caller.id
-            ? task.metadata.to
-            : task.metadata.from;
-        return (
-          other === target.id &&
-          (!contextId || task.contextId === contextId) &&
-          (!state || `${STATE_PREFIX}${task.status.state}` === state)
-        );
-      });
-      const page = all.slice(offset, offset + pageSize);
+      const own = state.startsWith(STATE_PREFIX)
+        ? state.slice(STATE_PREFIX.length)
+        : state;
+      // A state no request can be in finds none (rather than every request).
+      if (own && !TASK_STATES.includes(own as TaskState))
+        return ok(id, {
+          tasks: [],
+          nextPageToken: "",
+          pageSize,
+          totalSize: 0,
+        });
+      const { tasks: page, total } = await relay.tasksBetween(
+        caller,
+        target.id,
+        { contextId, state: own as TaskState },
+        { limit: pageSize, offset },
+      );
       return ok(id, {
         tasks: page.map((task) =>
           a2aTask(task, options.base, {
@@ -432,9 +433,9 @@ export async function a2aCall(
           }),
         ),
         nextPageToken:
-          offset + pageSize < all.length ? String(offset + pageSize) : "",
+          offset + pageSize < total ? String(offset + pageSize) : "",
         pageSize,
-        totalSize: all.length,
+        totalSize: total,
       });
     }
     // cancel: the one asking takes a request back.

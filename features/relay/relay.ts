@@ -58,6 +58,14 @@ export const FINAL: TaskState[] = [
   "REJECTED",
 ];
 
+/** Every state a request can be in. */
+export const TASK_STATES: TaskState[] = [
+  "SUBMITTED",
+  "WORKING",
+  "INPUT_REQUIRED",
+  ...FINAL,
+];
+
 /** What a member shows the office: A2A's AgentCard, with the person's status as an extension. */
 export interface Card {
   name: string;
@@ -245,6 +253,8 @@ const MIGRATIONS: string[][] = [
   [
     "CREATE TABLE ai_calls (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, member_id TEXT NOT NULL, provider TEXT NOT NULL, day DATE NOT NULL, calls INT NOT NULL DEFAULT 0, PRIMARY KEY (office_id, member_id, provider, day))",
   ],
+  // A2A clients go on by their conversation (contextId).
+  ["CREATE INDEX tasks_context ON tasks (context_id)"],
 ];
 
 /**
@@ -937,72 +947,86 @@ export class Relay {
   }
 
   async task(id: string): Promise<Task> {
-    const row = await this.taskRow(this.db, id);
-    const messages = await this.db.query<{
-      id: string;
-      role: "user" | "agent";
-      from_member: string;
-      text: string;
-      files: FileRef[] | string | null;
-      at: unknown;
-      by_person: boolean | null;
-    }>(
-      "SELECT id, role, from_member, text, files, at, by_person FROM messages WHERE task_id = $1 ORDER BY seq",
-      [id],
-    );
-    const history = messages.map((m): Message => {
-      const files = (
-        typeof m.files === "string" ? JSON.parse(m.files) : (m.files ?? [])
-      ) as FileRef[];
+    const [task] = await this.build([await this.taskRow(this.db, id)]);
+    return task;
+  }
+
+  /**
+   * Requests from their rows, in the rows' order, with three queries however many there are. For
+   * `member`, a link request they made carries the link's path, to give again.
+   */
+  private async build(rows: TaskRow[], member?: string): Promise<Task[]> {
+    if (!rows.length) return [];
+    const ids = rows.map((row) => row.id);
+    const [messages, links] = await Promise.all([
+      this.db.query<{
+        task_id: string;
+        id: string;
+        role: "user" | "agent";
+        from_member: string;
+        text: string;
+        files: FileRef[] | string | null;
+        at: unknown;
+        by_person: boolean | null;
+      }>(
+        "SELECT task_id, id, role, from_member, text, files, at, by_person FROM messages WHERE task_id = ANY($1::text[]) ORDER BY seq",
+        [ids],
+      ),
+      this.db.query<{ task_id: string; name: string; token: string }>(
+        "SELECT task_id, name, token FROM links WHERE task_id = ANY($1::text[])",
+        [ids],
+      ),
+    ]);
+    const byTask = new Map<string, typeof messages>();
+    for (const m of messages) {
+      const list = byTask.get(m.task_id);
+      if (list) list.push(m);
+      else byTask.set(m.task_id, [m]);
+    }
+    const linkOf = new Map(links.map((link) => [link.task_id, link]));
+    return rows.map((row): Task => {
+      const history = (byTask.get(row.id) ?? []).map((m): Message => {
+        const files = (
+          typeof m.files === "string" ? JSON.parse(m.files) : (m.files ?? [])
+        ) as FileRef[];
+        return {
+          messageId: m.id,
+          role: m.role,
+          parts: [{ text: m.text }],
+          ...(files.length ? { files } : {}),
+          taskId: row.id,
+          contextId: row.context_id,
+          metadata: {
+            from: m.from_member,
+            at: iso(m.at),
+            ...(m.by_person ? { by: "person" as const } : {}),
+          },
+        };
+      });
+      const last = history.at(-1);
+      const link = row.to_member.startsWith("link:")
+        ? linkOf.get(row.id)
+        : undefined;
       return {
-        messageId: m.id,
-        role: m.role,
-        parts: [{ text: m.text }],
-        ...(files.length ? { files } : {}),
-        taskId: id,
+        id: row.id,
         contextId: row.context_id,
+        status: {
+          state: row.state,
+          ...(last ? { message: last } : {}),
+          timestamp: iso(row.updated),
+        },
+        history,
         metadata: {
-          from: m.from_member,
-          at: iso(m.at),
-          ...(m.by_person ? { by: "person" as const } : {}),
+          from: row.from_member,
+          to: row.to_member,
+          created: iso(row.created),
+          ...(link ? { guest: link.name } : {}),
+          ...(link && member && row.from_member === member
+            ? { link: `/r/${link.token}` }
+            : {}),
         },
       };
     });
-    const last = history.at(-1);
-    const [link] = row.to_member.startsWith("link:")
-      ? await this.db.query<{ name: string }>(
-          "SELECT name FROM links WHERE task_id = $1",
-          [id],
-        )
-      : [];
-    return {
-      id,
-      contextId: row.context_id,
-      status: {
-        state: row.state,
-        ...(last ? { message: last } : {}),
-        timestamp: iso(row.updated),
-      },
-      history,
-      metadata: {
-        from: row.from_member,
-        to: row.to_member,
-        created: iso(row.created),
-        ...(link ? { guest: link.name } : {}),
-      },
-    };
-  }
-
-  /** A link request, as the one who made it sees it: with the link's path, to give again. */
-  private async withLink(task: Task, member: string): Promise<Task> {
-    if (task.metadata.from !== member || !task.metadata.guest) return task;
-    const [row] = await this.db.query<{ token: string }>(
-      "SELECT token FROM links WHERE task_id = $1",
-      [task.id],
-    );
-    return row
-      ? { ...task, metadata: { ...task.metadata, link: `/r/${row.token}` } }
-      : task;
   }
 
   /** One request, for the member who sent it or was asked; no one else learns it exists. */
@@ -1010,19 +1034,64 @@ export class Relay {
     const row = await this.taskRow(this.db, id);
     if (row.from_member !== member.id && row.to_member !== member.id)
       throw new RelayError(404, "No such request.", "not-found");
-    return this.withLink(await this.task(id), member.id);
+    const [task] = await this.build([row], member.id);
+    return task;
   }
 
   /** The member's requests, sent and received, latest first. */
   async tasks(member: Caller, limit = 50): Promise<Task[]> {
-    const rows = await this.db.query<{ id: string }>(
-      "SELECT id FROM tasks WHERE from_member = $1 OR to_member = $1 ORDER BY updated DESC, id LIMIT $2",
+    const rows = await this.db.query<TaskRow>(
+      "SELECT id, context_id, from_member, to_member, state, created, updated FROM tasks WHERE from_member = $1 OR to_member = $1 ORDER BY updated DESC, id LIMIT $2",
       [member.id, limit],
     );
-    const out: Task[] = [];
-    for (const row of rows)
-      out.push(await this.withLink(await this.task(row.id), member.id));
-    return out;
+    return this.build(rows, member.id);
+  }
+
+  /**
+   * The member's requests with one other member, latest first, filtered and paged by the database
+   * (A2A's ListTasks): `contextId` one conversation, `state` one state.
+   */
+  async tasksBetween(
+    member: Caller,
+    other: string,
+    filter: { contextId?: string; state?: TaskState },
+    page: { limit: number; offset: number },
+  ): Promise<{ tasks: Task[]; total: number }> {
+    const where =
+      "((from_member = $1 AND to_member = $2) OR (from_member = $2 AND to_member = $1)) AND ($3 = '' OR context_id = $3) AND ($4 = '' OR state = $4)";
+    const params = [
+      member.id,
+      other,
+      filter.contextId ?? "",
+      filter.state ?? "",
+    ];
+    const [rows, [count]] = await Promise.all([
+      this.db.query<TaskRow>(
+        `SELECT id, context_id, from_member, to_member, state, created, updated FROM tasks WHERE ${where} ORDER BY updated DESC, id LIMIT $5 OFFSET $6`,
+        [...params, page.limit, page.offset],
+      ),
+      this.db.query<{ total: string | number }>(
+        `SELECT count(*) AS total FROM tasks WHERE ${where}`,
+        params,
+      ),
+    ]);
+    return {
+      tasks: await this.build(rows, member.id),
+      total: Number(count?.total ?? 0),
+    };
+  }
+
+  /** The request still open that `member` sent `to` in one conversation, the latest. */
+  async openIn(
+    member: Caller,
+    to: string,
+    contextId: string,
+  ): Promise<string | undefined> {
+    const [row] = await this.db.query<{ id: string }>(
+      "SELECT id FROM tasks WHERE context_id = $1 AND from_member = $2 AND to_member = $3 AND state <> ALL($4::text[]) ORDER BY updated DESC, id LIMIT 1",
+      [contextId, member.id, to, FINAL],
+    );
+    return row?.id;
   }
 
   /** What concerns the member after `after`, waiting up to `waitMs` for something to come. */
@@ -1340,6 +1409,12 @@ export class Relay {
         now.getTime() - MEETING_DAYS * 24 * 60 * 60 * 1000,
       ).toISOString(),
     ]);
+    // Files past their two weeks, even in an office that puts no new one.
+    await this.db.query("DELETE FROM files WHERE expires < $1", [
+      now.toISOString(),
+    ]);
+    // Postgres reclaims what was deleted by itself (autovacuum); PGlite has no such worker.
+    if (this.db.kind === "pglite") await this.db.exec("VACUUM");
   }
 
   private async events(member: string, after: number): Promise<InboxEvent[]> {
@@ -1350,6 +1425,21 @@ export class Relay {
     }>(
       "SELECT seq, type, task_id FROM events WHERE member = $1 AND seq > $2 ORDER BY seq LIMIT 50",
       [member, after],
+    );
+    // Each request once, however many of the news are about it, as it is now.
+    const ids = [
+      ...new Set(
+        rows.filter((row) => row.type !== "meeting").map((row) => row.task_id),
+      ),
+    ];
+    const found = ids.length
+      ? await this.db.query<TaskRow>(
+          "SELECT id, context_id, from_member, to_member, state, created, updated FROM tasks WHERE id = ANY($1::text[])",
+          [ids],
+        )
+      : [];
+    const built = new Map(
+      (await this.build(found, member)).map((task) => [task.id, task]),
     );
     const out: InboxEvent[] = [];
     for (const row of rows) {
@@ -1362,7 +1452,9 @@ export class Relay {
         if (meeting) out.push({ seq, type: "meeting", meeting });
         continue;
       }
-      out.push({ seq, type: row.type, task: await this.task(row.task_id) });
+      // A request gone since (its office closed) is no news either.
+      const task = built.get(row.task_id);
+      if (task) out.push({ seq, type: row.type, task });
     }
     return out;
   }

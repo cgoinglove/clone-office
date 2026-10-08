@@ -9,16 +9,12 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { codexHome } from "../paths.ts";
 import {
-  type Conversation,
   cleanPrompt,
   headLines,
   type Lines,
   makeTurn,
-  streamLines,
   type Turn,
 } from "./common.ts";
-
-const TOOL = "Codex";
 
 interface Line {
   type?: string;

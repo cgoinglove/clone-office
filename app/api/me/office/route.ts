@@ -3,6 +3,7 @@ import { brainProblem } from "@/features/minime/brain/choice";
 import { pendingAsks } from "@/features/minime/gate/gate";
 import { draftCard, draftMenu, draftWays } from "@/features/minime/office/card";
 import {
+  findTask,
   inviteLink,
   joinOffice,
   leaveOffice,
@@ -111,19 +112,21 @@ export async function GET(request: Request) {
       ),
       asks: pendingAsks().filter((ask) => ask.chat?.startsWith("office-")),
       // Questions about requests kept for the person to answer when they can.
-      later: (await laterQuestions(requests)).map((entry) => ({
-        id: entry.id,
-        task: entry.task,
-        from: entry.from,
-        at: entry.at,
-        // The person's to answer themselves: what they write goes as their own words.
-        ...(entry.kind === "self" ? { self: true } : {}),
-        ask: {
-          kind: "question",
-          question: entry.question,
-          ...(entry.choices?.length ? { choices: entry.choices } : {}),
-        },
-      })),
+      later: (await laterQuestions(requests, (id) => findTask(office, id))).map(
+        (entry) => ({
+          id: entry.id,
+          task: entry.task,
+          from: entry.from,
+          at: entry.at,
+          // The person's to answer themselves: what they write goes as their own words.
+          ...(entry.kind === "self" ? { self: true } : {}),
+          ask: {
+            kind: "question",
+            question: entry.question,
+            ...(entry.choices?.length ? { choices: entry.choices } : {}),
+          },
+        }),
+      ),
       // Requests colleagues sent that the person stepped into: their notes to the clone, and the
       // ones they answer themselves.
       steps: await stepsFor(requests),

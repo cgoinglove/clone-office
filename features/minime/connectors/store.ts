@@ -8,7 +8,7 @@
 import { chmod, mkdir, readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { AuthorizationServerMetadata } from "@modelcontextprotocol/sdk/shared/auth.js";
-import { atomicWrite, readText, withLock } from "../memory/files.ts";
+import { withLock } from "../memory/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 import {

@@ -5,20 +5,16 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { claudeProjectsDir } from "../paths.ts";
 import {
-  type Conversation,
   cleanPrompt,
   headLines,
   type LineMessage,
   type Lines,
   makeTurn,
-  streamLines,
   type Turn,
 } from "./common.ts";
 import { mapLimit } from "./lines.ts";
 
 export type { LineMessage } from "./common.ts";
-
-const TOOL = "Claude Code";
 
 interface Row {
   type?: string;
