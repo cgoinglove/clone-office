@@ -91,6 +91,7 @@ jobs:
           # Empty on a push: a release is always `latest`.
           CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'latest' }}
 
+      - run: pnpm install --frozen-lockfile
       # The same gates a local `node scripts/pack.mjs` runs: types, every language, the build.
       - run: node scripts/pack.mjs
         env:
