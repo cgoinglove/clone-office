@@ -545,8 +545,15 @@ These words help discussion. They do not mandate separate services, tables or UI
   The launcher (`npx clone-office`) starts the app on 127.0.0.1 from port 4417 and opens `/`;
   `npx clone-office relay` starts a relay; `npx clone-office join <invite link>` keeps the invite in
   `settings.json` (`invite`, after checking the office answers) and starts the app, whose first
-  steps or Settings › Office join with it (`connect` and `join` each take either link). In the package, `CLONE_OFFICE_APP_DIR` tells the app where
-  its guide and tool server are (`server/paths.ts` `appDir`, `toolServerPath`).
+  steps or Settings › Office join with it (`connect` and `join` each take either link). When the
+  app already runs for the folder (on the port `app.json` names), it is opened rather than started
+  twice. `npx clone-office service install|uninstall|status` (`bin/service.mjs`, after OpenClaw's
+  gateway service) has it start at sign-in with no window: a LaunchAgent on macOS and a systemd user
+  service on Linux, both restarted only after a crash (the launcher exits quietly when it already
+  runs), and a hidden script in the Startup folder on Windows; Settings › General's **Start with
+  this computer** runs the same command through `app/api/me/service`. In the package,
+  `CLONE_OFFICE_APP_DIR` tells the app where its guide and tool server are (`server/paths.ts`
+  `appDir`, `toolServerPath`).
 
 `pnpm dev` serves on loopback. This is Next.js 16; consult the installed Next documentation
 before relying on older APIs. Use typecheck, lint, `pnpm test` and build as appropriate to the change.

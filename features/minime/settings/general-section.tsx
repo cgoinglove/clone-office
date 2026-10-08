@@ -1,8 +1,9 @@
 "use client";
 
 // Settings › General: the screen's language (also the one the clone works in from then on), the
-// theme, and what this app is, with where to read how it works and, when npm has a newer version,
-// the line that starts it (server/update.ts).
+// theme, starting with the computer (bin/service.mjs, through app/api/me/service), and what this
+// app is, with where to read how it works and, when npm has a newer version, the line that starts
+// it (server/update.ts).
 
 import {
   ArrowUpCircle,
@@ -11,6 +12,7 @@ import {
   Copy,
   Monitor,
   Moon,
+  Power,
   Sun,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -19,10 +21,11 @@ import { useEffect, useState } from "react";
 import { Segmented } from "@/components/ui/segmented";
 import { Logo } from "@/features/brand/logo";
 import { setTheme, useTheme } from "@/hooks/use-theme";
-import { pickLanguage } from "@/i18n/client";
+import { pickLanguage, useProblem } from "@/i18n/client";
 import { LOCALE_NAMES, LOCALES, type Locale } from "@/i18n/locales";
 import type { Theme } from "@/lib/theme";
 import { Group, Groups } from "./parts";
+import { Toggle } from "./preferences-section";
 import { APP_VERSION } from "./settings";
 
 const THEME_ICONS = { system: Monitor, light: Sun, dark: Moon } as const;
@@ -48,6 +51,47 @@ function useUpdate() {
   return update?.newer && update.command ? update : null;
 }
 
+/** Whether the app starts with the computer, and turning it on or off; nothing until known. */
+function useStartWithComputer() {
+  const [state, setState] = useState<{
+    available: boolean;
+    on: boolean;
+  } | null>(null);
+  const [problem, setProblem] = useState<string>();
+  useEffect(() => {
+    let live = true;
+    fetch("/api/me/service", { headers: HEADERS })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => live && setState(body))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  const change = (on: boolean) => {
+    setProblem(undefined);
+    setState((was) => (was ? { ...was, on } : was));
+    fetch("/api/me/service", {
+      method: "POST",
+      headers: { ...HEADERS, "content-type": "application/json" },
+      body: JSON.stringify({ on }),
+    })
+      .then(async (response) => {
+        if (response.ok) return;
+        setState((was) => (was ? { ...was, on: !on } : was));
+        setProblem(
+          ((await response.json().catch(() => ({}))) as { error?: string })
+            .error ?? "service-failed",
+        );
+      })
+      .catch(() => {
+        setState((was) => (was ? { ...was, on: !on } : was));
+        setProblem("service-failed");
+      });
+  };
+  return { state, problem, change };
+}
+
 export function GeneralSection() {
   const t = useTranslations("settings.general");
   const common = useTranslations("common");
@@ -56,6 +100,8 @@ export function GeneralSection() {
   const locale = useLocale();
   const router = useRouter();
   const theme = useTheme();
+  const start = useStartWithComputer();
+  const problemText = useProblem();
   return (
     <Groups>
       <Group title={t("language")} hint={t("languageHint")}>
@@ -91,6 +137,28 @@ export function GeneralSection() {
           onChange={setTheme}
         />
       </Group>
+      {start.state && (
+        <Group title={t("start")}>
+          {start.state.available ? (
+            <Toggle
+              icon={<Power className="size-4" />}
+              title={t("start")}
+              body={t("startBody")}
+              checked={start.state.on}
+              onChange={start.change}
+            />
+          ) : (
+            <p className="text-[13px] text-muted-foreground">
+              {t("startNone")}
+            </p>
+          )}
+          {start.problem && (
+            <p className="text-[13px] text-destructive">
+              {problemText(start.problem)}
+            </p>
+          )}
+        </Group>
+      )}
       <Group title={t("about")}>
         <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
           <div className="flex items-center justify-between gap-3">

@@ -7,6 +7,8 @@
 //                               Settings › Office) join that office with it
 //   npx clone-office connect <setup link>   this computer's mini-me joins one's office, then starts
 //                               (the link is the one-time line one's page on the office server gives)
+//   npx clone-office service install | uninstall | status
+//                               start with the computer, no window open (bin/service.mjs)
 // `join` and `connect` each take either link.
 //
 // The app listens on this computer only. Its port is the first free one from 4417, unless
@@ -68,6 +70,29 @@ if (args[0] === "relay") {
   );
   passSignals(relay);
   relay.on("exit", (code) => process.exit(code ?? 0));
+} else if (args[0] === "service") {
+  if (args[1] === "install" && !existsSync(join(root, "app", "server.js"))) {
+    if (args.includes("--json")) {
+      console.log(JSON.stringify({ ok: false, message: "no-build" }));
+      process.exit(1);
+    }
+    console.error(
+      "This copy of Clone Office has no built app to start (a checkout of the repository): install the service from the package, `npx clone-office service install`.",
+    );
+    process.exit(1);
+  }
+  const { service } = await import("./service.mjs");
+  const result = service(args[1] ?? "status", {
+    script: join(root, "bin", "clone-office.cjs"),
+    appHome: appHome(),
+    env: serviceEnv(),
+    dryRun: args.includes("--dry-run"),
+  });
+  // --json: for the app's own Settings, which runs this same command.
+  console.log(
+    args.includes("--json") ? JSON.stringify(result) : result.message,
+  );
+  process.exit(result.ok ? 0 : 1);
 } else if (args[0] === "connect" || args[0] === "join") {
   if (isInvite(args[1])) await keepInvite(args[1]);
   else await connect(args[1]);
@@ -80,7 +105,9 @@ if (args[0] === "relay") {
   clone-office join <invite link> [--no-start]
                                         start, ready to join the office that invited you
   clone-office connect <setup link> [--no-start]
-                                        join your office with the line from your page there, then start`);
+                                        join your office with the line from your page there, then start
+  clone-office service install [--dry-run] | uninstall | status
+                                        start with this computer, with no window open`);
 } else {
   await startApp();
 }
@@ -231,6 +258,31 @@ async function connect(link) {
     );
 }
 
+/**
+ * What the app started at sign-in needs of this shell: where its commands are (Claude Code, Codex,
+ * git), and its folder when it was moved. A login item starts with almost none of it.
+ */
+function serviceEnv() {
+  const keep = ["PATH", "CLONE_OFFICE_HOME", "SUB_OFFICE_HOME", "LANG"];
+  if (process.platform === "win32") keep.push("APPDATA");
+  return Object.fromEntries(
+    keep.flatMap((key) => (process.env[key] ? [[key, process.env[key]]] : [])),
+  );
+}
+
+/** The port the app last said it answers on (app.json, written when it starts). */
+function lastPort() {
+  try {
+    const { url } = JSON.parse(
+      readFileSync(join(appHome(), "app.json"), "utf8"),
+    );
+    const port = Number(new URL(url).port);
+    return Number.isInteger(port) && port > 0 ? port : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 function option(name) {
   const at = args.indexOf(name);
   return at >= 0 ? args[at + 1] : undefined;
@@ -287,6 +339,15 @@ async function startApp() {
   }
   // The front door: someone new goes through the first steps, everyone else to their clone.
   const url = () => `http://${HOST}:${port}/`;
+  const asService = args.includes("--service");
+  // Already running for this folder, on the port it last said (started with the computer, say).
+  const last = lastPort();
+  if (!asked && last && last !== port && (await ours(last))) {
+    port = last;
+    console.log(`Your clone is already running at ${url()}`);
+    if (!args.includes("--no-open")) open(url());
+    return;
+  }
   if (!(await free(port))) {
     if (await ours(port)) {
       console.log(`Your clone is already running at ${url()}`);
@@ -320,8 +381,13 @@ async function startApp() {
     }
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
+  if (asService) {
+    console.log(`${new Date().toISOString()} started at ${url()}`);
+    return;
+  }
   console.log(`Your clone is at ${url()}
 It runs on this computer only. Keep this window open; press Ctrl+C to stop.
-To start it again later, run: ${again}`);
+To start it again later, run: ${again}
+To have it start with this computer instead, with no window open: ${again} service install`);
   if (!args.includes("--no-open")) open(url());
 }

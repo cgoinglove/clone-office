@@ -71,7 +71,8 @@
     "brain-team-no-office": "Your clone uses the office's team key, but it isn't in an office now. Join again, or pick another way under AI model.",
     "no-team-key": "The office has no key for this vendor now. Add one, or pick another way under AI model.",
     "team-key-unsealed": "This office's server can't keep a team key until RELAY_ENCRYPTION_KEY is set.",
-    "team-key-not-yours": "Only whoever added the office's key, or an owner of the office, can change or remove it."
+    "team-key-not-yours": "Only whoever added the office's key, or an owner of the office, can change or remove it.",
+    "service-failed": "Starting with this computer could not be set up. Try `npx clone-office service install` in a terminal."
   },
   "start": {
     "title": "Get started",
@@ -1005,7 +1006,10 @@
       "about": "About",
       "aboutBody": "Clone Office gives everyone on a team a clone: an AI that works like them, does their everyday tasks, and stands in for them with teammates. It runs on your computer, and what it keeps stays here.",
       "guide": "Ask your clone how anything here works: it reads this app's guide to answer.",
-      "update": "Version {version} is out. Close this one (Ctrl+C in its window), then start it again with:"
+      "update": "Version {version} is out. Close this one (Ctrl+C in its window), then start it again with:",
+      "start": "Start with this computer",
+      "startBody": "Your clone keeps answering colleagues with no window open, from when you sign in.",
+      "startNone": "Available when Clone Office runs from its package (npx clone-office)."
     },
     "preferences": {
       "loading": "Loading…",

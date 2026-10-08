@@ -44,8 +44,11 @@ It opens in your browser. The first steps take about three minutes, and each can
 3. **Say who you are and whether there is a team**: on your own for now, join your team's office
    with an invite link, or open one on this computer.
 
-Then your clone is waiting in the chat, with a short list of first things to do. Keep the terminal
-window open while you use it; `npx -y clone-office` starts it again later.
+Then your clone is waiting in the chat, with a short list of first things to do. It runs while the
+terminal window is open, and `npx -y clone-office` starts it again later. To have it start with your
+computer instead, so your clone answers colleagues with no window open, turn on **Start with this
+computer** in Settings › General, or run `npx -y clone-office service install` (macOS, Linux and
+Windows; `service uninstall` undoes it).
 
 ## What it does
 

@@ -71,7 +71,8 @@
     "brain-team-no-office": "Tu clon usa la clave del equipo de la oficina, pero ahora no está en ninguna oficina. Vuelve a unirte o elige otra opción en Modelo de IA.",
     "no-team-key": "La oficina no tiene ahora una clave para este proveedor. Agrega una o elige otra opción en Modelo de IA.",
     "team-key-unsealed": "El servidor de esta oficina no puede guardar una clave del equipo hasta que se configure RELAY_ENCRYPTION_KEY.",
-    "team-key-not-yours": "Solo quien agregó la clave de la oficina, o un dueño de la oficina, puede cambiarla o quitarla."
+    "team-key-not-yours": "Solo quien agregó la clave de la oficina, o un dueño de la oficina, puede cambiarla o quitarla.",
+    "service-failed": "No se pudo configurar el inicio con la computadora. Prueba `npx clone-office service install` en una terminal."
   },
   "start": {
     "title": "Empezar",
@@ -1005,7 +1006,10 @@
       "about": "Acerca de",
       "aboutBody": "Clone Office le da a cada persona de un equipo un clon: una IA que trabaja como ella, hace sus tareas de todos los días y la representa ante sus colegas. Funciona en tu computadora, y lo que guarda se queda aquí.",
       "guide": "Pregúntale a tu clon cómo funciona cualquier cosa de aquí: lee la guía de esta app para responderte.",
-      "update": "Salió la versión {version}. Cierra esta (Ctrl+C en su ventana) y vuelve a iniciarla con:"
+      "update": "Salió la versión {version}. Cierra esta (Ctrl+C en su ventana) y vuelve a iniciarla con:",
+      "start": "Iniciar con la computadora",
+      "startBody": "Desde que inicias sesión, tu clon sigue respondiendo a tus compañeros sin ninguna ventana abierta.",
+      "startNone": "Disponible cuando Clone Office se ejecuta desde su paquete (npx clone-office)."
     },
     "preferences": {
       "loading": "Cargando…",

@@ -71,7 +71,8 @@
     "brain-team-no-office": "你的分身用的是办公室的团队密钥，但它现在不在办公室里。请重新加入，或者在“AI 模型”里换一种方式。",
     "no-team-key": "办公室现在没有这家服务商的密钥。请添加一个，或者在“AI 模型”里换一种方式。",
     "team-key-unsealed": "设置 RELAY_ENCRYPTION_KEY 之前，这个办公室的服务器没法保存团队密钥。",
-    "team-key-not-yours": "只有添加这个密钥的人或办公室的所有者，才能更改或移除它。"
+    "team-key-not-yours": "只有添加这个密钥的人或办公室的所有者，才能更改或移除它。",
+    "service-failed": "无法设置随电脑启动。请在终端中运行 `npx clone-office service install`。"
   },
   "start": {
     "title": "开始使用",
@@ -1005,7 +1006,10 @@
       "about": "关于",
       "aboutBody": "Clone Office 给团队里的每个人一个分身：一个像他们一样工作的 AI，处理日常事务，并在同事面前替他们出面。它在你的电脑上运行，保存的内容都留在这里。",
       "guide": "这里的任何功能怎么用，都可以问你的分身：它会读这个应用的说明来回答。",
-      "update": "{version} 版已发布。先关掉当前这个（在它的窗口里按 Ctrl+C），再用下面的命令重新启动："
+      "update": "{version} 版已发布。先关掉当前这个（在它的窗口里按 Ctrl+C），再用下面的命令重新启动：",
+      "start": "随电脑启动",
+      "startBody": "登录后，即使不打开窗口，分身也会继续回复同事。",
+      "startNone": "通过软件包运行时可用（npx clone-office）。"
     },
     "preferences": {
       "loading": "加载中…",

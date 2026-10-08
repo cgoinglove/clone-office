@@ -145,7 +145,10 @@ try {
   );
   cpSync(join(source, "guide"), join(out, "guide"), { recursive: true });
   cpSync(join(source, "skills"), join(out, "skills"), { recursive: true });
-  cpSync(join(source, "bin"), join(out, "bin"), { recursive: true });
+  cpSync(join(source, "bin"), join(out, "bin"), {
+    recursive: true,
+    filter: (path) => !path.endsWith(".test.mjs"),
+  });
   cpSync(join(source, "LICENSE"), join(out, "LICENSE"));
   cpSync(
     join(source, "THIRD_PARTY_NOTICES.md"),

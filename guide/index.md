@@ -70,8 +70,9 @@ Two things hold everywhere:
   its own, what it does without asking, folders left out), **Connectors** (도구 연결),
   **Notifications & phone** (알림·휴대폰: the phone, when kept questions come, quiet hours),
   **Office** (오피스: open one, join, invite, people, the morning lobby) and **General** (일반:
-  language, theme, the files it keeps, this app; when a newer version is on npm, it says so there
-  with the line that starts it, `npx -y clone-office@latest`, once this one is closed).
+  language, theme, starting with this computer, the files it keeps, this app; when a newer version
+  is on npm, it says so there with the line that starts it, `npx -y clone-office@latest`, once this
+  one is closed).
 - Keys: ⌘, (Ctrl+, on Windows and Linux) opens Settings, ⌘⇧N starts a new chat, and / goes to the
   box.
 
@@ -104,7 +105,10 @@ steps, and under Settings › General.
 Clone Office runs on their own computer, so their clone can learn from what is there and work with
 their files and tools; what it keeps stays there. It needs Node.js 22.13 or later (nodejs.org).
 In a terminal, `npx -y clone-office` starts it and opens it in the browser; the window stays open while it
-runs, and the same line starts it again later. Invited by a teammate, the invite link's page shows
+runs, and the same line starts it again later. **Start with this computer** (컴퓨터와 함께 켜기) in
+Settings › General has it start when they sign in to their computer instead, with no window open,
+so their clone answers colleagues while they are away from it (the same as
+`npx -y clone-office service install`; after updating Clone Office, turn it off and on again). Invited by a teammate, the invite link's page shows
 the same steps with the one line that also joins their office (`office.md`).
 
 ## Settings in more detail
