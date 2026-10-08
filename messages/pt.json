@@ -1060,6 +1060,22 @@
       "quietHint": "Nesse horário nada vai para o seu celular; o que estiver esperando fica guardado e chega quando ele acabar. Respostas ao que você escreve pelo celular continuam chegando.",
       "quietFrom": "Das",
       "quietTo": "às"
+    },
+    "usage": {
+      "title": "Últimos 30 dias",
+      "hint": "No que seu clone usou o modelo de IA. Nenhum texto de conversa é guardado para isso.",
+      "none": "Nada ainda.",
+      "groups": {
+        "conversations": "Suas conversas",
+        "colleagues": "Pedidos e reuniões de colegas",
+        "flows": "Rotinas",
+        "learning": "Aprender como você trabalha",
+        "other": "Outros"
+      },
+      "runs": "{count, plural, one {# vez} other {# vezes}}",
+      "failed": "{count} falharam",
+      "tokens": "{tokens} tokens",
+      "cost": "Cerca de {cost} pelos preços da API, como o modelo informa. Em uma assinatura, nada a mais é pago."
     }
   },
   "shell": {

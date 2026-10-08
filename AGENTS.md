@@ -232,7 +232,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   with those tools (the brain is a replaceable process: everything else talks to it only through
   `runSession`); `review.ts` looks back over a finished session and keeps what it taught;
   `runlog.ts` writes one line per session to `logs/runs.jsonl` (purpose, time, context, usage,
-  cost; never conversation text).
+  cost; never conversation text), and `usageSummary` reads the last 30 days of it by what it was
+  for, which Settings › AI model shows (`settings/usage-section.tsx`, `app/api/me/usage`).
 - `features/minime/chat/`: the conversations with the clone, kept by the app itself
   (`store.ts`, one append-only JSON-lines file per conversation under `chats/`), so a conversation
   outlives any brain session. `turn.ts` runs one turn: it resumes the brain's session, carries a

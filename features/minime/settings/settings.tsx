@@ -29,6 +29,7 @@ import { GeneralSection } from "./general-section";
 import { OfficeSection } from "./office-section";
 import { PermissionsSection } from "./permissions-section";
 import { PreferencesSection } from "./preferences-section";
+import { UsageSection } from "./usage-section";
 
 export type SectionId =
   | "brain"
@@ -225,6 +226,7 @@ export function SettingsDialog({
                       onChange={onPreferences}
                       parts={["learning", "models"]}
                     />
+                    <UsageSection />
                   </div>
                 )}
                 {current.id === "permissions" && (

@@ -1060,6 +1060,22 @@
       "quietHint": "Nothing goes to your phone in these hours; what waits is kept and comes when they end. Replies to what you write from your phone still come.",
       "quietFrom": "From",
       "quietTo": "to"
+    },
+    "usage": {
+      "title": "Last 30 days",
+      "hint": "What your clone used its AI model for. No conversation text is kept for this.",
+      "none": "Nothing yet.",
+      "groups": {
+        "conversations": "Your conversations",
+        "colleagues": "Colleagues' requests and meetings",
+        "flows": "Flows",
+        "learning": "Learning how you work",
+        "other": "Other"
+      },
+      "runs": "{count, plural, one {# time} other {# times}}",
+      "failed": "{count} failed",
+      "tokens": "{tokens} tokens",
+      "cost": "About {cost} at API prices, as the model reports it. On a subscription nothing more is paid."
     }
   },
   "shell": {

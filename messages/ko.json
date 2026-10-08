@@ -1060,6 +1060,22 @@
       "quietHint": "이 시간에는 휴대폰으로 아무것도 보내지 않아요. 기다리는 일은 모아 뒀다가 끝나면 보내요. 휴대폰에서 먼저 보낸 말에 대한 답은 그대로 와요.",
       "quietFrom": "시작",
       "quietTo": "끝"
+    },
+    "usage": {
+      "title": "지난 30일",
+      "hint": "클론이 AI 모델을 어디에 썼는지예요. 대화 내용은 남기지 않아요.",
+      "none": "아직 없어요.",
+      "groups": {
+        "conversations": "나와의 대화",
+        "colleagues": "동료 부탁과 회의",
+        "flows": "플로우",
+        "learning": "나를 배우기",
+        "other": "기타"
+      },
+      "runs": "{count}번",
+      "failed": "{count}번 실패",
+      "tokens": "토큰 {tokens}",
+      "cost": "모델이 알려 준 API 가격으로 약 {cost}예요. 구독이라면 따로 더 내지 않아요."
     }
   },
   "shell": {

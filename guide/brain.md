@@ -57,5 +57,10 @@ conversations (asking one, having one do work) still needs Claude Code on the co
 Changing the brain keeps everything. A conversation started with one brain goes on with another
 from its own record.
 
-Not yet: a key their team sets once for everyone, and a clone thinking on the team's server for
-someone who cannot install anything.
+**Last 30 days** (지난 30일), at the end of Settings › AI model, says what the clone used its AI
+for: their conversations, colleagues' requests and meetings, flows, and learning how they work,
+each with how often, how many failed, and the tokens. With Claude Code it also gives what that
+would cost at API prices, as Claude Code reports it; on a subscription nothing more is paid. It is
+read from the clone's run log, which keeps no conversation text.
+
+Not yet: a clone thinking on the team's server for someone who cannot install anything.

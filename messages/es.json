@@ -1060,6 +1060,22 @@
       "quietHint": "En estas horas no llega nada a tu teléfono; lo que espera se guarda y llega cuando terminan. Las respuestas a lo que escribes desde tu teléfono sí llegan.",
       "quietFrom": "De",
       "quietTo": "a"
+    },
+    "usage": {
+      "title": "Últimos 30 días",
+      "hint": "En qué usó tu clon su modelo de IA. No se guarda el texto de las conversaciones para esto.",
+      "none": "Nada todavía.",
+      "groups": {
+        "conversations": "Tus conversaciones",
+        "colleagues": "Solicitudes y reuniones de compañeros",
+        "flows": "Rutinas",
+        "learning": "Aprender cómo trabajas",
+        "other": "Otros"
+      },
+      "runs": "{count, plural, one {# vez} other {# veces}}",
+      "failed": "{count} fallaron",
+      "tokens": "{tokens} tokens",
+      "cost": "Unos {cost} a precios de la API, según informa el modelo. Con una suscripción no se paga nada más."
     }
   },
   "shell": {

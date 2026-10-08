@@ -1060,6 +1060,22 @@
       "quietHint": "这段时间里不会发东西到你的手机；等你的事会先存着，结束后再发。你从手机上发的消息照样会收到回复。",
       "quietFrom": "从",
       "quietTo": "到"
+    },
+    "usage": {
+      "title": "最近 30 天",
+      "hint": "分身把 AI 模型用在了哪里。不会为此保留对话内容。",
+      "none": "还没有。",
+      "groups": {
+        "conversations": "和你的对话",
+        "colleagues": "同事的请求和会议",
+        "flows": "自动流程",
+        "learning": "学习你的工作方式",
+        "other": "其他"
+      },
+      "runs": "{count} 次",
+      "failed": "{count} 次失败",
+      "tokens": "{tokens} 个 token",
+      "cost": "按模型报告的 API 价格约为 {cost}。如果是订阅，不会额外付费。"
     }
   },
   "shell": {

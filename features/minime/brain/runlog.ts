@@ -4,7 +4,7 @@
 // them) can see what their subscription was used for; it holds no conversation text. Past 2 MB it
 // is moved aside once (runs.1.jsonl), so it never grows without bound.
 
-import { appendFile, mkdir, rename, stat } from "node:fs/promises";
+import { appendFile, mkdir, readFile, rename, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { minimeHome } from "../server/paths.ts";
 
@@ -56,4 +56,101 @@ export async function logRun(record: RunRecord): Promise<void> {
       : {}),
   };
   await appendFile(path, `${JSON.stringify(line)}\n`, "utf8");
+}
+
+/** What the clone used its AI for, grouped as the person thinks of it. */
+export type UseGroup =
+  | "conversations"
+  | "colleagues"
+  | "flows"
+  | "learning"
+  | "other";
+
+const GROUPS: Record<string, UseGroup> = {
+  task: "conversations",
+  summary: "conversations",
+  fix: "conversations",
+  request: "colleagues",
+  check: "colleagues",
+  meeting: "colleagues",
+  card: "colleagues",
+  flow: "flows",
+  review: "learning",
+  learn: "learning",
+  import: "learning",
+};
+
+export interface UseLine {
+  group: UseGroup;
+  runs: number;
+  failed: number;
+  tokens: number;
+  /** What it would cost at the API's prices, as the brain reports it; none when it does not. */
+  cost?: number;
+}
+
+/**
+ * The last `days` of the run log, by group: how often, how many failed, the tokens, and the cost
+ * the brain reported (Claude Code reports what the work would cost at API prices, also on a
+ * subscription, where nothing more is paid). Read from both the log and the one moved aside.
+ */
+export async function usageSummary(
+  days = 30,
+  now = Date.now(),
+): Promise<{ since: string; lines: UseLine[] }> {
+  const since = now - days * 24 * 60 * 60 * 1000;
+  const path = runLogPath();
+  const texts = await Promise.all(
+    [path.replace(/\.jsonl$/, ".1.jsonl"), path].map((file) =>
+      readFile(file, "utf8").catch(() => ""),
+    ),
+  );
+  const totals = new Map<UseGroup, UseLine>();
+  for (const text of texts)
+    for (const raw of text.split("\n")) {
+      if (!raw.trim()) continue;
+      let line: {
+        at?: string;
+        purpose?: string;
+        ok?: boolean;
+        cost_usd?: number;
+        usage?: Record<string, number | undefined>;
+      };
+      try {
+        line = JSON.parse(raw);
+      } catch {
+        continue;
+      }
+      if (!line.at || Date.parse(line.at) < since) continue;
+      const group = GROUPS[line.purpose ?? ""] ?? "other";
+      const total = totals.get(group) ?? {
+        group,
+        runs: 0,
+        failed: 0,
+        tokens: 0,
+      };
+      total.runs += 1;
+      if (line.ok === false) total.failed += 1;
+      total.tokens += Object.values(line.usage ?? {}).reduce<number>(
+        (sum, value) => sum + (typeof value === "number" ? value : 0),
+        0,
+      );
+      if (typeof line.cost_usd === "number")
+        total.cost = (total.cost ?? 0) + line.cost_usd;
+      totals.set(group, total);
+    }
+  const order: UseGroup[] = [
+    "conversations",
+    "colleagues",
+    "flows",
+    "learning",
+    "other",
+  ];
+  return {
+    since: new Date(since).toISOString(),
+    lines: order.flatMap((group) => {
+      const line = totals.get(group);
+      return line ? [line] : [];
+    }),
+  };
 }
