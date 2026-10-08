@@ -1337,5 +1337,18 @@
       "takeOver": "Take it over",
       "answerClose": "Answer myself and close"
     }
+  },
+  "page": {
+    "notFound": {
+      "title": "Nothing here",
+      "body": "This page is not in Clone Office, or it has moved.",
+      "home": "Go to Home"
+    },
+    "failed": {
+      "title": "Something went wrong on this screen",
+      "body": "Your clone and what it keeps are fine. Try again, or go back Home.",
+      "again": "Try again",
+      "home": "Go to Home"
+    }
   }
 }
