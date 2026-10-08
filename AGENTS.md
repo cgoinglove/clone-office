@@ -175,7 +175,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), quiet
   hours for the phone (`quietFor`), and taking part in the office's meetings of the clones
   (`meetings`). Every default keeps the app as careful as before.
-- `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded}`, which
+- `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded,update}`, which
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).

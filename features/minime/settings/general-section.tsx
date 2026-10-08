@@ -1,11 +1,21 @@
 "use client";
 
 // Settings › General: the screen's language (also the one the clone works in from then on), the
-// theme, and what this app is, with where to read how it works.
+// theme, and what this app is, with where to read how it works and, when npm has a newer version,
+// the line that starts it (server/update.ts).
 
-import { BookOpen, Monitor, Moon, Sun } from "lucide-react";
+import {
+  ArrowUpCircle,
+  BookOpen,
+  Check,
+  Copy,
+  Monitor,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { Segmented } from "@/components/ui/segmented";
 import { Logo } from "@/features/brand/logo";
 import { setTheme, useTheme } from "@/hooks/use-theme";
@@ -17,8 +27,32 @@ import { APP_VERSION } from "./settings";
 
 const THEME_ICONS = { system: Monitor, light: Sun, dark: Moon } as const;
 
+const HEADERS = { "x-clone-office": "1" };
+
+/** npm's newer version and the line that starts it, once Settings opens; nothing when none. */
+function useUpdate() {
+  const [update, setUpdate] = useState<{
+    newer: string | null;
+    command: string | null;
+  } | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/me/update", { headers: HEADERS })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((body) => live && setUpdate(body))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  return update?.newer && update.command ? update : null;
+}
+
 export function GeneralSection() {
   const t = useTranslations("settings.general");
+  const common = useTranslations("common");
+  const update = useUpdate();
+  const [copied, setCopied] = useState(false);
   const locale = useLocale();
   const router = useRouter();
   const theme = useTheme();
@@ -74,6 +108,37 @@ export function GeneralSection() {
             <BookOpen className="size-3.5" />
             {t("guide")}
           </p>
+          {update?.command && (
+            <div className="flex flex-col gap-2 rounded-lg bg-muted p-3">
+              <p className="flex items-start gap-1.5 text-[13px]">
+                <ArrowUpCircle className="mt-0.5 size-3.5 shrink-0" />
+                {t("update", { version: update.newer ?? "" })}
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="min-w-0 flex-1 truncate rounded-md bg-background px-2 py-1 font-mono text-xs select-all">
+                  {update.command}
+                </code>
+                <button
+                  type="button"
+                  aria-label={copied ? common("copied") : common("copy")}
+                  title={copied ? common("copied") : common("copy")}
+                  onClick={() => {
+                    void navigator.clipboard
+                      ?.writeText(update.command ?? "")
+                      .then(() => setCopied(true))
+                      .catch(() => {});
+                  }}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground"
+                >
+                  {copied ? (
+                    <Check className="size-3.5" />
+                  ) : (
+                    <Copy className="size-3.5" />
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </Group>
     </Groups>

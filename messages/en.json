@@ -984,7 +984,8 @@
       },
       "about": "About",
       "aboutBody": "Clone Office gives everyone on a team a clone: an AI that works like them, does their everyday tasks, and stands in for them with teammates. It runs on your computer, and what it keeps stays here.",
-      "guide": "Ask your clone how anything here works: it reads this app's guide to answer."
+      "guide": "Ask your clone how anything here works: it reads this app's guide to answer.",
+      "update": "Version {version} is out. Close this one (Ctrl+C in its window), then start it again with:"
     },
     "preferences": {
       "loading": "Loading…",

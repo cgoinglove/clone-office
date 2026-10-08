@@ -66,7 +66,8 @@ Two things hold everywhere:
   its own, what it does without asking, folders left out), **Connectors** (도구 연결),
   **Notifications & phone** (알림·휴대폰: the phone, when kept questions come, quiet hours),
   **Office** (오피스: open one, join, invite, people, the morning lobby) and **General** (일반:
-  language, theme, the files it keeps, this app).
+  language, theme, the files it keeps, this app; when a newer version is on npm, it says so there
+  with the line that starts it, `npx -y clone-office@latest`, once this one is closed).
 - Keys: ⌘, (Ctrl+, on Windows and Linux) opens Settings, ⌘⇧N starts a new chat, and / goes to the
   box.
 
