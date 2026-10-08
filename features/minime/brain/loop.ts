@@ -29,6 +29,7 @@ import { TRUSTED_FROM_START } from "../gate/rules.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
 import { atomicWrite, readText } from "../memory/files.ts";
 import { SkillStore } from "../memory/skills.ts";
+import { loadOffice } from "../office/client.ts";
 import { keepAwake } from "../server/awake.ts";
 import { cleanEnv } from "../server/brain.ts";
 import { minimeHome, toolServerPath } from "../server/paths.ts";
@@ -113,13 +114,22 @@ export async function languageModel(choice: ApiChoice): Promise<{
       options: { openai: { store: false, systemMessageMode: "developer" } },
     };
   }
-  const key = await providerKey(choice.provider);
+  // The office's key, through its relay: the member's own token rides where the vendor's key goes,
+  // and the relay puts the key on (features/relay/team-ai.ts). The key never comes here.
+  const office = choice.team ? await loadOffice() : undefined;
+  if (choice.team && !office) throw new LoopError("brain-team-no-office");
+  const through = office
+    ? {
+        baseURL: new URL(`/ai/${choice.provider}`, office.relay).href,
+      }
+    : {};
+  const key = office ? office.token : await providerKey(choice.provider);
   if (!key && choice.provider !== "local")
     throw new LoopError("brain-key-missing");
   const apiKey = key ?? "";
   switch (choice.provider) {
     case "anthropic": {
-      const anthropic = createAnthropic({ apiKey });
+      const anthropic = createAnthropic({ apiKey, ...through });
       return {
         model: anthropic(choice.model),
         search: { web_search: anthropic.tools.webSearch_20260209() },
@@ -128,7 +138,7 @@ export async function languageModel(choice: ApiChoice): Promise<{
       };
     }
     case "openai": {
-      const openai = createOpenAI({ apiKey });
+      const openai = createOpenAI({ apiKey, ...through });
       return {
         model: openai(choice.model),
         search: { web_search: openai.tools.webSearch() },
@@ -136,7 +146,7 @@ export async function languageModel(choice: ApiChoice): Promise<{
       };
     }
     case "google": {
-      const google = createGoogleGenerativeAI({ apiKey });
+      const google = createGoogleGenerativeAI({ apiKey, ...through });
       return {
         model: google(choice.model),
         search: { google_search: google.tools.googleSearch({}) },
@@ -145,7 +155,7 @@ export async function languageModel(choice: ApiChoice): Promise<{
     }
     case "openrouter":
       return {
-        model: createOpenRouter({ apiKey })(choice.model),
+        model: createOpenRouter({ apiKey, ...through })(choice.model),
         options: choice.model.startsWith("anthropic/")
           ? { openrouter: { cacheControl: { type: "ephemeral" } } }
           : {},

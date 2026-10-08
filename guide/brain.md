@@ -24,8 +24,20 @@ computer** (**Found here**, 이 컴퓨터에 있음).
   key and nothing leaves the computer; slower and less able than the services. The model has to
   be pulled first (for Ollama, `ollama pull <model>`), then its name typed here.
 
+**Team key** (팀 키), under OpenAI, Claude, Gemini and OpenRouter, once they are in an office: one
+API key the whole office shares, so the team pays once. Anyone in the office pastes it there; the
+office's server asks the vendor whether it works, then keeps it sealed, and every clone that picks
+**Team key** thinks with it through that server. The key never reaches anyone's computer: someone
+who leaves the office stops using it at once, and the line under it says how many calls their clone
+and the whole office made in the last 30 days. What a clone asks passes through the office's server
+on its way and is never kept there. **Remove it from the office** (오피스에서 빼기) forgets it for
+everyone. A Claude or ChatGPT subscription is never shared this way: each is its person's own, and
+the vendors' terms say so. A server on its own Postgres keeps a team key only once whoever runs it
+sets RELAY_ENCRYPTION_KEY; an office opened on someone's computer always can.
+
 A key is checked by asking the service for its list of models, which costs nothing. Keys and the
-ChatGPT sign-in are kept on this computer only, in files only they can read. Then they pick a
+ChatGPT sign-in are kept on this computer only, in files only they can read, sealed with the
+folder's own key. Then they pick a
 model (small, mid, large; or type another name the service has); the one marked **Suggested**
 (추천) is picked to start with. **Use this** (이걸로 쓰기) makes it the clone's brain. On the first
 steps, **Continue** (계속) first checks that it answers: whether Claude Code is there and signed

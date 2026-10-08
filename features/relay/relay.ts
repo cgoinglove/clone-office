@@ -241,6 +241,10 @@ const MIGRATIONS: string[][] = [
   ],
   // Who wrote a message: the member's person themselves, or their clone (the default).
   ["ALTER TABLE messages ADD COLUMN by_person BOOLEAN NOT NULL DEFAULT false"],
+  // Calls made with the office's team keys, a count per member, vendor and day (team-ai.ts).
+  [
+    "CREATE TABLE ai_calls (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, member_id TEXT NOT NULL, provider TEXT NOT NULL, day DATE NOT NULL, calls INT NOT NULL DEFAULT 0, PRIMARY KEY (office_id, member_id, provider, day))",
+  ],
 ];
 
 /**
@@ -636,6 +640,89 @@ export class Relay {
       "INSERT INTO office_settings (office_id, name, value, by_member, updated) VALUES ($1, $2, $3::jsonb, $4, $5) ON CONFLICT (office_id, name) DO UPDATE SET value = $3::jsonb, by_member = $4, updated = $5",
       [member.office, name, text, member.id, new Date().toISOString()],
     );
+  }
+
+  // ---- Team keys (team-ai.ts) ----
+
+  /**
+   * A value the office keeps that no member reads back through /settings: a team key, sealed.
+   * Kept beside the settings, under a name TEAM_SETTING never takes.
+   */
+  async officeSecret(
+    office: string,
+    name: string,
+  ): Promise<{ value: unknown; by: string; updated: string } | undefined> {
+    if (!/^ai:[a-z]{2,20}$/.test(name))
+      throw new RelayError(400, "Not an office secret.", "bad-request");
+    const [row] = await this.db.query<{
+      value: unknown;
+      by_member: string;
+      updated: unknown;
+    }>(
+      "SELECT value, by_member, updated FROM office_settings WHERE office_id = $1 AND name = $2",
+      [office, name],
+    );
+    return row
+      ? { value: row.value, by: row.by_member, updated: iso(row.updated) }
+      : undefined;
+  }
+
+  async setOfficeSecret(
+    member: Caller,
+    name: string,
+    value: unknown,
+  ): Promise<void> {
+    if (!/^ai:[a-z]{2,20}$/.test(name))
+      throw new RelayError(400, "Not an office secret.", "bad-request");
+    if (value === null || value === undefined) {
+      await this.db.query(
+        "DELETE FROM office_settings WHERE office_id = $1 AND name = $2",
+        [member.office, name],
+      );
+      return;
+    }
+    await this.db.query(
+      "INSERT INTO office_settings (office_id, name, value, by_member, updated) VALUES ($1, $2, $3::jsonb, $4, $5) ON CONFLICT (office_id, name) DO UPDATE SET value = $3::jsonb, by_member = $4, updated = $5",
+      [
+        member.office,
+        name,
+        JSON.stringify(value),
+        member.id,
+        new Date().toISOString(),
+      ],
+    );
+  }
+
+  /** One more call a member made with a team key today. */
+  async countAiCall(
+    member: Caller,
+    provider: string,
+    now = new Date(),
+  ): Promise<void> {
+    await this.db.query(
+      "INSERT INTO ai_calls (office_id, member_id, provider, day, calls) VALUES ($1, $2, $3, $4, 1) ON CONFLICT (office_id, member_id, provider, day) DO UPDATE SET calls = ai_calls.calls + 1",
+      [member.office, member.id, provider, now.toISOString().slice(0, 10)],
+    );
+  }
+
+  /** The calls each member made with the office's team keys since a day. */
+  async aiCalls(
+    office: string,
+    since: Date,
+  ): Promise<{ member: string; provider: string; calls: number }[]> {
+    const rows = await this.db.query<{
+      member_id: string;
+      provider: string;
+      calls: unknown;
+    }>(
+      "SELECT member_id, provider, SUM(calls) AS calls FROM ai_calls WHERE office_id = $1 AND day >= $2 GROUP BY member_id, provider",
+      [office, since.toISOString().slice(0, 10)],
+    );
+    return rows.map((row) => ({
+      member: row.member_id,
+      provider: row.provider,
+      calls: Number(row.calls),
+    }));
   }
 
   /** A file, for the member who put it here or either member of the request it went with. */

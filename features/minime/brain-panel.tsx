@@ -14,6 +14,7 @@ import {
   KeyRound,
   LogIn,
   Terminal,
+  Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -34,7 +35,13 @@ import {
 
 type Choice =
   | { kind: "claude-code"; model?: string }
-  | { kind: "api"; provider: ProviderId; model: string; baseUrl?: string };
+  | {
+      kind: "api";
+      provider: ProviderId;
+      model: string;
+      baseUrl?: string;
+      team?: boolean;
+    };
 
 export interface BrainState {
   choice: Choice;
@@ -48,7 +55,17 @@ export interface BrainState {
     models: { id: string; label: string }[];
   } | null;
   local: { ollama: boolean; lmstudio: boolean };
+  /** The office's team keys, when this clone is in an office (features/relay/team-ai.ts). */
+  team: {
+    keys: { provider: string; hint: string; by: string }[];
+    sealing: boolean;
+    calls: { mine: number; all: number };
+  } | null;
 }
+
+/** Whether the office keeps a key for a vendor. */
+const teamHas = (state: BrainState, provider: ProviderId) =>
+  Boolean(state.team?.keys.some((key) => key.provider === provider));
 
 /** Whether the chosen brain can think now: the subscription signed in, or the key its vendor needs. */
 export function brainReady(state: BrainState | null): boolean {
@@ -56,6 +73,7 @@ export function brainReady(state: BrainState | null): boolean {
   const { choice } = state;
   if (choice.kind === "claude-code") return state.claudeCode;
   if (choice.provider === "chatgpt") return Boolean(state.chatgpt);
+  if (choice.team) return teamHas(state, choice.provider);
   return choice.provider === "local" || state.keyed.includes(choice.provider);
 }
 
@@ -79,10 +97,11 @@ export function brainLabel(state: BrainState, claudeCode: string): string {
 function placeOf(choice: Choice): { vendor: Vendor["id"]; way: number } {
   if (choice.kind === "claude-code") return { vendor: "claude", way: 0 };
   for (const vendor of VENDORS) {
-    const way = vendor.ways.findIndex(
-      (w) =>
-        (w.kind === "key" || w.kind === "sign-in") &&
-        w.provider === choice.provider,
+    const way = vendor.ways.findIndex((w) =>
+      choice.team
+        ? w.kind === "team" && w.provider === choice.provider
+        : (w.kind === "key" || w.kind === "sign-in") &&
+          w.provider === choice.provider,
     );
     if (way >= 0) return { vendor: vendor.id, way };
     if (choice.provider === "local" && vendor.id === "local")
@@ -93,7 +112,7 @@ function placeOf(choice: Choice): { vendor: Vendor["id"]; way: number } {
 
 /** The provider a way reaches models through (Claude Code has none of its own here). */
 const providerOfWay = (way: Way): ProviderId | undefined =>
-  way.kind === "key" || way.kind === "sign-in"
+  way.kind === "key" || way.kind === "sign-in" || way.kind === "team"
     ? way.provider
     : way.kind === "local"
       ? "local"
@@ -117,6 +136,7 @@ const WAY_ICONS = {
   "sign-in": LogIn,
   "claude-code": Terminal,
   key: KeyRound,
+  team: Users,
   local: Cpu,
 } as const;
 
@@ -302,9 +322,11 @@ export function BrainChooser({
         ? Boolean(state.chatgpt) && Boolean(chosenModel)
         : way?.kind === "key"
           ? state.keyed.includes(way.provider) && Boolean(chosenModel)
-          : way?.kind === "local"
-            ? Boolean(chosenModel)
-            : false;
+          : way?.kind === "team"
+            ? teamHas(state, way.provider) && Boolean(chosenModel)
+            : way?.kind === "local"
+              ? Boolean(chosenModel)
+              : false;
   const isCurrent =
     state.chosen &&
     (way?.kind === "claude-code"
@@ -312,7 +334,8 @@ export function BrainChooser({
         (current.model ?? "sonnet") === chosenModel
       : current.kind === "api" &&
         current.provider === id &&
-        current.model === chosenModel);
+        current.model === chosenModel &&
+        Boolean(current.team) === (way?.kind === "team"));
 
   return (
     <div className="flex flex-col gap-4 text-sm">
@@ -505,6 +528,77 @@ export function BrainChooser({
               </form>
             ))}
 
+          {way.kind === "team" &&
+            (!state.team ? (
+              <p className="text-muted-foreground">{t("team.notIn")}</p>
+            ) : teamHas(state, way.provider) ? (
+              <div className="flex flex-col gap-1 text-muted-foreground">
+                {state.team.keys
+                  .filter((kept) => kept.provider === way.provider)
+                  .map((kept) => (
+                    <p key={kept.provider}>
+                      {t("team.kept", { hint: kept.hint, name: kept.by })}{" "}
+                      <button
+                        type="button"
+                        className="underline underline-offset-4"
+                        disabled={busy}
+                        onClick={() =>
+                          void post({
+                            action: "forget-team-key",
+                            provider: way.provider,
+                          })
+                        }
+                      >
+                        {t("team.remove")}
+                      </button>
+                    </p>
+                  ))}
+                <p className="text-xs">
+                  {t("team.calls", {
+                    mine: state.team.calls.mine,
+                    all: state.team.calls.all,
+                  })}
+                </p>
+              </div>
+            ) : !state.team.sealing ? (
+              <p className="text-muted-foreground">{t("team.unsealed")}</p>
+            ) : (
+              <form
+                className="flex flex-col gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void post({
+                    action: "team-key",
+                    provider: way.provider,
+                    key,
+                  }).then((ok) => {
+                    if (ok) setKey("");
+                  });
+                }}
+              >
+                <p className="text-muted-foreground">{t("team.add")}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Input
+                    type="password"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="min-w-0 flex-1"
+                    value={key}
+                    aria-label={t("key")}
+                    placeholder={t("keyPlaceholder")}
+                    onChange={(event) => setKey(event.target.value)}
+                  />
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={busy || key.trim().length < 8}
+                  >
+                    {t("save")}
+                  </Button>
+                </div>
+              </form>
+            ))}
+
           {way.kind === "local" && (
             <div className="flex flex-col gap-2">
               <p className="text-muted-foreground">
@@ -617,6 +711,7 @@ export function BrainChooser({
                       provider: id,
                       model: chosenModel,
                       ...(way.kind === "local" ? { baseUrl: address } : {}),
+                      ...(way.kind === "team" ? { team: true } : {}),
                     },
               )
             }

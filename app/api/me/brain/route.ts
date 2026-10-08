@@ -16,6 +16,12 @@ import {
 } from "@/features/minime/brain/choice";
 import { probeBrain } from "@/features/minime/brain/probe";
 import { PROVIDERS, provider } from "@/features/minime/brain/providers";
+import {
+  loadOffice,
+  members,
+  setTeamKey,
+  teamKeys,
+} from "@/features/minime/office/client";
 import { hasClaudeCode } from "@/features/minime/server/brain";
 import { refuse } from "@/features/minime/server/guard";
 
@@ -28,16 +34,50 @@ async function answers(address: string): Promise<boolean> {
   }
 }
 
+/**
+ * The office's team keys as the page shows them: which vendors, a hint, who added each (by name),
+ * and the calls made with them. Null outside an office, or when its relay does not answer.
+ */
+async function teamState() {
+  const office = await loadOffice();
+  if (!office) return null;
+  try {
+    const [team, { members: people }] = await Promise.all([
+      teamKeys(office),
+      members(office),
+    ]);
+    const name = (id: string) =>
+      people.find((one) => one.id === id)?.card.name ?? id;
+    return {
+      keys: team.keys.map((key) => ({
+        provider: key.provider,
+        hint: key.hint,
+        by: name(key.by),
+      })),
+      sealing: team.sealing,
+      calls: {
+        mine: team.calls
+          .filter((one) => one.member === office.member)
+          .reduce((sum, one) => sum + one.calls, 0),
+        all: team.calls.reduce((sum, one) => sum + one.calls, 0),
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 // What the person's clone thinks with, and what this computer offers: Claude Code installed, a
-// ChatGPT plan signed in to (and the models it lists), Ollama or LM Studio running. The keys never
-// come back to the page; it hears only which vendors have one.
+// ChatGPT plan signed in to (and the models it lists), Ollama or LM Studio running, the office's
+// team keys. The keys never come back to the page; it hears only which vendors have one.
 export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
-  const [account, ollama, lmstudio] = await Promise.all([
+  const [account, ollama, lmstudio, team] = await Promise.all([
     chatGptAccount(),
     answers("http://127.0.0.1:11434/v1/models"),
     answers("http://127.0.0.1:1234/v1/models"),
+    teamState(),
   ]);
   return Response.json({
     choice: await brainChoice(),
@@ -51,6 +91,7 @@ export async function GET(request: Request) {
         }
       : null,
     local: { ollama, lmstudio },
+    team,
   });
 }
 
@@ -74,6 +115,8 @@ const Body = z.discriminatedUnion("action", [
     provider: ProviderId,
     model: z.string().trim().min(1).max(200),
     baseUrl: Address.optional(),
+    /** With the office's team key, through its relay. */
+    team: z.boolean().optional(),
   }),
   z.object({
     action: z.literal("key"),
@@ -82,6 +125,13 @@ const Body = z.discriminatedUnion("action", [
     baseUrl: Address.optional(),
   }),
   z.object({ action: z.literal("forget-key"), provider: ProviderId }),
+  /** A key for the whole office, kept sealed by its relay (features/relay/team-ai.ts). */
+  z.object({
+    action: z.literal("team-key"),
+    provider: ProviderId,
+    key: z.string().trim().min(8).max(400),
+  }),
+  z.object({ action: z.literal("forget-team-key"), provider: ProviderId }),
   z.object({ action: z.literal("chatgpt-sign-in") }),
   /** Ask the picked brain one word, to see that it answers (`probe.ts`). */
   z.object({ action: z.literal("probe") }),
@@ -122,7 +172,37 @@ export async function POST(request: Request) {
       await setProviderKey(input.provider as never, input.key || undefined);
     } else if (input.action === "forget-key")
       await setProviderKey(input.provider as never, undefined);
-    else {
+    else if (
+      input.action === "team-key" ||
+      input.action === "forget-team-key"
+    ) {
+      const office = await loadOffice();
+      if (!office)
+        return Response.json(
+          { error: "brain-team-no-office" },
+          { status: 400 },
+        );
+      await setTeamKey(
+        office,
+        input.provider,
+        input.action === "team-key" ? input.key : null,
+      );
+    } else if (input.team) {
+      const team = await teamState();
+      if (!team)
+        return Response.json(
+          { error: "brain-team-no-office" },
+          { status: 400 },
+        );
+      if (!team.keys.some((key) => key.provider === input.provider))
+        return Response.json({ error: "no-team-key" }, { status: 400 });
+      await setBrainChoice({
+        kind: "api",
+        provider: input.provider as never,
+        model: input.model,
+        team: true,
+      });
+    } else {
       const id = input.provider as Parameters<typeof provider>[0];
       if (id === "chatgpt" && !(await chatGptAccount()))
         return Response.json(
@@ -163,5 +243,6 @@ export async function POST(request: Request) {
   return Response.json({
     choice: await brainChoice(),
     keyed: await keyedProviders(),
+    team: await teamState(),
   });
 }

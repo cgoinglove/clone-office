@@ -86,10 +86,12 @@ const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 export class Budget {
   private left = 0;
-  constructor(
-    private readonly total: number,
-    private readonly shares: Map<string, number>,
-  ) {}
+  private readonly total: number;
+  private readonly shares: Map<string, number>;
+  constructor(total: number, shares: Map<string, number>) {
+    this.total = total;
+    this.shares = shares;
+  }
   /** The characters a source may use: its share plus whatever earlier sources left. */
   open(id: string): number {
     this.left += Math.floor(this.total * (this.shares.get(id) ?? 0));

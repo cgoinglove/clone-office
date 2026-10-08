@@ -363,12 +363,13 @@ export class BotMotion {
   gaze: Pt | null = null;
   private cur: Pose | null = null;
 
-  constructor(
-    readonly shape: BotShape,
-    mood: Mood,
-    readonly phase: number,
-  ) {
+  readonly shape: BotShape;
+  readonly phase: number;
+
+  constructor(shape: BotShape, mood: Mood, phase: number) {
+    this.shape = shape;
     this.mood = mood;
+    this.phase = phase;
   }
 
   frame(t: number, dt: number, still: boolean): BotFrame {

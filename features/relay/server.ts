@@ -17,6 +17,7 @@ import { Accounts } from "./accounts.ts";
 import { openDatabase } from "./db.ts";
 import { relayHandler } from "./handler.ts";
 import { Relay } from "./relay.ts";
+import { relaySealKey, TeamAi } from "./team-ai.ts";
 
 const { values } = parseArgs({
   options: {
@@ -49,6 +50,11 @@ const meetingRounds = setInterval(
 meetingRounds.unref();
 
 const publicUrl = process.env.RELAY_PUBLIC_URL || undefined;
+// Team keys are sealed with a key kept apart from the database (team-ai.ts).
+const teamAi = new TeamAi(
+  relay,
+  await relaySealKey(db.kind === "postgres" ? undefined : target),
+);
 const accounts = await Accounts.open(db, relay, { publicUrl });
 
 const server = createServer(
@@ -58,6 +64,7 @@ const server = createServer(
     publicUrl,
     // Started by someone's app: the office lives on their computer, reached on their network.
     onComputer: process.env.RELAY_WITH_PARENT === "1",
+    teamAi,
   }),
 );
 

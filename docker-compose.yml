@@ -5,6 +5,8 @@
 # RELAY_KEY sets the office key; RELAY_PORT the port people reach it on (3200); RELAY_TRUST_PROXY=1
 # and RELAY_PUBLIC_URL (https://office.example.com) when it sits behind an HTTPS proxy of your own.
 # The invite link in the logs is where the first person makes their account (they own the office).
+# RELAY_ENCRYPTION_KEY (`openssl rand -base64 32`, kept apart from the database's backups) lets the
+# office keep team API keys, sealed; without it the relay keeps none.
 services:
   postgres:
     image: postgres:17-alpine
@@ -29,6 +31,7 @@ services:
       RELAY_KEY: ${RELAY_KEY:-}
       RELAY_TRUST_PROXY: ${RELAY_TRUST_PROXY:-}
       RELAY_PUBLIC_URL: ${RELAY_PUBLIC_URL:-}
+      RELAY_ENCRYPTION_KEY: ${RELAY_ENCRYPTION_KEY:-}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
     ports:
       - "${RELAY_PORT:-3200}:3200"

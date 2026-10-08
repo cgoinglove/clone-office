@@ -67,7 +67,10 @@
     "meeting-said": "Your clone already spoke in this round.",
     "meeting-not-in": "Your clone isn't in that meeting.",
     "claude-signed-out": "Claude Code is not signed in. Open a terminal, run claude, and sign in; then try again.",
-    "brain-no-answer": "The model did not answer. What it said is below; try again, or pick another model."
+    "brain-no-answer": "The model did not answer. What it said is below; try again, or pick another model.",
+    "brain-team-no-office": "Your clone uses the office's team key, but it isn't in an office now. Join again, or pick another way under AI model.",
+    "no-team-key": "The office has no key for this vendor now. Add one, or pick another way under AI model.",
+    "team-key-unsealed": "This office's server can't keep a team key until RELAY_ENCRYPTION_KEY is set."
   },
   "start": {
     "title": "Get started",
@@ -643,13 +646,23 @@
       "sign-in": "My ChatGPT plan",
       "claude-code": "My Claude subscription",
       "key": "API key",
-      "local": "Ollama / LM Studio"
+      "local": "Ollama / LM Studio",
+      "team": "Team key"
     },
     "wayNote": {
       "sign-in": "Sign in with your ChatGPT account; your clone then uses your plan's allowance.",
       "claude-code": "Through Claude Code on this computer, signed in with your Claude account.",
       "key": "The service bills your key for what your clone uses.",
-      "local": "A model running on this computer. Nothing leaves it; it can be slower and less able than the services."
+      "local": "A model running on this computer. Nothing leaves it; it can be slower and less able than the services.",
+      "team": "The office's own key, kept sealed on its server. Every clone in the office can use it, and the key never reaches anyone's computer."
+    },
+    "team": {
+      "notIn": "Join an office first: a team key belongs to an office.",
+      "kept": "The office's key …{hint}, added by {name}.",
+      "remove": "Remove it from the office",
+      "add": "Paste a key the whole office will share. The office's server checks it with the vendor, then keeps it sealed.",
+      "unsealed": "This office's server can't keep a team key yet: whoever runs it sets RELAY_ENCRYPTION_KEY.",
+      "calls": "Last 30 days: {mine} calls by your clone, {all} by the office"
     },
     "claudeCodeFound": "Claude Code is on this computer.",
     "claudeMissing": "Claude Code is not on this computer. Install it from claude.com/code and sign in, then reopen this page; or pick another way.",

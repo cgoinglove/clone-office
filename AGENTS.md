@@ -287,7 +287,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   only cards and requests, their files, meetings (60 days), and a few settings an office shares
   (`/settings/:name`: the OAuth client a vendor wants registered once for the team,
   `connector:<vendor>`, and the standup's days, time and zone, `meeting:standup`, which any member
-  sets and all read). Someone without a
+  sets and all read), and team keys (`team-ai.ts`: one API key per vendor the office shares, team
+  billing; sealed with `lib/seal.ts` under RELAY_ENCRYPTION_KEY or the PGlite folder's
+  `secret.key`, never in the database alone; `GET /team-ai`, `POST /team-ai/:vendor` checks it with
+  the vendor first; members' clones call `/ai/:vendor/...` with their own token where the SDK puts
+  the key, and the relay passes the call on with the team key and streams the answer back, counting
+  calls per member and day, `ai_calls`; the clone's side is the brain choice's `team`, a way of its
+  own on the AI model screen; subscriptions are never shared). The relay runs as Node strips
+  TypeScript, so its code (and all code: `erasableSyntaxOnly`) uses only erasable syntax. Someone without a
   clone is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
   the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,
   for two weeks or until answered); the answer reaches the asker like any other. An invite is one

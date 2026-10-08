@@ -178,6 +178,31 @@ export async function setTeamSetting(
   });
 }
 
+/** The office's team keys (features/relay/team-ai.ts): which vendors, a hint, who set each. */
+export interface TeamKeys {
+  keys: { provider: string; hint: string; by: string; updated: string }[];
+  /** Whether the relay can keep one at all. */
+  sealing: boolean;
+  /** Calls made with them in the last 30 days, per member and vendor. */
+  calls: { member: string; provider: string; calls: number }[];
+}
+
+export function teamKeys(office: OfficeConfig): Promise<TeamKeys> {
+  return call(office.relay, "/team-ai", { token: office.token });
+}
+
+/** Keeps a key for the whole office (checked with its vendor by the relay), or forgets it. */
+export async function setTeamKey(
+  office: OfficeConfig,
+  provider: string,
+  key: string | null,
+): Promise<void> {
+  await call(office.relay, `/team-ai/${encodeURIComponent(provider)}`, {
+    token: office.token,
+    body: { key },
+  });
+}
+
 /** One request this mini-me sent or was asked. */
 export async function task(office: OfficeConfig, id: string): Promise<Task> {
   return (

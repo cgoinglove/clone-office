@@ -67,7 +67,10 @@
     "meeting-said": "내 클론은 이번 회차에 이미 말했어요.",
     "meeting-not-in": "내 클론은 이 회의에 참여하고 있지 않아요.",
     "claude-signed-out": "Claude Code에 로그인돼 있지 않아요. 터미널에서 claude를 실행해 로그인한 뒤 다시 해 주세요.",
-    "brain-no-answer": "모델이 답하지 않았어요. 받은 내용은 아래에 있어요. 다시 해 보거나 다른 모델을 골라 주세요."
+    "brain-no-answer": "모델이 답하지 않았어요. 받은 내용은 아래에 있어요. 다시 해 보거나 다른 모델을 골라 주세요.",
+    "brain-team-no-office": "클론이 오피스의 팀 키를 쓰는데, 지금은 오피스에 들어가 있지 않아요. 다시 들어가거나 AI 모델에서 다른 방법을 골라 주세요.",
+    "no-team-key": "지금 오피스에 이 회사의 키가 없어요. 키를 넣거나 AI 모델에서 다른 방법을 골라 주세요.",
+    "team-key-unsealed": "RELAY_ENCRYPTION_KEY가 설정되기 전에는 이 오피스의 서버에 팀 키를 둘 수 없어요."
   },
   "start": {
     "title": "시작하기",
@@ -643,13 +646,23 @@
       "sign-in": "내 ChatGPT 요금제",
       "claude-code": "내 Claude 구독",
       "key": "API 키",
-      "local": "Ollama / LM Studio"
+      "local": "Ollama / LM Studio",
+      "team": "팀 키"
     },
     "wayNote": {
       "sign-in": "ChatGPT 계정으로 로그인하면 클론이 내 요금제 사용량 안에서 답해요.",
       "claude-code": "이 컴퓨터의 Claude Code를 통해, 로그인된 내 Claude 계정으로 써요.",
       "key": "클론이 쓴 만큼 그 서비스에서 내 키로 요금이 나가요.",
-      "local": "이 컴퓨터에서 돌아가는 모델이에요. 아무것도 밖으로 나가지 않지만, 온라인 서비스보다 느리고 성능이 낮을 수 있어요."
+      "local": "이 컴퓨터에서 돌아가는 모델이에요. 아무것도 밖으로 나가지 않지만, 온라인 서비스보다 느리고 성능이 낮을 수 있어요.",
+      "team": "오피스가 함께 쓰는 키예요. 팀 서버에 봉인돼 보관되고, 오피스의 모든 클론이 이 키로 답해요. 키는 누구의 컴퓨터로도 가지 않아요."
+    },
+    "team": {
+      "notIn": "먼저 오피스에 들어가야 해요. 팀 키는 오피스에 두는 키예요.",
+      "kept": "오피스 키 …{hint} · {name} 님이 등록했어요.",
+      "remove": "오피스에서 빼기",
+      "add": "오피스 모두가 함께 쓸 키를 붙여 넣어 주세요. 팀 서버가 그 회사에 먼저 확인한 뒤 봉인해서 보관해요.",
+      "unsealed": "이 오피스의 서버는 아직 팀 키를 둘 수 없어요. 서버를 운영하는 사람이 RELAY_ENCRYPTION_KEY를 설정해야 해요.",
+      "calls": "최근 30일: 내 클론 {mine}번 · 오피스 전체 {all}번"
     },
     "claudeCodeFound": "이 컴퓨터에 Claude Code가 설치돼 있어요.",
     "claudeMissing": "이 컴퓨터에 Claude Code가 없어요. claude.com/code에서 설치하고 로그인한 뒤 이 화면을 다시 열어 주세요. 다른 방법을 골라도 돼요.",

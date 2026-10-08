@@ -9,6 +9,11 @@
 //   GET  /files/:id     the file's bytes, to its owner and the two members of its request
 //   GET  /settings/:name -> {setting}                  what the office keeps for all (a vendor's OAuth client)
 //   POST /settings/:name {value} -> {ok}               set it, or clear it with null
+//   GET  /team-ai       -> {keys, sealing, calls}       the office's team keys: vendor, hint, who set it
+//   POST /team-ai/:vendor {key} -> {ok}                 keep one (checked with its vendor first), or null
+//   GET|POST /ai/:vendor/...                            a call to that vendor's API with the team key
+//                                                       (team-ai.ts); the member's token rides where its
+//                                                       SDK puts the vendor's key
 //   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
@@ -62,6 +67,7 @@ import {
   RelayError,
   type TaskState,
 } from "./relay.ts";
+import { isTeamProvider, type TeamAi } from "./team-ai.ts";
 
 /** How long an inbox call waits for news before answering with none. */
 const INBOX_WAIT_MS = 25_000;
@@ -167,6 +173,8 @@ export function relayHandler(
     publicUrl?: string;
     /** Run by someone's app: the office is on their computer, so others join from its network. */
     onComputer?: boolean;
+    /** The office's team keys and the calls made with them (team-ai.ts). */
+    teamAi?: TeamAi;
   } = {},
 ) {
   const accounts = options.accounts;
@@ -807,6 +815,36 @@ export function relayHandler(
           }),
         });
       }
+      const teamAi = options.teamAi;
+      if (path === "/team-ai" && request.method === "GET") {
+        if (!teamAi) return send(200, { keys: [], sealing: false, calls: [] });
+        return send(200, await teamAi.list(await member(request)));
+      }
+      const teamKey = /^\/team-ai\/([a-z]{2,20})$/.exec(path);
+      if (teamKey && request.method === "POST") {
+        if (!teamAi || !isTeamProvider(teamKey[1]))
+          throw new RelayError(404, "No such vendor.", "not-found");
+        const me = await member(request);
+        const input = await body(request);
+        await teamAi.set(
+          me,
+          teamKey[1],
+          typeof input.key === "string" ? input.key : null,
+        );
+        return send(200, { ok: true });
+      }
+      const call = /^\/ai\/([a-z]{2,20})(\/.*)$/.exec(path);
+      if (call) {
+        if (!teamAi || !isTeamProvider(call[1]))
+          throw new RelayError(404, "No such vendor.", "not-found");
+        return await teamAi.pass(
+          request,
+          response,
+          call[1],
+          call[2],
+          url.search,
+        );
+      }
       let setting: RegExpExecArray | null = null;
       if (path.startsWith("/settings/"))
         try {
@@ -879,6 +917,11 @@ export function relayHandler(
       }
       send(404, { error: "Not here.", code: "not-found" });
     } catch (error) {
+      // A streamed answer already under way: it ends where it stopped.
+      if (response.headersSent) {
+        response.end();
+        return;
+      }
       if (error instanceof RelayError)
         return send(error.status, { error: error.message, code: error.code });
       console.error(error);

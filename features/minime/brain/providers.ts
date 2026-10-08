@@ -121,6 +121,8 @@ export type Way =
   | { kind: "sign-in"; provider: "chatgpt" }
   | { kind: "claude-code" }
   | { kind: "key"; provider: ProviderId }
+  /** The office's own key for the vendor, used through its relay (features/relay/team-ai.ts). */
+  | { kind: "team"; provider: ProviderId }
   | { kind: "local" };
 
 export interface Vendor {
@@ -151,18 +153,33 @@ export const VENDORS: Vendor[] = [
     ways: [
       { kind: "sign-in", provider: "chatgpt" },
       { kind: "key", provider: "openai" },
+      { kind: "team", provider: "openai" },
     ],
   },
   {
     id: "claude",
     name: "Claude",
-    ways: [{ kind: "claude-code" }, { kind: "key", provider: "anthropic" }],
+    ways: [
+      { kind: "claude-code" },
+      { kind: "key", provider: "anthropic" },
+      { kind: "team", provider: "anthropic" },
+    ],
   },
-  { id: "gemini", name: "Gemini", ways: [{ kind: "key", provider: "google" }] },
+  {
+    id: "gemini",
+    name: "Gemini",
+    ways: [
+      { kind: "key", provider: "google" },
+      { kind: "team", provider: "google" },
+    ],
+  },
   {
     id: "openrouter",
     name: "OpenRouter",
-    ways: [{ kind: "key", provider: "openrouter" }],
+    ways: [
+      { kind: "key", provider: "openrouter" },
+      { kind: "team", provider: "openrouter" },
+    ],
   },
   { id: "local", ways: [{ kind: "local" }] },
 ];

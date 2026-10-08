@@ -34,6 +34,11 @@ assistant that can read and act for you is one that can do so wrongly. What keep
 - The relay's pages are plain HTML with no scripts, refuse forms from other sites, and never send
   their address (with its invite key) to another site. Wrong keys and sign-ins are counted per
   address and slowed down.
+- **Team keys** (an API key the office shares) live only on the relay, sealed with AES-256-GCM
+  under `RELAY_ENCRYPTION_KEY`, or for an office kept in a folder, that folder's `secret.key`;
+  never in the database itself. Members' clones call the vendor through the relay with their own
+  token, so the key never reaches their computers and leaving the office ends its use. What they
+  ask passes through the relay and is not kept. Subscriptions (Claude, ChatGPT) are never shared.
 - One request goes out that nobody asked for by name: Settings › General asks npm's registry
   (`registry.npmjs.org/clone-office/latest`) which version is newest, at most once in six hours,
   only when the app runs from the npm package. Nothing goes with it.

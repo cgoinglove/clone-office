@@ -25,6 +25,8 @@ export type BrainChoice =
       model: string;
       /** A model on this computer: where its server answers. */
       baseUrl?: string;
+      /** With the office's key, through its relay, rather than one of the person's own. */
+      team?: boolean;
     };
 
 /** A failure the page says in the person's language. */
@@ -71,6 +73,7 @@ export async function brainChoice(): Promise<BrainChoice> {
       ...(typeof raw.baseUrl === "string" && raw.baseUrl
         ? { baseUrl: raw.baseUrl }
         : {}),
+      ...(raw.team === true ? { team: true } : {}),
     };
   return {
     kind: "claude-code",
