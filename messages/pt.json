@@ -311,12 +311,13 @@
       "WebFetch": "Abrir uma página da web",
       "WebSearch": "Pesquisar na web",
       "mcp__minime__ask_colleague": "Enviar um pedido ao clone de um colega",
-      "mcp__minime__ask_session": "Perguntar a uma das suas conversas do Claude Code",
+      "mcp__minime__ask_session": "Perguntar a uma das suas conversas do Claude Code ou do Codex",
       "Edit": "Alterar um arquivo",
       "Write": "Escrever um arquivo",
       "NotebookEdit": "Alterar um notebook",
       "Bash": "Executar um comando",
-      "mcp__minime__work_session": "Pôr uma das suas conversas do Claude Code para trabalhar",
+      "mcp__minime__work_session": "Pôr uma das suas conversas do Claude Code ou do Codex para trabalhar",
+      "mcp__minime__apply_changes": "Levar para os seus arquivos as mudanças de uma conversa do Codex",
       "mcp__minime__leave_out_folder": "Ignorar uma pasta daqui em diante",
       "mcp__minime__ask_by_link": "Criar um link para perguntar a alguém sem clone"
     },
@@ -1046,7 +1047,7 @@
           "body": "Ele também age nos seus serviços conectados e pergunta aos colegas sem perguntar a você antes. Você vê tudo na conversa."
         }
       },
-      "always": "Seja qual for a escolha, arquivos que saem do seu computador, rotinas e trabalho nas suas conversas do Claude Code sempre são mostrados a você antes. Pedidos de colegas não usam isto: cada tipo tem seu próprio nível de confiança, em Pedidos que você aceita.",
+      "always": "Seja qual for a escolha, arquivos que saem do seu computador, rotinas e trabalho nas suas conversas do Claude Code ou do Codex sempre são mostrados a você antes. Pedidos de colegas não usam isto: cada tipo tem seu próprio nível de confiança, em Pedidos que você aceita.",
       "trust": "Novos tipos de pedido começam em",
       "trustHint": "Onde um tipo de pedido começa quando você o adiciona ou seu clone o sugere. Promessas e decisões sempre chegam a você.",
       "batch": "Quando chegam as perguntas guardadas",

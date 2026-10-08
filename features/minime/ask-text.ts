@@ -53,7 +53,7 @@ export function describe(
     (typeof input.name === "string" && typeof input.request === "string"
       ? `${input.name}: ${input.request}`
       : undefined) ??
-    // Asking one of the person's Claude Code conversations: which, and what.
+    // Asking one of the person's Claude Code or Codex conversations: which, and what.
     (typeof input.session === "string"
       ? `${input.session}: ${String(input.question ?? "")}`
       : undefined);
@@ -106,6 +106,13 @@ export function changeOf(
     return clipLines(input.content, 12);
   if (tool === "Bash" && typeof input.command === "string")
     return `$ ${input.command}`;
+  // What a Codex conversation changed in its copy of the project: each file, then the lines.
+  if (tool === "mcp__minime__apply_changes" && typeof input.diff === "string")
+    return [
+      ...(Array.isArray(input.changed) ? input.changed.map(String) : []),
+      "",
+      clipLines(input.diff, 200),
+    ].join("\n");
   // What a connected service's tool would be given, each value on its line.
   if (connectorOfTool(tool)) {
     const lines = Object.entries(input).map(([key, value]) => {

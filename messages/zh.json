@@ -311,12 +311,13 @@
       "WebFetch": "打开网页",
       "WebSearch": "搜索网络",
       "mcp__minime__ask_colleague": "向同事的分身发送请求",
-      "mcp__minime__ask_session": "询问你的一个 Claude Code 对话",
+      "mcp__minime__ask_session": "询问你的一个 Claude Code 或 Codex 对话",
       "Edit": "修改文件",
       "Write": "写入文件",
       "NotebookEdit": "修改笔记本",
       "Bash": "运行命令",
-      "mcp__minime__work_session": "让你的一个 Claude Code 对话去做事",
+      "mcp__minime__work_session": "让你的一个 Claude Code 或 Codex 对话去做事",
+      "mcp__minime__apply_changes": "把一个 Codex 对话做的修改放进你的文件",
       "mcp__minime__leave_out_folder": "从现在起排除一个文件夹",
       "mcp__minime__ask_by_link": "生成链接，问一个没有分身的人"
     },
@@ -1046,7 +1047,7 @@
           "body": "它还会在你连接的服务里执行操作、向同事提问，都不先问你。所有事都能在对话里看到。"
         }
       },
-      "always": "无论选哪一项，文件离开你的电脑、自动流程以及你的 Claude Code 对话里的工作，都会先给你看。同事的请求不受这里影响：那里的每一类都有自己的信任级别，在“你接的请求”里设置。",
+      "always": "无论选哪一项，文件离开你的电脑、自动流程以及你的 Claude Code 或 Codex 对话里的工作，都会先给你看。同事的请求不受这里影响：那里的每一类都有自己的信任级别，在“你接的请求”里设置。",
       "trust": "新类别请求的初始级别",
       "trustHint": "你添加一类请求、或你的分身起草一类时，它从哪个级别开始。承诺和决定总会交给你。",
       "batch": "暂存的问题何时送来",

@@ -311,12 +311,13 @@
       "WebFetch": "Open a web page",
       "WebSearch": "Search the web",
       "mcp__minime__ask_colleague": "Send a request to a colleague's clone",
-      "mcp__minime__ask_session": "Ask one of your Claude Code conversations",
+      "mcp__minime__ask_session": "Ask one of your Claude Code or Codex conversations",
       "Edit": "Change a file",
       "Write": "Write a file",
       "NotebookEdit": "Change a notebook",
       "Bash": "Run a command",
-      "mcp__minime__work_session": "Have one of your Claude Code conversations do work",
+      "mcp__minime__work_session": "Have one of your Claude Code or Codex conversations do work",
+      "mcp__minime__apply_changes": "Let a Codex conversation's changes into your files",
       "mcp__minime__leave_out_folder": "Leave a folder out from now on",
       "mcp__minime__ask_by_link": "Make a link to ask someone without a clone"
     },
@@ -1046,7 +1047,7 @@
           "body": "It also acts in your connected services and asks colleagues without asking you first. You see everything in the conversation."
         }
       },
-      "always": "Whatever you pick, files leaving your computer, flows, and work in your Claude Code conversations are always shown to you first. Colleagues' requests don't use this: each kind there has its own trust level, under Requests you take.",
+      "always": "Whatever you pick, files leaving your computer, flows, and work in your Claude Code or Codex conversations are always shown to you first. Colleagues' requests don't use this: each kind there has its own trust level, under Requests you take.",
       "trust": "New kinds of request start at",
       "trustHint": "Where a kind of request starts when you add it or your clone drafts it. Promises and decisions always come to you.",
       "batch": "When kept questions come",

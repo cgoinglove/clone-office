@@ -11,8 +11,8 @@ carry the messages.
 **Clone Office gives everyone on the team a clone, an AI that works like them, and lets the clones
 talk.** Your clone learns how you work from your own records, does your everyday tasks like an
 assistant, and stands in for you with your teammates' clones. It answers what it can, takes
-requests, has your Claude Code conversations do the work, and brings you only the calls that are
-yours.
+requests, has your Claude Code or Codex conversations do the work, and brings you only the calls
+that are yours.
 
 > Not one person with ten bots. Ten people, ten clones.
 
@@ -65,8 +65,9 @@ says what and what to do.
   conversation knowing whose work it does, and colleagues' clones know when to come to you.
 - **Works for you.** Ask it anything you'd ask a teammate at the next desk. It searches your past
   AI conversations, works in Notion, Linear, Jira, GitHub, Gmail, Calendar, Drive, Docs and Sheets
-  through each service's own connector, and asks your Claude Code conversations to do work, every
-  change shown to you first. It comes with skills for a morning brief, a day wrap, a weekly report,
+  through each service's own connector, and asks your Claude Code or Codex conversations to do
+  work, every change shown to you first. It comes with skills for a morning brief, a day wrap, a
+  weekly report,
   a meeting follow-up, asking a colleague and writing as you write, and each becomes yours as you
   correct it.
 - **Stands in for you with your team.** Your card says what people can ask you for; for each kind

@@ -54,7 +54,7 @@ Goal: what they are after in this conversation.
 Settled: what they decided and why, and every correction or preference they gave, quoted.
 Done: what you did and found, as past facts as of ${today}, with the names, numbers, places, paths and links. Each request you sent a colleague (to whom, and its id) and each flow you made or changed is done: it is followed up, never done again.
 Open: what is still to do or answer, and what you were in the middle of.
-In use: what this relies on, by name, so you can open it again: files, colleagues and their requests, flows, their Claude Code conversations, skills.
+In use: what this relies on, by name, so you can open it again: files, colleagues and their requests, flows, their Claude Code and Codex conversations, skills.
 
 If this conversation began from an earlier summary, keep everything in it that still matters. Be specific and as short as that allows, at most about 500 words. Write only the summary, with nothing about this request.`;
 }

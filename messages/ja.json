@@ -311,12 +311,13 @@
       "WebFetch": "Webページを開く",
       "WebSearch": "Webを検索する",
       "mcp__minime__ask_colleague": "同僚のクローンに依頼を送る",
-      "mcp__minime__ask_session": "Claude Codeの会話のひとつに聞く",
+      "mcp__minime__ask_session": "Claude CodeかCodexの会話のひとつに聞く",
       "Edit": "ファイルを変更する",
       "Write": "ファイルを書き込む",
       "NotebookEdit": "ノートブックを変更する",
       "Bash": "コマンドを実行する",
-      "mcp__minime__work_session": "Claude Codeの会話のひとつに作業させる",
+      "mcp__minime__work_session": "Claude CodeかCodexの会話のひとつに作業させる",
+      "mcp__minime__apply_changes": "Codexの会話による変更をファイルに反映する",
       "mcp__minime__leave_out_folder": "今後このフォルダーを除外する",
       "mcp__minime__ask_by_link": "クローンのいない人に聞くリンクを作る"
     },
@@ -1046,7 +1047,7 @@
           "body": "接続したサービスでの操作や同僚への質問も、確認なしで行います。すべて会話で見られます。"
         }
       },
-      "always": "どれを選んでも、ファイルがコンピューターの外に出ること、フロー、Claude Codeの会話での作業は、必ず先にお見せします。同僚の依頼にはこの設定は使いません。依頼の種類ごとに「受ける依頼」で信頼レベルを決めます。",
+      "always": "どれを選んでも、ファイルがコンピューターの外に出ること、フロー、Claude CodeやCodexの会話での作業は、必ず先にお見せします。同僚の依頼にはこの設定は使いません。依頼の種類ごとに「受ける依頼」で信頼レベルを決めます。",
       "trust": "新しい種類の依頼の初期設定",
       "trustHint": "依頼の種類を追加したり、クローンが下書きしたりしたときの最初のレベル。約束や決定は必ずあなたに届きます。",
       "batch": "保留した質問が届く時間",

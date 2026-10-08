@@ -17,7 +17,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 | `brain.md` | What the clone thinks with: their ChatGPT plan, their Claude subscription through Claude Code (Haiku, Sonnet or Opus), a key (OpenAI, Claude, Gemini, OpenRouter) or a model on their computer (Ollama, LM Studio); keys, cost, the lighter model for background work, changing it |
 | `connectors.md` | Connectors: the services the clone works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
 | `flows.md` | Flows: what the clone does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
-| `trouble.md` | Claude Code missing or signed out, learning that takes long, something said that is out of date, reading again |
+| `trouble.md` | Claude Code missing or signed out, a Codex conversation that cannot be asked, learning that takes long, something said that is out of date, reading again |
 
 Two things hold everywhere:
 
@@ -153,23 +153,41 @@ This is version 0.1, an early one.
 - Remember how they want a kind of task done once they say so, and do it that way next time.
 - Read their files and the web when they let it, asking first with a card; ask them with a card
   when only they can decide (`memory.md`, "What it does alone, and what it asks first").
-- Ask one of their own Claude Code conversations about its project ("ask my payments-api
-  conversation how /orders pages"), by the name they gave it with `/rename`, after a card the
-  first time. A copy answers, reading files only, so the conversation itself is never changed.
+- Ask one of their own Claude Code or Codex conversations about its project ("ask my payments-api
+  conversation how /orders pages"), by the name they gave it with `/rename` (or, in Codex, by what
+  they first asked in it), after a card the first time. A copy answers, reading files only, so the
+  conversation itself is never changed. A Codex copy runs in Codex's own sandbox: it reads files,
+  kept out of the folders they left out (those listed by their place on the computer) and the
+  clone's own keys, and cannot write anything or reach the network.
 
 - Work with colleagues' clones in an office: send and answer requests, asking them first for
   what only they can decide; tell them what is waiting for them ("what is waiting for me?"); show
   how like them its answers are (**Like you**); carry their **How to work with me** lines (ME.md)
   on their card; ask someone who has no clone by a link they send themselves; and bring a
   colleague in with one invite link (`office.md`).
-- Have one of their Claude Code conversations do a piece of work they took on (often a
-  colleague's request): it works in a copy of that conversation named "<name> · clone", which
-  they can open later with `/resume`. The card that asks whether it may do the work also offers
-  **For this task, don't ask about changing files in <folder>**: ticked, it changes files in that
-  folder without a card each time, for that one piece of work only; otherwise every file it
-  changes is asked of them first, on a card that shows the change itself. Every command it runs is
-  asked every time. When it is done the clone says which files it changed (in a git repository:
-  each file, with the lines added and removed), so they can look before relying on it.
+- Have one of their Claude Code or Codex conversations do a piece of work they took on (often a
+  colleague's request). The card asking whether it may (**Have one of your Claude Code or Codex
+  conversations do work**) comes every time, and offers **For this task, don't ask about changing
+  files in <folder>**: ticked, it changes files in that folder without a card each time, for that
+  one piece of work only. When it is done the clone says which files it changed (in a git
+  repository: each file, with the lines added and removed), so they can look before relying on it.
+  - In Claude Code it works in a copy of that conversation named "<name> · clone", which they can
+    open later with `/resume`. Unless they ticked the task's choice, every file it changes is asked
+    of them first, on a card that shows the change itself; every command it runs is asked every
+    time.
+  - Codex cannot stop to ask, so a copy of the conversation works in a separate copy of the
+    project (it must be in git): its files as they are now, with changes not yet committed, but
+    without what git ignores (such as node_modules or .env) and without folders left out. There it
+    may change files and run commands, sandboxed: nothing outside that copy is written and nothing
+    reaches the network. When it is done, one card (**Let a Codex conversation's changes into your
+    files**, Codex 대화가 고친 내용을 내 파일에 반영하기) shows every file it changed and the lines
+    before and after, unless they ticked the task's choice, when the changes go in at once.
+    **Allow** puts the changes into their folder, all or none: if one of those files changed in the
+    meantime, nothing is applied. Otherwise their files stay as they were, and the changes are kept
+    as a patch file under `hands/changes/` in the clone's folder (`git apply <file>` in the project
+    applies it later). The copy of the project, under `hands/work/`, is removed once they decide.
+    The Codex conversation itself is never written to, and the copy is kept nowhere. This needs a
+    Codex from August 2026 or later (`codex exec fork`).
 - Do something on its own at set times, again and again or once later ("every weekday at 9, sum
   up what is waiting for me"), or handle a kind of colleague's request their way when it comes
   in, when they ask for it, after a card (`flows.md`).

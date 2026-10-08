@@ -55,7 +55,8 @@ picked.
 Except with Claude Code, the clone runs its own loop the way Claude Code would: it reads their
 files and the web only as they allow, asks on a card for everything else, and keeps its
 conversations under `brain/sessions/` in the clone's folder. Talking with their own Claude Code
-conversations (asking one, having one do work) still needs Claude Code on the computer.
+or Codex conversations (asking one, having one do work) needs that tool on the computer, signed
+in as they use it, whatever the clone itself thinks with.
 
 Changing the brain keeps everything. A conversation started with one brain goes on with another
 from its own record.

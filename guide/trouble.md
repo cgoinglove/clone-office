@@ -9,6 +9,11 @@
   their ChatGPT plan, a key, or a model on their computer (`brain.md`).
 - **"Claude Code is not signed in"**: open a terminal, run `claude` and sign in once, then try
   again. Nothing in Clone Office signs in for them.
+- **A Codex conversation cannot be asked or given work**: Codex must be on the computer, signed
+  in (run `codex` once), and from August 2026 or later, since the clone goes on from a copy of the
+  conversation with `codex exec fork` (update it the way it was installed, such as
+  `npm install -g @openai/codex@latest`). Work also needs the project to be in git; outside git a
+  Codex conversation can still be asked.
 - **"The brain did not answer"**: what the service said is shown under it, as it said it (a model
   their plan does not include, a limit reached). Try again, or pick another model under **AI model**.
 - **"The service did not accept that key"** or **"needs a key"**: the key was mistyped, removed or

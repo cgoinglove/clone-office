@@ -158,8 +158,11 @@ export async function taskGranted(
 }
 
 /** Put the question to the person and wait, asking again while the app says it is still waiting. */
-async function ask(ask: Record<string, unknown>): Promise<Answer> {
-  let reply = await post({ chat: GATE.chat, ask });
+async function ask(
+  ask: Record<string, unknown>,
+  chat = GATE.chat,
+): Promise<Answer> {
+  let reply = await post({ chat, ask });
   while (reply.waiting) reply = await post({ id: reply.id });
   return reply.answered
     ? {
@@ -168,6 +171,23 @@ async function ask(ask: Record<string, unknown>): Promise<Answer> {
         always: Boolean(reply.always),
       }
     : { answered: false };
+}
+
+/**
+ * Ask the person on a permission card before something the tool server's own code is about to do,
+ * as Claude Code asks through permission_prompt: the card shows `input`, which code made (such as
+ * the changes a Codex conversation's work would make to their files). `chat` is where it shows.
+ * Throws when the app cannot be reached to ask.
+ */
+export async function askPermission(
+  tool: string,
+  input: Record<string, unknown>,
+  chat = GATE.chat,
+): Promise<"allow" | "deny" | "unanswered"> {
+  if (!gateOpen) throw new Error("Nobody can be asked now.");
+  const answer = await ask({ kind: "permission", tool, input }, chat);
+  if (!answer.answered) return "unanswered";
+  return answer.answer === "allow" ? "allow" : "deny";
 }
 
 export async function callGateTool(

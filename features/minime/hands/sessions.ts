@@ -4,7 +4,8 @@
 // conversation itself is never touched, while the copy knows the project as that conversation did
 // (spike S2, 10/4). The copy loads the person's user settings only, so a project's own hooks do not
 // run, and no MCP server. Folders the person left out are never listed or opened, and the mini-me's
-// own sessions are not its person's.
+// own sessions are not its person's. Their Codex conversations are listed and asked alike
+// (hands/codex.ts); a conversation is found by its name whichever tool it is in.
 
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -16,10 +17,21 @@ import { isExcluded, loadExcludes } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 import { projectDirs } from "../server/sources/claude-code.ts";
 import { streamLines } from "../server/sources/common.ts";
+import {
+  type Approve,
+  askCodex,
+  listCodexSessions,
+  workCodex,
+} from "./codex.ts";
 
-export interface ClaudeSession {
+export interface HandSession {
+  /** The tool the conversation is in. */
+  tool: "claude-code" | "codex";
   id: string;
-  /** The name the person gave it (`--name`, `/rename`), else the title Claude Code gave it. */
+  /**
+   * The name the person gave it (`--name`, `/rename`), else a title: the one Claude Code gave it,
+   * or the first thing the person asked in Codex.
+   */
   name?: string;
   named: boolean;
   cwd: string;
@@ -58,9 +70,9 @@ async function titlesOf(
 }
 
 /** The person's recent Claude Code conversations, newest first, as the mini-me may see them. */
-export async function listSessions(
+async function listClaudeSessions(
   options: { days?: number; limit?: number } = {},
-): Promise<ClaudeSession[]> {
+): Promise<HandSession[]> {
   const excludes = loadExcludes();
   const home = minimeHome();
   const since = Date.now() - (options.days ?? 30) * DAY;
@@ -77,10 +89,11 @@ export async function listSessions(
     }
   }
   found.sort((a, b) => b.file.mtimeMs - a.file.mtimeMs);
-  const sessions: ClaudeSession[] = [];
+  const sessions: HandSession[] = [];
   for (const { cwd, file } of found.slice(0, options.limit ?? 30)) {
     const titles = file.size <= MAX_SCAN_BYTES ? await titlesOf(file.path) : {};
     sessions.push({
+      tool: "claude-code",
       id: basename(file.path, ".jsonl"),
       ...(titles.custom || titles.ai
         ? { name: titles.custom ?? titles.ai }
@@ -94,11 +107,24 @@ export async function listSessions(
   return sessions;
 }
 
+/** The person's recent conversations in Claude Code and in Codex, newest first. */
+export async function listSessions(
+  options: { days?: number; limit?: number } = {},
+): Promise<HandSession[]> {
+  const [claude, codex] = await Promise.all([
+    listClaudeSessions(options),
+    listCodexSessions(options),
+  ]);
+  return [...claude, ...codex]
+    .sort((a, b) => Date.parse(b.updated) - Date.parse(a.updated))
+    .slice(0, options.limit ?? 30);
+}
+
 /** A conversation by its id, or the name the person gave it (the newest, when two share it). */
 export function findSession(
-  sessions: ClaudeSession[],
+  sessions: HandSession[],
   wanted: string,
-): ClaudeSession | undefined {
+): HandSession | undefined {
   const key = wanted.trim().toLowerCase();
   return (
     sessions.find((s) => s.id === wanted.trim()) ??
@@ -117,7 +143,7 @@ Answer from what this conversation knows and from the files, in a few sentences.
 export async function askSession(
   wanted: string,
   question: string,
-): Promise<{ ok: boolean; text: string; session?: ClaudeSession }> {
+): Promise<{ ok: boolean; text: string; session?: HandSession }> {
   const session = findSession(
     await listSessions({ days: 90, limit: 200 }),
     wanted,
@@ -133,6 +159,8 @@ export async function askSession(
       text: `The folder of that conversation is no longer there (${session.cwd}).`,
       session,
     };
+  if (session.tool === "codex")
+    return { ...(await askCodex(session, askPrompt(question))), session };
   const command = claudeCommand();
   if (!command)
     return { ok: false, text: "Claude Code was not found.", session };
@@ -257,19 +285,27 @@ Do it in this project. Every change you make and every command you run is asked 
 }
 
 /**
- * Have one of the person's conversations do work: a copy of it that is kept, named after it
- * ("<name> · mini-me"), so the conversation itself is never written to and the person can open
- * the copy later and go on from it. The copy may read alone; every edit and command is asked of the
- * person on their screen, through the trust gate, in `chat`.
+ * Have one of the person's conversations do work. In Claude Code: a copy of it that is kept, named
+ * after it ("<name> · clone"), so the conversation itself is never written to and the person can
+ * open the copy later and go on from it; the copy may read alone, and every edit and command is
+ * asked of the person on their screen, through the trust gate, in `chat`. In Codex, which cannot
+ * ask: a copy of it works in a copy of the project, and what it changed is put to the person once
+ * (`approve`) before it reaches their folder (hands/codex.ts).
  */
 export async function workSession(
   wanted: string,
   task: string,
-  options: { chat: string; allow: string[]; edits?: boolean },
+  options: {
+    chat: string;
+    allow: string[];
+    approve: Approve;
+    /** The person let this task change files in its folder without asking (hands/grants.ts). */
+    edits?: boolean;
+  },
 ): Promise<{
   ok: boolean;
   text: string;
-  session?: ClaudeSession;
+  session?: HandSession;
   copy?: string;
 }> {
   const session = findSession(
@@ -293,6 +329,8 @@ export async function workSession(
       text: "Nobody can be asked now, so nothing can be changed.",
       session,
     };
+  if (session.tool === "codex")
+    return { ...(await workCodex(session, task, options.approve)), session };
   const command = claudeCommand();
   if (!command)
     return { ok: false, text: "Claude Code was not found.", session };

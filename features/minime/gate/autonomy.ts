@@ -1,10 +1,11 @@
 // What the person's autonomy mode (Settings › Preferences) lets their clone do on its own, beyond
 // the rules they made one by one on cards. `ask` adds nothing. `reads` adds reading: files (never
-// in folders left out, which are refused before any of this), web pages, asking a Claude Code
-// conversation (a read-only copy), and what only reads in the services it is connected to. `auto`
-// adds acting in those services and asking colleagues. Files leaving the computer, flows, and work
-// in Claude Code conversations stay asked every time: the tool server asks for files again itself,
-// and none of the others is ever named here.
+// in folders left out, which are refused before any of this), web pages, asking a Claude Code or
+// Codex conversation (a read-only copy), and what only reads in the services it is connected to.
+// `auto` adds acting in those services and asking colleagues. Files leaving the computer, flows,
+// and work in Claude Code or Codex conversations (and letting a Codex conversation's changes into
+// their files) stay asked every time: the tool server asks for files again itself, and none of the
+// others is ever named here.
 
 import { connectorOfTool } from "../connectors/catalog.ts";
 import { connectedConnectors } from "../connectors/oauth.ts";

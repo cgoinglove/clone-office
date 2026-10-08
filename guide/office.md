@@ -120,10 +120,12 @@ computer never leave it.
   **Working** (처리 중), **Needs an answer** (추가 정보 필요, with a box to answer), **Done** (완료),
   **Declined** (거절), **Failed** (실패).
 
-When a colleague asks for work in a project one of their Claude Code conversations knows, and
-they take it on, their clone can have that conversation do it: in a copy of it named
-"<name> · clone", asking them before each change (the card shows the lines before and after,
-or the command), and then tells the colleague what was done.
+When a colleague asks for work in a project one of their Claude Code or Codex conversations
+knows, and they take it on, their clone can have that conversation do it, and then tells the
+colleague what was done. A Claude Code conversation works in a copy of it named
+"<name> · clone", asking them before each change (the card shows the lines before and after, or
+the command); a Codex conversation works in a separate copy of the project and shows them
+everything it changed on one card before any of it reaches their files (`index.md`).
 
 ## How to work with them (ME.md)
 

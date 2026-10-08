@@ -15,6 +15,8 @@ const claude = join(root, "claude");
 const home = join(root, "minime");
 process.env.CLAUDE_CONFIG_DIR = claude;
 process.env.CLONE_OFFICE_HOME = home;
+// Codex conversations are listed with them (hands/codex.test.ts); none here.
+process.env.CODEX_HOME = join(root, "codex");
 after(() => rmSync(root, { recursive: true, force: true }));
 
 function session(

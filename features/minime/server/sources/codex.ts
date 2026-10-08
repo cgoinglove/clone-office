@@ -126,9 +126,11 @@ async function importedIds(home: string): Promise<Set<string>> {
   return ids;
 }
 
-async function rollouts(home: string): Promise<string[]> {
+async function rollouts(home: string, archived = true): Promise<string[]> {
   const out: string[] = [];
-  for (const dir of ["sessions", "archived_sessions"]) {
+  for (const dir of archived
+    ? ["sessions", "archived_sessions"]
+    : ["sessions"]) {
     try {
       // Paths in the person's home, never files of this app.
       const names = await readdir(join(/*turbopackIgnore: true*/ home, dir), {
@@ -202,8 +204,14 @@ export function rolloutLineMessage(
   return request.length >= 2 ? { role: "user", at, text: request } : undefined;
 }
 
-/** Codex sessions the person had, with the folder each ran in; imports and program runs left out. */
-export async function codexRolloutFiles(): Promise<
+/**
+ * Codex sessions the person had, with the folder each ran in; imports and program runs left out.
+ * `since` keeps those changed since then (a file's time is looked at before it is opened), and
+ * `archived: false` leaves out the ones the person archived, as Codex's own resume list does.
+ */
+export async function codexRolloutFiles(
+  options: { since?: number; archived?: boolean } = {},
+): Promise<
   {
     path: string;
     session: string;
@@ -214,7 +222,7 @@ export async function codexRolloutFiles(): Promise<
 > {
   const home = codexHome();
   const [files, imported] = await Promise.all([
-    rollouts(home),
+    rollouts(home, options.archived ?? true),
     importedIds(home),
   ]);
   const out: {
@@ -225,12 +233,12 @@ export async function codexRolloutFiles(): Promise<
     size: number;
   }[] = [];
   for (const file of files) {
+    const info = await stat(file).catch(() => undefined);
+    if (!info || info.mtimeMs < (options.since ?? 0)) continue;
     const meta = await sessionMeta(file).catch(() => undefined);
     if (!meta) continue;
     if (meta.id && imported.has(meta.id)) continue;
     if (meta.source === "exec" || typeof meta.source === "object") continue;
-    const info = await stat(file).catch(() => undefined);
-    if (!info) continue;
     out.push({
       path: file,
       session: meta.id ?? file,

@@ -443,10 +443,26 @@ These words help discussion. They do not mandate separate services, tables or UI
   asks for the work offers, instead of "from now on", to let that one task change files in its
   folder (`gate/enrich.ts` `task`): the answer is kept in the app's process (`grants.ts`), never in
   what the brain sends, and the tool server takes it once through the gate route as the work
-  starts (`gate/tools.ts` `taskGranted`), adding an `Edit(<folder>/**)` rule for that run only;
-  commands stay asked. Afterwards it tells the brain which files changed (`changes.ts`, git's
-  counts against the state before the run). `tools.ts`
-  serves `sessions` (free), `ask_session` and `work_session` (asked through the gate) to the brain.
+  starts (`gate/tools.ts` `taskGranted`), adding an `Edit(<folder>/**)` rule for that run only (in
+  Codex: its patch goes in without its card); commands stay asked. Afterwards it tells the brain
+  which files changed (`changes.ts`, git's counts against the state before the run). `codex.ts` does
+  the same for Codex conversations (rollouts read by `server/sources/codex.ts`, archived ones left
+  out; named from `session_index.jsonl`, else by what was first asked): `codex exec --ephemeral
+  --ignore-rules fork <id> -`, nothing written to the conversation and the copy kept nowhere, the
+  person's execpolicy rules (whose "allow" runs outside the sandbox) not loaded, and CODEX_API_KEY
+  not passed on. Codex cannot ask anyone mid-run, so a permission profile given with `-c`
+  (`sandboxConfig`: `default_permissions`, read anywhere but the folders left out as paths and the
+  clone's secrets, no network, approvals "never" and never by an automatic reviewer) bounds it:
+  asking writes nothing; work writes only in a copy of the project (`copy.ts`: the repository's
+  files as they are now, tracked and untracked but not ignored, not in folders left out,
+  copy-on-write, in a git repository of its own under `hands/work/`, so the person's repository is
+  never written to), and what it changed is one patch (`git diff-tree --binary` from the copy's
+  first tree) shown on one card, `mcp__minime__apply_changes` (asked every time, `ALWAYS_ASKED`;
+  `ask-text.ts` `changeOf` shows the files and lines), put by the tool server itself
+  (`gate/tools.ts` `askPermission`); allowed, `git apply --check` then `git apply` puts it into the
+  person's folder all or none, otherwise it is kept in `hands/changes/`. A folder outside git can
+  be asked but given no work. `tools.ts` serves `sessions` (free, both tools with a tool column),
+  `ask_session` and `work_session` (asked through the gate) to the brain.
 - `features/minime/history/`: a search index (SQLite FTS5 via `node:sqlite`, under `index/`) of
   what the person typed to their AI tools and what those answered, built in bounded passes that
   resume by byte offset, with CJK text indexed as bigrams; `tools.ts` gives the clone

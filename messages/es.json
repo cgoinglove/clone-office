@@ -311,12 +311,13 @@
       "WebFetch": "Abrir una página web",
       "WebSearch": "Buscar en la web",
       "mcp__minime__ask_colleague": "Enviar una solicitud al clon de un colega",
-      "mcp__minime__ask_session": "Preguntarle a una de tus conversaciones de Claude Code",
+      "mcp__minime__ask_session": "Preguntarle a una de tus conversaciones de Claude Code o Codex",
       "Edit": "Cambiar un archivo",
       "Write": "Escribir un archivo",
       "NotebookEdit": "Cambiar un notebook",
       "Bash": "Ejecutar un comando",
-      "mcp__minime__work_session": "Hacer que una de tus conversaciones de Claude Code trabaje",
+      "mcp__minime__work_session": "Hacer que una de tus conversaciones de Claude Code o Codex trabaje",
+      "mcp__minime__apply_changes": "Llevar a tus archivos los cambios de una conversación de Codex",
       "mcp__minime__leave_out_folder": "Excluir una carpeta de ahora en adelante",
       "mcp__minime__ask_by_link": "Crear un enlace para preguntarle a alguien sin clon"
     },
@@ -1046,7 +1047,7 @@
           "body": "También actúa en tus servicios conectados y les pregunta a tus colegas sin preguntarte antes. Ves todo en la conversación."
         }
       },
-      "always": "Elijas lo que elijas, los archivos que salen de tu computadora, las rutinas y el trabajo en tus conversaciones de Claude Code siempre se te muestran antes. Las solicitudes de colegas no usan esto: cada tipo tiene su propio nivel de confianza, en Solicitudes que aceptas.",
+      "always": "Elijas lo que elijas, los archivos que salen de tu computadora, las rutinas y el trabajo en tus conversaciones de Claude Code o Codex siempre se te muestran antes. Las solicitudes de colegas no usan esto: cada tipo tiene su propio nivel de confianza, en Solicitudes que aceptas.",
       "trust": "Los tipos nuevos de solicitud empiezan en",
       "trustHint": "Dónde empieza un tipo de solicitud cuando lo agregas o tu clon lo propone. Las promesas y las decisiones siempre llegan a ti.",
       "batch": "Cuándo llegan las preguntas guardadas",
