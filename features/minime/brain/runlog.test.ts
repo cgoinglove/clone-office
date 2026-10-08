@@ -24,7 +24,7 @@ test("the last 30 days of runs, by what they were for, with tokens and the repor
     });
   writeFileSync(
     join(root, "logs", "runs.1.jsonl"),
-    `${line("2026-10-01T09:00:00Z", "task", { usage: { input: 10, output: 5 }, cost_usd: 0.25 })}\n`,
+    `${line("2026-10-01T09:00:00Z", "task", { usage: { input: 10, output: 5, cache_read: 90 }, cost_usd: 0.25 })}\n`,
   );
   writeFileSync(
     join(root, "logs", "runs.jsonl"),
@@ -42,8 +42,24 @@ test("the last 30 days of runs, by what they were for, with tokens and the repor
   );
   const { lines } = await usageSummary(30, now);
   assert.deepEqual(lines, [
-    { group: "conversations", runs: 1, failed: 0, tokens: 15, cost: 0.25 },
-    { group: "colleagues", runs: 2, failed: 1, tokens: 3, cost: 0.5 },
-    { group: "learning", runs: 1, failed: 0, tokens: 0 },
+    {
+      group: "conversations",
+      runs: 1,
+      failed: 0,
+      tokens: 105,
+      cached: 90,
+      sent: 100,
+      cost: 0.25,
+    },
+    {
+      group: "colleagues",
+      runs: 2,
+      failed: 1,
+      tokens: 3,
+      cached: 0,
+      sent: 3,
+      cost: 0.5,
+    },
+    { group: "learning", runs: 1, failed: 0, tokens: 0, cached: 0, sent: 0 },
   ]);
 });

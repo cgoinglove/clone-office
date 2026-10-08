@@ -62,7 +62,9 @@ from its own record.
 
 **Last 30 days** (지난 30일), at the end of Settings › AI model, says what the clone used its AI
 for: their conversations, colleagues' requests and meetings, flows, and learning how they work,
-each with how often, how many failed, and the tokens. With Claude Code it also gives what that
+each with how often, how many failed, the tokens, and how much of what was sent the vendor read
+from its cache (cheaper and faster than sending it anew; the clone keeps what it sends first the
+same from call to call so that share stays high). With Claude Code it also gives what that
 would cost at API prices, as Claude Code reports it; on a subscription nothing more is paid. It is
 read from the clone's run log, which keeps no conversation text.
 

@@ -1076,6 +1076,7 @@
       "runs": "{count, plural, one {# vez} other {# veces}}",
       "failed": "{count} fallaron",
       "tokens": "{tokens} tokens",
+      "cached": "{percent}% desde la caché",
       "cost": "Unos {cost} a precios de la API, según informa el modelo. Con una suscripción no se paga nada más."
     },
     "notices": {

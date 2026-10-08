@@ -85,6 +85,10 @@ export interface UseLine {
   runs: number;
   failed: number;
   tokens: number;
+  /** Of what was sent, the tokens the vendor read from its cache rather than anew. */
+  cached: number;
+  /** All that was sent (fresh, written to the cache, and read from it), the cache's share's base. */
+  sent: number;
   /** What it would cost at the API's prices, as the brain reports it; none when it does not. */
   cost?: number;
 }
@@ -128,6 +132,8 @@ export async function usageSummary(
         runs: 0,
         failed: 0,
         tokens: 0,
+        cached: 0,
+        sent: 0,
       };
       total.runs += 1;
       if (line.ok === false) total.failed += 1;
@@ -135,6 +141,13 @@ export async function usageSummary(
         (sum, value) => sum + (typeof value === "number" ? value : 0),
         0,
       );
+      const count = (value: number | undefined) =>
+        typeof value === "number" ? value : 0;
+      total.cached += count(line.usage?.cache_read);
+      total.sent +=
+        count(line.usage?.input) +
+        count(line.usage?.cache_read) +
+        count(line.usage?.cache_write);
       if (typeof line.cost_usd === "number")
         total.cost = (total.cost ?? 0) + line.cost_usd;
       totals.set(group, total);

@@ -1076,6 +1076,7 @@
       "runs": "{count} 次",
       "failed": "{count} 次失败",
       "tokens": "{tokens} 个 token",
+      "cached": "{percent}% 来自缓存",
       "cost": "按模型报告的 API 价格约为 {cost}。如果是订阅，不会额外付费。"
     },
     "notices": {

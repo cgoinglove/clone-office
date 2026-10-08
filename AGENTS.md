@@ -227,6 +227,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   the permission prompt does; its conversations in `brain/sessions/<id>.json` so a session goes on
   or is copied for the review, and a session it never kept answers `session-missing` so a
   conversation goes on from its own record; a shaped answer is asked for last, without tools.
+  Caching, after Hermes Agent's: nothing that changes by the minute is in a system prompt (the
+  date and time go before each message, `nowLine`), a session keeps the system prompt it began
+  with, and `cacheHint` asks Anthropic (by key or through OpenRouter) to keep the cache an hour in
+  the person's own conversation and five minutes elsewhere, and gives OpenAI and the ChatGPT plan a
+  `prompt_cache_key` made from the session's unchanging start; `runlog.ts` keeps what was read
+  from the cache, which Settings › AI model shows as a share.
   The page's part is `features/minime/brain-panel.tsx` (vendor marks, ways, models with one
   suggested and picked to start with; Claude Code's own Haiku, Sonnet or Opus, kept as the
   choice's `model`) with the route `app/api/me/brain`.

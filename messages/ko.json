@@ -1076,6 +1076,7 @@
       "runs": "{count}번",
       "failed": "{count}번 실패",
       "tokens": "토큰 {tokens}",
+      "cached": "캐시에서 {percent}%",
       "cost": "모델이 알려 준 API 가격으로 약 {cost}예요. 구독이라면 따로 더 내지 않아요."
     },
     "notices": {

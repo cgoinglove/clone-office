@@ -12,6 +12,8 @@ interface UseLine {
   runs: number;
   failed: number;
   tokens: number;
+  cached: number;
+  sent: number;
   cost?: number;
 }
 
@@ -56,6 +58,11 @@ export function UsageSection() {
                 {line.tokens > 0 &&
                   ` · ${t("tokens", {
                     tokens: format.number(line.tokens, { notation: "compact" }),
+                  })}`}
+                {line.cached > 0 &&
+                  line.sent > 0 &&
+                  ` · ${t("cached", {
+                    percent: Math.round((line.cached / line.sent) * 100),
                   })}`}
               </span>
             </li>

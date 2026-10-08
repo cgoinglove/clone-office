@@ -1076,6 +1076,7 @@
       "runs": "{count, plural, one {# time} other {# times}}",
       "failed": "{count} failed",
       "tokens": "{tokens} tokens",
+      "cached": "{percent}% from cache",
       "cost": "About {cost} at API prices, as the model reports it. On a subscription nothing more is paid."
     },
     "notices": {

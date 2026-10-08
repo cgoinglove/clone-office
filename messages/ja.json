@@ -1076,6 +1076,7 @@
       "runs": "{count} 回",
       "failed": "{count} 回失敗",
       "tokens": "{tokens} トークン",
+      "cached": "キャッシュから {percent}%",
       "cost": "モデルが報告した API 料金でおよそ {cost} です。サブスクリプションなら追加の支払いはありません。"
     },
     "notices": {

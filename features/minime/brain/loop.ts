@@ -5,7 +5,7 @@
 // (loop-tools.ts) with the same names and permission rules, and the conversation is kept in
 // brain/sessions/<id>.json, so a session can go on later or be copied for the review.
 
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
@@ -112,7 +112,38 @@ async function saveSession(kept: Kept): Promise<void> {
 }
 
 /** The model the person chose, with their key. A model on their computer needs none. */
-export async function languageModel(choice: ApiChoice): Promise<{
+/**
+ * How a session asks the vendor to cache what it sends again, after Hermes Agent's prompt caching:
+ * Anthropic keeps the cache five minutes unless asked for an hour, which costs more to write and
+ * pays off only where a person types between calls (their conversation), not where calls follow
+ * each other (a flow, a request, a look back); OpenAI routes by a key, made from the session's
+ * unchanging start, so calls with the same start land where it is already cached.
+ */
+export interface CacheHint {
+  /** A person types between calls: Anthropic keeps the cache an hour. */
+  human: boolean;
+  /** The same for every call that starts the same: OpenAI's prompt_cache_key, 64 characters at most. */
+  key: string;
+}
+
+/** The cache hint for a session: from what it is for, and the start every call repeats. */
+export function cacheHint(
+  purpose: string | undefined,
+  system: string,
+): CacheHint {
+  return {
+    human: purpose === undefined || purpose === "task",
+    key: `clone-office-${createHash("sha256")
+      .update(`${purpose ?? "task"}\n${system}`)
+      .digest("hex")
+      .slice(0, 40)}`,
+  };
+}
+
+export async function languageModel(
+  choice: ApiChoice,
+  cache: CacheHint = { human: false, key: "" },
+): Promise<{
   model: LanguageModel;
   /** The vendor's own web search, run on its side; searching keeps nothing. */
   search?: Record<string, unknown>;
@@ -131,7 +162,13 @@ export async function languageModel(choice: ApiChoice): Promise<{
       model: createOpenAI({ apiKey: access, baseURL: OPENAI.api }).responses(
         choice.model,
       ),
-      options: { openai: { store: false, systemMessageMode: "developer" } },
+      options: {
+        openai: {
+          store: false,
+          systemMessageMode: "developer",
+          ...(cache.key ? { promptCacheKey: cache.key } : {}),
+        },
+      },
     };
   }
   // The office's key, through its relay: the member's own token rides where the vendor's key goes,
@@ -154,7 +191,14 @@ export async function languageModel(choice: ApiChoice): Promise<{
         model: anthropic(choice.model),
         search: { web_search: anthropic.tools.webSearch_20260209() },
         // Anthropic caches only when asked; the marker follows the conversation's end.
-        options: { anthropic: { cacheControl: { type: "ephemeral" } } },
+        options: {
+          anthropic: {
+            cacheControl: {
+              type: "ephemeral",
+              ...(cache.human ? { ttl: "1h" } : {}),
+            },
+          },
+        },
       };
     }
     case "openai": {
@@ -164,7 +208,12 @@ export async function languageModel(choice: ApiChoice): Promise<{
         search: { web_search: openai.tools.webSearch() },
         // OpenAI keeps each response unless told not to (store defaults to true): with a team key that
         // would be in the key owner's account for anyone to read in its logs.
-        options: { openai: { store: false } },
+        options: {
+          openai: {
+            store: false,
+            ...(cache.key ? { promptCacheKey: cache.key } : {}),
+          },
+        },
       };
     }
     case "google": {
@@ -179,7 +228,14 @@ export async function languageModel(choice: ApiChoice): Promise<{
       return {
         model: createOpenRouter({ apiKey, ...through })(choice.model),
         options: choice.model.startsWith("anthropic/")
-          ? { openrouter: { cacheControl: { type: "ephemeral" } } }
+          ? {
+              openrouter: {
+                cacheControl: {
+                  type: "ephemeral",
+                  ...(cache.human ? { ttl: "1h" } : {}),
+                },
+              },
+            }
           : {},
       };
     case "local":
@@ -308,7 +364,7 @@ export async function runLoop(
       options: providerOptions,
     } = deps.model
       ? { model: deps.model, search: undefined, options: {} }
-      : await languageModel(choice);
+      : await languageModel(choice, cacheHint(options.purpose, system));
     // The same lines as a Claude Code session: its own tools always; with the gate, asking and
     // reading too; with standing rules, what the person already allowed and nothing more.
     const guard: Guard = {
@@ -539,6 +595,8 @@ export async function runLoop(
           output_tokens: usage.outputTokens ?? 0,
           cache_read_input_tokens:
             usage.inputTokenDetails?.cacheReadTokens ?? 0,
+          cache_creation_input_tokens:
+            usage.inputTokenDetails?.cacheWriteTokens ?? 0,
         },
       },
       turns,
