@@ -152,7 +152,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   `home/colleague.tsx` asks a colleague with files. `use-learn.ts` follows a reading wherever it
   started. Settings is one dialog of six sections (`features/minime/settings/`, after
   Thursday's; an ember dot where something wants the person, red where something is broken),
-  each laid out with `parts.tsx`: Brain (the brain, learning after each conversation, the lighter
+  each laid out with `parts.tsx`: AI model (the brain, learning after each conversation, the lighter
   model), Permissions (`permissions-section.tsx`: how much it does alone, rules taken back,
   folders left out), Connectors, Notifications & phone (the messenger, kept questions' hours,
   quiet hours), Office (`office-section.tsx`: open here, join, invite, people, leave, the lobby)
