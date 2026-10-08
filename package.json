@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Send your clone: an AI that works like you, for everyone on your team.",
+  "license": "MIT",
   "engines": {
     "node": ">=22.18"
   },

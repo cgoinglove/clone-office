@@ -110,6 +110,7 @@ try {
   cpSync(join(source, "guide"), join(out, "guide"), { recursive: true });
   cpSync(join(source, "skills"), join(out, "skills"), { recursive: true });
   cpSync(join(source, "bin"), join(out, "bin"), { recursive: true });
+  cpSync(join(source, "LICENSE"), join(out, "LICENSE"));
 
   for (const [entry, file] of [
     ["features/minime/memory/mcp-server.ts", "mcp-server.mjs"],
@@ -143,6 +144,7 @@ try {
         name: own.name,
         version: own.version,
         description: own.description,
+        license: own.license,
         bin: { "sub-office": "bin/sub-office.mjs" },
         engines: { node: ">=22.13" },
         files: ["app", "bin", "dist", "guide", "skills"],

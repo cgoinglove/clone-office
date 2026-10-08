@@ -159,3 +159,7 @@ English and Korean today; a language is one file under `messages/`.
 0.1.0: early. Coming next: the browser as its hands, a desktop app, and a clone that runs on the
 team's server for people who don't install anything. See [CHANGELOG.md](CHANGELOG.md),
 [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE).
