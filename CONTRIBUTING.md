@@ -23,6 +23,12 @@ moves it, so a test never touches your own clone).
 | `node scripts/pack.mjs --working` | the npm package from your working tree, into `dist/`, published nowhere |
 | `node scripts/smoke.mjs` | starts that package as a person would and opens it (CI does this on Linux, macOS and Windows) |
 
+## Issues
+
+A bug: what happened, how to reproduce it, the AI model and the kind of office (the template asks).
+An idea: the moment you wished your clone did it. A security problem goes privately through the
+Security tab (SECURITY.md), never into a public issue.
+
 ## Before you open a pull request
 
 - **Read [AGENTS.md](AGENTS.md) first**: what each folder is for and the few rules that hold

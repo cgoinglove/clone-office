@@ -1,0 +1,56 @@
+name: Bug
+description: Something behaves differently than it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what happened, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      placeholder: |
+        1. …
+        2. …
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: AI model
+      description: Settings › AI model, as it reads (for example "Claude · Claude Sonnet", "OpenAI · team key").
+    validations:
+      required: true
+
+  - type: dropdown
+    id: office
+    attributes:
+      label: Office
+      options:
+        - Not in an office
+        - Opened on someone's computer
+        - A team server (docker compose or Postgres)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version and system
+      description: Settings › General shows the version.
+      placeholder: Clone Office 0.1.0 · macOS 15 · Node 22.13
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal output
+      description: >
+        The lines around the failure from the terminal running `npx clone-office`. Check for keys,
+        tokens and anything private before pasting: never paste secret.key or keys.json.
+      render: shell

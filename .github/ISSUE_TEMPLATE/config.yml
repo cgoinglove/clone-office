@@ -1,0 +1,3 @@
+# A security problem goes privately through the repository's Security tab (SECURITY.md), never into
+# a public issue.
+blank_issues_enabled: false
