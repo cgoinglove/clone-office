@@ -9,7 +9,11 @@ import { withLock } from "../memory/files.ts";
 import { hasClaudeCode } from "../server/brain.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
-import { readSecretJson, writeSecretJson } from "../server/secret.ts";
+import {
+  readSecretJson,
+  readSecretJsonOr,
+  writeSecretJson,
+} from "../server/secret.ts";
 import { chatGptAccount } from "./chatgpt.ts";
 import { type ProviderId, provider } from "./providers.ts";
 
@@ -92,12 +96,11 @@ export async function setBrainChoice(choice: BrainChoice): Promise<void> {
   });
 }
 
+type Keys = Partial<Record<ProviderId, string>>;
+
 /** Sealed (server/secret.ts); a file written before sealing began is read as it is. */
-async function readKeys(): Promise<Partial<Record<ProviderId, string>>> {
-  return (
-    (await readSecretJson<Partial<Record<ProviderId, string>>>(keysPath())) ??
-    {}
-  );
+async function readKeys(): Promise<Keys> {
+  return readSecretJsonOr<Keys>(keysPath(), {});
 }
 
 export async function providerKey(id: ProviderId): Promise<string | undefined> {
@@ -119,7 +122,8 @@ export async function setProviderKey(
   await withLock(
     join(/*turbopackIgnore: true*/ minimeHome(), "brain"),
     async () => {
-      const keys = await readKeys();
+      // Unreadable (another key, a key file in trouble): refused rather than written over.
+      const keys = (await readSecretJson<Keys>(keysPath())) ?? {};
       if (key) keys[id] = key;
       else delete keys[id];
       await writeSecretJson(keysPath(), keys);

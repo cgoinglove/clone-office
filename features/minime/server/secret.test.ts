@@ -14,15 +14,25 @@ const root = mkdtempSync(join(tmpdir(), "minime-secret-"));
 process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
+/** Each process keeps its key in memory; a test starts some afresh by clearing it. */
+const forgetKeys = () =>
+  (
+    globalThis as { __cloneOfficeKeys?: Map<string, unknown> }
+  ).__cloneOfficeKeys?.clear();
+
 test("secrets are sealed with the folder's own key, and what was written plain is still read", async () => {
   const {
     readSecretJson,
+    readSecretJsonOr,
     writeSecretJson,
     secretKeyPath,
     isSealed,
     seal,
     open,
   } = await import("./secret.ts");
+  const { sealWith, newKeyText, keyFrom } = await import(
+    "../../../lib/seal.ts"
+  );
   const path = join(root, "keys.json");
 
   // Written before sealing began: read as it is.
@@ -46,16 +56,31 @@ test("secrets are sealed with the folder's own key, and what was written plain i
   assert.equal(await open(a), "same");
   assert.equal(readFileSync(secretKeyPath(), "utf8"), key);
 
-  // Sealed under another key: read as nothing, so it is given again.
-  const { sealWith, newKeyText, keyFrom } = await import(
-    "../../../lib/seal.ts"
-  );
+  // Sealed under another key: reading falls back; changing refuses rather than writing over it.
   const other = keyFrom(newKeyText()) as Buffer;
   writeFileSync(path, sealWith(other, JSON.stringify({ openai: "x" })));
-  assert.equal(await readSecretJson(path), undefined);
+  assert.deepEqual(await readSecretJsonOr(path, {}), {});
+  await assert.rejects(readSecretJson(path));
 
-  // A key file that is not a key is never replaced.
+  // A key file that is not a key is never replaced, and plain values are read without it.
   writeFileSync(secretKeyPath(), "not a key\n");
+  forgetKeys();
   await assert.rejects(seal("x"), /not a key Clone Office made/);
   assert.equal(readFileSync(secretKeyPath(), "utf8"), "not a key\n");
+  writeFileSync(path, JSON.stringify({ openai: "sk-plain" }));
+  assert.deepEqual(await readSecretJson(path), { openai: "sk-plain" });
+});
+
+test("several making the key at once end with one key, never a half-written one", async () => {
+  const { secretKey, secretKeyPath } = await import("./secret.ts");
+  rmSync(secretKeyPath(), { force: true });
+  forgetKeys();
+  // As separate processes would: each without the others' key in memory.
+  const made = await Promise.all(
+    Array.from({ length: 8 }, async () => {
+      forgetKeys();
+      return (await secretKey()).toString("base64");
+    }),
+  );
+  assert.equal(new Set(made).size, 1);
 });

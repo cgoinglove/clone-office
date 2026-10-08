@@ -174,19 +174,11 @@ async function opened(
   messenger: MessengerSettings | undefined,
 ): Promise<MessengerSettings | undefined> {
   if (!messenger) return undefined;
-  try {
-    return {
-      ...messenger,
-      token: await open(messenger.token),
-      ...(messenger.appToken
-        ? { appToken: await open(messenger.appToken) }
-        : {}),
-    };
-  } catch (error) {
-    // Sealed under a key this folder no longer has: connected again from the page.
-    console.error(`messenger: ${(error as Error).message}`);
-    return undefined;
-  }
+  return {
+    ...messenger,
+    token: await open(messenger.token),
+    ...(messenger.appToken ? { appToken: await open(messenger.appToken) } : {}),
+  };
 }
 
 async function sealed(
@@ -200,7 +192,14 @@ async function sealed(
 }
 
 async function loadMessenger(): Promise<MessengerSettings | undefined> {
-  return opened(asMessenger((await readSettings()).messenger));
+  try {
+    return await opened(asMessenger((await readSettings()).messenger));
+  } catch (error) {
+    // Sealed under a key this folder cannot open now: not running until it can, or until the
+    // person connects again; never taken for "no messenger" and written over (saveMessenger).
+    console.error(`messenger: ${(error as Error).message}`);
+    return undefined;
+  }
 }
 
 async function saveMessenger(

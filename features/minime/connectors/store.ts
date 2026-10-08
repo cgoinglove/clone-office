@@ -14,6 +14,7 @@ import { minimeHome } from "../server/paths.ts";
 import {
   open,
   readSecretJson,
+  readSecretJsonOr,
   seal,
   writeSecretJson,
 } from "../server/secret.ts";
@@ -89,7 +90,7 @@ const pendingPath = () =>
 
 /** Sealed (server/secret.ts); a file written before sealing began is read as it is. */
 export async function loadKept(id: string): Promise<Kept> {
-  return (await readSecretJson<Kept>(keptPath(id))) ?? {};
+  return readSecretJsonOr<Kept>(keptPath(id), {});
 }
 
 /** Changes what is kept for one service, one writer at a time. */
@@ -98,7 +99,8 @@ export async function changeKept(
   change: (kept: Kept) => Kept | undefined,
 ): Promise<Kept | undefined> {
   return withLock(await ownDir(), async () => {
-    const next = change(await loadKept(id));
+    // Unreadable (another key, a key file in trouble): refused rather than written over or removed.
+    const next = change((await readSecretJson<Kept>(keptPath(id))) ?? {});
     if (next) await writeSecretJson(keptPath(id), next);
     else await unlink(keptPath(id)).catch(() => {});
     return next;

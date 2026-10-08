@@ -31,6 +31,22 @@ const work = mkdtempSync(join(tmpdir(), "clone-office-pack-"));
 const source = join(work, "clone-office");
 const out = join(work, "package");
 
+/** owner/name on GitHub: the Actions run's (GITHUB_REPOSITORY), else origin's, else none. */
+function repositorySlug() {
+  if (process.env.GITHUB_REPOSITORY) return process.env.GITHUB_REPOSITORY;
+  try {
+    const origin = execFileSync("git", ["remote", "get-url", "origin"], {
+      cwd: repo,
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .toString()
+      .trim();
+    return /github\.com[:/]([^/]+\/[^/]+?)(?:\.git)?$/.exec(origin)?.[1];
+  } catch {
+    return undefined;
+  }
+}
+
 function run(command, args, cwd, env = {}) {
   const result = spawnSync(command, args, {
     cwd,
@@ -151,6 +167,23 @@ try {
     });
 
   const own = JSON.parse(readFileSync(join(source, "package.json"), "utf8"));
+  // Where the code lives, for npm's page and for provenance, which npm accepts only when
+  // repository.url names the repository that built it: the Actions run's own, else origin.
+  const slug = repositorySlug();
+  if (process.env.GITHUB_ACTIONS === "true" && !slug)
+    throw new Error("No repository to name: GITHUB_REPOSITORY is not set.");
+  const github = slug ? `https://github.com/${slug}` : undefined;
+  // The README npm shows, its own links and pictures pointing at the repository.
+  cpSync(join(source, "README.md"), join(out, "README.md"));
+  if (github)
+    writeFileSync(
+      join(out, "README.md"),
+      readFileSync(join(out, "README.md"), "utf8").replace(
+        /(!?)\[([^\]]*)\]\((?!https?:|#|mailto:)([^)\s]+)\)/g,
+        (_, picture, text, path) =>
+          `${picture}[${text}](${picture ? `https://raw.githubusercontent.com/${slug}/main/${path}` : `${github}/blob/main/${path}`})`,
+      ),
+    );
   const pick = (names) =>
     Object.fromEntries(names.map((name) => [name, own.dependencies[name]]));
   writeFileSync(
@@ -161,6 +194,23 @@ try {
         version: own.version,
         description: own.description,
         license: own.license,
+        keywords: [
+          "ai",
+          "agent",
+          "clone",
+          "team",
+          "office",
+          "a2a",
+          "mcp",
+          "claude-code",
+        ],
+        ...(github
+          ? {
+              repository: { type: "git", url: `git+${github}.git` },
+              homepage: `${github}#readme`,
+              bugs: { url: `${github}/issues` },
+            }
+          : {}),
         bin: { "clone-office": "bin/clone-office.cjs" },
         engines: { node: ">=22.13" },
         files: ["app", "bin", "dist", "guide", "skills"],
