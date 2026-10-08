@@ -16,16 +16,6 @@ export interface Turn {
   before: string;
 }
 
-export interface Conversation {
-  /** The tool's name as people know it, such as "Claude Code". */
-  tool: string;
-  /** The folder it ran in, when the tool records one. */
-  cwd?: string;
-  /** When it last changed, in milliseconds; the newest are read first. */
-  updatedMs: number;
-  turns(): Promise<Turn[]>;
-}
-
 /** One side of a conversation, as the conversation index keeps it. */
 export interface LineMessage {
   role: "user" | "assistant";

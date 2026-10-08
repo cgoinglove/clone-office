@@ -34,7 +34,14 @@ test("a question nobody answers ends unanswered", async () => {
     { kind: "question", question: "?" },
     20,
   );
-  assert.deepEqual(await done, { answered: false });
+  // The gate's timer never holds the process open (the app may stop while a question waits), so
+  // the test holds it, or Node may end before the 20 ms are up.
+  const hold = setTimeout(() => {}, 5_000);
+  try {
+    assert.deepEqual(await done, { answered: false });
+  } finally {
+    clearTimeout(hold);
+  }
 });
 
 test("an answer 'from now on' becomes a rule for a folder or a site, and kept-out folders become rules too", () => {
