@@ -7,15 +7,15 @@ import { join } from "node:path";
 
 /**
  * The mini-me's own folder. `CLONE_OFFICE_HOME` moves it, for tests and for a second person.
- * Before the app was named Clone Office it kept `~/.sub-office` (and read `SUB_OFFICE_HOME`): a
- * folder already there is used where it is, never moved.
+ * Before the app was named Clone Office it kept `~/.sub-office` (and read `SUB_OFFICE_HOME`): while
+ * that folder is there it stays the one, never moved, whatever else appears beside it.
  */
 export function minimeHome(): string {
   const moved = process.env.CLONE_OFFICE_HOME ?? process.env.SUB_OFFICE_HOME;
   if (moved) return moved;
   const home = join(homedir(), ".clone-office");
   const before = join(homedir(), ".sub-office");
-  return !existsSync(home) && existsSync(before) ? before : home;
+  return existsSync(before) ? before : home;
 }
 
 export function claudeHome(): string {

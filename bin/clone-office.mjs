@@ -116,13 +116,13 @@ function writeSettings(path, settings) {
 }
 
 // The app's folder, as features/minime/server/paths.ts minimeHome() decides it: a ~/.sub-office
-// kept before the app was named Clone Office is used where it is.
+// kept before the app was named Clone Office stays the one while it is there.
 function appHome() {
   const moved = process.env.CLONE_OFFICE_HOME || process.env.SUB_OFFICE_HOME;
   if (moved) return moved;
   const home = join(homedir(), ".clone-office");
   const before = join(homedir(), ".sub-office");
-  return !existsSync(home) && existsSync(before) ? before : home;
+  return existsSync(before) ? before : home;
 }
 
 function settingsFile() {

@@ -63,11 +63,11 @@ async function home($: EngineInterface): Promise<string | undefined> {
   if (moved) return moved;
   const user = (await $.env.get("HOME")) ?? (await $.env.get("USERPROFILE"));
   if (!user) return undefined;
-  // A ~/.sub-office kept before the app was named Clone Office is used where it is.
+  // A ~/.sub-office kept before the app was named Clone Office stays the one while it is there.
   const home = `${user}/.clone-office`;
   const before = `${user}/.sub-office`;
   const settings = (dir: string) => readJson($, `${dir}/settings.json`);
-  return !(await settings(home)) && (await settings(before)) ? before : home;
+  return (await settings(before)) ? before : home;
 }
 
 async function readJson<T>(

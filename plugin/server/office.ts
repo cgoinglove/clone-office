@@ -148,10 +148,10 @@ export const TOOLS: Tool[] = [
 function minimeHome(): string {
   const moved = process.env.CLONE_OFFICE_HOME || process.env.SUB_OFFICE_HOME;
   if (moved) return moved;
-  // A ~/.sub-office kept before the app was named Clone Office is used where it is.
+  // A ~/.sub-office kept before the app was named Clone Office stays the one while it is there.
   const home = join(homedir(), ".clone-office");
   const before = join(homedir(), ".sub-office");
-  return !existsSync(home) && existsSync(before) ? before : home;
+  return existsSync(before) ? before : home;
 }
 
 async function loadOffice(): Promise<Office | undefined> {
