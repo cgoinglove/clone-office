@@ -2,11 +2,11 @@
 
 The clone keeps four small things, all as plain text files on this computer:
 
-- **About them**: a few short lines on how they work, decide and talk, and what they want to be
-  asked first. Read at the start of every conversation, so it stays short (about 1,400
-  characters).
-- **Their way of working**: lasting conventions that are written nowhere else. Also read every
-  time, also short (about 2,200 characters).
+- **About them**: short lines on how they work, decide and talk, and what they want to be asked
+  first. Read at the start of every conversation, so it stays short (about 1,400 characters).
+- **Their work**: what surrounds it: the kinds of work they do again and again, the tools and
+  services they work in, where their work lives, the conventions they follow and the team around
+  them. Also read every time, also short (about 2,200 characters).
 - **Skills**: how they want one kind of task done, such as a weekly report or a reply to a
   client, with what they corrected. Opened only when that kind of task comes up. A few come with
   the app, so there is something to ask for on the first day: a morning brief, a day wrap, a weekly
@@ -15,7 +15,10 @@ The clone keeps four small things, all as plain text files on this computer:
   later version of the app, and one set aside is not brought back. They are listed under **Your
   clone** › What it knows (**Skills**, 스킬); in an office, they can share one of theirs with their
   colleagues and add the ones colleagues shared (`office.md`, "Sharing skills with the office").
-- **Notes**: one page per person they work with, opened only when that person comes up.
+- **Notes**: one page per piece of work they are on (a project, a client, a product) and per
+  person they work with, opened only when it comes up. A page says what it is, their part, where
+  it lives, who else is in it and where it stood on which date; the clone checks what is current
+  before relying on it and keeps the page up to date as they work together.
 
 Beside these is **About you** (나에 대해, on the clone's screen): their name, what they do, what
 they look after and the tools they work in. It is not memory: they set it themselves, on the first
@@ -25,10 +28,9 @@ does; their name, what they do and what they look after also go on their card in
 
 ## What it never keeps
 
-- **Anything that changes or can be found again on the computer**: projects and how far along
-  they are, plans, goals, dates, versions, folders and files, what they are doing now, what they
-  did. A kept copy goes out of date and would mislead; the clone looks these up each time
-  instead (`reading.md`).
+- **Changing details in what it reads every time**: plans, dates, versions, files and where a
+  piece of work stands stay out of the lines about them and their work; where a project stands
+  goes in its note page, with its date, and the rest is looked up when needed (`reading.md`).
 - Passwords, keys and other secrets, health details, and private details about other people.
 
 ## How it learns
@@ -39,14 +41,20 @@ reads in English, Korean, Simplified Chinese, Japanese, Spanish or Brazilian Por
 other language it reads in English while the clone still keeps what it learns, and asks them, in
 theirs.
 
-- **The first time**: it reads a little of what is on their computer (`reading.md`) and keeps at
-  most five lines about how they work. Lines kept this time are marked **New** (새로).
+- **The first time**: it reads what is on their computer (`reading.md`) and learns as much as it
+  shows: what they do, what they are working on, the people and tools around them and how they
+  work. **Here's what I understood** (이렇게 이해했어요) shows it all: what they do, what they are
+  working on, who they work with, what surrounds their work, how they work, decide and talk.
+  Lines kept this time are marked **New** (새로).
 - **From another AI**: **Bring it from another AI** (다른 AI에서 가져오기) shows the text Claude's own
   memory import uses (**Copy**, 복사), to paste into a chat with the AI they use most — ChatGPT,
   Claude, Gemini or another. It asks that AI for everything it remembers; the clone sorts it. They
-  paste that AI's answer back and press **Add to memory** (기억에 더하기). The clone keeps only what
-  will still be true in months (at most five lines each time) and never stores the pasted text. It
-  can be done during the first steps, or any time later under **Your clone** (내 클론) › What it knows.
+  paste that AI's answer back and press **Add to memory** (기억에 더하기). The clone learns from it
+  what it learns from their records (how they work, their work, what they are on, the people
+  around them), keeps nothing private, and never stores the pasted text. For someone with no AI
+  records on the computer this is how it comes to know them. It can be done during the first steps
+  (**Use ChatGPT or Claude apps? Bring their memory too**, ChatGPT·Claude 앱을 주로 쓰나요? 그 기억도
+  가져오기), or any time later under **Your clone** (내 클론) › What it knows.
 - **While working**: when they correct it ("shorter", "always ask before sending"), it keeps the
   correction in the skill for that kind of task, or in the lines about them when it applies to
   everything.

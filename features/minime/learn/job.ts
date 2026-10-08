@@ -14,9 +14,11 @@ import type { SourceReport } from "./gather.ts";
 import {
   type Example,
   freshConversations,
+  type Knows,
   type LearnProgress,
   lastLearn,
   learn,
+  NO_KNOWS,
   type Task,
 } from "./learn.ts";
 
@@ -27,6 +29,8 @@ export type LearnEvent =
   | {
       type: "done";
       kept: string[];
+      /** All it learned, by where it went: how they work, their work, projects, people. */
+      knows: Knows;
       tasks: Task[];
       /** Things they do at a regular time, offered around that time. */
       routines: Routine[];
@@ -88,6 +92,7 @@ export function startLearn(options: {
           ? {
               type: "done",
               kept: result.kept,
+              knows: result.knows,
               tasks: result.tasks,
               routines: result.routines,
               ...(result.example ? { example: result.example } : {}),
@@ -133,6 +138,7 @@ export async function savedLearn(): Promise<LearnEvent | undefined> {
   return {
     type: "done",
     kept: last.kept ?? [],
+    knows: last.knows ?? NO_KNOWS,
     tasks: last.tasks ?? [],
     routines: last.routines ?? [],
     ...(last.example ? { example: last.example } : {}),

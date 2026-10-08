@@ -198,9 +198,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   own SQLite files, where a changed chat is read again whole and a deleted one leaves the index),
   plus notes about the person; `server/apps.ts` reads app usage from
   what the system records (macOS, Windows, Linux).
-- Memory keeps only what stays true: how the person works, decides and talks, and corrections
-  they gave. Anything that changes or can be found again on their computer (projects and their
-  status, plans, dates, files) is looked up when needed, never stored; a stale copy misleads.
+- What the clone reads every time (memory) keeps only what stays true: how the person works,
+  decides and talks, the corrections they gave, and what surrounds their work. What they are
+  working on and the people they work with are kept as note pages, dated, opened when one comes up
+  and kept current as it works with them (the first reading writes them, `learn.ts`
+  `keepKnowledge`); the rest that changes (plans, dates, files) is looked up when needed, never
+  stored, as a stale copy misleads.
 - `features/minime/memory/`: the clone's memory, following Hermes Agent's layout and learning
   loop. `store.ts` keeps `memories/USER.md` and `MEMORY.md` (small, capped, read every session),
   with each line's source beside them in `.sources.json`, never in a prompt (what kept it, from

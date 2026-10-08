@@ -445,7 +445,7 @@ export async function gather(options: GatherOptions = {}): Promise<Material> {
   const started = Date.now();
   const now = options.now ?? started;
   const since = options.since ?? now - 14 * DAY;
-  const budget = new Budget(options.budget ?? 60_000, new Map(SHARES));
+  const budget = new Budget(options.budget ?? 100_000, new Map(SHARES));
   const excludes = loadExcludes();
 
   // Index only the conversations this reading needs (those touched since \`since\`), in bounded

@@ -4,8 +4,8 @@
 // settings (folders left out) and the conversation index (rebuilt from the records anyway) stay.
 //
 // When what it keeps is only what a reading of their records gave (they have not talked with it,
-// it made no skill or note, and its memory has not changed since that reading), there is nothing
-// of theirs to keep: it is cleared instead, as a new reading brings it back.
+// it made no skill, and its memory and notes have not changed since that reading, which writes
+// both), there is nothing of theirs to keep: it is cleared instead, as a new reading brings it back.
 
 import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import { basename, join } from "node:path";
@@ -14,16 +14,22 @@ import { minimeHome } from "../server/paths.ts";
 
 const KEPT = ["memories", "skills", "notes", "learn.json"];
 
-/** Whether a file whose name matches is anywhere under `dir`. */
+/** Whether a file whose name matches, and changed after `after` when given, is anywhere under `dir`. */
 async function holds(
   dir: string,
   name: (file: string) => boolean,
+  after?: number,
 ): Promise<boolean> {
   const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
   for (const entry of entries) {
     const full = join(/*turbopackIgnore: true*/ dir, entry.name);
-    if (entry.isDirectory() ? await holds(full, name) : name(entry.name))
-      return true;
+    if (entry.isDirectory()) {
+      if (await holds(full, name, after)) return true;
+    } else if (name(entry.name)) {
+      if (after === undefined) return true;
+      const changed = await stat(full).catch(() => undefined);
+      if (changed && changed.mtimeMs > after) return true;
+    }
   }
   return false;
 }
@@ -50,13 +56,15 @@ async function ownSkills(dir: string): Promise<boolean> {
 
 /**
  * Whether everything the mini-me keeps came from reading the person's records: no conversation
- * with it, no skill or note, and no memory written after the last reading (brought from another
- * AI, corrected by them, or learned in a conversation).
+ * with it, no skill, and no memory or note written after the last reading (brought from another
+ * AI, corrected by them, or learned in a conversation). The reading writes its record after the
+ * lines and pages it keeps.
  */
 export async function onlyRead(home = minimeHome()): Promise<boolean> {
   const at = (name: string) => join(/*turbopackIgnore: true*/ home, name);
   if (await holds(at("chats"), (file) => file.endsWith(".jsonl"))) return false;
   if (await ownSkills(at("skills"))) return false;
+  const read = await stat(at("learn.json")).catch(() => undefined);
   if (
     await holds(
       at("notes"),
@@ -64,15 +72,14 @@ export async function onlyRead(home = minimeHome()): Promise<boolean> {
         file.endsWith(".md") &&
         file !== "index.md" &&
         !/^log(-\d{4})?\.md$/.test(file),
+      read?.mtimeMs ?? -1,
     )
   )
     return false;
-  const read = await stat(at("learn.json")).catch(() => undefined);
   for (const name of ["USER.md", "MEMORY.md"]) {
     const memory = await stat(
       join(/*turbopackIgnore: true*/ home, "memories", name),
     ).catch(() => undefined);
-    // The reading writes its record after the lines it keeps.
     if (memory && (!read || memory.mtimeMs > read.mtimeMs)) return false;
   }
   return true;

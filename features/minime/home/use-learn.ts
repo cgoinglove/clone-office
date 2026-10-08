@@ -24,6 +24,14 @@ export interface Source {
   items: number;
 }
 
+/** What a reading learned, by where it went (learn/learn.ts `Knows`). */
+export interface Knows {
+  user: { kind: "work" | "decide" | "voice"; text: string }[];
+  work: string[];
+  projects: { name: string; summary: string; now?: string; path: string }[];
+  people: { name: string; summary: string; path: string }[];
+}
+
 export interface LearnState {
   stage: "boot" | "idle" | "learning" | "done";
   progress: Progress | null;
@@ -37,6 +45,8 @@ export interface LearnState {
   example?: { question: string; answer: string };
   /** Who they are at work, as the last reading saw it, for them to confirm. */
   about?: { role: string; owns: string[]; tools: string[] };
+  /** Everything the last reading learned: how they work, their work, projects and people. */
+  knows?: Knows;
   /** How many new conversations are worth reading again, when it has been a while. */
   fresh: number;
   problem: string | null;
@@ -93,6 +103,7 @@ export function useLearn(lang: string, onDone?: () => void) {
           routines: (event.routines as Routine[] | undefined) ?? [],
           example: event.example as LearnState["example"],
           about: event.about as LearnState["about"],
+          knows: event.knows as LearnState["knows"],
         }));
         done.current?.();
         break;
