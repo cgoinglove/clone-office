@@ -144,12 +144,13 @@ interface TokenAnswer {
 
 async function tokenRequest(
   form: Record<string, string>,
+  ms = 20_000,
 ): Promise<TokenAnswer> {
   const response = await fetch(OPENAI.token, {
     method: "POST",
     headers: { "content-type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(form),
-    signal: AbortSignal.timeout(20_000),
+    signal: AbortSignal.timeout(ms),
   }).catch(() => undefined);
   if (!response) throw new ChatGptError("chatgpt-unreachable");
   const body = (await response.json().catch(() => ({}))) as TokenAnswer & {
@@ -254,13 +255,18 @@ export async function chatGptAccessToken(now = Date.now()): Promise<string> {
     if (now2) return now2;
     if (!again.tokens?.refresh || !again.clientId)
       throw new ChatGptError("brain-chatgpt-signed-out");
-    const answer = await tokenRequest({
-      grant_type: "refresh_token",
-      client_id: again.clientId,
-      refresh_token: again.tokens.refresh,
-      ...(again.redirect ? { redirect_uri: again.redirect } : {}),
-      resource: OPENAI.api,
-    }).catch((error: unknown) => {
+    const answer = await tokenRequest(
+      {
+        grant_type: "refresh_token",
+        client_id: again.clientId,
+        refresh_token: again.tokens.refresh,
+        ...(again.redirect ? { redirect_uri: again.redirect } : {}),
+        resource: OPENAI.api,
+      },
+      // Done before the lock counts as stale: a second refresh with the same token would be
+      // taken by OpenAI for a stolen one.
+      8_000,
+    ).catch((error: unknown) => {
       if (error instanceof ChatGptError && error.code === "chatgpt-refused")
         throw new ChatGptError("brain-chatgpt-signed-out");
       throw error;

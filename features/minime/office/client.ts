@@ -74,6 +74,30 @@ async function saveOffice(office: OfficeConfig | undefined): Promise<void> {
   });
 }
 
+/** How long a call to the relay may take before it counts as out of reach. */
+const CALL_MS = 15_000;
+/** A file of up to 25 MB going either way. */
+const FILE_MS = 2 * 60_000;
+
+/**
+ * The caller's own signal, if any, with a time limit: a relay that stops answering is out of
+ * reach, rather than holding the work that called it forever.
+ */
+function limited(ms: number, signal?: AbortSignal): AbortSignal {
+  const timeout = AbortSignal.timeout(ms);
+  return signal ? AbortSignal.any([signal, timeout]) : timeout;
+}
+
+/** A fetch that failed or ran out of time, as the screen's code; the caller's own abort as it is. */
+function unreachable(error: unknown, signal?: AbortSignal): never {
+  if (signal?.aborted) throw error;
+  const timedOut = (error as Error).name === "TimeoutError";
+  throw new OfficeError(
+    "relay-unreachable",
+    timedOut ? "The relay did not answer in time." : (error as Error).message,
+  );
+}
+
 async function call<T>(
   relay: string,
   path: string,
@@ -82,6 +106,8 @@ async function call<T>(
     token?: string;
     body?: unknown;
     signal?: AbortSignal;
+    /** How long it may take; the inbox's long poll takes longer than the relay holds it. */
+    ms?: number;
   } = {},
 ): Promise<T> {
   let response: Response;
@@ -93,11 +119,10 @@ async function call<T>(
         ...(init.token ? { authorization: `Bearer ${init.token}` } : {}),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
-      signal: init.signal,
+      signal: limited(init.ms ?? CALL_MS, init.signal),
     });
   } catch (error) {
-    if ((error as Error).name === "AbortError") throw error;
-    throw new OfficeError("relay-unreachable", (error as Error).message);
+    unreachable(error, init.signal);
   }
   const data = (await response.json().catch(() => ({}))) as Record<
     string,
@@ -318,9 +343,10 @@ export async function putFile(
         "x-file-name": encodeURIComponent(file.name),
       },
       body: file.bytes as BodyInit,
+      signal: limited(FILE_MS),
     });
   } catch (error) {
-    throw new OfficeError("relay-unreachable", (error as Error).message);
+    unreachable(error);
   }
   if (!response.ok) throw await refused(response);
   return ((await response.json()) as { file: FileRef }).file;
@@ -335,10 +361,13 @@ export async function takeFile(
   try {
     response = await fetch(
       new URL(`/files/${encodeURIComponent(id)}`, office.relay),
-      { headers: { authorization: `Bearer ${office.token}` } },
+      {
+        headers: { authorization: `Bearer ${office.token}` },
+        signal: limited(FILE_MS),
+      },
     );
   } catch (error) {
-    throw new OfficeError("relay-unreachable", (error as Error).message);
+    unreachable(error);
   }
   if (!response.ok) throw await refused(response);
   return new Uint8Array(await response.arrayBuffer());
@@ -422,6 +451,8 @@ export function inbox(
   return call(office.relay, `/inbox?after=${after}`, {
     token: office.token,
     signal,
+    // The relay holds it up to 25 seconds when there is no news.
+    ms: 40_000,
   });
 }
 

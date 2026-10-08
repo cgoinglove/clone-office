@@ -76,6 +76,8 @@ export class SlackBot implements Bot {
   private socket?: Socket;
   private stopped = true;
   private tries = 0;
+  /** Sockets Slack said hello on: their close is Slack's routine one. */
+  private greeted = new WeakSet<Socket>();
   private team?: string;
   private people = new Map<string, Promise<string>>();
 
@@ -149,8 +151,18 @@ export class SlackBot implements Bot {
     socket.addEventListener("close", () => {
       if (this.socket !== socket) return;
       this.socket = undefined;
-      // Slack closes every socket now and then, and says so first: a new one is opened.
-      if (!this.stopped) void this.connect();
+      if (this.stopped) return;
+      // Slack closes every socket now and then, and says so first: a new one is opened. One that
+      // closed before Slack said hello went wrong: the next waits, longer each time.
+      if (this.greeted.has(socket)) {
+        void this.connect();
+        return;
+      }
+      const wait = BACKOFF_MS[Math.min(this.tries, BACKOFF_MS.length - 1)];
+      this.tries += 1;
+      setTimeout(() => {
+        if (!this.stopped && !this.socket) void this.connect();
+      }, wait).unref?.();
     });
     socket.addEventListener("error", () => {});
   }
@@ -167,6 +179,7 @@ export class SlackBot implements Bot {
     const payload = (frame.payload ?? {}) as Record<string, unknown>;
     if (frame.type === "hello") {
       this.tries = 0;
+      this.greeted.add(socket);
       const app = (frame.connection_info as { app_id?: string } | undefined)
         ?.app_id;
       if (app && this.team)

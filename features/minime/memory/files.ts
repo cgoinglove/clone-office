@@ -76,14 +76,21 @@ export async function tryLock(
   return undefined;
 }
 
-/** Run `work` while holding `<dir>/.lock`; a lock older than 10 seconds is taken over. */
+/** A lock held longer than this is taken over: its holder died. Work under a lock ends sooner. */
+export const LOCK_STALE_MS = 10_000;
+
+/**
+ * Run `work` while holding `<dir>/.lock`; a lock older than LOCK_STALE_MS is taken over. A caller
+ * waits for as long as a holder may keep it, so a slow holder is waited for, not failed.
+ */
 export async function withLock<T>(
   dir: string,
   work: () => Promise<T>,
 ): Promise<T> {
   await mkdir(dir, { recursive: true });
   const path = join(/*turbopackIgnore: true*/ dir, ".lock");
-  for (let attempt = 0; ; attempt++) {
+  const giveUp = Date.now() + LOCK_STALE_MS + 5_000;
+  for (;;) {
     try {
       const handle = await open(path, "wx");
       await handle.close();
@@ -94,8 +101,8 @@ export async function withLock<T>(
         (info) => Date.now() - info.mtimeMs,
         () => 0,
       );
-      if (age > 10_000) await unlink(path).catch(() => {});
-      else if (attempt > 200)
+      if (age > LOCK_STALE_MS) await unlink(path).catch(() => {});
+      else if (Date.now() > giveUp)
         throw new Error(`${dir} is locked by another writer.`);
       else await sleep(25);
     }

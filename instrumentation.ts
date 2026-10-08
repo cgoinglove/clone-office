@@ -1,7 +1,9 @@
 // Run once when the app's server starts: the person's messenger connects then, and their office
 // work starts (the office open here, the loop that answers colleagues), so what comes from their
-// phone or their team is answered even before this computer's page is opened. The skills the app
-// ships are brought in too, as Hermes Agent syncs its bundled skills on start.
+// phone or their team is answered even before this computer's page is opened. Their flows keep
+// their times from then on too, and once they are past the first steps (which choose the folders
+// left out), the search index is kept caught up. The skills the app ships are brought in, as
+// Hermes Agent syncs its bundled skills on start.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { startMessenger } = await import("./features/minime/messenger/bridge");
@@ -16,4 +18,13 @@ export async function register() {
   void startMessenger();
   void startOfficeOnBoot();
   void bringShippedSkills();
+  const { keepFlowsRunning } = await import("./features/minime/flows/run");
+  keepFlowsRunning();
+  const { isOnboarded } = await import("./features/minime/server/onboarded");
+  if (isOnboarded()) {
+    const { keepIndexFresh } = await import(
+      "./features/minime/history/indexer"
+    );
+    keepIndexFresh();
+  }
 }

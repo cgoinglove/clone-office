@@ -6,7 +6,7 @@
 // chats, each window's own database lists its chats. The files are opened read-only, and SQLite
 // pulls out only the few fields needed, so the large rows never reach this process.
 
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
@@ -123,14 +123,35 @@ async function olderChatFolders(root: string): Promise<Map<string, string>> {
   return out;
 }
 
+/** The last listing, kept while Cursor's file and its write-ahead log are as they were. */
+let listed: { stamp: string; chats: CursorChat[] } | undefined;
+
+/** What changes whenever Cursor writes: the file's and its log's size and time. */
+function stampOf(path: string): string {
+  return [path, `${path}-wal`]
+    .map((file) => {
+      try {
+        const info = statSync(file);
+        return `${info.size}:${info.mtimeMs}`;
+      } catch {
+        return "-";
+      }
+    })
+    .join("|");
+}
+
 /**
  * Every chat in which something was said, with when it last changed, without reading its bubbles:
- * one pass over the chats' own rows, and one lookup of each chat's last bubble for its time.
+ * one pass over the chats' own rows, and one lookup of each chat's last bubble for its time. That
+ * pass reads every chat's row and holds the server while it runs, so a file Cursor has not written
+ * since is not read again.
  */
 export async function cursorChats(
   path = cursorDbPath(),
 ): Promise<CursorChat[]> {
   if (!existsSync(path)) return [];
+  const stamp = `${path}#${stampOf(path)}`;
+  if (listed?.stamp === stamp) return listed.chats;
   const db = openReadOnly(path);
   if (!db) throw new Error("Cursor's chat database could not be opened.");
   let rows: {
@@ -198,6 +219,7 @@ export async function cursorChats(
       folder,
     });
   }
+  listed = { stamp, chats };
   return chats;
 }
 

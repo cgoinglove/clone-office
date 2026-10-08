@@ -227,16 +227,24 @@ export async function readChat(
   return info ? { info, messages } : undefined;
 }
 
+/** Each conversation's summary as last listed, with its file's size and time then. */
+const listedChats = new Map<string, { stamp: string; info: ChatInfo }>();
+
 /** The latest conversations first. */
 export async function listChats(limit = 30): Promise<ChatInfo[]> {
-  const names = await readdir(chatsDir()).catch(() => [] as string[]);
   const chats: ChatInfo[] = [];
-  for (const name of names) {
-    if (!name.endsWith(".jsonl")) continue;
-    const id = name.slice(0, -".jsonl".length);
-    if (!ID.test(id)) continue;
-    const chat = await readChat(id);
-    if (chat) chats.push(chat.info);
+  for (const file of await chatFiles()) {
+    // A conversation is read whole only when its file changed since it was last listed.
+    const stamp = `${file.size}:${file.mtimeMs}`;
+    const known = listedChats.get(file.id);
+    if (known?.stamp === stamp) {
+      chats.push(known.info);
+      continue;
+    }
+    const chat = await readChat(file.id);
+    if (!chat) continue;
+    listedChats.set(file.id, { stamp, info: chat.info });
+    chats.push(chat.info);
   }
   return (
     chats

@@ -96,6 +96,8 @@ export async function changeFlow(
     const flow = await read(id);
     if (!flow) return undefined;
     const next = change(flow);
+    // Left as it was (the minute's look at a flow not due): the file is not written again.
+    if (next === flow) return next;
     if (next)
       await atomicWrite(flowPath(id), `${JSON.stringify(next, null, 2)}\n`);
     else await unlink(flowPath(id)).catch(() => {});

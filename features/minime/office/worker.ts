@@ -43,7 +43,10 @@ interface Worker {
   problem?: string;
 }
 
-const holder = globalThis as typeof globalThis & { __minimeOffice?: Worker };
+const holder = globalThis as typeof globalThis & {
+  __minimeOffice?: Worker;
+  __minimeOfficeSignals?: boolean;
+};
 
 /** Start the office's loop if it is not running; the gate URL is where questions to the person go. */
 export function startOffice(gateUrl: string, language?: string): void {
@@ -55,8 +58,12 @@ export function startOffice(gateUrl: string, language?: string): void {
   }
   const worker: Worker = { running: true, gateUrl, language, busy: new Set() };
   holder.__minimeOffice = worker;
-  process.once("SIGTERM", onShutdown);
-  process.once("SIGINT", onShutdown);
+  // Once per process, however often the office is left and joined again.
+  if (!holder.__minimeOfficeSignals) {
+    holder.__minimeOfficeSignals = true;
+    process.once("SIGTERM", onShutdown);
+    process.once("SIGINT", onShutdown);
+  }
   void loop(worker);
 }
 
@@ -241,7 +248,9 @@ async function loop(worker: Worker): Promise<void> {
     } catch (error) {
       if (!worker.running) return;
       worker.problem = problemCode(error);
-      await sleep(5000);
+      // Removed from the office: nothing changes in five seconds, so look again after a minute
+      // (the person may join again, or the relay come back with their place).
+      await sleep(worker.problem === "office-member-unknown" ? 60_000 : 5000);
     }
   }
 }
