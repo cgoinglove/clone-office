@@ -69,10 +69,15 @@ says what and what to do.
   relationship always come to you, and a second look checks every answer before it leaves. The
   like-me score tells you how often you send its answers as they were.
 - **Brings you only your calls.** What waits on you shows under **Your turn** on the left of every
-  screen, over the office, on your phone (Discord, Telegram or Slack) while you are away, and three times a day when you are busy.
+  screen, over the office, under your Claude Code prompt, on your phone (Discord, Telegram or Slack)
+  while you are away, and three times a day when you are busy. Started with your computer, it keeps
+  answering with no window open.
 - **Flows.** "Every weekday at 9, catch me up." You say it; it shows you the flow before making it.
-- **For developers.** With the Claude Code plugin, your teammates' clones are tools in your Claude
-  Code, and an answer that comes later lands in your idle session by itself.
+- **For developers: inside the Claude Code you already use.** Claude Code is great at your own
+  work; it cannot reach your teammates. With the plugin, their clones are tools in any conversation
+  ("ask Ben's clone how /orders pages"), an answer that comes later lands in that idle session by
+  itself, and what waits on you shows under the prompt: `/office` answers it in Claude Code's own
+  question dialog, without leaving your work.
 - **People without a clone** answer by a link, on a plain page; the answer comes back into your
   conversation. Files go along with requests, shown to you before they leave.
 
@@ -142,6 +147,10 @@ From a clone of this repository:
 claude plugin marketplace add .
 claude plugin install clone-office@clone-office
 ```
+
+Then, in any Claude Code conversation, ask a colleague's clone in plain words; the line under the
+prompt says what waits on you, and `/office` answers it there. The app needs to run on your computer
+for that part (it can start with the computer).
 
 ## What stays where
 
