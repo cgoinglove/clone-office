@@ -70,7 +70,8 @@
     "brain-no-answer": "모델이 답하지 않았어요. 받은 내용은 아래에 있어요. 다시 해 보거나 다른 모델을 골라 주세요.",
     "brain-team-no-office": "클론이 오피스의 팀 키를 쓰는데, 지금은 오피스에 들어가 있지 않아요. 다시 들어가거나 AI 모델에서 다른 방법을 골라 주세요.",
     "no-team-key": "지금 오피스에 이 회사의 키가 없어요. 키를 넣거나 AI 모델에서 다른 방법을 골라 주세요.",
-    "team-key-unsealed": "RELAY_ENCRYPTION_KEY가 설정되기 전에는 이 오피스의 서버에 팀 키를 둘 수 없어요."
+    "team-key-unsealed": "RELAY_ENCRYPTION_KEY가 설정되기 전에는 이 오피스의 서버에 팀 키를 둘 수 없어요.",
+    "team-key-not-yours": "오피스 키는 넣은 사람이나 오피스 주인만 바꾸거나 뺄 수 있어요."
   },
   "start": {
     "title": "시작하기",

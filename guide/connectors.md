@@ -8,8 +8,8 @@ signed in as them. It works there in their conversations with it and in their fl
 For a colleague's request it may **read** there too, never change anything: only the tools a
 service marks as reading are offered then, and every other one is refused. Each connected service
 has **Read here for colleagues' requests too** (동료 부탁에도 읽기), shown once they are in an
-office. Notion, Linear, Jira and Confluence, and GitHub start on; Google's Gmail, Calendar, Drive,
-Docs and Sheets start off, since their mail, schedule and own files are mixed with private things.
+office. Each starts off: what a colleague's clone may get read for it is theirs to decide. Only the
+tools a service marks as reading in its latest list are offered; a new or unknown one is refused.
 Whatever the answer says still passes the look before it leaves (`office.md`).
 
 ## Connecting one

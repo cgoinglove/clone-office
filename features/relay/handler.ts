@@ -826,6 +826,16 @@ export function relayHandler(
           throw new RelayError(404, "No such vendor.", "not-found");
         const me = await member(request);
         const input = await body(request);
+        // A key, or null to remove it, said outright: anything else removes nothing.
+        if (
+          !("key" in input) ||
+          (input.key !== null && typeof input.key !== "string")
+        )
+          throw new RelayError(
+            400,
+            "Send {key} or {key: null}.",
+            "bad-request",
+          );
         await teamAi.set(
           me,
           teamKey[1],

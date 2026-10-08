@@ -143,7 +143,9 @@ export async function languageModel(choice: ApiChoice): Promise<{
       return {
         model: openai(choice.model),
         search: { web_search: openai.tools.webSearch() },
-        options: {},
+        // OpenAI keeps each response unless told not to (store defaults to true): with a team key that
+        // would be in the key owner's account for anyone to read in its logs.
+        options: { openai: { store: false } },
       };
     }
     case "google": {
@@ -332,7 +334,7 @@ export async function runLoop(
         guard,
         reads,
         ...(reads ? {} : { only: new Set(ALLOWED_TOOLS) }),
-        hidden: new Set(colleagueRule.deny),
+        readsOnly: colleagueRule.reads,
         onResult: (tool, input, raw) => {
           if (WATCHED.has(tool)) reportKept(tool, input, raw, options.onEvent);
         },

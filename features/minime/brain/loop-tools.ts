@@ -681,8 +681,11 @@ export async function loopTools(options: {
   reads: boolean;
   /** Only these of the mini-me's own tools are offered (a session with nobody to ask or answer). */
   only?: Set<string>;
-  /** A connected service's tools never offered, by name (a colleague's request's changes). */
-  hidden?: Set<string>;
+  /**
+   * A colleague's request: for each service here, only these of its tools (its reading ones, by
+   * their own names) are offered; anything else it lists is not (connectors/colleagues.ts).
+   */
+  readsOnly?: Map<string, Set<string>>;
   /** A call that finished: its name, input and the text it answered. */
   onResult?: (
     tool: string,
@@ -699,9 +702,10 @@ export async function loopTools(options: {
       // A connected service's tools are named, not loaded: see servicePair.
       if (server !== "minime") {
         if (!options.only) {
-          const offered = page.tools.filter(
-            (tool) => !options.hidden?.has(mcpToolName(server, tool.name)),
-          );
+          const only = options.readsOnly?.get(server);
+          const offered = only
+            ? page.tools.filter((tool) => only.has(tool.name))
+            : page.tools;
           const found = services.find((entry) => entry.server === server);
           if (found) found.tools.push(...offered);
           else services.push({ server, client, tools: offered });

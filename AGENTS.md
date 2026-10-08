@@ -459,9 +459,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   `connector:google`, set by any member, shown with who set it) or else the person's own
   (`settings.json` `connectors.clients`). A session reaches the connected services only for the
   person's own work (`runSession` `connectors`: conversations and flows; a colleague's request,
-  `colleagueReads`, gets only the services the person let it read in, `colleagues.ts`, settings.json
-  `connectors.forColleagues`, work tools on and Google's off at first, with their reading tools
-  allowed and every other one refused): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
+  `colleagueReads`, gets only the services the person turned on for it, `colleagues.ts`, settings.json
+  `connectors.forColleagues`, each off at first; their listed reading tools are allowed and every
+  other one refused, fail closed: the loop offers those alone, `readsOnly`, and Claude Code's
+  prompt refuses the rest outright, MINIME_READS_ONLY): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
   (`dist/connector-headers.mjs` in the package) for a fresh token, so no token is in the
   arguments, and each tool is asked through the gate (`rules.ts` `ruleFor` makes "from now on" a
   rule for that one tool). `tools.ts` keeps what each server offers (`tools/list`, again once a

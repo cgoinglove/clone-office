@@ -164,7 +164,24 @@ test("an office's team key is kept sealed, and members think with it without eve
     "no climbing out of the API",
   );
 
-  // Forgotten: nobody thinks with it any more.
+  // Someone else's key is not Ben's to swap for his own, and a body without a key removes nothing.
+  const swap = await call(ben.token, "/team-ai/openai", {
+    method: "POST",
+    body: JSON.stringify({ key: "sk-team-1234" }),
+  });
+  assert.equal(swap.status, 403);
+  assert.equal((await swap.json()).code, "team-key-not-yours");
+  const vague = await call(ana.token, "/team-ai/openai", {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+  assert.equal(vague.status, 400);
+  assert.equal(
+    (await (await call(ben.token, "/team-ai")).json()).keys.length,
+    1,
+  );
+
+  // Forgotten by whoever added it: nobody thinks with it any more.
   await call(ana.token, "/team-ai/openai", {
     method: "POST",
     body: JSON.stringify({ key: null }),

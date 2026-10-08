@@ -693,6 +693,24 @@ export class Relay {
     );
   }
 
+  /** Whether a member's person owns its office (an account's role there, accounts.ts). */
+  async ownsOffice(member: Caller): Promise<boolean> {
+    const rows = await this.db.query(
+      "SELECT 1 FROM members m JOIN office_people p ON p.office_id = m.office_id AND p.user_id = m.user_id WHERE m.id = $1 AND p.role = 'owner'",
+      [member.id],
+    );
+    return rows.length > 0;
+  }
+
+  /** Whether a member is still in an office. */
+  async isMember(office: string, id: string): Promise<boolean> {
+    const rows = await this.db.query(
+      "SELECT 1 FROM members WHERE office_id = $1 AND id = $2",
+      [office, id],
+    );
+    return rows.length > 0;
+  }
+
   /** One more call a member made with a team key today. */
   async countAiCall(
     member: Caller,

@@ -14,6 +14,15 @@ const GATE = {
 
 export const gateOpen = Boolean(GATE.url);
 
+/**
+ * A colleague's request reads in these services and changes nothing there: their reading tools are
+ * allowed before any prompt, so one of theirs that reaches the prompt is refused without asking
+ * (connectors/colleagues.ts).
+ */
+const READS_ONLY = (process.env.MINIME_READS_ONLY ?? "")
+  .split(",")
+  .filter(Boolean);
+
 /** In a conversation with the person (not while answering a colleague): the office's two tools. */
 export const colleaguesOpen = gateOpen && process.env.MINIME_COLLEAGUES === "1";
 
@@ -233,9 +242,19 @@ export async function callGateTool(
       };
     }
     const input = (args.input ?? {}) as Record<string, unknown>;
+    const tool = String(args.tool_name ?? "");
+    if (READS_ONLY.some((id) => tool.startsWith(`mcp__${id}__`)))
+      return {
+        result: JSON.stringify({
+          behavior: "deny",
+          message:
+            "For a colleague's request you may only read in this service. Answer from what you could read.",
+        }),
+        isError: false,
+      };
     const answer = await ask({
       kind: "permission",
-      tool: String(args.tool_name ?? ""),
+      tool,
       input,
     });
     return {

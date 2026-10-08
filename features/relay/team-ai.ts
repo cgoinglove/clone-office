@@ -154,8 +154,25 @@ export class TeamAi {
     };
   }
 
-  /** Keeps a key for the office after asking its vendor whether it works, or forgets it (null). */
+  /**
+   * Keeps a key for the office after asking its vendor whether it works, or forgets it (null).
+   * Anyone in the office may add one where there is none; one already there is changed or removed
+   * only by whoever added it, an owner of the office, or anyone once its adder has left, since every
+   * clone's conversations would then go through the new key's account.
+   */
   async set(me: Caller, provider: TeamProvider, key: string | null) {
+    const kept = await this.relay.officeSecret(me.office, `ai:${provider}`);
+    if (
+      kept &&
+      kept.by !== me.id &&
+      (await this.relay.isMember(me.office, kept.by)) &&
+      !(await this.relay.ownsOffice(me))
+    )
+      throw new RelayError(
+        403,
+        "Only whoever added the team key, or an owner of the office, changes it.",
+        "team-key-not-yours",
+      );
     if (key === null) {
       await this.relay.setOfficeSecret(me, `ai:${provider}`, null);
       return;

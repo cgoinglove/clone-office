@@ -39,8 +39,10 @@ test("with the office's team key, the clone calls its vendor through the relay, 
       },
     }),
   );
-  const openai = (await languageModel(choice("openai")))
-    .model as unknown as Configured;
+  const made = await languageModel(choice("openai"));
+  // OpenAI keeps nothing of it in the key owner's account.
+  assert.deepEqual(made.options, { openai: { store: false } });
+  const openai = made.model as unknown as Configured;
   assert.equal(
     openai.config.url?.({ path: "/responses", modelId: "m" }),
     "http://127.0.0.1:3200/ai/openai/responses",

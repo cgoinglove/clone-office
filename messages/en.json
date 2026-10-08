@@ -70,7 +70,8 @@
     "brain-no-answer": "The model did not answer. What it said is below; try again, or pick another model.",
     "brain-team-no-office": "Your clone uses the office's team key, but it isn't in an office now. Join again, or pick another way under AI model.",
     "no-team-key": "The office has no key for this vendor now. Add one, or pick another way under AI model.",
-    "team-key-unsealed": "This office's server can't keep a team key until RELAY_ENCRYPTION_KEY is set."
+    "team-key-unsealed": "This office's server can't keep a team key until RELAY_ENCRYPTION_KEY is set.",
+    "team-key-not-yours": "Only whoever added the office's key, or an owner of the office, can change or remove it."
   },
   "start": {
     "title": "Get started",

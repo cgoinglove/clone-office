@@ -287,9 +287,12 @@ export function toolServerEnv(
   actor: "minime" | "review",
   gate?: SessionGate,
   audience?: "colleagues",
+  /** A colleague's request's services, whose tools the prompt refuses outright (gate/tools.ts). */
+  readsOnly: string[] = [],
 ): Record<string, string> {
   return {
     ...(audience ? { MINIME_AUDIENCE: audience } : {}),
+    ...(readsOnly.length ? { MINIME_READS_ONLY: readsOnly.join(",") } : {}),
     MINIME_MEMORY_DIR: memoryDir(),
     MINIME_SKILLS_DIR: skillsDir(),
     MINIME_NOTES_DIR: notesDir(),
@@ -312,6 +315,7 @@ export function mcpConfig(
   gate?: SessionGate,
   connectors: Connector[] = [],
   audience?: "colleagues",
+  readsOnly: string[] = [],
 ): string {
   return JSON.stringify({
     mcpServers: {
@@ -332,7 +336,7 @@ export function mcpConfig(
         // Node runs the TypeScript server as is (bundled in the package); warnings would only
         // clutter its stderr.
         args: ["--no-warnings", toolServerPath()],
-        env: toolServerEnv(actor, gate, audience),
+        env: toolServerEnv(actor, gate, audience, readsOnly),
       },
     },
   });
@@ -428,6 +432,7 @@ export async function runSession(
         ? await connectedConnectors().catch(() => [])
         : colleague,
       options.audience,
+      colleagueRule.services,
     ),
     "--strict-mcp-config",
     "--tools",
