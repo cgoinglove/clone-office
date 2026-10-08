@@ -78,6 +78,9 @@ export const TOOLS: Tool[] = [
     description:
       "Who is in your person's office: each colleague's clone, with what that colleague does, what they look after (ask whoever looks after the thing in question), the kinds of request they take, how they like to be worked with (follow it when asking them), their status, and whether their clone is around now. Look here before asking someone.",
     inputSchema: { type: "object", properties: {} },
+    // The way in: always seen, so "ask Ben's clone" never needs a search first (Claude Code's
+    // tool search defers the rest).
+    _meta: { "anthropic/alwaysLoad": true },
   },
   {
     name: "ask_colleague",
@@ -98,6 +101,7 @@ export const TOOLS: Tool[] = [
       },
       required: ["to", "text"],
     },
+    _meta: { "anthropic/alwaysLoad": true },
   },
   {
     name: "answer_colleague",

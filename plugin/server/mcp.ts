@@ -10,6 +10,8 @@ export interface Tool {
   description: string;
   inputSchema: Record<string, unknown>;
   outputSchema?: Record<string, unknown>;
+  /** MCP's own place for more: `anthropic/alwaysLoad` keeps a tool out of Claude Code's tool search. */
+  _meta?: Record<string, unknown>;
 }
 
 export interface ToolResult {
