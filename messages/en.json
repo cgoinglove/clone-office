@@ -1286,8 +1286,7 @@
         "yesterday": "What did I do yesterday?",
         "waiting": "What is waiting on me?",
         "brief": "Give me my morning brief",
-        "week": "Draft this week's report",
-        "know": "What do you know about how I work?"
+        "week": "Draft this week's report"
       },
       "decide": "Decide now",
       "decideHint": "Your clone brings you only what is yours to decide.",
