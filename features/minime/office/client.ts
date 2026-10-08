@@ -13,10 +13,11 @@ import type {
   Task,
   TaskState,
 } from "../../relay/relay.ts";
-import type {
-  SharedSkill,
-  SharedSkillContent,
-  SkillFileData,
+import {
+  isSkillName,
+  type SharedSkill,
+  type SharedSkillContent,
+  type SkillFileData,
 } from "../../relay/skills.ts";
 import { withLock } from "../memory/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
@@ -240,6 +241,20 @@ export async function setTeamKey(
   });
 }
 
+/**
+ * A skill's name as the relay and the skill store take it (lowercase letters, digits, '.', '_' or
+ * '-', at most 64, starting with a letter or digit), refused before it is put in an address: "."
+ * and ".." would be read as steps up and reach another of the relay's routes ("/skills/.." is "/").
+ */
+export function skillName(name: string): string {
+  if (!isSkillName(name))
+    throw new OfficeError(
+      "skill-name-invalid",
+      `'${name.slice(0, 80)}' is not a skill's name: lowercase letters, digits, '.', '_' or '-', at most 64 characters, starting with a letter or digit.`,
+    );
+  return name;
+}
+
 /** The skills the office's members share, without their files (../../relay/skills.ts). */
 export async function sharedSkills(
   office: OfficeConfig,
@@ -259,7 +274,7 @@ export async function sharedSkill(
   return (
     await call<{ skill: SharedSkillContent }>(
       office.relay,
-      `/skills/${encodeURIComponent(name)}`,
+      `/skills/${encodeURIComponent(skillName(name))}`,
       { token: office.token },
     )
   ).skill;
@@ -283,7 +298,7 @@ export async function removeSharedSkill(
   office: OfficeConfig,
   name: string,
 ): Promise<void> {
-  await call(office.relay, `/skills/${encodeURIComponent(name)}`, {
+  await call(office.relay, `/skills/${encodeURIComponent(skillName(name))}`, {
     method: "DELETE",
     token: office.token,
   });

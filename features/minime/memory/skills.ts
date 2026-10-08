@@ -18,7 +18,11 @@
 // what one would take there, and `addShared` brings in one a colleague shared, checked first as
 // Hermes Agent's skills hub checks what it installs (paths, programs, the memory threat scan, the
 // hash it was shared with), with its origin in `.office.json` so a later version replaces it only
-// while it is as it came, as the skills the app ships are.
+// while it is as it came, as the skills the app ships are. A copy counts as the office's only while
+// its `created_by` is "office"; its origin goes when it is set aside or a skill of the person's takes
+// its name. A newer version is written whole aside and swapped in with two renames; what a process
+// that died between them left aside is put back, or cleared once shown to be a copy, the next time
+// the store is used (`recoverLocked`).
 
 import { randomBytes } from "node:crypto";
 import {
@@ -29,19 +33,27 @@ import {
   readFile,
   rename,
   rm,
+  stat,
   writeFile,
 } from "node:fs/promises";
 import { dirname, join, normalize, sep } from "node:path";
 import {
+  isSkillName,
   SKILL_BYTES,
   SKILL_FILES,
+  skillFrontMatter,
   skillHash,
   skillPath,
 } from "../../relay/skills.ts";
-import { atomicWrite, readText, withLock } from "./files.ts";
+import {
+  atomicWrite,
+  LOCK_STALE_MS,
+  readText,
+  tryLock,
+  withLock,
+} from "./files.ts";
 import { threatMessage } from "./threats.ts";
 
-const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 const MAX_DESCRIPTION = 1024;
 /** What the session's skill index shows of a description; a new skill's must fit whole. */
 export const INDEX_DESCRIPTION = 60;
@@ -65,6 +77,17 @@ const BUNDLED = ".bundled.json";
 /** The skills added from the office, each with the hash it came with and who shared it. */
 const OFFICE = ".office.json";
 const USAGE = ".usage.json";
+/** A skill from the office written whole aside, before it is put in place (`addShared`). */
+const INCOMING = ".incoming-";
+/**
+ * The version a newer one from the office replaces, set aside until that one is in place, named for
+ * the hash it was checked to have and where it was: `.replaced-<random>-<hash>+[<category>+]<name>`.
+ */
+const REPLACED = ".replaced-";
+/** A leftover younger than this may be a writer's still at work (one whose lock was taken over). */
+const LEFTOVER_MS = 10 * 60_000;
+/** One set aside that cannot be shown to be the office's copy is kept this long first. */
+const UNPROVEN_MS = 7 * 24 * 60 * 60_000;
 
 /** Programs, which a skill never carries to or from the office (Hermes Agent's skills guard). */
 const PROGRAM =
@@ -165,6 +188,25 @@ export interface OfficeOrigin {
   added: string;
 }
 
+/** A skill here as the screens that weigh it against the office's see it (`survey`). */
+export interface StoredSkill extends SkillInfo {
+  createdBy: UsageRecord["created_by"];
+  /** Where it came from, while it is a copy from the office (made by "office", its origin kept). */
+  origin?: OfficeOrigin;
+  /** What sharing it would send, or why it may not go; its files are read on the first ask only. */
+  pack(): Promise<PackedSkill | SkillRefusal>;
+  /** The hash of its folder now (the office's `skillHash`); read on the first ask only. */
+  hash(): Promise<string>;
+}
+
+/** A skill's folder as a scan finds it. */
+interface FoundSkill {
+  name: string;
+  description: string;
+  category?: string;
+  path: string;
+}
+
 export type SkillView =
   | {
       name: string;
@@ -175,19 +217,6 @@ export type SkillView =
     }
   | { name: string; file_path: string; content: string };
 
-export function frontMatter(content: string): {
-  name?: string;
-  description?: string;
-} {
-  const block = /^---\n([\s\S]*?)\n---/.exec(content.replace(/^﻿/, ""))?.[1];
-  if (!block) return {};
-  const field = (key: string) => {
-    const match = new RegExp(`^${key}:\\s*(.*)$`, "m").exec(block)?.[1]?.trim();
-    return match?.replace(/^["']|["']$/g, "");
-  };
-  return { name: field("name"), description: field("description") };
-}
-
 function body(content: string): string {
   return content.replace(/^﻿?---\n[\s\S]*?\n---\n?/, "");
 }
@@ -197,11 +226,11 @@ function validateSkill(
   content: string,
   isNew: boolean,
 ): string | undefined {
-  if (!NAME.test(name))
+  if (!isSkillName(name))
     return `Invalid skill name '${name}': lowercase letters, digits, '.', '_' or '-', at most 64 characters, starting with a letter or digit.`;
   if (content.length > MAX_CONTENT)
     return `SKILL.md content is ${content.length.toLocaleString("en-US")} characters (limit: ${MAX_CONTENT.toLocaleString("en-US")}). Keep the always-on rules in SKILL.md and move depth into references/<topic>.md.`;
-  const meta = frontMatter(content);
+  const meta = skillFrontMatter(content);
   if (!meta.name || !meta.description)
     return "SKILL.md must start with YAML front matter holding 'name' and 'description'.";
   if (meta.name !== name)
@@ -214,7 +243,7 @@ function validateSkill(
 }
 
 function validateCategory(category: string): string | undefined {
-  return NAME.test(category)
+  return isSkillName(category)
     ? undefined
     : `Invalid category '${category}': one folder name of lowercase letters, digits, '.', '_' or '-'.`;
 }
@@ -297,7 +326,7 @@ export class SkillStore {
       const read = await readText(
         join(/*turbopackIgnore: true*/ this.dir, entry, "DESCRIPTION.md"),
       );
-      const description = read.raw && frontMatter(read.raw).description;
+      const description = read.raw && skillFrontMatter(read.raw).description;
       if (description) out[entry] = description;
     }
     return out;
@@ -358,7 +387,7 @@ export class SkillStore {
     return {
       name: found.name,
       ...(found.category ? { category: found.category } : {}),
-      description: frontMatter(read.raw).description ?? "",
+      description: skillFrontMatter(read.raw).description ?? "",
       content: read.raw,
       ...(Object.keys(linked).length ? { linked_files: linked } : {}),
     };
@@ -473,70 +502,62 @@ export class SkillStore {
   async pack(name: string): Promise<PackedSkill | SkillRefusal> {
     const found = await this.find(name);
     if (!found) return refusal("not-found", `No skill named '${name}'.`);
-    const files: SkillFile[] = [];
-    let size = 0;
-    const take = async (path: string): Promise<SkillRefusal | undefined> => {
-      const full = join(/*turbopackIgnore: true*/ found.path, path);
-      const info = await lstat(full).catch(() => undefined);
-      if (!info) return undefined;
-      // A link could carry any file on this computer out with the skill.
-      if (info.isSymbolicLink())
-        return refusal(
-          "skill-blocked",
-          `${path} is a link to something elsewhere on this computer; a skill never takes one to the office.`,
-        );
-      if (info.isDirectory()) {
-        const entries = await readdir(full).catch(() => [] as string[]);
-        for (const entry of entries.sort()) {
-          if (entry.startsWith(".")) continue;
-          const stop = await take(`${path}/${entry}`);
-          if (stop) return stop;
-        }
-        return undefined;
-      }
-      if (!info.isFile()) return undefined;
-      size += info.size;
-      if (size > SKILL_BYTES || files.length >= SKILL_FILES)
-        return refusal(
-          "skill-too-large",
-          `'${found.name}' is larger than the office takes (${SKILL_BYTES / 1024} KB and ${SKILL_FILES} files at most).`,
-        );
-      files.push({ path, bytes: new Uint8Array(await readFile(full)) });
-      return undefined;
-    };
-    for (const path of ["SKILL.md", ...SUPPORT_DIRS]) {
-      const stop = await take(path);
-      if (stop) return stop;
-    }
-    const checked = inspect(found.name, files);
-    if (!checked.ok) return checked;
-    return {
-      ok: true,
-      name: found.name,
-      ...(found.category ? { category: found.category } : {}),
-      description: checked.description,
-      files,
-      size: checked.size,
-      hash: skillHash(files),
-    };
+    return packFolder(found);
   }
 
-  /** The skills added from the office, by name, with where each came from. */
+  /**
+   * The skills added from the office, by name, with where each came from, as the file has them; a
+   * name counts only while its skill's `created_by` is "office" (`survey`, `addShared`).
+   */
   async officeOrigins(): Promise<Record<string, OfficeOrigin>> {
     try {
-      return JSON.parse(
+      const origins = JSON.parse(
         (await readText(join(/*turbopackIgnore: true*/ this.dir, OFFICE)))
           .raw || "{}",
+      );
+      // No prototype: a skill named "constructor" has no origin unless the file gives it one.
+      return Object.assign(
+        Object.create(null),
+        origins && typeof origins === "object" ? origins : {},
       );
     } catch {
       return {};
     }
   }
 
-  /** The hash of a skill's folder as it is now (the office's `skillHash` over every file). */
-  async hashOf(name: string): Promise<string | undefined> {
-    const found = await this.find(name);
-    return found ? treeHash(found.path) : undefined;
+  /**
+   * Every active skill with who made it and, for a copy from the office, where it came from, from
+   * one look over the folder (a page weighing ~200 of the office's skills against them makes no
+   * other); each one's files are read only when asked, and once. A skill whose `created_by` is not
+   * "office" is the person's own, whatever `.office.json` still says.
+   */
+  async survey(): Promise<StoredSkill[]> {
+    const found = await this.scan();
+    const [usage, origins] = await Promise.all([
+      this.usage(),
+      this.officeOrigins(),
+    ]);
+    return found.map((skill) => {
+      const createdBy = usage[skill.name]?.created_by ?? null;
+      const origin = createdBy === "office" ? origins[skill.name] : undefined;
+      let packed: Promise<PackedSkill | SkillRefusal> | undefined;
+      let hashed: Promise<string> | undefined;
+      return {
+        name: skill.name,
+        description: skill.description,
+        ...(skill.category ? { category: skill.category } : {}),
+        createdBy,
+        ...(origin ? { origin } : {}),
+        pack: () => {
+          packed ??= packFolder(skill);
+          return packed;
+        },
+        hash: () => {
+          hashed ??= treeHash(skill.path);
+          return hashed;
+        },
+      };
+    });
   }
 
   /**
@@ -564,15 +585,25 @@ export class SkillStore {
         `'${input.name}' did not come whole from the office; nothing was added.`,
       );
     return withLock(this.dir, async () => {
-      const origins = await this.officeOrigins();
-      const origin = origins[input.name];
-      const here = await this.find(input.name);
+      // What a process that died midway left aside is back in place before anything is weighed.
+      await this.recoverLocked();
+      const skills = await this.scanTree();
+      const [usage, kept] = await Promise.all([
+        this.usage(),
+        this.officeOrigins(),
+      ]);
+      // Only copies from the office that are still here and still theirs keep an origin.
+      const origins = liveOrigins(kept, skills, usage);
+      const here = skills.find((skill) => skill.name === input.name);
+      const origin = here && origins[input.name];
       if (here && !origin)
         return refusal(
           "skill-name-taken-here",
           `A skill named '${input.name}' is here already and did not come from the office; it is never replaced.`,
         );
-      if (here && origin && (await treeHash(here.path)) !== origin.hash)
+      // Its folder's hash, read once: the one it has when it is set aside below.
+      const current = here ? await treeHash(here.path) : undefined;
+      if (origin && current !== origin.hash)
         return refusal(
           "skill-changed-here",
           `'${input.name}' was changed here since it was added; the office's version is not put over it.`,
@@ -581,7 +612,7 @@ export class SkillStore {
         return { ok: true as const, updated: false, same: true };
       // A new one goes into the category it was shared in, unless that is a skill here.
       let category =
-        input.category && NAME.test(input.category)
+        input.category && isSkillName(input.category)
           ? input.category
           : undefined;
       if (
@@ -617,7 +648,7 @@ export class SkillStore {
       // Written whole aside first (a hidden folder no listing reads), then put in place at once.
       const staging = join(
         /*turbopackIgnore: true*/ this.dir,
-        `.incoming-${randomBytes(6).toString("hex")}`,
+        `${INCOMING}${randomBytes(6).toString("hex")}`,
       );
       try {
         for (const file of input.files) {
@@ -631,9 +662,11 @@ export class SkillStore {
         }
         await mkdir(dirname(target), { recursive: true });
         if (here) {
+          // Named for the hash it was just checked to have and where it was, so a process that dies
+          // before the new one is in place leaves enough to put it back (`recoverLocked`).
           const old = join(
             /*turbopackIgnore: true*/ this.dir,
-            `.replaced-${randomBytes(6).toString("hex")}`,
+            setAsideName(current ?? (await treeHash(here.path)), here),
           );
           await rename(here.path, old);
           try {
@@ -658,10 +691,7 @@ export class SkillStore {
         byName: input.byName,
         added: now(),
       };
-      await atomicWrite(
-        join(/*turbopackIgnore: true*/ this.dir, OFFICE),
-        JSON.stringify(origins, null, 2),
-      );
+      await this.writeOrigins(origins);
       await this.updateUsage((usage) => {
         usage[input.name] =
           here && usage[input.name]
@@ -834,7 +864,7 @@ export class SkillStore {
           changes.push({
             action: "create",
             name,
-            description: frontMatter(content).description,
+            description: skillFrontMatter(content).description,
           });
           warnings.push(...lint(content, 0));
           continue;
@@ -939,7 +969,7 @@ export class SkillStore {
         changes.push({
           action: "patch",
           name: found.name,
-          description: frontMatter(next).description,
+          description: skillFrontMatter(next).description,
         });
         warnings.push(
           ...lint(
@@ -979,6 +1009,11 @@ export class SkillStore {
       join(/*turbopackIgnore: true*/ this.dir, USAGE),
       JSON.stringify(usage, null, 2),
     );
+    // A new skill by the name of one the office's copy once had is the person's (or the clone's).
+    const created = changes
+      .filter((change) => change.action === "create")
+      .map((change) => change.name);
+    if (created.length) await this.dropOrigins(created);
     for (const change of changes)
       if (
         change.action === "write_file" &&
@@ -1041,6 +1076,8 @@ export class SkillStore {
       join(/*turbopackIgnore: true*/ this.dir, USAGE),
       JSON.stringify(usage, null, 2),
     );
+    // Set aside, it no longer follows the office's versions; a skill by its name later is new.
+    await this.dropOrigins([found.name]);
     return {
       ok: true,
       message: `Skill '${found.name}' set aside in .archive/ (it can be restored).`,
@@ -1085,23 +1122,144 @@ export class SkillStore {
     }
   }
 
-  /** Skills at <dir>/<name>/ and <dir>/<category>/<name>/. */
-  private async scan(): Promise<
-    { name: string; description: string; category?: string; path: string }[]
-  > {
-    const out: {
-      name: string;
-      description: string;
-      category?: string;
-      path: string;
-    }[] = [];
+  /** Skills at <dir>/<name>/ and <dir>/<category>/<name>/, after tidying what was left aside. */
+  private async scan(): Promise<FoundSkill[]> {
+    await this.tidy();
+    return this.scanTree();
+  }
+
+  /**
+   * On a look over the store, what a process that died while putting an office skill in place left
+   * aside is recovered first (`recoverLocked`), when there is any and the lock is free; a lock held
+   * (by another writer, or by the caller of this very look) leaves it for the next look.
+   */
+  private async tidy(): Promise<void> {
+    const names = await readdir(this.dir).catch(() => [] as string[]);
+    let due = false;
+    for (const name of names)
+      if (
+        name.startsWith(REPLACED) ||
+        (name.startsWith(INCOMING) &&
+          (await ageOf(join(/*turbopackIgnore: true*/ this.dir, name))) >
+            LEFTOVER_MS)
+      ) {
+        due = true;
+        break;
+      }
+    if (!due) return;
+    const release = await tryLock(this.dir, LOCK_STALE_MS).catch(
+      () => undefined,
+    );
+    if (!release) return;
+    try {
+      await this.recoverLocked();
+    } catch {
+      // Best effort: what is left aside stays as it is, and the next look tries again.
+    } finally {
+      await release();
+    }
+  }
+
+  /**
+   * Under the lock: puts back what a process that died while replacing an office skill with its newer
+   * version (`addShared`) left aside, then clears what is left over. A version set aside goes back
+   * where it was when no skill of its name is here; when one is, it goes once it is shown to be the
+   * office's copy as it came (the hash it was checked to have, in its name, or the one its origin
+   * records), after the origin follows the newer version put in its place, or else after UNPROVEN_MS.
+   * A half-written incoming one goes after LEFTOVER_MS. Only an office copy unchanged here is ever
+   * set aside, so nothing removed is the person's own work.
+   */
+  private async recoverLocked(): Promise<void> {
+    const names = await readdir(this.dir).catch(() => [] as string[]);
+    const aside = names.filter((name) => name.startsWith(REPLACED));
+    const incoming = names.filter((name) => name.startsWith(INCOMING));
+    if (!aside.length && !incoming.length) return;
+    const [usage, origins] = await Promise.all([
+      this.usage(),
+      this.officeOrigins(),
+    ]);
+    let followed = false;
+    for (const entry of aside) {
+      const path = join(/*turbopackIgnore: true*/ this.dir, entry);
+      const mark = setAsideMark(entry);
+      // Set aside before its name said where (or a name that does not parse): its own SKILL.md
+      // names it, and it goes back at the top.
+      const name =
+        mark.at?.at(-1) ??
+        skillFrontMatter(
+          (await readText(join(/*turbopackIgnore: true*/ path, "SKILL.md")))
+            .raw,
+        ).name;
+      if (!name || !isSkillName(name)) continue;
+      const place = join(
+        /*turbopackIgnore: true*/ this.dir,
+        ...(mark.at ?? [name]),
+      );
+      const here = (await this.scanTree()).find((skill) => skill.name === name);
+      if (!here) {
+        if (await emptyOrMissing(place)) {
+          await mkdir(dirname(place), { recursive: true });
+          await rm(place, { recursive: true, force: true });
+          await rename(path, place);
+        }
+        continue;
+      }
+      const hash = await treeHash(path);
+      const origin = Object.hasOwn(origins, name) ? origins[name] : undefined;
+      if (hash === mark.hash || (origin && hash === origin.hash)) {
+        // Its newer version was put in place but not recorded before the process died.
+        if (
+          origin?.hash === hash &&
+          here.path === place &&
+          usage[name]?.created_by === "office"
+        ) {
+          origins[name] = {
+            ...origin,
+            hash: await treeHash(here.path),
+            added: now(),
+          };
+          followed = true;
+        }
+        await rm(path, { recursive: true, force: true });
+      } else if ((await ageOf(path, true)) > UNPROVEN_MS)
+        await rm(path, { recursive: true, force: true });
+    }
+    for (const entry of incoming) {
+      const path = join(/*turbopackIgnore: true*/ this.dir, entry);
+      if ((await ageOf(path)) > LEFTOVER_MS)
+        await rm(path, { recursive: true, force: true });
+    }
+    if (followed) await this.writeOrigins(origins);
+  }
+
+  private async writeOrigins(
+    origins: Record<string, OfficeOrigin>,
+  ): Promise<void> {
+    await atomicWrite(
+      join(/*turbopackIgnore: true*/ this.dir, OFFICE),
+      JSON.stringify(origins, null, 2),
+    );
+  }
+
+  /** Forgets where these skills came from: set aside, or a skill of the person's took the name. */
+  private async dropOrigins(names: string[]): Promise<void> {
+    const origins = await this.officeOrigins();
+    const gone = names.filter((name) => Object.hasOwn(origins, name));
+    if (!gone.length) return;
+    for (const name of gone) delete origins[name];
+    await this.writeOrigins(origins);
+  }
+
+  /** Skills at <dir>/<name>/ and <dir>/<category>/<name>/, as they are. */
+  private async scanTree(): Promise<FoundSkill[]> {
+    const out: FoundSkill[] = [];
     for (const top of await this.entries(this.dir)) {
       const topPath = join(/*turbopackIgnore: true*/ this.dir, top);
       const own = await readText(join(topPath, "SKILL.md"));
       if (own.exists) {
         out.push({
           name: top,
-          description: frontMatter(own.raw).description ?? "",
+          description: skillFrontMatter(own.raw).description ?? "",
           path: topPath,
         });
         continue;
@@ -1111,7 +1269,7 @@ export class SkillStore {
         if (read.exists)
           out.push({
             name: inner,
-            description: frontMatter(read.raw).description ?? "",
+            description: skillFrontMatter(read.raw).description ?? "",
             category: top,
             path: join(topPath, inner),
           });
@@ -1125,9 +1283,7 @@ export class SkillStore {
   }
 
   /** A skill by bare name or by "category/name". */
-  private async find(
-    name: string,
-  ): Promise<{ name: string; path: string; category?: string } | undefined> {
+  private async find(name: string): Promise<FoundSkill | undefined> {
     const [category, bare] = name.includes("/")
       ? name.split("/", 2)
       : [undefined, name];
@@ -1169,6 +1325,131 @@ function refusal(code: string, message: string): SkillRefusal {
   return { ok: false, code, message };
 }
 
+/**
+ * What one of the person's skills would take to their office (`SkillStore.pack`): SKILL.md and the
+ * files under its four folders, read once, checked, and hashed as the office hashes them.
+ */
+async function packFolder(
+  found: FoundSkill,
+): Promise<PackedSkill | SkillRefusal> {
+  const files: SkillFile[] = [];
+  let size = 0;
+  const take = async (path: string): Promise<SkillRefusal | undefined> => {
+    const full = join(/*turbopackIgnore: true*/ found.path, path);
+    const info = await lstat(full).catch(() => undefined);
+    if (!info) return undefined;
+    // A link could carry any file on this computer out with the skill.
+    if (info.isSymbolicLink())
+      return refusal(
+        "skill-blocked",
+        `${path} is a link to something elsewhere on this computer; a skill never takes one to the office.`,
+      );
+    if (info.isDirectory()) {
+      const entries = await readdir(full).catch(() => [] as string[]);
+      for (const entry of entries.sort()) {
+        if (entry.startsWith(".")) continue;
+        const stop = await take(`${path}/${entry}`);
+        if (stop) return stop;
+      }
+      return undefined;
+    }
+    if (!info.isFile()) return undefined;
+    size += info.size;
+    if (size > SKILL_BYTES || files.length >= SKILL_FILES)
+      return refusal(
+        "skill-too-large",
+        `'${found.name}' is larger than the office takes (${SKILL_BYTES / 1024} KB and ${SKILL_FILES} files at most).`,
+      );
+    files.push({ path, bytes: new Uint8Array(await readFile(full)) });
+    return undefined;
+  };
+  for (const path of ["SKILL.md", ...SUPPORT_DIRS]) {
+    const stop = await take(path);
+    if (stop) return stop;
+  }
+  const checked = inspect(found.name, files);
+  if (!checked.ok) return checked;
+  return {
+    ok: true,
+    name: found.name,
+    ...(found.category ? { category: found.category } : {}),
+    description: checked.description,
+    files,
+    size: checked.size,
+    hash: skillHash(files),
+  };
+}
+
+/**
+ * The origins that still count: each one's skill is here and is still a copy from the office
+ * (`created_by` "office"); a skill of the person's by an old origin's name is theirs.
+ */
+function liveOrigins(
+  origins: Record<string, OfficeOrigin>,
+  skills: readonly FoundSkill[],
+  usage: Record<string, UsageRecord>,
+): Record<string, OfficeOrigin> {
+  const live: Record<string, OfficeOrigin> = Object.create(null);
+  for (const skill of skills)
+    if (
+      Object.hasOwn(origins, skill.name) &&
+      usage[skill.name]?.created_by === "office"
+    )
+      live[skill.name] = origins[skill.name];
+  return live;
+}
+
+/** The name a version replaced by the office's newer one has while it is set aside. */
+function setAsideName(
+  hash: string,
+  skill: { name: string; category?: string },
+): string {
+  const at = [...(skill.category ? [skill.category] : []), skill.name];
+  return `${REPLACED}${randomBytes(6).toString("hex")}-${hash}+${at.map(encodeURIComponent).join("+")}`;
+}
+
+/** Where a version set aside was, and the hash it was checked to have, from its name. */
+function setAsideMark(entry: string): { hash?: string; at?: string[] } {
+  const [head = "", ...parts] = entry.slice(REPLACED.length).split("+");
+  const hash = /^[0-9a-f]{12}-([0-9a-f]{64})$/.exec(head)?.[1];
+  let at: string[] | undefined;
+  try {
+    at = parts.map((part) => decodeURIComponent(part));
+  } catch {
+    at = undefined;
+  }
+  const fine =
+    at !== undefined &&
+    at.length >= 1 &&
+    at.length <= 2 &&
+    at.every(
+      (part) => part && !part.startsWith(".") && !/[\\/\u0000]/.test(part),
+    ) &&
+    isSkillName(at[at.length - 1]);
+  return { ...(hash ? { hash } : {}), ...(fine ? { at } : {}) };
+}
+
+/** How long ago a file or folder last changed (or was moved), in ms; 0 when it cannot be read. */
+/**
+ * How long ago a folder was last written, or, for one set aside (`moved`), moved there too: a rename
+ * keeps its contents' times and changes only its own status time.
+ */
+async function ageOf(path: string, moved = false): Promise<number> {
+  const info = await stat(path).catch(() => undefined);
+  if (!info) return 0;
+  return (
+    Date.now() - (moved ? Math.max(info.mtimeMs, info.ctimeMs) : info.mtimeMs)
+  );
+}
+
+/** Whether nothing is at a path but, at most, an empty folder. */
+async function emptyOrMissing(path: string): Promise<boolean> {
+  return readdir(path).then(
+    (entries) => entries.length === 0,
+    (error: NodeJS.ErrnoException) => error.code === "ENOENT",
+  );
+}
+
 /** A file's bytes as text when they are UTF-8. */
 function utf8(bytes: Uint8Array): string | undefined {
   try {
@@ -1196,7 +1477,7 @@ function inspect(
   name: string,
   files: readonly SkillFile[],
 ): { ok: true; description: string; size: number } | SkillRefusal {
-  if (!NAME.test(name))
+  if (!isSkillName(name))
     return refusal("skill-invalid", `'${name}' is not a skill's name.`);
   if (files.length > SKILL_FILES)
     return refusal(
@@ -1239,7 +1520,7 @@ function inspect(
     if (path === "SKILL.md") {
       const invalid = validateSkill(name, text.trim(), false);
       if (invalid) return refusal("skill-invalid", `SKILL.md: ${invalid}`);
-      description = frontMatter(text).description ?? "";
+      description = skillFrontMatter(text).description ?? "";
     }
   }
   if (!seen.has("SKILL.md"))

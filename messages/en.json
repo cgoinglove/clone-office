@@ -82,7 +82,8 @@
     "skill-blocked": "Something in that skill is never shared or added: a link to a file elsewhere, a program, or text that tries to steer an AI or reach secrets.",
     "skill-name-taken-here": "You already have a skill by that name, so the office's one wasn't added.",
     "skill-changed-here": "You changed this skill after adding it, so the office's version wasn't put over your changes.",
-    "skill-not-shareable": "That skill came with the app or from a colleague, so it isn't yours to share."
+    "skill-not-shareable": "That skill came with the app or from a colleague, so it isn't yours to share.",
+    "skill-name-invalid": "That isn't a skill's name. A name uses lowercase letters, digits, dots, dashes or underscores, and starts with a letter or digit."
   },
   "start": {
     "title": "Get started",

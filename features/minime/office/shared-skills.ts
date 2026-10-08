@@ -11,7 +11,12 @@
 // script runs only when the person allows that very command in one of their Claude Code
 // conversations. So they are kept, scanned like the rest, and counted where the person decides.
 
-import type { PackedSkill, SkillFile, SkillStore } from "../memory/skills.ts";
+import type {
+  PackedSkill,
+  SkillFile,
+  SkillStore,
+  StoredSkill,
+} from "../memory/skills.ts";
 import { logActivity } from "../server/activity.ts";
 import {
   loadOffice,
@@ -66,37 +71,56 @@ async function inOffice(): Promise<OfficeConfig> {
 export const scriptsIn = (files: readonly { path: string }[]): number =>
   files.filter((file) => file.path.startsWith("scripts/")).length;
 
-/** The skills the office's members share, each with how it stands here. */
-export async function officeSkills(store: SkillStore): Promise<OfficeSkill[]> {
+/**
+ * The skills the office's members share, each with how it stands here. `local` is the store's
+ * `survey` when the caller has one already: one look over the skills folder serves both, and only
+ * the skills that need it are read (a copy from the office is hashed, one the person shared packed),
+ * each once.
+ */
+export async function officeSkills(
+  store: SkillStore,
+  local?: StoredSkill[],
+): Promise<OfficeSkill[]> {
   const office = await inOffice();
-  const [shared, origins] = await Promise.all([
+  const [shared, here] = await Promise.all([
     sharedSkills(office),
-    store.officeOrigins(),
+    local ?? store.survey(),
   ]);
+  // The first by a name, as the store finds one by name.
+  const byName = new Map<string, StoredSkill>();
+  for (const skill of here)
+    if (!byName.has(skill.name)) byName.set(skill.name, skill);
   const out: OfficeSkill[] = [];
-  for (const skill of shared) {
-    let here: SkillHere;
-    if (skill.by === office.member) {
-      const packed = await store.pack(skill.name);
-      here =
-        !packed.ok || packed.hash === skill.hash ? "yours" : "yours-changed";
-    } else {
-      const local = await store.hashOf(skill.name);
-      const origin = origins[skill.name]?.hash;
-      here =
-        local === undefined
-          ? "new"
-          : !origin
-            ? "taken"
-            : local !== origin
-              ? "changed"
-              : skill.hash === origin
-                ? "added"
-                : "update";
-    }
-    out.push({ ...skill, here, scripts: scriptsIn(skill.files) });
-  }
+  for (const skill of shared)
+    out.push({
+      ...skill,
+      here: await standing(skill, byName.get(skill.name), office.member),
+      scripts: scriptsIn(skill.files),
+    });
   return out;
+}
+
+/** How one of the office's skills stands against the skill of its name here, if any. */
+async function standing(
+  skill: SharedSkill,
+  local: StoredSkill | undefined,
+  me: string,
+): Promise<SkillHere> {
+  if (skill.by === me) {
+    const packed = await local?.pack();
+    return !packed?.ok || packed.hash === skill.hash
+      ? "yours"
+      : "yours-changed";
+  }
+  if (!local) return "new";
+  // Not a copy from the office (whatever .office.json still says): the person's own.
+  if (!local.origin) return "taken";
+  const hash = await local.hash();
+  return hash !== local.origin.hash
+    ? "changed"
+    : skill.hash === local.origin.hash
+      ? "added"
+      : "update";
 }
 
 /**

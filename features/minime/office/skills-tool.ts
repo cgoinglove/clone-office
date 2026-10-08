@@ -9,7 +9,7 @@
 import { untrusted } from "../brain/untrusted.ts";
 import { askPermission, gateOpen } from "../gate/tools.ts";
 import type { SkillStore } from "../memory/skills.ts";
-import { OfficeError, problemCode } from "./client.ts";
+import { OfficeError, problemCode, skillName } from "./client.ts";
 import {
   addSkill,
   fetchToAdd,
@@ -144,6 +144,8 @@ export async function callOfficeSkillTool(
       };
     }
     if (action === "unshare") {
+      // A name the office could not hold is refused before the person is asked about it.
+      skillName(name);
       const answer = await askPermission(OFFICE_SKILL_MANAGE, { action, name });
       if (answer !== "allow")
         return { result: NOT_ASKED[answer], isError: true };

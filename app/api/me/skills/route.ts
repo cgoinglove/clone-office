@@ -19,19 +19,19 @@ type From = "app" | "office" | "own";
 // The clone's skills as the person's page shows them, and, in an office, the skills colleagues
 // shared with how each stands here. What the person presses here is theirs to do: sharing one
 // sends its files to the office, adding one brings a colleague's in, after the same checks the
-// clone's own tool makes (office/shared-skills.ts).
+// clone's own tool makes (office/shared-skills.ts). One look over the skills folder serves the
+// whole answer (`survey`), after a press too: each skill's files are read at most once, and only
+// where that is needed (what one of the person's own would send, a copy from the office's hash).
 async function snapshot() {
   const store = new SkillStore(skillsDir(), "person");
-  const [skills, usage, origins] = await Promise.all([
-    store.list().catch(() => []),
-    store.usage(),
-    store.officeOrigins(),
+  const [local, office] = await Promise.all([
+    store.survey().catch(() => []),
+    loadOffice(),
   ]);
-  const office = await loadOffice();
   let shared: OfficeSkill[] = [];
   let problem: string | undefined;
   if (office)
-    shared = await officeSkills(store).catch((error) => {
+    shared = await officeSkills(store, local).catch((error) => {
       problem = problemCode(error);
       return [];
     });
@@ -41,20 +41,22 @@ async function snapshot() {
       .map((skill) => [skill.name, skill]),
   );
   const own = [];
-  for (const skill of skills) {
-    const made = usage[skill.name]?.created_by;
+  for (const skill of local) {
     const from: From =
-      made === "bundled" ? "app" : made === "office" ? "office" : "own";
+      skill.createdBy === "bundled"
+        ? "app"
+        : skill.createdBy === "office"
+          ? "office"
+          : "own";
     // What sharing it would send, or why it may not go, shown before the person confirms.
-    const packed =
-      office && from === "own" ? await store.pack(skill.name) : undefined;
+    const packed = office && from === "own" ? await skill.pack() : undefined;
     const sharedAs = mine.get(skill.name);
     own.push({
-      ...skill,
+      name: skill.name,
+      description: skill.description,
+      ...(skill.category ? { category: skill.category } : {}),
       from,
-      ...(from === "office" && origins[skill.name]
-        ? { by: origins[skill.name].byName }
-        : {}),
+      ...(skill.origin ? { by: skill.origin.byName } : {}),
       ...(packed?.ok
         ? { files: packed.files.map((file) => file.path) }
         : packed

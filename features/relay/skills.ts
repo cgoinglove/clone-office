@@ -6,8 +6,9 @@
 // before adding it, as Hermes Agent's skills hub scans a skill before installing it.
 //
 // The hash is the one a clone keeps for a skill's folder (features/minime/memory/skills.ts
-// `filesHash`): each file's path and bytes, by path, so a clone tells "as it came" from "changed
-// here" by hashing its own copy.
+// `treeHash`): each file's path and bytes, by path, so a clone tells "as it came" from "changed
+// here" by hashing its own copy. The name rule and the front matter reader are the clone's skill
+// store's too (it imports them from here; this module imports nothing from the app).
 
 import { createHash } from "node:crypto";
 
@@ -56,6 +57,7 @@ export interface SkillProblem {
   message: string;
 }
 
+/** A skill's (or a category's) name: lowercase letters, digits, '.', '_' or '-', at most 64. */
 export const isSkillName = (name: string): boolean => NAME.test(name);
 
 /** A file's path in a skill: SKILL.md, or a file under one of the four folders, never leaving it. */

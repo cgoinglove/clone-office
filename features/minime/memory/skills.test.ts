@@ -3,9 +3,10 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, test } from "node:test";
+import { skillFrontMatter } from "../../relay/skills";
 import { CURATOR, curatorDue, runCurator } from "./curator";
 import { atomicWrite } from "./files";
-import { frontMatter, SkillStore } from "./skills";
+import { SkillStore } from "./skills";
 
 const dirs: string[] = [];
 function fresh(actor?: "minime" | "review" | "person"): SkillStore {
@@ -44,7 +45,7 @@ test("a skill is created in a category, listed with it, and indexed under it", a
   const index = await store.index();
   assert.match(index, /writing: Reports, mail and documents\./);
   assert.match(index, /- daily-report: Use when writing a daily report\./);
-  assert.equal(frontMatter(skill("x", "y")).name, "x");
+  assert.equal(skillFrontMatter(skill("x", "y")).name, "x");
   assert.equal((await store.usage())["daily-report"].created_by, "minime");
 });
 

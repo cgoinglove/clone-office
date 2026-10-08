@@ -82,7 +82,8 @@
     "skill-blocked": "Esa habilidad tiene algo que nunca se comparte ni se añade: un enlace a un archivo de otro lugar, un programa, o texto que intenta dirigir a una IA o llegar a secretos.",
     "skill-name-taken-here": "Ya tienes una habilidad con ese nombre, así que no se añadió la de la oficina.",
     "skill-changed-here": "Cambiaste esta habilidad después de añadirla, así que la versión de la oficina no se puso encima de tus cambios.",
-    "skill-not-shareable": "Esa habilidad vino con la app o de un colega, así que no te toca compartirla."
+    "skill-not-shareable": "Esa habilidad vino con la app o de un colega, así que no te toca compartirla.",
+    "skill-name-invalid": "Ese no es un nombre de habilidad. Un nombre usa letras minúsculas, números, puntos, guiones o guiones bajos, y empieza por una letra o un número."
   },
   "start": {
     "title": "Empezar",

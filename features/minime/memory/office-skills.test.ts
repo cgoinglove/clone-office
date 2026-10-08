@@ -5,9 +5,11 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   statSync,
   symlinkSync,
+  utimesSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -156,7 +158,10 @@ test("a skill from the office comes in checked, as it was hashed, and follows ne
     (await store.officeOrigins())["weekly-report"].hash,
     skillHash(v1),
   );
-  assert.equal(await store.hashOf("weekly-report"), skillHash(v1));
+  const [added] = await store.survey();
+  assert.equal(added.createdBy, "office");
+  assert.equal(added.origin?.byName, "Ana");
+  assert.equal(await added.hash(), skillHash(v1));
   assert.ok(
     readdirLeftovers(store.dir).length === 0,
     "nothing left aside in the skills folder",
@@ -254,6 +259,185 @@ test("the look back after a conversation never changes a skill from the office",
     },
   ]);
   assert.match(!result.success ? result.error : "", /one their office shares/);
+});
+
+/** Where the newer version's swap leaves the old one, as `addShared` names it. */
+const asideName = (hash: string, ...at: string[]) =>
+  `.replaced-0123456789ab-${hash}+${at.join("+")}`;
+const filesOf = (dir: string) =>
+  readdirSync(dir, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) =>
+      join(entry.parentPath, entry.name)
+        .slice(dir.length + 1)
+        .split("\\")
+        .join("/"),
+    )
+    .sort();
+const ago = (path: string, ms: number) => {
+  const at = new Date(Date.now() - ms);
+  utimesSync(path, at, at);
+};
+
+test("a version set aside by a process that died before the newer one was in place goes back on the next use", async () => {
+  const dir = fresh();
+  const v1 = [
+    text("SKILL.md", md("weekly-report")),
+    text("references/format.md", "Wins, risks, next."),
+  ];
+  assert.ok((await new SkillStore(dir).addShared(shared(v1))).ok);
+  const place = join(dir, "writing", "weekly-report");
+  // The first rename happened, the second never did: the skill is gone from its place.
+  renameSync(
+    place,
+    join(dir, asideName(skillHash(v1), "writing", "weekly-report")),
+  );
+  // The newer version was half written aside; another, younger, may be a writer's still at work.
+  const stale = join(dir, ".incoming-aaaaaaaaaaaa");
+  mkdirSync(join(stale, "references"), { recursive: true });
+  writeFileSync(join(stale, "SKILL.md"), md("weekly-report", "Newer."));
+  ago(stale, 60 * 60_000);
+  const young = join(dir, ".incoming-bbbbbbbbbbbb");
+  mkdirSync(young);
+
+  const store = new SkillStore(dir);
+  assert.deepEqual(
+    (await store.list()).map((skill) => [skill.name, skill.category]),
+    [["weekly-report", "writing"]],
+  );
+  assert.deepEqual(filesOf(place), ["SKILL.md", "references/format.md"]);
+  assert.deepEqual(readdirLeftovers(dir), [".incoming-bbbbbbbbbbbb"]);
+  // It is the office's copy as it came, so the office's next version still follows it.
+  const [back] = await store.survey();
+  assert.equal(await back.hash(), back.origin?.hash);
+  const v2 = [text("SKILL.md", md("weekly-report", "Blockers first."))];
+  assert.deepEqual(await store.addShared(shared(v2)), {
+    ok: true,
+    updated: true,
+    same: false,
+  });
+});
+
+test("one set aside after its newer version was in place goes once shown to be the office's copy, and the origin follows the newer one", async () => {
+  const dir = fresh();
+  const v1 = [text("SKILL.md", md("weekly-report"))];
+  const v2 = [text("SKILL.md", md("weekly-report", "Blockers first."))];
+  assert.ok((await new SkillStore(dir).addShared(shared(v1))).ok);
+  const place = join(dir, "writing", "weekly-report");
+  // Both renames happened; the process died before the origin was written.
+  const aside = join(dir, asideName(skillHash(v1), "writing", "weekly-report"));
+  renameSync(place, aside);
+  mkdirSync(place);
+  writeFileSync(
+    join(place, "SKILL.md"),
+    md("weekly-report", "Blockers first."),
+  );
+
+  const store = new SkillStore(dir);
+  assert.equal((await store.list()).length, 1);
+  assert.ok(!existsSync(aside), "the office's old copy is cleared");
+  assert.equal(
+    (await store.officeOrigins())["weekly-report"].hash,
+    skillHash(v2),
+    "the newer one in place is the office's copy as it came",
+  );
+  const same = await store.addShared(shared(v2));
+  assert.equal(same.ok && same.same, true);
+
+  // A copy set aside after the origin was written goes too.
+  const late = join(dir, asideName(skillHash(v1), "writing", "weekly-report"));
+  mkdirSync(late);
+  writeFileSync(join(late, "SKILL.md"), md("weekly-report"));
+  await new SkillStore(dir).list();
+  assert.ok(!existsSync(late));
+});
+
+test("what cannot be shown to be the office's copy is kept, and an old one with no mark goes back at the top", async () => {
+  const dir = fresh();
+  const files = [text("SKILL.md", md("weekly-report"))];
+  assert.ok((await new SkillStore(dir).addShared(shared(files))).ok);
+  // Not the office's copy (changed after it was set aside): never removed while it is young.
+  const changed = join(
+    dir,
+    asideName(skillHash(files), "writing", "weekly-report"),
+  );
+  mkdirSync(changed);
+  writeFileSync(
+    join(changed, "SKILL.md"),
+    md("weekly-report", "Someone's edit."),
+  );
+  await new SkillStore(dir).list();
+  assert.ok(existsSync(changed));
+  rmSync(changed, { recursive: true });
+
+  // Set aside before names said where: its SKILL.md names it, and it comes back.
+  renameSync(
+    join(dir, "writing", "weekly-report"),
+    join(dir, ".replaced-0123456789ab"),
+  );
+  assert.deepEqual(
+    (await new SkillStore(dir).list()).map((skill) => [
+      skill.name,
+      skill.category,
+    ]),
+    [["weekly-report", undefined]],
+  );
+  assert.deepEqual(readdirLeftovers(dir), []);
+});
+
+test("a skill of the person's by the name an office copy had is theirs, whatever .office.json still says", async () => {
+  const dir = fresh();
+  const store = new SkillStore(dir, "person");
+  const v1 = [text("SKILL.md", md("weekly-report"))];
+  assert.ok((await store.addShared(shared(v1))).ok);
+  // Set aside: its origin goes with it.
+  await store.view("weekly-report");
+  assert.ok(
+    (await store.apply([{ action: "delete", name: "weekly-report" }])).success,
+  );
+  assert.deepEqual(Object.keys(await store.officeOrigins()), []);
+  await made(store);
+  const [own] = await store.survey();
+  assert.equal(own.createdBy, "person");
+  assert.equal(own.origin, undefined);
+  const refused = await store.addShared(shared(v1));
+  assert.equal(!refused.ok && refused.code, "skill-name-taken-here");
+
+  // An origin left behind (the folder removed by hand, a skill of theirs made by that name) counts
+  // for nothing, and the next skill added from the office drops it.
+  writeFileSync(
+    join(dir, ".office.json"),
+    JSON.stringify({
+      "weekly-report": {
+        hash: "0".repeat(64),
+        by: "m-ana",
+        byName: "Ana",
+        added: "",
+      },
+    }),
+  );
+  assert.equal((await store.survey())[0].origin, undefined);
+  const again = await store.addShared(shared(v1));
+  assert.equal(!again.ok && again.code, "skill-name-taken-here");
+  assert.ok(
+    (
+      await store.addShared(
+        shared([text("SKILL.md", md("client-reply"))], "client-reply"),
+      )
+    ).ok,
+  );
+  assert.deepEqual(Object.keys(await store.officeOrigins()), ["client-reply"]);
+});
+
+test("a survey reads each skill's files once, and only when asked", async () => {
+  const store = new SkillStore(fresh());
+  await made(store);
+  const [skill] = await store.survey();
+  assert.equal(skill.createdBy, "minime");
+  const [packed, again] = await Promise.all([skill.pack(), skill.pack()]);
+  assert.equal(packed, again, "packed once");
+  assert.ok(packed.ok);
+  assert.equal(await skill.hash(), await skill.hash());
 });
 
 function readdirLeftovers(dir: string): string[] {
