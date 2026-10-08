@@ -66,10 +66,10 @@ says what and what to do.
 - **Works for you.** Ask it anything you'd ask a teammate at the next desk. It searches your past
   AI conversations, works in Notion, Linear, Jira, GitHub, Gmail, Calendar, Drive, Docs and Sheets
   through each service's own connector, and asks your Claude Code or Codex conversations to do
-  work, every change shown to you first. It comes with skills for a morning brief, a day wrap, a
-  weekly report,
-  a meeting follow-up, asking a colleague and writing as you write, and each becomes yours as you
-  correct it. Share one with your office and your teammates' clones add it, checked first, so a
+  work, every change shown to you first. It comes with skills that do work: handing a task to
+  your Claude Code or Codex conversation, finding where a project stands, finding how you did
+  something before, working in your connected services, asking a colleague and writing as you
+  write, and each becomes yours as you correct it. Share one with your office and your teammates' clones add it, checked first, so a
   team that works the same way teaches it once.
 - **Stands in for you with your team.** Your card says what people can ask you for; for each kind
   you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about a

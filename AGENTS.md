@@ -214,10 +214,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   aside long-unused skills weekly; `notes.ts` keeps one page per person, piece of work or topic
   under `notes/`, with an index and log written by code; `mcp-server.ts` serves all of it as
   tools. `skills/` (top level) holds the skills the app ships, laid out as the store is and shipped
-  in the package; `SkillStore.syncBundled` brings them in before a session first lists skills, after
-  Hermes Agent's skills_sync (`.bundled.json` keeps each one's origin hash: a later version replaces
-  one only while it is as it came, one set aside is not brought back, a skill of the person's by the
-  same name is never touched); they are `created_by: "bundled"`, which the review may adapt but not
+  in the package: each for real work with the clone's own tools (handing work to a session, where
+  a project stands, how something was done before, working in connected services, asking a
+  colleague, writing as the person writes), never a report template; `SkillStore.syncBundled`
+  brings them in before a session first lists skills, after Hermes Agent's skills_sync
+  (`.bundled.json` keeps each one's origin hash: a later version replaces one only while it is as
+  it came, one set aside is not brought back, a skill of the person's by the same name is never
+  touched, and one the app no longer ships is set aside while it is as it came and becomes the
+  person's once adapted); they are `created_by: "bundled"`, which the review may adapt but not
   set aside and the curator leaves, and start over does not count as the person's until changed.
   A skill also travels within the office (`office/shared-skills.ts`): `SkillStore.pack` gathers
   SKILL.md and the four folders as they would go (no link to anything elsewhere, no program, the

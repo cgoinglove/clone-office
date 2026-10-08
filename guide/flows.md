@@ -53,10 +53,11 @@ talking there ("tell me more about the second one").
 
 ## Ready-made ones
 
-With no flows yet, **Flows** offers two to start from: **Weekday morning catch-up** (평일 아침
-브리핑: today's events when their calendar is connected, what waits for their answer in the
-office, what came back from their requests, what they left open in their AI conversations since
-yesterday) and **Friday wrap-up** (금요일 한 주 정리).
+With no flows yet, **Flows** offers two to start from: **Costs and dates come to me first**
+(비용·일정 얘기는 나에게 먼저: a colleague's request about costs, prices or promising a date is shown
+to them before the answer goes) and **Keep project notes current** (진행 중인 일 노트를 최신으로:
+every weekday evening, the day's AI conversations and commits bring the project pages up to date,
+and nothing is sent when nothing changed).
 Either one is asked of the clone in the conversation, so they see the card and can change it
 before it is made. When the clone offers something they usually do around this time, **Every
 time** (매번 하기) asks it to make that a flow.

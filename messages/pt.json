@@ -729,10 +729,10 @@
     "removeSure": "Remover esta rotina?",
     "removeYes": "Remover",
     "suggest": {
-      "morning": "Resumo da manhã, de segunda a sexta",
-      "morningAsk": "Crie uma rotina: de segunda a sexta às 9, me atualize em poucas linhas: os eventos de hoje, se minha agenda estiver conectada, o que está esperando minha resposta no escritório, o que voltou dos pedidos que enviei e o que deixei em aberto nas minhas conversas com IA desde ontem.",
-      "week": "Fechamento de sexta",
-      "weekAsk": "Crie uma rotina: toda sexta às 17h, liste em poucas linhas o que terminei nesta semana e o que ainda está em aberto, a partir das minhas conversas com IA e dos meus pedidos no escritório."
+      "topic": "Custos e prazos, primeiro para mim",
+      "topicAsk": "Crie um fluxo: quando o pedido de um colega for sobre custos, preços ou prometer um prazo, me mostre sua resposta antes de enviar.",
+      "notes": "Notas dos projetos em dia",
+      "notesAsk": "Crie um fluxo: todo dia útil às 18h, leia as conversas de IA e os commits de hoje e atualize minhas notas de projetos. Não me envie nada se nada mudou."
     },
     "onRequest": "Seguida quando chega um pedido assim",
     "tooLong": "Longo demais para salvar: o nome pode ter 80 caracteres, e as instruções, 4.000."
@@ -970,10 +970,10 @@
     "tryAsking": "Experimente pedir",
     "starter": {
       "know": "O que você sabe sobre como eu trabalho?",
-      "brief": "Me dê meu resumo da manhã",
-      "today": "Resuma no que trabalhei hoje",
-      "week": "Rascunhe o relatório da semana",
-      "flow": "Me dê um resumo curto de segunda a sexta às 9"
+      "status": "Como estão meus projetos?",
+      "find": "Encontre como resolvi algo parecido antes",
+      "handoff": "Passe uma tarefa para minha conversa do Claude Code",
+      "flow": "Se um colega perguntar sobre custos ou prazos, me mostre antes"
     },
     "routineHint": "Você costuma fazer isso por volta desta hora",
     "loading": "Carregando…",
@@ -1367,10 +1367,10 @@
       "suggested": "O que posso fazer por você agora",
       "tryAsking": "Experimente pedir",
       "starter": {
-        "today": "Resuma no que trabalhei ontem",
+        "status": "Como estão meus projetos?",
         "help": "O que você pode fazer por mim aqui?",
         "know": "O que você sabe sobre como eu trabalho?",
-        "flow": "De segunda a sexta às 9, me conte o que precisa de mim"
+        "flow": "Se um colega perguntar sobre custos ou prazos, me mostre antes"
       },
       "steps": {
         "title": "Primeiros passos",
@@ -1501,8 +1501,8 @@
       "try": {
         "yesterday": "O que eu fiz ontem?",
         "waiting": "O que está esperando por mim?",
-        "brief": "Me dê meu resumo da manhã",
-        "week": "Rascunhe o relatório da semana"
+        "status": "Como estão meus projetos?",
+        "find": "Encontre como resolvi algo parecido antes"
       },
       "decide": "Decida agora",
       "caughtUp": "Nada esperando por você. Seu clone cuida do resto.",

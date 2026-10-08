@@ -70,7 +70,7 @@ front for about a minute), what waits on them comes to their messenger:
 - **Questions kept for later**: ones they did not answer in time come together at 10, 14 and 17
   o'clock, once each. While their status says they are in a meeting, away or off, colleagues'
   questions wait for those moments instead of coming at once.
-- **Finished work nobody has seen**: a flow's answer (the morning brief), or a colleague's answer
+- **Finished work nobody has seen**: a flow's answer, or a colleague's answer
   to a request they sent from the page.
 
 An answer to something they asked from the phone comes back to the phone even while the page is

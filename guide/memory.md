@@ -7,10 +7,14 @@ The clone keeps four small things, all as plain text files on this computer:
 - **Their work**: what surrounds it: the kinds of work they do again and again, the tools and
   services they work in, where their work lives, the conventions they follow and the team around
   them. Also read every time, also short (about 2,200 characters).
-- **Skills**: how they want one kind of task done, such as a weekly report or a reply to a
-  client, with what they corrected. Opened only when that kind of task comes up. A few come with
-  the app, so there is something to ask for on the first day: a morning brief, a day wrap, a weekly
-  report, asking a colleague, a meeting follow-up, and writing a message as they write. The clone
+- **Skills**: how they want one kind of task done, such as handing work to a session or a reply
+  to a client, with what they corrected. Opened only when that kind of task comes up. A few come
+  with the app, each for real work with what the clone can use: handing a task to their own Claude
+  Code or Codex conversation (**hand-work-to-a-session**), finding where a project stands
+  (**project-status**), finding how something was done or decided before
+  (**find-how-it-was-done**), working in their connected services (**work-in-connected-services**),
+  asking a colleague, and writing a message as they write. One the app stops shipping is set aside
+  while it is as it came, and stays theirs once it was changed. The clone
   changes them as they correct it, so each becomes theirs; one they changed is never replaced by a
   later version of the app, and one set aside is not brought back. They are listed under **Your
   clone** › What it knows (**Skills**, 스킬); in an office, they can share one of theirs with their

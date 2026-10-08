@@ -729,10 +729,10 @@
     "removeSure": "Remove this flow?",
     "removeYes": "Remove",
     "suggest": {
-      "morning": "Weekday morning catch-up",
-      "morningAsk": "Make a flow: every weekday at 9, catch me up in a few lines: today's events if my calendar is connected, what is waiting for my answer in the office, what came back from the requests I sent, and what I left open in my AI conversations since yesterday.",
-      "week": "Friday wrap-up",
-      "weekAsk": "Make a flow: every Friday at 5 pm, list in a few lines what I finished this week and what is still open, from my AI conversations and my office requests."
+      "topic": "Costs and dates come to me first",
+      "topicAsk": "Make a flow: when a colleague's request is about costs, prices or promising a date, show me your answer before it goes.",
+      "notes": "Keep project notes current",
+      "notesAsk": "Make a flow: every weekday at 6 pm, read today's AI conversations and commits and bring my project notes up to date. Send me nothing when nothing changed."
     },
     "onRequest": "Followed when such a request comes in",
     "tooLong": "Too long to save: a name can be 80 characters, the request 4,000."
@@ -970,10 +970,10 @@
     "tryAsking": "Try asking",
     "starter": {
       "know": "What do you know about how I work?",
-      "brief": "Give me my morning brief",
-      "today": "Sum up what I worked on today",
-      "week": "Draft this week's report",
-      "flow": "Give me a short briefing every weekday at 9"
+      "status": "Where do my projects stand?",
+      "find": "Find how I solved something like this before",
+      "handoff": "Hand a task to my Claude Code conversation",
+      "flow": "When a colleague asks about costs or dates, show me first"
     },
     "routineHint": "You often do this around now",
     "loading": "Loading…",
@@ -1367,10 +1367,10 @@
       "suggested": "Things I can do for you now",
       "tryAsking": "Try asking",
       "starter": {
-        "today": "Sum up what I worked on yesterday",
+        "status": "Where do my projects stand?",
         "help": "What can you do for me here?",
         "know": "What do you know about how I work?",
-        "flow": "Every weekday at 9am, brief me on what needs me"
+        "flow": "When a colleague asks about costs or dates, show me first"
       },
       "steps": {
         "title": "Getting started",
@@ -1501,8 +1501,8 @@
       "try": {
         "yesterday": "What did I do yesterday?",
         "waiting": "What is waiting on me?",
-        "brief": "Give me my morning brief",
-        "week": "Draft this week's report"
+        "status": "Where do my projects stand?",
+        "find": "Find how I solved something like this before"
       },
       "decide": "Decide now",
       "caughtUp": "Nothing waits on you. Your clone is handling the rest.",

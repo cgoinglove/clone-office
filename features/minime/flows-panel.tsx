@@ -25,7 +25,7 @@ interface FlowView {
 
 const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
-const SUGGESTIONS = ["morning", "week"] as const;
+const SUGGESTIONS = ["topic", "notes"] as const;
 
 export function FlowsPanel({
   onOpenChat,

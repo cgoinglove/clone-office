@@ -228,9 +228,9 @@ export function HomeScreen() {
               : [
                   t("try.yesterday"),
                   t("try.waiting"),
-                  // Two of the skills it ships with (skills/productivity).
-                  t("try.brief"),
-                  t("try.week"),
+                  // Two of the skills it ships with (skills/work).
+                  t("try.status"),
+                  t("try.find"),
                 ]
           }
           onSend={(text) =>

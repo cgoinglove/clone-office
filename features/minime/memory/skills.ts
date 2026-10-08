@@ -417,7 +417,9 @@ export class SkillStore {
    * Bring in the skills the app ships (`source`, laid out as the store is), as Hermes Agent's
    * skills_sync does: each is copied in once and its origin recorded in `.bundled.json`; a later
    * version replaces it only while it is as it came (not adapted since); one the person set aside
-   * or removed is not brought back; a skill of theirs by the same name is never touched.
+   * or removed is not brought back; a skill of theirs by the same name is never touched. One the
+   * app no longer ships is set aside to the archive while it is as it came (never deleted), and
+   * stays as the person's own once it was adapted.
    */
   async syncBundled(source: string): Promise<string[]> {
     const shipped = await new SkillStore(source).scan();
@@ -467,12 +469,27 @@ export class SkillStore {
         manifest[skill.name] = origin;
         changed.push(skill.name);
       }
+      const shippedNames = new Set(shipped.map((skill) => skill.name));
+      const adapted: string[] = [];
+      for (const [name, origin] of Object.entries(manifest)) {
+        if (shippedNames.has(name)) continue;
+        delete manifest[name];
+        changed.push(name);
+        const here = await this.find(name);
+        if (!here) continue;
+        if ((await treeHash(here.path)) === origin)
+          await this.archiveLocked(here);
+        else adapted.push(name);
+      }
       if (!changed.length) return [];
       await atomicWrite(manifestPath, JSON.stringify(manifest, null, 2));
-      if (added.length)
+      if (added.length || adapted.length)
         await this.updateUsage((usage) => {
           for (const name of added)
             usage[name] = usage[name] ?? emptyRecord("bundled");
+          for (const name of adapted)
+            if (usage[name]?.created_by === "bundled")
+              usage[name] = { ...usage[name], created_by: "person" };
         });
       return changed;
     });

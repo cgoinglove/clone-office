@@ -24,7 +24,7 @@ export function Welcome() {
   const app = useApp();
   const { chat } = app;
   const starters = [
-    t("starter.today"),
+    t("starter.status"),
     t("starter.help"),
     t("starter.know"),
     t("starter.flow"),

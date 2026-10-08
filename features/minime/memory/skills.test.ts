@@ -299,6 +299,45 @@ test("a skill named like a category is refused, and a failed batch never takes t
   assert.equal(inside.success, false, "a skill is never made inside another");
 });
 
+test("a skill the app stops shipping is set aside while untouched, and stays the person's once adapted", async () => {
+  const shipped = fresh();
+  const write = (name: string, rule: string) =>
+    atomicWrite(join(shipped.dir, "work", name, "SKILL.md"), skill(name, rule));
+  await write("brief", "Short.");
+  await write("wrap", "Outcomes first.");
+  await write("status", "Dated.");
+  const store = fresh();
+  await store.syncBundled(shipped.dir);
+  const review = new SkillStore(store.dir, "review");
+  await review.view("wrap");
+  await review.apply([
+    {
+      action: "patch",
+      name: "wrap",
+      old_string: "Outcomes first.",
+      new_string: "Blockers first.",
+    },
+  ]);
+
+  rmSync(join(shipped.dir, "work", "brief"), { recursive: true });
+  rmSync(join(shipped.dir, "work", "wrap"), { recursive: true });
+  assert.deepEqual((await store.syncBundled(shipped.dir)).sort(), [
+    "brief",
+    "wrap",
+  ]);
+  assert.deepEqual(
+    (await store.list()).map((s) => s.name).sort(),
+    ["status", "wrap"],
+    "the untouched one is gone from the list, the adapted one stays",
+  );
+  assert.ok(
+    existsSync(join(store.dir, ".archive", "brief", "SKILL.md")),
+    "set aside, never deleted",
+  );
+  assert.equal((await store.usage()).wrap.created_by, "person");
+  assert.deepEqual(await store.syncBundled(shipped.dir), [], "settled");
+});
+
 test("the skills the app ships come in once, follow new versions while untouched, and never come back once removed", async () => {
   const shipped = fresh();
   const write = (name: string, rule: string) =>
