@@ -116,7 +116,6 @@ jobs:
         env:
           VERSION: ${{ steps.what.outputs.version }}
           TAG: ${{ steps.what.outputs.tag }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # A `latest` run by hand publishes what no Release PR tagged (the first release): it gets its
       # tag and its GitHub Release, the notes being that version's CHANGELOG section, so
