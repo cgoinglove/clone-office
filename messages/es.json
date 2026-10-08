@@ -7,7 +7,9 @@
     "copied": "Copiado"
   },
   "language": {
-    "label": "Idioma"
+    "label": "Idioma",
+    "browser": "Seguir el navegador",
+    "browserNote": "Ahora: {name} · si no, English"
   },
   "errors": {
     "generic": "Algo salió mal: {detail}",
@@ -87,25 +89,37 @@
   },
   "start": {
     "title": "Empezar",
-    "stepOf": "Paso {at} de {count}",
+    "steps": {
+      "brain": "Modelo de IA",
+      "learn": "Aprender",
+      "you": "Tú y tu equipo",
+      "ready": "Listo"
+    },
     "next": "Continuar",
     "back": "Atrás",
     "later": "Omitir este paso",
     "hello": {
-      "title": "Tu clon les responde primero a tus colegas.",
-      "body": "Aprende cómo trabajas de tus propias conversaciones con IA, responde lo que un colega te pregunta como lo harías tú y solo te trae lo que te toca decidir. Sin equipo, también hace tu trabajo de todos los días como un asistente.",
+      "title": "Otro tú,\nque trabaja como tú.",
+      "body": "Cada persona del equipo envía su propio clon. Los clones se preguntan y se responden entre sí, y a las personas solo llega lo que deben decidir. Si lo usas solo, trabaja como un asistente.",
       "go": "Empezar",
-      "fine": "3 minutos · funciona en esta computadora · puedes omitir cualquier paso",
-      "scene": {
-        "title": "Así se ve",
-        "ask": "Ben pregunta",
-        "askText": "¿Cambiaron los valores del estado de pago?",
-        "clone": "Tu clon responde con tus registros",
-        "cloneText": "Sí: 'paid' ahora es 'succeeded'. Sale de tus conversaciones de ayer sobre pagos.",
-        "you": "Solo esto te llega a ti",
-        "youText": "¿Puedes entregarlo el jueves?",
-        "yes": "Sí",
-        "no": "Todavía no"
+      "fine": "3 minutos · en tu computadora · puedes omitir",
+      "points": {
+        "learn": {
+          "title": "Aprende",
+          "body": "De tus chats con IA, commits y notas: de qué te encargas y dónde te detienes."
+        },
+        "act": {
+          "title": "Te sustituye",
+          "body": "Hace tu trabajo como un asistente y responde a tus compañeros como tú lo harías."
+        },
+        "ask": {
+          "title": "Te pregunta",
+          "body": "Solo te trae las promesas, decisiones y revisiones que te necesitan."
+        }
+      },
+      "uses": {
+        "title": "Sigue con la IA que ya usas",
+        "note": "Sin cuenta nueva: tu plan o tu clave"
       }
     },
     "demo": {
@@ -136,38 +150,55 @@
         "4": "El clon de Sam trae algo que solo tú puedes decidir.",
         "5": "Eso sí te llega a ti: una pregunta, un toque.",
         "6": "Y la respuesta ya va en camino."
-      }
+      },
+      "example": "Escena de ejemplo · nadie real"
     },
     "brain": {
       "title": "¿Qué modelo de IA debería usar?",
-      "body": "Necesita un modelo de IA: tu suscripción de ChatGPT o Claude, una clave de uno de estos servicios o un modelo que corra en esta computadora. Elige uno; puedes cambiarlo cuando quieras.",
-      "pick": "Elige uno y presiona “Usar este”.",
+      "body": "La IA con la que piensa tu clon: tu suscripción, una clave de API o un modelo en esta computadora. Puedes cambiarla cuando quieras.",
       "probing": "Comprobando que responda",
-      "anyway": "Seguir de todos modos"
+      "anyway": "Seguir de todos modos",
+      "answered": "Respondió",
+      "answeredIn": "{model} · en {seconds} s",
+      "safe": "Los inicios de sesión y las claves se quedan en esta computadora.",
+      "guide": {
+        "title": "¿Cuál elijo?",
+        "plan": {
+          "title": "Suscripción",
+          "body": "Tu plan de ChatGPT o Claude: responde dentro de lo que ya pagas."
+        },
+        "key": {
+          "title": "Clave de API",
+          "body": "El servicio cobra a tu clave lo que use."
+        },
+        "local": {
+          "title": "Esta computadora",
+          "body": "Ollama o LM Studio: gratis, y nada sale de la computadora."
+        }
+      }
     },
     "learn": {
-      "title": "Tu clon aprende cómo trabajas",
-      "body": "Para responder a tus colegas como lo harías tú, necesita saber cómo trabajas. Lee tus conversaciones con tus herramientas de IA en esta computadora, guarda unas pocas líneas que siguen siendo ciertas y luego te muestra qué le respondería a un colega.",
+      "title": "Aprende cómo trabajas",
+      "body": "Lee las conversaciones con IA de esta computadora y guarda solo unas líneas que seguirán siendo ciertas dentro de meses. Luego te muestra cómo respondería a un compañero.",
       "none": "No hay conversaciones con IA para leer en esta computadora. Mejor trae lo que tu IA de siempre recuerda de ti:",
       "read": "Leer y aprender",
       "reading": "Puedes seguir; continúa leyendo.",
-      "done": "Esto es lo que entendió",
-      "doneHint": "Estas líneas quedan guardadas como lo que recuerda de ti.",
       "skip": "Ahora no",
-      "leaveOut": "Excluir carpetas ({count})",
       "understood": "Lo que entendí de ti",
       "example": "Si un colega pregunta",
       "exampleAnswer": "Yo respondería por ti",
-      "editLater": "Cambia o quita cualquier línea más tarde en Tu clon › Lo que sabe.",
-      "about": "Tu trabajo, según lo que leí",
-      "aboutRole": "Qué haces",
-      "aboutOwns": "De qué te encargas",
-      "aboutTools": "Herramientas que usas",
-      "aboutNext": "Puedes cambiar esto en el siguiente paso."
+      "doneTitle": "Esto es lo que entendí",
+      "saved": "Guardado en la memoria",
+      "folders": "Carpetas que no leerá",
+      "foldersRecent": "{count, plural, one {# carpeta reciente} other {# carpetas recientes}}",
+      "foldersNone": "Ninguna · las lee todas",
+      "foldersSome": "{count} fuera",
+      "foldersSearch": "Buscar una carpeta",
+      "doneBody": "Guardé {count, plural, one {# línea} other {# líneas}} que deberían durar. Cambia o quita cualquier línea más tarde en Tu clon › Lo que sabe."
     },
     "you": {
       "title": "Tú y tu equipo",
-      "body": "Revisa lo que tu clon leyó sobre tu trabajo y di si hay un equipo al que unirte.",
+      "body": "Revisa lo que tu clon leyó de tu trabajo. Los clones de tus compañeros eligen a quién preguntar según de qué te encargas.",
       "name": "Tu nombre",
       "role": "Qué haces, en una línea",
       "rolePlaceholder": "p. ej., Diseño de producto",
@@ -183,11 +214,13 @@
       "openGo": "Abrir y continuar",
       "notLink": "Eso no parece un enlace de invitación. Copia el enlace completo que te envió tu colega.",
       "invited": "{from} te invitó a su oficina: tu clon se une cuando continúes.",
-      "invitedNobody": "Te invitaron a una oficina: tu clon se une cuando continúes."
+      "invitedNobody": "Te invitaron a una oficina: tu clon se une cuando continúes.",
+      "fromRecords": "De tus registros · cámbialo si quieres",
+      "toolsMore": "Añadir…"
     },
     "ready": {
       "title": "Tu clon está listo",
-      "body": "Inicio te muestra lo que te espera, las solicitudes en camino y lo que tu clon hizo por ti, junto con tus primeros pasos.",
+      "body": "Así te ven tus compañeros y sus clones. Ahora pídele lo que necesites, como a un compañero.",
       "brain": "Modelo de IA",
       "claudeCode": "Claude Code",
       "learned": "Te conoce",
@@ -198,8 +231,11 @@
       "alone": "Por ahora, solo tú",
       "joined": "Te uniste a tu equipo",
       "opened": "Abierta en esta computadora",
-      "try": "Dile lo que necesitas, como se lo dirías a un colega. Te pregunta antes de cualquier cosa que no hayas permitido.",
-      "go": "Abrir Inicio"
+      "go": "Abrir Inicio",
+      "card": "Tu tarjeta",
+      "cardNote": "Como la ve la oficina",
+      "change": "Cambiar",
+      "safe": "Te pregunta antes de hacer algo que no hayas permitido."
     }
   },
   "firstRun": {
@@ -208,19 +244,18 @@
     "plan": {
       "read": {
         "title": "Qué leo",
-        "body": "Lo que les pediste a tus herramientas de IA en los últimos 14 días, tus archivos de instrucciones y memoria de IA, los tipos de documentos y apps que usas, y tus commits si programas. De los documentos solo veo el tipo, nunca el contenido ni los nombres."
+        "body": "Conversaciones con IA de los últimos 14 días, archivos de instrucciones y memoria de IA, tus commits. De los documentos, solo el tipo."
       },
       "keep": {
         "title": "Qué guardo",
-        "body": "Solo lo que seguirá siendo cierto dentro de meses —cómo trabajas, decides y hablas— en cinco líneas o menos."
+        "body": "Cómo trabajas, cómo decides, cómo lo dices. Cinco líneas como mucho."
       },
       "skip": {
         "title": "Qué no guardo",
-        "body": "Lo que cambia, como proyectos, horarios y archivos. Lo busco cuando lo necesito."
+        "body": "Proyectos, agendas, archivos: los busca cuando hace falta."
       },
       "time": {
-        "title": "Cuánto tarda",
-        "body": "Unos 30 segundos. Sigue aunque cierres esta ventana."
+        "body": "Unos 30 segundos. Sigue leyendo aunque continúes."
       }
     },
     "folders": "Estas son las carpetas en las que trabajaste últimamente. Excluye las que no deba leer.",
@@ -722,7 +757,15 @@
       "mid": "mediano",
       "large": "grande"
     },
-    "suggested": "Recomendado"
+    "suggested": "Recomendado",
+    "pick": "Elige un modelo",
+    "modelsAfter": "Sus modelos aparecen aquí cuando esté conectado.",
+    "offer": {
+      "claudeCode": "Claude Code está en esta computadora",
+      "claudeCodeNote": "Con tu suscripción de Claude · Claude Sonnet",
+      "chatgpt": "Ya iniciaste sesión en ChatGPT",
+      "chatgptNote": "Con tu plan de ChatGPT"
+    }
   },
   "messenger": {
     "title": "En tu teléfono",

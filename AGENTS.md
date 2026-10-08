@@ -113,10 +113,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   kind that is stored or sent to colleagues is a code, so each reads it in their own language.
   The clone's language is separate: the one picked, else the browser's, whatever it is.
 - The front door (`app/page.tsx`) sends someone new to the first steps (`app/start`,
-  `features/minime/start/onboarding.tsx`, after Thursday's first run: what a clone is, as one scene
-  (a colleague asks, the clone answers from its person's records, only their call comes to them),
-  beside the office playing the app's loop with nobody real in it (`start/demo.ts`, data the office
-  draws as any day), then its brain, the first reading with the folders left out (it ends on what
+  `features/minime/start/onboarding.tsx`, after Thursday's first run: what a clone is (one more of
+  you, one each on a team; it learns, stands in, asks; it keeps to the AI already in use), beside
+  the office, framed, playing the app's loop with nobody real in it (`start/demo.ts`, data the
+  office draws as any day); each step in one frame (the name and the language, `language-switch.tsx`,
+  on top, the steps named beneath, Back and the step's button on a bar at the bottom), what is
+  picked in a popover at its field so no step grows; then its brain (`BrainPicker`, asked one word
+  as soon as it is picked), the first reading with the folders left out (it ends on what
   it understood and what it would answer a colleague, `learn.ts` `example`), who they are and their
   team (`server/profile.ts`, `settings.json` `profile`: name, what they do, what they look after
   and the tools they work in, filled in from what the reading saw (`learn.ts` `about`) for them to
@@ -252,7 +255,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   from the cache, which Settings › AI model shows as a share.
   The page's part is `features/minime/brain-panel.tsx` (vendor marks, ways, models with one
   suggested and picked to start with; Claude Code's own Haiku, Sonnet or Opus, kept as the
-  choice's `model`) with the route `app/api/me/brain`.
+  choice's `model`; `useBrainChoice` behind both Settings' `BrainChooser` and the first steps'
+  `BrainPicker`, one field opening on vendors and what the one in hand offers, after Thursday's
+  model picker) with the route `app/api/me/brain`.
   `session.ts` runs a session on the person's own Claude Code
   with those tools (the brain is a replaceable process: everything else talks to it only through
   `runSession`); `review.ts` looks back over a finished session and keeps what it taught;

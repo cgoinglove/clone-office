@@ -22,6 +22,18 @@ export function pickLanguage(locale: string): void {
   document.cookie = `${LOCALE_COOKIE}=${encodeURIComponent(locale)}; path=/; max-age=31536000; samesite=lax`;
 }
 
+/** Forget the language picked, so the browser's languages decide again (`pickLocale`). */
+export function followBrowserLanguage(): void {
+  document.cookie = `${LOCALE_COOKIE}=; path=/; max-age=0; samesite=lax`;
+}
+
+/** Whether the person picked a language for the screen, rather than following their browser's. */
+export function languagePicked(): boolean {
+  return document.cookie
+    .split("; ")
+    .some((cookie) => cookie.startsWith(`${LOCALE_COOKIE}=`));
+}
+
 type ErrorKey = Parameters<ReturnType<typeof useTranslations<"errors">>>[0];
 
 /**

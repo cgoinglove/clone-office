@@ -6,6 +6,13 @@ same: the same memory, skills, notes and conversations, the same cards before an
 not allowed, the same folders kept out. A vendor already on this computer is marked **On this
 computer** (**Found here**, 이 컴퓨터에 있음).
 
+In the first steps it is one field (**Pick a model**, 모델 고르기) that opens on two columns: the
+vendors, and what the one in hand offers, its ways in, what a way needs first (a sign-in or a key),
+then its models; pressing a model picks it. What this computer already has is offered under the
+field, one press away (**Claude Code is on this computer**, 이 컴퓨터에 Claude Code가 있어요). The
+model picked is asked one word at once, and the step says it answered (**It answered**, 답했어요) or
+what to do when it did not.
+
 - **OpenAI**
   - **My ChatGPT plan** (내 ChatGPT 요금제): **Sign in with ChatGPT** (ChatGPT로 로그인) opens
     OpenAI's sign-in in a new tab; they approve, and the clone thinks within their plan's

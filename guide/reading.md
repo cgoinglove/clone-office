@@ -15,10 +15,11 @@ again** (다시 읽기) reads only what is new or changed since the last time.
 
 ## Leaving something out
 
-Before it reads, the first steps list the folders they worked in lately, from all their AI tools
-(**Leave folders out**, 읽지 않을 폴더 고르기); **Leave out** (빼기) keeps a folder out of everything the clone reads and
-searches, from then on. Folders it leaves out are shown struck through, with **Left out** (뺐어요)
-to bring them back.
+Before it reads, the first steps have one field for it (**Folders to leave out**, 읽지 않을 폴더):
+it opens on the folders they worked in lately, from all their AI tools, each with how many
+conversations it holds; ticking one keeps it out of everything the clone reads and searches, from
+then on, and unticking brings it back. A folder's name or path typed at the bottom leaves out any
+other.
 
 Later, **Folders left out** (읽지 않는 폴더) under Settings › Permissions shows the same list at any
 time, and they can type any other folder's name or path to leave it out. What the clone had

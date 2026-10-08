@@ -2030,6 +2030,14 @@
 [data-side="open"] .of-wrap.of-full .composer {
   display: none;
 }
+/* The office playing its example beside the first steps: framed, nobody to drive it, so no views
+   or zoom, and its floor sign under the frame's own line saying it is an example. */
+.of-wrap.of-full.of-demo .hud.bl {
+  display: none;
+}
+.of-wrap.of-full.of-demo .hud.tl {
+  top: 44px;
+}
 /* The office as one screen of the app, under the screen's own heading: no bar above to keep
    clear of. */
 .of-wrap.of-full.of-pane .hud.tl {

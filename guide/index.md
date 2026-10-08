@@ -91,18 +91,23 @@ records), **Bring in a colleague** (동료 부르기), **Choose what colleagues 
 
 ## The first time
 
-Opened the first time, the app shows what a clone does in one scene (a colleague asks, the clone
-answers from their records, and only the call that is theirs comes to them) beside the office
-playing it out, and **Get started** (시작하기). Four steps follow: what it thinks with
-(`brain.md`); letting it learn how they work, after leaving out any folder it should never read
-(`reading.md`, `memory.md`): when it has read, it shows **What I understood about you** (제가 이해한
-내용), the lines it kept, **Your work, as I read it** (기록으로 본 내 일: what they do, what they
-look after, the tools they work in), and, under **If a colleague asks** (동료가 이렇게 물으면), what
-it would answer a colleague in their place (with no AI records on the computer, it simply learns as
-they work); who they are (name, and their work as it read it, to correct) and whether a team is in it (`office.md`; started from an invite, it says
-who invited them and joins that office); then Home. **Skip this step** (이 단계 건너뛰기) at the
-bottom passes over the step on screen only. The screen's language is at the top right of the first
-steps, and under Settings › General.
+Opened the first time, the app says what a clone is (**One more you, working the way you do.**,
+나처럼 일하는 나를 하나 더.): everyone on a team sends a clone of their own, it learns, stands in and
+asks them only what is theirs, and it keeps to the AI they already use. Beside it, the office plays
+the loop out as an example with nobody real in it. **Get started** (시작하기) leads to four steps,
+named in a bar at the top: what it thinks with, picked from one field that opens on the vendors and
+what each offers, and checked to answer at once (`brain.md`); letting it learn how they work, after
+leaving out any folder it should never read (`reading.md`, `memory.md`): when it has read, it shows
+**What I understood about you** (제가 이해한 내용), the lines it kept, and, under **If a colleague
+asks** (동료가 이렇게 물으면), what it would answer a colleague in their place (with no AI records
+on the computer, it simply learns as they work); who they are (name, what they do, what they look
+after and the tools they work in, filled in from what it read for them to correct) and whether a
+team is in it (`office.md`; started from an invite, it says who invited them and joins that office);
+then their card as colleagues will see it, with **Change** (바꾸기) on what can still be changed, and
+Home. **Back** (이전) is at the bottom left; **Skip this step** (이 단계 건너뛰기) beside the step's
+own button passes over the step on screen only. The screen's language is one button at the top
+right of the first steps (**Follow the browser**, 브라우저 언어 따르기, until they pick one), and
+under Settings › General.
 
 ## Installing
 
