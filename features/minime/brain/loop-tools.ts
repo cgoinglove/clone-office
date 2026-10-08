@@ -486,9 +486,164 @@ export async function guarded(
   return run();
 }
 
+interface Service {
+  server: string;
+  client: Client;
+  tools: Awaited<ReturnType<Client["listTools"]>>["tools"];
+}
+
+/** The most tool definitions one search hands back: a service's schemas are large. */
+export const SEARCH_SCHEMAS = 8;
+
+/**
+ * A connected service's tools are reached in two steps instead of loading every schema into every
+ * step, as Thursday reaches its MCP servers (and Claude Code defers them): the tools are named in
+ * `tool_search`'s description, `tool_search` hands back the definitions asked for by name, and
+ * `tool_call` runs one, under the same rules as if it were called by its own name.
+ */
+function servicePair(
+  services: Service[],
+  options: {
+    guard: Guard;
+    onResult?: (
+      tool: string,
+      input: Record<string, unknown>,
+      text: string,
+    ) => void;
+  },
+): ToolSet {
+  const find = (server: string) =>
+    services.find((entry) => entry.server === server.trim());
+  // On a miss, say what exists, so the model does not try again with a synonym.
+  const whatExists = (server: string) => {
+    const service = find(server);
+    return service
+      ? `Tools on "${service.server}": ${service.tools.map((tool) => tool.name).join(", ")}.`
+      : `There is no service called "${server}". Connected: ${services.map((entry) => entry.server).join(", ")}.`;
+  };
+  const listing = services
+    .map(
+      (entry) =>
+        `${entry.server}: ${entry.tools.map((tool) => tool.name).join(", ")}`,
+    )
+    .join("\n");
+  return {
+    tool_search: dynamicTool({
+      description: `Hand back the description and exact input schema of tools on a service your person connected, so one can be run with tool_call. Ask only for the ones you may call; at most ${SEARCH_SCHEMAS} at a time. Connected now, as service: tools:\n${listing}`,
+      inputSchema: jsonSchema({
+        type: "object",
+        properties: {
+          server: {
+            type: "string",
+            description: "A service's name, exactly as listed.",
+          },
+          tools: {
+            type: "array",
+            items: { type: "string" },
+            description: "Tool names listed under that service.",
+          },
+        },
+        required: ["server", "tools"],
+      } as never),
+      execute: async (raw) => {
+        const { server = "", tools: asked = [] } = (raw ?? {}) as {
+          server?: string;
+          tools?: string[];
+        };
+        const service = find(server);
+        if (!service) return whatExists(server);
+        const names = [
+          ...new Set(asked.map((name) => String(name).trim())),
+        ].filter(Boolean);
+        const wanted = names.slice(0, SEARCH_SCHEMAS);
+        const found = service.tools.filter((tool) =>
+          wanted.includes(tool.name),
+        );
+        if (!found.length) return whatExists(server);
+        const missing = wanted.filter(
+          (name) => !found.some((tool) => tool.name === name),
+        );
+        const rest = names.slice(SEARCH_SCHEMAS);
+        return JSON.stringify({
+          tools: found.map((tool) => ({
+            name: tool.name,
+            description: tool.description ?? "",
+            inputSchema: tool.inputSchema,
+          })),
+          ...(missing.length || rest.length
+            ? {
+                note: [
+                  missing.length
+                    ? `Not on "${service.server}": ${missing.join(", ")}.`
+                    : "",
+                  rest.length
+                    ? `Only ${SEARCH_SCHEMAS} at a time; ask again for: ${rest.join(", ")}.`
+                    : "",
+                ]
+                  .filter(Boolean)
+                  .join(" "),
+              }
+            : {}),
+        });
+      },
+    }),
+    tool_call: dynamicTool({
+      description:
+        "Run one tool of a connected service whose definition came back from tool_search.",
+      inputSchema: jsonSchema({
+        type: "object",
+        properties: {
+          server: { type: "string", description: "The service it is on." },
+          tool: {
+            type: "string",
+            description: "Its name, as tool_search gave it.",
+          },
+          args: {
+            type: ["object", "null"],
+            description:
+              "Arguments matching the input schema tool_search gave; do not guess. Null when it takes none.",
+          },
+        },
+        required: ["server", "tool"],
+      } as never),
+      execute: async (raw) => {
+        const {
+          server = "",
+          tool = "",
+          args,
+        } = (raw ?? {}) as {
+          server?: string;
+          tool?: string;
+          args?: Record<string, unknown> | null;
+        };
+        const service = find(server);
+        const known = service?.tools.find(
+          (entry) => entry.name === tool.trim(),
+        );
+        if (!service || !known) return whatExists(server);
+        const input = args ?? {};
+        // Its own name, so the person's rules and the gate see the call as they always have.
+        const name = mcpToolName(service.server, known.name);
+        const text = await guarded(options.guard, name, input, async () =>
+          resultText(
+            (await service.client.callTool(
+              { name: known.name, arguments: input },
+              undefined,
+              { timeout: 11 * 60_000, resetTimeoutOnProgress: true },
+            )) as { content?: unknown; isError?: unknown },
+          ),
+        );
+        options.onResult?.(name, input, text);
+        return text;
+      },
+    }),
+  };
+}
+
 /**
  * The tools a session's model may call: its own tool server's (as allowed for the session), the
- * connected services', and reading files and the web when the session may read at all.
+ * connected services' (named, and reached through tool_search and tool_call), and reading files
+ * and the web when the session may read at all.
  */
 export async function loopTools(options: {
   servers: Servers;
@@ -505,10 +660,21 @@ export async function loopTools(options: {
   ) => void;
 }): Promise<ToolSet> {
   const tools: ToolSet = {};
+  const services: Service[] = [];
   for (const { name: server, client } of options.servers.clients) {
     let cursor: string | undefined;
     do {
       const page = await client.listTools(cursor ? { cursor } : {});
+      // A connected service's tools are named, not loaded: see servicePair.
+      if (server !== "minime") {
+        if (!options.only) {
+          const found = services.find((entry) => entry.server === server);
+          if (found) found.tools.push(...page.tools);
+          else services.push({ server, client, tools: [...page.tools] });
+        }
+        cursor = page.nextCursor;
+        continue;
+      }
       for (const tool of page.tools) {
         // The gate's own way in for Claude Code; this loop asks the gate itself.
         if (server === "minime" && tool.name === "permission_prompt") continue;
@@ -539,6 +705,8 @@ export async function loopTools(options: {
       cursor = page.nextCursor;
     } while (cursor);
   }
+  if (services.some((entry) => entry.tools.length))
+    Object.assign(tools, servicePair(services, options));
   if (options.reads)
     for (const [name, local] of Object.entries(LOCAL_TOOLS))
       tools[name] = dynamicTool({
