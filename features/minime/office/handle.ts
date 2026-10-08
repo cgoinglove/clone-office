@@ -19,6 +19,7 @@ import { changeFlow, listFlows } from "../flows/store.ts";
 import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
 import { denyRules, loadTrust, pathRule } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
+import { logActivity } from "../server/activity.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { type CheckOutcome, checkBeforeSending, decideCheck } from "./check.ts";
 import {
@@ -709,6 +710,7 @@ async function finish(
     ? (await loadMenu()).find((m) => m.id === sending.menu)
     : undefined;
   if ("hold" in outcome) {
+    await logActivity({ kind: "held", task: task.id, to: sending.from });
     if (sending.approving) await recordOutcome(sending.menu, "held");
     if (sending.approving && item) await countApproval(item, false);
     // Held: the request stays open and becomes the person's to answer themselves.
@@ -726,6 +728,20 @@ async function finish(
     state: sending.state,
     text: outcome.send,
     ...(files.length ? { files: files.map((file) => file.id) } : {}),
+  });
+  await logActivity({
+    kind: "answered",
+    task: task.id,
+    to: sending.from,
+    text: outcome.send,
+    how: sending.approving
+      ? outcome.send === sending.reply
+        ? "as-is"
+        : "changed"
+      : sending.trust === "tell"
+        ? "told"
+        : "alone",
+    ...(files.length ? { files: files.map((file) => file.name) } : {}),
   });
   // The person sent it as it was: three in a row, and the mini-me offers to do these alone.
   if (sending.approving)

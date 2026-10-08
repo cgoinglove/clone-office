@@ -147,7 +147,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   place, files, the colleague); `/office` (`office-screen.tsx`: the floor, its lobby once a day,
   with the person's turn laid over it to answer there, and the clones' meeting beside it while one
   goes on, round by round, started from its header: `meeting.tsx`); `/clone` (`clone-screen.tsx`: what it
-  knows, the requests it takes, flows). `parts.tsx` holds the screens' own marks (`PhaseChip`,
+  knows, the requests it takes, flows, and what it did in their name any day, `activity-list.tsx`
+  from `server/activity.ts`'s `logs/activity.jsonl`: answers sent and how, held back, requests sent,
+  "from now on" made or taken back, flows run). `parts.tsx` holds the screens' own marks (`PhaseChip`,
   `DoneStamp`, the split-flap `Flap`). `use-office.ts` is the office as the screens read it;
   `home/colleague.tsx` asks a colleague with files. `use-learn.ts` follows a reading wherever it
   started. Settings is one dialog of six sections (`features/minime/settings/`, after

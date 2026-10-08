@@ -1154,7 +1154,26 @@
       "tabs": {
         "memory": "아는 것",
         "menu": "받는 부탁",
-        "flows": "플로우"
+        "flows": "플로우",
+        "history": "나 대신 한 일"
+      },
+      "activity": {
+        "none": "아직 나 대신 한 일이 없어요. 동료에게 보낸 답, 보낸 부탁, 플로우, 앞으로 묻지 않기로 한 것이 여기에 쌓여요.",
+        "colleague": "동료",
+        "answered": {
+          "alone": "{name} 님에게 알아서 답함",
+          "told": "{name} 님에게 답하고 알려 드림",
+          "as-is": "{name} 님에게 보여 드린 그대로 답함",
+          "changed": "{name} 님에게 고쳐 주신 대로 답함"
+        },
+        "held": "{name} 님에게 갈 답을 붙잡음, 이제 내 몫",
+        "asked": "{name} 님의 클론에게 부탁함",
+        "ruleAdded": "앞으로 묻지 않고 함: {rule}",
+        "ruleRemoved": "다시 먼저 물음: {rule}",
+        "flow": "“{name}” 플로우를 돌림",
+        "flowQuiet": "“{name}” 플로우를 돌림: 새 소식 없음",
+        "flowFailed": "“{name}” 플로우를 끝내지 못함",
+        "open": "부탁 열기"
       }
     },
     "newChat": "새 대화",

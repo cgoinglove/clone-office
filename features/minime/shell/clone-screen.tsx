@@ -1,9 +1,9 @@
 "use client";
 
-// The person's clone, on its own screen: who it is and how like them it answers, then three
+// The person's clone, on its own screen: who it is and how like them it answers, then four
 // views. What it knows about them (the memory as saved, each line correctable), the requests it
-// takes from colleagues with how much it does alone, and its flows: the things it does on its own
-// at set times. How it thinks and connects (brain, tools, phone) stays in settings.
+// takes from colleagues with how much it does alone, its flows: the things it does on its own at
+// set times, and what it did in their name, any day (activity-list.tsx). How it thinks and connects (brain, tools, phone) stays in settings.
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -13,9 +13,10 @@ import { FlowsPanel } from "../flows-panel";
 import { CloneSection } from "../settings/clone-section";
 import { PreferencesSection } from "../settings/preferences-section";
 import { RequestsSection } from "../settings/requests-section";
+import { ActivityList } from "./activity-list";
 import { useApp } from "./app-state";
 
-type Tab = "memory" | "menu" | "flows";
+type Tab = "memory" | "menu" | "flows" | "history";
 
 export function CloneScreen() {
   const t = useTranslations("shell.clone");
@@ -23,7 +24,10 @@ export function CloneScreen() {
   const router = useRouter();
   const params = useSearchParams();
   const asked = params.get("tab");
-  const tab: Tab = asked === "menu" || asked === "flows" ? asked : "memory";
+  const tab: Tab =
+    asked === "menu" || asked === "flows" || asked === "history"
+      ? asked
+      : "memory";
   const like = app.office.office?.likeMe;
   const percent = like?.total
     ? Math.round((like.asIs / like.total) * 100)
@@ -63,6 +67,7 @@ export function CloneScreen() {
             { value: "memory", label: t("tabs.memory") },
             { value: "menu", label: t("tabs.menu") },
             { value: "flows", label: t("tabs.flows") },
+            { value: "history", label: t("tabs.history") },
           ]}
           value={tab}
           onChange={(next) =>
@@ -109,6 +114,7 @@ export function CloneScreen() {
               }}
             />
           )}
+          {tab === "history" && <ActivityList />}
         </div>
       </div>
     </div>

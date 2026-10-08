@@ -1154,7 +1154,26 @@
       "tabs": {
         "memory": "Lo que sabe",
         "menu": "Solicitudes que acepta",
-        "flows": "Rutinas"
+        "flows": "Rutinas",
+        "history": "En tu nombre"
+      },
+      "activity": {
+        "none": "Todavía no hizo nada en tu nombre. Aquí aparecen las respuestas a compañeros, las solicitudes que envía, las rutinas y lo que permites sin preguntar.",
+        "colleague": "un compañero",
+        "answered": {
+          "alone": "Respondió a {name} por su cuenta",
+          "told": "Respondió a {name} y te avisó",
+          "as-is": "Respondió a {name} tal como lo viste",
+          "changed": "Respondió a {name} con tus cambios"
+        },
+        "held": "Retuvo una respuesta para {name}; ahora te toca a ti",
+        "asked": "Le pidió algo al clon de {name}",
+        "ruleAdded": "Desde ahora sin preguntar: {rule}",
+        "ruleRemoved": "Vuelve a preguntar antes: {rule}",
+        "flow": "Ejecutó la rutina «{name}»",
+        "flowQuiet": "Ejecutó la rutina «{name}»: nada nuevo",
+        "flowFailed": "La rutina «{name}» no terminó",
+        "open": "Abrir la solicitud"
       }
     },
     "newChat": "Nuevo chat",

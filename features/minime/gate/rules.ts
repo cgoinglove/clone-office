@@ -8,6 +8,7 @@ import { homedir } from "node:os";
 import { dirname, isAbsolute, sep } from "node:path";
 import { connectorOfTool } from "../connectors/catalog.ts";
 import { withLock } from "../memory/files.ts";
+import { logActivity } from "../server/activity.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 
@@ -47,6 +48,7 @@ export async function loadTrust(): Promise<string[]> {
 }
 
 export async function addTrust(rule: string): Promise<void> {
+  await logActivity({ kind: "rule", rule, added: true });
   await withLock(minimeHome(), async () => {
     const settings = await readSettings();
     const trust = (settings.trust ?? {}) as { allow?: string[] };
@@ -68,6 +70,7 @@ export async function removeTrust(rule: string): Promise<boolean> {
     await writeSettings(
       `${JSON.stringify({ ...settings, trust: { ...trust, allow: allow.filter((kept) => kept !== rule) } }, null, 2)}\n`,
     );
+    await logActivity({ kind: "rule", rule, added: false });
     return true;
   });
 }

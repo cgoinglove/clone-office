@@ -287,7 +287,10 @@ test("each line keeps where it came from; a fix moves it and a removal lets it g
   assert.deepEqual(Object.keys(fixed), [
     "Answers in short bullet points, newest first",
   ]);
-  assert.equal(fixed["Answers in short bullet points, newest first"]?.from, "fix");
+  assert.equal(
+    fixed["Answers in short bullet points, newest first"]?.from,
+    "fix",
+  );
 
   // Removed on the screen, with no origin of its own: the source goes with the line.
   await new MemoryStore(dir).remove("user", "newest first");

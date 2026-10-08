@@ -1154,7 +1154,26 @@
       "tabs": {
         "memory": "O que ele sabe",
         "menu": "Pedidos que aceita",
-        "flows": "Rotinas"
+        "flows": "Rotinas",
+        "history": "Em seu nome"
+      },
+      "activity": {
+        "none": "Ainda não fez nada em seu nome. Respostas a colegas, pedidos enviados, rotinas e o que você liberou sem perguntar aparecem aqui.",
+        "colleague": "um colega",
+        "answered": {
+          "alone": "Respondeu a {name} por conta própria",
+          "told": "Respondeu a {name} e te avisou",
+          "as-is": "Respondeu a {name} como você viu",
+          "changed": "Respondeu a {name} com as suas mudanças"
+        },
+        "held": "Segurou uma resposta para {name}; agora é com você",
+        "asked": "Fez um pedido ao clone de {name}",
+        "ruleAdded": "Daqui em diante sem perguntar: {rule}",
+        "ruleRemoved": "Volta a perguntar antes: {rule}",
+        "flow": "Rodou a rotina “{name}”",
+        "flowQuiet": "Rodou a rotina “{name}”: nada novo",
+        "flowFailed": "A rotina “{name}” não terminou",
+        "open": "Abrir o pedido"
       }
     },
     "newChat": "Novo chat",

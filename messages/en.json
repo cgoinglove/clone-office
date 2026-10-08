@@ -1154,7 +1154,26 @@
       "tabs": {
         "memory": "What it knows",
         "menu": "Requests it takes",
-        "flows": "Flows"
+        "flows": "Flows",
+        "history": "In your name"
+      },
+      "activity": {
+        "none": "Nothing done in your name yet. Answers to colleagues, requests it sends, flows and what you allow from now on show here.",
+        "colleague": "a colleague",
+        "answered": {
+          "alone": "Answered {name} on its own",
+          "told": "Answered {name} and told you",
+          "as-is": "Answered {name}, as you saw it",
+          "changed": "Answered {name}, as you changed it"
+        },
+        "held": "Held back an answer to {name}; it is yours now",
+        "asked": "Asked {name}'s clone",
+        "ruleAdded": "From now on without asking: {rule}",
+        "ruleRemoved": "Asks first again: {rule}",
+        "flow": "Ran the flow “{name}”",
+        "flowQuiet": "Ran the flow “{name}”: nothing new",
+        "flowFailed": "The flow “{name}” did not finish",
+        "open": "Open the request"
       }
     },
     "newChat": "New chat",

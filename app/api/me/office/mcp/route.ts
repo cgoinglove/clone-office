@@ -12,6 +12,7 @@ import {
 import { putFiles } from "@/features/minime/office/files";
 import { publicRelay } from "@/features/minime/office/host";
 import { changeState } from "@/features/minime/office/state";
+import { logActivity } from "@/features/minime/server/activity";
 import { refuse } from "@/features/minime/server/guard";
 
 const Body = z.discriminatedUnion("action", [
@@ -99,6 +100,13 @@ export async function POST(request: Request) {
       await changeState((s) => {
         s.sent[task.id] = { chat };
       });
+    await logActivity({
+      kind: "asked",
+      task: task.id,
+      to: to.card.name,
+      text: input.text,
+      ...(files.length ? { files: files.length } : {}),
+    });
     return Response.json({
       sent: { to: to.card.name, id: task.id, files: files.length },
     });

@@ -18,6 +18,7 @@ import {
 import { gateSecret } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { tryLock } from "../memory/files.ts";
+import { logActivity } from "../server/activity.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { personLanguage } from "../server/language.ts";
 import { errorCode } from "../server/ndjson.ts";
@@ -155,6 +156,14 @@ export async function runFlow(
     ...f,
     last: { at: now.toISOString(), ok, ...(error ? { error } : {}) },
   }));
+  await logActivity({
+    kind: "flow",
+    name: flow.name,
+    ok,
+    ...(ok && shaped.notify === false && !options.gateUrl
+      ? { quiet: true }
+      : {}),
+  });
   return { ok, chat };
 }
 

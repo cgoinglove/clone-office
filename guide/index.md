@@ -61,10 +61,13 @@ Two things hold everywhere:
   (answered right there), its files, and who it is with.
 - **Office** (오피스): the office floor (`office.md`), with what waits on them laid over it to
   answer right there.
-- **Your clone** (내 클론): how like them it answers, and three tabs. **What it knows** (아는 것:
+- **Your clone** (내 클론): how like them it answers, and four tabs. **What it knows** (아는 것:
   about them, what it remembers, reading again, bringing it from another AI, starting over),
   **Requests it takes** (받는 부탁: the kinds colleagues can ask, how much it does alone for each,
-  where a new kind starts) and **Flows** (플로우).
+  where a new kind starts), **Flows** (플로우) and **In your name** (나 대신 한 일: what it did for
+  them, any day, latest first: each answer it sent a colleague and whether it did so on its own,
+  told them, or sent what they saw; answers it held back; requests it sent; what they allowed from
+  now on or took back; flows run. A request opens where it is answered.)
 - **Settings** (설정) has six sections. **AI model** (AI 모델: the model it uses, learning after each
   conversation, the lighter model for background work), **Permissions** (권한: how much it does on
   its own, what it does without asking, folders left out), **Connectors** (도구 연결),

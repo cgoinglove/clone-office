@@ -1154,7 +1154,26 @@
       "tabs": {
         "memory": "它知道的",
         "menu": "它接的请求",
-        "flows": "自动流程"
+        "flows": "自动流程",
+        "history": "以你的名义"
+      },
+      "activity": {
+        "none": "还没有以你的名义做过的事。回复同事、发出的请求、自动流程和你允许以后不再询问的事都会出现在这里。",
+        "colleague": "同事",
+        "answered": {
+          "alone": "自行回复了 {name}",
+          "told": "回复了 {name} 并告诉了你",
+          "as-is": "按你看过的原样回复了 {name}",
+          "changed": "按你修改后的内容回复了 {name}"
+        },
+        "held": "拦下了给 {name} 的回复，现在由你处理",
+        "asked": "向 {name} 的分身发了请求",
+        "ruleAdded": "以后不再询问：{rule}",
+        "ruleRemoved": "恢复先询问：{rule}",
+        "flow": "运行了自动流程“{name}”",
+        "flowQuiet": "运行了自动流程“{name}”：没有新消息",
+        "flowFailed": "自动流程“{name}”没有完成",
+        "open": "打开请求"
       }
     },
     "newChat": "新对话",
