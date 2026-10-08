@@ -27,6 +27,45 @@ const WORDS = {
     footer:
       "{asker} 님의 클론이 Clone Office로 보낸 질문이에요. 답은 {asker} 님에게만 가요.",
   },
+  zh: {
+    title: "{asker}向你提问",
+    answer: "你的回答",
+    send: "发送",
+    sent: "已发送。{asker}收到了你的回答：",
+    closed: "这个链接已关闭。",
+    missing: "没有这个链接。",
+    footer: "由{asker}的分身通过 Clone Office 发送。你的回答只会发给{asker}。",
+  },
+  ja: {
+    title: "{asker}さんからの質問",
+    answer: "あなたの回答",
+    send: "送信",
+    sent: "送信しました。{asker}さんに届いた回答：",
+    closed: "このリンクはすでに終了しています。",
+    missing: "このリンクは存在しません。",
+    footer:
+      "{asker}さんのクローンがClone Officeで送った質問です。回答は{asker}さんにだけ届きます。",
+  },
+  es: {
+    title: "{asker} te pregunta",
+    answer: "Tu respuesta",
+    send: "Enviar",
+    sent: "Enviado. {asker} ya tiene tu respuesta:",
+    closed: "Este enlace está cerrado.",
+    missing: "Este enlace no existe.",
+    footer:
+      "Enviado por el clon de {asker}, con Clone Office. Tu respuesta solo le llega a {asker}.",
+  },
+  pt: {
+    title: "{asker} pergunta a você",
+    answer: "Sua resposta",
+    send: "Enviar",
+    sent: "Enviado. {asker} recebeu sua resposta:",
+    closed: "Este link já foi encerrado.",
+    missing: "Este link não existe.",
+    footer:
+      "Enviado pelo clone de {asker}, com o Clone Office. Sua resposta vai só para {asker}.",
+  },
 };
 
 export type PageLanguage = keyof typeof WORDS;
@@ -67,7 +106,10 @@ const STYLE = `
 :root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --brand: #0169cc; --danger: #dc2626; color-scheme: light; }
 @media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --brand: #0a84ff; --danger: #ef4444; color-scheme: dark; } }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+:lang(ko) body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; }
+:lang(ja) body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, system-ui, sans-serif; }
+:lang(zh) body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif; }
 main { max-width: 34rem; margin: 0 auto; padding: 2.5rem 1rem; display: flex; flex-direction: column; gap: 1.25rem; }
 h1 { font-size: 1.25rem; margin: 0; text-wrap: balance; }
 .request { white-space: pre-wrap; border: 1px solid var(--line); border-radius: 14px; padding: 1rem; margin: 0; }
@@ -166,6 +208,30 @@ const INVITE_WORDS = {
     titleNobody: "오피스에 초대받았어요",
     what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)이 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
     keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
+  },
+  zh: {
+    title: "{from}邀请你加入他们的办公室",
+    titleNobody: "你收到了一个办公室的邀请",
+    what: "在这个办公室里，每个人的分身（一个像本人一样工作的 AI）会接收并回答团队的请求，只把该本人决定的事交给本人。",
+    keep: "拿到这个链接的任何人都能加入这个办公室，请只在团队内分享。",
+  },
+  ja: {
+    title: "{from}さんからオフィスへの招待が届いています",
+    titleNobody: "オフィスに招待されています",
+    what: "このオフィスでは、一人ひとりのクローン（本人のように働くAI）がチームの依頼を受けて答え、本人が決めるべきことだけを本人に届けます。",
+    keep: "このリンクがあれば誰でもこのオフィスに参加できます。チームの中だけで共有してください。",
+  },
+  es: {
+    title: "{from} te invita a su oficina",
+    titleNobody: "Te invitaron a una oficina",
+    what: "En esta oficina, el clon de cada persona (una IA que trabaja como ella) recibe y responde las solicitudes del equipo, y a cada persona solo le trae las decisiones que le tocan.",
+    keep: "Cualquiera con este enlace puede unirse a esta oficina; compártelo solo dentro de tu equipo.",
+  },
+  pt: {
+    title: "{from} convida você para o escritório",
+    titleNobody: "Você recebeu um convite para um escritório",
+    what: "Neste escritório, o clone de cada pessoa (uma IA que trabalha como ela) recebe e responde os pedidos da equipe, e traz a cada pessoa só as decisões que são dela.",
+    keep: "Qualquer pessoa com este link pode entrar neste escritório; compartilhe só com a sua equipe.",
   },
 };
 const _inviteInStep: AllInSync<typeof INVITE_WORDS> &

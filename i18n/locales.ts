@@ -2,7 +2,8 @@
 // language reads in English. To add a language, add messages/<code>.json with every key of
 // messages/en.json (the test in i18n/messages.test.ts says which are missing) and its code here.
 
-export const LOCALES = ["en", "ko"] as const;
+// zh is Simplified Chinese and pt Brazilian Portuguese, as Intl reads the bare codes.
+export const LOCALES = ["en", "ko", "zh", "ja", "es", "pt"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -13,6 +14,10 @@ export const LOCALE_COOKIE = "locale";
 export const LOCALE_NAMES: Record<Locale, string> = {
   en: "English",
   ko: "한국어",
+  zh: "简体中文",
+  ja: "日本語",
+  es: "Español",
+  pt: "Português (Brasil)",
 };
 
 export function isLocale(value: unknown): value is Locale {

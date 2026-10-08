@@ -161,7 +161,8 @@ To try an office alone, run a second clone with its own folder, port and build f
 `CLONE_OFFICE_HOME=~/.clone-office-b CLONE_OFFICE_DEV_DIR=.next-b pnpm dev --port 3001`.
 `node scripts/pack.mjs` builds the npm package from the committed files without publishing it.
 
-English and Korean today; a language is one file under `messages/`.
+The screen speaks English, Korean, Simplified Chinese, Japanese, Spanish and Brazilian Portuguese;
+a language is one file under `messages/`.
 
 ## Status
 

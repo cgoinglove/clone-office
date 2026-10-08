@@ -2,12 +2,16 @@
 // them per request (request.ts); work with no page (the person's messenger) loads them here.
 
 import en from "../messages/en.json";
+import es from "../messages/es.json";
+import ja from "../messages/ja.json";
 import ko from "../messages/ko.json";
+import pt from "../messages/pt.json";
+import zh from "../messages/zh.json";
 import { DEFAULT_LOCALE, type Locale } from "./locales";
 import type { InSync } from "./sync";
 
 /** Each language's file, as it is. */
-const FILES = { en, ko };
+const FILES = { en, ko, zh, ja, es, pt };
 
 /**
  * Every language the screen is written in, each with exactly English's keys: a language listed in

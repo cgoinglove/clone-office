@@ -93,7 +93,11 @@ test("every message formats in every language", () => {
 
 test("the screen speaks the first of the browser's languages it is written in, else English", () => {
   assert.equal(pickLocale("ko-KR,ko;q=0.9,en-US;q=0.8"), "ko");
-  assert.equal(pickLocale("ja-JP,ja;q=0.9,ko;q=0.8,en;q=0.7"), "ko");
+  assert.equal(pickLocale("ja-JP,ja;q=0.9,ko;q=0.8,en;q=0.7"), "ja");
+  assert.equal(pickLocale("fr-FR,ko;q=0.8,en;q=0.7"), "ko");
+  assert.equal(pickLocale("zh-CN,zh;q=0.9"), "zh");
+  assert.equal(pickLocale("pt-BR"), "pt");
+  assert.equal(pickLocale("es-MX,es;q=0.9"), "es");
   assert.equal(pickLocale("en-GB,en;q=0.9,ko;q=0.5"), "en");
   assert.equal(pickLocale("fr-FR,de;q=0.8"), "en");
   assert.equal(pickLocale("ko;q=0,en;q=0.5"), "en", "q=0 means not wanted");

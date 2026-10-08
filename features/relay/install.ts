@@ -88,6 +88,165 @@ const WORDS = {
     already:
       "이미 Clone Office를 쓰고 있다면, 앱을 열고 설정 › 오피스에 이 링크를 붙여 넣어 주세요.",
   },
+  zh: {
+    title: "设置你的分身",
+    time: "大约 5 分钟，不用写代码：只要复制一行命令。",
+    why: "你的分身在你自己的电脑上运行。它从电脑上已有的内容学习你的工作方式，用你的文件和工具干活，学到的东西也只留在那台电脑上。经过办公室的只有请求和你的名片。",
+    node: "安装 Node.js",
+    nodeMac: "下载 macOS 安装程序，打开后一直点“继续”，直到完成。",
+    nodeWindows: "下载 Windows 安装程序，打开后一直点 Next，直到完成。",
+    nodeLinux: "从 nodejs.org 或你的包管理器安装 Node.js 22.13 或更高版本。",
+    nodeSkip: "已经有 Node.js 22.13 或更高版本？跳过这一步。",
+    download: "下载 Node.js",
+    terminalMac: "打开“终端”",
+    terminalMacHow: "按 ⌘ 空格键，输入 Terminal，然后按 Return 键。",
+    terminalWindows: "打开命令提示符",
+    terminalWindowsHow:
+      "按 Windows 键，输入 cmd，然后按 Enter。如果安装 Node.js 时它是开着的，请关掉再重新打开。",
+    terminalLinux: "打开终端",
+    terminalLinuxHow: "大多数系统按 Ctrl+Alt+T 就能打开。",
+    paste: "粘贴这一行，然后按 Enter",
+    pasteNote: "第一次需要一两分钟。",
+    answer: "回答几个问题",
+    answerFrom:
+      "浏览器会打开 Clone Office。选好你的分身用的 AI，介绍一下你自己，它就会加入{from}的办公室。",
+    answerNobody:
+      "浏览器会打开 Clone Office。选好你的分身用的 AI，介绍一下你自己，它就会加入办公室。",
+    local:
+      "这个办公室运行在{from}的电脑上：请在对方的 Clone Office 开着时，从同一个 Wi-Fi 或网络加入。",
+    localNobody:
+      "这个办公室运行在一位同事的电脑上：请在对方的 Clone Office 开着时，从同一个 Wi-Fi 或网络加入。",
+    other: "用的是别的电脑？",
+    mac: "Mac",
+    windows: "Windows",
+    linux: "Linux",
+    phone:
+      "请在电脑上打开这个链接：你的分身运行在电脑上，不在手机上。可以用邮件或聊天软件发给自己。",
+    already:
+      "已经在用 Clone Office？打开它，然后在“设置 › 办公室”里粘贴这个链接。",
+  },
+  ja: {
+    title: "クローンを用意する",
+    time: "5分ほどで、コーディングは不要です。1行コピーするだけです。",
+    why: "クローンはあなた自身のコンピューターで動きます。そこにあるものからあなたの仕事の進め方を学び、あなたのファイルやツールで作業し、学んだことはそのコンピューターに残します。オフィスを通るのは依頼とあなたの名刺だけです。",
+    node: "Node.jsをインストール",
+    nodeMac:
+      "macOS用インストーラーをダウンロードして開き、完了するまで「続ける」を押してください。",
+    nodeWindows:
+      "Windows用インストーラーをダウンロードして開き、完了するまでNextを押してください。",
+    nodeLinux:
+      "nodejs.orgかパッケージマネージャーで、Node.js 22.13以降をインストールしてください。",
+    nodeSkip:
+      "Node.js 22.13以降がすでにある場合は、このステップを飛ばしてください。",
+    download: "Node.jsをダウンロード",
+    terminalMac: "ターミナルを開く",
+    terminalMacHow:
+      "⌘ + スペースを押して「ターミナル」と入力し、Returnを押します。",
+    terminalWindows: "コマンドプロンプトを開く",
+    terminalWindowsHow:
+      "Windowsキーを押してcmdと入力し、Enterを押します。Node.jsのインストール中に開いていた場合は、いったん閉じて開き直してください。",
+    terminalLinux: "ターミナルを開く",
+    terminalLinuxHow: "多くのシステムではCtrl+Alt+Tで開けます。",
+    paste: "この1行を貼り付けてEnter",
+    pasteNote: "初回は1〜2分かかります。",
+    answer: "いくつかの質問に答える",
+    answerFrom:
+      "ブラウザーでClone Officeが開きます。クローンが使うAIを選んで自己紹介すると、{from}さんのオフィスに参加します。",
+    answerNobody:
+      "ブラウザーでClone Officeが開きます。クローンが使うAIを選んで自己紹介すると、オフィスに参加します。",
+    local:
+      "このオフィスは{from}さんのコンピューターで動いています。相手のClone Officeが開いている間に、同じWi-Fiかネットワークから参加してください。",
+    localNobody:
+      "このオフィスはチームメイトのコンピューターで動いています。相手のClone Officeが開いている間に、同じWi-Fiかネットワークから参加してください。",
+    other: "別の種類のコンピューターですか？",
+    mac: "Mac",
+    windows: "Windows",
+    linux: "Linux",
+    phone:
+      "このリンクはコンピューターで開いてください。クローンはスマホではなく、コンピューターで動きます。メールやメッセンジャーで自分に送っておきましょう。",
+    already:
+      "すでにClone Officeを使っている場合は、アプリを開き、設定 › オフィスでこのリンクを貼り付けてください。",
+  },
+  es: {
+    title: "Crea tu clon",
+    time: "Unos 5 minutos y nada de programación: solo copias una línea.",
+    why: "Tu clon funciona en tu propia computadora. Aprende cómo trabajas a partir de lo que hay ahí, trabaja con tus archivos y herramientas, y guarda lo que aprende en esa computadora. Por la oficina solo pasan las solicitudes y tu tarjeta.",
+    node: "Instala Node.js",
+    nodeMac:
+      "Descarga el instalador para macOS, ábrelo y haz clic en Continuar hasta que termine.",
+    nodeWindows:
+      "Descarga el instalador para Windows, ábrelo y haz clic en Next hasta que termine.",
+    nodeLinux:
+      "Instala Node.js 22.13 o posterior desde nodejs.org o con tu gestor de paquetes.",
+    nodeSkip: "¿Ya tienes Node.js 22.13 o posterior? Omite este paso.",
+    download: "Descargar Node.js",
+    terminalMac: "Abre Terminal",
+    terminalMacHow: "Presiona ⌘ Space, escribe Terminal y presiona Return.",
+    terminalWindows: "Abre el Símbolo del sistema",
+    terminalWindowsHow:
+      "Presiona la tecla Windows, escribe cmd y presiona Enter. Si estaba abierto mientras se instalaba Node.js, ciérralo y vuelve a abrirlo.",
+    terminalLinux: "Abre una terminal",
+    terminalLinuxHow: "Ctrl+Alt+T abre una en la mayoría de los sistemas.",
+    paste: "Pega esta línea y presiona Enter",
+    pasteNote: "La primera vez tarda uno o dos minutos.",
+    answer: "Responde unas preguntas",
+    answerFrom:
+      "Tu navegador abre Clone Office. Elige la IA que usará tu clon y di quién eres; después se une a la oficina de {from}.",
+    answerNobody:
+      "Tu navegador abre Clone Office. Elige la IA que usará tu clon y di quién eres; después se une a la oficina.",
+    local:
+      "Esta oficina funciona en la computadora de {from}: únete desde el mismo Wi-Fi o red, mientras su Clone Office esté abierto.",
+    localNobody:
+      "Esta oficina funciona en la computadora de un colega: únete desde el mismo Wi-Fi o red, mientras su Clone Office esté abierto.",
+    other: "¿Usas otro tipo de computadora?",
+    mac: "Mac",
+    windows: "Windows",
+    linux: "Linux",
+    phone:
+      "Abre este enlace en tu computadora: tu clon funciona ahí, no en un teléfono. Envíatelo por correo o por una app de mensajería.",
+    already:
+      "¿Ya usas Clone Office? Ábrelo y pega este enlace en Configuración › Oficina.",
+  },
+  pt: {
+    title: "Crie seu clone",
+    time: "Uns 5 minutos e nada de programação: você só copia uma linha.",
+    why: "Seu clone roda no seu próprio computador. Ele aprende como você trabalha com o que está ali, trabalha com seus arquivos e ferramentas, e guarda o que aprende nesse computador. Pelo escritório passam só os pedidos e o seu cartão.",
+    node: "Instale o Node.js",
+    nodeMac:
+      "Baixe o instalador para macOS, abra e clique em Continuar até terminar.",
+    nodeWindows:
+      "Baixe o instalador para Windows, abra e clique em Next até terminar.",
+    nodeLinux:
+      "Instale o Node.js 22.13 ou mais recente pelo nodejs.org ou pelo seu gerenciador de pacotes.",
+    nodeSkip: "Já tem o Node.js 22.13 ou mais recente? Pule esta etapa.",
+    download: "Baixar o Node.js",
+    terminalMac: "Abra o Terminal",
+    terminalMacHow: "Pressione ⌘ Space, digite Terminal e pressione Return.",
+    terminalWindows: "Abra o Prompt de Comando",
+    terminalWindowsHow:
+      "Pressione a tecla Windows, digite cmd e pressione Enter. Se ele estava aberto durante a instalação do Node.js, feche e abra de novo.",
+    terminalLinux: "Abra um terminal",
+    terminalLinuxHow: "Ctrl+Alt+T abre um na maioria dos sistemas.",
+    paste: "Cole esta linha e pressione Enter",
+    pasteNote: "Na primeira vez, leva um ou dois minutos.",
+    answer: "Responda algumas perguntas",
+    answerFrom:
+      "Seu navegador abre o Clone Office. Escolha a IA que seu clone vai usar e diga quem você é; depois ele entra no escritório de {from}.",
+    answerNobody:
+      "Seu navegador abre o Clone Office. Escolha a IA que seu clone vai usar e diga quem você é; depois ele entra no escritório.",
+    local:
+      "Este escritório roda no computador de {from}: entre pelo mesmo Wi-Fi ou rede, enquanto o Clone Office dessa pessoa estiver aberto.",
+    localNobody:
+      "Este escritório roda no computador de um colega: entre pelo mesmo Wi-Fi ou rede, enquanto o Clone Office dele estiver aberto.",
+    other: "Está em outro tipo de computador?",
+    mac: "Mac",
+    windows: "Windows",
+    linux: "Linux",
+    phone:
+      "Abra este link no seu computador: seu clone roda nele, não no celular. Mande o link para o seu e-mail ou para um app de mensagens.",
+    already:
+      "Já usa o Clone Office? Abra o app e cole este link em Configurações › Escritório.",
+  },
 };
 // Each page language's guide says everything the English one says, and nothing more.
 const _wordsInStep: AllInSync<typeof WORDS> & Record<PageLanguage, unknown> =

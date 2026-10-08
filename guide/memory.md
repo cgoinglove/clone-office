@@ -33,8 +33,9 @@ does; their name, what they do and what they look after also go on their card in
 
 Everything it keeps is written in their own language, whatever it is: the one they picked under
 **Language** (언어) under Settings › General, else the one their browser uses. The screen itself
-reads in English or Korean (more can be added); in any other language it reads in English while
-the clone still keeps what it learns, and asks them, in theirs.
+reads in English, Korean, Simplified Chinese, Japanese, Spanish or Brazilian Portuguese; in any
+other language it reads in English while the clone still keeps what it learns, and asks them, in
+theirs.
 
 - **The first time**: it reads a little of what is on their computer (`reading.md`) and keeps at
   most five lines about how they work. Lines kept this time are marked **New** (새로).
