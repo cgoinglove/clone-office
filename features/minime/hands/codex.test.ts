@@ -428,3 +428,60 @@ test("the card for a Codex conversation's changes shows them, and is asked every
     false,
   );
 });
+
+test("a task let to change files in its folder goes in without a card only when every change is there and none is left out", async () => {
+  const { withinFolder } = await import("./codex.ts");
+  const copy = { dir: "/tmp/w/1", cwd: "/tmp/w/1/web", root: "/home/p/repo" };
+  const change = (...paths: string[]) =>
+    paths.map((path) => ({ status: "M", path }));
+  assert.equal(withinFolder(copy, change("web/a.ts", "web/x/b.ts"), []), true);
+  assert.equal(
+    withinFolder(copy, change("web/a.ts", "api/server.ts"), []),
+    false,
+    "a file outside the folder the card named",
+  );
+  assert.equal(withinFolder(copy, change("package.json"), []), false);
+  assert.equal(withinFolder(copy, change("website/a.ts"), []), false);
+  assert.equal(
+    withinFolder(copy, change("web/secret/k.txt"), ["/home/p/repo/web/secret"]),
+    false,
+    "a folder left out",
+  );
+  // The conversation ran at the repository's root: the whole of it is its folder.
+  assert.equal(
+    withinFolder({ ...copy, cwd: copy.dir }, change("api/a.ts"), []),
+    true,
+  );
+});
+
+test("the copy keeps what the person ignores only in .git/info/exclude out, and starts in a folder that has nothing copied", async () => {
+  const { makeWorkCopy, removeWorkCopy } = await import("./copy.ts");
+  const repo = mkdtempSync(join(tmpdir(), "clone-copy-"));
+  const home = mkdtempSync(join(tmpdir(), "clone-copy-home-"));
+  try {
+    execFileSync("git", ["init", "-q", repo]);
+    writeFileSync(join(repo, "a.ts"), "a\n");
+    writeFileSync(
+      join(repo, ".git", "info", "exclude"),
+      "out/\nbuild-scripts/\n",
+    );
+    mkdirSync(join(repo, "out"));
+    writeFileSync(join(repo, "out", "bundle.js"), "x\n");
+    mkdirSync(join(repo, "build-scripts"));
+    writeFileSync(join(repo, "build-scripts", "make.sh"), "echo\n");
+    const copy = await makeWorkCopy(join(repo, "build-scripts"), {
+      home,
+      excludes: [],
+    });
+    assert.equal(existsSync(join(copy.dir, "out")), false);
+    assert.equal(
+      readFileSync(join(copy.dir, ".git", "info", "exclude"), "utf8"),
+      "out/\nbuild-scripts/\n",
+    );
+    assert.equal(existsSync(copy.cwd), true, "the work can start there");
+    await removeWorkCopy(copy, home);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
+  }
+});

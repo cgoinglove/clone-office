@@ -301,6 +301,8 @@ export async function workSession(
     approve: Approve;
     /** The person let this task change files in its folder without asking (hands/grants.ts). */
     edits?: boolean;
+    /** The conversation, when the caller found it already: the list is not read again. */
+    found?: HandSession;
   },
 ): Promise<{
   ok: boolean;
@@ -308,10 +310,9 @@ export async function workSession(
   session?: HandSession;
   copy?: string;
 }> {
-  const session = findSession(
-    await listSessions({ days: 90, limit: 200 }),
-    wanted,
-  );
+  const session =
+    options.found ??
+    findSession(await listSessions({ days: 90, limit: 200 }), wanted);
   if (!session)
     return {
       ok: false,

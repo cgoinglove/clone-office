@@ -36,6 +36,7 @@ import { brainChoice } from "./choice.ts";
 import { reportKept, WATCHED } from "./events.ts";
 import { lighterModel } from "./providers.ts";
 import { logRun } from "./runlog.ts";
+import { TOOL_WAIT_MS } from "./waits.ts";
 
 export function memoryDir(): string {
   return join(minimeHome(), "memories");
@@ -498,8 +499,8 @@ export async function runSession(
     const env = cleanEnv();
     // The helpers it starts (a service's token) find the same mini-me.
     env.CLONE_OFFICE_HOME = home;
-    // A question to the person may wait up to ten minutes inside one tool call.
-    if (gate) env.MCP_TOOL_TIMEOUT = String(11 * 60 * 1000);
+    // A question to the person, or a piece of work in their conversations, waits inside one call.
+    if (gate) env.MCP_TOOL_TIMEOUT = String(TOOL_WAIT_MS);
     const child = spawn(command.file, [...command.prefix, ...args], {
       cwd: home,
       env: env as NodeJS.ProcessEnv,

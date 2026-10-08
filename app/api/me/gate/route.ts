@@ -9,7 +9,7 @@ import {
   timeoutFor,
   waitFor,
 } from "@/features/minime/gate/gate";
-import { takeTaskGrant } from "@/features/minime/hands/grants";
+import { GRANT_TASK_MAX, takeTaskGrant } from "@/features/minime/hands/grants";
 import { personAway } from "@/features/minime/office/client";
 import { refuse } from "@/features/minime/server/guard";
 
@@ -38,7 +38,7 @@ const Body = z.union([
     chat: z.string().max(64).optional(),
     grant: z.object({
       session: z.string().max(500),
-      task: z.string().max(50_000),
+      task: z.string().max(GRANT_TASK_MAX),
     }),
   }),
 ]);

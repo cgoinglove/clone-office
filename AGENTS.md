@@ -458,8 +458,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   folder (`gate/enrich.ts` `task`): the answer is kept in the app's process (`grants.ts`), never in
   what the brain sends, and the tool server takes it once through the gate route as the work
   starts (`gate/tools.ts` `taskGranted`), adding an `Edit(<folder>/**)` rule for that run only (in
-  Codex: its patch goes in without its card); commands stay asked. Afterwards it tells the brain
-  which files changed (`changes.ts`, git's counts against the state before the run). `codex.ts` does
+  Codex: its patch goes in without its card when every change is inside that folder and none left
+  out, `codex.ts` `withinFolder`); commands stay asked. Afterwards it tells the brain which files
+  changed (`changes.ts`: each file's content before and after the run, with git's counts). The brain
+  waits for such work as long as it can take (`brain/waits.ts` `TOOL_WAIT_MS`), so it never reports
+  a failure while the work goes on. `codex.ts` does
   the same for Codex conversations (rollouts read by `server/sources/codex.ts`, archived ones left
   out; named from `session_index.jsonl`, else by what was first asked): `codex exec --ephemeral
   --ignore-rules fork <id> -`, nothing written to the conversation and the copy kept nowhere, the

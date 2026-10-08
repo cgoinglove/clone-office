@@ -206,13 +206,17 @@ export async function makeWorkCopy(
       const value = text(await git(["config", "--get", key], root));
       if (value) await git(["config", key, value], dir);
     }
-    const attributes = text(
-      await git(["rev-parse", "--git-path", "info/attributes"], root),
-    );
-    const from = attributes ? resolve(root, attributes) : "";
-    if (from && existsSync(from)) {
-      await mkdir(join(dir, ".git", "info"), { recursive: true });
-      await copyFile(from, join(dir, ".git", "info", "attributes"));
+    // Its own attributes and ignore list too: what the person ignores only in .git/info/exclude
+    // (build output, a local .env) must not come back in the patch as new files.
+    for (const name of ["attributes", "exclude"]) {
+      const gitPath = text(
+        await git(["rev-parse", "--git-path", `info/${name}`], root),
+      );
+      const from = gitPath ? resolve(root, gitPath) : "";
+      if (from && existsSync(from)) {
+        await mkdir(join(dir, ".git", "info"), { recursive: true });
+        await copyFile(from, join(dir, ".git", "info", name));
+      }
     }
     if (kept.length) {
       // Every copied file, tracked ones git would otherwise ignore included.
@@ -228,12 +232,11 @@ export async function makeWorkCopy(
     if (base.code !== 0) throw new CopyError("git", base.stderr.trim());
     // Git names the top by its real path (/private/var, not /var), so the folder is compared so too.
     const at = relative(root, await realpath(cwd).catch(() => resolve(cwd)));
-    return {
-      dir,
-      root,
-      cwd: at && !at.startsWith("..") ? join(dir, at) : dir,
-      base: text(base),
-    };
+    const here = at && !at.startsWith("..") ? join(dir, at) : dir;
+    // A folder holding only what git ignores or what was left out has nothing copied into it, but
+    // the work still starts there.
+    await mkdir(here, { recursive: true });
+    return { dir, root, cwd: here, base: text(base) };
   } catch (error) {
     await rm(dir, { recursive: true, force: true }).catch(() => {});
     throw error;

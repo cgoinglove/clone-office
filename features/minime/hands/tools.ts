@@ -125,17 +125,18 @@ export async function callHandsTool(
       chat,
       allow: await loadTrust(),
       edits,
+      ...(found ? { found } : {}),
       // A Codex conversation's change, shown once before it reaches the folder; given already
-      // when the person let this task change files there.
-      approve: (card: ChangeCard) =>
-        edits
+      // when the person let this task change files there and it changes nothing elsewhere.
+      approve: (card: ChangeCard, scope: { within: boolean }) =>
+        edits && scope.within
           ? Promise.resolve("allow" as const)
           : askPermission(APPLY_CHANGES_TOOL, { ...card }, chat),
     });
     const after = found && before ? await snapshot(found.cwd) : undefined;
     const changed = before && after ? changedSince(before, after) : [];
     const report = changed.length
-      ? `\nFiles it changed in ${short(found?.cwd ?? "")}${edits ? " (your person let it change files there for this task without asking)" : ""}:\n${changed.map((line) => `- ${line}`).join("\n")}\nTell your person what changed, file by file, so they can look before relying on it.`
+      ? `\nFiles it changed in ${short(after?.top ?? found?.cwd ?? "")}${edits ? " (your person let it change files there for this task without asking)" : ""}:\n${changed.map((line) => `- ${line}`).join("\n")}\nTell your person what changed, file by file, so they can look before relying on it.`
       : "";
     return {
       result:

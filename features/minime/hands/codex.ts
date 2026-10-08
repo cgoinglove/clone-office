@@ -17,7 +17,7 @@
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, isAbsolute, join, sep } from "node:path";
+import { dirname, isAbsolute, join, relative, sep } from "node:path";
 import { logRun } from "../brain/runlog.ts";
 import { cleanEnv } from "../server/brain.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
@@ -414,9 +414,29 @@ export interface ChangeCard {
   copy: string;
 }
 
+/**
+ * Put the change to the person. `within` says whether every file it changes is inside the
+ * conversation's own folder (the one its work card named) and none in a folder they left out: only
+ * then may a task they let change files there go in without this card.
+ */
 export type Approve = (
   card: ChangeCard,
+  scope: { within: boolean },
 ) => Promise<"allow" | "deny" | "unanswered">;
+
+/** Whether each changed path is in the conversation's folder within the copy, and none left out. */
+export function withinFolder(
+  copy: Pick<WorkCopy, "dir" | "cwd" | "root">,
+  changed: Changes["changed"],
+  excludes: readonly string[],
+): boolean {
+  const at = relative(copy.dir, copy.cwd).replaceAll(sep, "/");
+  if (at.startsWith("..")) return false;
+  return changed.every(({ path }) => {
+    const inside = !at || path === at || path.startsWith(`${at}/`);
+    return inside && !isExcluded(join(copy.root, path), excludes);
+  });
+}
 
 const listOf = (changes: Changes) =>
   changes.changed.map(({ status, path }) => `${status} ${path}`);
@@ -478,13 +498,16 @@ export async function workCodex(
     const changed = listOf(changes);
     let answer: Awaited<ReturnType<Approve>>;
     try {
-      answer = await approve({
-        session: session.name ?? session.id,
-        folder: copy.root,
-        changed,
-        diff: clip(changes.patch.toString("utf8"), CARD_DIFF_CHARS),
-        copy: copy.dir,
-      });
+      answer = await approve(
+        {
+          session: session.name ?? session.id,
+          folder: copy.root,
+          changed,
+          diff: clip(changes.patch.toString("utf8"), CARD_DIFF_CHARS),
+          copy: copy.dir,
+        },
+        { within: withinFolder(copy, changes.changed, excludes) },
+      );
     } catch (error) {
       const kept = await keepPatch(home, changes.patch);
       return {

@@ -8,6 +8,7 @@
 import { connectorOfTool } from "../connectors/catalog.ts";
 import { readRule, readsOnly } from "../connectors/tools.ts";
 import { getFlow } from "../flows/store.ts";
+import { GRANT_TASK_MAX } from "../hands/grants.ts";
 import { findSession, listSessions } from "../hands/sessions.ts";
 import { loadMenu } from "../office/menu.ts";
 import { allowedByMode } from "./autonomy.ts";
@@ -38,6 +39,9 @@ export async function alreadyAllowed(ask: Ask, own = false): Promise<boolean> {
  */
 async function workCard(ask: Extract<Ask, { kind: "permission" }>) {
   const wanted = typeof ask.input.session === "string" ? ask.input.session : "";
+  // A task too long to be looked up again offers no grant, so what is offered is what is kept.
+  if (String(ask.input.task ?? "").length > GRANT_TASK_MAX)
+    return { ...ask, always: false };
   const session = wanted
     ? findSession(
         await listSessions({ days: 90, limit: 200 }).catch(() => []),

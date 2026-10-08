@@ -172,7 +172,8 @@ This is version 0.1, an early one.
   conversations do work**) comes every time, and offers **For this task, don't ask about changing
   files in <folder>**: ticked, it changes files in that folder without a card each time, for that
   one piece of work only. When it is done the clone says which files it changed (in a git
-  repository: each file, with the lines added and removed), so they can look before relying on it.
+  repository: each file whose content changed, with the lines added and removed, and the files it
+  added, removed or put back as committed), so they can look before relying on it.
   - In Claude Code it works in a copy of that conversation named "<name> · clone", which they can
     open later with `/resume`. Unless they ticked the task's choice, every file it changes is asked
     of them first, on a card that shows the change itself; every command it runs is asked every
@@ -183,7 +184,8 @@ This is version 0.1, an early one.
     may change files and run commands, sandboxed: nothing outside that copy is written and nothing
     reaches the network. When it is done, one card (**Let a Codex conversation's changes into your
     files**, Codex 대화가 고친 내용을 내 파일에 반영하기) shows every file it changed and the lines
-    before and after, unless they ticked the task's choice, when the changes go in at once.
+    before and after, unless they ticked the task's choice and every change is inside that folder
+    (and none in a folder they left out), when the changes go in at once.
     **Allow** puts the changes into their folder, all or none: if one of those files changed in the
     meantime, nothing is applied. Otherwise their files stay as they were, and the changes are kept
     as a patch file under `hands/changes/` in the clone's folder (`git apply <file>` in the project

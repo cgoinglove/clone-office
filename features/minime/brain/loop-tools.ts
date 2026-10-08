@@ -17,6 +17,7 @@ import type { Connector } from "../connectors/catalog.ts";
 import { accessToken } from "../connectors/oauth.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
 import { untrusted } from "./untrusted.ts";
+import { TOOL_WAIT_MS } from "./waits.ts";
 
 /** A rule's folder as a path: "~/x" from home, "//x" absolute (gate/rules.ts pathRule). */
 function rulePath(spec: string): string {
@@ -708,8 +709,9 @@ export async function loopTools(options: {
                 (await client.callTool(
                   { name: tool.name, arguments: input },
                   undefined,
-                  // A question to the person can wait ten minutes inside one call.
-                  { timeout: 11 * 60_000, resetTimeoutOnProgress: true },
+                  // A question to the person, or a piece of work in their conversations, waits
+                  // inside one call.
+                  { timeout: TOOL_WAIT_MS, resetTimeoutOnProgress: true },
                 )) as { content?: unknown; isError?: unknown },
               ),
             );

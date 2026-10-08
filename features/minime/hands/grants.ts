@@ -6,6 +6,9 @@
 
 import { createHash } from "node:crypto";
 
+/** The longest task a grant is offered for: the gate route takes no longer one to look it up. */
+export const GRANT_TASK_MAX = 200_000;
+
 /** Long enough for the work to start after the card; a grant nobody took is gone after it. */
 const GRANT_MS = 60 * 60 * 1000;
 
