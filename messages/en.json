@@ -73,7 +73,16 @@
     "team-key-unsealed": "This office's server can't keep a team key until RELAY_ENCRYPTION_KEY is set.",
     "team-key-not-yours": "Only whoever added the office's key, or an owner of the office, can change or remove it.",
     "team-key-limit": "Today's calls with the office's key are used up for you. They start again tomorrow, or pick another way under AI model.",
-    "service-failed": "Starting with this computer could not be set up. Try `npx clone-office service install` in a terminal."
+    "service-failed": "Starting with this computer could not be set up. Try `npx clone-office service install` in a terminal.",
+    "skill-taken": "A colleague already shares a skill by that name. Give yours another name to share it.",
+    "skill-not-yours": "Only the one who shared it, or an owner of the office, can take it out.",
+    "skill-too-large": "That skill is larger than the office takes (256 KB and 50 files at most). Move big files out of it first.",
+    "skills-full": "The office keeps no more skills for now. Take one out first.",
+    "skill-invalid": "That isn't a skill the office can take: its SKILL.md needs a name and a one-line description, and its files go under references, templates, scripts or assets.",
+    "skill-blocked": "Something in that skill is never shared or added: a link to a file elsewhere, a program, or text that tries to steer an AI or reach secrets.",
+    "skill-name-taken-here": "You already have a skill by that name, so the office's one wasn't added.",
+    "skill-changed-here": "You changed this skill after adding it, so the office's version wasn't put over your changes.",
+    "skill-not-shareable": "That skill came with the app or from a colleague, so it isn't yours to share."
   },
   "start": {
     "title": "Get started",
@@ -338,7 +347,13 @@
     "ruleRead": "Read files in {path}",
     "ruleEdit": "Change files in {path}",
     "ruleSite": "Open pages on {site}",
-    "ruleReads": "Read in {service}"
+    "ruleReads": "Read in {service}",
+    "officeSkill": {
+      "share": "Share a skill with your office: {name}",
+      "add": "Add {from}'s skill to your clone: {name}",
+      "addScripts": "Add {from}'s skill to your clone: {name} (it has scripts, which your clone never runs on its own)",
+      "unshare": "Stop sharing a skill with your office: {name}"
+    }
   },
   "office": {
     "title": "Office",
@@ -969,6 +984,37 @@
         "other": "Kept by your clone"
       }
     },
+    "skills": {
+      "title": "Skills",
+      "hint": "How your clone does one kind of task your way. It opens one only when that kind of task comes up.",
+      "loading": "Loading…",
+      "none": "No skills yet. When you show your clone how you want a kind of task done, it keeps it here.",
+      "fromApp": "came with the app",
+      "fromOffice": "from {name}",
+      "share": "Share with office",
+      "shareChanges": "Share changes",
+      "shared": "Shared",
+      "cantShare": "Can't be shared",
+      "shareSure": "These files go to your office, for colleagues' clones to add:",
+      "shareYes": "Share",
+      "officeTitle": "Office skills",
+      "officeHint": "Skills your colleagues shared. Add one and your clone does that kind of task the way they do. Each is checked before it's added, and one you change is never replaced.",
+      "officeNone": "No one has shared a skill yet. Share one of yours above.",
+      "by": "shared by {name}",
+      "byYou": "shared by you",
+      "files": "{count, plural, one {# file} other {# files}}",
+      "scripts": "{count, plural, one {a script} other {# scripts}}, which your clone never runs on its own",
+      "add": "Add",
+      "added": "Added",
+      "update": "Update",
+      "changed": "Changed here",
+      "changedHint": "You changed it, so newer versions from the office don't replace it.",
+      "taken": "You have one by this name",
+      "unshare": "Stop sharing",
+      "remove": "Take out",
+      "removeSure": "Take it out of the office? Copies colleagues added stay theirs.",
+      "removeYes": "Take it out"
+    },
     "office": {
       "thisOffice": "This office",
       "hereHint": "It's open on this computer. Teammates on the same network join with the invite link.",
@@ -1186,7 +1232,13 @@
         "flow": "Ran the flow “{name}”",
         "flowQuiet": "Ran the flow “{name}”: nothing new",
         "flowFailed": "The flow “{name}” did not finish",
-        "open": "Open the request"
+        "open": "Open the request",
+        "skill": {
+          "shared": "Shared the skill “{name}” with the office",
+          "unshared": "Took the skill “{name}” out of the office",
+          "added": "Added {from}'s skill “{name}”",
+          "updated": "Updated {from}'s skill “{name}”"
+        }
       }
     },
     "newChat": "New chat",

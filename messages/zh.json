@@ -73,7 +73,16 @@
     "team-key-unsealed": "设置 RELAY_ENCRYPTION_KEY 之前，这个办公室的服务器没法保存团队密钥。",
     "team-key-not-yours": "只有添加这个密钥的人或办公室的所有者，才能更改或移除它。",
     "team-key-limit": "你今天用办公室密钥的次数已经用完了。明天会重新开始，或者在 AI 模型中换一种方式。",
-    "service-failed": "无法设置随电脑启动。请在终端中运行 `npx clone-office service install`。"
+    "service-failed": "无法设置随电脑启动。请在终端中运行 `npx clone-office service install`。",
+    "skill-taken": "已经有同事共享了同名的技能。给你的技能换个名字就能共享。",
+    "skill-not-yours": "只有共享它的人或办公室的所有者才能把它撤下。",
+    "skill-too-large": "这个技能超出了办公室能收的大小（最多 256 KB、50 个文件）。请先把大文件移出去。",
+    "skills-full": "办公室暂时放不下更多技能了。请先撤下一个。",
+    "skill-invalid": "这不是办公室能收的技能：SKILL.md 需要名称和一行说明，文件要放在 references、templates、scripts 或 assets 下。",
+    "skill-blocked": "这个技能里有永远不会被共享或添加的内容：指向别处文件的链接、程序，或试图操纵 AI、获取机密的文字。",
+    "skill-name-taken-here": "你已经有同名的技能，所以没有添加办公室的这个。",
+    "skill-changed-here": "你在添加后修改过这个技能，所以没有用办公室的版本覆盖你的修改。",
+    "skill-not-shareable": "这个技能是应用自带的，或来自同事，所以不能由你共享。"
   },
   "start": {
     "title": "开始使用",
@@ -338,7 +347,13 @@
     "ruleRead": "读取 {path} 里的文件",
     "ruleEdit": "修改 {path} 里的文件",
     "ruleSite": "打开 {site} 上的网页",
-    "ruleReads": "在 {service} 里读取"
+    "ruleReads": "在 {service} 里读取",
+    "officeSkill": {
+      "share": "把技能共享给办公室：{name}",
+      "add": "把 {from} 的技能加到你的分身：{name}",
+      "addScripts": "把 {from} 的技能加到你的分身：{name}（其中有脚本，你的分身绝不会自己运行）",
+      "unshare": "不再向办公室共享技能：{name}"
+    }
   },
   "office": {
     "title": "办公室",
@@ -969,6 +984,37 @@
         "other": "分身记下的"
       }
     },
+    "skills": {
+      "title": "技能",
+      "hint": "你的分身按你的方式做某一类事的方法。只有遇到这类事时才会打开。",
+      "loading": "加载中…",
+      "none": "还没有技能。告诉分身某类事你想怎么做，它就会记在这里。",
+      "fromApp": "应用自带",
+      "fromOffice": "来自 {name}",
+      "share": "共享给办公室",
+      "shareChanges": "共享修改",
+      "shared": "已共享",
+      "cantShare": "无法共享",
+      "shareSure": "这些文件会发到你的办公室，供同事的分身添加：",
+      "shareYes": "共享",
+      "officeTitle": "办公室技能",
+      "officeHint": "同事共享的技能。添加后，你的分身会像他们一样做这类事。每个技能添加前都会检查，你改过的不会被替换。",
+      "officeNone": "还没有人共享技能。可以在上面共享你的技能。",
+      "by": "{name} 共享",
+      "byYou": "你共享的",
+      "files": "{count, plural, other {# 个文件}}",
+      "scripts": "{count, plural, other {# 个脚本}}，你的分身绝不会自己运行",
+      "add": "添加",
+      "added": "已添加",
+      "update": "更新",
+      "changed": "已在这里修改",
+      "changedHint": "你改过它，所以办公室的新版本不会替换它。",
+      "taken": "你有同名的技能",
+      "unshare": "停止共享",
+      "remove": "撤下",
+      "removeSure": "从办公室撤下它？同事已添加的副本仍归他们。",
+      "removeYes": "撤下"
+    },
     "office": {
       "thisOffice": "这个办公室",
       "hereHint": "办公室开在这台电脑上。同一网络里的同事用邀请链接加入。",
@@ -1186,7 +1232,13 @@
         "flow": "运行了自动流程“{name}”",
         "flowQuiet": "运行了自动流程“{name}”：没有新消息",
         "flowFailed": "自动流程“{name}”没有完成",
-        "open": "打开请求"
+        "open": "打开请求",
+        "skill": {
+          "shared": "把技能“{name}”共享给了办公室",
+          "unshared": "把技能“{name}”从办公室撤下",
+          "added": "添加了 {from} 的技能“{name}”",
+          "updated": "更新了 {from} 的技能“{name}”"
+        }
       }
     },
     "newChat": "新对话",

@@ -67,6 +67,8 @@ test("the mini-me's tool server starts and lists its tools, the gate's and the h
     "flows",
     "flow_manage",
     "office_inbox",
+    "office_skills",
+    "office_skill_manage",
   ])
     assert.ok(names.includes(name), `${name} is listed`);
 });
@@ -170,6 +172,8 @@ test("answering a colleague's request, the person's own office, flows and settin
   const names = tools.map((t) => t.name);
   for (const name of [
     "office_inbox",
+    "office_skills",
+    "office_skill_manage",
     "flows",
     "flow_manage",
     "leave_out_folder",

@@ -38,6 +38,11 @@ import {
 } from "../hands/tools.ts";
 import { CONVERSATION_TOOLS, callConversationTool } from "../history/tools.ts";
 import { OFFICE_INBOX_TOOL, officeInbox } from "../office/inbox-tool.ts";
+import {
+  callOfficeSkillTool,
+  OFFICE_SKILL_MANAGE_TOOL,
+  OFFICE_SKILLS_TOOL,
+} from "../office/skills-tool.ts";
 import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
 import { appDir, minimeHome } from "../server/paths.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
@@ -99,6 +104,8 @@ const answering =
 const PERSON_ONLY = new Set([
   "flows",
   "office_inbox",
+  "office_skills",
+  "office_skill_manage",
   "flow_manage",
   "leave_out_folder",
 ]);
@@ -117,7 +124,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         CONVERSATION_TOOLS.search,
         CONVERSATION_TOOLS.read,
         GUIDE_TOOL,
-        ...(answering ? [] : [FLOWS_TOOL, OFFICE_INBOX_TOOL]),
+        ...(answering
+          ? []
+          : [FLOWS_TOOL, OFFICE_INBOX_TOOL, OFFICE_SKILLS_TOOL]),
         ...(gateOpen
           ? [
               ASK_TOOL,
@@ -125,7 +134,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
               SESSIONS_TOOL,
               ASK_SESSION_TOOL,
               WORK_SESSION_TOOL,
-              ...(answering ? [] : [LEAVE_OUT_TOOL, FLOW_MANAGE_TOOL]),
+              ...(answering
+                ? []
+                : [LEAVE_OUT_TOOL, FLOW_MANAGE_TOOL, OFFICE_SKILL_MANAGE_TOOL]),
             ]
           : []),
         ...(colleaguesOpen
@@ -207,6 +218,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     case OFFICE_INBOX_TOOL.name: {
       const { result, isError } = await officeInbox(args);
+      return text(result, isError);
+    }
+    case OFFICE_SKILLS_TOOL.name:
+    case OFFICE_SKILL_MANAGE_TOOL.name: {
+      const { result, isError } = await callOfficeSkillTool(
+        skills,
+        request.params.name,
+        args,
+      );
       return text(result, isError);
     }
     case FLOWS_TOOL.name:

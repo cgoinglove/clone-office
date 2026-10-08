@@ -2,10 +2,12 @@
 
 // The clone's screen, In your name: what it did for the person, latest first, any day (answers it
 // sent colleagues and how, ones it held back, requests it sent, "from now on" made or taken back,
-// flows run), each request opening where it is answered (server/activity.ts).
+// flows run, skills shared with the office or added from it), each request opening where it is
+// answered (server/activity.ts).
 
 import {
   ArrowUpRight,
+  BookOpen,
   Check,
   Hand,
   Repeat,
@@ -32,6 +34,12 @@ type Logged = { at: string } & (
   | { kind: "asked"; task: string; to: string; text: string; files?: number }
   | { kind: "rule"; rule: string; added: boolean }
   | { kind: "flow"; name: string; ok: boolean; quiet?: boolean }
+  | {
+      kind: "skill";
+      name: string;
+      action: "shared" | "unshared" | "added" | "updated";
+      from?: string;
+    }
 );
 
 const ICONS = {
@@ -40,6 +48,7 @@ const ICONS = {
   asked: Send,
   rule: ShieldCheck,
   flow: Repeat,
+  skill: BookOpen,
 } as const;
 
 export function ActivityList() {
@@ -70,6 +79,11 @@ export function ActivityList() {
     if (line.kind === "rule")
       return t(line.added ? "ruleAdded" : "ruleRemoved", {
         rule: ruleText(ask, line.rule),
+      });
+    if (line.kind === "skill")
+      return t(`skill.${line.action}`, {
+        name: line.name,
+        from: line.from ?? t("colleague"),
       });
     return t(line.ok ? (line.quiet ? "flowQuiet" : "flow") : "flowFailed", {
       name: line.name,

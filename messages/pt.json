@@ -73,7 +73,16 @@
     "team-key-unsealed": "O servidor deste escritório não pode guardar uma chave da equipe até que RELAY_ENCRYPTION_KEY seja configurada.",
     "team-key-not-yours": "Só quem adicionou a chave do escritório, ou um dono do escritório, pode alterá-la ou removê-la.",
     "team-key-limit": "Você já usou as chamadas de hoje com a chave do escritório. Amanhã elas voltam, ou escolha outra opção em Modelo de IA.",
-    "service-failed": "Não foi possível configurar o início com o computador. Tente `npx clone-office service install` em um terminal."
+    "service-failed": "Não foi possível configurar o início com o computador. Tente `npx clone-office service install` em um terminal.",
+    "skill-taken": "Um colega já compartilha uma habilidade com esse nome. Dê outro nome à sua para compartilhá-la.",
+    "skill-not-yours": "Só quem a compartilhou, ou um dono do escritório, pode tirá-la.",
+    "skill-too-large": "Essa habilidade é maior do que o escritório aceita (no máximo 256 KB e 50 arquivos). Tire os arquivos grandes dela primeiro.",
+    "skills-full": "O escritório não guarda mais habilidades por enquanto. Tire uma primeiro.",
+    "skill-invalid": "Essa não é uma habilidade que o escritório aceite: o SKILL.md precisa de um nome e de uma descrição de uma linha, e os arquivos ficam em references, templates, scripts ou assets.",
+    "skill-blocked": "Essa habilidade tem algo que nunca é compartilhado nem adicionado: um link para um arquivo em outro lugar, um programa, ou um texto que tenta conduzir uma IA ou chegar a segredos.",
+    "skill-name-taken-here": "Você já tem uma habilidade com esse nome, então a do escritório não foi adicionada.",
+    "skill-changed-here": "Você mudou essa habilidade depois de adicioná-la, então a versão do escritório não foi colocada por cima das suas mudanças.",
+    "skill-not-shareable": "Essa habilidade veio com o app ou de um colega, então não cabe a você compartilhá-la."
   },
   "start": {
     "title": "Começar",
@@ -338,7 +347,13 @@
     "ruleRead": "Ler arquivos em {path}",
     "ruleEdit": "Alterar arquivos em {path}",
     "ruleSite": "Abrir páginas de {site}",
-    "ruleReads": "Ler em {service}"
+    "ruleReads": "Ler em {service}",
+    "officeSkill": {
+      "share": "Compartilhar uma habilidade com seu escritório: {name}",
+      "add": "Adicionar ao seu clone a habilidade de {from}: {name}",
+      "addScripts": "Adicionar ao seu clone a habilidade de {from}: {name} (tem scripts, que seu clone nunca roda sozinho)",
+      "unshare": "Parar de compartilhar uma habilidade com seu escritório: {name}"
+    }
   },
   "office": {
     "title": "Escritório",
@@ -969,6 +984,37 @@
         "other": "Guardado pelo seu clone"
       }
     },
+    "skills": {
+      "title": "Habilidades",
+      "hint": "Como seu clone faz um tipo de tarefa do seu jeito. Ele abre uma só quando esse tipo de tarefa aparece.",
+      "loading": "Carregando…",
+      "none": "Ainda não há habilidades. Quando você mostrar ao seu clone como quer um tipo de tarefa feito, ele guarda aqui.",
+      "fromApp": "veio com o app",
+      "fromOffice": "de {name}",
+      "share": "Compartilhar com o escritório",
+      "shareChanges": "Compartilhar mudanças",
+      "shared": "Compartilhada",
+      "cantShare": "Não pode ser compartilhada",
+      "shareSure": "Estes arquivos vão para o seu escritório, para os clones dos colegas adicionarem:",
+      "shareYes": "Compartilhar",
+      "officeTitle": "Habilidades do escritório",
+      "officeHint": "Habilidades que seus colegas compartilharam. Adicione uma e seu clone faz esse tipo de tarefa do jeito deles. Cada uma é verificada antes de ser adicionada, e uma que você mudar nunca é substituída.",
+      "officeNone": "Ninguém compartilhou uma habilidade ainda. Compartilhe uma das suas acima.",
+      "by": "compartilhada por {name}",
+      "byYou": "compartilhada por você",
+      "files": "{count, plural, one {# arquivo} other {# arquivos}}",
+      "scripts": "{count, plural, one {um script} other {# scripts}}, que seu clone nunca roda sozinho",
+      "add": "Adicionar",
+      "added": "Adicionada",
+      "update": "Atualizar",
+      "changed": "Mudada aqui",
+      "changedHint": "Você a mudou, então as versões novas do escritório não a substituem.",
+      "taken": "Você tem uma com esse nome",
+      "unshare": "Parar de compartilhar",
+      "remove": "Tirar",
+      "removeSure": "Tirá-la do escritório? As cópias que os colegas adicionaram continuam deles.",
+      "removeYes": "Tirar"
+    },
     "office": {
       "thisOffice": "Este escritório",
       "hereHint": "Está aberto neste computador. Colegas na mesma rede entram com o link de convite.",
@@ -1186,7 +1232,13 @@
         "flow": "Rodou a rotina “{name}”",
         "flowQuiet": "Rodou a rotina “{name}”: nada novo",
         "flowFailed": "A rotina “{name}” não terminou",
-        "open": "Abrir o pedido"
+        "open": "Abrir o pedido",
+        "skill": {
+          "shared": "Compartilhou a habilidade “{name}” com o escritório",
+          "unshared": "Tirou a habilidade “{name}” do escritório",
+          "added": "Adicionou a habilidade “{name}” de {from}",
+          "updated": "Atualizou a habilidade “{name}” de {from}"
+        }
       }
     },
     "newChat": "Novo chat",

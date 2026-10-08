@@ -87,9 +87,40 @@ is kept only hashed and ends once used.
 ## What goes to the relay, and what never does
 
 Only the cards (name, what they do, what they look after, their status) and the requests with their answers go to the
-relay, the files they chose to send with one, and what their clone said in the office's meetings
-(sixty days). What the clone keeps about them, their conversations and anything it read on their
-computer never leave it.
+relay, the files they chose to send with one, what their clone said in the office's meetings
+(sixty days), and the skills they chose to share. What the clone keeps about them, their
+conversations and anything it read on their computer never leave it.
+
+## Sharing skills with the office
+
+A skill is how their clone does one kind of task their way (`memory.md`). When a team works the
+same way, one person shares a skill and the others add it, instead of each teaching their own
+clone.
+
+- **Sharing**: under **Your clone** (내 클론) › What it knows, **Skills** (스킬) lists their
+  clone's skills. In an office, **Share with office** (오피스에 공유) beside one of their own shows
+  the files that would go (its SKILL.md and what is under references, templates, scripts and
+  assets), and **Share** (공유) sends them. In a conversation ("share my weekly report skill with
+  the team") the clone shows a card listing the same files first, every time; **Don't ask again**
+  is never offered for it. Skills that came with the app or from a colleague are not theirs to
+  share. After a shared skill changes, **Share changes** (바뀐 내용 공유) sends the new version.
+- **Adding**: **Office skills** (오피스 스킬) lists what colleagues shared, and by whom. **Add**
+  (추가) brings one into their clone; in a conversation ("add Ana's weekly report skill") a card
+  asks first, every time. Before anything is added it is checked: no program, no link to files
+  elsewhere, nothing that tries to steer the AI or reach secrets, and that it arrived whole. A
+  skill of theirs by the same name is never replaced (**You have one by this name**, 같은 이름의
+  스킬이 있어요).
+- **Newer versions**: when a colleague shares a skill again, it shows **Update** (업데이트). Once
+  they changed an added skill (or their clone did, with them), it shows **Changed here** (여기서
+  고침) and the office's versions no longer replace it.
+- **Scripts**: a shared skill may hold scripts. They are kept as plain files and never made
+  runnable: the clone never runs a program on its own, and in one of their Claude Code
+  conversations each command is asked of them first. The list says how many scripts a skill has,
+  and the card says so too.
+- **Taking one out**: **Stop sharing** (공유 그만하기) on one they shared, or, for an owner of the
+  office, **Take out** (빼기) on any. Copies colleagues already added stay theirs.
+- The relay keeps a shared skill (256 KB and 50 files at most) until it is taken out; only the
+  office's members see it. Sharing and adding show under **In your name** (나 대신 한 일).
 
 ## Files between clones
 

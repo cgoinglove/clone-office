@@ -73,7 +73,16 @@
     "team-key-unsealed": "El servidor de esta oficina no puede guardar una clave del equipo hasta que se configure RELAY_ENCRYPTION_KEY.",
     "team-key-not-yours": "Solo quien agregó la clave de la oficina, o un dueño de la oficina, puede cambiarla o quitarla.",
     "team-key-limit": "Ya usaste las llamadas de hoy con la clave de la oficina. Mañana vuelven a estar disponibles, o elige otra opción en Modelo de IA.",
-    "service-failed": "No se pudo configurar el inicio con la computadora. Prueba `npx clone-office service install` en una terminal."
+    "service-failed": "No se pudo configurar el inicio con la computadora. Prueba `npx clone-office service install` en una terminal.",
+    "skill-taken": "Un colega ya comparte una habilidad con ese nombre. Ponle otro nombre a la tuya para compartirla.",
+    "skill-not-yours": "Solo quien la compartió, o un dueño de la oficina, puede quitarla.",
+    "skill-too-large": "Esa habilidad es más grande de lo que acepta la oficina (256 KB y 50 archivos como máximo). Saca primero los archivos grandes.",
+    "skills-full": "La oficina no guarda más habilidades por ahora. Quita una primero.",
+    "skill-invalid": "No es una habilidad que la oficina pueda aceptar: su SKILL.md necesita un nombre y una descripción de una línea, y sus archivos van en references, templates, scripts o assets.",
+    "skill-blocked": "Esa habilidad tiene algo que nunca se comparte ni se añade: un enlace a un archivo de otro lugar, un programa, o texto que intenta dirigir a una IA o llegar a secretos.",
+    "skill-name-taken-here": "Ya tienes una habilidad con ese nombre, así que no se añadió la de la oficina.",
+    "skill-changed-here": "Cambiaste esta habilidad después de añadirla, así que la versión de la oficina no se puso encima de tus cambios.",
+    "skill-not-shareable": "Esa habilidad vino con la app o de un colega, así que no te toca compartirla."
   },
   "start": {
     "title": "Empezar",
@@ -338,7 +347,13 @@
     "ruleRead": "Leer archivos en {path}",
     "ruleEdit": "Cambiar archivos en {path}",
     "ruleSite": "Abrir páginas de {site}",
-    "ruleReads": "Leer en {service}"
+    "ruleReads": "Leer en {service}",
+    "officeSkill": {
+      "share": "Compartir una habilidad con tu oficina: {name}",
+      "add": "Añadir a tu clon la habilidad de {from}: {name}",
+      "addScripts": "Añadir a tu clon la habilidad de {from}: {name} (tiene scripts, que tu clon nunca ejecuta por su cuenta)",
+      "unshare": "Dejar de compartir una habilidad con tu oficina: {name}"
+    }
   },
   "office": {
     "title": "Oficina",
@@ -969,6 +984,37 @@
         "other": "Guardado por tu clon"
       }
     },
+    "skills": {
+      "title": "Habilidades",
+      "hint": "Cómo hace tu clon un tipo de tarea a tu manera. Abre una solo cuando surge ese tipo de tarea.",
+      "loading": "Cargando…",
+      "none": "Todavía no hay habilidades. Cuando le muestres a tu clon cómo quieres que haga un tipo de tarea, la guarda aquí.",
+      "fromApp": "vino con la app",
+      "fromOffice": "de {name}",
+      "share": "Compartir con la oficina",
+      "shareChanges": "Compartir cambios",
+      "shared": "Compartida",
+      "cantShare": "No se puede compartir",
+      "shareSure": "Estos archivos van a tu oficina, para que los clones de tus colegas los añadan:",
+      "shareYes": "Compartir",
+      "officeTitle": "Habilidades de la oficina",
+      "officeHint": "Habilidades que compartieron tus colegas. Añade una y tu clon hará ese tipo de tarea como ellos. Cada una se revisa antes de añadirse, y una que cambies nunca se reemplaza.",
+      "officeNone": "Nadie ha compartido una habilidad todavía. Comparte una de las tuyas arriba.",
+      "by": "compartida por {name}",
+      "byYou": "compartida por ti",
+      "files": "{count, plural, one {# archivo} other {# archivos}}",
+      "scripts": "{count, plural, one {un script} other {# scripts}}, que tu clon nunca ejecuta por su cuenta",
+      "add": "Añadir",
+      "added": "Añadida",
+      "update": "Actualizar",
+      "changed": "Cambiada aquí",
+      "changedHint": "La cambiaste, así que las versiones nuevas de la oficina no la reemplazan.",
+      "taken": "Tienes una con este nombre",
+      "unshare": "Dejar de compartir",
+      "remove": "Quitar",
+      "removeSure": "¿Quitarla de la oficina? Las copias que añadieron tus colegas siguen siendo suyas.",
+      "removeYes": "Quitarla"
+    },
     "office": {
       "thisOffice": "Esta oficina",
       "hereHint": "Está abierta en esta computadora. Tus colegas en la misma red se unen con el enlace de invitación.",
@@ -1186,7 +1232,13 @@
         "flow": "Ejecutó la rutina «{name}»",
         "flowQuiet": "Ejecutó la rutina «{name}»: nada nuevo",
         "flowFailed": "La rutina «{name}» no terminó",
-        "open": "Abrir la solicitud"
+        "open": "Abrir la solicitud",
+        "skill": {
+          "shared": "Compartió la habilidad «{name}» con la oficina",
+          "unshared": "Quitó la habilidad «{name}» de la oficina",
+          "added": "Añadió la habilidad «{name}» de {from}",
+          "updated": "Actualizó la habilidad «{name}» de {from}"
+        }
       }
     },
     "newChat": "Nuevo chat",

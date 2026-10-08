@@ -13,10 +13,31 @@
 // Follows Hermes Agent (tools/skill_manager_tool.py, tools/skills_tool.py, tools/skill_usage.py,
 // tools/skill_linter.py; MIT, Nous Research), with one difference: deleting archives instead of
 // removing, because this app never deletes what a person's mini-me has learned.
+//
+// A skill also travels within the person's office (../office/shared-skills.ts): `pack` gathers
+// what one would take there, and `addShared` brings in one a colleague shared, checked first as
+// Hermes Agent's skills hub checks what it installs (paths, programs, the memory threat scan, the
+// hash it was shared with), with its origin in `.office.json` so a later version replaces it only
+// while it is as it came, as the skills the app ships are.
 
-import { createHash } from "node:crypto";
-import { cp, mkdir, readdir, readFile, rename, rm } from "node:fs/promises";
-import { join, normalize, sep } from "node:path";
+import { randomBytes } from "node:crypto";
+import {
+  cp,
+  lstat,
+  mkdir,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  writeFile,
+} from "node:fs/promises";
+import { dirname, join, normalize, sep } from "node:path";
+import {
+  SKILL_BYTES,
+  SKILL_FILES,
+  skillHash,
+  skillPath,
+} from "../../relay/skills.ts";
 import { atomicWrite, readText, withLock } from "./files.ts";
 import { threatMessage } from "./threats.ts";
 
@@ -41,7 +62,13 @@ export const SUPPORT_DIRS = [
 const ARCHIVE = ".archive";
 /** The skills the app shipped here, each with the hash of the files it came with. */
 const BUNDLED = ".bundled.json";
+/** The skills added from the office, each with the hash it came with and who shared it. */
+const OFFICE = ".office.json";
 const USAGE = ".usage.json";
+
+/** Programs, which a skill never carries to or from the office (Hermes Agent's skills guard). */
+const PROGRAM =
+  /\.(?:exe|dll|so|dylib|bin|com|msi|dmg|app|deb|rpm|pkg|apk|jar|scr|bat|cmd|ps1|vbs)$/i;
 
 /**
  * Who is writing. The mini-me in a session with its person, its background review (no person
@@ -57,8 +84,12 @@ export interface SkillInfo {
 }
 
 export interface UsageRecord {
-  /** "bundled": one the app ships, which the clone adapts to its person and the curator leaves. */
-  created_by: "minime" | "person" | "bundled" | null;
+  /**
+   * "bundled": one the app ships, which the clone adapts to its person and the curator leaves.
+   * "office": one a colleague shared that the person added; changed only with them, never set
+   * aside by the curator.
+   */
+  created_by: "minime" | "person" | "bundled" | "office" | null;
   created_at: string;
   view_count: number;
   last_viewed_at: string | null;
@@ -99,6 +130,40 @@ export type SkillResult =
       warnings?: string[];
     }
   | { success: false; error: string };
+
+/** One file of a skill as it goes to or comes from the office: its path in the skill, its bytes. */
+export interface SkillFile {
+  path: string;
+  bytes: Uint8Array;
+}
+
+/** Why a skill does not go to the office or come from it: a code for the screen, and the detail. */
+export interface SkillRefusal {
+  ok: false;
+  code: string;
+  message: string;
+}
+
+/** A skill as it would go to the office. */
+export interface PackedSkill {
+  ok: true;
+  name: string;
+  category?: string;
+  description: string;
+  files: SkillFile[];
+  size: number;
+  hash: string;
+}
+
+/** Where a skill added from the office came from. */
+export interface OfficeOrigin {
+  /** The hash of its files as they came (the relay's `skillHash`). */
+  hash: string;
+  /** The member who shared it, and their name then. */
+  by: string;
+  byName: string;
+  added: string;
+}
 
 export type SkillView =
   | {
@@ -397,6 +462,216 @@ export class SkillStore {
     if (from.exists) await atomicWrite(to, from.raw);
   }
 
+  // The office --------------------------------------------------------------------------------
+
+  /**
+   * What one of the person's skills would take to their office: SKILL.md and the files under its
+   * four folders, as they are, checked as a colleague's clone will check them on adding it (no link
+   * to anything elsewhere, no program, nothing the threat scan stops, small enough), with the hash
+   * the office will keep for it.
+   */
+  async pack(name: string): Promise<PackedSkill | SkillRefusal> {
+    const found = await this.find(name);
+    if (!found) return refusal("not-found", `No skill named '${name}'.`);
+    const files: SkillFile[] = [];
+    let size = 0;
+    const take = async (path: string): Promise<SkillRefusal | undefined> => {
+      const full = join(/*turbopackIgnore: true*/ found.path, path);
+      const info = await lstat(full).catch(() => undefined);
+      if (!info) return undefined;
+      // A link could carry any file on this computer out with the skill.
+      if (info.isSymbolicLink())
+        return refusal(
+          "skill-blocked",
+          `${path} is a link to something elsewhere on this computer; a skill never takes one to the office.`,
+        );
+      if (info.isDirectory()) {
+        const entries = await readdir(full).catch(() => [] as string[]);
+        for (const entry of entries.sort()) {
+          if (entry.startsWith(".")) continue;
+          const stop = await take(`${path}/${entry}`);
+          if (stop) return stop;
+        }
+        return undefined;
+      }
+      if (!info.isFile()) return undefined;
+      size += info.size;
+      if (size > SKILL_BYTES || files.length >= SKILL_FILES)
+        return refusal(
+          "skill-too-large",
+          `'${found.name}' is larger than the office takes (${SKILL_BYTES / 1024} KB and ${SKILL_FILES} files at most).`,
+        );
+      files.push({ path, bytes: new Uint8Array(await readFile(full)) });
+      return undefined;
+    };
+    for (const path of ["SKILL.md", ...SUPPORT_DIRS]) {
+      const stop = await take(path);
+      if (stop) return stop;
+    }
+    const checked = inspect(found.name, files);
+    if (!checked.ok) return checked;
+    return {
+      ok: true,
+      name: found.name,
+      ...(found.category ? { category: found.category } : {}),
+      description: checked.description,
+      files,
+      size: checked.size,
+      hash: skillHash(files),
+    };
+  }
+
+  /** The skills added from the office, by name, with where each came from. */
+  async officeOrigins(): Promise<Record<string, OfficeOrigin>> {
+    try {
+      return JSON.parse(
+        (await readText(join(/*turbopackIgnore: true*/ this.dir, OFFICE)))
+          .raw || "{}",
+      );
+    } catch {
+      return {};
+    }
+  }
+
+  /** The hash of a skill's folder as it is now (the office's `skillHash` over every file). */
+  async hashOf(name: string): Promise<string | undefined> {
+    const found = await this.find(name);
+    return found ? treeHash(found.path) : undefined;
+  }
+
+  /**
+   * Adds a skill a colleague shared with the office, or its newer version, after the checks `pack`
+   * makes and a check that it came whole (its hash). Never over a skill of the person's by that
+   * name, nor over one added before that was changed here since; its scripts are kept as files,
+   * never made runnable. With `check`, only says whether it would.
+   */
+  async addShared(
+    input: {
+      name: string;
+      category?: string;
+      files: SkillFile[];
+      hash: string;
+      by: string;
+      byName: string;
+    },
+    options: { check?: boolean } = {},
+  ): Promise<{ ok: true; updated: boolean; same: boolean } | SkillRefusal> {
+    const checked = inspect(input.name, input.files);
+    if (!checked.ok) return checked;
+    if (skillHash(input.files) !== input.hash)
+      return refusal(
+        "skill-invalid",
+        `'${input.name}' did not come whole from the office; nothing was added.`,
+      );
+    return withLock(this.dir, async () => {
+      const origins = await this.officeOrigins();
+      const origin = origins[input.name];
+      const here = await this.find(input.name);
+      if (here && !origin)
+        return refusal(
+          "skill-name-taken-here",
+          `A skill named '${input.name}' is here already and did not come from the office; it is never replaced.`,
+        );
+      if (here && origin && (await treeHash(here.path)) !== origin.hash)
+        return refusal(
+          "skill-changed-here",
+          `'${input.name}' was changed here since it was added; the office's version is not put over it.`,
+        );
+      if (here && origin?.hash === input.hash)
+        return { ok: true as const, updated: false, same: true };
+      // A new one goes into the category it was shared in, unless that is a skill here.
+      let category =
+        input.category && NAME.test(input.category)
+          ? input.category
+          : undefined;
+      if (
+        category &&
+        (
+          await readText(
+            join(/*turbopackIgnore: true*/ this.dir, category, "SKILL.md"),
+          )
+        ).exists
+      )
+        category = undefined;
+      const target =
+        here?.path ??
+        join(
+          /*turbopackIgnore: true*/ this.dir,
+          ...(category ? [category] : []),
+          input.name,
+        );
+      if (!here) {
+        const listed = await readdir(target).then(
+          (entries) => entries,
+          (error: NodeJS.ErrnoException) =>
+            error.code === "ENOENT" ? undefined : ["?"],
+        );
+        if (listed?.length)
+          return refusal(
+            "skill-name-taken-here",
+            `'${input.name}' is a folder here already (a category or other files); nothing was added.`,
+          );
+      }
+      if (options.check)
+        return { ok: true as const, updated: Boolean(here), same: false };
+      // Written whole aside first (a hidden folder no listing reads), then put in place at once.
+      const staging = join(
+        /*turbopackIgnore: true*/ this.dir,
+        `.incoming-${randomBytes(6).toString("hex")}`,
+      );
+      try {
+        for (const file of input.files) {
+          const to = join(
+            /*turbopackIgnore: true*/ staging,
+            ...file.path.split("/"),
+          );
+          await mkdir(dirname(to), { recursive: true });
+          // Never executable: a script that came from a colleague runs only if the person runs it.
+          await writeFile(to, file.bytes, { mode: 0o644 });
+        }
+        await mkdir(dirname(target), { recursive: true });
+        if (here) {
+          const old = join(
+            /*turbopackIgnore: true*/ this.dir,
+            `.replaced-${randomBytes(6).toString("hex")}`,
+          );
+          await rename(here.path, old);
+          try {
+            await rename(staging, target);
+          } catch (error) {
+            await rename(old, here.path);
+            throw error;
+          }
+          await rm(old, { recursive: true, force: true });
+        } else {
+          // An empty folder left there is nothing of anyone's.
+          await rm(target, { recursive: true, force: true });
+          await rename(staging, target);
+        }
+      } catch (error) {
+        await rm(staging, { recursive: true, force: true });
+        throw error;
+      }
+      origins[input.name] = {
+        hash: input.hash,
+        by: input.by,
+        byName: input.byName,
+        added: now(),
+      };
+      await atomicWrite(
+        join(/*turbopackIgnore: true*/ this.dir, OFFICE),
+        JSON.stringify(origins, null, 2),
+      );
+      await this.updateUsage((usage) => {
+        usage[input.name] =
+          here && usage[input.name]
+            ? { ...usage[input.name], created_by: "office", state: "active" }
+            : emptyRecord("office");
+      });
+      return { ok: true as const, updated: Boolean(here), same: false };
+    });
+  }
+
   /** Keep a skill from being set aside or changed by the review; for the person. */
   async pin(name: string, pinned: boolean): Promise<boolean> {
     const found = await this.find(name);
@@ -569,13 +844,14 @@ export class SkillStore {
           throw new Error(`${at}: no skill named '${name}'. Use skills_list.`);
         const record = usage[found.name];
         // The review adapts what the clone made and the skills the app ships to how the person
-        // works; their own skills, pinned ones, and setting a shipped one aside are theirs.
+        // works; their own skills, pinned ones, and setting a shipped one aside are theirs. One
+        // their office shared is too: changed here, the office's later versions no longer come.
         const adaptable =
           record?.created_by === "minime" ||
           (record?.created_by === "bundled" && op.action !== "delete");
         if (this.actor === "review" && (!adaptable || record?.pinned))
           throw new Error(
-            `${at}: '${found.name}' is ${record?.pinned ? "pinned" : record?.created_by === "bundled" ? "one the app ships; only your person sets it aside" : "your person's own skill"}; it can be changed only in a session with them. Say what should change in your reply instead.`,
+            `${at}: '${found.name}' is ${record?.pinned ? "pinned" : record?.created_by === "bundled" ? "one the app ships; only your person sets it aside" : record?.created_by === "office" ? "one their office shares (once changed, the office's newer versions no longer replace it)" : "your person's own skill"}; it can be changed only in a session with them. Say what should change in your reply instead.`,
           );
         if (op.action === "delete") {
           if (record?.pinned)
@@ -875,15 +1151,100 @@ export class SkillStore {
   }
 }
 
-/** One hash over a skill's files (names and contents, hidden files left out), to tell if it changed. */
+/**
+ * One hash over a skill's files (names and contents, hidden files left out), to tell if it changed:
+ * the office's own (`skillHash`), so a skill added from it hashes here as it was shared.
+ */
 async function treeHash(dir: string): Promise<string> {
-  const hash = createHash("sha256");
-  for (const file of (await listFiles(dir)).sort()) {
-    hash.update(`${file}\0`);
-    hash.update(await readFile(join(/*turbopackIgnore: true*/ dir, file)));
-    hash.update("\0");
+  const files: SkillFile[] = [];
+  for (const path of await listFiles(dir))
+    files.push({
+      path,
+      bytes: await readFile(join(/*turbopackIgnore: true*/ dir, path)),
+    });
+  return skillHash(files);
+}
+
+function refusal(code: string, message: string): SkillRefusal {
+  return { ok: false, code, message };
+}
+
+/** A file's bytes as text when they are UTF-8. */
+function utf8(bytes: Uint8Array): string | undefined {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return undefined;
   }
-  return hash.digest("hex");
+}
+
+/** The threat scan over all of a text, in overlapping windows (one scan looks at 64K at most). */
+function scanText(text: string): string | undefined {
+  for (let at = 0; ; at += 60_000) {
+    const blocked = threatMessage(text.slice(at, at + 64_000));
+    if (blocked) return blocked;
+    if (at + 64_000 >= text.length) return undefined;
+  }
+}
+
+/**
+ * Whether a skill may go to the office or come from it, file by file: every path one a skill holds,
+ * no program, text where text is read (SKILL.md and scripts), nothing the memory threat scan stops
+ * (it is read into a session as the clone's own procedure), and SKILL.md naming the skill.
+ */
+function inspect(
+  name: string,
+  files: readonly SkillFile[],
+): { ok: true; description: string; size: number } | SkillRefusal {
+  if (!NAME.test(name))
+    return refusal("skill-invalid", `'${name}' is not a skill's name.`);
+  if (files.length > SKILL_FILES)
+    return refusal(
+      "skill-too-large",
+      `A shared skill holds at most ${SKILL_FILES} files.`,
+    );
+  const seen = new Set<string>();
+  let size = 0;
+  let description = "";
+  for (const file of files) {
+    const path = skillPath(file.path);
+    if (!path || seen.has(path))
+      return refusal(
+        "skill-invalid",
+        `'${file.path}' is not a file a skill holds (SKILL.md, or a file under ${SUPPORT_DIRS.join(", ")}).`,
+      );
+    seen.add(path);
+    size += file.bytes.byteLength;
+    if (size > SKILL_BYTES)
+      return refusal(
+        "skill-too-large",
+        `A shared skill holds at most ${SKILL_BYTES / 1024} KB.`,
+      );
+    if (PROGRAM.test(path))
+      return refusal(
+        "skill-blocked",
+        `${path} is a program; a skill never carries one to or from the office.`,
+      );
+    const text = utf8(file.bytes);
+    if (text === undefined) {
+      if (path === "SKILL.md" || path.startsWith("scripts/"))
+        return refusal(
+          "skill-blocked",
+          `${path} is not text; SKILL.md and scripts are always text.`,
+        );
+      continue;
+    }
+    const blocked = scanText(text);
+    if (blocked) return refusal("skill-blocked", `${path}: ${blocked}`);
+    if (path === "SKILL.md") {
+      const invalid = validateSkill(name, text.trim(), false);
+      if (invalid) return refusal("skill-invalid", `SKILL.md: ${invalid}`);
+      description = frontMatter(text).description ?? "";
+    }
+  }
+  if (!seen.has("SKILL.md"))
+    return refusal("skill-invalid", "A skill has a SKILL.md.");
+  return { ok: true, description, size };
 }
 
 /** Files under `dir`, relative to it, recursively. */

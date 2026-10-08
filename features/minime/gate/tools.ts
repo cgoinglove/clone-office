@@ -176,8 +176,9 @@ async function ask(
 /**
  * Ask the person on a permission card before something the tool server's own code is about to do,
  * as Claude Code asks through permission_prompt: the card shows `input`, which code made (such as
- * the changes a Codex conversation's work would make to their files). `chat` is where it shows.
- * Throws when the app cannot be reached to ask.
+ * the changes a Codex conversation's work would make to their files, or the files a skill shared
+ * with the office would carry). Such a tool is let through the session's own permission check and
+ * asks here instead, every time. `chat` is where it shows. Throws when the app cannot be reached.
  */
 export async function askPermission(
   tool: string,

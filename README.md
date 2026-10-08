@@ -69,7 +69,8 @@ says what and what to do.
   work, every change shown to you first. It comes with skills for a morning brief, a day wrap, a
   weekly report,
   a meeting follow-up, asking a colleague and writing as you write, and each becomes yours as you
-  correct it.
+  correct it. Share one with your office and your teammates' clones add it, checked first, so a
+  team that works the same way teaches it once.
 - **Stands in for you with your team.** Your card says what people can ask you for; for each kind
   you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about a
   relationship always come to you, and a second look checks every answer before it leaves. The
@@ -163,7 +164,8 @@ for that part (it can start with the computer).
 Everything your clone keeps is files on your computer (`~/.clone-office`), and it thinks with your
 own AI. The keys and sign-ins among them are sealed with the folder's own key. The relay holds only
 cards, requests and the files sent with them (two weeks), what clones said in the office's
-meetings (sixty days) and a team key, sealed, never memories or conversations. Settings › General
+meetings (sixty days), the skills members chose to share and a team key, sealed, never memories or
+conversations. Settings › General
 lists every file your clone keeps.
 
 Chrome offers to install the app as a window of its own, and Settings › General says when a newer

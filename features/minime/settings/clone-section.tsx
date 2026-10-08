@@ -1,8 +1,9 @@
 "use client";
 
 // Settings › Your clone: who the person is to their clone (what to call them, what they do), what
-// it remembers about them exactly as kept (each line correctable or removable), reading their
-// records again or bringing what their usual AI remembers, and starting over.
+// it remembers about them exactly as kept (each line correctable or removable), its skills and the
+// office's (skills-section.tsx), reading their records again or bringing what their usual AI
+// remembers, and starting over.
 
 import {
   BookOpen,
@@ -32,6 +33,7 @@ import {
 import { EXPORT_PROMPT } from "../learn/export-prompt";
 import { stream } from "../stream";
 import { Empty, Group, Groups, Rows } from "./parts";
+import { SkillsSection } from "./skills-section";
 
 /** Where a line came from (memory/store.ts Source), as the route words it. */
 interface Source {
@@ -172,6 +174,8 @@ export function CloneSection({
         )}
         {problem && <p className="text-destructive">{problemText(problem)}</p>}
       </Group>
+
+      <SkillsSection />
 
       <Group title={t("learnMore")} hint={t("learnMoreHint")}>
         <ReadAgain learn={learn} />

@@ -12,7 +12,9 @@ The clone keeps four small things, all as plain text files on this computer:
   the app, so there is something to ask for on the first day: a morning brief, a day wrap, a weekly
   report, asking a colleague, a meeting follow-up, and writing a message as they write. The clone
   changes them as they correct it, so each becomes theirs; one they changed is never replaced by a
-  later version of the app, and one set aside is not brought back.
+  later version of the app, and one set aside is not brought back. They are listed under **Your
+  clone** › What it knows (**Skills**, 스킬); in an office, they can share one of theirs with their
+  colleagues and add the ones colleagues shared (`office.md`, "Sharing skills with the office").
 - **Notes**: one page per person they work with, opened only when that person comes up.
 
 Beside these is **About you** (나에 대해, on the clone's screen): their name, what they do, what
@@ -102,6 +104,8 @@ theirs.
   alone from then on. Folders they left out stay out whatever they answer. Settings ›
   Permissions can let it read on its own, or also act, without these cards (`index.md`,
   "Settings in more detail").
+- **It asks every time**, whatever they answered before: sharing one of its skills with their
+  office or adding one a colleague shared (the card lists the files that would go or come).
 - **It never does now**: changing their files, running programs, or sending anything to anyone.
 - **When only they can decide**, it asks with a card (**Needs you**, 답이 필요해요), with choices or
   their own answer, and waits up to ten minutes; without an answer it does not guess.

@@ -28,14 +28,16 @@ async function readSettings(): Promise<Record<string, unknown>> {
 
 /**
  * The clone's own tools asked every time, whatever was answered before: making or changing a flow,
- * work in a Claude Code or Codex conversation, and letting what a Codex conversation changed into
- * the person's files. "From now on" is never offered for them (Hermes Agent offers no lasting scope
- * on a gate that asks every time either).
+ * work in a Claude Code or Codex conversation, letting what a Codex conversation changed into
+ * the person's files, and sharing a skill with the office or adding one from it. "From now on" is
+ * never offered for them (Hermes Agent offers no lasting scope on a gate that asks every time
+ * either).
  */
 export const ALWAYS_ASKED = new Set([
   "mcp__minime__flow_manage",
   "mcp__minime__work_session",
   "mcp__minime__apply_changes",
+  "mcp__minime__office_skill_manage",
 ]);
 
 export async function loadTrust(): Promise<string[]> {

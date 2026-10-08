@@ -162,7 +162,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   quiet hours), Office (`office-section.tsx`: open here, join, invite, people, leave, the lobby)
   and General (language, theme, version, Files from `server/stored.ts`). The clone's screen
   reuses `clone-section.tsx` (about them, the memory as saved with each line correctable or
-  removable, reading again, bringing what their usual AI remembers, starting over),
+  removable, its skills and, in an office, the office's skills (`skills-section.tsx`, route
+  `app/api/me/skills`: share one of theirs after seeing its files, add or update a colleague's),
+  reading again, bringing what their usual AI remembers, starting over),
   `requests-section.tsx` (the menu, trust levels, the like-me score, ME.md lines) and the flows;
   `preferences-section.tsx` draws the preferences' parts wherever they belong (`parts`). Keys:
   ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, / the box; the tab's title carries what
@@ -179,7 +181,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), quiet
   hours for the phone (`quietFor`), and taking part in the office's meetings of the clones
   (`meetings`). Every default keeps the app as careful as before.
-- `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded,update}`, which
+- `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded,update,skills}`, which
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
@@ -210,6 +212,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   one only while it is as it came, one set aside is not brought back, a skill of the person's by the
   same name is never touched); they are `created_by: "bundled"`, which the review may adapt but not
   set aside and the curator leaves, and start over does not count as the person's until changed.
+  A skill also travels within the office (`office/shared-skills.ts`): `SkillStore.pack` gathers
+  SKILL.md and the four folders as they would go (no link to anything elsewhere, no program, the
+  memory threat scan over all of each text, 256 KB and 50 files at most), and `addShared` brings
+  in a colleague's after the same checks and its hash (the relay's `skillHash`, which `treeHash`
+  is), written aside and put in place whole, never runnable, `created_by: "office"` (the review
+  leaves it, the curator too), its origin in `.office.json`: a later version replaces it only while
+  it is as it came, and a skill of the person's by that name is never touched, after Hermes Agent's
+  skills hub (quarantine, scan, install, `_has_local_edits`).
   `features/minime/brain/`: what the clone thinks with is the person's pick
   (`choice.ts`, `settings.json` `brain`; keys apart in `brain/keys.json`, 0600, checked by listing
   the vendor's models for free; `providers.ts` the vendors and suggested models, after Thursday's
@@ -301,8 +311,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   Agent's own tools). Meetings are the clones talking together (`POST /meetings`, a standup or a
   question to everyone): the members present take part, each says one thing a round or passes, a
   round ends when all have spoken or after four minutes (`advanceMeetings`, on a timer in
-  `server.ts`), and everyone in the office reads it; a scheduled standup is held once a day. It keeps
-  only cards and requests, their files, meetings (60 days), and a few settings an office shares
+  `server.ts`), and everyone in the office reads it; a scheduled standup is held once a day. Members
+  share skills with their office (`skills.ts`, `/skills`): one per name per office, its files whole
+  as base64 (256 KB, 50 files, 200 skills an office), its description from SKILL.md and its hash
+  made by the relay; only the one who shared it updates it, and they or an owner of the office take
+  it out; members only. It keeps
+  only cards and requests, their files, meetings (60 days), shared skills, and a few settings an office shares
   (`/settings/:name`: the OAuth client a vendor wants registered once for the team,
   `connector:<vendor>`, and the standup's days, time and zone, `meeting:standup`, which any member
   sets and all read), and team keys (`team-ai.ts`: one API key per vendor the office shares, team
@@ -375,7 +389,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   kinds of request the person takes, each with a trust level: auto, tell or ask; the kinds go on
   the card as A2A skills, the trust levels stay in `settings.json`. The brain names a request's
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role
-  `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the clone's own key, so it works in flows too), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind), `files.ts` (files between clones: what goes is checked first, a full path, not in a folder kept out, 25 MB at most, then put at the relay and named on the message; what comes is taken once into `office/files/<request>/` with an index, owner-only, and the request's session may read that folder alone; `ask_colleague` takes `files`, shown on its card (`ask-text.ts` `changeOf`) and asked every time, even when asking colleagues was allowed from now on (the tool server asks again, `seen`); an answer's `files` go only after the person saw them, through the check with `approve`; the page saves one through `app/api/me/office/file`, always as an attachment). In a
+  `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the clone's own key, so it works in flows too), `shared-skills.ts` (the office's skills and how each stands here: new, added, update, changed here, taken by a skill of the person's, theirs; sharing one of theirs, never one the app ships or a colleague's; adding one checked first; scripts kept as files, never run by the clone) with `skills-tool.ts` (`office_skills`, free, a shared SKILL.md coming back inside `<untrusted>` marks; `office_skill_manage`, share/add/unshare, asked every time on a card listing the files that go or come, worked out by the tool itself, which the session lets through its own check for that reason, `session.ts` `SELF_ASKING_TOOLS`, and never "from now on", `rules.ts` `ALWAYS_ASKED`; both left out while answering a colleague), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind), `files.ts` (files between clones: what goes is checked first, a full path, not in a folder kept out, 25 MB at most, then put at the relay and named on the message; what comes is taken once into `office/files/<request>/` with an index, owner-only, and the request's session may read that folder alone; `ask_colleague` takes `files`, shown on its card (`ask-text.ts` `changeOf`) and asked every time, even when asking colleagues was allowed from now on (the tool server asks again, `seen`); an answer's `files` go only after the person saw them, through the check with `approve`; the page saves one through `app/api/me/office/file`, always as an attachment). In a
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screens'
   office is `/office`, `/requests` and the column's Your turn (`features/minime/shell/`), with
   Settings › Office and the clone's Requests it takes, and the route `app/api/me/office`.

@@ -259,7 +259,15 @@ export const ALLOWED_TOOLS = [
   "guide_read",
   "flows",
   "office_inbox",
+  "office_skills",
 ].map((tool) => `mcp__minime__${tool}`);
+
+/**
+ * The clone's own tools that ask the person themselves, every time, with what the card should
+ * show (office/skills-tool.ts): the session lets them through its own check so nobody is asked
+ * twice. Only with the gate, where the person can be asked.
+ */
+export const SELF_ASKING_TOOLS = ["mcp__minime__office_skill_manage"];
 
 /** The few fields of Claude Code's stream-json events this reads. */
 interface StreamEvent {
@@ -418,6 +426,7 @@ export async function runSession(
           // Seeing which conversations there are is free; asking one is the person's to allow.
           "mcp__minime__sessions",
           ...(gate.colleagues ? ["mcp__minime__colleagues"] : []),
+          ...SELF_ASKING_TOOLS,
           ...TRUSTED_FROM_START,
           ...(await sessionRules([
             ...gate.allow,

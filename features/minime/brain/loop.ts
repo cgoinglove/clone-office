@@ -44,6 +44,7 @@ import { pruneToolResults, underPressure } from "./prune.ts";
 import { logRun } from "./runlog.ts";
 import {
   ALLOWED_TOOLS,
+  SELF_ASKING_TOOLS,
   type SessionOptions,
   type SessionResult,
   sessionOrigin,
@@ -375,6 +376,7 @@ export async function runLoop(
               "mcp__minime__ask_me",
               "mcp__minime__sessions",
               ...(gate.colleagues ? ["mcp__minime__colleagues"] : []),
+              ...SELF_ASKING_TOOLS,
               ...TRUSTED_FROM_START,
               ...(await sessionRules([
                 ...gate.allow,

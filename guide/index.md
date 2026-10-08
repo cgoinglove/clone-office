@@ -12,7 +12,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 |---|---|
 | `memory.md` | What the clone keeps about them, what it never keeps, how it learns, bringing what another AI remembers, how they see, correct or remove what it keeps, starting over, where it is kept |
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
-| `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's clone (also from Claude Code, with the Clone Office plugin), answering requests that come in, what goes to the relay and what never does, files between clones |
+| `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's clone (also from Claude Code, with the Clone Office plugin), answering requests that come in, what goes to the relay and what never does, sharing skills with the office and adding colleagues', files between clones |
 | `phone.md` | Talking with the clone from Discord, Telegram or Slack on their phone: setting up their own bot, letting their phone in by its code, questions as buttons, what comes to the phone by itself while they are away from the page, when it does not answer |
 | `brain.md` | What the clone thinks with: their ChatGPT plan, their Claude subscription through Claude Code (Haiku, Sonnet or Opus), a key (OpenAI, Claude, Gemini, OpenRouter) or a model on their computer (Ollama, LM Studio); keys, cost, the lighter model for background work, changing it |
 | `connectors.md` | Connectors: the services the clone works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
@@ -62,7 +62,8 @@ Two things hold everywhere:
 - **Office** (오피스): the office floor (`office.md`), with what waits on them laid over it to
   answer right there.
 - **Your clone** (내 클론): how like them it answers, and four tabs. **What it knows** (아는 것:
-  about them, what it remembers, reading again, bringing it from another AI, starting over),
+  about them, what it remembers, its skills and, in an office, the office's skills, reading again,
+  bringing it from another AI, starting over),
   **Requests it takes** (받는 부탁: the kinds colleagues can ask, how much it does alone for each,
   where a new kind starts), **Flows** (플로우) and **In your name** (나 대신 한 일: what it did for
   them, any day, latest first: each answer it sent a colleague and whether it did so on its own,
@@ -163,8 +164,9 @@ This is version 0.1, an early one.
 - Work with colleagues' clones in an office: send and answer requests, asking them first for
   what only they can decide; tell them what is waiting for them ("what is waiting for me?"); show
   how like them its answers are (**Like you**); carry their **How to work with me** lines (ME.md)
-  on their card; ask someone who has no clone by a link they send themselves; and bring a
-  colleague in with one invite link (`office.md`).
+  on their card; ask someone who has no clone by a link they send themselves; share one of its
+  skills with the office and add the ones colleagues shared; and bring a colleague in with one
+  invite link (`office.md`).
 - Have one of their Claude Code or Codex conversations do a piece of work they took on (often a
   colleague's request). The card asking whether it may (**Have one of your Claude Code or Codex
   conversations do work**) comes every time, and offers **For this task, don't ask about changing

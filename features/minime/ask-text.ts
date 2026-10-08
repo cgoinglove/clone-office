@@ -30,6 +30,16 @@ export function describe(
       : "update";
     return t(`flow.${action}` as Parameters<AskWords>[0]);
   }
+  // A skill shared with the office, added from it, or taken out: which, and whose it is.
+  if (tool === "mcp__minime__office_skill_manage") {
+    const name = String(input.name ?? "");
+    const from = String(input.from ?? "");
+    if (input.action === "unshare") return t("officeSkill.unshare", { name });
+    if (input.action !== "add") return t("officeSkill.share", { name });
+    return Number(input.scripts) > 0
+      ? t("officeSkill.addScripts", { name, from })
+      : t("officeSkill.add", { name, from });
+  }
   // A connected service's tool: the service by its name, and the tool's own.
   const service = connectorOfTool(tool);
   if (service)
@@ -146,6 +156,11 @@ export function askDetails(
   input: Record<string, unknown>,
   shown: AskShown = {},
 ): string[] {
+  // A skill to share or add: what it is for, in its own words (the files are listed as the change).
+  if (tool === "mcp__minime__office_skill_manage")
+    return typeof input.description === "string" && input.description.trim()
+      ? [input.description.trim()]
+      : [];
   if (tool !== "mcp__minime__flow_manage") return [];
   const now = shown.flow;
   const given = (value: unknown) =>

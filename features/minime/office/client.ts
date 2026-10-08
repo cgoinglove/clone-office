@@ -13,6 +13,11 @@ import type {
   Task,
   TaskState,
 } from "../../relay/relay.ts";
+import type {
+  SharedSkill,
+  SharedSkillContent,
+  SkillFileData,
+} from "../../relay/skills.ts";
 import { withLock } from "../memory/files.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
@@ -25,6 +30,7 @@ export type {
   MeetingKind,
   MeetingPost,
   Member,
+  SharedSkill,
   Task,
   TaskState,
 };
@@ -231,6 +237,55 @@ export async function setTeamKey(
   await call(office.relay, `/team-ai/${encodeURIComponent(provider)}`, {
     token: office.token,
     body: { key },
+  });
+}
+
+/** The skills the office's members share, without their files (../../relay/skills.ts). */
+export async function sharedSkills(
+  office: OfficeConfig,
+): Promise<SharedSkill[]> {
+  return (
+    await call<{ skills: SharedSkill[] }>(office.relay, "/skills", {
+      token: office.token,
+    })
+  ).skills;
+}
+
+/** One shared skill with its files, to add. */
+export async function sharedSkill(
+  office: OfficeConfig,
+  name: string,
+): Promise<SharedSkillContent> {
+  return (
+    await call<{ skill: SharedSkillContent }>(
+      office.relay,
+      `/skills/${encodeURIComponent(name)}`,
+      { token: office.token },
+    )
+  ).skill;
+}
+
+/** Shares a skill with the office, or the newer version of one this clone shared. */
+export async function putSharedSkill(
+  office: OfficeConfig,
+  skill: { name: string; category?: string; files: SkillFileData[] },
+): Promise<SharedSkill> {
+  return (
+    await call<{ skill: SharedSkill }>(office.relay, "/skills", {
+      token: office.token,
+      body: skill,
+    })
+  ).skill;
+}
+
+/** Takes a skill out of the office: one this clone shared, or any in an office its person owns. */
+export async function removeSharedSkill(
+  office: OfficeConfig,
+  name: string,
+): Promise<void> {
+  await call(office.relay, `/skills/${encodeURIComponent(name)}`, {
+    method: "DELETE",
+    token: office.token,
   });
 }
 

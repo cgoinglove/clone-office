@@ -1,7 +1,8 @@
 // What the clone did in its person's name, kept so they can look back on it any day, not only
 // today (after Paperclip's activity log and OpenClaw's audit ledger): each answer it sent a
 // colleague and how (alone, telling them, or after they saw it), each it held back, each request it
-// sent, each "from now on" made or taken back, and each flow run. One line each in
+// sent, each "from now on" made or taken back, each flow run, and each skill shared with the
+// office or added from it. One line each in
 // logs/activity.jsonl, on the person's computer; past 2 MB it is moved aside once.
 
 import { appendFile, mkdir, readFile, rename, stat } from "node:fs/promises";
@@ -21,7 +22,14 @@ export type Activity =
   | { kind: "held"; task: string; to?: string }
   | { kind: "asked"; task: string; to: string; text: string; files?: number }
   | { kind: "rule"; rule: string; added: boolean }
-  | { kind: "flow"; name: string; ok: boolean; quiet?: boolean };
+  | { kind: "flow"; name: string; ok: boolean; quiet?: boolean }
+  /** A skill shared with the office, taken out of it, or one a colleague shared added here. */
+  | {
+      kind: "skill";
+      name: string;
+      action: "shared" | "unshared" | "added" | "updated";
+      from?: string;
+    };
 
 export type Logged = Activity & { at: string };
 
