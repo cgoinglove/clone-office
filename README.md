@@ -171,4 +171,5 @@ team's server for people who don't install anything. See [CHANGELOG.md](CHANGELO
 
 ## License
 
-[MIT](LICENSE).
+[MIT](LICENSE). Code and marks taken from other projects keep their own licenses:
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

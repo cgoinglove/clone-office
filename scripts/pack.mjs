@@ -147,6 +147,10 @@ try {
   cpSync(join(source, "skills"), join(out, "skills"), { recursive: true });
   cpSync(join(source, "bin"), join(out, "bin"), { recursive: true });
   cpSync(join(source, "LICENSE"), join(out, "LICENSE"));
+  cpSync(
+    join(source, "THIRD_PARTY_NOTICES.md"),
+    join(out, "THIRD_PARTY_NOTICES.md"),
+  );
 
   for (const [entry, file] of [
     ["features/minime/memory/mcp-server.ts", "mcp-server.mjs"],
@@ -217,7 +221,14 @@ try {
           : {}),
         bin: { "clone-office": "bin/clone-office.cjs" },
         engines: { node: ">=22.13" },
-        files: ["app", "bin", "dist", "guide", "skills"],
+        files: [
+          "app",
+          "bin",
+          "dist",
+          "guide",
+          "skills",
+          "THIRD_PARTY_NOTICES.md",
+        ],
         dependencies: pick([
           "next",
           "react",
