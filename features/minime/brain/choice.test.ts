@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { after, test } from "node:test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-brain-choice-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
 test("Claude Code stays the brain until the person picks another; keys are theirs alone, checked for free", async () => {

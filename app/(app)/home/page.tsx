@@ -4,7 +4,7 @@ import { HomeScreen } from "@/features/minime/shell/home-screen";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("shell.screens");
-  return { title: `${t("home")} · sub-office` };
+  return { title: `${t("home")} · Clone Office` };
 }
 
 // The first screen: what is happening, what waits on the person, and what to do about it.

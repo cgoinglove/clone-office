@@ -5,5 +5,5 @@ import { refuse } from "@/features/minime/server/guard";
 export function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
-  return Response.json({ app: "sub-office" });
+  return Response.json({ app: "clone-office" });
 }

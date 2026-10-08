@@ -110,7 +110,7 @@ async function post(
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-sub-office": "1",
+      "x-clone-office": "1",
       "x-minime-gate": GATE.secret,
     },
     body: JSON.stringify(body),

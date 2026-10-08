@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { after, test } from "node:test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-rule-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
 test("three answers of a kind sent as they were, and the mini-me offers to do them alone", async () => {

@@ -1,5 +1,5 @@
 // Where the OAuth client a vendor wants registered first comes from: the office's, set once by
-// anyone on the team for everyone, else the person's own (someone using sub-office alone).
+// anyone on the team for everyone, else the person's own (someone using Clone Office alone).
 
 import { loadOffice, setTeamSetting, teamSetting } from "../office/client.ts";
 import { ownClient, saveOwnClient, type TeamClient } from "./store.ts";

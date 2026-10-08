@@ -7,7 +7,7 @@
 import { useEffect } from "react";
 import { BEAT_MS } from "./server/presence";
 
-const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
 export function usePresence(): void {
   useEffect(() => {

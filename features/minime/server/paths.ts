@@ -1,12 +1,21 @@
 // Where a mini-me keeps its files, and where the person's AI tools keep the records it learns from.
 // Each tool's own environment variable moves its folder, as the tool itself does.
 
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-/** The mini-me's own folder. `SUB_OFFICE_HOME` moves it, for tests and for a second person. */
+/**
+ * The mini-me's own folder. `CLONE_OFFICE_HOME` moves it, for tests and for a second person.
+ * Before the app was named Clone Office it kept `~/.sub-office` (and read `SUB_OFFICE_HOME`): a
+ * folder already there is used where it is, never moved.
+ */
 export function minimeHome(): string {
-  return process.env.SUB_OFFICE_HOME ?? join(homedir(), ".sub-office");
+  const moved = process.env.CLONE_OFFICE_HOME ?? process.env.SUB_OFFICE_HOME;
+  if (moved) return moved;
+  const home = join(homedir(), ".clone-office");
+  const before = join(homedir(), ".sub-office");
+  return !existsSync(home) && existsSync(before) ? before : home;
 }
 
 export function claudeHome(): string {
@@ -20,17 +29,17 @@ export function claudeProjectsDir(): string {
 
 /**
  * Where the app's own files are (the guide, the mini-me's tool server): the installed package when
- * it runs from npm, whose launcher says so in SUB_OFFICE_APP_DIR, or this folder in development.
+ * it runs from npm, whose launcher says so in CLONE_OFFICE_APP_DIR, or this folder in development.
  */
 export function appDir(): string {
-  return process.env.SUB_OFFICE_APP_DIR ?? process.cwd();
+  return process.env.CLONE_OFFICE_APP_DIR ?? process.cwd();
 }
 
 /** The mini-me's tool server: one bundled file in the package, the TypeScript itself in development. */
 export function toolServerPath(): string {
-  return process.env.SUB_OFFICE_APP_DIR
+  return process.env.CLONE_OFFICE_APP_DIR
     ? join(
-        /*turbopackIgnore: true*/ process.env.SUB_OFFICE_APP_DIR,
+        /*turbopackIgnore: true*/ process.env.CLONE_OFFICE_APP_DIR,
         "dist",
         "mcp-server.mjs",
       )
@@ -45,9 +54,9 @@ export function toolServerPath(): string {
 
 /** What hands a session's connection to a service its token (connectors/headers.ts). */
 export function connectorHeadersPath(): string {
-  return process.env.SUB_OFFICE_APP_DIR
+  return process.env.CLONE_OFFICE_APP_DIR
     ? join(
-        /*turbopackIgnore: true*/ process.env.SUB_OFFICE_APP_DIR,
+        /*turbopackIgnore: true*/ process.env.CLONE_OFFICE_APP_DIR,
         "dist",
         "connector-headers.mjs",
       )
@@ -62,9 +71,9 @@ export function connectorHeadersPath(): string {
 
 /** The relay's server, for an office opened on this computer: bundled in the package, or the source. */
 export function relayServerPath(): string {
-  return process.env.SUB_OFFICE_APP_DIR
+  return process.env.CLONE_OFFICE_APP_DIR
     ? join(
-        /*turbopackIgnore: true*/ process.env.SUB_OFFICE_APP_DIR,
+        /*turbopackIgnore: true*/ process.env.CLONE_OFFICE_APP_DIR,
         "dist",
         "relay.mjs",
       )

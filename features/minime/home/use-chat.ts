@@ -11,7 +11,7 @@ import type { GateAsk } from "../ask-card";
 import { savedText } from "../saved-text";
 import { stream } from "../stream";
 
-const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
 export type Turn =
   | { id: number; kind: "me"; text: string }

@@ -21,7 +21,7 @@ const root = mkdtempSync(join(tmpdir(), "minime-history-"));
 const claude = join(root, "claude");
 const db = join(root, "home", "index", "history.db");
 const saved = {
-  SUB_OFFICE_HOME: process.env.SUB_OFFICE_HOME,
+  CLONE_OFFICE_HOME: process.env.CLONE_OFFICE_HOME,
   CLAUDE_CONFIG_DIR: process.env.CLAUDE_CONFIG_DIR,
   CODEX_HOME: process.env.CODEX_HOME,
   HERMES_HOME: process.env.HERMES_HOME,
@@ -58,10 +58,10 @@ function session(project: string, id: string, lines: string[]): string {
   return file;
 }
 
-// Every record the index reads is the test's own: the mini-me's conversations (SUB_OFFICE_HOME)
+// Every record the index reads is the test's own: the mini-me's conversations (CLONE_OFFICE_HOME)
 // as well as each AI tool's, never the person's on this computer.
 before(() => {
-  process.env.SUB_OFFICE_HOME = join(root, "home");
+  process.env.CLONE_OFFICE_HOME = join(root, "home");
   process.env.CLAUDE_CONFIG_DIR = claude;
   process.env.CODEX_HOME = join(root, "codex");
   process.env.HERMES_HOME = join(root, "hermes");

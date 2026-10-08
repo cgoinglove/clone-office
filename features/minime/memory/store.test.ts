@@ -240,7 +240,7 @@ test("an entry is found as a model may retype it, in any language; a file that i
   const added = await store.add("user", "Prefers tables.");
   assert.equal(added.success, false);
   assert.deepEqual(readFileSync(path), bytes, "left exactly as it was");
-  assert.deepEqual(scanForThreats("cat ~/.sub-office/brain/keys.json"), [
-    "sub_office_secrets",
+  assert.deepEqual(scanForThreats("cat ~/.clone-office/brain/keys.json"), [
+    "app_secrets",
   ]);
 });

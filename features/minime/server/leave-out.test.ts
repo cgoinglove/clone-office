@@ -12,9 +12,9 @@ import { after, before, test } from "node:test";
 import { leaveOut } from "./leave-out";
 
 const root = mkdtempSync(join(tmpdir(), "minime-leave-"));
-const saved = process.env.SUB_OFFICE_HOME;
+const saved = process.env.CLONE_OFFICE_HOME;
 before(() => {
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
   mkdirSync(root, { recursive: true });
   writeFileSync(
     join(root, "settings.json"),
@@ -22,8 +22,8 @@ before(() => {
   );
 });
 after(() => {
-  if (saved === undefined) delete process.env.SUB_OFFICE_HOME;
-  else process.env.SUB_OFFICE_HOME = saved;
+  if (saved === undefined) delete process.env.CLONE_OFFICE_HOME;
+  else process.env.CLONE_OFFICE_HOME = saved;
   rmSync(root, { recursive: true, force: true });
 });
 

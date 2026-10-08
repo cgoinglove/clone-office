@@ -5,7 +5,7 @@ import { CloneScreen } from "@/features/minime/shell/clone-screen";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("shell.screens");
-  return { title: `${t("clone")} · sub-office` };
+  return { title: `${t("clone")} · Clone Office` };
 }
 
 // The person's clone: what it knows, the requests it takes, and its flows.

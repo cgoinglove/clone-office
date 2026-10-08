@@ -4,7 +4,7 @@ import { RequestScreen } from "@/features/minime/shell/request-screen";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("shell.screens");
-  return { title: `${t("requests")} · sub-office` };
+  return { title: `${t("requests")} · Clone Office` };
 }
 
 // One request between two clones.

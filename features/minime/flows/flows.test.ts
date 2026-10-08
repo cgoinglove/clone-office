@@ -5,13 +5,13 @@ import { join } from "node:path";
 import { after, before, test } from "node:test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-flows-"));
-const saved = process.env.SUB_OFFICE_HOME;
+const saved = process.env.CLONE_OFFICE_HOME;
 before(() => {
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
 });
 after(() => {
-  if (saved === undefined) delete process.env.SUB_OFFICE_HOME;
-  else process.env.SUB_OFFICE_HOME = saved;
+  if (saved === undefined) delete process.env.CLONE_OFFICE_HOME;
+  else process.env.CLONE_OFFICE_HOME = saved;
   rmSync(root, { recursive: true, force: true });
 });
 

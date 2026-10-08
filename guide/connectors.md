@@ -38,7 +38,7 @@ through it, a page of Google Cloud's console at a time:
 5. Create a client of the type Desktop app and download its JSON file.
 6. Choose that file on the page (**Choose the JSON file**, JSON 파일 고르기). With **For everyone
    in the office** (오피스 모두에게) ticked, everyone in their office gets it, and the page shows who
-   registered it; someone using sub-office alone keeps it for themselves.
+   registered it; someone using Clone Office alone keeps it for themselves.
 
 The office keeps only the client (its ID and secret), never anyone's Google sign-in.
 
@@ -63,7 +63,7 @@ is in their mail or documents does not go out to colleagues by itself.
 ## Disconnecting
 
 **Disconnect** (연결 끊기) forgets their sign-in on this computer at once. To take the access back
-at the service too, they remove sub-office there: in Notion, Settings, Connections; in their
+at the service too, they remove Clone Office there: in Notion, Settings, Connections; in their
 Google account, Security, third-party access; in GitHub, the token on its tokens page.
 
 ## When it does not work

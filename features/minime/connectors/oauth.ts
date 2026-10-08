@@ -122,7 +122,7 @@ export async function startConnect(
     const made = await registerClient(server.authorizationServerUrl, {
       metadata: server.metadata,
       clientMetadata: {
-        client_name: "sub-office",
+        client_name: "clone-office",
         redirect_uris: [redirect],
         grant_types: ["authorization_code", "refresh_token"],
         response_types: ["code"],

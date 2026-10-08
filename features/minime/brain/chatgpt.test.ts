@@ -8,7 +8,7 @@ import { after, before, test } from "node:test";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 
 const root = mkdtempSync(join(tmpdir(), "minime-chatgpt-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 let server: Server;
 let base = "";
 let nonce = "";
@@ -112,7 +112,7 @@ test("Sign in with ChatGPT: registers this app for this computer once, checks wh
   const first = new URL(await chatgpt.startSignIn(4417));
   const ask = Object.fromEntries(first.searchParams);
   assert.equal(ask.client_id, "dynamic_agent_client");
-  assert.equal(ask.agent_name_hint, "sub-office");
+  assert.equal(ask.agent_name_hint, "Clone Office");
   assert.match(ask.ext_agent_host_id, /^urn:uuid:[0-9a-f-]{36}$/);
   assert.equal(ask.redirect_uri, "http://127.0.0.1:4417/auth/callback");
   assert.equal(

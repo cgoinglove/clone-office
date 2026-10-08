@@ -9,7 +9,7 @@ import { after, before, test } from "node:test";
 import { promisify } from "node:util";
 
 const root = mkdtempSync(join(tmpdir(), "minime-connectors-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 let server: Server;
 let base = "";
 /** What the stand-in service saw. */
@@ -252,7 +252,7 @@ test("a personal token is kept as it is; the session's helper hands it over, or 
   );
   const run = promisify(execFile);
   const helper = join(import.meta.dirname, "headers.ts");
-  const env = { ...process.env, SUB_OFFICE_HOME: root };
+  const env = { ...process.env, CLONE_OFFICE_HOME: root };
   const given = await run(
     process.execPath,
     ["--no-warnings", helper, "github"],

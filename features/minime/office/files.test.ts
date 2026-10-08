@@ -14,7 +14,7 @@ import { after, before, test } from "node:test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-files-"));
 const homes = { ana: join(root, "ana"), ben: join(root, "ben") };
-process.env.SUB_OFFICE_HOME = homes.ana;
+process.env.CLONE_OFFICE_HOME = homes.ana;
 let server: Server;
 let base = "";
 let close: () => Promise<void>;
@@ -44,12 +44,12 @@ test("a file goes with a request after the checks, and comes once into the reque
   const client = await import("./client");
   const files = await import("./files");
   // Ana's mini-me and Ben's, each in its own folder.
-  process.env.SUB_OFFICE_HOME = homes.ben;
+  process.env.CLONE_OFFICE_HOME = homes.ben;
   const ben = await client.joinOffice(base, "files-key", {
     name: "Ben",
     description: "",
   });
-  process.env.SUB_OFFICE_HOME = homes.ana;
+  process.env.CLONE_OFFICE_HOME = homes.ana;
   const ana = await client.joinOffice(base, "files-key", {
     name: "Ana",
     description: "",
@@ -99,7 +99,7 @@ test("a file goes with a request after the checks, and comes once into the reque
   assert.equal(sent.history[0].files?.[0].id, refs[0].id);
 
   // Ben's mini-me takes it into the request's folder, once, for its person's eyes only.
-  process.env.SUB_OFFICE_HOME = homes.ben;
+  process.env.CLONE_OFFICE_HOME = homes.ben;
   const incoming = sent.history[0].files ?? [];
   const taken = await files.takeFiles(ben, sent.id, incoming);
   assert.equal(
@@ -121,7 +121,7 @@ test("a file goes with a request after the checks, and comes once into the reque
 
   // An answer brings a file of the same name: it gets a number, not the first one's place.
   writeFileSync(join(docs, "fixed.csv"), "item,price\nlicense,90\n");
-  process.env.SUB_OFFICE_HOME = homes.ben;
+  process.env.CLONE_OFFICE_HOME = homes.ben;
   const back = await client.putFile(ben, {
     name: "quote.csv",
     type: "text/csv",

@@ -193,7 +193,7 @@ export function SettingsDialog({
             })}
             {APP_VERSION && (
               <span className="mt-auto px-2.5 pt-4 font-mono text-[10px] text-muted-foreground max-sm:hidden">
-                sub-office v{APP_VERSION}
+                Clone Office v{APP_VERSION}
               </span>
             )}
           </nav>

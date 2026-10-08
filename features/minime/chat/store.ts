@@ -1,4 +1,4 @@
-// The mini-me's conversations with its person, kept by sub-office itself: one JSON-lines file per
+// The mini-me's conversations with its person, kept by Clone Office itself: one JSON-lines file per
 // conversation under chats/. The brain's own session is only a working copy: when a long
 // conversation is carried into a fresh session, or the person changes brains, the record here stays
 // whole. Lines are only ever appended, so a crash loses at most the line being written.

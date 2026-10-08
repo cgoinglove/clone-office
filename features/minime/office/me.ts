@@ -44,7 +44,7 @@ export function meMarkdown(card: Card, menu: MenuItem[]): string {
   lines.push(
     "---",
     "",
-    `Written by sub-office from ${card.name}'s card; ${card.name} added every line.`,
+    `Written by Clone Office from ${card.name}'s card; ${card.name} added every line.`,
     "",
   );
   return lines.join("\n");

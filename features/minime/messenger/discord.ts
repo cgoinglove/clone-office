@@ -227,8 +227,8 @@ export class DiscordBot {
                   intents: INTENTS,
                   properties: {
                     os: process.platform,
-                    browser: "sub-office",
-                    device: "sub-office",
+                    browser: "clone-office",
+                    device: "clone-office",
                   },
                 },
               },
@@ -421,7 +421,7 @@ export class DiscordBot {
         headers: {
           authorization: `Bot ${this.token}`,
           "content-type": "application/json",
-          "user-agent": "DiscordBot (sub-office, 0)",
+          "user-agent": "DiscordBot (clone-office, 0)",
         },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
@@ -510,7 +510,7 @@ export class DiscordBot {
           method: "POST",
           headers: {
             authorization: `Bot ${this.token}`,
-            "user-agent": "DiscordBot (sub-office, 0)",
+            "user-agent": "DiscordBot (clone-office, 0)",
           },
           body: form,
         },

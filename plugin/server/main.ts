@@ -5,7 +5,7 @@ import { serve } from "./mcp.ts";
 import { callTool, INSTRUCTIONS, TOOLS } from "./office.ts";
 
 serve({
-  name: "sub-office",
+  name: "clone-office",
   version: "0.1.0",
   instructions: INSTRUCTIONS,
   tools: TOOLS,

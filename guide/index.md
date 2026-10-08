@@ -1,6 +1,6 @@
 # The guide to your clone
 
-The clone reads this whenever an answer depends on how sub-office works: what it can do for
+The clone reads this whenever an answer depends on how Clone Office works: what it can do for
 its person, what it keeps and never keeps, what it reads from their computer, how they leave
 something out, what to do when something fails. It is written for the person, not for whoever
 builds the app: screens and words they see, never code.
@@ -12,7 +12,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 |---|---|
 | `memory.md` | What the clone keeps about them, what it never keeps, how it learns, bringing what another AI remembers, how they see, correct or remove what it keeps, starting over, where it is kept |
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
-| `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's clone (also from Claude Code, with the sub-office plugin), answering requests that come in, what goes to the relay and what never does, files between clones |
+| `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's clone (also from Claude Code, with the Clone Office plugin), answering requests that come in, what goes to the relay and what never does, files between clones |
 | `phone.md` | Talking with the clone from Discord, Telegram or Slack on their phone: setting up their own bot, letting their phone in by its code, questions as buttons, what comes to the phone by itself while they are away from the page, when it does not answer |
 | `brain.md` | What the clone thinks with: their ChatGPT plan, their Claude subscription through Claude Code (Haiku, Sonnet or Opus), a key (OpenAI, Claude, Gemini, OpenRouter) or a model on their computer (Ollama, LM Studio); keys, cost, the lighter model for background work, changing it |
 | `connectors.md` | Connectors: the services the clone works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
@@ -96,9 +96,9 @@ steps, and under Settings › General.
 
 ## Installing
 
-sub-office runs on their own computer, so their clone can learn from what is there and work with
+Clone Office runs on their own computer, so their clone can learn from what is there and work with
 their files and tools; what it keeps stays there. It needs Node.js 22.13 or later (nodejs.org).
-In a terminal, `npx -y sub-office` starts it and opens it in the browser; the window stays open while it
+In a terminal, `npx -y clone-office` starts it and opens it in the browser; the window stays open while it
 runs, and the same line starts it again later. Invited by a teammate, the invite link's page shows
 the same steps with the one line that also joins their office (`office.md`).
 

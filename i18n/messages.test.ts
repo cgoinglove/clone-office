@@ -74,8 +74,8 @@ test("every message formats in every language", () => {
   const values = {
     count: 2,
     name: "Ana",
-    dir: "~/.sub-office/memories",
-    home: "~/.sub-office",
+    dir: "~/.clone-office/memories",
+    home: "~/.clone-office",
     detail: "detail",
     answer: "Yes",
     when: "Oct 6",

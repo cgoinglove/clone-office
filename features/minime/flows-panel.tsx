@@ -23,7 +23,7 @@ interface FlowView {
   chat?: string;
 }
 
-const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
 const SUGGESTIONS = ["morning", "week"] as const;
 

@@ -251,7 +251,7 @@ async function webFetchTool(input: Record<string, unknown>): Promise<string> {
   const response = await fetch(address, {
     signal: AbortSignal.timeout(20_000),
     redirect: "follow",
-    headers: { "user-agent": "sub-office (a person's clone)" },
+    headers: { "user-agent": "clone-office (a person's clone)" },
   }).catch((error: Error) => error);
   if (response instanceof Error)
     return `The page could not be opened: ${response.message}`;
@@ -374,7 +374,7 @@ export async function connectServers(options: {
 }): Promise<Servers> {
   const clients: { name: string; client: Client }[] = [];
   const join = async (name: string, transport: Transport) => {
-    const client = new Client({ name: "sub-office", version: "1" });
+    const client = new Client({ name: "clone-office", version: "1" });
     await client.connect(transport, { timeout: 30_000 });
     clients.push({ name, client });
   };
@@ -430,7 +430,7 @@ export async function askGate(
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-sub-office": "1",
+        "x-clone-office": "1",
         "x-minime-gate": gate.secret,
       },
       body: JSON.stringify(body),

@@ -1,4 +1,4 @@
-// A mini-me's memory: two small files the mini-me curates itself, in the person's sub-office home.
+// A mini-me's memory: two small files the mini-me curates itself, in the person's Clone Office home.
 //   USER.md    who the person is: role, what they own, how they work and talk, what they expect
 //   MEMORY.md  the environment of their work: tools, places, standing conventions
 // Both are written into every session's prompt, so each has a hard character limit. A write that

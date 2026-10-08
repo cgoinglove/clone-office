@@ -116,7 +116,7 @@ export async function startSignIn(port: number): Promise<string> {
   const url = new URL(OPENAI.authorize);
   url.searchParams.set("client_id", client);
   // The name the person sees when approving; sent only while registering.
-  if (!kept.clientId) url.searchParams.set("agent_name_hint", "sub-office");
+  if (!kept.clientId) url.searchParams.set("agent_name_hint", "Clone Office");
   url.searchParams.set("ext_agent_host_id", kept.hostId as string);
   if (kept.idToken) url.searchParams.set("id_token_hint", kept.idToken);
   if (kept.account?.email)

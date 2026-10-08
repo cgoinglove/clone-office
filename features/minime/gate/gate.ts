@@ -63,7 +63,7 @@ export const ASK_TIMEOUT_MS = 10 * 60 * 1000;
  * when they do, so a colleague is told "they will get back to you" rather than kept hanging.
  */
 export const OFFICE_ASK_LIVE_MS =
-  Number(process.env.SUB_OFFICE_ASK_LIVE_MS) || 2 * 60 * 1000;
+  Number(process.env.CLONE_OFFICE_ASK_LIVE_MS) || 2 * 60 * 1000;
 
 /** The conversation id a colleague's request is asked under. */
 export const isRequestChat = (chat: string | undefined) =>

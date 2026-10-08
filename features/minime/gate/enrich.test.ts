@@ -7,7 +7,7 @@ import { createFormatter, createTranslator } from "next-intl";
 import english from "../../../messages/en.json";
 
 const root = mkdtempSync(join(tmpdir(), "minime-enrich-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
 const words = {

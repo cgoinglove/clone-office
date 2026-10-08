@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "sub-office",
+  title: "Clone Office",
   description:
     "Send your clone: an AI that works like you, for everyone on your team.",
 };

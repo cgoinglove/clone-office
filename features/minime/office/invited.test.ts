@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { after, test } from "node:test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-invited-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
 test("an invite the launcher kept is offered with who sent it, until it is used", async () => {

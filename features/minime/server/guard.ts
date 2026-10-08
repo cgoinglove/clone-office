@@ -2,7 +2,7 @@
 // this app's own pages: a request must carry our header and come from the same origin. A web page
 // elsewhere cannot add the header without a CORS preflight, which these routes never grant.
 
-export const MINIME_HEADER = "x-sub-office";
+export const MINIME_HEADER = "x-clone-office";
 
 export function refuse(request: Request): Response | undefined {
   if (request.headers.get(MINIME_HEADER) !== "1") {

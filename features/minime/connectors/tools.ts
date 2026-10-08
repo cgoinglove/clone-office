@@ -37,7 +37,7 @@ export async function listTools(
   const entry = connector(id);
   if (!entry) return [];
   const token = await accessToken(id);
-  const client = new Client({ name: "sub-office", version: "1" });
+  const client = new Client({ name: "clone-office", version: "1" });
   const transport = new StreamableHTTPClientTransport(
     new URL(options.url ?? entry.url),
     { requestInit: { headers: { Authorization: `Bearer ${token}` } } },

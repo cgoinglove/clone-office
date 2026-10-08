@@ -15,7 +15,7 @@ import { roomData, statusCode } from "../office/room-data";
 
 export const HEADERS = {
   "content-type": "application/json",
-  "x-sub-office": "1",
+  "x-clone-office": "1",
 };
 
 export type State =
@@ -212,7 +212,7 @@ export async function upload(file: File): Promise<string | { error: string }> {
   const response = await fetch("/api/me/office/upload", {
     method: "POST",
     headers: {
-      "x-sub-office": "1",
+      "x-clone-office": "1",
       "content-type": file.type || "application/octet-stream",
       "x-file-name": encodeURIComponent(file.name),
     },

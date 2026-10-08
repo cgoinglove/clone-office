@@ -14,7 +14,7 @@ const root = mkdtempSync(join(tmpdir(), "minime-sessions-"));
 const claude = join(root, "claude");
 const home = join(root, "minime");
 process.env.CLAUDE_CONFIG_DIR = claude;
-process.env.SUB_OFFICE_HOME = home;
+process.env.CLONE_OFFICE_HOME = home;
 after(() => rmSync(root, { recursive: true, force: true }));
 
 function session(

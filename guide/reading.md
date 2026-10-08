@@ -48,6 +48,6 @@ reports it. It holds no conversation text. It is listed under **All files I keep
 
 ## Where their data goes
 
-Nothing is uploaded to sub-office. What the clone reads goes only to their own Claude Code, the
+Nothing is uploaded to Clone Office. What the clone reads goes only to their own Claude Code, the
 AI tool they already use and are signed in to, which does the thinking; it counts toward that
 subscription's usage like any other use.

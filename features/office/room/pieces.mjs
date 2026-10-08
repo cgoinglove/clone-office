@@ -39,7 +39,7 @@ import {
 } from "./core.mjs";
 
 /** The company's name where the building and its wall carry it. */
-export const BRAND = "SUB-OFFICE";
+export const BRAND = "CLONE OFFICE";
 // ---- the personal desk: three styles; a chair behind it, a laptop, a lamp, a tray of work, one thing of its own
 
 export const DK = { w: 20, d: 10, top: 7.2 };

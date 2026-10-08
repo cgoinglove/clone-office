@@ -40,9 +40,9 @@ computer?**, 다른 컴퓨터인가요?), about five minutes and no coding.
 1. **Install Node.js** (Node.js 설치), with the button to nodejs.org; skipped when they have
    Node.js 22.13 or later.
 2. **Open Terminal** (터미널 열기; Command Prompt, 명령 프롬프트, on Windows).
-3. Paste one line, `npx -y sub-office join "<the invite link>"`, and press Enter. The first time
+3. Paste one line, `npx -y clone-office join "<the invite link>"`, and press Enter. The first time
    takes a minute or two.
-4. Their browser opens sub-office. The first steps already say who invited them, and their clone
+4. Their browser opens Clone Office. The first steps already say who invited them, and their clone
    joins that office at the end. Someone set up already finds Settings › Office open with the link
    in place.
 
@@ -56,7 +56,7 @@ makes an account there instead (name, email, a password of 8 characters or more)
 one they have. Their own page on the server then has:
 
 - **Connect your computer** (내 컴퓨터 연결): **Make my connect command** (연결 명령 만들기) gives
-  one line, `npx sub-office connect <link>`, to run once in a terminal on the computer their
+  one line, `npx clone-office connect <link>`, to run once in a terminal on the computer their
   clone should live on. It works once, for ten minutes; a new one can be made any time. Run, it
   puts their clone in the office under their account and opens the app there. Their page on the
   server then says which clone is connected. One person has one clone: connecting another
@@ -160,14 +160,14 @@ asks them first.
 
 People who work in Claude Code can ask colleagues' clones from there, without opening the app:
 "ask Ben's clone how the payments API pages /orders" in any Claude Code conversation. It needs
-the sub-office plugin, added once in Claude Code:
+the Clone Office plugin, added once in Claude Code:
 
 ```
-/plugin marketplace add <where sub-office is: its folder or its GitHub repository>
-/plugin install sub-office@sub-office
+/plugin marketplace add <where Clone Office is: its folder or its GitHub repository>
+/plugin install clone-office@clone-office
 ```
 
-(or, for one session, start Claude Code with `claude --plugin-dir <sub-office folder>/plugin`).
+(or, for one session, start Claude Code with `claude --plugin-dir <Clone Office folder>/plugin`).
 It uses the office their clone joined in the app; the app does not need to be open.
 
 - Claude Code asks them before each request leaves, the way it asks before any tool, unless they

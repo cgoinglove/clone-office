@@ -1,5 +1,5 @@
 // How someone invited sets up their clone, on the invite's page: install Node.js, open a
-// terminal, paste one line (`npx -y sub-office join "<invite link>"`), answer a few questions. The
+// terminal, paste one line (`npx -y clone-office join "<invite link>"`), answer a few questions. The
 // steps follow the computer the page was opened on (its User-Agent), with the others folded
 // away; a phone is told to open the link on a computer. Plain HTML like the relay's other pages.
 
@@ -35,13 +35,13 @@ const WORDS = {
     pasteNote: "The first time takes a minute or two.",
     answer: "Answer a few questions",
     answerFrom:
-      "Your browser opens sub-office. Pick what your clone thinks with and say who you are; then it joins {from}'s office.",
+      "Your browser opens Clone Office. Pick the AI your clone uses and say who you are; then it joins {from}'s office.",
     answerNobody:
-      "Your browser opens sub-office. Pick what your clone thinks with and say who you are; then it joins the office.",
+      "Your browser opens Clone Office. Pick the AI your clone uses and say who you are; then it joins the office.",
     local:
-      "This office runs on {from}'s computer: join from the same Wi-Fi or network, while their sub-office is open.",
+      "This office runs on {from}'s computer: join from the same Wi-Fi or network, while their Clone Office is open.",
     localNobody:
-      "This office runs on a teammate's computer: join from the same Wi-Fi or network, while their sub-office is open.",
+      "This office runs on a teammate's computer: join from the same Wi-Fi or network, while their Clone Office is open.",
     other: "On another kind of computer?",
     mac: "Mac",
     windows: "Windows",
@@ -49,7 +49,7 @@ const WORDS = {
     phone:
       "Open this link on your computer: your clone runs there, not on a phone. Send it to yourself by email or a messenger.",
     already:
-      "Already use sub-office? Open it, then paste this link under Settings › Office.",
+      "Already use Clone Office? Open it, then paste this link under Settings › Office.",
   },
   ko: {
     title: "내 클론 만들기",
@@ -72,13 +72,13 @@ const WORDS = {
     pasteNote: "처음 한 번은 1~2분 걸려요.",
     answer: "몇 가지에 답하기",
     answerFrom:
-      "브라우저에 sub-office가 열려요. 클론이 무엇으로 생각할지 고르고 나를 소개하면, {from}님의 오피스에 들어가요.",
+      "브라우저에 Clone Office가 열려요. 클론이 쓸 AI 모델을 고르고 나를 소개하면 {from} 님의 오피스에 들어가요.",
     answerNobody:
-      "브라우저에 sub-office가 열려요. 클론이 무엇으로 생각할지 고르고 나를 소개하면, 오피스에 들어가요.",
+      "브라우저에 Clone Office가 열려요. 클론이 쓸 AI 모델을 고르고 나를 소개하면 오피스에 들어가요.",
     local:
-      "이 오피스는 {from}님의 컴퓨터에서 돌아요. 같은 와이파이나 네트워크에서, {from}님의 sub-office가 켜져 있을 때 들어오세요.",
+      "이 오피스는 {from} 님의 컴퓨터에서 열려 있어요. {from} 님의 Clone Office가 켜져 있을 때, 같은 와이파이에서 들어와 주세요.",
     localNobody:
-      "이 오피스는 동료의 컴퓨터에서 돌아요. 같은 와이파이나 네트워크에서, 동료의 sub-office가 켜져 있을 때 들어오세요.",
+      "이 오피스는 동료의 컴퓨터에서 열려 있어요. 동료의 Clone Office가 켜져 있을 때, 같은 와이파이에서 들어와 주세요.",
     other: "다른 컴퓨터인가요?",
     mac: "Mac",
     windows: "Windows",
@@ -86,7 +86,7 @@ const WORDS = {
     phone:
       "이 링크는 컴퓨터에서 여세요. 클론은 휴대폰이 아니라 컴퓨터에서 돌아요. 메일이나 메신저로 나에게 보내 두세요.",
     already:
-      "sub-office를 이미 쓰고 있다면, 열어서 설정 › 오피스에 이 링크를 붙여 넣으세요.",
+      "이미 Clone Office를 쓰고 있다면, 앱을 열고 설정 › 오피스에 이 링크를 붙여 넣어 주세요.",
   },
 };
 // Each page language's guide says everything the English one says, and nothing more.
@@ -131,17 +131,17 @@ export function isPrivateHost(host: string): boolean {
  * otherwise read its "?" as a pattern), with the name's characters a shell might act on encoded.
  */
 /** Where a relay serves the app's own package, when it serves one. */
-export const PACKAGE_PATH = "/sub-office.tgz";
+export const PACKAGE_PATH = "/clone-office.tgz";
 
 /**
- * The app's package this relay serves itself (`SUB_OFFICE_PACKAGE_FILE`, a .tgz `scripts/pack.mjs`
+ * The app's package this relay serves itself (`CLONE_OFFICE_PACKAGE_FILE`, a .tgz `scripts/pack.mjs`
  * built): a team's own build, or the app before it is on npm. Its lines then take the app from the
  * relay they were opened on rather than from npm.
  */
 export function servedPackage(
   env: Record<string, string | undefined> = process.env,
 ): string | undefined {
-  const file = env.SUB_OFFICE_PACKAGE_FILE?.trim();
+  const file = env.CLONE_OFFICE_PACKAGE_FILE?.trim();
   return file?.endsWith(".tgz") ? file : undefined;
 }
 
@@ -153,8 +153,8 @@ export function npxLine(
 ): string {
   return served
     ? // quoted, as the link is: an IPv6 address's brackets are a pattern to zsh
-      `npx -y --package="${base}${PACKAGE_PATH}" sub-office ${args}`
-    : `npx -y sub-office ${args}`;
+      `npx -y --package="${base}${PACKAGE_PATH}" clone-office ${args}`
+    : `npx -y clone-office ${args}`;
 }
 
 export function joinCommand(input: {

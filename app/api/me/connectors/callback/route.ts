@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     }
   const words = done ? t("callback.done", { name: done }) : (problem ?? "");
   return new Response(
-    `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>sub-office</title><style>body{font:16px/1.6 system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#fff;color:#16171a}main{max-width:28rem;padding:24px}p{margin:0 0 8px}small{color:#63666e}</style></head><body><main><p>${escape(words)}</p><small>${escape(t("callback.close"))}</small></main></body></html>`,
+    `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Clone Office</title><style>body{font:16px/1.6 system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#fff;color:#16171a}main{max-width:28rem;padding:24px}p{margin:0 0 8px}small{color:#63666e}</style></head><body><main><p>${escape(words)}</p><small>${escape(t("callback.close"))}</small></main></body></html>`,
     {
       status: done ? 200 : 400,
       headers: {

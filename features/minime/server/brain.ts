@@ -30,9 +30,9 @@ export interface BrainResult<T> {
   };
 }
 
-/** The model a mini-me thinks with; `SUB_OFFICE_MODEL` changes it. */
+/** The model a mini-me thinks with; `CLONE_OFFICE_MODEL` changes it. */
 export function defaultModel(): string {
-  return process.env.SUB_OFFICE_MODEL ?? "sonnet";
+  return process.env.CLONE_OFFICE_MODEL ?? "sonnet";
 }
 
 interface Command {

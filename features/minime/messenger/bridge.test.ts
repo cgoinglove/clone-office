@@ -10,20 +10,20 @@ import type { Choice, Listener, Person, Press } from "./discord";
 import type { Kept, OfficeSide } from "./office";
 
 const root = mkdtempSync(join(tmpdir(), "minime-messenger-"));
-const saved = process.env.SUB_OFFICE_HOME;
+const saved = process.env.CLONE_OFFICE_HOME;
 let bridgeModule: typeof import("./bridge");
 let store: typeof import("../chat/store");
 let gate: typeof import("../gate/gate");
 
 before(async () => {
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
   bridgeModule = await import("./bridge");
   store = await import("../chat/store");
   gate = await import("../gate/gate");
 });
 after(() => {
-  if (saved === undefined) delete process.env.SUB_OFFICE_HOME;
-  else process.env.SUB_OFFICE_HOME = saved;
+  if (saved === undefined) delete process.env.CLONE_OFFICE_HOME;
+  else process.env.CLONE_OFFICE_HOME = saved;
   rmSync(root, { recursive: true, force: true });
 });
 
@@ -227,7 +227,7 @@ test("the person's own bot: the first to write is let in by the code their phone
 
 test("while no page is in view, what waits on the person goes to their phone; news in the phone's conversation always does", async () => {
   const home = join(root, "push");
-  process.env.SUB_OFFICE_HOME = home;
+  process.env.CLONE_OFFICE_HOME = home;
   const bots: FakeBot[] = [];
   let seen: ReturnType<typeof watching> = { state: "watching" };
   let away = false;
@@ -426,12 +426,12 @@ test("while no page is in view, what waits on the person goes to their phone; ne
     "An answer to your request\nBen: Merged it.",
   );
   await bridge.disconnect();
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
 });
 
 test("Telegram's Start is only a hello; another messenger starts afresh, a new token for the same one keeps the person", async () => {
   const home = join(root, "telegram");
-  process.env.SUB_OFFICE_HOME = home;
+  process.env.CLONE_OFFICE_HOME = home;
   const bots: { service: string; bot: FakeBot }[] = [];
   const turns: string[] = [];
   const bridge = new bridgeModule.Bridge({
@@ -466,12 +466,12 @@ test("Telegram's Start is only a hello; another messenger starts afresh, a new t
   assert.equal((await bridge.status()).service, "discord");
   assert.equal((await bridge.status()).owner, undefined);
   await bridge.disconnect();
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
 });
 
 test("Slack's two tokens are told apart by how they start, and both are needed", async () => {
   const home = join(root, "slack");
-  process.env.SUB_OFFICE_HOME = home;
+  process.env.CLONE_OFFICE_HOME = home;
   const made: { service: string; token: string; appToken?: string }[] = [];
   const bridge = new bridgeModule.Bridge({
     makeBot: (account, listener) => {
@@ -503,12 +503,12 @@ test("Slack's two tokens are told apart by how they start, and both are needed",
     on: true,
   });
   await bridge.disconnect();
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
 });
 
 test("files from the person's phone are kept for the mini-me to read; a stranger's are never taken; a colleague's come to the phone", async () => {
   const home = join(root, "phone-files");
-  process.env.SUB_OFFICE_HOME = home;
+  process.env.CLONE_OFFICE_HOME = home;
   const bots: FakeBot[] = [];
   const turns: { text: string; allow?: string[] }[] = [];
   const bridge = new bridgeModule.Bridge({
@@ -603,12 +603,12 @@ test("files from the person's phone are kept for the mini-me to read; a stranger
     bytes: "item,price",
   });
   await bridge.disconnect();
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
 });
 
 test("a flow the mini-me would make shows itself on the phone, as its card does on the page", async () => {
   const home = join(root, "flow-card");
-  process.env.SUB_OFFICE_HOME = home;
+  process.env.CLONE_OFFICE_HOME = home;
   const bots: FakeBot[] = [];
   const bridge = new bridgeModule.Bridge({
     makeBot: ({ token }, listener) => {
@@ -678,5 +678,5 @@ test("a flow the mini-me would make shows itself on the phone, as its card does 
   );
   for (const pending of gate.pendingAsks()) gate.answerAsk(pending.id, "deny");
   await bridge.disconnect();
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
 });

@@ -1,4 +1,4 @@
-# sub-office
+# Clone Office
 
 Send your clone. Everyone on a team gets a *clone*: an AI that works like them. It knows
 their role, what they own and how they work, does their everyday tasks like an assistant, and
@@ -18,7 +18,9 @@ messenger; one teammate sets up connectors and team billing once.
 Status: early, in local development. What works and what comes next are written once, in
 README.md ("What works today" and "Status"); keep them current there rather than here. The
 relay's storage is moving to Postgres so a team can deploy it anywhere; what a clone keeps stays
-in files on its person's computer. The product name is being reconsidered; it will keep "office".
+in files on its person's computer. The product is Clone Office (`clone-office` on npm and in commands);
+until 10/8 it was sub-office, which the repository folder, browser storage keys and the relay's
+cookie still say, and a `~/.sub-office` folder already there is used where it is.
 
 # How to read the planning material
 
@@ -177,7 +179,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
   (`server/language.ts` `personLanguage`).
-  Everything lives under `~/.sub-office` (`SUB_OFFICE_HOME` moves it). `server/sources/` reads
+  Everything lives under `~/.clone-office` (`CLONE_OFFICE_HOME` moves it). `server/sources/` reads
   each AI tool's local records (Claude Code and Codex session files; Cursor's and Hermes Agent's
   own SQLite files, where a changed chat is read again whole and a deleted one leaves the index),
   plus notes about the person; `server/apps.ts` reads app usage from
@@ -284,8 +286,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   for two weeks or until answered); the answer reaches the asker like any other. An invite is one
   link, `/i/<office key>?from=<name>` (`GET /invite` gives it to a member): the relay's page guides
   setting up a clone with it (`install.ts`: Node.js, a terminal, then one line,
-  `npx -y sub-office join "<link>"`, or with the app taken from the relay itself when it serves its
-  own package, `SUB_OFFICE_PACKAGE_FILE` at `/sub-office.tgz`, for a team's own build or before
+  `npx -y clone-office join "<link>"`, or with the app taken from the relay itself when it serves its
+  own package, `CLONE_OFFICE_PACKAGE_FILE` at `/clone-office.tgz`, for a team's own build or before
   the app is on npm; the steps for the computer its User-Agent names and the
   others folded; on a phone, open it on a computer; on a private network, join from the same one),
   and the join form fills in the relay and key from it (`office/invite.ts`).
@@ -306,7 +308,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   make others owners, make a new invite link (the office key changes; those in stay) and name the
   office (`Accounts` `removePerson`, `removeClone`, `makeOwner`, `newInvite`, `renameOffice`),
   each looked at once on its own page first (`confirmPage`); the invite's page folds the account
-  away below the guide. `npx sub-office connect <link>` (`bin/sub-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
+  away below the guide. `npx clone-office connect <link>` (`bin/clone-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
   office this computer hosted), and starts the app. `RELAY_PUBLIC_URL` is the address people reach
   a server at behind a proxy.
 - `features/minime/office/`: the clone's side. `client.ts` (where its relay is and who it is
@@ -493,23 +495,23 @@ These words help discussion. They do not mandate separate services, tables or UI
   from every tool's lists, which the screen offers to leave out before the first reading and any
   time after ("Folders left out"); leaving one out removes what the index holds from it at once
   (`history/indexer.ts` `forgetExcluded`).
-- `guide/`: how sub-office works, written for the person using it; the clone reads it with
+- `guide/`: how Clone Office works, written for the person using it; the clone reads it with
   `guide_read` (`features/minime/memory/guide.ts`). A change the person would notice updates
   `guide/` in the same change.
 - `.claude/rules/ui.md`: map of the current UI. Read it when touching that area.
 - `.claude/rules/taste.md`: working visual directions, not a frozen design specification.
 
-- `bin/sub-office.mjs` and `scripts/pack.mjs`: the npm package. `node scripts/pack.mjs [--working]`
+- `bin/clone-office.mjs` and `scripts/pack.mjs`: the npm package. `node scripts/pack.mjs [--working]`
   builds it in a temporary folder from the repository's own files only (committed, or with
   `--working` every file git tracks or would track; ignored files never), so nothing private
   and no path of this computer reaches it: the app as a standalone server (`next.config.ts`,
-  `SUB_OFFICE_PACKAGE=1`, its own `.next-package/`), the tool server and the relay bundled into
+  `CLONE_OFFICE_PACKAGE=1`, its own `.next-package/`), the tool server and the relay bundled into
   `dist/*.mjs` (Node does not run TypeScript inside node_modules), the guide, and the launcher;
-  next, react and the relay's pg and PGlite come from npm. It leaves `dist/sub-office-<version>.tgz` and publishes nothing.
-  The launcher (`npx sub-office`) starts the app on 127.0.0.1 from port 4417 and opens `/`;
-  `npx sub-office relay` starts a relay; `npx sub-office join <invite link>` keeps the invite in
+  next, react and the relay's pg and PGlite come from npm. It leaves `dist/clone-office-<version>.tgz` and publishes nothing.
+  The launcher (`npx clone-office`) starts the app on 127.0.0.1 from port 4417 and opens `/`;
+  `npx clone-office relay` starts a relay; `npx clone-office join <invite link>` keeps the invite in
   `settings.json` (`invite`, after checking the office answers) and starts the app, whose first
-  steps or Settings › Office join with it (`connect` and `join` each take either link). In the package, `SUB_OFFICE_APP_DIR` tells the app where
+  steps or Settings › Office join with it (`connect` and `join` each take either link). In the package, `CLONE_OFFICE_APP_DIR` tells the app where
   its guide and tool server are (`server/paths.ts` `appDir`, `toolServerPath`).
 
 `pnpm dev` serves on loopback. This is Next.js 16; consult the installed Next documentation

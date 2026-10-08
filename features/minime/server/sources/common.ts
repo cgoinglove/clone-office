@@ -148,6 +148,7 @@ export function isNoise(path: string): boolean {
     process.env.LOCALAPPDATA,
   ].filter((place): place is string => Boolean(place));
   return (
+    path.includes(`${sep}.clone-office`) ||
     path.includes(`${sep}.sub-office`) ||
     places.some((place) => path === place || path.startsWith(place))
   );

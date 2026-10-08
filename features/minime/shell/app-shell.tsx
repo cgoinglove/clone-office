@@ -39,8 +39,8 @@ function Frame({ children }: { children: ReactNode }) {
   );
   useEffect(() => {
     document.title = waiting
-      ? `(${waiting}) ${title} · sub-office`
-      : `${title} · sub-office`;
+      ? `(${waiting}) ${title} · Clone Office`
+      : `${title} · Clone Office`;
   }, [waiting, title]);
 
   const { setSettings, chat } = app;
@@ -61,7 +61,7 @@ function Frame({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [setSettings, chat, router]);
 
-  // Started again with `sub-office join <link>`: the office's settings open once, ready to join.
+  // Started again with `clone-office join <link>`: the office's settings open once, ready to join.
   const invite = app.office.office?.invite?.link;
   const offered = useRef<string | undefined>(undefined);
   useEffect(() => {

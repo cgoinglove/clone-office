@@ -23,7 +23,7 @@
 //   POST /r/:token      the answer, from the page's form
 //   GET  /invite        -> {path}                       one's office's invite link
 //   GET  /i/:key        the invite page (HTML): what the office is and how to join with the link
-//   GET  /sub-office.tgz the app's own package, when the relay serves one (SUB_OFFICE_PACKAGE_FILE)
+//   GET  /clone-office.tgz the app's own package, when the relay serves one (CLONE_OFFICE_PACKAGE_FILE)
 // With people's accounts (accounts.ts), the invite page makes an account instead, and:
 //   POST /i/:key        the account's form -> one's own page, signed in
 //   GET|POST /login     signing in;  POST /logout  signing out

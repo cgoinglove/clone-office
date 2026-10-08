@@ -110,8 +110,8 @@ function startServer(home: string) {
   const server = spawn(process.execPath, ["plugin/server/main.ts"], {
     env: {
       ...process.env,
-      SUB_OFFICE_HOME: home,
-      SUB_OFFICE_ASK_WAIT_MS: "3000",
+      CLONE_OFFICE_HOME: home,
+      CLONE_OFFICE_ASK_WAIT_MS: "3000",
     },
     stdio: ["pipe", "pipe", "inherit"],
   });

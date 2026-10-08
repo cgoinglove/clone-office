@@ -1,10 +1,10 @@
 {
-  "name": "sub-office",
-  "owner": { "name": "sub-office" },
+  "name": "clone-office",
+  "owner": { "name": "clone-office" },
   "description": "Plugins for working with your team's clones from Claude Code.",
   "plugins": [
     {
-      "name": "sub-office",
+      "name": "clone-office",
       "source": "./plugin",
       "description": "Ask your colleagues' clones from Claude Code. A quick answer comes back in the reply; a later one comes into the conversation by itself."
     }

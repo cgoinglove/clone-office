@@ -55,7 +55,7 @@ type ApiChoice = Extract<BrainChoice, { kind: "api" }>;
  * What Claude Code's own prompt tells it and a model reached directly does not know: how this
  * app runs its tools. Prepended to the mini-me's own system prompt.
  */
-const LOOP_GUIDE = `You run on your person's computer inside sub-office, through tools. Call a tool whenever it helps rather than guessing; several at once when they do not depend on each other. Some tools ask your person first: if they say no, or nobody is there to ask, do not try another way to do the same thing; say plainly what you could not do. Paths on their computer are full paths ("~/" is their home). Keep answers short and in their language.`;
+const LOOP_GUIDE = `You run on your person's computer inside Clone Office, through tools. Call a tool whenever it helps rather than guessing; several at once when they do not depend on each other. Some tools ask your person first: if they say no, or nobody is there to ask, do not try another way to do the same thing; say plainly what you could not do. Paths on their computer are full paths ("~/" is their home). Keep answers short and in their language.`;
 
 /** One kept session: the system prompt it started with and the conversation so far. */
 interface Kept {
@@ -299,7 +299,7 @@ export async function runLoop(
         args: ["--no-warnings", toolServerPath()],
         env: {
           ...(cleanEnv() as Record<string, string>),
-          SUB_OFFICE_HOME: minimeHome(),
+          CLONE_OFFICE_HOME: minimeHome(),
           ...toolServerEnv(actor, gate, options.audience),
         },
       },

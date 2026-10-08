@@ -1,4 +1,4 @@
-// An invite waiting to be used: `npx sub-office join <invite link>` keeps the link in
+// An invite waiting to be used: `npx clone-office join <invite link>` keeps the link in
 // `settings.json` (`invite`) and starts the app, whose first steps (or Settings › Office) offer to
 // join with it. Joining or opening an office uses it up.
 

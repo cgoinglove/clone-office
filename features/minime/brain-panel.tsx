@@ -99,7 +99,7 @@ const providerOfWay = (way: Way): ProviderId | undefined =>
       ? "local"
       : undefined;
 
-const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
 /** Each vendor's own mark; a model on this computer shows the two apps that run one. */
 function VendorMark({ vendor }: { vendor: Vendor["id"] }) {

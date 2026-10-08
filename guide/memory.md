@@ -85,7 +85,7 @@ the clone still keeps what it learns, and asks them, in theirs.
   making a backup, and says so before they confirm; reading again brings it back.
 - Settings › **General** (일반), under **Files** (파일), lists every file the clone keeps on the computer, grouped by kind,
   and opens each text file in place.
-- The files are theirs to read and edit with any text editor, in the `.sub-office` folder in their
+- The files are theirs to read and edit with any text editor, in the `.clone-office` folder in their
   home folder.
 
 ## What it does alone, and what it asks first
@@ -105,4 +105,4 @@ the clone still keeps what it learns, and asks them, in theirs.
   Settings › **Permissions** (권한) under **What it does without asking** (묻지 않고 하는 일), each
   in plain words;
   **Ask me first again** (다시 먼저 묻기) takes one back. (It is kept in `settings.json` in the
-  `.sub-office` folder, under `trust`.)
+  `.clone-office` folder, under `trust`.)

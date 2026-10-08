@@ -1,5 +1,5 @@
 // Folders the person keeps out of everything the mini-me reads, such as a company's work. They
-// live in ~/.sub-office/settings.json as {"exclude": ["client-*", "~/work/private"]} and apply to
+// live in ~/.clone-office/settings.json as {"exclude": ["client-*", "~/work/private"]} and apply to
 // the first transplant, the conversation index and its search alike.
 // A pattern with a slash is a path (a leading "~" is the home folder) and excludes everything
 // under it; a pattern without one matches any single folder name in a path. "*" matches any run

@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// sub-office from npm: start the app on this computer, or a relay for a team.
+// Clone Office from npm: start the app on this computer, or a relay for a team.
 //
-//   npx sub-office              the app, at http://127.0.0.1:<port>/, opened in the browser
-//   npx sub-office relay [...]  a relay for an office (--port, --host, --database, --key)
-//   npx sub-office join <invite link>     starts the app with the invite kept: its first steps (or
+//   npx clone-office              the app, at http://127.0.0.1:<port>/, opened in the browser
+//   npx clone-office relay [...]  a relay for an office (--port, --host, --database, --key)
+//   npx clone-office join <invite link>     starts the app with the invite kept: its first steps (or
 //                               Settings › Office) join that office with it
-//   npx sub-office connect <setup link>   this computer's mini-me joins one's office, then starts
+//   npx clone-office connect <setup link>   this computer's mini-me joins one's office, then starts
 //                               (the link is the one-time line one's page on the office server gives)
 // `join` and `connect` each take either link.
 //
@@ -37,23 +37,23 @@ const FIRST_PORT = 4417;
 // What npx was asked for: the app by its npm name, or a package of a team's own.
 const fromNpx = process.env.npm_config_package?.trim();
 const ownBuild =
-  fromNpx && !/^sub-office(@|$)/.test(fromNpx) ? fromNpx : undefined;
+  fromNpx && !/^clone-office(@|$)/.test(fromNpx) ? fromNpx : undefined;
 if (
   ownBuild?.endsWith(".tgz") &&
   !/^https?:/.test(ownBuild) &&
   existsSync(resolve(ownBuild)) &&
-  !process.env.SUB_OFFICE_PACKAGE_FILE
+  !process.env.CLONE_OFFICE_PACKAGE_FILE
 )
-  process.env.SUB_OFFICE_PACKAGE_FILE = resolve(ownBuild);
+  process.env.CLONE_OFFICE_PACKAGE_FILE = resolve(ownBuild);
 /** The line that starts the app again, as it was started. */
 const again = ownBuild
-  ? `npx -y --package="${ownBuild}" sub-office`
-  : "npx -y sub-office";
+  ? `npx -y --package="${ownBuild}" clone-office`
+  : "npx -y clone-office";
 
 const [major, minor] = process.versions.node.split(".").map(Number);
 if (major < 22 || (major === 22 && minor < 13)) {
   console.error(
-    `sub-office needs Node.js 22.13 or later; this is ${process.versions.node}. Get it from https://nodejs.org`,
+    `Clone Office needs Node.js 22.13 or later; this is ${process.versions.node}. Get it from https://nodejs.org`,
   );
   process.exit(1);
 }
@@ -74,12 +74,12 @@ if (args[0] === "relay") {
   if (!args.includes("--no-start")) await startApp();
 } else if (args.includes("--help") || args.includes("-h")) {
   console.log(`Usage:
-  sub-office [--port <n>] [--no-open]   start the app on this computer
-  sub-office relay [--port <n>] [--host <address>] [--database <postgres url | folder>] [--key <office key>]
+  clone-office [--port <n>] [--no-open]   start the app on this computer
+  clone-office relay [--port <n>] [--host <address>] [--database <postgres url | folder>] [--key <office key>]
                                         start a relay for an office
-  sub-office join <invite link> [--no-start]
+  clone-office join <invite link> [--no-start]
                                         start, ready to join the office that invited you
-  sub-office connect <setup link> [--no-start]
+  clone-office connect <setup link> [--no-start]
                                         join your office with the line from your page there, then start`);
 } else {
   await startApp();
@@ -115,8 +115,18 @@ function writeSettings(path, settings) {
   renameSync(temp, path);
 }
 
+// The app's folder, as features/minime/server/paths.ts minimeHome() decides it: a ~/.sub-office
+// kept before the app was named Clone Office is used where it is.
+function appHome() {
+  const moved = process.env.CLONE_OFFICE_HOME || process.env.SUB_OFFICE_HOME;
+  if (moved) return moved;
+  const home = join(homedir(), ".clone-office");
+  const before = join(homedir(), ".sub-office");
+  return !existsSync(home) && existsSync(before) ? before : home;
+}
+
 function settingsFile() {
-  const home = process.env.SUB_OFFICE_HOME || join(homedir(), ".sub-office");
+  const home = appHome();
   mkdirSync(home, { recursive: true });
   return join(home, "settings.json");
 }
@@ -133,7 +143,7 @@ async function keepInvite(link) {
     await fetch(url, { signal: AbortSignal.timeout(15_000) });
   } catch {
     console.error(
-      `Could not reach the office at ${url.host}. If it runs on ${from || "a teammate"}'s computer, join from the same Wi-Fi or network while their sub-office is open; otherwise check the link, and that this computer is online.`,
+      `Could not reach the office at ${url.host}. If it runs on ${from || "a teammate"}'s computer, join from the same Wi-Fi or network while their Clone Office is open; otherwise check the link, and that this computer is online.`,
     );
     process.exit(1);
   }
@@ -144,7 +154,7 @@ async function keepInvite(link) {
   console.log(
     settings.office
       ? "Your clone here is in an office already. To join this one instead, leave that one under Settings › Office; this link will be ready there."
-      : `Invited to ${from ? `${from}'s office` : "an office"}. Your browser opens sub-office: after a few questions, your clone joins the office.`,
+      : `Invited to ${from ? `${from}'s office` : "an office"}. Your browser opens Clone Office: after a few questions, your clone joins the office.`,
   );
 }
 
@@ -159,7 +169,7 @@ async function connect(link) {
     url = new URL(String(link ?? ""));
   } catch {
     console.error(
-      "Usage: sub-office join <the invite link a teammate sent you>",
+      "Usage: clone-office join <the invite link a teammate sent you>",
     );
     process.exit(1);
   }
@@ -243,10 +253,10 @@ function free(port) {
 async function ours(port) {
   try {
     const response = await fetch(`http://${HOST}:${port}/api/me/ping`, {
-      headers: { "x-sub-office": "1" },
+      headers: { "x-clone-office": "1" },
       signal: AbortSignal.timeout(1500),
     });
-    return response.ok && (await response.json()).app === "sub-office";
+    return response.ok && (await response.json()).app === "clone-office";
   } catch {
     return false;
   }
@@ -295,7 +305,7 @@ async function startApp() {
       NODE_ENV: "production",
       PORT: String(port),
       HOSTNAME: HOST,
-      SUB_OFFICE_APP_DIR: root,
+      CLONE_OFFICE_APP_DIR: root,
     },
     stdio: ["ignore", "ignore", "inherit"],
   });

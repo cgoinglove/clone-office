@@ -1,7 +1,7 @@
 // Reading a route's answer that comes one JSON value per line (the app's streams: a reading's
 // progress, a turn's words), as each line arrives.
 
-const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
 /** Read a route's one-JSON-per-line answer as it arrives. */
 export async function stream(

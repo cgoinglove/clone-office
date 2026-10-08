@@ -57,7 +57,7 @@ test("the invite page names who invites, escaped, and guides the setup with one 
   assert.ok(page.includes("https://nodejs.org/en/download"));
   assert.ok(
     page.includes(
-      "npx -y sub-office join &quot;http://office.example.com/i/key?from=%3Cb%3EBen%3C%2Fb%3E&quot;",
+      "npx -y clone-office join &quot;http://office.example.com/i/key?from=%3Cb%3EBen%3C%2Fb%3E&quot;",
     ),
   );
 });
@@ -69,23 +69,23 @@ test("the join line quotes the link and encodes what a shell would act on", () =
       key: "k1",
       from: "Ana (PM)!",
     }),
-    'npx -y sub-office join "http://192.168.0.7:3200/i/k1?from=Ana%20%28PM%29%21"',
+    'npx -y clone-office join "http://192.168.0.7:3200/i/k1?from=Ana%20%28PM%29%21"',
   );
   assert.equal(
     joinCommand({ base: "https://office.example.com", key: "k1" }),
-    'npx -y sub-office join "https://office.example.com/i/k1"',
+    'npx -y clone-office join "https://office.example.com/i/k1"',
   );
   // A relay serving the app's own package: the line takes the app from it.
   assert.equal(
     joinCommand({ base: "http://192.168.0.7:3200", key: "k1", served: true }),
-    'npx -y --package="http://192.168.0.7:3200/sub-office.tgz" sub-office join "http://192.168.0.7:3200/i/k1"',
+    'npx -y --package="http://192.168.0.7:3200/clone-office.tgz" clone-office join "http://192.168.0.7:3200/i/k1"',
   );
   assert.equal(
-    servedPackage({ SUB_OFFICE_PACKAGE_FILE: "/x/a.tgz" }),
+    servedPackage({ CLONE_OFFICE_PACKAGE_FILE: "/x/a.tgz" }),
     "/x/a.tgz",
   );
   assert.equal(
-    servedPackage({ SUB_OFFICE_PACKAGE_FILE: "/etc/passwd" }),
+    servedPackage({ CLONE_OFFICE_PACKAGE_FILE: "/etc/passwd" }),
     undefined,
   );
   assert.equal(servedPackage({}), undefined);

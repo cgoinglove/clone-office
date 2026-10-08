@@ -2,7 +2,7 @@
 // committed (or, with --working, every file git tracks or would track, as it is now; ignored
 // files such as *.local.* never). Nothing private or stray can reach the package that way, and
 // no path of this computer is written into the build. There the dependencies are installed, the
-// app is built as a standalone server (next.config.ts, SUB_OFFICE_PACKAGE), and the mini-me's
+// app is built as a standalone server (next.config.ts, CLONE_OFFICE_PACKAGE), and the mini-me's
 // tool server and the relay are bundled into one file each, since Node does not run TypeScript
 // from inside node_modules. Before it builds, the types and every language are checked, and a
 // language out of step stops it. The package is left in dist/; nothing is published.
@@ -25,8 +25,8 @@ import { build } from "esbuild";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const working = process.argv.includes("--working");
-const work = mkdtempSync(join(tmpdir(), "sub-office-pack-"));
-const source = join(work, "sub-office");
+const work = mkdtempSync(join(tmpdir(), "clone-office-pack-"));
+const source = join(work, "clone-office");
 const out = join(work, "package");
 
 function run(command, args, cwd, env = {}) {
@@ -81,7 +81,7 @@ try {
   run("pnpm", ["typecheck"], source);
   run("pnpm", ["exec", "tsx", "--test", "i18n/messages.test.ts"], source);
   run("pnpm", ["exec", "next", "build"], source, {
-    SUB_OFFICE_PACKAGE: "1",
+    CLONE_OFFICE_PACKAGE: "1",
     NEXT_TELEMETRY_DISABLED: "1",
   });
 
@@ -145,7 +145,7 @@ try {
         version: own.version,
         description: own.description,
         license: own.license,
-        bin: { "sub-office": "bin/sub-office.mjs" },
+        bin: { "clone-office": "bin/clone-office.mjs" },
         engines: { node: ">=22.13" },
         files: ["app", "bin", "dist", "guide", "skills"],
         dependencies: pick([

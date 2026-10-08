@@ -27,7 +27,7 @@ const calls = join(root, "calls.jsonl");
 const script = join(root, "script.json");
 mkdirSync(home, { recursive: true });
 mkdirSync(bin, { recursive: true });
-process.env.SUB_OFFICE_HOME = home;
+process.env.CLONE_OFFICE_HOME = home;
 process.env.PATH = `${bin}${delimiter}${process.env.PATH ?? ""}`;
 
 // The stand-in: answers a request from the script (in order), passes every check, and keeps nothing

@@ -31,7 +31,7 @@ interface Status {
   problem?: string;
 }
 
-const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 /** Where each service makes a bot, and what it is called (a name, not a word to translate). */
 const SERVICES: Record<Service, { name: string; portal: string }> = {
   discord: {

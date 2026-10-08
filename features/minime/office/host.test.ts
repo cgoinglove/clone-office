@@ -18,19 +18,19 @@ const v4 = (address: string, internal = false) => ({
 });
 
 const root = mkdtempSync(join(tmpdir(), "minime-host-"));
-const saved = process.env.SUB_OFFICE_HOME;
+const saved = process.env.CLONE_OFFICE_HOME;
 let host: typeof import("./host");
 let client: typeof import("./client");
 
 before(async () => {
-  process.env.SUB_OFFICE_HOME = root;
+  process.env.CLONE_OFFICE_HOME = root;
   host = await import("./host");
   client = await import("./client");
 });
 after(async () => {
   await host.closeHere();
-  if (saved === undefined) delete process.env.SUB_OFFICE_HOME;
-  else process.env.SUB_OFFICE_HOME = saved;
+  if (saved === undefined) delete process.env.CLONE_OFFICE_HOME;
+  else process.env.CLONE_OFFICE_HOME = saved;
   // The relay lets go of its folder as it stops.
   for (let i = 0; i < 20; i++)
     try {

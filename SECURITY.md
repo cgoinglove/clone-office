@@ -20,7 +20,7 @@ assistant that can read and act for you is one that can do so wrongly. What keep
 
 ## Where things are kept
 
-- On your computer, in `~/.sub-office`: memory, conversations, settings, and the keys and
+- On your computer, in `~/.clone-office`: memory, conversations, settings, and the keys and
   sign-ins you gave it (`brain/keys.json`, `brain/chatgpt.json`, `connectors/*.json`, the messenger
   token in `settings.json`), each readable by your user alone (mode 0600). They are not encrypted
   at rest: anything running as you can read them, as it can your other tokens.

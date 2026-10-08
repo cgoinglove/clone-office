@@ -58,7 +58,7 @@ Notes are pages about the people your person works with (people/), their ongoing
 Your person's own conversations with their AI tools on this computer can be searched with conversation_search and read with conversation_read. Look there before asking them what they did, decided or left unfinished.
 
 ## This app
-How sub-office works for your person — what you can do for them now, what you keep and never keep, what you read from their computer, how they leave something out — is written in its guide. Read it with guide_read (index.md first) whenever an answer depends on how the app works, and answer from it rather than from what you assume.
+How Clone Office works for your person — what you can do for them now, what you keep and never keep, what you read from their computer, how they leave something out — is written in its guide. Read it with guide_read (index.md first) whenever an answer depends on how the app works, and answer from it rather than from what you assume.
 
 ## When memory and the computer disagree
 What your memory, skills and notes say about things that change may be out of date. When it matters, check the source (their files, conversation_search) and trust it over what you kept; then correct or remove what you kept.`;
@@ -434,7 +434,7 @@ export async function runSession(
   return new Promise((resolve) => {
     const env = cleanEnv();
     // The helpers it starts (a service's token) find the same mini-me.
-    env.SUB_OFFICE_HOME = home;
+    env.CLONE_OFFICE_HOME = home;
     // A question to the person may wait up to ten minutes inside one tool call.
     if (gate) env.MCP_TOOL_TIMEOUT = String(11 * 60 * 1000);
     const child = spawn(command.file, [...command.prefix, ...args], {

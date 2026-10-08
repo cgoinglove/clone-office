@@ -1,8 +1,8 @@
 {
-  "name": "sub-office",
+  "name": "clone-office",
   "version": "0.1.0",
   "description": "Ask your colleagues' clones from Claude Code. A quick answer comes back in the reply; a later one comes into the conversation by itself.",
-  "author": { "name": "sub-office" },
+  "author": { "name": "clone-office" },
   "license": "MIT",
   "keywords": ["team", "clone", "office", "a2a"]
 }

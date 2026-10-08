@@ -37,7 +37,7 @@ interface State {
   clients: { google: { from: "team" | "own"; by?: string } | null };
 }
 
-const HEADERS = { "content-type": "application/json", "x-sub-office": "1" };
+const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
 // Registering the team's Google client, a page at a time in Google Cloud's console: what to turn
 // on and what to paste come from the catalog, so they always match what the mini-me asks for.

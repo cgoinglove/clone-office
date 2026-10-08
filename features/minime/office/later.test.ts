@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { after, test } from "node:test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-later-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
 test("a request's question waits only a little at the screen; the person's own conversation waits longer", async () => {

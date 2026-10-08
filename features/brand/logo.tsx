@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  */
 const REST = new BotMotion("b113", "idle", 0).frame(0, 1, true);
 
-export const APP_NAME = "sub-office";
+export const APP_NAME = "Clone Office";
 
 export function LogoMark({
   className,

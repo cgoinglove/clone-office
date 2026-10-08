@@ -123,7 +123,7 @@ export class Accounts {
     options: { secret?: string; publicUrl?: string } = {},
   ): Promise<Accounts> {
     const config: BetterAuthOptions = {
-      appName: "sub-office",
+      appName: "Clone Office",
       secret:
         options.secret ||
         process.env.BETTER_AUTH_SECRET ||

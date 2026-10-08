@@ -6,7 +6,7 @@ import "@/features/office/office.css";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("start");
-  return { title: `${t("title")} · sub-office` };
+  return { title: `${t("title")} · Clone Office` };
 }
 
 export default function StartPage() {

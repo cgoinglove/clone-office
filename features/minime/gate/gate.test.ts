@@ -135,8 +135,8 @@ test("what was allowed from now on reads as the person would say it, and can be 
   const { mkdtempSync, rmSync } = await import("node:fs");
   const { tmpdir } = await import("node:os");
   const home = mkdtempSync(join(tmpdir(), "minime-trust-"));
-  const was = process.env.SUB_OFFICE_HOME;
-  process.env.SUB_OFFICE_HOME = home;
+  const was = process.env.CLONE_OFFICE_HOME;
+  process.env.CLONE_OFFICE_HOME = home;
   try {
     const { addTrust, loadTrust, removeTrust } = await import("./rules");
     await addTrust("Read(~/Documents/**)");
@@ -145,8 +145,8 @@ test("what was allowed from now on reads as the person would say it, and can be 
     assert.equal(await removeTrust("Read(~/Documents/**)"), false);
     assert.deepEqual(await loadTrust(), ["mcp__notion__notion-search"]);
   } finally {
-    if (was === undefined) delete process.env.SUB_OFFICE_HOME;
-    else process.env.SUB_OFFICE_HOME = was;
+    if (was === undefined) delete process.env.CLONE_OFFICE_HOME;
+    else process.env.CLONE_OFFICE_HOME = was;
     rmSync(home, { recursive: true, force: true });
   }
 });

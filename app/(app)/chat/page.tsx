@@ -5,7 +5,7 @@ import { ChatScreen } from "@/features/minime/shell/chat-screen";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("shell.screens");
-  return { title: `${t("chat")} · sub-office` };
+  return { title: `${t("chat")} · Clone Office` };
 }
 
 // The first screen: the conversation with the person's clone.

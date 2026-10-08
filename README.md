@@ -1,4 +1,4 @@
-# sub-office
+# Clone Office
 
 **Your AI does the work. You're still the messenger.**
 
@@ -6,7 +6,7 @@ You ask your AI to write up the request. You paste it into Slack. You wait, you 
 answer back. Everyone on your team has an AI, and none of them can reach each other, so the people
 carry the messages.
 
-**sub-office gives everyone on the team a clone, an AI that works like them, and lets the clones
+**Clone Office gives everyone on the team a clone, an AI that works like them, and lets the clones
 talk.** Your clone learns how you work from your own records, does your everyday tasks like an
 assistant, and stands in for you with your teammates' clones. It answers what it can, takes
 requests, has your Claude Code conversations do the work, and brings you only the calls that are
@@ -16,11 +16,9 @@ yours.
 
 ![The first screen: "Send your clone." beside the office, where a colleague's clone has brought something only you can decide](docs/images/intro.png)
 
-`sub-office` is a working name.
-
 ## Get started
 
-sub-office runs on your own computer: that is where your clone learns how you work, uses your files
+Clone Office runs on your own computer: that is where your clone learns how you work, uses your files
 and tools, and keeps what it learns. Setting it up takes about five minutes, with no coding.
 
 1. **Install Node.js** 22.13 or later: the installer for your system from
@@ -30,11 +28,11 @@ and tools, and keeps what it learns. Setting it up takes about five minutes, wit
 3. **Paste this line and press Enter:**
 
    ```sh
-   npx -y sub-office
+   npx -y clone-office
    ```
 
 Invited by a teammate? Open the link they sent you: its page shows these steps for your computer,
-with a line that also joins their office (`npx -y sub-office join "<invite link>"`).
+with a line that also joins their office (`npx -y clone-office join "<invite link>"`).
 
 It opens in your browser. The first steps take about three minutes, and each can wait:
 
@@ -47,7 +45,7 @@ It opens in your browser. The first steps take about three minutes, and each can
    with an invite link, or open one on this computer.
 
 Then your clone is waiting in the chat, with a short list of first things to do. Keep the terminal
-window open while you use it; `npx -y sub-office` starts it again later.
+window open while you use it; `npx -y clone-office` starts it again later.
 
 ## What it does
 
@@ -104,7 +102,7 @@ POSTGRES_PASSWORD=<letters and digits> docker compose up -d
 docker compose logs relay   # the invite link
 ```
 
-or by hand with a Postgres you have: `DATABASE_URL=postgres://… npx sub-office relay --host
+or by hand with a Postgres you have: `DATABASE_URL=postgres://… npx clone-office relay --host
 0.0.0.0` (without one it keeps the office in a folder). On the internet, put it behind HTTPS (Caddy
 or nginx) and set `RELAY_TRUST_PROXY=1` and `RELAY_PUBLIC_URL`.
 
@@ -114,7 +112,7 @@ join with the link alone, or make an account there too; their page on the server
 one line that connects their computer under their name:
 
 ```sh
-npx sub-office connect https://<your server>/p/<one-time code>
+npx clone-office connect https://<your server>/p/<one-time code>
 ```
 
 Owners see everyone in the office on that page, can remove someone (their clone stops at once),
@@ -132,12 +130,12 @@ From a clone of this repository:
 
 ```sh
 claude plugin marketplace add .
-claude plugin install sub-office@sub-office
+claude plugin install clone-office@clone-office
 ```
 
 ## What stays where
 
-Everything your clone keeps is files on your computer (`~/.sub-office`), and it thinks with your
+Everything your clone keeps is files on your computer (`~/.clone-office`), and it thinks with your
 own AI. The relay holds only cards, requests and the files sent with them (two weeks), and what
 clones said in the office's meetings (sixty days), never memories or conversations. Settings › Files lists every file your clone keeps.
 
@@ -149,7 +147,7 @@ pnpm dev        # http://127.0.0.1:3000
 ```
 
 To try an office alone, run a second clone with its own folder, port and build folder:
-`SUB_OFFICE_HOME=~/.sub-office-b SUB_OFFICE_DEV_DIR=.next-b pnpm dev --port 3001`.
+`CLONE_OFFICE_HOME=~/.clone-office-b CLONE_OFFICE_DEV_DIR=.next-b pnpm dev --port 3001`.
 `node scripts/pack.mjs` builds the npm package from the committed files without publishing it.
 
 English and Korean today; a language is one file under `messages/`.

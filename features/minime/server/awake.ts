@@ -19,7 +19,7 @@ export function awakeCommand(
       "systemd-inhibit",
       [
         "--what=idle:sleep",
-        "--who=sub-office",
+        "--who=clone-office",
         "--why=Your clone is working",
         "--mode=block",
         "sh",

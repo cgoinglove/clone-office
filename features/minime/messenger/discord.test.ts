@@ -91,8 +91,8 @@ test("the bot says who it is, and hears direct messages and button presses only"
       intents: 4096,
       properties: {
         os: process.platform,
-        browser: "sub-office",
-        device: "sub-office",
+        browser: "clone-office",
+        device: "clone-office",
       },
     },
   });

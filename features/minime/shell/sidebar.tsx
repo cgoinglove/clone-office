@@ -86,7 +86,7 @@ export function Sidebar() {
         >
           <LogoMark className="size-[22px] shrink-0" />
           <span className="truncate text-[15px] font-semibold tracking-tight">
-            sub-office
+            Clone Office
           </span>
         </Link>
         <button

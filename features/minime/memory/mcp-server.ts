@@ -3,16 +3,15 @@
 // its person did with their AI tools (../history). Node runs this file
 // directly:
 //   node features/minime/memory/mcp-server.ts
-// MINIME_MEMORY_DIR sets where USER.md and MEMORY.md live (default ~/.sub-office/memories),
-// MINIME_SKILLS_DIR where skills live (default ~/.sub-office/skills), MINIME_NOTES_DIR where
-// notes live (default ~/.sub-office/notes). MINIME_ACTOR says who is writing: "minime" in a
+// MINIME_MEMORY_DIR sets where USER.md and MEMORY.md live (default ~/.clone-office/memories),
+// MINIME_SKILLS_DIR where skills live (default ~/.clone-office/skills), MINIME_NOTES_DIR where
+// notes live (default ~/.clone-office/notes). MINIME_ACTOR says who is writing: "minime" in a
 // session with the person (default), "review" for the background review, which may change only
 // what the mini-me made itself. In a conversation with the person, MINIME_GATE_URL,
 // MINIME_GATE_SECRET and MINIME_CHAT_ID add the trust gate's tools (../gate/tools.ts).
 // The same server can later be added to the person's own Claude Code, so every session they
 // run shares what their mini-me knows.
 
-import { homedir } from "node:os";
 import { join } from "node:path";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -40,14 +39,14 @@ import {
 import { CONVERSATION_TOOLS, callConversationTool } from "../history/tools.ts";
 import { OFFICE_INBOX_TOOL, officeInbox } from "../office/inbox-tool.ts";
 import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
-import { appDir } from "../server/paths.ts";
+import { appDir, minimeHome } from "../server/paths.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
 import { NOTE_TOOLS, NoteStore } from "./notes.ts";
 import { type Actor, SKILL_TOOLS, SkillStore } from "./skills.ts";
 import { MemoryStore } from "./store.ts";
 import { callMemoryTool, MEMORY_TOOL } from "./tool.ts";
 
-const home = join(homedir(), ".sub-office");
+const home = minimeHome();
 const actor: Actor =
   process.env.MINIME_ACTOR === "review" ? "review" : "minime";
 // One store per server process: Claude Code starts one server per session, so the failure count

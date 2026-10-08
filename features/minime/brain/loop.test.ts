@@ -6,7 +6,7 @@ import { after, test } from "node:test";
 import { convertArrayToReadableStream, MockLanguageModelV4 } from "ai/test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-loop-"));
-process.env.SUB_OFFICE_HOME = root;
+process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
 const usage = {

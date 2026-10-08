@@ -1,6 +1,6 @@
 "use client";
 
-// The first time with sub-office (/start), after Thursday's first run: it opens on what the app is,
+// The first time with Clone Office (/start), after Thursday's first run: it opens on what the app is,
 // beside the office itself playing the app's one loop (demo.ts), then one thing a screen: what the
 // clone thinks with, letting it learn how the person works, who they are and whether a team is in
 // it, and their office, which they enter by its lobby. No step holds anyone: each can be passed
@@ -74,7 +74,7 @@ export function Onboarding() {
   }, [about]);
   const [team, setTeam] = useState<Team>("alone");
   const [invite, setInvite] = useState("");
-  // Started with `sub-office join <link>`: the invite is kept, and joining it is the way in.
+  // Started with `clone-office join <link>`: the invite is kept, and joining it is the way in.
   const [invited, setInvited] = useState<{ from?: string } | null>(null);
   useEffect(() => {
     void fetch("/api/me/office", { headers: HEADERS })

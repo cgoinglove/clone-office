@@ -17,7 +17,7 @@ test("the mini-me's tool server starts and lists its tools, the gate's and the h
     {
       env: {
         ...process.env,
-        SUB_OFFICE_HOME: root,
+        CLONE_OFFICE_HOME: root,
         MINIME_GATE_URL: "http://127.0.0.1:9/api/me/gate",
         MINIME_GATE_SECRET: "s",
         MINIME_CHAT_ID: "chat-1",
@@ -78,7 +78,7 @@ test("a working copy's tool server offers only the permission prompt", async () 
     {
       env: {
         ...process.env,
-        SUB_OFFICE_HOME: root,
+        CLONE_OFFICE_HOME: root,
         MINIME_ROLE: "permission",
         MINIME_GATE_URL: "http://127.0.0.1:9/api/me/gate",
         MINIME_GATE_SECRET: "s",
@@ -130,7 +130,7 @@ test("answering a colleague's request, the person's own office, flows and settin
     {
       env: {
         ...process.env,
-        SUB_OFFICE_HOME: root,
+        CLONE_OFFICE_HOME: root,
         MINIME_GATE_URL: "http://127.0.0.1:9/api/me/gate",
         MINIME_GATE_SECRET: "s",
         MINIME_CHAT_ID: "office-request-123",

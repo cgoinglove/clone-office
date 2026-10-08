@@ -28,7 +28,7 @@ interface Watch {
 }
 
 const KEY = "request:";
-const TOOLS = /^mcp__plugin_sub-office_.+__(ask|answer)_colleague$/;
+const TOOLS = /^mcp__plugin_clone-office_.+__(ask|answer)_colleague$/;
 // One conversation can have more than one id: /clear starts a new one in the same process.
 const sessions = new Set<string>();
 let timer: { cancel: () => void } | undefined;
@@ -57,10 +57,17 @@ export function register(on: On) {
 }
 
 async function home($: EngineInterface): Promise<string | undefined> {
-  const moved = await $.env.get("SUB_OFFICE_HOME");
+  const moved =
+    (await $.env.get("CLONE_OFFICE_HOME")) ??
+    (await $.env.get("SUB_OFFICE_HOME"));
   if (moved) return moved;
   const user = (await $.env.get("HOME")) ?? (await $.env.get("USERPROFILE"));
-  return user ? `${user}/.sub-office` : undefined;
+  if (!user) return undefined;
+  // A ~/.sub-office kept before the app was named Clone Office is used where it is.
+  const home = `${user}/.clone-office`;
+  const before = `${user}/.sub-office`;
+  const settings = (dir: string) => readJson($, `${dir}/settings.json`);
+  return !(await settings(home)) && (await settings(before)) ? before : home;
 }
 
 async function readJson<T>(

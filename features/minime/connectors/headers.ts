@@ -11,12 +11,12 @@
 export {};
 
 const id = process.argv[2] ?? process.env.CLAUDE_CODE_MCP_SERVER_NAME ?? "";
-if (process.argv[3]) process.env.SUB_OFFICE_HOME = process.argv[3];
+if (process.argv[3]) process.env.CLONE_OFFICE_HOME = process.argv[3];
 try {
   const { accessToken } = await import("./oauth.ts");
   const token = await accessToken(id);
   process.stdout.write(JSON.stringify({ Authorization: `Bearer ${token}` }));
 } catch (error) {
-  process.stderr.write(`sub-office ${id}: ${(error as Error).message}\n`);
+  process.stderr.write(`Clone Office ${id}: ${(error as Error).message}\n`);
   process.stdout.write("{}");
 }

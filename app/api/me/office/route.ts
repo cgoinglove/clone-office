@@ -68,7 +68,7 @@ export async function GET(request: Request) {
   await resumeHosting();
   const office = await loadOffice();
   const menu = await loadMenu();
-  // An invite the launcher kept (`sub-office join <link>`) waits here until it is used.
+  // An invite the launcher kept (`clone-office join <link>`) waits here until it is used.
   if (!office)
     return Response.json({ joined: false, menu, invite: await readInvite() });
   // Of the answers the person saw first, how many they sent as they were.
