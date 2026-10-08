@@ -4,6 +4,7 @@
 
 import { connectorOfTool } from "../connectors/catalog.ts";
 import { readRule } from "../connectors/tools.ts";
+import { grantTaskEdits } from "../hands/grants.ts";
 import { answerAsk, pendingAsks } from "./gate.ts";
 import { addTrust, ruleFor } from "./rules.ts";
 
@@ -16,6 +17,22 @@ export async function answerPerson(
   const waiting = pendingAsks().find((ask) => ask.id === id);
   if (!waiting) return { ok: false };
   let rule: string | undefined;
+  // Work in a conversation: "always" is this one task changing files in its folder, kept here for
+  // the tool server to take when the work starts, never a rule.
+  if (
+    always &&
+    answer === "allow" &&
+    waiting.ask.kind === "permission" &&
+    waiting.ask.task
+  ) {
+    grantTaskEdits(
+      waiting.chat,
+      String(waiting.ask.input.session ?? ""),
+      String(waiting.ask.input.task ?? ""),
+    );
+    answerAsk(id, answer);
+    return { ok: true };
+  }
   if (always && answer === "allow" && waiting.ask.kind === "permission") {
     // A service's reading tool: reading in that service, every reading tool of it.
     const service = waiting.ask.reads

@@ -59,9 +59,11 @@ export function wordAsk(
         ...(ask.always
           ? [
               {
-                label: ask.reads
-                  ? tAsk("alwaysReads", { service: ask.reads })
-                  : tAsk("always"),
+                label: ask.task
+                  ? tAsk("alwaysTask", { folder: ask.task })
+                  : ask.reads
+                    ? tAsk("alwaysReads", { service: ask.reads })
+                    : tAsk("always"),
                 value: `ask:${id}:always`,
               },
             ]

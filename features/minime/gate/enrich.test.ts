@@ -131,3 +131,14 @@ test("a flow card shows the flow as it would be kept, or as it is when it is pau
     /Too long to save/,
   );
 });
+
+test("work in a conversation offers its task's folder, never 'from now on'; an unknown one offers nothing", async () => {
+  const { enrichAsk } = await import("./enrich");
+  const ask = await enrichAsk({
+    kind: "permission",
+    tool: "mcp__minime__work_session",
+    input: { session: "no such conversation", task: "Fix it" },
+  });
+  assert.equal(ask.kind === "permission" && ask.always, false);
+  assert.equal(ask.kind === "permission" && ask.task, undefined);
+});

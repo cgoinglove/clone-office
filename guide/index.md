@@ -164,8 +164,12 @@ This is version 0.1, an early one.
   colleague in with one invite link (`office.md`).
 - Have one of their Claude Code conversations do a piece of work they took on (often a
   colleague's request): it works in a copy of that conversation named "<name> · clone", which
-  they can open later with `/resume`, and every file it changes and every command it runs is
-  asked of them first, on a card that shows the change itself.
+  they can open later with `/resume`. The card that asks whether it may do the work also offers
+  **For this task, don't ask about changing files in <folder>**: ticked, it changes files in that
+  folder without a card each time, for that one piece of work only; otherwise every file it
+  changes is asked of them first, on a card that shows the change itself. Every command it runs is
+  asked every time. When it is done the clone says which files it changed (in a git repository:
+  each file, with the lines added and removed), so they can look before relying on it.
 - Do something on its own at set times, again and again or once later ("every weekday at 9, sum
   up what is waiting for me"), or handle a kind of colleague's request their way when it comes
   in, when they ask for it, after a card (`flows.md`).

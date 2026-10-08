@@ -4,7 +4,14 @@
 
 import { homedir } from "node:os";
 import { loadTrust } from "../gate/rules.ts";
-import { askSession, listSessions, workSession } from "./sessions.ts";
+import { taskGranted } from "../gate/tools.ts";
+import { changedSince, snapshot } from "./changes.ts";
+import {
+  askSession,
+  findSession,
+  listSessions,
+  workSession,
+} from "./sessions.ts";
 
 export const SESSIONS_TOOL = {
   name: "sessions",
@@ -36,7 +43,7 @@ export const ASK_SESSION_TOOL = {
 export const WORK_SESSION_TOOL = {
   name: "work_session",
   description:
-    "Have one of your person's Claude Code conversations do a piece of work in its project, once your person has taken it on: a change, a fix, a small feature. It works in a copy of that conversation, kept and named after it, so your person can open it later; every file it changes and every command it runs is asked of your person first. Say plainly what to do and why.",
+    "Have one of your person's Claude Code conversations do a piece of work in its project, once your person has taken it on: a change, a fix, a small feature. It works in a copy of that conversation, kept and named after it, so your person can open it later. Your person is asked first, and may let it change files in that folder for this task without asking again; otherwise every file it changes is asked, and every command it runs always is. You are told which files it changed. Say plainly what to do and why.",
   inputSchema: {
     type: "object",
     properties: {
@@ -96,15 +103,29 @@ export async function callHandsTool(
     };
   }
   if (name === WORK_SESSION_TOOL.name) {
-    const work = await workSession(
-      String(args.session ?? ""),
-      String(args.task ?? ""),
-      { chat: workChat(), allow: await loadTrust() },
+    const wanted = String(args.session ?? "");
+    const task = String(args.task ?? "");
+    // What the person gave on this task's card: changing files in its folder without asking.
+    const edits = await taskGranted(wanted, task);
+    const found = findSession(
+      await listSessions({ days: 90, limit: 200 }),
+      wanted,
     );
+    const before = found ? await snapshot(found.cwd) : undefined;
+    const work = await workSession(wanted, task, {
+      chat: workChat(),
+      allow: await loadTrust(),
+      edits,
+    });
+    const after = found && before ? await snapshot(found.cwd) : undefined;
+    const changed = before && after ? changedSince(before, after) : [];
+    const report = changed.length
+      ? `\nFiles it changed in ${short(found?.cwd ?? "")}${edits ? " (your person let it change files there for this task without asking)" : ""}:\n${changed.map((line) => `- ${line}`).join("\n")}\nTell your person what changed, file by file, so they can look before relying on it.`
+      : "";
     return {
       result: work.ok
-        ? `"${work.session?.name ?? work.session?.id}" did it, in a copy named "${work.session?.name ?? "conversation"} · clone"${work.copy ? ` (${work.copy})` : ""} that your person can open:\n${work.text}`
-        : work.text,
+        ? `"${work.session?.name ?? work.session?.id}" did it, in a copy named "${work.session?.name ?? "conversation"} · clone"${work.copy ? ` (${work.copy})` : ""} that your person can open:\n${work.text}${report}`
+        : `${work.text}${report}`,
       isError: !work.ok,
     };
   }

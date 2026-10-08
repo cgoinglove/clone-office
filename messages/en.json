@@ -300,6 +300,7 @@
     "deny": "Don't allow",
     "always": "Don't ask again for this",
     "alwaysReads": "Don't ask again for reading in {service}",
+    "alwaysTask": "For this task, don't ask about changing files in {folder}",
     "allowed": "Allowed",
     "denied": "Declined",
     "answered": "Answer: {answer}",

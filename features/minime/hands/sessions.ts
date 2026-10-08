@@ -10,7 +10,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { basename, sep } from "node:path";
 import { logRun } from "../brain/runlog.ts";
-import { denyRules } from "../gate/rules.ts";
+import { denyRules, pathRule } from "../gate/rules.ts";
 import { claudeCommand, cleanEnv, defaultModel } from "../server/brain.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
@@ -265,7 +265,7 @@ Do it in this project. Every change you make and every command you run is asked 
 export async function workSession(
   wanted: string,
   task: string,
-  options: { chat: string; allow: string[] },
+  options: { chat: string; allow: string[]; edits?: boolean },
 ): Promise<{
   ok: boolean;
   text: string;
@@ -316,7 +316,14 @@ export async function workSession(
     "--tools",
     "Read,Glob,Grep,Edit,Write,Bash",
     "--allowedTools",
-    ["Read", "Glob", "Grep", ...options.allow].join(","),
+    [
+      "Read",
+      "Glob",
+      "Grep",
+      ...options.allow,
+      // The person let this task change files in its folder without asking (hands/grants.ts).
+      ...(options.edits ? [`Edit(${pathRule(session.cwd)}/**)`] : []),
+    ].join(","),
     "--disallowedTools",
     ["SendMessage", "ListAgents", ...denyRules(excludes)].join(","),
     "--permission-mode",

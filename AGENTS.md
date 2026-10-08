@@ -435,7 +435,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   Work goes to a kept copy instead (`workSession`: `--fork-session --name "<name> · clone"`),
   so an open conversation is never written to and the person can resume the copy; it may read
   alone, and each edit or command goes to the person's screen through the gate (the clone's tool
-  server run with `MINIME_ROLE=permission` offers it only the permission prompt). `tools.ts`
+  server run with `MINIME_ROLE=permission` offers it only the permission prompt). The card that
+  asks for the work offers, instead of "from now on", to let that one task change files in its
+  folder (`gate/enrich.ts` `task`): the answer is kept in the app's process (`grants.ts`), never in
+  what the brain sends, and the tool server takes it once through the gate route as the work
+  starts (`gate/tools.ts` `taskGranted`), adding an `Edit(<folder>/**)` rule for that run only;
+  commands stay asked. Afterwards it tells the brain which files changed (`changes.ts`, git's
+  counts against the state before the run). `tools.ts`
   serves `sessions` (free), `ask_session` and `work_session` (asked through the gate) to the brain.
 - `features/minime/history/`: a search index (SQLite FTS5 via `node:sqlite`, under `index/`) of
   what the person typed to their AI tools and what those answered, built in bounded passes that

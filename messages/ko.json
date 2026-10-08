@@ -300,6 +300,7 @@
     "deny": "거절하기",
     "always": "앞으로 이런 건 묻지 않기",
     "alwaysReads": "앞으로 {service}에서 읽는 건 묻지 않기",
+    "alwaysTask": "이 작업 동안 {folder} 안의 파일 고치기는 묻지 않기",
     "allowed": "허락했어요",
     "denied": "거절했어요",
     "answered": "답: {answer}",

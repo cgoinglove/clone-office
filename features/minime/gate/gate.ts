@@ -19,6 +19,11 @@ export interface AskShown {
   flow?: { name: string; when: unknown; what: string };
   /** The name of the kind of request a flow is for. */
   menuName?: string;
+  /**
+   * A piece of work in one of the person's conversations: the folder it works in, where "from now
+   * on" is instead "for this task, change files here without asking" (hands/grants.ts).
+   */
+  task?: string;
 }
 
 export type Ask =

@@ -300,6 +300,7 @@
     "deny": "不允许",
     "always": "以后这类不用再问",
     "alwaysReads": "以后在 {service} 里读取不用再问",
+    "alwaysTask": "这项工作期间，修改 {folder} 里的文件不用再问",
     "allowed": "已允许",
     "denied": "已拒绝",
     "answered": "回答：{answer}",

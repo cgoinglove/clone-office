@@ -137,6 +137,26 @@ async function post(
   return data;
 }
 
+/**
+ * Whether the person let a piece of work change files in its conversation's folder for this one
+ * task (the work card's choice, hands/grants.ts); taken, so asking twice gives it once.
+ */
+export async function taskGranted(
+  session: string,
+  task: string,
+): Promise<boolean> {
+  if (!gateOpen) return false;
+  try {
+    const { granted } = await post({
+      chat: GATE.chat,
+      grant: { session, task },
+    });
+    return granted === true;
+  } catch {
+    return false;
+  }
+}
+
 /** Put the question to the person and wait, asking again while the app says it is still waiting. */
 async function ask(ask: Record<string, unknown>): Promise<Answer> {
   let reply = await post({ chat: GATE.chat, ask });

@@ -300,6 +300,7 @@
     "deny": "許可しない",
     "always": "今後これは聞かない",
     "alwaysReads": "今後{service}での読み取りは聞かない",
+    "alwaysTask": "この作業の間、{folder} 内のファイル変更は聞かない",
     "allowed": "許可しました",
     "denied": "許可しませんでした",
     "answered": "回答：{answer}",

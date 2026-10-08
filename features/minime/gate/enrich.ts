@@ -8,10 +8,11 @@
 import { connectorOfTool } from "../connectors/catalog.ts";
 import { readRule, readsOnly } from "../connectors/tools.ts";
 import { getFlow } from "../flows/store.ts";
+import { findSession, listSessions } from "../hands/sessions.ts";
 import { loadMenu } from "../office/menu.ts";
 import { allowedByMode } from "./autonomy.ts";
 import type { Ask } from "./gate.ts";
-import { loadTrust, ruleFor } from "./rules.ts";
+import { loadTrust, pathRule, ruleFor } from "./rules.ts";
 
 /** Whether the person's rules already let this through, so nobody needs to be asked. */
 export async function alreadyAllowed(ask: Ask, own = false): Promise<boolean> {
@@ -31,6 +32,28 @@ export async function alreadyAllowed(ask: Ask, own = false): Promise<boolean> {
   );
 }
 
+/**
+ * Work in one of the person's conversations: never "from now on", but its folder, where they may let
+ * it change files for this one task (hands/grants.ts). Not offered for the whole home folder or disk.
+ */
+async function workCard(ask: Extract<Ask, { kind: "permission" }>) {
+  const wanted = typeof ask.input.session === "string" ? ask.input.session : "";
+  const session = wanted
+    ? findSession(
+        await listSessions({ days: 90, limit: 200 }).catch(() => []),
+        wanted,
+      )
+    : undefined;
+  const rule = session ? pathRule(session.cwd) : undefined;
+  return rule && rule !== "~" && rule !== "//" && rule !== "/"
+    ? {
+        ...ask,
+        always: true,
+        task: rule.startsWith("//") ? rule.slice(1) : rule,
+      }
+    : { ...ask, always: false };
+}
+
 export async function enrichAsk(ask: Ask): Promise<Ask> {
   if (ask.kind !== "permission") return ask;
   const always = Boolean(ruleFor(ask.tool, ask.input));
@@ -43,6 +66,7 @@ export async function enrichAsk(ask: Ask): Promise<Ask> {
         ? { reads: service.connector.name }
         : {}),
     };
+  if (ask.tool === "mcp__minime__work_session") return workCard(ask);
   if (ask.tool !== "mcp__minime__flow_manage") return { ...ask, always };
   const id = typeof ask.input.id === "string" ? ask.input.id : undefined;
   const flow = id ? await getFlow(id).catch(() => undefined) : undefined;

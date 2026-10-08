@@ -9,6 +9,7 @@ import {
   timeoutFor,
   waitFor,
 } from "@/features/minime/gate/gate";
+import { takeTaskGrant } from "@/features/minime/hands/grants";
 import { personAway } from "@/features/minime/office/client";
 import { refuse } from "@/features/minime/server/guard";
 
@@ -31,6 +32,15 @@ const Ask = z.discriminatedUnion("kind", [
 const Body = z.union([
   z.object({ chat: z.string().max(64).optional(), ask: Ask }),
   z.object({ id: z.string().uuid() }),
+  // The tool server, as a piece of work starts: whether the person let it change files in its
+  // folder for this task (hands/grants.ts), taken once.
+  z.object({
+    chat: z.string().max(64).optional(),
+    grant: z.object({
+      session: z.string().max(500),
+      task: z.string().max(50_000),
+    }),
+  }),
 ]);
 
 // Questions from the mini-me's tool server (only those this app started know the secret). A new
@@ -44,6 +54,14 @@ export async function POST(request: Request) {
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
+  if ("grant" in body.data)
+    return Response.json({
+      granted: takeTaskGrant(
+        body.data.chat,
+        body.data.grant.session,
+        body.data.grant.task,
+      ),
+    });
   let id: string;
   let done: ReturnType<typeof waitFor>;
   if ("ask" in body.data) {

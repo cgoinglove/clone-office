@@ -300,6 +300,7 @@
     "deny": "No permitir",
     "always": "No volver a preguntar por esto",
     "alwaysReads": "No volver a preguntar para leer en {service}",
+    "alwaysTask": "Durante esta tarea, no preguntar por cambios de archivos en {folder}",
     "allowed": "Permitido",
     "denied": "Rechazado",
     "answered": "Respuesta: {answer}",
