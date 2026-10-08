@@ -393,6 +393,9 @@ export class Bridge {
       },
     });
     this.bot = bot;
+    // A bot that failed left its listeners and its look behind: let them go before the new ones.
+    for (const unhear of this.unhear.splice(0)) unhear();
+    clearInterval(this.looker);
     // What waits on the person: a new question, a line in a conversation, and a look every little
     // while for a page that left or a batch moment that came.
     this.unhear.push(
