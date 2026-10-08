@@ -93,9 +93,13 @@ let stopping = false;
 async function stop() {
   if (stopping) return;
   stopping = true;
+  // Whatever closing waits on (a long poll, the database), the process ends: one left running
+  // with its port closed would hold its folder and a CPU for nothing.
+  setTimeout(() => process.exit(0), 3000);
   server.close();
-  await relay.close();
-  await db.close();
+  server.closeAllConnections();
+  await relay.close().catch(() => {});
+  await db.close().catch(() => {});
   process.exit(0);
 }
 process.on("SIGINT", () => void stop());
