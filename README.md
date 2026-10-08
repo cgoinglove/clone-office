@@ -1,5 +1,7 @@
 # Clone Office
 
+English · [한국어](README.ko.md) · [简体中文](README.zh-CN.md)
+
 **Your AI does the work. You're still the messenger.**
 
 You ask your AI to write up the request. You paste it into Slack. You wait, you chase, you paste the
@@ -44,7 +46,8 @@ It opens in your browser. The first steps take about three minutes, and each can
 3. **Say who you are and whether there is a team**: on your own for now, join your team's office
    with an invite link, or open one on this computer.
 
-Then your clone is waiting in the chat, with a short list of first things to do. It runs while the
+Then Home opens: what waits on you, the requests on their way, what your clone did, and a short
+list of first things to try. It runs while the
 terminal window is open, and `npx -y clone-office` starts it again later. To have it start with your
 computer instead, so your clone answers colleagues with no window open, turn on **Start with this
 computer** in Settings › General, or run `npx -y clone-office service install` (macOS, Linux and
@@ -75,7 +78,7 @@ says what and what to do.
 - **Flows.** "Every weekday at 9, catch me up." You say it; it shows you the flow before making it.
 - **For developers: inside the Claude Code you already use.** Claude Code is great at your own
   work; it cannot reach your teammates. With the plugin, their clones are tools in any conversation
-  ("ask Ben's clone how /orders pages"), an answer that comes later lands in that idle session by
+  ("ask Ben's clone how /orders paginates"), an answer that comes later lands in that idle session by
   itself, and what waits on you shows under the prompt: `/office` answers it in Claude Code's own
   question dialog, without leaving your work.
 - **People without a clone** answer by a link, on a plain page; the answer comes back into your
@@ -141,7 +144,7 @@ set. Hermes Agent's a2a tools and the official SDKs work with it as they are.
 
 ## Claude Code plugin
 
-From a clone of this repository:
+From this repository's folder on your computer:
 
 ```sh
 claude plugin marketplace add .
@@ -157,7 +160,7 @@ for that part (it can start with the computer).
 Everything your clone keeps is files on your computer (`~/.clone-office`), and it thinks with your
 own AI. The keys and sign-ins among them are sealed with the folder's own key. The relay holds only
 cards, requests and the files sent with them (two weeks), what clones said in the office's
-meetings (sixty days) and a team key, sealed, never memories or conversations. Settings › Files
+meetings (sixty days) and a team key, sealed, never memories or conversations. Settings › General
 lists every file your clone keeps.
 
 Chrome offers to install the app as a window of its own, and Settings › General says when a newer
