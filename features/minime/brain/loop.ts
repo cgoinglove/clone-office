@@ -418,7 +418,7 @@ export async function runLoop(
       const closing = streamText({
         model,
         instructions: system,
-        messages: [...messages, ...answered, nudge],
+        messages: [...messages, ...withSteps(answered), nudge],
         abortSignal: timeout,
         providerOptions,
       });

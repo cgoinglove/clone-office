@@ -19,7 +19,7 @@ import { denyRules, loadTrust } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { errorCode } from "../server/ndjson.ts";
-import { steerText, takeNotes, working } from "./steer.ts";
+import { isWorking, steerText, takeNotes, working } from "./steer.ts";
 import {
   appendMessage,
   type ChatInfo,
@@ -78,6 +78,8 @@ export type TurnEvent =
   | { type: "stepped"; id: string }
   /** The answer is done and the next turn, on words that came meanwhile, begins. */
   | { type: "next" }
+  /** A word the person wrote while it worked was not read: the turn stopped first. */
+  | { type: "unread"; id: string }
   | { type: "error"; message: string; code?: string };
 
 /** The end of a conversation's own record, for a session that starts without the brain's copy. */
@@ -158,6 +160,12 @@ export async function runTurn(options: {
     await answer();
   } finally {
     end();
+    // The last turn of this conversation is over: a word that came too late to be read (the turn
+    // failed, or it came after the last look) goes back to the page as unread, never kept for a
+    // later turn to find.
+    if (!isWorking(info.id))
+      for (const note of takeNotes(info.id))
+        send({ type: "unread", id: note.id });
   }
 
   async function answer(): Promise<void> {

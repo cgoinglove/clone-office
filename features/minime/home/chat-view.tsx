@@ -200,7 +200,18 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
             {turn.text}
           </p>
           {turn.note &&
-            (turn.read ? (
+            (turn.missed ? (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {tChat("noteMissed")}
+                <button
+                  type="button"
+                  onClick={() => void chat.resend(turn.note ?? "")}
+                  className="underline underline-offset-4 hover:text-foreground"
+                >
+                  {tChat("noteResend")}
+                </button>
+              </span>
+            ) : turn.read ? (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Check className="size-3.5" />
                 {tStep("read")}

@@ -286,7 +286,9 @@
     "told": "대신 답했어요",
     "flowRan": "‘{name}’ 플로우가 알아서 실행됐어요 ({at})",
     "fromMeeting": "회의에서 나온 말",
-    "fromColleagueThemselves": "동료가 직접 답했어요"
+    "fromColleagueThemselves": "동료가 직접 답했어요",
+    "noteMissed": "답이 먼저 멈춰서 읽지 못했어요.",
+    "noteResend": "다시 보내기"
   },
   "ask": {
     "needsYou": "답이 필요해요",

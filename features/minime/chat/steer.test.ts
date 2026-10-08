@@ -19,3 +19,15 @@ test("a word waits only while the clone works, can be taken back unread, and is 
   end();
   assert.equal(isWorking("c1"), false);
 });
+
+test("a turn ending while the next one runs leaves the next one working", () => {
+  const first = working("c2");
+  const second = working("c2");
+  first();
+  first();
+  assert.equal(isWorking("c2"), true, "ending twice counts once");
+  assert.ok(addNote("c2", "still heard"));
+  second();
+  assert.equal(isWorking("c2"), false);
+  assert.equal(takeNotes("c2").length, 1);
+});

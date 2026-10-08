@@ -11,10 +11,15 @@ export interface Note {
 }
 
 const pinned = globalThis as typeof globalThis & {
-  __cloneOfficeSteer?: { running: Set<string>; notes: Map<string, Note[]> };
+  __cloneOfficeSteer?: {
+    running: Map<string, number>;
+    notes: Map<string, Note[]>;
+  };
 };
+// A count per conversation: a turn still looking back after its answer and the next turn the
+// person already started run at once, and the first to end must not end the other's.
 const state = (pinned.__cloneOfficeSteer ??= {
-  running: new Set<string>(),
+  running: new Map<string, number>(),
   notes: new Map<string, Note[]>(),
 });
 
@@ -22,17 +27,22 @@ let made = 0;
 
 /** A conversation's turn begins: words for it wait from now on. Returns its end. */
 export function working(chat: string): () => void {
-  state.running.add(chat);
+  state.running.set(chat, (state.running.get(chat) ?? 0) + 1);
+  let ended = false;
   return () => {
-    state.running.delete(chat);
+    if (ended) return;
+    ended = true;
+    const left = (state.running.get(chat) ?? 1) - 1;
+    if (left > 0) state.running.set(chat, left);
+    else state.running.delete(chat);
   };
 }
 
-export const isWorking = (chat: string) => state.running.has(chat);
+export const isWorking = (chat: string) => (state.running.get(chat) ?? 0) > 0;
 
 /** Keeps a word for a conversation the clone is working in; undefined when it is not working. */
 export function addNote(chat: string, text: string): Note | undefined {
-  if (!state.running.has(chat)) return undefined;
+  if (!isWorking(chat)) return undefined;
   const note = {
     id: `n${Date.now().toString(36)}${(++made).toString(36)}`,
     text,

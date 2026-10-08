@@ -286,7 +286,9 @@
     "told": "I answered for you",
     "flowRan": "{name} ran on its own ({at})",
     "fromMeeting": "Said in the meeting",
-    "fromColleagueThemselves": "Your colleague answered themselves"
+    "fromColleagueThemselves": "Your colleague answered themselves",
+    "noteMissed": "Not read: the answer stopped first.",
+    "noteResend": "Send again"
   },
   "ask": {
     "needsYou": "Needs you",

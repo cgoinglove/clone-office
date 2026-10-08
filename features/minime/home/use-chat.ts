@@ -21,6 +21,8 @@ export type Turn =
       /** Written while the clone worked: its id while it waits, and whether it was read (chat/steer.ts). */
       note?: string;
       read?: boolean;
+      /** The turn stopped before it was read: the person may send it again. */
+      missed?: boolean;
     }
   | { id: number; kind: "minime"; text: string; live: boolean }
   | { id: number; kind: "saved"; text: string }
@@ -61,6 +63,14 @@ export function useChat(lang: string) {
   // Something was kept: the clone's face is glad for a moment.
   const [kept, setKept] = useState(0);
   const nextId = useRef(1);
+  /** Words that could not wait at the server, sent when the turn ends (`note`). */
+  const waiting = useRef<string[]>([]);
+  /** The latest `ask`, for the end of one turn to start the next. */
+  const askRef = useRef<((text: string) => Promise<void>) | undefined>(
+    undefined,
+  );
+  /** The turns as they are now, for handlers that run later. */
+  const turnsRef = useRef<Turn[]>([]);
 
   const push = useCallback((turn: TurnInput) => {
     const id = nextId.current++;
@@ -135,6 +145,7 @@ export function useChat(lang: string) {
   // streaming into it.
   const busyRef = useRef(false);
   busyRef.current = busy;
+  turnsRef.current = turns;
   const chatRef = useRef(chatId);
   chatRef.current = chatId;
   const refresh = useCallback(() => {
@@ -234,6 +245,14 @@ export function useChat(lang: string) {
                     : turn,
                 ),
               );
+            if (event.type === "unread")
+              setTurns((all) =>
+                all.map((turn) =>
+                  turn.kind === "me" && turn.note === String(event.id)
+                    ? { ...turn, missed: true }
+                    : turn,
+                ),
+              );
             if (event.type === "next") {
               finishReply();
               reply = push({ kind: "minime", text: "", live: true });
@@ -261,10 +280,22 @@ export function useChat(lang: string) {
         finishReply();
         setBusy(false);
         busyRef.current = false;
+        // Words written meanwhile that could not wait at the server go now, as the next turn.
+        const after = waiting.current.splice(0);
+        if (after.length) {
+          setTurns((all) =>
+            all.filter(
+              (turn) => !(turn.kind === "me" && turn.note?.startsWith("here-")),
+            ),
+          );
+          void askRef.current?.(after.join("\n\n"));
+        }
       }
     },
     [lang, push, t, loadChats],
   );
+
+  askRef.current = ask;
 
   /**
    * A word for the clone while it works in this conversation, read before its next step (after
@@ -284,8 +315,27 @@ export function useChat(lang: string) {
         : undefined;
       if (data?.id) push({ kind: "me", text, note: data.id });
       else if (!busyRef.current) await ask(text);
+      else {
+        // The server could not keep it (the turn was just ending): it waits here and goes as the
+        // next turn, never lost.
+        waiting.current.push(text);
+        push({ kind: "me", text, note: `here-${waiting.current.length}` });
+      }
     },
     [ask, push],
+  );
+
+  /** A word the clone did not get to read, sent again as a turn of its own. */
+  const resend = useCallback(
+    async (id: string) => {
+      const turn = turnsRef.current.find(
+        (one) => one.kind === "me" && one.note === id,
+      );
+      if (!turn || turn.kind !== "me") return;
+      setTurns((all) => all.filter((one) => one !== turn));
+      await ask(turn.text);
+    },
+    [ask],
   );
 
   /** Takes back a word while the clone has not read it yet. */
@@ -355,6 +405,7 @@ export function useChat(lang: string) {
     kept,
     ask,
     note,
+    resend,
     takeBack,
     answer,
     openChat,
