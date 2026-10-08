@@ -4,7 +4,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import * as z from "zod";
-import { loopTools, REFUSED, untrusted } from "./loop-tools.ts";
+import { loopTools, REFUSED } from "./loop-tools.ts";
+import { untrusted } from "./untrusted.ts";
 
 /** A connected service as the loop sees it: one in-memory MCP server with two tools. */
 async function service(name: string) {

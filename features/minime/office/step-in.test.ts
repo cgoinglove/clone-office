@@ -220,7 +220,7 @@ test("what comes while the clone answers is read before its answer leaves", asyn
     .find((call) => /Before your answer went/.test(call.prompt));
   assert.match(
     again?.prompt ?? "",
-    /Ana themselves wrote: Same place as last time\?/,
+    /Ana themselves wrote:\n<untrusted[^>]*>\nSame place as last time\?/,
   );
   assert.equal(
     (await current(task.id)).task.history.at(-1)?.parts[0]?.text,
@@ -269,7 +269,10 @@ test("answering oneself goes as one's own words; the clone leaves the request to
     said().findLast((call) => /hands it back/.test(call.prompt))?.prompt ?? "";
   assert.match(back, /hands it back to you/);
   assert.match(back, /Your person, themselves: Which days exactly\?/);
-  assert.match(back, /Ana themselves: Tuesday and Wednesday\./);
+  assert.match(
+    back,
+    /Ana themselves: <untrusted[^>]*>\nTuesday and Wednesday\./,
+  );
   assert.equal((await loadState()).handled[task.id]?.person, undefined);
 
   // A kept "answer it yourself" sends the person's words as theirs and closes it.

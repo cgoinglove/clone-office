@@ -42,7 +42,27 @@ test("an add past the limit is refused with the current entries, so the mini-me 
   );
   assert.equal(result.success, false);
   assert.ok(!result.success && result.current_entries?.length === 1);
-  assert.match(!result.success ? result.error : "", /Consolidate now/);
+  // How much to free, exactly, so the retry is not still too big (Hermes Agent, 2026-10-04).
+  assert.match(
+    !result.success ? result.error : "",
+    /exceed the limit by 34 chars[\s\S]*free at least 34 chars AND adds this entry/,
+  );
+});
+
+test("an old_text that matches nothing is answered with the entries it most likely meant", async () => {
+  const store = fresh();
+  await store.add("memory", "Deploys go out on Thursday afternoons");
+  await store.add("memory", "Uses pnpm, never npm");
+  const result = await store.replace(
+    "memory",
+    "Deploys go out on Thursdays",
+    "Deploys go out on Wednesday afternoons",
+  );
+  assert.equal(result.success, false);
+  assert.deepEqual(!result.success && result.closest_entries, [
+    "Deploys go out on Thursday afternoons",
+  ]);
+  assert.match(!result.success ? result.error : "", /copied verbatim/);
 });
 
 test("replace overwrites the whole entry that the substring finds; an exact entry wins", async () => {

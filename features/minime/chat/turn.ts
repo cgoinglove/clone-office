@@ -37,15 +37,27 @@ import {
  * what was settled and corrected (quoted), what was done as past facts, what is open, and what it
  * relies on by name so it can open it again. The person's own words are added by code, as said.
  */
-export const SUMMARY_PROMPT = `This conversation will go on in a fresh session that sees only what you write now, with your person's own messages added word for word after it. Write it for yourself, in their language, under these headings, leaving out any with nothing under it:
+/**
+ * What the clone writes before a long conversation goes on in a fresh session, under Hermes'
+ * headings. What it did is dated and marked finished (Hermes' temporal anchoring): a session that
+ * reads "send Ben the quote" without knowing it was sent sends it again.
+ */
+export function summaryPrompt(now = new Date()): string {
+  const today = now.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return `This conversation will go on in a fresh session that sees only what you write now, with your person's own messages added word for word after it. Write it for yourself, in their language, under these headings, leaving out any with nothing under it:
 
 Goal: what they are after in this conversation.
 Settled: what they decided and why, and every correction or preference they gave, quoted.
-Done: what you did and found, as past facts, with the names, numbers, places, paths and links.
+Done: what you did and found, as past facts as of ${today}, with the names, numbers, places, paths and links. Each request you sent a colleague (to whom, and its id) and each flow you made or changed is done: it is followed up, never done again.
 Open: what is still to do or answer, and what you were in the middle of.
 In use: what this relies on, by name, so you can open it again: files, colleagues and their requests, flows, their Claude Code conversations, skills.
 
 If this conversation began from an earlier summary, keep everything in it that still matters. Be specific and as short as that allows, at most about 500 words. Write only the summary, with nothing about this request.`;
+}
 
 /** The person's own messages in a stretch of conversation, word for word, newest kept first. */
 export function theirWords(
@@ -185,7 +197,7 @@ export async function runTurn(options: {
       const written = await runSession({
         resume: session,
         fork: true,
-        prompt: SUMMARY_PROMPT,
+        prompt: summaryPrompt(),
         language,
         maxTurns: 1,
         purpose: "summary",

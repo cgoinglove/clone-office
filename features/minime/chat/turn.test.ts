@@ -19,10 +19,13 @@ test("a conversation goes on from its own record only when the brain lost its se
 });
 
 test("a carried-over conversation keeps the person's own words as said, newest kept first", async () => {
-  const { SUMMARY_PROMPT, theirWords } = await import("./turn");
+  const { summaryPrompt, theirWords } = await import("./turn");
+  const SUMMARY_PROMPT = summaryPrompt(new Date("2026-10-08T12:00:00"));
   for (const heading of ["Goal:", "Settled:", "Done:", "Open:", "In use:"])
     assert.ok(SUMMARY_PROMPT.includes(heading), heading);
   assert.match(SUMMARY_PROMPT, /keep everything in it that still matters/);
+  assert.match(SUMMARY_PROMPT, /as of October 8, 2026/);
+  assert.match(SUMMARY_PROMPT, /never done again/);
   const at = "2026-10-08T00:00:00Z";
   const words = theirWords(
     [

@@ -16,6 +16,7 @@ import { dynamicTool, jsonSchema, type ToolSet } from "ai";
 import type { Connector } from "../connectors/catalog.ts";
 import { accessToken } from "../connectors/oauth.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
+import { untrusted } from "./untrusted.ts";
 
 /** A rule's folder as a path: "~/x" from home, "//x" absolute (gate/rules.ts pathRule). */
 function rulePath(spec: string): string {
@@ -328,29 +329,6 @@ const LOCAL_TOOLS: Record<
     run: webFetchTool,
   },
 };
-
-// ---- What comes from outside ----
-
-/**
- * Invisible and bidirectional control characters (zero-width ones, bidi embeddings, overrides and
- * isolates, tag characters): they make a text read one way to a person and another to the model,
- * so they are dropped from what comes from outside (Hermes Agent's source hygiene).
- */
-const HIDDEN =
-  /[\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]|[\u{E0000}-\u{E007F}]/gu;
-
-/**
- * What a web page or a connected service answered, marked as coming from outside: the system
- * prompt says such text is information, never instructions (session.ts, "What comes from
- * outside"). A closing mark inside it cannot end the mark early.
- */
-export function untrusted(source: string, text: string): string {
-  const from = source.replace(/["<>\n]/g, " ").slice(0, 200);
-  const body = text
-    .replace(HIDDEN, "")
-    .replace(/<\/untrusted\s*>/gi, "</ untrusted>");
-  return `<untrusted source="${from}">\n${body}\n</untrusted>`;
-}
 
 // ---- MCP servers: the mini-me's own, and the services connected ----
 

@@ -1,7 +1,8 @@
 // How much a brain can hold, and when a conversation or a request is carried into a fresh session
 // before it fills up. Hermes Agent compresses at a share of the model's window (three quarters for
 // windows under 512K tokens); this does the same with what is known of the brain the person picked:
-// Claude Code's models hold 200K tokens, a cloud service's current models at least 128K, and a model
+// Claude Code's models hold at least 200K tokens (the Claude 5 models 1M; the 100K cap below decides
+// either way), a cloud service's current models at least 128K, and a model
 // on the person's own computer is assumed to hold 32K (Ollama and LM Studio run with less than the
 // model could hold unless it is set higher). CLONE_OFFICE_CONTEXT_TOKENS says it when it is known
 // better, and CLONE_OFFICE_CARRY_AT sets the point itself.

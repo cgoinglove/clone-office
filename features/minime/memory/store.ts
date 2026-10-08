@@ -51,9 +51,46 @@ export type WriteResult =
       error: string;
       done?: true;
       current_entries?: string[];
+      closest_entries?: string[];
       usage?: string;
       matches?: string[];
     };
+
+/**
+ * The entries an old_text that matched nothing most likely meant: those sharing at least 30% of
+ * its words, best first, three at most (Hermes Agent's memory store, 2026-10-04: a paraphrased or
+ * stale old_text still shares most of its words).
+ */
+export function closestEntries(entries: string[], oldText: string): string[] {
+  const words = (text: string) =>
+    new Set(text.toLowerCase().match(/[\p{L}\p{N}_]+/gu) ?? []);
+  const wanted = words(oldText);
+  if (!wanted.size) return [];
+  return entries
+    .map((entry, i) => {
+      const have = words(entry);
+      let shared = 0;
+      for (const word of wanted) if (have.has(word)) shared += 1;
+      return { entry, i, score: shared / wanted.size };
+    })
+    .filter((x) => x.score >= 0.3)
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .slice(0, 3)
+    .map((x) => x.entry);
+}
+
+/** A zero-match error that names the fix, as Hermes Agent's does. */
+function noMatch(entries: string[], oldText: string, verb: string): string {
+  const hint = oldText.includes("§")
+    ? " old_text must come from ONE entry ('§' separates entries); use one operation per entry."
+    : "";
+  return `No entry matched '${oldText}'.${hint} Retry the ${verb} with old_text copied verbatim from the intended entry${closestEntries(entries, oldText).length ? " (closest_entries below)." : "."}`;
+}
+
+/** How far over the limit a change would put memory, and what to free. */
+function overLimit(total: number, limit: number): string {
+  return `would put memory at ${total.toLocaleString("en-US")}/${limit.toLocaleString("en-US")} chars: free at least ${(total - limit).toLocaleString("en-US")} chars`;
+}
 
 export interface BatchOp {
   action?: string;
@@ -194,7 +231,7 @@ export class MemoryStore {
         return this.overflow(
           target,
           entries,
-          `Memory at ${this.count(entries)}/${limit.toLocaleString("en-US")} chars. Adding this entry (${text.length} chars) would exceed the limit. Consolidate now: use 'replace' to merge overlapping entries into shorter ones or 'remove' stale or less important entries (see current_entries below), then retry this add — all in this turn.`,
+          `Memory at ${this.count(entries)}/${limit.toLocaleString("en-US")} chars; adding this entry (${text.length} chars) would exceed the limit by ${(next.join(ENTRY_DELIMITER).length - limit).toLocaleString("en-US")} chars. Retry as ONE 'operations' batch that removes or shortens (replace) stale entries from current_entries below to free at least ${(next.join(ENTRY_DELIMITER).length - limit).toLocaleString("en-US")} chars AND adds this entry — the limit is checked only on the batch result.`,
         );
       return {
         entries: next,
@@ -255,7 +292,7 @@ export class MemoryStore {
             return this.batchFailure(
               target,
               entries,
-              `${at}: content is required.`,
+              `${at}: content is required — set this operation's own 'content' to the COMPLETE new entry.`,
             );
           if (!working.includes(content)) {
             working.push(content);
@@ -292,7 +329,8 @@ export class MemoryStore {
           return this.batchFailure(
             target,
             entries,
-            `${at}: no entry matched '${oldText}'.`,
+            `${at}: ${noMatch(working, oldText, action)}`,
+            closestEntries(working, oldText),
           );
         const previous = working[index];
         if (action === "replace") {
@@ -316,7 +354,7 @@ export class MemoryStore {
         return this.batchFailure(
           target,
           entries,
-          `After applying all ${operations.length} operations, memory would be at ${total.toLocaleString("en-US")}/${limit.toLocaleString("en-US")} chars -- over the limit. Remove or shorten more entries in the same batch, then retry.`,
+          `Applying all ${operations.length} operations ${overLimit(total, limit)} more. Add removes or shorter replacements of other stale entries to the same batch, then retry.`,
         );
       return {
         entries: working,
@@ -359,8 +397,17 @@ export class MemoryStore {
       if (index === undefined)
         return this.failure(
           fail(
-            `No entry matched '${oldText}'. Check current_entries below and retry with the exact text of the entry you want to ${newContent === undefined ? "remove" : "replace"}.`,
-            { current_entries: entries },
+            noMatch(
+              entries,
+              oldText,
+              newContent === undefined ? "remove" : "replace",
+            ),
+            {
+              current_entries: entries,
+              ...(closestEntries(entries, oldText).length
+                ? { closest_entries: closestEntries(entries, oldText) }
+                : {}),
+            },
           ),
         );
       const previous = entries[index];
@@ -379,7 +426,7 @@ export class MemoryStore {
         return this.overflow(
           target,
           entries,
-          `Replacement would put memory at ${total.toLocaleString("en-US")}/${limit.toLocaleString("en-US")} chars. Shorten the new content, or 'remove' other stale or less important entries to make room (see current_entries below), then retry — all in this turn.`,
+          `Replacement ${overLimit(total, limit)}. Shorten the new content, or retry as ONE 'operations' batch with this replace plus removes or shortenings of other stale entries (see current_entries below) — the limit is checked only on the batch result.`,
         );
       return {
         entries: next,
@@ -417,10 +464,13 @@ export class MemoryStore {
     target: Target,
     entries: string[],
     message: string,
+    /** For an operation that matched nothing: the few entries it most likely meant. */
+    closest: string[] = [],
   ): WriteResult {
     return this.failure(
       fail(`${message} No operations were applied (batch is all-or-nothing).`, {
         usage: this.usage(target, entries),
+        ...(closest.length ? { closest_entries: closest } : {}),
       }),
     );
   }

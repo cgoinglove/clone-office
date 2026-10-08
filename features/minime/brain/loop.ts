@@ -57,6 +57,24 @@ type ApiChoice = Extract<BrainChoice, { kind: "api" }>;
  * What Claude Code's own prompt tells it and a model reached directly does not know: how this
  * app runs its tools. Prepended to the mini-me's own system prompt.
  */
+/**
+ * When it is on the person's computer, put before each message: Claude Code tells its model the
+ * date, and a model reached by key knows none. Kept out of the system prompt, which a session
+ * keeps as it began (and a vendor caches), so "today" and "this week" stay true.
+ */
+export function nowLine(now = new Date()): string {
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const when = now.toLocaleString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `(${when} on their computer${zone ? `, ${zone}` : ""})`;
+}
+
 const LOOP_GUIDE = `You run on your person's computer inside Clone Office, through tools. Call a tool whenever it helps rather than guessing; several at once when they do not depend on each other. Some tools ask your person first: if they say no, or nobody is there to ask, do not try another way to do the same thing; say plainly what you could not do. Paths on their computer are full paths ("~/" is their home). Keep answers short and in their language.`;
 
 /** One kept session: the system prompt it started with and the conversation so far. */
@@ -344,7 +362,7 @@ export async function runLoop(
     };
     const messages: ModelMessage[] = [
       ...(previous?.messages ?? []),
-      { role: "user", content: options.prompt },
+      { role: "user", content: `${nowLine()}\n\n${options.prompt}` },
     ];
     const timeout = AbortSignal.timeout(
       options.timeoutMs ?? (gate ? 15 * 60_000 : 180_000),

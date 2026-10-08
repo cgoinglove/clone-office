@@ -51,7 +51,7 @@ export const PROVIDERS: Provider[] = [
     name: "Claude",
     keysAt: "https://platform.claude.com/settings/keys",
     models: [
-      { id: "claude-haiku-4-5", label: "Haiku 4.5", tier: "small" },
+      { id: "claude-haiku-5-5", label: "Haiku 5.5", tier: "small" },
       { id: "claude-sonnet-5-5", label: "Sonnet 5.5", tier: "mid" },
       { id: "claude-opus-5-5", label: "Opus 5.5", tier: "large" },
     ],
