@@ -1,7 +1,8 @@
 // The check before an answer leaves for a colleague (product 2.8a): the one who wrote an answer
 // misses its own slips, so a separate look decides whether it may go as it is. It holds back an
 // answer that shares something private the request does not need, promises or decides what only
-// the person can, or would hurt a relationship. A held-back answer goes to the person as a card:
+// the person can, would hurt a relationship, or states about the person's work what nothing it
+// found shows (the top complaint about agents that answer with confidence, Paperclip's reviews). A held-back answer goes to the person as a card:
 // send it, send a fixed one, or do not send. Code, not the model, then does what they chose.
 
 import { runSession } from "../brain/session.ts";
@@ -38,12 +39,22 @@ export function checkPrompt(
   files: string[] = [],
   /** The colleague wrote the request themselves, not their clone. */
   byPerson = false,
+  /**
+   * Where the answer's writer says its facts came from; with it, an answer that states what none
+   * of them show is held back too. Left out where no sources are asked for.
+   */
+  sources?: string[],
 ): string {
   const asked = said.length
     ? `\nWhat your person themselves said while it was answered (theirs to give; a promise or decision in it may go):\n${said.map((s) => `- Asked: ${s.question}\n  They said: ${s.answer}`).join("\n")}\n`
     : "";
   const told = ways.length
     ? `\nHow your person told you to handle requests like this, in their own words (following it is theirs, not a fault):\n${ways.map((way) => `- ${way}`).join("\n")}\n`
+    : "";
+  const grounds = sources
+    ? sources.length
+      ? `\nWhere its writer says the facts in it came from:\n${sources.map((source) => `- ${source}`).join("\n")}\n`
+      : "\nIts writer named nowhere its facts came from.\n"
     : "";
   return `Before this answer goes to a colleague's clone on your person's behalf, look at it once more, as your person would.
 
@@ -52,8 +63,12 @@ ${request}
 ${asked}${told}
 The answer about to be sent:
 ${reply}
-${files.length ? `\nWith these files from your person's computer:\n${files.map((file) => `- ${file}`).join("\n")}\n` : ""}
-Hold it back (ok: false) if it shares something private about your person or anyone else that the request does not need (health, family, money, personal life, things told in confidence, what you keep about how your person works beyond what helps here); promises a date, money or scope your person has not agreed to; decides something only your person can decide; or would hurt a relationship. Otherwise ok: true, and nothing else is needed.
+${grounds}${files.length ? `\nWith these files from your person's computer:\n${files.map((file) => `- ${file}`).join("\n")}\n` : ""}
+Hold it back (ok: false) if it shares something private about your person or anyone else that the request does not need (health, family, money, personal life, things told in confidence, what you keep about how your person works beyond what helps here); promises a date, money or scope your person has not agreed to; decides something only your person can decide; or would hurt a relationship.${
+    sources
+      ? " Hold it back too if it states as fact something specific about your person or their work (a status, a date, a number, what was decided or done) that none of the places above show: a colleague will act on it as your person's word. Then revised says the same without it, or says plainly that your person will confirm it."
+      : ""
+  } Otherwise ok: true, and nothing else is needed.
 
 When you hold it back: say what is wrong in problem; give a fixed answer in revised when a small change would do; and write, in your person's language, ask_person (one short question that quotes the answer and says what is wrong) and choices (short labels for send, send_revised when there is a revised answer, and hold).${
     approve
@@ -112,6 +127,8 @@ export async function checkBeforeSending(options: {
   from?: string;
   /** They wrote the request themselves, not their clone. */
   byPerson?: boolean;
+  /** Where the answer's writer says its facts came from (`checkPrompt`). */
+  sources?: string[];
 }): Promise<CheckOutcome> {
   const check = await runSession({
     prompt: checkPrompt(
@@ -123,6 +140,7 @@ export async function checkBeforeSending(options: {
       options.ways,
       options.files,
       options.byPerson,
+      options.sources,
     ),
     jsonSchema: CHECK_SCHEMA,
     language: options.language,

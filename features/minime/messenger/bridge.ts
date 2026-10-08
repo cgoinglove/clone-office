@@ -855,6 +855,8 @@ export class Bridge {
       (news.role === "minime" || news.role === "error")
     ) {
       this.flowChats.delete(news.chat);
+      // A run with nothing new for them is kept, not sent.
+      if (news.quiet) return;
       this.endings.push({
         kind: "flow",
         name: flow,

@@ -31,6 +31,11 @@ export interface ChatMessage {
   files?: string[];
   /** A colleague's line they wrote themselves, not their clone. */
   person?: boolean;
+  /**
+   * Kept without telling anyone: a flow's run with nothing new for the person. It goes to no
+   * phone and does not bring its conversation up the list.
+   */
+  quiet?: boolean;
 }
 
 export interface ChatInfo {
@@ -60,6 +65,8 @@ type Line =
       text: string;
       at: string;
       files?: string[];
+      person?: boolean;
+      quiet?: boolean;
     }
   | { type: "session"; session: string; context?: number; at: string }
   | { type: "carried"; summary: string; at: string }
@@ -106,6 +113,7 @@ export interface ChatNews {
   text: string;
   at: string;
   files?: string[];
+  quiet?: boolean;
 }
 
 const hearing = globalThis as typeof globalThis & {
@@ -128,11 +136,14 @@ export async function appendMessage(
   files: string[] = [],
   /** A colleague's line they wrote themselves, not their clone. */
   person = false,
+  /** Kept without telling anyone (`ChatMessage.quiet`). */
+  quiet = false,
 ): Promise<void> {
   const at = new Date().toISOString();
   const more = {
     ...(files.length ? { files } : {}),
     ...(person ? { person: true } : {}),
+    ...(quiet ? { quiet: true } : {}),
   };
   await append(id, { type: "message", role, text, at, ...more });
   for (const listener of hearing.__minimeChatNews ?? [])
@@ -189,13 +200,18 @@ function parse(raw: string): {
         turns: 0,
       };
     if (!info) continue;
-    info.updated = line.at ?? info.updated;
+    // What was said brings the conversation up the list; a flow's heading, a quiet line and the
+    // bookkeeping lines (its session, its look back) do not.
+    if (line.type === "message" && !line.quiet && line.role !== "flow")
+      info.updated = line.at ?? info.updated;
     if (line.type === "message") {
       messages.push({
         role: line.role,
         text: line.text,
         at: line.at,
         ...(line.files?.length ? { files: line.files } : {}),
+        ...(line.person ? { person: true } : {}),
+        ...(line.quiet ? { quiet: true } : {}),
       });
       if (line.role === "me") info.turns += 1;
     }

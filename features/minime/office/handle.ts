@@ -66,6 +66,7 @@ export const REQUEST_SCHEMA = {
     note: { type: "string" },
     waiting_on_person: { type: "boolean" },
     files: { type: "array", items: { type: "string" }, maxItems: 10 },
+    sources: { type: "array", items: { type: "string" }, maxItems: 12 },
   },
   required: ["reply"],
 };
@@ -123,6 +124,8 @@ Put in menu the id of the one this request is, or leave it empty if none fits.
 `
     : ""
 }${ways.length ? `\n${waysText(menu, ways)}\n` : ""}
+In sources, say where each fact about your person or their work in your reply came from (your memory, a note, a past conversation, a session's answer, a connected service), a few words each. It is not sent: the look before your answer leaves holds back what nothing you found shows, so say what you do not know rather than guess.
+
 In note, write one line for your person, in their language: who asked what, and what you answered.`;
 }
 
@@ -529,6 +532,7 @@ async function answer(options: {
       note?: string;
       waiting_on_person?: boolean;
       files?: unknown;
+      sources?: unknown;
     };
     // The person was asked and has not answered: the question waits for them, and the colleague
     // hears that they will get back to them.
@@ -606,6 +610,11 @@ async function answer(options: {
       from: from?.name,
       byPerson: first?.metadata.by === "person",
       files,
+      sources: Array.isArray(answer.sources)
+        ? answer.sources
+            .filter((source): source is string => typeof source === "string")
+            .slice(0, 12)
+        : [],
     });
     if (officeClosing()) return;
     const sending = {

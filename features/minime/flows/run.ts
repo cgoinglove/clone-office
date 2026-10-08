@@ -30,10 +30,27 @@ import {
   listFlows,
 } from "./store.ts";
 
+/** A run's answer: what the person reads, and whether it is worth telling them about now. */
+export const FLOW_SCHEMA = {
+  type: "object",
+  properties: {
+    notify: { type: "boolean" },
+    text: { type: "string" },
+  },
+  required: ["notify", "text"],
+};
+
+/** What the last run told the person, so a run says only what is new. */
+export interface LastAnswer {
+  at: string;
+  text: string;
+}
+
 export function flowPrompt(
   flow: Flow,
   now = new Date(),
   present = false,
+  last?: LastAnswer,
 ): string {
   const time = now.toLocaleString("en-US", {
     weekday: "long",
@@ -51,7 +68,27 @@ ${
   present
     ? "They started this run themselves from their page: what you may not do alone yet is asked on a card, and what they allow from now on holds for this flow's runs at its times too. This conversation has no earlier part."
     : "Nobody is there to ask, and this conversation has no earlier part. If something you need is refused because they have not let you do it alone yet, name it, and say that running this flow once from Flows on their page lets them allow it."
-} Use what you may (your memory, their past AI conversations, your notes, the guide, the web, the services they connected) and say plainly what you could not do. Your answer is what they will read, in the conversation named after this flow, so give what they asked for and no more, as short as it allows. Keep nothing in your memory from this run.`;
+} Use what you may (your memory, their past AI conversations, your notes, the guide, the web, the services they connected) and say plainly what you could not do. Keep nothing in your memory from this run.
+
+Answer with text and notify. text is what they will read, in the conversation named after this flow: what they asked for and no more, as short as it allows. notify says whether this run has something for them now: when they asked to hear every time (a brief, a summary, a report), or something new or needing them came up, it is true, and they are told (on their phone when they are away). When they asked you to watch for something and nothing new came up since the last run, it is false and text says so in one line; it is kept without telling them. Never repeat as news what the last run already told them.${
+    last
+      ? `
+
+What the last run told them (${new Date(last.at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}):
+${last.text}`
+      : ""
+  }`;
+}
+
+/** The last answer a run left in the flow's conversation, cut to a readable length. */
+async function lastAnswer(chat: string): Promise<LastAnswer | undefined> {
+  const found = (await readChat(chat))?.messages.findLast(
+    (message) => message.role === "minime",
+  );
+  if (!found) return undefined;
+  const text =
+    found.text.length > 2000 ? `${found.text.slice(0, 2000)}…` : found.text;
+  return { at: found.at, text };
 }
 
 /** The flow's own conversation, made the first time it is needed. */
@@ -74,11 +111,13 @@ export async function runFlow(
   if (!flow) return { ok: false };
   const now = options.now ?? new Date();
   const chat = await flowChat(flow);
+  const last = await lastAnswer(chat);
   await appendMessage(chat, "flow", flow.name);
   const allow = await loadTrust();
   const deny = denyRules(loadExcludes());
   const result = await runSession({
-    prompt: flowPrompt(flow, now, Boolean(options.gateUrl)),
+    prompt: flowPrompt(flow, now, Boolean(options.gateUrl), last),
+    jsonSchema: FLOW_SCHEMA,
     language: await personLanguage(),
     maxTurns: 12,
     // Someone may take a while to answer a card; nobody does at its time.
@@ -97,10 +136,17 @@ export async function runFlow(
         }
       : { standing: { allow, deny } }),
   });
-  const ok = result.ok && Boolean(result.text.trim());
+  const shaped = (result.structured ?? {}) as {
+    notify?: boolean;
+    text?: string;
+  };
+  const text = (shaped.text ?? result.text).trim();
+  const ok = result.ok && Boolean(text);
   const error = ok ? undefined : (result.error ?? "flow-failed");
   if (ok) {
-    await appendMessage(chat, "minime", result.text);
+    // Run by the person, it is theirs to read whatever it says; at its time, only news is told.
+    const quiet = shaped.notify === false && !options.gateUrl;
+    await appendMessage(chat, "minime", text, [], false, quiet);
     if (result.sessionId)
       await setSession(chat, result.sessionId, result.context);
   } else

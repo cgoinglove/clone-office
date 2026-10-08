@@ -47,6 +47,29 @@ test("the check knows what the person said, so it does not ask them twice", asyn
   );
 });
 
+test("the check holds back what none of the answer's sources show, where sources are asked for", async () => {
+  const { checkPrompt } = await import("./check");
+  const grounded = checkPrompt(
+    "Is the release out?",
+    "Yes, it shipped Tuesday.",
+    [],
+    false,
+    undefined,
+    [],
+    [],
+    false,
+    ["their Claude Code conversation in api, yesterday"],
+  );
+  assert.match(grounded, /- their Claude Code conversation in api, yesterday/);
+  assert.match(grounded, /none of the places above show/);
+  assert.match(
+    checkPrompt("Q", "A", [], false, undefined, [], [], false, []),
+    /named nowhere its facts came from/,
+  );
+  // A meeting's line asks for no sources: nothing is held back for that.
+  assert.doesNotMatch(checkPrompt("Q", "A"), /none of the places above show/);
+});
+
 test("a request is put with the person's menu, and asks for a line to tell them", async () => {
   const { requestPrompt } = await import("./handle");
   const { cleanMenu } = await import("./menu");
