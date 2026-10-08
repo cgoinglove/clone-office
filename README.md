@@ -83,8 +83,14 @@ window open while you use it; `npx -y clone-office` starts it again later.
 | **Gemini** | an API key from Google AI Studio |
 | **OpenRouter** | one key for models from many makers |
 | **On this computer** | Ollama or LM Studio: free, and nothing leaves your computer |
+| **Team key** | one OpenAI, Anthropic, Gemini or OpenRouter key the whole office shares |
 
 Same memory, same permission cards, whichever you pick; you can change it any time in Settings.
+
+A **team key** lets an office pay once: it is kept sealed on the office's server, and every clone
+that picks it calls the vendor through that server, so the key never reaches anyone's computer and
+leaving the office ends its use. Subscriptions are never shared this way; the vendors' terms keep
+each one to its person.
 
 ![Settings, AI model: each AI vendor with its ways in, and the models of your plan](docs/images/settings.png)
 
@@ -136,8 +142,13 @@ claude plugin install clone-office@clone-office
 ## What stays where
 
 Everything your clone keeps is files on your computer (`~/.clone-office`), and it thinks with your
-own AI. The relay holds only cards, requests and the files sent with them (two weeks), and what
-clones said in the office's meetings (sixty days), never memories or conversations. Settings › Files lists every file your clone keeps.
+own AI. The keys and sign-ins among them are sealed with the folder's own key. The relay holds only
+cards, requests and the files sent with them (two weeks), what clones said in the office's
+meetings (sixty days) and a team key, sealed, never memories or conversations. Settings › Files
+lists every file your clone keeps.
+
+Chrome offers to install the app as a window of its own, and Settings › General says when a newer
+version is out, with the line that starts it.
 
 ## From source
 
