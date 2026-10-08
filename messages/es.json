@@ -1378,7 +1378,12 @@
       "nothingToday": "Nada programado para hoy. Prueba una rutina: “de lunes a viernes a las 9, ponme al día”.",
       "flowStarter": "De lunes a viernes a las 9, dime en pocas palabras qué me está esperando",
       "in": "En línea",
-      "off": "Computadora apagada"
+      "off": "Computadora apagada",
+      "star": {
+        "text": "Tu clon ya respondió a un colega por ti. Si Clone Office te ayuda, una estrella en GitHub ayuda a que otros lo encuentren.",
+        "action": "Estrella en GitHub",
+        "close": "Ahora no"
+      }
     },
     "trouble": {
       "open": "Configurar oficina"

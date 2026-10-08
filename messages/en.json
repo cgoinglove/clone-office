@@ -1378,7 +1378,12 @@
       "nothingToday": "Nothing set for today. Try a flow: “every weekday at 9, catch me up”.",
       "flowStarter": "Every weekday at 9, tell me briefly what is waiting on me",
       "in": "In",
-      "off": "Computer off"
+      "off": "Computer off",
+      "star": {
+        "text": "Your clone has answered a colleague for you. If Clone Office helps, a star on GitHub helps others find it.",
+        "action": "Star on GitHub",
+        "close": "Not now"
+      }
     },
     "trouble": {
       "open": "Office settings"

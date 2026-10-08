@@ -1378,7 +1378,12 @@
       "nothingToday": "Nada marcado para hoje. Experimente uma rotina: “de segunda a sexta às 9, me atualize”.",
       "flowStarter": "De segunda a sexta às 9, me diga rapidinho o que está esperando por mim",
       "in": "Online",
-      "off": "Computador desligado"
+      "off": "Computador desligado",
+      "star": {
+        "text": "Seu clone já respondeu a um colega por você. Se o Clone Office ajuda, uma estrela no GitHub ajuda outras pessoas a encontrá-lo.",
+        "action": "Estrela no GitHub",
+        "close": "Agora não"
+      }
     },
     "trouble": {
       "open": "Configurar escritório"

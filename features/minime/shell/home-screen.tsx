@@ -30,6 +30,7 @@ import { useApp } from "./app-state";
 import { OfficeTrouble } from "./office-trouble";
 import { Mark, PhaseChip, phaseOf } from "./parts";
 import { askedText } from "./requests-screen";
+import { StarNote } from "./star-note";
 import { TurnRows } from "./turn-rows";
 import { FirstSteps } from "./welcome";
 import { taskOf, yourTurn } from "./your-turn";
@@ -239,6 +240,13 @@ export function HomeScreen() {
               text ? `/chat?say=${encodeURIComponent(text)}` : "/chat",
             )
           }
+        />
+
+        <StarNote
+          ready={tasks.some(
+            (task) =>
+              task.metadata.to === me && task.status.state === "COMPLETED",
+          )}
         />
 
         <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
