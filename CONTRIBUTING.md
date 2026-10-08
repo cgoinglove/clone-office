@@ -52,16 +52,14 @@ after Thursday's):
   its squash commit and is checked (`pr-title.yml`).
 - Every push to main updates one open **Release PR** (release-please) with the next version and the
   changelog its commits earned. Merging it releases: the commit is tagged, the GitHub Release
-  written, CI runs again (the install on all three systems included), and the package is staged on
-  npm with provenance. It goes out once a maintainer approves it with their own second factor, on
-  the package's page on npmjs.com or with `npm stage approve <id>` (`npm stage list clone-office`).
-- **Run workflow** on *Release* from main: `next` stages a test build of main as
-  `npx clone-office@next`; `latest` stages the version `package.json` says, for a publish that
+  written, CI runs again (the install on all three systems included), and the package goes to npm
+  with provenance.
+- **Run workflow** on *Release* from main: `next` publishes a test build of main as
+  `npx clone-office@next`; `latest` publishes the version `package.json` says, for a publish that
   failed after its tag.
 
-The package's trusted publisher on npmjs.com is this repository and `release.yml`, set up without
-direct `npm publish`: a workflow can only stage, so nothing reaches npm without a maintainer's
-second factor.
+The package's trusted publisher on npmjs.com is this repository and `release.yml`, so no npm token
+is stored anywhere.
 
 ## What the project holds to
 
