@@ -588,8 +588,10 @@ export class Relay {
           "The office keeps no more files for now.",
           "files-full",
         );
+      // Sent as base64 text and decoded by the database: PGlite takes a bytea parameter ten to
+      // twenty times slower (a 25 MB file, seconds).
       await tx.query(
-        "INSERT INTO files (id, office_id, owner, name, type, size, bytes, created, expires) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+        "INSERT INTO files (id, office_id, owner, name, type, size, bytes, created, expires) VALUES ($1, $2, $3, $4, $5, $6, decode($7, 'base64'), $8, $9)",
         [
           id,
           member.office,
@@ -597,7 +599,7 @@ export class Relay {
           name,
           type,
           size,
-          input.bytes,
+          Buffer.from(input.bytes).toString("base64"),
           at,
           new Date(
             now.getTime() + LOOSE_FILE_HOURS * 60 * 60 * 1000,
@@ -759,18 +761,18 @@ export class Relay {
     id: string,
     now = new Date(),
   ): Promise<{ ref: FileRef; bytes: Uint8Array }> {
+    // Who may take it is settled first; the bytes are read only for them.
     const [row] = await this.db.query<{
       id: string;
       name: string;
       type: string;
       size: number;
-      bytes: Uint8Array;
       owner: string;
       from_member: string | null;
       to_member: string | null;
       expires: unknown;
     }>(
-      "SELECT f.id, f.name, f.type, f.size, f.bytes, f.owner, t.from_member, t.to_member, f.expires FROM files f LEFT JOIN tasks t ON t.id = f.task_id WHERE f.id = $1 AND f.office_id = $2",
+      "SELECT f.id, f.name, f.type, f.size, f.owner, t.from_member, t.to_member, f.expires FROM files f LEFT JOIN tasks t ON t.id = f.task_id WHERE f.id = $1 AND f.office_id = $2",
       [id, member.office],
     );
     const allowed =
@@ -779,9 +781,15 @@ export class Relay {
       now.getTime() < new Date(row.expires as string).getTime();
     if (!row || !allowed)
       throw new RelayError(404, "No such file.", "file-missing");
+    // As base64 text, as it was put (see `putFile`).
+    const [content] = await this.db.query<{ bytes: string }>(
+      "SELECT encode(bytes, 'base64') AS bytes FROM files WHERE id = $1",
+      [id],
+    );
+    if (!content) throw new RelayError(404, "No such file.", "file-missing");
     return {
       ref: { id: row.id, name: row.name, type: row.type, size: row.size },
-      bytes: new Uint8Array(row.bytes),
+      bytes: new Uint8Array(Buffer.from(content.bytes, "base64")),
     };
   }
 
