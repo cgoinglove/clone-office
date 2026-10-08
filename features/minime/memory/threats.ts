@@ -101,9 +101,10 @@ const PATTERNS: [source: string, id: string, flags?: string][] = [
   ],
   // Persistence and agent-config tampering.
   [String.raw`authorized_keys`, "ssh_backdoor"],
-  // This app's own secrets: the brain's keys, connectors' tokens, the settings with the office's.
+  // This app's own secrets: the key that opens them, the brain's keys, connectors' tokens, the
+  // settings with the office's.
   [
-    String.raw`(?:\$HOME|~|\.(?:clone|sub)-office)/(?:\.(?:clone|sub)-office/)?(?:brain/keys\.json|brain/chatgpt\.json|connectors/|settings\.json)`,
+    String.raw`(?:\$HOME|~|\.(?:clone|sub)-office)/(?:\.(?:clone|sub)-office/)?(?:secret\.key|brain/keys\.json|brain/chatgpt\.json|connectors/|settings\.json)`,
     "app_secrets",
   ],
   [

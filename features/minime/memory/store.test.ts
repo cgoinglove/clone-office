@@ -243,4 +243,7 @@ test("an entry is found as a model may retype it, in any language; a file that i
   assert.deepEqual(scanForThreats("cat ~/.clone-office/brain/keys.json"), [
     "app_secrets",
   ]);
+  assert.deepEqual(scanForThreats("read ~/.clone-office/secret.key next"), [
+    "app_secrets",
+  ]);
 });

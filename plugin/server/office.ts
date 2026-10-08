@@ -151,7 +151,7 @@ function minimeHome(): string {
   // A ~/.sub-office kept before the app was named Clone Office stays the one while it is there.
   const home = join(homedir(), ".clone-office");
   const before = join(homedir(), ".sub-office");
-  return existsSync(before) ? before : home;
+  return existsSync(join(before, "settings.json")) ? before : home;
 }
 
 async function loadOffice(): Promise<Office | undefined> {

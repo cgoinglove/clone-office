@@ -127,6 +127,27 @@ export function ruleFor(
 
 /** The folders kept out (the ones written as paths) as rules no answer can override. */
 export function denyRules(excludes: readonly string[]): string[] {
+  return [...appSecretRules(), ...excludedRules(excludes)];
+}
+
+/**
+ * The clone's own secrets, out of its reach whatever it is told: the key that opens them and the
+ * sealed files (server/secret.ts). Together they would give the keys back in the clear.
+ */
+function appSecretRules(): string[] {
+  const home = pathRule(minimeHome());
+  return [
+    `Read(${home}/secret.key)`,
+    `Read(${home}/brain/keys.json)`,
+    `Read(${home}/brain/chatgpt.json)`,
+    `Read(${home}/connectors/**)`,
+    `Edit(${home}/secret.key)`,
+    `Edit(${home}/brain/**)`,
+    `Edit(${home}/connectors/**)`,
+  ];
+}
+
+function excludedRules(excludes: readonly string[]): string[] {
   return excludes
     .map((pattern) => pattern.trim())
     .filter((pattern) => pattern.includes("/") || pattern.includes(sep))

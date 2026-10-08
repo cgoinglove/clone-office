@@ -42,9 +42,11 @@ async function teamState() {
   const office = await loadOffice();
   if (!office) return null;
   try {
+    // A relay that does not answer (a teammate's laptop asleep) must not hold up the page.
+    const signal = AbortSignal.timeout(2500);
     const [team, { members: people }] = await Promise.all([
-      teamKeys(office),
-      members(office),
+      teamKeys(office, signal),
+      members(office, signal),
     ]);
     const name = (id: string) =>
       people.find((one) => one.id === id)?.card.name ?? id;

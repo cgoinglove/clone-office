@@ -146,8 +146,11 @@ export async function leaveOffice(): Promise<void> {
   await saveOffice(undefined);
 }
 
-export function members(office: OfficeConfig): Promise<{ members: Member[] }> {
-  return call(office.relay, "/members", { token: office.token });
+export function members(
+  office: OfficeConfig,
+  signal?: AbortSignal,
+): Promise<{ members: Member[] }> {
+  return call(office.relay, "/members", { token: office.token, signal });
 }
 
 export function tasks(office: OfficeConfig): Promise<{ tasks: Task[] }> {
@@ -187,8 +190,11 @@ export interface TeamKeys {
   calls: { member: string; provider: string; calls: number }[];
 }
 
-export function teamKeys(office: OfficeConfig): Promise<TeamKeys> {
-  return call(office.relay, "/team-ai", { token: office.token });
+export function teamKeys(
+  office: OfficeConfig,
+  signal?: AbortSignal,
+): Promise<TeamKeys> {
+  return call(office.relay, "/team-ai", { token: office.token, signal });
 }
 
 /** Keeps a key for the whole office (checked with its vendor by the relay), or forgets it. */

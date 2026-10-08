@@ -54,12 +54,16 @@ test("an answer 'from now on' becomes a rule for a folder or a site, and kept-ou
     "WebFetch(domain:example.com)",
   );
   assert.equal(ruleFor("Bash", { command: "ls" }), undefined);
-  assert.deepEqual(denyRules(["client-*", "~/work/private", "/srv/secret"]), [
+  const rules = denyRules(["client-*", "~/work/private", "/srv/secret"]);
+  assert.deepEqual(rules.slice(-4), [
     "Read(~/work/private/**)",
     "Edit(~/work/private/**)",
     "Read(//srv/secret/**)",
     "Edit(//srv/secret/**)",
   ]);
+  // The clone's own key and sealed files are always out of its reach.
+  assert.ok(rules.some((rule) => /^Read\(.*\/secret\.key\)$/.test(rule)));
+  assert.ok(rules.some((rule) => /^Read\(.*\/brain\/keys\.json\)$/.test(rule)));
 });
 
 test("changing files becomes a rule for that folder; a command never does; folders left out stay closed", async () => {
@@ -78,7 +82,7 @@ test("changing files becomes a rule for that folder; a command never does; folde
     "Edit(//srv/app/**)",
   );
   assert.equal(ruleFor("Bash", { command: "rm -rf build" }), undefined);
-  assert.deepEqual(denyRules(["~/work/client-a"]), [
+  assert.deepEqual(denyRules(["~/work/client-a"]).slice(-2), [
     "Read(~/work/client-a/**)",
     "Edit(~/work/client-a/**)",
   ]);

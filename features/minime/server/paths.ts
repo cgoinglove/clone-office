@@ -5,17 +5,26 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
+const pinned = globalThis as typeof globalThis & {
+  __cloneOfficeHome?: string;
+};
+
 /**
- * The mini-me's own folder. `CLONE_OFFICE_HOME` moves it, for tests and for a second person.
- * Before the app was named Clone Office it kept `~/.sub-office` (and read `SUB_OFFICE_HOME`): while
- * that folder is there it stays the one, never moved, whatever else appears beside it.
+ * The mini-me's own folder. `CLONE_OFFICE_HOME` moves it, for tests and for a second person (an
+ * empty value counts as none). Before the app was named Clone Office it kept `~/.sub-office` (and
+ * read `SUB_OFFICE_HOME`): a clone kept there (its settings.json is there) stays there, never moved.
+ * Decided once per process, so the folder never changes under a running app; the launcher and the
+ * plugin decide the same way (bin/clone-office.mjs, plugin/server/office.ts, plugin/hooks/office.ts).
  */
 export function minimeHome(): string {
-  const moved = process.env.CLONE_OFFICE_HOME ?? process.env.SUB_OFFICE_HOME;
+  const moved = process.env.CLONE_OFFICE_HOME || process.env.SUB_OFFICE_HOME;
   if (moved) return moved;
-  const home = join(homedir(), ".clone-office");
-  const before = join(homedir(), ".sub-office");
-  return existsSync(before) ? before : home;
+  pinned.__cloneOfficeHome ??= existsSync(
+    join(homedir(), ".sub-office", "settings.json"),
+  )
+    ? join(homedir(), ".sub-office")
+    : join(homedir(), ".clone-office");
+  return pinned.__cloneOfficeHome;
 }
 
 export function claudeHome(): string {

@@ -122,7 +122,7 @@ function appHome() {
   if (moved) return moved;
   const home = join(homedir(), ".clone-office");
   const before = join(homedir(), ".sub-office");
-  return existsSync(before) ? before : home;
+  return existsSync(join(before, "settings.json")) ? before : home;
 }
 
 function settingsFile() {

@@ -58,7 +58,7 @@ export function register(on: On) {
 
 async function home($: EngineInterface): Promise<string | undefined> {
   const moved =
-    (await $.env.get("CLONE_OFFICE_HOME")) ??
+    (await $.env.get("CLONE_OFFICE_HOME")) ||
     (await $.env.get("SUB_OFFICE_HOME"));
   if (moved) return moved;
   const user = (await $.env.get("HOME")) ?? (await $.env.get("USERPROFILE"));
