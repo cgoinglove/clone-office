@@ -160,7 +160,6 @@
       "anyway": "仍然继续",
       "answered": "它回答了",
       "answeredIn": "{model} · 用时 {seconds} 秒",
-      "safe": "登录信息和密钥只保存在这台电脑上。",
       "guide": {
         "title": "选哪个？",
         "plan": {
@@ -174,12 +173,17 @@
         "local": {
           "title": "本机",
           "body": "Ollama 或 LM Studio：免费，什么都不离开这台电脑。"
+        },
+        "team": {
+          "title": "团队密钥",
+          "body": "办公室共用的密钥，费用由团队支付。"
         }
-      }
+      },
+      "probingNote": "只问一句，几秒就好。"
     },
     "learn": {
       "title": "了解你的工作方式",
-      "body": "它读取这台电脑上的 AI 对话，只记住几个月后依然成立的几行。然后告诉你它会怎样回答同事。",
+      "body": "它会读取这台电脑上的 AI 记录，了解你做什么、正在做的事、身边的人和工具，以及你的工作方式。然后告诉你它会怎样回答同事。",
       "none": "这台电脑上没有可读的 AI 对话。可以把你常用的 AI 记得的关于你的内容带过来：",
       "read": "读取并学习",
       "reading": "你可以继续，它会接着读。",
@@ -188,13 +192,39 @@
       "example": "如果同事问",
       "exampleAnswer": "我会替你这样回答",
       "doneTitle": "我是这样理解你的",
-      "saved": "已存入记忆",
       "folders": "不读取的文件夹",
       "foldersRecent": "最近 {count} 个文件夹",
       "foldersNone": "无 · 全部读取",
       "foldersSome": "排除 {count} 个",
       "foldersSearch": "查找文件夹",
-      "doneBody": "我从读到的内容里记下了 {count} 行长期有效的信息。 之后可以在“你的分身 › 它知道的”里修改或删除任意一条。"
+      "doneBody": "它了解了关于你和你工作的 {count} 件事。 之后可以在“你的分身 › 它知道的”里修改或删除任何一条。",
+      "found": "找到的记录",
+      "pick": "选择",
+      "bring": "主要用 ChatGPT 或 Claude 应用？把它们的记忆也带过来",
+      "bringTitle": "带入你常用 AI 的记忆",
+      "foldersNote": "最近 14 天用 AI 工具工作过的文件夹。勾选的文件夹里做过的事不会被读取或搜索。",
+      "foldersPath": "用名称或路径排除列表外的文件夹",
+      "foldersDone": "完成",
+      "sources": {
+        "notes": "AI 指令和记忆文件",
+        "inputs": "你让 AI 做的事",
+        "commits": "你的提交",
+        "work": "文档类型和应用",
+        "learn": "整理学到的内容"
+      },
+      "knows": {
+        "saved": "{count} 项 · 已存入记忆和笔记",
+        "role": "做什么",
+        "projects": "正在做的事",
+        "people": "一起工作的人",
+        "work": "工作环境",
+        "traits": {
+          "work": "工作方式",
+          "decide": "判断标准",
+          "voice": "说话方式"
+        },
+        "more": "还有 {count} 项"
+      }
     },
     "you": {
       "title": "你和你的团队",
@@ -216,7 +246,11 @@
       "invited": "{from} 邀请你加入他们的办公室：继续后，你的分身就会加入。",
       "invitedNobody": "你收到了一个办公室的邀请：继续后，你的分身就会加入。",
       "fromRecords": "来自你的记录 · 可随意修改",
-      "toolsMore": "添加…"
+      "toolsMore": "添加…",
+      "invitedOffice": "{from} 的办公室",
+      "invitedOfficeNobody": "你受邀加入的办公室",
+      "invitedTag": "已受邀",
+      "bodyFirst": "写下名字，加入你受邀的办公室。做什么、负责什么，等分身读完记录后会帮你填上。"
     },
     "ready": {
       "title": "你的分身准备好了",
@@ -235,7 +269,20 @@
       "card": "你的名片",
       "cardNote": "办公室里看到的样子",
       "change": "更改",
-      "safe": "没有允许过的事，它会先问你。"
+      "mode": "分身可以自己做的范围",
+      "modeNote": "仅限你自己的事 · 之后可在设置中更改",
+      "knows": "{count} 项"
+    },
+    "guide": {
+      "brainPick": "选好模型后会立刻确认它能回答",
+      "brainOk": "准备好了，进入下一步",
+      "brainFailed": "换一个模型，或者直接继续",
+      "learn": "读取时也可以继续下一步",
+      "reading": "读取中 · {percent}%",
+      "learned": "不对的地方之后再改就行",
+      "learnNone": "把你常用的 AI 记得的内容带过来",
+      "you": "同事的分身会按你负责的事来找你",
+      "ready": "现在去首页和你的分身说话吧"
     }
   },
   "firstRun": {
@@ -244,15 +291,15 @@
     "plan": {
       "read": {
         "title": "我读什么",
-        "body": "最近 14 天的 AI 对话、AI 指令和记忆文件、你的提交。文档只看类型。"
+        "body": "最近 14 天你让 AI 做的事、AI 指令和记忆文件、你的提交。不读 AI 的回答，也不读文档内容。"
       },
       "keep": {
         "title": "我记住什么",
-        "body": "你的工作方式、判断标准和说话方式，最多五行。"
+        "body": "你做什么、正在做的事、和谁用什么一起工作、你的工作方式和判断标准。项目记成带日期的笔记，边工作边更新。"
       },
       "skip": {
         "title": "我不记什么",
-        "body": "项目、日程、文件：需要时再去查。"
+        "body": "密码和密钥、健康、金钱，以及别人的隐私。"
       },
       "time": {
         "body": "大约 30 秒。你继续下一步，它也会接着读。"
@@ -260,7 +307,7 @@
     },
     "folders": "这些是你最近用过的文件夹。把不想让我读的排除掉。",
     "noFolders": "这台电脑上没找到 AI 对话。把你常用的 AI 对你的了解带过来，是最快的开始方式。",
-    "sessions": "{count, plural, other {# 次对话}}",
+    "sessions": "{count, plural, other {工作 # 次}}",
     "leaveOut": "排除",
     "leftOut": "已排除",
     "foldersOpen": "已排除的文件夹",
@@ -755,7 +802,8 @@
     "tier": {
       "small": "小",
       "mid": "中",
-      "large": "大"
+      "large": "大",
+      "top": "顶级"
     },
     "suggested": "推荐",
     "pick": "选择模型",
@@ -764,8 +812,13 @@
       "claudeCode": "这台电脑上有 Claude Code",
       "claudeCodeNote": "使用你的 Claude 订阅 · Claude Sonnet",
       "chatgpt": "你已登录 ChatGPT",
-      "chatgptNote": "使用你的 ChatGPT 套餐"
-    }
+      "chatgptNote": "使用你的 ChatGPT 套餐",
+      "team": "你的团队有可用的模型",
+      "teamNote": "使用团队密钥 · {model}"
+    },
+    "ourTeam": "我们团队",
+    "teamNote": "办公室共用的密钥：费用由团队支付，密钥只保存在团队服务器上。",
+    "teamVia": "{vendor} · 团队密钥"
   },
   "messenger": {
     "title": "在手机上",

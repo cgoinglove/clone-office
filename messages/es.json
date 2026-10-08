@@ -160,7 +160,6 @@
       "anyway": "Seguir de todos modos",
       "answered": "Respondió",
       "answeredIn": "{model} · en {seconds} s",
-      "safe": "Los inicios de sesión y las claves se quedan en esta computadora.",
       "guide": {
         "title": "¿Cuál elijo?",
         "plan": {
@@ -174,12 +173,17 @@
         "local": {
           "title": "Esta computadora",
           "body": "Ollama o LM Studio: gratis, y nada sale de la computadora."
+        },
+        "team": {
+          "title": "Clave del equipo",
+          "body": "Una clave que comparte la oficina; paga el equipo."
         }
-      }
+      },
+      "probingNote": "Solo una palabra. Unos segundos."
     },
     "learn": {
       "title": "Aprende cómo trabajas",
-      "body": "Lee las conversaciones con IA de esta computadora y guarda solo unas líneas que seguirán siendo ciertas dentro de meses. Luego te muestra cómo respondería a un compañero.",
+      "body": "Lee los registros de IA de esta computadora y aprende qué haces, en qué estás trabajando, las personas y herramientas a tu alrededor y cómo trabajas. Luego te muestra cómo respondería a un compañero.",
       "none": "No hay conversaciones con IA para leer en esta computadora. Mejor trae lo que tu IA de siempre recuerda de ti:",
       "read": "Leer y aprender",
       "reading": "Puedes seguir; continúa leyendo.",
@@ -188,13 +192,39 @@
       "example": "Si un colega pregunta",
       "exampleAnswer": "Yo respondería por ti",
       "doneTitle": "Esto es lo que entendí",
-      "saved": "Guardado en la memoria",
       "folders": "Carpetas que no leerá",
       "foldersRecent": "{count, plural, one {# carpeta reciente} other {# carpetas recientes}}",
       "foldersNone": "Ninguna · las lee todas",
       "foldersSome": "{count} fuera",
       "foldersSearch": "Buscar una carpeta",
-      "doneBody": "Guardé {count, plural, one {# línea} other {# líneas}} que deberían durar. Cambia o quita cualquier línea más tarde en Tu clon › Lo que sabe."
+      "doneBody": "Aprendió {count, plural, one {# cosa} other {# cosas}} sobre ti y tu trabajo. Cambia o quita cualquier cosa más tarde en Tu clon › Lo que sabe.",
+      "found": "Encontrado aquí",
+      "pick": "Elegir",
+      "bring": "¿Usas las apps de ChatGPT o Claude? Trae también su memoria",
+      "bringTitle": "Trae lo que recuerda tu IA de siempre",
+      "foldersNote": "Carpetas en las que trabajaste con herramientas de IA en los últimos 14 días. Lo que hiciste en las que marques no se lee ni se busca.",
+      "foldersPath": "Deja fuera otra carpeta por nombre o ruta",
+      "foldersDone": "Listo",
+      "sources": {
+        "notes": "Archivos de instrucciones y memoria de IA",
+        "inputs": "Lo que pediste a tus herramientas de IA",
+        "commits": "Tus commits",
+        "work": "Tipos de documentos y apps",
+        "learn": "Ordenando lo aprendido"
+      },
+      "knows": {
+        "saved": "{count, plural, one {# cosa} other {# cosas}} · guardado en su memoria y notas",
+        "role": "Qué haces",
+        "projects": "En marcha",
+        "people": "Trabaja con",
+        "work": "Alrededor de tu trabajo",
+        "traits": {
+          "work": "Cómo trabajas",
+          "decide": "Cómo decides",
+          "voice": "Cómo lo dices"
+        },
+        "more": "y {count} más"
+      }
     },
     "you": {
       "title": "Tú y tu equipo",
@@ -216,7 +246,11 @@
       "invited": "{from} te invitó a su oficina: tu clon se une cuando continúes.",
       "invitedNobody": "Te invitaron a una oficina: tu clon se une cuando continúes.",
       "fromRecords": "De tus registros · cámbialo si quieres",
-      "toolsMore": "Añadir…"
+      "toolsMore": "Añadir…",
+      "invitedOffice": "La oficina de {from}",
+      "invitedOfficeNobody": "La oficina a la que te invitaron",
+      "invitedTag": "invitación",
+      "bodyFirst": "Tu nombre y luego la oficina a la que te invitaron. Qué haces y de qué te encargas se completan cuando haya leído tus registros."
     },
     "ready": {
       "title": "Tu clon está listo",
@@ -235,7 +269,20 @@
       "card": "Tu tarjeta",
       "cardNote": "Como la ve la oficina",
       "change": "Cambiar",
-      "safe": "Te pregunta antes de hacer algo que no hayas permitido."
+      "mode": "Lo que tu clon hace por su cuenta",
+      "modeNote": "Solo tu trabajo · cámbialo en Ajustes",
+      "knows": "{count, plural, one {# cosa} other {# cosas}}"
+    },
+    "guide": {
+      "brainPick": "Elige un modelo y se comprueba al momento",
+      "brainOk": "Listo. Sigamos",
+      "brainFailed": "Elige otro modelo o sigue de todos modos",
+      "learn": "Puedes seguir mientras lee",
+      "reading": "Leyendo · {percent}%",
+      "learned": "Corrige luego lo que no encaje",
+      "learnNone": "Trae lo que recuerda tu IA de siempre",
+      "you": "Los clones de tus compañeros te encuentran por lo que llevas",
+      "ready": "Ahora habla con tu clon desde Inicio"
     }
   },
   "firstRun": {
@@ -244,15 +291,15 @@
     "plan": {
       "read": {
         "title": "Qué leo",
-        "body": "Conversaciones con IA de los últimos 14 días, archivos de instrucciones y memoria de IA, tus commits. De los documentos, solo el tipo."
+        "body": "Lo que pediste a tus herramientas de IA en los últimos 14 días, tus archivos de instrucciones y memoria de IA, tus commits. No lo que respondió la IA ni el contenido de los documentos."
       },
       "keep": {
         "title": "Qué guardo",
-        "body": "Cómo trabajas, cómo decides, cómo lo dices. Cinco líneas como mucho."
+        "body": "Qué haces, en qué estás, con quién y con qué trabajas, cómo trabajas y decides. Los proyectos quedan como notas con fecha que actualiza mientras trabajan juntos."
       },
       "skip": {
         "title": "Qué no guardo",
-        "body": "Proyectos, agendas, archivos: los busca cuando hace falta."
+        "body": "Contraseñas y claves, salud, dinero y nada privado de otras personas."
       },
       "time": {
         "body": "Unos 30 segundos. Sigue leyendo aunque continúes."
@@ -260,7 +307,7 @@
     },
     "folders": "Estas son las carpetas en las que trabajaste últimamente. Excluye las que no deba leer.",
     "noFolders": "No encontré conversaciones con IA en esta computadora. Lo más rápido para empezar es traer lo que tu IA de siempre sabe de ti.",
-    "sessions": "{count, plural, one {# conversación} other {# conversaciones}}",
+    "sessions": "{count, plural, one {# sesión} other {# sesiones}}",
     "leaveOut": "Excluir",
     "leftOut": "Excluida",
     "foldersOpen": "Carpetas excluidas",
@@ -755,7 +802,8 @@
     "tier": {
       "small": "pequeño",
       "mid": "mediano",
-      "large": "grande"
+      "large": "grande",
+      "top": "superior"
     },
     "suggested": "Recomendado",
     "pick": "Elige un modelo",
@@ -764,8 +812,13 @@
       "claudeCode": "Claude Code está en esta computadora",
       "claudeCodeNote": "Con tu suscripción de Claude · Claude Sonnet",
       "chatgpt": "Ya iniciaste sesión en ChatGPT",
-      "chatgptNote": "Con tu plan de ChatGPT"
-    }
+      "chatgptNote": "Con tu plan de ChatGPT",
+      "team": "Tu equipo tiene un modelo",
+      "teamNote": "Con la clave del equipo · {model}"
+    },
+    "ourTeam": "Nuestro equipo",
+    "teamNote": "Claves que comparte tu oficina: paga el equipo y quedan en el servidor del equipo.",
+    "teamVia": "{vendor} · clave del equipo"
   },
   "messenger": {
     "title": "En tu teléfono",

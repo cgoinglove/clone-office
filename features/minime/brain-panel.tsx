@@ -849,10 +849,38 @@ export function BrainPicker({
   const problemText = useProblem();
   const choice = useBrainChoice(onChange);
   const [open, setOpen] = useState(false);
+  // "Our team" in the left column: the models the office's own keys reach, first when there are any.
+  const [teamView, setTeamView] = useState(false);
   const { state, vendor, way, id, models, suggested, busy, problem } = choice;
   if (!state) return <div className="h-12 rounded-[10px] bg-muted/60" />;
 
   const shown = vendor ?? VENDORS[0];
+  const teamModels = (state.team?.keys ?? []).flatMap((key) => {
+    const entry = providerOf(key.provider as ProviderId);
+    if (!entry || entry.signIn) return [];
+    return entry.models.map((model) => ({
+      provider: entry.id,
+      vendor: entry.name,
+      ...model,
+    }));
+  });
+  const teamFirst =
+    teamModels.find((model) => model.tier === "mid") ?? teamModels[0];
+  const onTeam = (provider: ProviderId, model: string) =>
+    state.chosen &&
+    state.choice.kind === "api" &&
+    Boolean(state.choice.team) &&
+    state.choice.provider === provider &&
+    state.choice.model === model;
+  const pickTeam = async (provider: ProviderId, model: string) => {
+    const ok = await choice.post({
+      action: "use",
+      provider,
+      model,
+      team: true,
+    });
+    if (ok) setOpen(false);
+  };
   const pick = async (modelId: string) => {
     if (!modelId.trim()) return;
     const ok = await choice.use(modelId.trim());
@@ -861,33 +889,43 @@ export function BrainPicker({
       setOpen(false);
     }
   };
-  // Claude Code on this computer, or a ChatGPT plan already signed in: one press away.
+  // The team's own model, Claude Code on this computer, or a ChatGPT plan already signed in: one
+  // press away.
   const offer =
     suggest && !state.chosen
-      ? state.claudeCode
+      ? teamFirst
         ? {
-            mark: "claude" as const,
-            title: t("offer.claudeCode"),
-            note: t("offer.claudeCodeNote"),
-            take: () =>
-              void choice.post({ action: "claude-code", model: "sonnet" }),
+            mark: (modelMark(teamFirst.id, teamFirst.provider) ??
+              "claude") as MarkId,
+            title: t("offer.team"),
+            note: t("offer.teamNote", { model: teamFirst.label }),
+            take: () => void pickTeam(teamFirst.provider, teamFirst.id),
           }
-        : state.chatgpt
+        : state.claudeCode
           ? {
-              mark: "openai" as const,
-              title: t("offer.chatgpt"),
-              note: t("offer.chatgptNote"),
+              mark: "claude" as const,
+              title: t("offer.claudeCode"),
+              note: t("offer.claudeCodeNote"),
               take: () =>
-                void choice.post({
-                  action: "use",
-                  provider: "chatgpt",
-                  model:
-                    state.chatgpt?.models[0]?.id ??
-                    providerOf("chatgpt")?.models.find((m) => m.tier === "mid")
-                      ?.id,
-                }),
+                void choice.post({ action: "claude-code", model: "sonnet" }),
             }
-          : null
+          : state.chatgpt
+            ? {
+                mark: "openai" as const,
+                title: t("offer.chatgpt"),
+                note: t("offer.chatgptNote"),
+                take: () =>
+                  void choice.post({
+                    action: "use",
+                    provider: "chatgpt",
+                    model:
+                      state.chatgpt?.models[0]?.id ??
+                      providerOf("chatgpt")?.models.find(
+                        (m) => m.tier === "mid",
+                      )?.id,
+                  }),
+              }
+            : null
       : null;
 
   return (
@@ -896,7 +934,14 @@ export function BrainPicker({
         open={open}
         onOpenChange={(next) => {
           setOpen(next);
-          // Opens on the vendor in use, else the first one this computer has, else the first.
+          // Opens on the team's models when the office has keys and nothing else is picked, else on
+          // the vendor in use, else the first one this computer has, else the first.
+          if (next)
+            setTeamView(
+              teamModels.length > 0 &&
+                (!state.chosen ||
+                  (state.choice.kind === "api" && Boolean(state.choice.team))),
+            );
           if (next && !vendor)
             choice.lookAt(
               state.chosen
@@ -923,6 +968,26 @@ export function BrainPicker({
           className="h-68 w-(--anchor-width) min-w-[26rem] flex-row gap-0 overflow-hidden rounded-xl p-0"
         >
           <div className="flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-muted/40 p-1.5">
+            {teamModels.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setTeamView(true)}
+                  className={cn(
+                    "flex h-9.5 shrink-0 items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                    teamView ? "bg-muted font-medium" : "hover:bg-muted/60",
+                  )}
+                >
+                  <span className="grid size-5 place-items-center rounded-[5px] bg-foreground text-background">
+                    <Users className="size-3" strokeWidth={2.5} />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">
+                    {t("ourTeam")}
+                  </span>
+                </button>
+                <span className="mx-1.5 my-1 h-px shrink-0 bg-border" />
+              </>
+            )}
             {VENDORS.map((v) => {
               const inUse =
                 state.chosen && placeOf(state.choice).vendor === v.id;
@@ -930,10 +995,13 @@ export function BrainPicker({
                 <button
                   key={v.id}
                   type="button"
-                  onClick={() => choice.lookAt(v.id)}
+                  onClick={() => {
+                    setTeamView(false);
+                    choice.lookAt(v.id);
+                  }}
                   className={cn(
                     "flex h-9.5 shrink-0 items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
-                    v.id === shown.id
+                    v.id === shown.id && !teamView
                       ? "bg-muted font-medium"
                       : "hover:bg-muted/60",
                   )}
@@ -962,7 +1030,53 @@ export function BrainPicker({
             })}
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-2.5 overflow-y-auto p-2 text-[13px]">
-            {vendor && way && (
+            {teamView && (
+              <>
+                <p className="px-1 text-xs leading-relaxed text-muted-foreground">
+                  {t("teamNote")}
+                </p>
+                <div className="flex flex-col gap-0.5">
+                  {teamModels.map((option) => {
+                    const mark = modelMark(option.id, option.provider);
+                    const on = onTeam(option.provider, option.id);
+                    return (
+                      <button
+                        key={`${option.provider}:${option.id}`}
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          void pickTeam(option.provider, option.id)
+                        }
+                        className={cn(
+                          "flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2.5 py-1.5 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
+                          on ? "bg-muted" : "hover:bg-muted/60",
+                        )}
+                      >
+                        {mark && <BrandMark id={mark} className="size-3.5" />}
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-1.5">
+                            <span className="truncate text-[13.5px] font-medium">
+                              {option.label}
+                            </span>
+                            {option === teamFirst && (
+                              <span className="shrink-0 rounded-md bg-brand/10 px-1.5 text-[10.5px] leading-4 font-medium text-brand">
+                                {t("suggested")}
+                              </span>
+                            )}
+                          </span>
+                          <span className="block text-[11.5px] text-muted-foreground">
+                            {t("teamVia", { vendor: option.vendor })}
+                          </span>
+                        </span>
+                        <span className="flex-1" />
+                        {on && <Check className="size-3.5 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {!teamView && vendor && way && (
               <>
                 {vendor.ways.length > 1 && (
                   <Segmented<string>

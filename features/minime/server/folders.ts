@@ -9,11 +9,15 @@ import { folderName, isNoise, projectRoot } from "./sources/common.ts";
 import { cursorChats } from "./sources/cursor.ts";
 import { hermesSessions } from "./sources/hermes.ts";
 
+export type FolderTool = "claude" | "codex" | "cursor" | "hermes";
+
 export interface RecentFolder {
   path: string;
   name: string;
   /** Conversations that ran there since the time asked about. */
   sessions: number;
+  /** Which tools those conversations ran in, the busiest first. */
+  tools: FolderTool[];
 }
 
 export async function recentFolders(
@@ -21,11 +25,15 @@ export async function recentFolders(
   limit = 10,
 ): Promise<RecentFolder[]> {
   const counts = new Map<string, number>();
-  const add = (cwd: string | undefined, at: number) => {
+  const byTool = new Map<string, Map<FolderTool, number>>();
+  const add = (cwd: string | undefined, at: number, tool: FolderTool) => {
     if (!cwd || at < since) return;
     const root = projectRoot(cwd);
     if (isNoise(root)) return;
     counts.set(root, (counts.get(root) ?? 0) + 1);
+    const tools = byTool.get(root) ?? new Map<FolderTool, number>();
+    tools.set(tool, (tools.get(tool) ?? 0) + 1);
+    byTool.set(root, tools);
   };
   const [claude, codex, cursor] = await Promise.all([
     projectDirs().catch(() => []),
@@ -33,17 +41,24 @@ export async function recentFolders(
     cursorChats().catch(() => []),
   ]);
   for (const dir of claude)
-    for (const file of dir.files) add(dir.cwd, file.mtimeMs);
-  for (const file of codex) add(file.cwd, file.mtimeMs);
-  for (const chat of cursor) add(chat.folder, chat.updatedMs);
+    for (const file of dir.files) add(dir.cwd, file.mtimeMs, "claude");
+  for (const file of codex) add(file.cwd, file.mtimeMs, "codex");
+  for (const chat of cursor) add(chat.folder, chat.updatedMs, "cursor");
   try {
     for (const session of hermesSessions())
-      add(session.folder, session.updatedMs);
+      add(session.folder, session.updatedMs, "hermes");
   } catch {
     // Hermes Agent's file is busy or unreadable now.
   }
   return [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
-    .map(([path, sessions]) => ({ path, name: folderName(path), sessions }));
+    .map(([path, sessions]) => ({
+      path,
+      name: folderName(path),
+      sessions,
+      tools: [...(byTool.get(path) ?? new Map<FolderTool, number>())]
+        .sort((a, b) => b[1] - a[1])
+        .map(([tool]) => tool),
+    }));
 }

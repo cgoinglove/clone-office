@@ -104,9 +104,9 @@ leaving out any folder it should never read (`reading.md`, `memory.md`): when it
 asks** (동료가 이렇게 물으면), what it would answer a colleague in their place (with no AI records
 on the computer, it simply learns as they work); who they are (name, what they do, what they look
 after and the tools they work in, filled in from what it read for them to correct) and whether a
-team is in it (`office.md`; started from an invite, it says who invited them and joins that office);
+team is in it (`office.md`; started from an invite, this comes first, with the office they were invited to picked already, so the team's models are there when they pick one);
 then their card as colleagues will see it, with **Change** (바꾸기) on what can still be changed, and
-Home. **Back** (이전) is at the bottom left; **Skip this step** (이 단계 건너뛰기) beside the step's
+Home. The arrow at the bottom left goes back (**Back**, 이전), a line beside it with a blue dot says what to do now, and **Skip this step** (이 단계 건너뛰기) beside the step's
 own button passes over the step on screen only. The screen's language is one button at the top
 right of the first steps (**Follow the browser**, 브라우저 언어 따르기, until they pick one), and
 under Settings › General.

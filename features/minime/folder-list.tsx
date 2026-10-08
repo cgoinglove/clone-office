@@ -11,6 +11,8 @@ export interface Folder {
   path: string;
   name: string;
   sessions: number;
+  /** The AI tools the person worked there in (server/folders.ts). */
+  tools?: ("claude" | "codex" | "cursor" | "hermes")[];
   excluded: boolean;
 }
 

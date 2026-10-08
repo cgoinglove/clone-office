@@ -17,8 +17,8 @@ export type ProviderId =
 export interface ModelChoice {
   id: string;
   label: string;
-  /** Size, not quality: a label rather than a price, because prices move. */
-  tier: "small" | "mid" | "large";
+  /** Size, not quality: a label rather than a price, because prices move. "top" is the vendor's most capable. */
+  tier: "small" | "mid" | "large" | "top";
 }
 
 export interface Provider {
@@ -54,6 +54,7 @@ export const PROVIDERS: Provider[] = [
       { id: "claude-haiku-5-5", label: "Haiku 5.5", tier: "small" },
       { id: "claude-sonnet-5-5", label: "Sonnet 5.5", tier: "mid" },
       { id: "claude-opus-5-5", label: "Opus 5.5", tier: "large" },
+      { id: "claude-fable-5-1", label: "Fable 5.1", tier: "top" },
     ],
   },
   {
@@ -138,6 +139,7 @@ export const CLAUDE_CODE_MODELS: ModelChoice[] = [
   { id: "haiku", label: "Claude Haiku", tier: "small" },
   { id: "sonnet", label: "Claude Sonnet", tier: "mid" },
   { id: "opus", label: "Claude Opus", tier: "large" },
+  { id: "fable", label: "Claude Fable", tier: "top" },
 ];
 
 /** A vendor's lighter model, for background work when the person wants it light. */

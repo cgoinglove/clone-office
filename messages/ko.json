@@ -160,7 +160,6 @@
       "anyway": "그래도 계속하기",
       "answered": "답했어요",
       "answeredIn": "{model} · {seconds}초 만에",
-      "safe": "로그인 정보와 키는 이 컴퓨터에만 저장돼요.",
       "guide": {
         "title": "무엇을 고를까요?",
         "plan": {
@@ -174,12 +173,17 @@
         "local": {
           "title": "내 컴퓨터",
           "body": "Ollama·LM Studio. 무료, 밖으로 나가는 게 없어요."
+        },
+        "team": {
+          "title": "팀 키",
+          "body": "오피스가 함께 쓰는 키. 요금은 팀이 내요."
         }
-      }
+      },
+      "probingNote": "한 마디만 물어봐요. 몇 초면 돼요."
     },
     "learn": {
       "title": "내 일하는 방식을 배워요",
-      "body": "이 컴퓨터의 AI 대화를 읽고 몇 달 뒤에도 맞을 것만 몇 줄 기억해요. 그다음 동료에게 어떻게 답할지 보여 드려요.",
+      "body": "이 컴퓨터의 AI 기록을 읽고 하는 일, 진행 중인 일, 같이 일하는 사람과 도구, 일하는 방식을 알아 둬요. 그다음 동료에게 어떻게 답할지 보여 드려요.",
       "none": "이 컴퓨터에는 읽을 AI 대화가 없어요. 대신 평소 쓰는 AI가 나에 대해 기억하는 걸 가져와 주세요.",
       "read": "읽고 배우기",
       "reading": "다음으로 넘어가도 계속 읽어요.",
@@ -188,13 +192,39 @@
       "example": "동료가 이렇게 물으면",
       "exampleAnswer": "제가 대신 이렇게 답해요",
       "doneTitle": "이렇게 이해했어요",
-      "saved": "기억에 저장됨",
       "folders": "읽지 않을 폴더",
       "foldersRecent": "최근 폴더 {count}개",
       "foldersNone": "없음 · 전부 읽어요",
       "foldersSome": "{count}개 빼기",
       "foldersSearch": "폴더 이름으로 찾기",
-      "doneBody": "읽은 것에서 오래갈 {count}줄을 기억했어요. 어느 줄이든 나중에 내 클론 › 아는 것에서 고치거나 지울 수 있어요."
+      "doneBody": "나와 내 일에 대해 {count}가지를 알아 뒀어요. 어느 것이든 나중에 내 클론 › 아는 것에서 고치거나 지울 수 있어요.",
+      "found": "찾은 기록",
+      "pick": "고르기",
+      "bring": "ChatGPT·Claude 앱을 주로 쓰나요? 그 기억도 가져오기",
+      "bringTitle": "평소 쓰는 AI의 기억 가져오기",
+      "foldersNote": "최근 14일 동안 AI 도구로 일한 폴더예요. 고른 폴더에서 한 일은 읽지도, 찾지도 않아요.",
+      "foldersPath": "목록에 없는 폴더는 이름이나 경로로 빼기",
+      "foldersDone": "완료",
+      "sources": {
+        "notes": "AI 지침·메모 파일",
+        "inputs": "AI에게 시킨 말",
+        "commits": "내 커밋",
+        "work": "문서 종류와 앱",
+        "learn": "배운 것 정리하기"
+      },
+      "knows": {
+        "saved": "{count}가지 · 기억과 노트에 저장됨",
+        "role": "하는 일",
+        "projects": "진행 중인 일",
+        "people": "같이 일하는 사람",
+        "work": "일의 환경",
+        "traits": {
+          "work": "일하는 방식",
+          "decide": "판단 기준",
+          "voice": "말투"
+        },
+        "more": "외 {count}개"
+      }
     },
     "you": {
       "title": "나와 우리 팀",
@@ -216,7 +246,11 @@
       "invited": "{from} 님이 오피스에 초대했어요. 다음으로 넘어가면 내 클론이 그 오피스에 들어가요.",
       "invitedNobody": "오피스에 초대받았어요. 다음으로 넘어가면 내 클론이 그 오피스에 들어가요.",
       "fromRecords": "기록에서 읽음 · 고쳐도 돼요",
-      "toolsMore": "더하기…"
+      "toolsMore": "더하기…",
+      "invitedOffice": "{from} 님의 오피스",
+      "invitedOfficeNobody": "초대받은 오피스",
+      "invitedTag": "초대받음",
+      "bodyFirst": "이름을 적고 초대받은 오피스에 들어가요. 하는 일과 맡은 일은 클론이 기록을 읽은 뒤 채워 드려요."
     },
     "ready": {
       "title": "클론이 준비됐어요",
@@ -235,7 +269,20 @@
       "card": "내 명함",
       "cardNote": "오피스에 보이는 모습",
       "change": "바꾸기",
-      "safe": "허락하지 않은 일은 하기 전에 먼저 물어봐요."
+      "mode": "클론이 혼자 할 수 있는 범위",
+      "modeNote": "내 일에만 · 나중에 설정에서 바꿀 수 있어요",
+      "knows": "{count}가지"
+    },
+    "guide": {
+      "brainPick": "모델을 고르면 바로 답하는지 확인해요",
+      "brainOk": "준비됐어요. 다음으로 가요",
+      "brainFailed": "다른 모델을 고르거나 그래도 계속할 수 있어요",
+      "learn": "읽는 동안 다음으로 넘어가도 돼요",
+      "reading": "읽는 중 · {percent}%",
+      "learned": "맞지 않는 건 나중에 고쳐 주세요",
+      "learnNone": "평소 쓰는 AI의 기억을 가져와 주세요",
+      "you": "맡은 일로 동료 클론이 나를 찾아요",
+      "ready": "이제 홈에서 클론에게 말을 걸어 보세요"
     }
   },
   "firstRun": {
@@ -244,15 +291,15 @@
     "plan": {
       "read": {
         "title": "읽는 것",
-        "body": "최근 14일의 AI 대화, AI 지침·메모 파일, 내 커밋. 문서는 종류만 봐요."
+        "body": "최근 14일 동안 내가 AI에게 시킨 말, AI 지침·메모 파일, 내 커밋. AI의 답과 문서 내용은 읽지 않아요."
       },
       "keep": {
         "title": "기억하는 것",
-        "body": "일하는 방식, 판단 기준, 말투. 다섯 줄 이내로."
+        "body": "하는 일, 진행 중인 일, 같이 일하는 사람과 도구, 일하는 방식과 판단 기준. 프로젝트는 날짜를 붙인 노트로 두고 일하면서 고쳐 가요."
       },
       "skip": {
         "title": "기억하지 않는 것",
-        "body": "프로젝트, 일정, 파일. 필요할 때 그때 찾아봐요."
+        "body": "비밀번호·키, 건강, 돈, 다른 사람의 사적인 이야기."
       },
       "time": {
         "body": "30초쯤 걸려요. 다음 단계로 넘어가도 계속 읽어요."
@@ -260,7 +307,7 @@
     },
     "folders": "최근에 작업한 폴더예요. 읽으면 안 되는 폴더는 빼 주세요.",
     "noFolders": "이 컴퓨터에서 AI 대화를 찾지 못했어요. 평소 쓰는 AI가 나에 대해 기억하는 걸 가져오면 가장 빨리 시작할 수 있어요.",
-    "sessions": "{count, plural, one {대화 #개} other {대화 #개}}",
+    "sessions": "{count, plural, one {작업 #번} other {작업 #번}}",
     "leaveOut": "빼기",
     "leftOut": "뺐어요",
     "foldersOpen": "읽지 않는 폴더",
@@ -755,7 +802,8 @@
     "tier": {
       "small": "소형",
       "mid": "중형",
-      "large": "대형"
+      "large": "대형",
+      "top": "최상위"
     },
     "suggested": "추천",
     "pick": "모델 고르기",
@@ -764,8 +812,13 @@
       "claudeCode": "이 컴퓨터에 Claude Code가 있어요",
       "claudeCodeNote": "내 Claude 구독으로 · Claude Sonnet",
       "chatgpt": "ChatGPT에 로그인돼 있어요",
-      "chatgptNote": "내 ChatGPT 요금제로"
-    }
+      "chatgptNote": "내 ChatGPT 요금제로",
+      "team": "우리 팀 모델이 있어요",
+      "teamNote": "팀 키로 · {model}"
+    },
+    "ourTeam": "우리 팀",
+    "teamNote": "오피스가 함께 쓰는 키예요. 요금은 팀에서 내고, 키는 팀 서버에만 있어요.",
+    "teamVia": "{vendor} · 팀 키"
   },
   "messenger": {
     "title": "휴대폰에서",

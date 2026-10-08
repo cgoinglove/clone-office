@@ -16,10 +16,10 @@ again** (다시 읽기) reads only what is new or changed since the last time.
 ## Leaving something out
 
 Before it reads, the first steps have one field for it (**Folders to leave out**, 읽지 않을 폴더):
-it opens on the folders they worked in lately, from all their AI tools, each with how many
-conversations it holds; ticking one keeps it out of everything the clone reads and searches, from
-then on, and unticking brings it back. A folder's name or path typed at the bottom leaves out any
-other.
+pressing it opens the folders they worked in lately in a dialog, from all their AI tools (Claude
+Code, Codex, Cursor, Hermes Agent), each with the tools' marks and how many sessions ran there;
+ticking one keeps it out of everything the clone reads and searches, from then on, and unticking
+brings it back. A folder's name or path typed at the bottom leaves out any other.
 
 Later, **Folders left out** (읽지 않는 폴더) under Settings › Permissions shows the same list at any
 time, and they can type any other folder's name or path to leave it out. What the clone had

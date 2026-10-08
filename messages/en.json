@@ -160,7 +160,6 @@
       "anyway": "Go on anyway",
       "answered": "It answered",
       "answeredIn": "{model} · in {seconds}s",
-      "safe": "Sign-ins and keys stay on this computer.",
       "guide": {
         "title": "Which to pick?",
         "plan": {
@@ -174,12 +173,17 @@
         "local": {
           "title": "This computer",
           "body": "Ollama or LM Studio: free, and nothing leaves the computer."
+        },
+        "team": {
+          "title": "Team key",
+          "body": "A key the office shares; the team pays."
         }
-      }
+      },
+      "probingNote": "One word to it. A few seconds."
     },
     "learn": {
       "title": "It learns how you work",
-      "body": "It reads the AI conversations on this computer and keeps only a few lines that will still be true in months. Then it shows you how it would answer a colleague.",
+      "body": "It reads the AI records on this computer and learns what you do, what you are working on, the people and tools around you and how you work. Then it shows you how it would answer a colleague.",
       "none": "There are no AI conversations to read on this computer. Bring what your usual AI remembers about you instead:",
       "read": "Read and learn",
       "reading": "You can go on; it keeps reading.",
@@ -188,13 +192,39 @@
       "example": "If a colleague asks",
       "exampleAnswer": "I'd answer for you",
       "doneTitle": "Here's what I understood",
-      "saved": "Saved to memory",
       "folders": "Folders to leave out",
       "foldersRecent": "{count, plural, one {# recent folder} other {# recent folders}}",
       "foldersNone": "None · it reads them all",
       "foldersSome": "{count} left out",
       "foldersSearch": "Find a folder",
-      "doneBody": "I kept {count, plural, one {# line} other {# lines}} that should last. Change or remove any line later under Your clone › What it knows."
+      "doneBody": "It learned {count, plural, one {# thing} other {# things}} about you and your work. Change or remove any of it later under Your clone › What it knows.",
+      "found": "Found here",
+      "pick": "Choose",
+      "bring": "Use ChatGPT or Claude apps? Bring their memory too",
+      "bringTitle": "Bring what your usual AI remembers",
+      "foldersNote": "Folders you worked in with AI tools in the last 14 days. What you did in a folder you tick is never read or searched.",
+      "foldersPath": "Leave out another folder by name or path",
+      "foldersDone": "Done",
+      "sources": {
+        "notes": "AI instruction and memory files",
+        "inputs": "What you asked your AI tools",
+        "commits": "Your commits",
+        "work": "Kinds of documents and apps",
+        "learn": "Putting together what it learned"
+      },
+      "knows": {
+        "saved": "{count, plural, one {# thing} other {# things}} · kept in its memory and notes",
+        "role": "What you do",
+        "projects": "Working on",
+        "people": "Works with",
+        "work": "Around your work",
+        "traits": {
+          "work": "How you work",
+          "decide": "How you decide",
+          "voice": "How you put things"
+        },
+        "more": "and {count} more"
+      }
     },
     "you": {
       "title": "You and your team",
@@ -216,7 +246,11 @@
       "invited": "{from} invited you to their office: your clone joins it when you go on.",
       "invitedNobody": "You were invited to an office: your clone joins it when you go on.",
       "fromRecords": "From your records · edit freely",
-      "toolsMore": "Add…"
+      "toolsMore": "Add…",
+      "invitedOffice": "{from}'s office",
+      "invitedOfficeNobody": "The office you were invited to",
+      "invitedTag": "invited",
+      "bodyFirst": "Your name, then the office you were invited to. What you do and look after are filled in once it has read your records."
     },
     "ready": {
       "title": "Your clone is ready",
@@ -235,7 +269,20 @@
       "card": "Your card",
       "cardNote": "As the office sees it",
       "change": "Change",
-      "safe": "It asks you before anything you haven't allowed."
+      "mode": "What your clone does on its own",
+      "modeNote": "Your own work only · change it in Settings",
+      "knows": "{count, plural, one {# thing} other {# things}}"
+    },
+    "guide": {
+      "brainPick": "Pick a model and it is checked at once",
+      "brainOk": "Ready. On to the next step",
+      "brainFailed": "Pick another model, or go on anyway",
+      "learn": "You can go on while it reads",
+      "reading": "Reading · {percent}%",
+      "learned": "Fix anything that is off later",
+      "learnNone": "Bring in what your usual AI remembers",
+      "you": "Colleagues' clones find you by what you look after",
+      "ready": "Now talk to your clone from Home"
     }
   },
   "firstRun": {
@@ -244,15 +291,15 @@
     "plan": {
       "read": {
         "title": "What I read",
-        "body": "AI conversations from the last 14 days, AI instruction and memory files, your commits. Of documents, only the kind."
+        "body": "What you asked your AI tools in the last 14 days, your AI instruction and memory files, your commits. Not what the AI answered, nor what documents say."
       },
       "keep": {
         "title": "What I keep",
-        "body": "How you work, how you decide, how you put things. Five lines at most."
+        "body": "What you do, what you are working on, who and what you work with, how you work and decide. Projects are kept as dated notes it updates as you work."
       },
       "skip": {
         "title": "What I don't keep",
-        "body": "Projects, schedules, files: it looks them up when needed."
+        "body": "Passwords and keys, health, money, and anything private about other people."
       },
       "time": {
         "body": "About 30 seconds. It keeps reading if you go on."
@@ -260,7 +307,7 @@
     },
     "folders": "These are the folders you worked in lately. Leave out any I shouldn't read.",
     "noFolders": "I found no AI conversations on this computer. Bringing what your usual AI knows about you is the quickest start.",
-    "sessions": "{count, plural, one {# conversation} other {# conversations}}",
+    "sessions": "{count, plural, one {# session} other {# sessions}}",
     "leaveOut": "Leave out",
     "leftOut": "Left out",
     "foldersOpen": "Folders left out",
@@ -755,7 +802,8 @@
     "tier": {
       "small": "small",
       "mid": "mid",
-      "large": "large"
+      "large": "large",
+      "top": "top"
     },
     "suggested": "Suggested",
     "pick": "Pick a model",
@@ -764,8 +812,13 @@
       "claudeCode": "Claude Code is on this computer",
       "claudeCodeNote": "With your Claude subscription · Claude Sonnet",
       "chatgpt": "You're signed in to ChatGPT",
-      "chatgptNote": "With your ChatGPT plan"
-    }
+      "chatgptNote": "With your ChatGPT plan",
+      "team": "Your team has a model",
+      "teamNote": "With the team's key · {model}"
+    },
+    "ourTeam": "Our team",
+    "teamNote": "Keys your office shares: the team pays, and the keys stay on the team's server.",
+    "teamVia": "{vendor} · team key"
   },
   "messenger": {
     "title": "On your phone",
