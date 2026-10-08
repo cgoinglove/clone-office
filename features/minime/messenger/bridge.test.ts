@@ -517,6 +517,7 @@ test("files from the person's phone are kept for the mini-me to read; a stranger
   process.env.CLONE_OFFICE_HOME = home;
   const bots: FakeBot[] = [];
   const turns: { text: string; allow?: string[] }[] = [];
+  const chats: string[] = [];
   const bridge = new bridgeModule.Bridge({
     makeBot: ({ token }, listener) => {
       const bot = new FakeBot(token, listener);
@@ -526,6 +527,7 @@ test("files from the person's phone are kept for the mini-me to read; a stranger
     turn: async ({ text, allow, send }) => {
       turns.push({ text, allow });
       const chat = await store.createChat(text);
+      chats.push(chat.id);
       send({ type: "chat", id: chat.id, title: text });
       await store.appendMessage(chat.id, "minime", "Got it.");
       send({ type: "done", chat: chat.id });
@@ -589,10 +591,13 @@ test("files from the person's phone are kept for the mini-me to read; a stranger
   await until(() => turns.length === 3);
   assert.match(turns[2].text, /receipt \(2\)\.jpg/);
 
-  // A colleague's answer with a file, in the phone's conversation, brings the file along.
-  const settings = JSON.parse(
-    readFileSync(join(home, "settings.json"), "utf8"),
-  );
+  // A colleague's answer with a file, in the phone's conversation, brings the file along. The
+  // phone's conversation is the one the last turn made, once the bridge has kept it.
+  const phoneChat = () =>
+    JSON.parse(readFileSync(join(home, "settings.json"), "utf8")).messenger
+      ?.chat;
+  await until(() => chats.length === 3 && phoneChat() === chats[2]);
+  const settings = { messenger: { chat: phoneChat() } };
   const attached = join(home, "quote-fixed.csv");
   const { writeFileSync } = await import("node:fs");
   writeFileSync(attached, "item,price");
