@@ -142,8 +142,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   `FirstSteps`; they tick off from what is there), one line asking for a star on GitHub once the
   clone has answered a colleague (`star-note.tsx`, once per browser, after Orca's timing), what to
   decide now answered in place
-  (`turn-rows.tsx`, shared with the office's board), the requests on their way, what the clone did
-  today, and today's standup, flows and colleagues); `/chat` (`chat-screen.tsx`: one
+  (`turn-rows.tsx`, shared with the office's board), the requests on their way, and beside them the
+  day in one panel: what the clone did, today's standup and flows, and colleagues; an empty part is
+  one line, never an empty box); `/chat` (`chat-screen.tsx`: one
   conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's hello and things to try
   when it is new, helpers under the box that start a sentence, and on a wide screen the office
   live beside it (`office-rail.tsx`: the floor small, requests in motion, today's flows));

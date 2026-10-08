@@ -1452,7 +1452,6 @@
         "week": "起草这周的周报"
       },
       "decide": "现在决定",
-      "decideHint": "你的分身只把该你决定的事交给你。",
       "caughtUp": "没有等你处理的事。其余的你的分身在处理。",
       "moving": "进行中的请求",
       "allRequests": "所有请求",
@@ -1465,7 +1464,6 @@
       "setUpOffice": "设置办公室",
       "linkStarter": "生成一个链接去问别人：",
       "did": "今天你的分身做了什么",
-      "didHint": "它替你回答的每件事都留在这里，方便你核对。",
       "answered": "回答了{name}",
       "meetingBack": "{kind}：带回给你的",
       "flowRan": "运行了“{name}”",
@@ -1481,7 +1479,11 @@
         "text": "你的克隆已经替你回答了同事。如果 Clone Office 对你有帮助，在 GitHub 上点个星能让更多人找到它。",
         "action": "在 GitHub 上加星",
         "close": "以后再说"
-      }
+      },
+      "summaryQuiet": "目前很安静，分身在帮你看着。",
+      "didShort": "分身做了什么",
+      "coming": "接下来",
+      "colleagues": "同事"
     },
     "trouble": {
       "open": "办公室设置"

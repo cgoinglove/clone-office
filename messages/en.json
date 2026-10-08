@@ -1452,7 +1452,6 @@
         "week": "Draft this week's report"
       },
       "decide": "Decide now",
-      "decideHint": "Your clone brings you only what is yours to decide.",
       "caughtUp": "Nothing waits on you. Your clone is handling the rest.",
       "moving": "Requests on their way",
       "allRequests": "All requests",
@@ -1465,7 +1464,6 @@
       "setUpOffice": "Set up an office",
       "linkStarter": "Make a link to ask someone: ",
       "did": "What your clone did today",
-      "didHint": "Everything it answered for you, kept here so you can check it.",
       "answered": "Answered {name}",
       "meetingBack": "{kind}: what came back to you",
       "flowRan": "Ran “{name}”",
@@ -1481,7 +1479,11 @@
         "text": "Your clone has answered a colleague for you. If Clone Office helps, a star on GitHub helps others find it.",
         "action": "Star on GitHub",
         "close": "Not now"
-      }
+      },
+      "summaryQuiet": "Quiet so far. Your clone is keeping watch.",
+      "didShort": "What your clone did",
+      "coming": "Still to come",
+      "colleagues": "Colleagues"
     },
     "trouble": {
       "open": "Office settings"

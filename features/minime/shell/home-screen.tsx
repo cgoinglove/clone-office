@@ -9,12 +9,12 @@
 import {
   ArrowDownLeft,
   ArrowRight,
+  ArrowUp,
   ArrowUpRight,
   CalendarClock,
   Check,
   Link2,
   MessagesSquare,
-  Send,
   Sparkles,
   UserPlus,
 } from "lucide-react";
@@ -198,22 +198,26 @@ export function HomeScreen() {
           : "evening";
   const answeredToday = did.filter((item) => item.key.startsWith("t:")).length;
 
+  const quiet = !turns.length && !moving.length && !answeredToday;
+
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-8 pt-8 pb-14">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-9 px-8 pt-10 pb-16">
         <OfficeTrouble />
         <header className="flex flex-col gap-1.5">
-          <h1 className="text-[24px] leading-tight font-semibold tracking-tight text-balance">
+          <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.02em] text-balance">
             {app.name
               ? t(`hello.${part}`, { name: app.name })
               : t(`helloPlain.${part}`)}
           </h1>
-          <p className="text-sm text-muted-foreground">
-            {t("summary", {
-              decide: turns.length,
-              moving: moving.length,
-              answered: answeredToday,
-            })}
+          <p className="text-[14.5px] text-muted-foreground">
+            {quiet
+              ? t("summaryQuiet")
+              : t("summary", {
+                  decide: turns.length,
+                  moving: moving.length,
+                  answered: answeredToday,
+                })}
           </p>
         </header>
 
@@ -249,14 +253,13 @@ export function HomeScreen() {
           )}
         />
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-          <div className="flex min-w-0 flex-col gap-8">
+        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_19rem]">
+          <div className="flex min-w-0 flex-col gap-9">
             <Section
               id="h-decide"
               title={t("decide")}
               count={turns.length}
               tone={turns.length ? "ember" : undefined}
-              hint={t("decideHint")}
             >
               {turns.length ? (
                 <div className="overflow-hidden rounded-[14px] bg-background shadow-[0_0_0_1px_var(--alpha-10)]">
@@ -306,16 +309,18 @@ export function HomeScreen() {
                   ))}
                 </ul>
               ) : colleagues.length ? (
-                <Quiet>{t("movingEmpty")}</Quiet>
+                <Quiet icon={<ArrowUpRight className="size-4" />}>
+                  {t("movingEmpty")}
+                </Quiet>
               ) : (
-                <div className="flex flex-col gap-3 rounded-[14px] px-4 py-4 shadow-[inset_0_0_0_1px_var(--alpha-10)]">
-                  <p className="text-[13.5px] leading-relaxed text-muted-foreground">
+                <div className="flex flex-col gap-3">
+                  <Quiet icon={<UserPlus className="size-4" />}>
                     {t("movingAlone")}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
+                  </Quiet>
+                  <div className="flex flex-wrap gap-2 pl-6.5">
                     <Button
-                      size="sm"
-                      variant="brand"
+                      variant="outline"
+                      className="h-8.5 rounded-[10px] px-3"
                       onClick={() =>
                         router.push(
                           `/chat?say=${encodeURIComponent(t("linkStarter"))}`,
@@ -326,8 +331,8 @@ export function HomeScreen() {
                       {t("askByLink")}
                     </Button>
                     <Button
-                      size="sm"
                       variant="outline"
+                      className="h-8.5 rounded-[10px] px-3"
                       onClick={() => app.setSettings("office")}
                     >
                       <UserPlus />
@@ -339,15 +344,33 @@ export function HomeScreen() {
             </Section>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-8">
-            <Section id="h-did" title={t("did")} hint={t("didHint")}>
+          {/* The day at a glance, beside: what the clone did, what is still to come, who is in. */}
+          <aside
+            aria-labelledby="h-today"
+            className="flex flex-col gap-6 rounded-[14px] bg-muted/45 p-5"
+          >
+            <h2
+              id="h-today"
+              className="flex items-baseline justify-between gap-3 text-[15px] font-semibold"
+            >
+              {t("today")}
+              <span className="text-[12.5px] font-normal text-muted-foreground">
+                {format.dateTime(new Date(), {
+                  month: "short",
+                  day: "numeric",
+                  weekday: "short",
+                })}
+              </span>
+            </h2>
+
+            <Group title={t("didShort")}>
               {did.length ? (
-                <ul className="flex flex-col">
-                  {did.slice(0, 8).map((item) => (
+                <ul className="-mx-2 flex flex-col">
+                  {did.slice(0, 6).map((item) => (
                     <li key={item.key}>
                       <Link
                         href={item.href}
-                        className="-mx-2 flex items-start gap-2.5 rounded-lg px-2 py-2 transition-colors hover:bg-muted/60"
+                        className="flex items-start gap-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-background"
                       >
                         <span className="mt-0.5 grid size-[18px] shrink-0 place-items-center">
                           {item.icon}
@@ -367,7 +390,7 @@ export function HomeScreen() {
                             </span>
                           )}
                         </span>
-                        <span className="shrink-0 font-mono text-[11.5px] text-muted-foreground tabular-nums">
+                        <span className="shrink-0 pt-0.5 text-xs text-muted-foreground tabular-nums">
                           {clock(item.at)}
                         </span>
                       </Link>
@@ -375,17 +398,19 @@ export function HomeScreen() {
                   ))}
                 </ul>
               ) : (
-                <Quiet>{t("didEmpty")}</Quiet>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">
+                  {t("didEmpty")}
+                </p>
               )}
-            </Section>
+            </Group>
 
-            <Section id="h-today" title={t("today")}>
-              <ul className="flex flex-col gap-1.5">
+            <Group title={t("coming")}>
+              <ul className="flex flex-col gap-2">
                 {standupToday && (
                   <li className="flex items-center gap-2.5 text-[13.5px]">
                     <MessagesSquare className="size-4 shrink-0 text-muted-foreground" />
                     <span className="flex-1">{t("standupAt")}</span>
-                    <span className="font-mono text-[12px] text-muted-foreground tabular-nums">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {standupToday}
                     </span>
                   </li>
@@ -397,7 +422,7 @@ export function HomeScreen() {
                   >
                     <CalendarClock className="size-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1 truncate">{flow.name}</span>
-                    <span className="font-mono text-[12px] text-muted-foreground tabular-nums">
+                    <span className="text-xs text-muted-foreground tabular-nums">
                       {flow.next ? clock(flow.next) : ""}
                     </span>
                   </li>
@@ -411,16 +436,19 @@ export function HomeScreen() {
                           `/chat?say=${encodeURIComponent(t("flowStarter"))}`,
                         )
                       }
-                      className="flex items-center gap-2 text-left text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                      className="flex items-start gap-2 text-left text-[13px] leading-relaxed text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      <Sparkles className="size-3.5 shrink-0" />
+                      <Sparkles className="mt-0.5 size-3.5 shrink-0" />
                       {t("nothingToday")}
                     </button>
                   </li>
                 )}
               </ul>
-              {colleagues.length > 0 && (
-                <ul className="mt-2 flex flex-col gap-1 border-t border-border/60 pt-3">
+            </Group>
+
+            {colleagues.length > 0 && (
+              <Group title={t("colleagues")}>
+                <ul className="flex flex-col gap-2">
                   {colleagues.slice(0, 8).map((member) => {
                     const code = statusCode(member.card.status);
                     const off =
@@ -440,7 +468,7 @@ export function HomeScreen() {
                         <span className="min-w-0 flex-1 truncate">
                           {member.card.name}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="shrink-0 text-xs text-muted-foreground">
                           {off
                             ? t("off")
                             : statusText(tOffice, member.card.status) ||
@@ -450,9 +478,9 @@ export function HomeScreen() {
                     );
                   })}
                 </ul>
-              )}
-            </Section>
-          </div>
+              </Group>
+            )}
+          </aside>
         </div>
       </div>
     </div>
@@ -470,13 +498,13 @@ function AskBox({
   const t = useTranslations("shell.home");
   const [text, setText] = useState("");
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-3">
       <form
         onSubmit={(event) => {
           event.preventDefault();
           if (text.trim()) onSend(text.trim());
         }}
-        className="flex items-center gap-2 rounded-[14px] bg-background py-2 pr-2 pl-4 shadow-[0_0_0_1px_var(--alpha-15),0_10px_30px_-22px_var(--alpha-30)] focus-within:shadow-[0_0_0_1.5px_var(--brand)]"
+        className="flex items-center gap-2 rounded-2xl bg-background py-2 pr-2 pl-5 shadow-[0_0_0_1px_var(--alpha-12),0_10px_28px_-18px_var(--alpha-20)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_0_0_4px_var(--alpha-05),0_10px_28px_-18px_var(--alpha-20)]"
       >
         <input
           id="home-ask"
@@ -484,20 +512,27 @@ function AskBox({
           onChange={(event) => setText(event.target.value)}
           placeholder={t("askPlaceholder")}
           aria-label={t("askPlaceholder")}
-          className="h-9 min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
+          className="h-11 min-w-0 flex-1 bg-transparent text-[15.5px] outline-none placeholder:text-muted-foreground"
         />
-        <Button type="submit" variant="brand" disabled={!text.trim()}>
-          <Send />
-          {t("askSend")}
+        <Button
+          type="submit"
+          variant="brand"
+          size="icon"
+          aria-label={t("askSend")}
+          title={t("askSend")}
+          disabled={!text.trim()}
+          className="size-10 rounded-[10px] disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
+        >
+          <ArrowUp className="size-4.5" />
         </Button>
       </form>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion) => (
           <button
             key={suggestion}
             type="button"
             onClick={() => onSend(suggestion)}
-            className="rounded-lg px-2.5 py-1 text-[12.5px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--alpha-10)] transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-8 items-center rounded-[10px] bg-muted/60 px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {suggestion}
           </button>
@@ -512,7 +547,6 @@ function Section({
   title,
   count,
   tone,
-  hint,
   action,
   children,
 }: {
@@ -520,36 +554,30 @@ function Section({
   title: string;
   count?: number;
   tone?: "ember";
-  hint?: string;
   action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
-      <div className="flex items-end justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h2
-            id={id}
-            className="flex items-center gap-2 text-[15px] font-semibold"
-          >
-            {title}
-            {count !== undefined && count > 0 && (
-              <span
-                className={cn(
-                  "rounded-md px-1.5 font-mono text-[11.5px] font-medium tabular-nums",
-                  tone === "ember"
-                    ? "bg-waiting/10 text-waiting"
-                    : "bg-muted text-muted-foreground",
-                )}
-              >
-                {count}
-              </span>
-            )}
-          </h2>
-          {hint && (
-            <p className="text-[12.5px] text-muted-foreground">{hint}</p>
+      <div className="flex items-center justify-between gap-3">
+        <h2
+          id={id}
+          className="flex items-center gap-2 text-[15px] font-semibold"
+        >
+          {title}
+          {count !== undefined && count > 0 && (
+            <span
+              className={cn(
+                "rounded-md px-1.5 text-[12px] font-medium tabular-nums",
+                tone === "ember"
+                  ? "bg-waiting/10 text-waiting"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
+              {count}
+            </span>
           )}
-        </div>
+        </h2>
         {action}
       </div>
       {children}
@@ -557,11 +585,24 @@ function Section({
   );
 }
 
+/** One part of the day's panel, under a small heading. */
+function Group({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      <h3 className="text-[12.5px] font-medium text-muted-foreground">
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+/** Nothing here yet, said in one line: an empty part is a sentence, never an empty box. */
 function Quiet({ icon, children }: { icon?: ReactNode; children: ReactNode }) {
   return (
-    <p className="flex items-center gap-2 rounded-[14px] px-4 py-3.5 text-[13.5px] text-muted-foreground shadow-[inset_0_0_0_1px_var(--alpha-08)]">
+    <p className="flex items-start gap-2.5 text-[14px] leading-relaxed text-muted-foreground [&_svg]:mt-0.5 [&_svg]:shrink-0">
       {icon}
-      {children}
+      <span>{children}</span>
     </p>
   );
 }
@@ -605,7 +646,7 @@ function RequestRow({
           </span>
         </span>
         <PhaseChip phase={phaseOf(task.status.state, yours)} />
-        <span className="shrink-0 font-mono text-[11.5px] text-muted-foreground tabular-nums">
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
           {when}
         </span>
       </Link>

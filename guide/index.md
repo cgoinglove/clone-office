@@ -42,9 +42,10 @@ Two things hold everywhere:
   about it. One box at the top asks their clone anything (name a colleague, and it asks theirs),
   with a few things to try under it; **Getting started** (시작하기) while the app is new; **Decide
   now** (정할 것), answered right there; **Requests on their way** (오가는 부탁), those waiting on
-  them first; **What your clone did today** (오늘 클론이 한 일: whom it answered for them,
-  meetings it brought back, flows it ran); and **Today** (오늘: the clones' standup, today's flows,
-  their colleagues).
+  them first; and beside them, **Today** (오늘), the day in one panel: **What your clone did**
+  (클론이 한 일: whom it answered for them, meetings it brought back, flows it ran), **Still to
+  come** (남은 일정: the clones' standup, today's flows) and their **Colleagues** (동료). A part with
+  nothing in it says so in one line.
 - **Chat** (대화): the conversation with their clone, and the box, **Ask your clone anything**
   (클론에게 무엇이든 부탁해 보세요). A new chat starts with the clone's hello and things to try.
   While the clone is answering, what they write still goes: it shows **Waits for its next step**
@@ -87,7 +88,8 @@ done: **Hand your clone a task** (클론에게 일 하나 맡기기), **Tell you
 나를 알려 주기, which starts the sentence "About me…" in the box; nothing else is needed, no AI
 records), **Bring in a colleague** (동료 부르기), **Choose what colleagues can ask** (동료가 부탁할
 수 있는 일 정하기) and **Get what needs you on your phone** (나를 기다리는 일을 휴대폰으로 받기).
-**Hide getting started** (시작하기 숨기기) folds it away.
+The one to do next says why; the others wait one line each, and those done fold into one line
+beneath. **Hide getting started** (시작하기 숨기기) folds it away.
 
 ## The first time
 

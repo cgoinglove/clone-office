@@ -1452,7 +1452,6 @@
         "week": "Rascunhe o relatório da semana"
       },
       "decide": "Decida agora",
-      "decideHint": "Seu clone só traz para você o que cabe a você decidir.",
       "caughtUp": "Nada esperando por você. Seu clone cuida do resto.",
       "moving": "Pedidos a caminho",
       "allRequests": "Todos os pedidos",
@@ -1465,7 +1464,6 @@
       "setUpOffice": "Configurar um escritório",
       "linkStarter": "Crie um link para perguntar a alguém: ",
       "did": "O que seu clone fez hoje",
-      "didHint": "Tudo o que ele respondeu por você, guardado aqui para você conferir.",
       "answered": "Respondeu a {name}",
       "meetingBack": "{kind}: o que voltou para você",
       "flowRan": "Rodou “{name}”",
@@ -1481,7 +1479,11 @@
         "text": "Seu clone já respondeu a um colega por você. Se o Clone Office ajuda, uma estrela no GitHub ajuda outras pessoas a encontrá-lo.",
         "action": "Estrela no GitHub",
         "close": "Agora não"
-      }
+      },
+      "summaryQuiet": "Tudo calmo por enquanto. Seu clone está de olho.",
+      "didShort": "O que seu clone fez",
+      "coming": "O que vem",
+      "colleagues": "Colegas"
     },
     "trouble": {
       "open": "Configurar escritório"

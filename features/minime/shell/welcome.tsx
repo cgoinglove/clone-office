@@ -174,27 +174,29 @@ export function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
   const count = steps.filter((step) => done[step.id]).length;
   if (hidden || !facts || count === steps.length) return null;
   const next = steps.find((step) => !done[step.id])?.id;
+  const finished = steps.filter((step) => done[step.id]);
 
+  // What is left, each with why and one way to do it; what is done, folded into one line under it.
   return (
     <section
       aria-labelledby="w-steps"
-      className="flex flex-col gap-1 rounded-[14px] bg-background p-2 shadow-[0_0_0_1px_var(--alpha-10),0_12px_32px_-20px_var(--alpha-20)]"
+      className="flex flex-col gap-1 rounded-[14px] bg-muted/45 p-2"
     >
-      <div className="flex items-center gap-3 px-3 pt-2 pb-1">
-        <h2 id="w-steps" className="text-sm font-semibold">
+      <div className="flex items-center gap-3 px-3 pt-2 pb-1.5">
+        <h2 id="w-steps" className="text-[15px] font-semibold">
           {t("title")}
         </h2>
-        <span className="font-mono text-xs text-muted-foreground tabular-nums">
-          {count}/{steps.length}
-        </span>
         <span
           aria-hidden
-          className="relative h-1 w-20 overflow-hidden rounded-full bg-muted"
+          className="relative h-1 w-16 overflow-hidden rounded-full bg-foreground/10"
         >
           <span
             className="absolute inset-y-0 left-0 rounded-full bg-foreground transition-[width] duration-500"
             style={{ width: `${(count / steps.length) * 100}%` }}
           />
+        </span>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {count}/{steps.length}
         </span>
         <button
           type="button"
@@ -206,59 +208,68 @@ export function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
               localStorage.setItem(HIDDEN, "1");
             } catch {}
           }}
-          className="ml-auto grid size-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="ml-auto grid size-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
         >
           <X className="size-4" />
         </button>
       </div>
-      <ol className="flex flex-col">
+      <ol className="flex flex-col gap-1">
         {steps.map((step, at) => {
-          const ok = done[step.id];
+          if (done[step.id]) return null;
           const current = step.id === next;
+          // The step to do now says why and how; the others wait in one line each.
           return (
             <li
               key={step.id}
               className={cn(
-                "flex items-center gap-3 rounded-[10px] px-3 py-2.5",
-                current && "bg-muted/50",
+                "flex items-center gap-3 rounded-[10px] px-3",
+                current
+                  ? "bg-background py-3 shadow-[0_0_0_1px_var(--alpha-08)]"
+                  : "py-1.5",
               )}
             >
               <span
                 aria-hidden
                 className={cn(
                   "grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums",
-                  ok
-                    ? "bg-foreground text-background"
-                    : current
-                      ? "shadow-[inset_0_0_0_1.5px_var(--foreground)]"
-                      : "text-muted-foreground shadow-[inset_0_0_0_1px_var(--alpha-20)]",
+                  current
+                    ? "shadow-[inset_0_0_0_1.5px_var(--foreground)]"
+                    : "text-muted-foreground shadow-[inset_0_0_0_1px_var(--alpha-20)]",
                 )}
               >
-                {ok ? <Check className="size-3.5" strokeWidth={3} /> : at + 1}
+                {at + 1}
               </span>
               <span className="flex min-w-0 flex-1 flex-col">
                 <span
                   className={cn(
                     "text-sm",
-                    ok
-                      ? "text-muted-foreground line-through decoration-1"
-                      : "font-medium",
+                    current ? "font-medium" : "text-foreground/80",
                   )}
                 >
                   {t(`${step.id}.title`)}
                 </span>
-                {!ok && (
-                  <span className="text-xs leading-relaxed text-muted-foreground">
+                {current && (
+                  <span className="text-[13px] leading-relaxed text-muted-foreground">
                     {t(`${step.id}.why`)}
                   </span>
                 )}
               </span>
-              {!ok && <span className="shrink-0">{step.action}</span>}
-              <span className="sr-only">{ok ? t("done") : ""}</span>
+              <span className="shrink-0">{step.action}</span>
             </li>
           );
         })}
       </ol>
+      {finished.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 pt-1.5 pb-2 text-[12.5px] text-muted-foreground">
+          <span className="sr-only">{t("done")}</span>
+          {finished.map((step) => (
+            <span key={step.id} className="flex items-center gap-1.5">
+              <Check className="size-3.5" strokeWidth={2.5} />
+              {t(`${step.id}.title`)}
+            </span>
+          ))}
+        </p>
+      )}
     </section>
   );
 }
@@ -274,7 +285,7 @@ function StepButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
+      className="flex h-8.5 items-center gap-1.5 rounded-[10px] bg-background px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
     >
       {children}
       <ArrowRight className="size-3.5" />
@@ -292,7 +303,7 @@ function StepLink({
   return (
     <Link
       href={href}
-      className="flex h-8 items-center gap-1.5 rounded-lg px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
+      className="flex h-8.5 items-center gap-1.5 rounded-[10px] bg-background px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
     >
       {children}
       <ArrowRight className="size-3.5" />

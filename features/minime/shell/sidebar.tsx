@@ -28,7 +28,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogoMark } from "@/features/brand/logo";
 import { Bot } from "@/features/office";
 import { cn } from "@/lib/utils";
 import { STATUSES, statusCode } from "../office/room-data";
@@ -84,7 +83,7 @@ export function Sidebar() {
           href="/home"
           className="flex min-w-0 flex-1 items-center gap-2 py-1"
         >
-          <LogoMark className="size-[22px] shrink-0" />
+          {/* The name alone: the clone's own mark is already at the bottom, as the person's. */}
           <span className="truncate text-[15px] font-semibold tracking-tight">
             Clone Office
           </span>

@@ -1452,7 +1452,6 @@
         "week": "이번 주 주간 보고 초안 써 줘"
       },
       "decide": "지금 정할 것",
-      "decideHint": "클론은 내가 정해야 할 것만 가져와요.",
       "caughtUp": "지금 정할 건 없어요. 나머지는 클론이 하고 있어요.",
       "moving": "오가는 부탁",
       "allRequests": "부탁 모두 보기",
@@ -1465,7 +1464,6 @@
       "setUpOffice": "오피스 준비하기",
       "linkStarter": "링크를 만들어서 물어봐 줘: ",
       "did": "오늘 클론이 한 일",
-      "didHint": "클론이 나 대신 답한 건 모두 여기에 남아요. 언제든 확인할 수 있어요.",
       "answered": "{name} 님에게 답함",
       "meetingBack": "{kind}: 나에게 온 내용",
       "flowRan": "“{name}” 실행함",
@@ -1481,7 +1479,11 @@
         "text": "클론이 나 대신 동료에게 답했어요. Clone Office가 도움이 된다면 GitHub 별 하나가 다른 사람들이 찾는 데 도움이 돼요.",
         "action": "GitHub에 별 주기",
         "close": "나중에"
-      }
+      },
+      "summaryQuiet": "아직 조용해요. 클론이 지켜보고 있어요.",
+      "didShort": "클론이 한 일",
+      "coming": "남은 일정",
+      "colleagues": "동료"
     },
     "trouble": {
       "open": "오피스 설정"
