@@ -8,7 +8,7 @@ colleagues for them: it answers what it can, and brings back only what its perso
 In the first steps (**You and your team**, 나와 우리 팀), or any time under Settings › **Office**
 (오피스). There are two ways in:
 
-- **Open one on this computer** (이 컴퓨터에서 열기): this computer becomes the team's office. The
+- **Open one on this computer** (이 컴퓨터에서 오피스 열기): this computer becomes the team's office. The
   app starts the relay itself (the same one as `pnpm relay`, keeping the office in `relay/` in
   the clone's folder) and puts their card in it. Teammates on the same network (the same Wi-Fi,
   or the same office network) join with the invite link they send. Settings › Office then says
@@ -20,10 +20,10 @@ In the first steps (**You and your team**, 나와 우리 팀), or any time under
   and teammates need a new link. Teammates who are not on the same network need a relay the team
   runs on a server (the README says how).
 - **Join with an invite link** (초대 링크로 들어가기): paste the link a teammate sent. **Join with
-  an address and key instead** (주소와 열쇠로 들어가기) is for a relay someone runs by hand: its
-  address and the **Office key** (오피스 열쇠) they shared.
+  an address and key instead** (주소와 오피스 키로 들어가기) is for a relay someone runs by hand: its
+  address and the **Office key** (오피스 키) they shared.
 
-Either way they give their name and what they do in a line. **Draft it for me** (초안 써 줘) has
+Either way they give their name and what they do in a line. **Draft it for me** (초안 만들기) has
 the clone write that line from what it knows of them; they correct it before going in, and
 nothing is shared until then. Colleagues who join appear at their desks in the office, in **Ask a colleague**
 (동료에게 부탁) on the Chat and Requests screens, and under **People** (사람들) in Settings › Office.
@@ -107,7 +107,7 @@ computer never leave it.
   sending something on their behalf is theirs to allow; with **Don't ask again for this** it sends
   such requests alone from then on. The answer is put into that conversation when it comes.
 - Each request shows under **Requests** (부탁) with how far it has come: **Sent** (보냄),
-  **Working** (처리 중), **Needs more** (더 필요해요, with a box to answer), **Done** (끝남),
+  **Working** (처리 중), **Needs an answer** (추가 정보 필요, with a box to answer), **Done** (완료),
   **Declined** (거절), **Failed** (실패).
 
 When a colleague asks for work in a project one of their Claude Code conversations knows, and
@@ -119,7 +119,7 @@ or the command), and then tells the colleague what was done.
 
 Under **Your clone** (내 클론) › **Requests it takes** (받는 부탁), **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
 clones read: how they like to be asked, when to expect an answer, what to bring them early.
-**Draft it for me** (초안 써 줘) has the clone write a few from what it knows of them, leaving out
+**Draft it for me** (초안 만들기) has the clone write a few from what it knows of them, leaving out
 anything private; a line goes on the card only when they press **Add** (더하기), and **Remove**
 (지우기) takes one off. They can also type their own. The same lines, with their card and the
 requests they take, are kept as ME.md in the clone's folder, a file they can hand to anyone.
@@ -140,7 +140,7 @@ says, **Tell me** unless they changed it):
 
 When they send the clone's answers of an **Ask me first** kind as they were three times in a
 row, it asks whether to answer that kind itself and tell them from then on (**Make it a rule?**,
-앞으로 이렇게 할까요?); only their **Yes, from now on** (네, 앞으로 그렇게) changes it, and they can
+앞으로도 이렇게 할까요?); only their **Yes, from now on** (네, 앞으로 그렇게 해 주세요) changes it, and they can
 set it back on the menu at any time.
 
 **Like you** (나 같다) on the same list is how often, in the last 30 days, they sent the answers
@@ -149,8 +149,8 @@ the 17 answers I showed you first as they were"), and under each kind, how often
 It is the plainest sign of how well the clone answers like them; a kind that is nearly always
 sent as it was is one they might let it answer alone.
 
-**Draft it for me** (초안 써 줘) has the clone suggest kinds from what it knows of them, and
-**Add one** (직접 더하기) adds one by hand; every change is kept and shown on their card at once.
+**Draft it for me** (초안 만들기) has the clone suggest kinds from what it knows of them, and
+**Add one** (직접 추가하기) adds one by hand; every change is kept and shown on their card at once.
 Colleagues see the kinds they take, never how much is done alone. A request that fits none of
 them is answered, and they are told. Whatever the setting, a promise, a decision they answer
 for, anything about a relationship or a check of work in their field stays theirs: the clone
@@ -189,8 +189,8 @@ It uses the office their clone joined in the app; the app does not need to be op
 
 Their clone answers from what it knows of them. What only they can give — a promise (a date,
 money, scope), a decision they answer for, anything about a relationship, a check of work in their
-field — it asks them first, with a card under **Office** ("A request needs your answer", 받은
-부탁에 답이 필요해요), and answers with what they said. Meanwhile the colleague sees **Working**.
+field — it asks them first, with a card under **Office** ("A request needs your answer", 부탁에
+내 답이 필요해요), and answers with what they said. Meanwhile the colleague sees **Working**.
 When the AI is briefly unavailable it tries again a few minutes later before giving up.
 
 When they are not at their screen, such a card waits two minutes and is then kept under
@@ -215,11 +215,11 @@ themselves, and it stays open as theirs to answer (below).
 On a request a colleague sent, under the conversation of the two clones (**Requests**, 부탁, then
 the request), they can step in at any time while it is open:
 
-- **Tell my clone** (클론에게 한마디): a word to their own clone about this request ("tell her
+- **Tell my clone** (클론에게 전하기): a word to their own clone about this request ("tell her
   Thursday also works", "don't promise a date"). It is their own word, so the clone follows it.
   While the clone is working on the request, it reads it before its answer leaves; while it is
   waiting, it goes on with the request at once; when it was waiting on a question to them, this
-  answers it. Until it is read, the line shows **Waits for its next step** (다음 걸음 전에 읽어요)
+  answers it. Until it is read, the line shows **Waits for its next step** (다음 단계 전에 읽어요)
   with **Take it back** (되돌리기); once read, **Read** (읽음).
 - **Answer myself and close** (직접 답하고 끝내기): what they write goes to the colleague as their
   own words, marked as written by them, not their clone, and that ends the request.
@@ -227,7 +227,7 @@ the request), they can step in at any time while it is open:
   the colleague writes next comes to them (under **Your turn**, 내 차례, and on their phone at the
   day's moments), and they answer it in the same box: **Send and close** (보내고 끝내기) or
   **Send, keep it open** (보내고 열어 두기), each as their own words.
-- **Hand it back to my clone** (클론에게 돌려주기): the clone takes the request up again from
+- **Hand it back to my clone** (클론에게 다시 맡기기): the clone takes the request up again from
   everything said so far, their own words included.
 
 Whatever the colleague writes while their clone is still making its answer is read before that
@@ -276,7 +276,7 @@ stamped on the floor. Only requests they are part of are shown: what colleagues 
 stays between them. When something waits for them, their clone asks over its head with
 **Answer** (답하기), which brings them to the question, and **YOUR TURN** (내 차례) is written on
 the floor. **Your turn** (내 차례) also lies over the office's top right, **Answer right here**
-(여기서 바로 답해요): a permission or a question with a few choices is answered with its buttons
+(여기서 바로 답할 수 있어요): a permission or a question with a few choices is answered with its buttons
 there, and **Open** (열기) takes them to the request.
 
 Behind the wall stands the office board: everyone, those a decision waits on first, with what

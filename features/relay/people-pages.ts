@@ -88,7 +88,7 @@ const WORDS = {
     },
   },
   ko: {
-    inviteTitle: "{from}님이 오피스에 초대했어요",
+    inviteTitle: "{from} 님이 오피스에 초대했어요",
     inviteTitleNobody: "오피스에 초대받았어요",
     what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)이 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
     accountInstead: "또는 이 오피스 서버에 계정 만들기",

@@ -43,7 +43,7 @@ rebuilt from the AI tools' own records, which it only ever reads.
 
 Each time the clone thinks with their AI, it writes one line to a run log: what for (learning,
 a conversation, looking back, summing up), how long it took, and how much it used, as their AI
-reports it. It holds no conversation text. It is listed under **All files I keep** (저장된 파일
+reports it. It holds no conversation text. It is listed under **All files I keep** (클론이 저장한 파일
 전체) as the run log.
 
 ## Where their data goes

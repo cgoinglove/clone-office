@@ -51,7 +51,7 @@ test("the invite page names who invites, escaped, and guides the setup with one 
     os: "windows",
     command,
   });
-  assert.ok(page.includes("&lt;b&gt;Ben&lt;/b&gt;님이 오피스에 초대했어요"));
+  assert.ok(page.includes("&lt;b&gt;Ben&lt;/b&gt; 님이 오피스에 초대했어요"));
   assert.ok(!page.includes("<b>Ben</b>"));
   assert.ok(page.includes("명령 프롬프트 열기"));
   assert.ok(page.includes("https://nodejs.org/en/download"));

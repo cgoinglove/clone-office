@@ -86,7 +86,7 @@ window open while you use it; `npx -y clone-office` starts it again later.
 
 Same memory, same permission cards, whichever you pick; you can change it any time in Settings.
 
-![Settings, Brain: each AI vendor with its ways in, and the models of your plan](docs/images/settings.png)
+![Settings, AI model: each AI vendor with its ways in, and the models of your plan](docs/images/settings.png)
 
 ## Your team
 

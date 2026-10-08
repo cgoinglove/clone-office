@@ -17,7 +17,7 @@ The clone keeps four small things, all as plain text files on this computer:
 
 Beside these is **About you** (나에 대해, on the clone's screen): their name, what they do, what
 they look after and the tools they work in. It is not memory: they set it themselves, on the first
-steps or there (**Draft it for me**, 초안 써 줘, fills it in from their records), and change it
+steps or there (**Draft it for me**, 초안 만들기, fills it in from their records), and change it
 whenever it stops being true. Every conversation starts with it, so the clone knows whose work it
 does; their name, what they do and what they look after also go on their card in the office.
 
@@ -41,24 +41,24 @@ the clone still keeps what it learns, and asks them, in theirs.
 - **From another AI**: **Bring it from another AI** (다른 AI에서 가져오기) shows the text Claude's own
   memory import uses (**Copy**, 복사), to paste into a chat with the AI they use most — ChatGPT,
   Claude, Gemini or another. It asks that AI for everything it remembers; the clone sorts it. They
-  paste that AI's answer back and press **Add to memory** (기억에 추가). The clone keeps only what
+  paste that AI's answer back and press **Add to memory** (기억에 더하기). The clone keeps only what
   will still be true in months (at most five lines each time) and never stores the pasted text. It
   can be done during the first steps, or any time later under **Your clone** (내 클론) › What it knows.
 - **While working**: when they correct it ("shorter", "always ask before sending"), it keeps the
   correction in the skill for that kind of task, or in the lines about them when it applies to
   everything.
 - **After a piece of work**: it looks back over the conversation once and keeps what is worth
-  keeping. Each thing it keeps shows as a **Kept:** (기억함:) line in the conversation. Settings ›
-  Brain can turn this off (**Learn after each conversation**, 대화가 끝나면 배우기).
+  keeping. Each thing it keeps shows as a **Kept:** (기억했어요:) line in the conversation. Settings ›
+  AI model can turn this off (**Learn after each conversation**, 대화가 끝날 때마다 배우기).
 - **After a colleague's request they answered in**: their own words about it ("not Friday
   mornings, I keep them for focused work") are looked back on the same way; only what stays true
   is kept (never the date), shown as a **Kept:** line in their latest conversation.
 - **When a conversation gets long**: it first keeps what is worth keeping, then sums up what came
   before (the goal, what was settled and every correction, what was done, what is open, and what it
   relies on, by name) and goes on from that summary, with their own messages added word for word,
-  as Claude Code compacts a long conversation. "Long" follows what its brain can hold: earlier for
-  a model on their computer than for a cloud one. The line "I summed up what came before" (앞의
-  대화를 정리해 두었어요) shows when it happens. If no summary can be written, it goes on from the
+  as Claude Code compacts a long conversation. "Long" follows what its model can hold: earlier for
+  a model on their computer than for a cloud one. The line "I summed up what came before" (앞
+  내용을 요약해 두었어요) shows when it happens. If no summary can be written, it goes on from the
   end of the conversation's own record instead. The whole conversation stays in its record and can
   still be searched. In one long piece of work, older results of what it looked up are cut short
   once its brain's room runs low, and it looks them up again when it needs them; a long file is read

@@ -7,7 +7,7 @@ they disconnect and set up the other.
 
 ## Setting it up, once
 
-Under Settings › **Notifications & phone** (알림과 휴대폰) they pick Discord, Telegram or Slack.
+Under Settings › **Notifications & phone** (알림·휴대폰) they pick Discord, Telegram or Slack.
 
 With Telegram (no server needed):
 
@@ -39,9 +39,9 @@ With Discord:
    server's member list, then Message.
 
 The bot answers with a code and the page asks about them with the same code. They press **Let
-in** (들여보내기) only if the code is the one their phone shows; then the clone answers what they
+in** (허락하기) only if the code is the one their phone shows; then the clone answers what they
 wrote. Anyone else who writes to the bot is not answered: it talks with its person only. **Not
-them** (내가 아니에요) turns away someone who is not them.
+them** (거절하기) turns away someone who is not them.
 
 ## Talking
 

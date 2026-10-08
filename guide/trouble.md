@@ -1,15 +1,15 @@
 # When something goes wrong
 
 - **"Claude Code is not on this computer"**: the clone was set to think with their own Claude
-  Code. Install it (claude.com/code), or pick another brain under Settings › **Brain** (두뇌):
+  Code. Install it (claude.com/code), or pick another model under Settings › **AI model** (AI 모델):
   their ChatGPT plan, a key, or a model on their computer (`brain.md`).
 - **"Claude Code is not signed in"**: open a terminal, run `claude` and sign in once, then try
   again. Nothing in Clone Office signs in for them.
 - **"The brain did not answer"**: what the service said is shown under it, as it said it (a model
-  their plan does not include, a limit reached). Try again, or pick another model under **Brain**.
+  their plan does not include, a limit reached). Try again, or pick another model under **AI model**.
 - **"The service did not accept that key"** or **"needs a key"**: the key was mistyped, removed or
-  ran out of credit at the service. Make a new one there and paste it under **Brain** (두뇌).
-- **"Can't reach the office"** (오피스에 닿지 않아요), at the top of Home, Requests and Office: the
+  ran out of credit at the service. Make a new one there and paste it under **AI model** (AI 모델).
+- **"Can't reach the office"** (오피스에 연결하지 못했어요), at the top of Home, Requests and Office: the
   computer that opened the office is off, its app is closed, or they are on another network (an
   office opened on a computer is reached on the same Wi-Fi). Once it answers again, everything
   reconnects by itself; what came meanwhile waits there. **Office settings** (오피스 설정) shows the

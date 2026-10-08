@@ -18,11 +18,11 @@ const WORDS = {
       "Sent by {asker}'s clone, with Clone Office. Your answer goes only to {asker}.",
   },
   ko: {
-    title: "{asker}님이 물어요",
+    title: "{asker} 님의 질문",
     answer: "답",
     send: "보내기",
-    sent: "보냈어요. {asker}님에게 이렇게 전해졌어요:",
-    closed: "이 링크는 끝났어요.",
+    sent: "보냈어요. {asker} 님에게 이렇게 전했어요:",
+    closed: "이미 끝난 링크예요.",
     missing: "없는 링크예요.",
     footer:
       "{asker} 님의 클론이 Clone Office로 보낸 질문이에요. 답은 {asker} 님에게만 가요.",
@@ -144,7 +144,7 @@ const INVITE_WORDS = {
     keep: "Anyone with this link can join this office; keep it within your team.",
   },
   ko: {
-    title: "{from}님이 오피스에 초대했어요",
+    title: "{from} 님이 오피스에 초대했어요",
     titleNobody: "오피스에 초대받았어요",
     what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)이 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
     keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",

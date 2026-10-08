@@ -54,9 +54,9 @@ const WORDS = {
   ko: {
     title: "내 클론 만들기",
     time: "5분쯤 걸려요. 코딩은 필요 없고 한 줄만 붙여 넣으면 돼요.",
-    why: "클론은 내 컴퓨터에서 돌아요. 거기 있는 것으로 내가 일하는 방식을 배우고, 내 파일과 도구로 일하고, 배운 것은 그 컴퓨터에 둬요. 오피스로는 부탁과 내 명함만 오가요.",
+    why: "클론은 내 컴퓨터에서 돌아가요. 그 컴퓨터에 있는 기록으로 내가 일하는 방식을 배우고, 내 파일과 도구로 일하고, 배운 것도 그 컴퓨터에만 둬요. 오피스로는 부탁과 내 명함만 오가요.",
     node: "Node.js 설치",
-    nodeMac: "macOS 설치 파일을 받아 열고, 끝날 때까지 계속을 누르세요.",
+    nodeMac: "macOS 설치 파일을 받아 열고, 끝날 때까지 ‘계속’을 누르세요.",
     nodeWindows: "Windows 설치 파일을 받아 열고, 끝날 때까지 Next를 누르세요.",
     nodeLinux: "nodejs.org나 패키지 관리자로 Node.js 22.13 이상을 설치하세요.",
     nodeSkip: "Node.js 22.13 이상이 이미 있다면 넘어가세요.",
@@ -67,7 +67,7 @@ const WORDS = {
     terminalWindowsHow:
       "Windows 키를 누르고 cmd를 입력한 뒤 Enter. Node.js를 설치할 때 열려 있었다면 닫고 다시 여세요.",
     terminalLinux: "터미널 열기",
-    terminalLinuxHow: "대부분 Ctrl+Alt+T로 열려요.",
+    terminalLinuxHow: "보통 Ctrl+Alt+T로 열 수 있어요.",
     paste: "이 한 줄을 붙여 넣고 Enter",
     pasteNote: "처음 한 번은 1~2분 걸려요.",
     answer: "몇 가지에 답하기",

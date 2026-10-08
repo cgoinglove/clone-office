@@ -397,7 +397,7 @@ test("while no page is in view, what waits on the person goes to their phone; ne
   );
   assert.match(
     phone().at(-1)?.text ?? "",
-    /^Morning brief, on its own \(.+\)\n\nThree things today\.$/,
+    /^Morning brief ran on its own \(.+\)\n\nThree things today\.$/,
   );
   seen = { state: "watching" };
   await store.appendMessage(flowChat.id, "flow", "Morning brief");
@@ -666,7 +666,7 @@ test("a flow the mini-me would make shows itself on the phone, as its card does 
   );
   assert.deepEqual(
     card?.choices.map((c) => c.label),
-    ["Allow", "Don't ask again for this", "Don't"],
+    ["Allow", "Don't ask again for this", "Don't allow"],
   );
   for (const pending of gate.pendingAsks()) gate.answerAsk(pending.id, "deny");
   // A command is asked every time: no "from now on" on the phone either.
@@ -674,7 +674,7 @@ test("a flow the mini-me would make shows itself on the phone, as its card does 
   await until(() => bot.sent.some((m) => m.text.includes("$ ls")));
   assert.deepEqual(
     bot.sent.find((m) => m.text.includes("$ ls"))?.choices.map((c) => c.label),
-    ["Allow", "Don't"],
+    ["Allow", "Don't allow"],
   );
   for (const pending of gate.pendingAsks()) gate.answerAsk(pending.id, "deny");
   await bridge.disconnect();

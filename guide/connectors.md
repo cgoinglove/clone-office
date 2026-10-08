@@ -36,7 +36,7 @@ through it, a page of Google Cloud's console at a time:
    organization can use it.
 4. In Data Access, add the scopes the page shows (**Copy the scopes**, 범위 복사).
 5. Create a client of the type Desktop app and download its JSON file.
-6. Choose that file on the page (**Choose the JSON file**, JSON 파일 고르기). With **For everyone
+6. Choose that file on the page (**Choose the JSON file**, JSON 파일 선택). With **For everyone
    in the office** (오피스 모두에게) ticked, everyone in their office gets it, and the page shows who
    registered it; someone using Clone Office alone keeps it for themselves.
 

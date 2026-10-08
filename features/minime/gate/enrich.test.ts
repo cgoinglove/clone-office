@@ -91,7 +91,7 @@ test("a flow card shows the flow as it would be kept, or as it is when it is pau
         what: "x",
       })
     )[1],
-    "Not a schedule it can keep: it would be refused.",
+    "Your clone can't keep this schedule.",
   );
   assert.equal(
     (
@@ -124,6 +124,6 @@ test("a flow card shows the flow as it would be kept, or as it is when it is pau
         what: "x".repeat(4001),
       })
     ).at(-1) ?? "",
-    /Too long to be kept/,
+    /Too long to save/,
   );
 });
