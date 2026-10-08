@@ -2,6 +2,7 @@
 // temporary file and is renamed into place, so a crash never leaves half a file, and writers in
 // different processes (a session and its background review) take turns through a lock file.
 
+import { randomBytes } from "node:crypto";
 import {
   mkdir,
   open,
@@ -22,7 +23,8 @@ export async function atomicWrite(
   options: { mode?: number } = {},
 ): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
-  const temp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  // Its own name: two writes of one file in the same moment never share a temp file.
+  const temp = `${path}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
   await writeFile(temp, content, { encoding: "utf8", mode: options.mode });
   await rename(temp, path);
 }

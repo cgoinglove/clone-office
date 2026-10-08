@@ -1350,5 +1350,12 @@
       "again": "重试",
       "home": "回到首页"
     }
+  },
+  "plugin": {
+    "header": "待你处理",
+    "later": "稍后",
+    "stop": "先到这里",
+    "none": "没有等你处理的事。",
+    "status": "{count} 件待你处理 · /office"
   }
 }

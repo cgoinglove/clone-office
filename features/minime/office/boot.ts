@@ -3,14 +3,14 @@
 // colleagues' requests. Before, both waited for a page to ask about the office, so a clone whose
 // person had not opened the app did not answer anyone.
 
+import { ownUrl } from "../server/here.ts";
 import { personLanguage } from "../server/language.ts";
 import { loadOffice } from "./client.ts";
 import { resumeHosting } from "./host.ts";
 import { startOffice } from "./worker.ts";
 
 /** The app's own gate, where the clone's tool server puts its questions. */
-export const ownGate = () =>
-  `http://127.0.0.1:${process.env.PORT || 3000}/api/me/gate`;
+export const ownGate = () => `${ownUrl()}/api/me/gate`;
 
 export async function startOfficeOnBoot(): Promise<void> {
   try {

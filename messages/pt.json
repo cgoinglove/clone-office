@@ -1350,5 +1350,12 @@
       "again": "Tentar de novo",
       "home": "Ir para o Início"
     }
+  },
+  "plugin": {
+    "header": "Sua vez",
+    "later": "Depois",
+    "stop": "Parar aqui",
+    "none": "Nada esperando por você.",
+    "status": "{count, plural, one {# esperando por você} other {# esperando por você}} · /office"
   }
 }

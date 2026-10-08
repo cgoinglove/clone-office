@@ -17,11 +17,6 @@
 import { randomInt } from "node:crypto";
 import { readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { createFormatter, createTranslator } from "next-intl";
-import { isLocale, type Locale } from "../../../i18n/locales.ts";
-import { loadMessages } from "../../../i18n/messages.ts";
-import type english from "../../../messages/en.json";
-import { askDetails, changeOf, describe } from "../ask-text.ts";
 import { dueAt } from "../batch.ts";
 import { type ChatNews, onChatMessage, readChat } from "../chat/store.ts";
 import { runTurn } from "../chat/turn.ts";
@@ -36,6 +31,8 @@ import { minimeHome } from "../server/paths.ts";
 import { quietFor, readPreferences } from "../server/preferences.ts";
 import { watching } from "../server/presence.ts";
 import { isSealed, open, seal } from "../server/secret.ts";
+import { type Words, words } from "../server/words.ts";
+import { ABOUT_CHARS, aboutAsk, clip, wordAsk } from "../turn/turn.ts";
 import {
   type Choice,
   DiscordBot,
@@ -122,7 +119,6 @@ const LOOK_MS = 15_000;
 /** How long it remembers what went to the phone, and which of its messages asked what. */
 const TOLD_MS = 24 * 60 * 60 * 1000;
 /** How much of a colleague's request the phone is shown over the question about it. */
-const ABOUT_CHARS = 300;
 /** The largest file sent to the phone; Discord takes about 10 MB from a bot. */
 const PHONE_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -148,11 +144,6 @@ interface Waiting {
 type Ending =
   | { kind: "flow"; name: string; text: string; failed: boolean; at: string }
   | { kind: "office"; text: string };
-
-const clip = (text: string, max: number) => {
-  const flat = text.replace(/\s+/g, " ").trim();
-  return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
-};
 
 async function readSettings(): Promise<Record<string, unknown>> {
   try {
@@ -212,40 +203,6 @@ async function saveMessenger(
       `${JSON.stringify(next ? { ...others, messenger: await sealed(next) } : others, null, 2)}\n`,
     );
   });
-}
-
-/** The words for the messenger, in the language the person's screen last used, else English. */
-async function words() {
-  const tag = (await readSettings()).language;
-  const base = typeof tag === "string" ? tag.split("-")[0] : undefined;
-  const locale: Locale = isLocale(base) ? base : "en";
-  // Made once per language: a translator keeps what it has parsed.
-  let made = wordsMade.get(locale);
-  if (!made) {
-    made = makeWords(locale);
-    wordsMade.set(locale, made);
-  }
-  return made;
-}
-
-type Words = Awaited<ReturnType<typeof makeWords>>;
-const wordsMade = new Map<Locale, Promise<Words>>();
-
-async function makeWords(locale: Locale) {
-  const messages = (await loadMessages(locale)) as typeof english;
-  return {
-    locale,
-    t: createTranslator({ locale, messages, namespace: "messenger" }),
-    ask: createTranslator({ locale, messages, namespace: "ask" }),
-    chat: createTranslator({ locale, messages, namespace: "chat" }),
-    flows: createTranslator({ locale, messages, namespace: "flows" }),
-    // The person's own clock: the computer's time zone, said, so dates read as theirs.
-    format: createFormatter({
-      locale,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    }),
-    errors: createTranslator({ locale, messages, namespace: "errors" }),
-  };
 }
 
 function alive(pid: number): boolean {
@@ -711,44 +668,12 @@ export class Bridge {
     known?: Words,
   ): Promise<void> {
     const w = known ?? (await words());
-    const { t, ask: tAsk } = w;
-    let text: string;
-    let choices: Choice[] = [];
-    if (ask.kind === "permission") {
-      const change = changeOf(ask.tool, ask.input);
-      // The same lines its card shows on the page (a flow: its name, when, and what).
-      const details = askDetails(w, ask.tool, ask.input, ask)
-        .map((line) => `\n${line}`)
-        .join("");
-      text = `${tAsk("mayI")}\n${describe(tAsk, ask.tool, ask.input)}${details}${change ? `\n\`\`\`\n${change.replace(/```/g, "ˋˋˋ")}\n\`\`\`` : ""}`;
-      choices = [
-        { label: tAsk("allow"), value: `ask:${id}:allow`, style: "primary" },
-        // "From now on" only where code can keep it as a rule: never a command, never files.
-        ...(ask.always
-          ? [
-              {
-                label: ask.reads
-                  ? tAsk("alwaysReads", { service: ask.reads })
-                  : tAsk("always"),
-                value: `ask:${id}:always`,
-              },
-            ]
-          : []),
-        { label: tAsk("deny"), value: `ask:${id}:deny` },
-      ];
-    } else if (ask.kind === "rule") {
-      text = tAsk("rule", { menu: ask.menu });
-      choices = [
-        { label: tAsk("ruleYes"), value: `ask:${id}:yes`, style: "primary" },
-        { label: tAsk("ruleNo"), value: `ask:${id}:no` },
-      ];
-    } else {
-      text = `${ask.question}\n\n${ask.choices?.length ? t("orReply") : t("replyHere")}`;
-      choices = (ask.choices ?? []).map((choice, index) => ({
-        label: choice,
-        value: `ask:${id}:${index}`,
-      }));
-    }
+    const worded = wordAsk(w, id, ask);
+    const choices: Choice[] = worded.choices;
+    const text =
+      ask.kind === "question"
+        ? `${worded.text}\n\n${ask.choices?.length ? w.t("orReply") : w.t("replyHere")}`
+        : worded.text;
     const sent = await this.bot?.send(
       channel,
       about ? `${about}\n\n${text}` : text,
@@ -1041,22 +966,8 @@ export class Bridge {
   }
 
   /** Whose question it is: who asked what, or the conversation on the page it came from. */
-  private async about(
-    chat: string | undefined,
-    w: Awaited<ReturnType<typeof words>>,
-  ): Promise<string> {
-    if (isRequestChat(chat)) {
-      const task = (chat ?? "").slice("office-request-".length);
-      const request = await this.office.about(task).catch(() => undefined);
-      return w.t("fromRequest", {
-        name: request?.from ?? w.t("colleague"),
-        request: clip(request?.text ?? "", ABOUT_CHARS),
-      });
-    }
-    const title = chat
-      ? (await readChat(chat).catch(() => undefined))?.info.title
-      : undefined;
-    return title ? w.t("inChat", { title }) : w.t("fromPage");
+  private about(chat: string | undefined, w: Words): Promise<string> {
+    return aboutAsk(this.office, chat, w);
   }
 
   private endingText(

@@ -15,6 +15,9 @@ export async function register() {
   const { keysPath } = await import("./features/minime/brain/choice");
   // Not waited for: the server answers pages meanwhile.
   void sealKeptFiles([keysPath()]).catch(() => {});
+  // Where it answers, for the person's own Claude Code (the plugin's /office).
+  const { writeHere } = await import("./features/minime/server/here");
+  void writeHere().catch(() => {});
   void startMessenger();
   void startOfficeOnBoot();
   void bringShippedSkills();

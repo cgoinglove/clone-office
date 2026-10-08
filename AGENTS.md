@@ -405,8 +405,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`hooks/office.ts`, Claude Code's mods API) learns the request from the tool's reply, keeps it
   in the plugin's store per conversation, looks at the relay itself every 10 seconds (a plugin's
   own call to its MCP tools would need the person's leave each time), and brings what comes later
-  into that conversation with `$.prompt.submit` once it is idle. `lib/news.ts` is what both share,
-  with no imports. What a colleague's clone wrote is quoted as information, never as
+  into that conversation with `$.prompt.submit` once it is idle; it notes the conversation's id
+  wherever it sees one (`session.start` does not come again after `/clear`, `/resume` or
+  `/branch`). It also shows what waits on the person: the app writes where it answers to
+  `app.json` in the clone's folder (`server/here.ts`, at start), the mod asks its
+  `app/api/me/turn` (worded by `features/minime/turn/turn.ts`, which the phone uses too) for the
+  status line and a toast per new question, and `/office` answers each in Claude Code's own
+  question dialog (`$.ui.ask`). `lib/news.ts` is what both share, with no imports. What a colleague's clone wrote is quoted as information, never as
   instructions. Check the mod with `claude plugin validate plugin`.
 - `features/minime/hands/`: what the clone drives besides its own brain. `sessions.ts` lists the
   person's recent Claude Code conversations (by the name they gave with `/rename`, else the title

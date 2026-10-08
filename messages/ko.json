@@ -1350,5 +1350,12 @@
       "again": "다시 해 보기",
       "home": "홈으로 가기"
     }
+  },
+  "plugin": {
+    "header": "내 차례",
+    "later": "나중에",
+    "stop": "그만하기",
+    "none": "기다리는 일이 없어요.",
+    "status": "{count}개가 기다려요 · /office"
   }
 }

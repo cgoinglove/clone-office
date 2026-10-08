@@ -1350,5 +1350,12 @@
       "again": "Try again",
       "home": "Go to Home"
     }
+  },
+  "plugin": {
+    "header": "Your turn",
+    "later": "Later",
+    "stop": "Stop here",
+    "none": "Nothing waits on you.",
+    "status": "{count, plural, one {# waits on you} other {# wait on you}} · /office"
   }
 }

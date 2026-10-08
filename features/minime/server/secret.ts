@@ -8,6 +8,7 @@
 // too (SECURITY.md). A key file that is there but not a key is never replaced: a new key would
 // leave every secret sealed under the old one unreadable.
 
+import { randomBytes } from "node:crypto";
 import { chmod, link, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { keyFrom, newKeyText, openWith, sealWith } from "../../../lib/seal.ts";
@@ -65,7 +66,8 @@ async function loadOrMake(path: string): Promise<Buffer> {
   }
   // Written whole under another name, then linked into place: the link fails if another process
   // made one first, and nobody ever reads a key file half written.
-  const temp = `${path}.${process.pid}.${Date.now()}.tmp`;
+  // Its own name, so two making it at the same moment never share (or unlink) one temp file.
+  const temp = `${path}.${process.pid}.${randomBytes(6).toString("hex")}.tmp`;
   await writeFile(temp, `${NOTE}${newKeyText()}\n`, { mode: 0o600 });
   try {
     await link(temp, path);

@@ -1350,5 +1350,12 @@
       "again": "Intentar de nuevo",
       "home": "Ir a Inicio"
     }
+  },
+  "plugin": {
+    "header": "Te toca",
+    "later": "Más tarde",
+    "stop": "Parar aquí",
+    "none": "No hay nada pendiente para ti.",
+    "status": "{count, plural, one {# pendiente para ti} other {# pendientes para ti}} · /office"
   }
 }

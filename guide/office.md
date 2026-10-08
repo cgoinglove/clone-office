@@ -185,6 +185,15 @@ It uses the office their clone joined in the app; the app does not need to be op
   Code takes one onto the computer when it needs it (into the same `office/files/` folder the app
   uses).
 
+What waits on them comes to Claude Code too, while the app runs on their computer: their clone's
+questions about colleagues' requests, its permission cards, and questions kept for later. The line
+under the prompt says how many wait ("2 wait on you · /office"), and a new one shows for a moment
+at the top right, saying who asked what. **/office** (typed even while Claude Code is working) puts
+each one in Claude Code's own question dialog with its choices: picking one answers it as the page
+or the phone would, **Later** leaves it for now, their own words go under **Other** where words
+answer it (a permission card takes only its choices), and closing the dialog stops. What was
+answered is a dim line in the conversation, which Claude Code itself does not read.
+
 ## When a colleague asks them
 
 Their clone answers from what it knows of them. What only they can give — a promise (a date,
