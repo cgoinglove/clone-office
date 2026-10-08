@@ -12,6 +12,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 import type { Connector } from "../connectors/catalog.ts";
+import { colleagueRules, colleagueServices } from "../connectors/colleagues.ts";
 import { connectedConnectors } from "../connectors/oauth.ts";
 import { sessionRules } from "../connectors/tools.ts";
 import { ownModeRules } from "../gate/autonomy.ts";
@@ -175,10 +176,15 @@ export interface SessionOptions {
   audience?: "colleagues";
   /**
    * The person's own work (their conversation, a flow): the services they connected are reached
-   * too (connectors/), each tool asked first unless they allowed it. Never for a colleague's
-   * request, so what is in their mail or documents does not go out to colleagues by itself.
+   * too (connectors/), each tool asked first unless they allowed it. A colleague's request reads
+   * only, where the person let it (`colleagueReads`).
    */
   connectors?: boolean;
+  /**
+   * A colleague's request: the services the person let colleagues' requests read in
+   * (connectors/colleagues.ts), with their reading tools only, every other tool refused.
+   */
+  colleagueReads?: boolean;
   onEvent?: (event: SessionEvent) => void;
 }
 
@@ -392,7 +398,14 @@ export async function runSession(
           ]
         : []),
   ];
-  const deny = (gate ?? standing)?.deny ?? [];
+  // A colleague's request reads in the services let for it, and changes nothing there.
+  const colleague =
+    options.colleagueReads && actor === "minime"
+      ? await colleagueServices()
+      : [];
+  const colleagueRule = await colleagueRules(colleague);
+  allowed.push(...colleagueRule.allow);
+  const deny = [...((gate ?? standing)?.deny ?? []), ...colleagueRule.deny];
   const args = [
     "-p",
     "--output-format",
@@ -408,7 +421,7 @@ export async function runSession(
       gate,
       options.connectors && actor === "minime"
         ? await connectedConnectors().catch(() => [])
-        : [],
+        : colleague,
       options.audience,
     ),
     "--strict-mcp-config",

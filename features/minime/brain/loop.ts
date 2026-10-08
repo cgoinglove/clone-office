@@ -22,6 +22,7 @@ import {
   streamText,
   type ToolSet,
 } from "ai";
+import { colleagueRules, colleagueServices } from "../connectors/colleagues.ts";
 import { connectedConnectors } from "../connectors/oauth.ts";
 import { sessionRules } from "../connectors/tools.ts";
 import { ownModeRules } from "../gate/autonomy.ts";
@@ -303,6 +304,13 @@ export async function runLoop(
         : {}),
     };
     const reads = Boolean(gate || standing);
+    // A colleague's request reads in the services let for it, and changes nothing there.
+    const colleague =
+      options.colleagueReads && actor === "minime"
+        ? await colleagueServices()
+        : [];
+    const colleagueRule = await colleagueRules(colleague);
+    guard.allow.push(...colleagueRule.allow);
     servers = await connectServers({
       toolServer: deps.toolServer ?? {
         command: process.execPath,
@@ -316,7 +324,7 @@ export async function runLoop(
       connectors:
         options.connectors && actor === "minime"
           ? await connectedConnectors().catch(() => [])
-          : [],
+          : colleague,
     });
     const tools = {
       ...(await loopTools({
@@ -324,6 +332,7 @@ export async function runLoop(
         guard,
         reads,
         ...(reads ? {} : { only: new Set(ALLOWED_TOOLS) }),
+        hidden: new Set(colleagueRule.deny),
         onResult: (tool, input, raw) => {
           if (WATCHED.has(tool)) reportKept(tool, input, raw, options.onEvent);
         },

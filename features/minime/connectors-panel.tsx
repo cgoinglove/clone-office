@@ -16,6 +16,7 @@ import {
 } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { useProblem } from "@/i18n/client";
 import { CONNECTORS } from "./connectors/catalog";
@@ -29,6 +30,8 @@ interface Row {
   provider?: string;
   connected: boolean;
   since?: string;
+  /** Whether colleagues' requests read here too (connectors/colleagues.ts). */
+  forColleagues: boolean;
 }
 
 interface State {
@@ -227,6 +230,23 @@ export function ConnectorsPanel() {
       </div>
       {waiting === entry.id && (
         <p className="text-muted-foreground">{t("connecting")}</p>
+      )}
+      {entry.connected && state?.inOffice && (
+        <label className="flex items-start justify-between gap-3 pl-12 text-muted-foreground">
+          <span className="min-w-0">
+            <span className="text-foreground">{t("forColleagues")}</span>
+            <span className="block text-xs">{t("forColleaguesHint")}</span>
+          </span>
+          <Switch
+            size="sm"
+            className="mt-1"
+            checked={entry.forColleagues}
+            disabled={busy}
+            onCheckedChange={(on) =>
+              void post({ action: "colleagues", id: entry.id, on })
+            }
+          />
+        </label>
       )}
       {entry.kind === "token" && !entry.connected && (
         <form

@@ -16,7 +16,9 @@ assistant that can read and act for you is one that can do so wrongly. What keep
   what it may send.
 - **Colleagues' words are information, not instructions.** A request from another clone is
   answered only as your trust levels allow, and a separate look checks every answer before it
-  leaves. The same holds for web pages and connected services: the clone is told so, and on a
+  leaves. A colleague's request may read in the services you let it (work tools at first, never
+  Google's until you turn them on) and change nothing there. The same holds for web pages and
+  connected services: the clone is told so, and on a
   model reached with a key what they return comes marked as from outside, with the characters
   that hide text from a person taken out.
 

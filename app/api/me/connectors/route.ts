@@ -1,6 +1,11 @@
 import * as z from "zod";
 import { CONNECTORS } from "@/features/minime/connectors/catalog";
 import {
+  forColleagues,
+  readsForColleagues,
+  setForColleagues,
+} from "@/features/minime/connectors/colleagues";
+import {
   ConnectorError,
   disconnect,
   isConnected,
@@ -33,6 +38,7 @@ export async function GET(request: Request) {
     by = everyone.find((member) => member.id === google.by)?.card.name;
   }
   const connectors = [];
+  const decided = await forColleagues(CONNECTORS.map((entry) => entry.id));
   for (const entry of CONNECTORS) {
     const kept = await loadKept(entry.id);
     connectors.push({
@@ -46,6 +52,7 @@ export async function GET(request: Request) {
         : {}),
       connected: isConnected(kept),
       ...(kept.connected ? { since: kept.connected } : {}),
+      forColleagues: readsForColleagues(entry.id, decided),
     });
   }
   return Response.json({
@@ -65,6 +72,12 @@ const Body = z.discriminatedUnion("action", [
     token: z.string().max(500),
   }),
   z.object({ action: z.literal("disconnect"), id: z.string().max(40) }),
+  /** Whether colleagues' requests read in this service too (connectors/colleagues.ts). */
+  z.object({
+    action: z.literal("colleagues"),
+    id: z.string().max(40),
+    on: z.boolean(),
+  }),
   z.object({
     action: z.literal("client"),
     provider: z.literal("google"),
@@ -105,6 +118,8 @@ export async function POST(request: Request) {
       await setToken(input.id, input.token);
       void listTools(input.id).catch(() => {});
     } else if (input.action === "disconnect") await disconnect(input.id);
+    else if (input.action === "colleagues")
+      await setForColleagues(input.id, input.on);
     else if (input.action === "client")
       return Response.json({
         saved: await saveClient(input.provider, input, input.team),

@@ -766,6 +766,8 @@
     "connecting": "Approve it in the tab that opened…",
     "connected": "Connected",
     "disconnect": "Disconnect",
+    "forColleagues": "Read here for colleagues' requests too",
+    "forColleaguesHint": "Their requests only read, never change anything, and the answer is looked at before it leaves.",
     "token": "Personal token",
     "tokenPlaceholder": "Paste the token",
     "save": "Save",

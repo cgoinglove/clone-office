@@ -454,8 +454,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   `team.ts` takes the Google client from the office (the relay's `office_settings`,
   `connector:google`, set by any member, shown with who set it) or else the person's own
   (`settings.json` `connectors.clients`). A session reaches the connected services only for the
-  person's own work (`runSession` `connectors`: conversations and flows, never a colleague's
-  request): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
+  person's own work (`runSession` `connectors`: conversations and flows; a colleague's request,
+  `colleagueReads`, gets only the services the person let it read in, `colleagues.ts`, settings.json
+  `connectors.forColleagues`, work tools on and Google's off at first, with their reading tools
+  allowed and every other one refused): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
   (`dist/connector-headers.mjs` in the package) for a fresh token, so no token is in the
   arguments, and each tool is asked through the gate (`rules.ts` `ruleFor` makes "from now on" a
   rule for that one tool). `tools.ts` keeps what each server offers (`tools/list`, again once a

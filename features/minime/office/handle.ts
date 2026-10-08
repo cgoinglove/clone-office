@@ -474,6 +474,7 @@ async function answer(options: {
         maxTurns: 16,
         purpose: "request",
         gate,
+        colleagueReads: true,
       });
     let result = await run();
     // The brain no longer has the session (deleted, another brain, or past its window): go on from
@@ -501,6 +502,7 @@ async function answer(options: {
         maxTurns: 8,
         purpose: "request",
         gate,
+        colleagueReads: true,
       });
       if (again.ok) result = again;
       else {
