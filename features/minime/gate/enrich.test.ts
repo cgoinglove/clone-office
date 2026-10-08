@@ -16,7 +16,11 @@ const words = {
     messages: english,
     namespace: "flows",
   }),
-  format: createFormatter({ locale: "en", timeZone: "Asia/Seoul" }),
+  // The computer's own zone, as the app's words use (server/words.ts), wherever the test runs.
+  format: createFormatter({
+    locale: "en",
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }),
 };
 
 test("a card may offer 'from now on' only where code can keep it as a rule", async () => {

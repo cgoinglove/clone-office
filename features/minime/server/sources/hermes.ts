@@ -34,8 +34,14 @@ export function hermesDbPath(): string {
   return join(hermesHome(), "state.db");
 }
 
-/** The text of what Hermes stored: plain text, or the text parts of structured content. */
-export function contentText(content: unknown): string {
+/**
+ * The text of what Hermes stored: plain text, or the text parts of structured content. It is read
+ * as bytes (`CAST(content AS BLOB)`), since Node 22's SQLite ends a text at its first NUL, and the
+ * JSON mark begins with one.
+ */
+export function contentText(stored: unknown): string {
+  const content =
+    stored instanceof Uint8Array ? new TextDecoder().decode(stored) : stored;
   if (typeof content !== "string") return "";
   if (!content.startsWith(JSON_MARK)) return content;
   let value: unknown;
@@ -151,7 +157,7 @@ export function hermesMessages(path: string, id: string): LineMessage[] {
   try {
     const rows = db
       .prepare(
-        `SELECT role, content, timestamp FROM messages
+        `SELECT role, CAST(content AS BLOB) AS content, timestamp FROM messages
           WHERE session_id = ? AND role IN ('user', 'assistant') AND ${kept(db)}
           ORDER BY id`,
       )
