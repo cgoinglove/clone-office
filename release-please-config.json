@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "60404c978488ceb6687cd5103eb3d95ad0c24b2b",
   "include-component-in-tag": false,
   "packages": {
     ".": {
@@ -9,15 +10,46 @@
       "include-v-in-tag": true,
       "bump-minor-pre-major": true,
       "changelog-sections": [
-        { "type": "feat", "section": "Features" },
-        { "type": "fix", "section": "Fixes" },
-        { "type": "perf", "section": "Performance" },
-        { "type": "refactor", "section": "Under the hood" },
-        { "type": "docs", "section": "Docs" },
-        { "type": "chore", "section": "Chores", "hidden": true },
-        { "type": "test", "section": "Tests", "hidden": true },
-        { "type": "ci", "section": "CI", "hidden": true },
-        { "type": "build", "section": "Build", "hidden": true }
+        {
+          "type": "feat",
+          "section": "Features"
+        },
+        {
+          "type": "fix",
+          "section": "Fixes"
+        },
+        {
+          "type": "perf",
+          "section": "Performance"
+        },
+        {
+          "type": "refactor",
+          "section": "Under the hood"
+        },
+        {
+          "type": "docs",
+          "section": "Docs"
+        },
+        {
+          "type": "chore",
+          "section": "Chores",
+          "hidden": true
+        },
+        {
+          "type": "test",
+          "section": "Tests",
+          "hidden": true
+        },
+        {
+          "type": "ci",
+          "section": "CI",
+          "hidden": true
+        },
+        {
+          "type": "build",
+          "section": "Build",
+          "hidden": true
+        }
       ]
     }
   }
