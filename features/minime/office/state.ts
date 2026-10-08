@@ -134,12 +134,43 @@ export async function loadState(): Promise<OfficeState> {
   }
 }
 
+/** How long what was done for a request or a meeting is kept once nothing waits on it. */
+const KEEP_DAYS = 120;
+/** Requests sent from conversations remembered, the latest (they carry no date). */
+const KEEP_SENT = 2000;
+
+/**
+ * The state without what no longer matters, so the file read and written on every change stays
+ * small after years of requests: old requests nothing waits on, old meetings, the oldest sent.
+ */
+export function trimmed(state: OfficeState, now = Date.now()): OfficeState {
+  const before = now - KEEP_DAYS * 24 * 60 * 60 * 1000;
+  const old = (at: string) => Date.parse(at) < before;
+  const waited = new Set(Object.values(state.later).map((entry) => entry.task));
+  for (const [id, entry] of Object.entries(state.handled))
+    if (
+      old(entry.at) &&
+      !entry.lease &&
+      !entry.person &&
+      !entry.notes?.length &&
+      !waited.has(id)
+    )
+      delete state.handled[id];
+  for (const [id, entry] of Object.entries(state.meetings))
+    if (old(entry.at)) delete state.meetings[id];
+  const sent = Object.keys(state.sent);
+  for (const id of sent.slice(0, Math.max(0, sent.length - KEEP_SENT)))
+    delete state.sent[id];
+  return state;
+}
+
 export async function changeState(
   change: (state: OfficeState) => void,
 ): Promise<OfficeState> {
   return withLock(officeDir(), async () => {
     const state = await loadState();
     change(state);
+    trimmed(state);
     await atomicWrite(statePath(), `${JSON.stringify(state, null, 2)}\n`);
     return state;
   });
