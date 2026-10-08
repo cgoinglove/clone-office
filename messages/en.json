@@ -847,7 +847,9 @@
     "tryAsking": "Try asking",
     "starter": {
       "know": "What do you know about how I work?",
+      "brief": "Give me my morning brief",
       "today": "Sum up what I worked on today",
+      "week": "Draft this week's report",
       "flow": "Give me a short briefing every weekday at 9"
     },
     "routineHint": "You often do this around now",
@@ -1283,6 +1285,8 @@
       "try": {
         "yesterday": "What did I do yesterday?",
         "waiting": "What is waiting on me?",
+        "brief": "Give me my morning brief",
+        "week": "Draft this week's report",
         "know": "What do you know about how I work?"
       },
       "decide": "Decide now",

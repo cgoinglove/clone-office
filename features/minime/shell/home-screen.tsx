@@ -220,7 +220,13 @@ export function HomeScreen() {
           suggestions={
             app.learn.tasks.length
               ? app.learn.tasks.slice(0, 3).map((task) => task.label)
-              : [t("try.yesterday"), t("try.waiting"), t("try.know")]
+              : [
+                  t("try.yesterday"),
+                  t("try.waiting"),
+                  // Two of the skills it ships with (skills/productivity).
+                  t("try.brief"),
+                  t("try.week"),
+                ]
           }
           onSend={(text) =>
             router.push(`/chat?send=${encodeURIComponent(text)}`)

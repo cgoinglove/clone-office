@@ -117,8 +117,15 @@ function Empty({
 }) {
   const t = useTranslations("home");
   const routine = routineNow(routines);
-  // What anyone can ask a clone on its first day, until it has read enough to suggest its own.
-  const starters = [t("starter.know"), t("starter.today"), t("starter.flow")];
+  // What anyone can ask a clone on its first day, until it has read enough to suggest its own:
+  // most run one of the skills it ships with (skills/: morning-brief, day-wrap, weekly-report).
+  const starters = [
+    t("starter.know"),
+    t("starter.brief"),
+    t("starter.today"),
+    t("starter.week"),
+    t("starter.flow"),
+  ];
   const offers = tasks.length
     ? tasks.map((task) => ({ label: task.label, why: task.why }))
     : starters.map((label) => ({ label, why: "" }));
