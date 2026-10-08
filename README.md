@@ -48,7 +48,8 @@ Then your clone is waiting in the chat, with a short list of first things to do.
 terminal window is open, and `npx -y clone-office` starts it again later. To have it start with your
 computer instead, so your clone answers colleagues with no window open, turn on **Start with this
 computer** in Settings › General, or run `npx -y clone-office service install` (macOS, Linux and
-Windows; `service uninstall` undoes it).
+Windows; `service uninstall` undoes it). When something does not work, `npx -y clone-office doctor`
+says what and what to do.
 
 ## What it does
 

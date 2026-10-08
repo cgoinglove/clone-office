@@ -22,7 +22,10 @@ test("macOS: a LaunchAgent that starts at sign-in and comes back only after a cr
   assert.match(plist, /<string>\/pkg\/bin\/clone-office\.cjs<\/string>/);
   assert.match(plist, /<string>--service<\/string>/);
   assert.match(plist, /<key>SuccessfulExit<\/key>\s*<false\/>/);
-  assert.match(plist, /<key>PATH<\/key>\s*<string>\/usr\/bin:\/opt\/homebrew\/bin/);
+  assert.match(
+    plist,
+    /<key>PATH<\/key>\s*<string>\/usr\/bin:\/opt\/homebrew\/bin/,
+  );
   assert.deepEqual(plan.load.at(-1), [
     "launchctl",
     "bootstrap",

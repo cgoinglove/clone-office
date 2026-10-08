@@ -1,5 +1,9 @@
 # When something goes wrong
 
+- **Not sure what is wrong**: `npx -y clone-office doctor` in a terminal checks this computer
+  (Node.js, the clone's folder, whether the app runs, the AI model and its sign-in, the office,
+  starting with the computer, a newer version) and says what to do for each thing that is not right.
+  It changes nothing and calls no AI model.
 - **"Claude Code is not on this computer"**: the clone was set to think with their own Claude
   Code. Install it (claude.com/code), or pick another model under Settings › **AI model** (AI 모델):
   their ChatGPT plan, a key, or a model on their computer (`brain.md`).

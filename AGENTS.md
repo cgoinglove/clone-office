@@ -555,6 +555,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   service on Linux, both restarted only after a crash (the launcher exits quietly when it already
   runs), and a hidden script in the Startup folder on Windows; Settings › General's **Start with
   this computer** runs the same command through `app/api/me/service`. In the package,
+  `npx clone-office doctor` (`bin/doctor.mjs`) checks Node, the folder, the running app, the AI
+  model's sign-in (`claude auth status`, no model call), the office's relay with the member's token,
+  the login item and npm's latest, each with what to do. In the package,
   `CLONE_OFFICE_APP_DIR` tells the app where its guide and tool server are (`server/paths.ts`
   `appDir`, `toolServerPath`).
 

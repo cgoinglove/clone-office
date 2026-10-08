@@ -9,6 +9,7 @@
 //                               (the link is the one-time line one's page on the office server gives)
 //   npx clone-office service install | uninstall | status
 //                               start with the computer, no window open (bin/service.mjs)
+//   npx clone-office doctor      what works and what does not here, each with what to do
 // `join` and `connect` each take either link.
 //
 // The app listens on this computer only. Its port is the first free one from 4417, unless
@@ -70,6 +71,22 @@ if (args[0] === "relay") {
   );
   passSignals(relay);
   relay.on("exit", (code) => process.exit(code ?? 0));
+} else if (args[0] === "doctor") {
+  const [{ doctor, printDoctor }, { service }] = await Promise.all([
+    import("./doctor.mjs"),
+    import("./service.mjs"),
+  ]);
+  const lines = await doctor({
+    appHome: appHome(),
+    version: readSettings(join(root, "package.json")).version,
+    service: (action) =>
+      service(action, {
+        script: join(root, "bin", "clone-office.cjs"),
+        appHome: appHome(),
+        env: serviceEnv(),
+      }),
+  });
+  process.exit(printDoctor(lines) ? 0 : 1);
 } else if (args[0] === "service") {
   if (args[1] === "install" && !existsSync(join(root, "app", "server.js"))) {
     if (args.includes("--json")) {
@@ -107,7 +124,8 @@ if (args[0] === "relay") {
   clone-office connect <setup link> [--no-start]
                                         join your office with the line from your page there, then start
   clone-office service install [--dry-run] | uninstall | status
-                                        start with this computer, with no window open`);
+                                        start with this computer, with no window open
+  clone-office doctor                   what works and what does not, each with what to do`);
 } else {
   await startApp();
 }
@@ -375,7 +393,9 @@ async function startApp() {
   const deadline = Date.now() + 60_000;
   while (!(await ours(port))) {
     if (Date.now() > deadline || app.exitCode !== null) {
-      console.error("The app did not start.");
+      console.error(
+        "The app did not start. `npx -y clone-office doctor` says what is wrong.",
+      );
       app.kill();
       process.exit(1);
     }
