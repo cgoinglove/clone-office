@@ -26,8 +26,9 @@ decision) is still asked of them first. On the page it shows as **When a colleag
 
 A flow can also be about a topic rather than a kind: "if anything about salaries comes up, ask me
 first", "when someone asks about the launch date, tell me what you said". The clone judges whether
-a request is about it (by what it means, not by its words), and then code holds to what they
-asked for, whatever the kind's own setting: **you see the answer first** (보내기 전에 나에게 먼저)
+a request is about it (by what it means, not by its words), and so does the separate look before
+an answer leaves, since a request may be worded to steer the one answering it. When either finds
+it is, code holds to what they asked for, whatever the kind's own setting: **you see the answer first** (보내기 전에 나에게 먼저)
 shows them the answer before it goes, **you're told what went** (보낸 뒤 나에게 알림) sends it and
 tells them in their conversation. It shows as **When a colleague asks about …** (동료가 …에 대해
 물을 때).
