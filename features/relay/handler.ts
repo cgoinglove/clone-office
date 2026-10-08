@@ -14,6 +14,10 @@
 //   GET|POST /ai/:vendor/...                            a call to that vendor's API with the team key
 //                                                       (team-ai.ts); the member's token rides where its
 //                                                       SDK puts the vendor's key
+//   GET  /skills        -> {skills}                     the skills the office's members share (skills.ts)
+//   POST /skills        {name, category?, files: [{path, data}]} -> {skill}   share one, or its newer version
+//   GET  /skills/:name  -> {skill}                      one, with its files (base64), for a clone to add
+//   DELETE /skills/:name -> {ok}                        take it out: the one who shared it, or an owner
 //   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
@@ -915,6 +919,30 @@ export function relayHandler(
             ...(input.by === "person" ? { by: "person" as const } : {}),
           }),
         });
+      }
+      if (path === "/skills" && request.method === "GET")
+        return send(200, {
+          skills: await relay.sharedSkills(await member(request)),
+        });
+      if (path === "/skills" && request.method === "POST") {
+        const me = await member(request);
+        const input = await body(request);
+        return send(200, {
+          skill: await relay.shareSkill(me, {
+            name: input.name,
+            category: input.category,
+            files: input.files,
+          }),
+        });
+      }
+      const skill = /^\/skills\/([a-z0-9][a-z0-9._-]{0,63})$/.exec(path);
+      if (skill && request.method === "GET")
+        return send(200, {
+          skill: await relay.sharedSkill(await member(request), skill[1]),
+        });
+      if (skill && request.method === "DELETE") {
+        await relay.unshareSkill(await member(request), skill[1]);
+        return send(200, { ok: true });
       }
       if (request.method === "GET" && path === "/tasks") {
         return send(200, { tasks: await relay.tasks(await member(request)) });

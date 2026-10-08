@@ -23,9 +23,21 @@
 // clones present when it opens take part, each says one thing a round (or passes), a round ends
 // once all have spoken or its time is up, and after the last one each clone tells its person what
 // matters to them. Everyone in the office can read it; nobody's person needs to be there.
+//
+// A member can also share one of its clone's skills (how its person does one kind of task) with
+// the office, for colleagues' clones to add (skills.ts): kept whole and small, one per name, until
+// the one who shared it or an owner of the office takes it out.
 
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import type { Database, Sql } from "./db.ts";
+import {
+  checkSkill,
+  isSkillName,
+  type SharedSkill,
+  type SharedSkillContent,
+  SKILLS_PER_OFFICE,
+  type SkillFileData,
+} from "./skills.ts";
 
 export type TaskState =
   | "SUBMITTED"
@@ -255,6 +267,10 @@ const MIGRATIONS: string[][] = [
   ],
   // A2A clients go on by their conversation (contextId).
   ["CREATE INDEX tasks_context ON tasks (context_id)"],
+  // Skills the members share with their office (skills.ts): one per name, its files whole.
+  [
+    "CREATE TABLE shared_skills (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, name TEXT NOT NULL, category TEXT, description TEXT NOT NULL, paths JSONB NOT NULL, files JSONB NOT NULL, size INT NOT NULL, hash TEXT NOT NULL, by_member TEXT NOT NULL, by_name TEXT NOT NULL, created TIMESTAMPTZ NOT NULL, updated TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, name))",
+  ],
 ];
 
 /**
@@ -308,6 +324,41 @@ interface MeetingRow {
 
 const MEETING_COLUMNS =
   "id, office_id, kind, topic, language, opened_by, members, round, rounds, state, created, round_ends, closed";
+
+interface SkillRow {
+  name: string;
+  category: string | null;
+  description: string;
+  paths: { path: string; size: number }[] | string;
+  size: number;
+  hash: string;
+  by_member: string;
+  by_name: string;
+  updated: unknown;
+}
+
+/** A shared skill's columns, its sharer's name as their card has it now (or as it was, once gone). */
+const SKILL_COLUMNS =
+  "s.name, s.category, s.description, s.paths, s.size, s.hash, s.by_member, COALESCE(m.card->>'name', s.by_name) AS by_name, s.updated";
+
+function sharedSkillOf(
+  row: SkillRow,
+  member: Caller,
+  owner: boolean,
+): SharedSkill {
+  return {
+    name: row.name,
+    ...(row.category ? { category: row.category } : {}),
+    description: row.description,
+    files: typeof row.paths === "string" ? JSON.parse(row.paths) : row.paths,
+    size: Number(row.size),
+    hash: row.hash,
+    by: row.by_member,
+    byName: row.by_name,
+    updated: iso(row.updated),
+    removable: owner || row.by_member === member.id,
+  };
+}
 
 export class Relay {
   private db: Database;
@@ -721,6 +772,128 @@ export class Relay {
       [office, id],
     );
     return rows.length > 0;
+  }
+
+  // ---- Skills the members share (skills.ts) ----
+
+  /**
+   * Shares one of a member's skills with their office, or the newer version of one they shared:
+   * a skill by that name another member shares stays theirs.
+   */
+  async shareSkill(
+    member: Caller,
+    input: { name: unknown; category?: unknown; files: unknown },
+    now = new Date(),
+  ): Promise<SharedSkill> {
+    const skill = checkSkill({
+      name: input.name,
+      category: input.category,
+      files: input.files,
+    });
+    if ("code" in skill)
+      throw new RelayError(skill.status, skill.message, skill.code);
+    const at = now.toISOString();
+    await this.db.transaction(async (tx) => {
+      // One sharer at a time per office, so two never take the same name or the last place.
+      await tx.query("SELECT 1 FROM offices WHERE id = $1 FOR UPDATE", [
+        member.office,
+      ]);
+      const [held] = await tx.query<{ by_member: string }>(
+        "SELECT by_member FROM shared_skills WHERE office_id = $1 AND name = $2",
+        [member.office, skill.name],
+      );
+      if (held && held.by_member !== member.id)
+        throw new RelayError(
+          409,
+          "A colleague shares a skill by that name already.",
+          "skill-taken",
+        );
+      if (!held) {
+        const [count] = await tx.query<{ n: string | number }>(
+          "SELECT count(*) AS n FROM shared_skills WHERE office_id = $1",
+          [member.office],
+        );
+        if (Number(count?.n ?? 0) >= SKILLS_PER_OFFICE)
+          throw new RelayError(
+            413,
+            "The office keeps no more skills for now.",
+            "skills-full",
+          );
+      }
+      const paths = skill.files.map((file) => ({
+        path: file.path,
+        size: file.bytes.byteLength,
+      }));
+      const files: SkillFileData[] = skill.files.map((file) => ({
+        path: file.path,
+        data: Buffer.from(file.bytes).toString("base64"),
+      }));
+      await tx.query(
+        "INSERT INTO shared_skills (office_id, name, category, description, paths, files, size, hash, by_member, by_name, created, updated) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9, $10, $11, $11) ON CONFLICT (office_id, name) DO UPDATE SET category = $3, description = $4, paths = $5::jsonb, files = $6::jsonb, size = $7, hash = $8, by_name = $10, updated = $11",
+        [
+          member.office,
+          skill.name,
+          skill.category ?? null,
+          skill.description,
+          JSON.stringify(paths),
+          JSON.stringify(files),
+          skill.size,
+          skill.hash,
+          member.id,
+          member.card.name.slice(0, 80),
+          at,
+        ],
+      );
+    });
+    return (await this.sharedSkill(member, skill.name)) as SharedSkill;
+  }
+
+  /** The skills an office's members share, by name, without their files. */
+  async sharedSkills(member: Caller): Promise<SharedSkill[]> {
+    const rows = await this.db.query<SkillRow>(
+      `SELECT ${SKILL_COLUMNS} FROM shared_skills s LEFT JOIN members m ON m.id = s.by_member AND m.office_id = s.office_id WHERE s.office_id = $1 ORDER BY s.name`,
+      [member.office],
+    );
+    const owner = rows.length ? await this.ownsOffice(member) : false;
+    return rows.map((row) => sharedSkillOf(row, member, owner));
+  }
+
+  /** One shared skill with its files, for a member's clone to add. */
+  async sharedSkill(member: Caller, name: string): Promise<SharedSkillContent> {
+    const [row] = isSkillName(name)
+      ? await this.db.query<SkillRow & { files: SkillFileData[] | string }>(
+          `SELECT ${SKILL_COLUMNS}, s.files FROM shared_skills s LEFT JOIN members m ON m.id = s.by_member AND m.office_id = s.office_id WHERE s.office_id = $1 AND s.name = $2`,
+          [member.office, name],
+        )
+      : [];
+    if (!row) throw new RelayError(404, "No such skill.", "not-found");
+    const content =
+      typeof row.files === "string" ? JSON.parse(row.files) : row.files;
+    return {
+      ...sharedSkillOf(row, member, await this.ownsOffice(member)),
+      content,
+    };
+  }
+
+  /** Takes a skill out of the office: the one who shared it, or an owner of the office. */
+  async unshareSkill(member: Caller, name: string): Promise<void> {
+    const [row] = isSkillName(name)
+      ? await this.db.query<{ by_member: string }>(
+          "SELECT by_member FROM shared_skills WHERE office_id = $1 AND name = $2",
+          [member.office, name],
+        )
+      : [];
+    if (!row) throw new RelayError(404, "No such skill.", "not-found");
+    if (row.by_member !== member.id && !(await this.ownsOffice(member)))
+      throw new RelayError(
+        403,
+        "Only the one who shared it, or an owner of the office, takes it out.",
+        "skill-not-yours",
+      );
+    await this.db.query(
+      "DELETE FROM shared_skills WHERE office_id = $1 AND name = $2",
+      [member.office, name],
+    );
   }
 
   /** One more call a member made with a team key today. */
