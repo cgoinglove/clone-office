@@ -40,6 +40,7 @@ import {
   useState,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { ChoiceList } from "@/components/ui/choice-list";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +48,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { APP_NAME, LogoMark } from "@/features/brand/logo";
@@ -72,6 +72,7 @@ import { HEADERS, splitList } from "../home/use-office";
 import { LanguageSwitch } from "../language-switch";
 import { parseInvite } from "../office/invite";
 import { BringFromAnotherAi } from "../settings/clone-section";
+import { AutonomyChoice } from "../settings/preferences-section";
 import { type DemoWords, useDemoRoom } from "./demo";
 
 type Step = "brain" | "learn" | "you" | "ready";
@@ -786,24 +787,16 @@ function Hello() {
       <p className="mt-4 animate-in text-[15.5px] leading-relaxed text-muted-foreground delay-150 duration-700 fill-mode-backwards fade-in slide-in-from-bottom-2">
         {t("body")}
       </p>
-      <ul className="mt-6 flex animate-in flex-col gap-5 delay-300 duration-700 fill-mode-backwards fade-in">
+      <ul className="mt-7 flex animate-in flex-col gap-4.5 delay-300 duration-700 fill-mode-backwards fade-in">
         {points.map(([part, Icon]) => (
           <li key={part} className="flex gap-3.5">
-            <span
-              className={cn(
-                "grid size-9 shrink-0 place-items-center rounded-[10px]",
-                part === "ask"
-                  ? "bg-waiting/8 text-waiting shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--waiting)_22%,transparent)]"
-                  : "bg-muted",
-              )}
-            >
-              <Icon className="size-4.5" />
-            </span>
+            {/* A feature list as Apple's welcome screens draw one: each mark in the one ink, no tile. */}
+            <Icon className="mt-0.5 size-5 shrink-0" strokeWidth={1.75} />
             <span className="min-w-0">
-              <span className="block text-[15.5px] font-semibold">
+              <span className="block text-[15px] leading-6 font-semibold">
                 {t(`points.${part}.title`)}
               </span>
-              <span className="mt-0.5 block text-sm leading-relaxed text-muted-foreground">
+              <span className="block text-sm leading-relaxed text-muted-foreground">
                 {t(`points.${part}.body`)}
               </span>
             </span>
@@ -1034,21 +1027,22 @@ function LearnStep({
 
   return (
     <>
-      <ul className="mt-6 flex flex-col gap-3.5">
+      <ul className="mt-6 flex flex-col gap-3">
         {plan.map(([part, Icon]) => (
           <li key={part} className="flex gap-3">
             <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <span className="w-24 shrink-0 text-sm font-medium">
-              {tRun(`plan.${part}.title`)}
-            </span>
-            <span className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
+            {/* What it is leads its line, the details after it in the line's own grey. */}
+            <p className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
+              <span className="mr-1.5 font-medium text-foreground">
+                {tRun(`plan.${part}.title`)}
+              </span>
               {tRun(`plan.${part}.body`)}
-            </span>
+            </p>
           </li>
         ))}
       </ul>
       <div className="mt-7 flex flex-col gap-2">
-        <span className="flex items-baseline justify-between gap-3">
+        <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
           <span className="text-[13px] font-medium">{t("learn.folders")}</span>
           <span className="text-xs text-muted-foreground">
             {t("learn.foldersHint")}
@@ -1069,9 +1063,10 @@ function LearnStep({
         <button
           type="button"
           onClick={() => setBringing(true)}
-          className="mt-1 self-start text-[12.5px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          className="group -mx-2 mt-1 flex h-8 items-center gap-1 self-start rounded-lg px-2 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
         >
           {t("learn.bring")}
+          <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </button>
       </div>
       {bring}
@@ -1205,7 +1200,7 @@ function Knowledge({
 
   return (
     <div className="mt-6 flex flex-col gap-2">
-      <span className="flex items-baseline justify-between gap-3">
+      <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
         <span className="text-[13px] font-medium">{t("understood")}</span>
         <span className="text-xs text-muted-foreground">
           {t("knows.saved", { count })}
@@ -1381,53 +1376,23 @@ function YouStep({
 
       <div className="mt-6 flex flex-col gap-2">
         <span className="text-[13px] font-medium">{t("team")}</span>
-        <div
-          role="radiogroup"
+        <ChoiceList<Team>
           aria-label={t("team")}
-          className="flex flex-col gap-1"
-        >
-          {options.map(([value, Icon]) => (
-            <button
-              key={value}
-              type="button"
-              role="radio"
-              aria-checked={team === value}
-              disabled={joined && team !== value}
-              onClick={() => setTeam(value)}
-              className={cn(
-                "flex min-h-11 items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-left text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
-                team === value
-                  ? "bg-muted font-medium"
-                  : "ring-1 ring-foreground/10 ring-inset hover:bg-muted/40",
-              )}
-            >
-              <span
-                aria-hidden
-                className={cn(
-                  "size-4 shrink-0 rounded-full",
-                  team === value
-                    ? "border-[5px] border-foreground"
-                    : "border-[1.5px] border-foreground/25",
-                )}
-              />
-              <Icon className="size-4 shrink-0 text-muted-foreground" />
-              {value === "join" && invited ? (
-                <span className="flex min-w-0 items-baseline gap-1.5">
-                  <span className="truncate">
-                    {invited.from
-                      ? t("invitedOffice", { from: invited.from })
-                      : t("invitedOfficeNobody")}
-                  </span>
-                  <span className="shrink-0 text-xs font-normal text-muted-foreground">
-                    {t("invitedTag")}
-                  </span>
-                </span>
-              ) : (
-                t(value === "open" ? "open" : value)
-              )}
-            </button>
-          ))}
-        </div>
+          value={team}
+          onChange={setTeam}
+          options={options.map(([value, Icon]) => ({
+            value,
+            icon: Icon,
+            disabled: joined && team !== value,
+            title:
+              value === "join" && invited
+                ? invited.from
+                  ? t("invitedOffice", { from: invited.from })
+                  : t("invitedOfficeNobody")
+                : t(value),
+            tag: value === "join" && invited ? t("invitedTag") : undefined,
+          }))}
+        />
         {/* One place below for what the choice needs, the same height whatever is picked. */}
         <div className="flex min-h-16 flex-col justify-center gap-1.5">
           {team === "join" && !invited ? (
@@ -1544,20 +1509,15 @@ function ReadyStep({
   }[];
 }) {
   const t = useTranslations("start");
-  const tModes = useTranslations("settings.preferences.modes");
+  const tShell = useTranslations("shell");
   return (
     <>
       <div className="mt-6 flex flex-col gap-3.5 rounded-[14px] p-4.5 shadow-[inset_0_0_0_1px_var(--alpha-12)]">
         <div className="flex items-center gap-3.5">
           <LogoMark className="size-10" />
           <span className="min-w-0">
-            <span
-              className={cn(
-                "block truncate text-base font-semibold tracking-[-0.01em]",
-                !name.trim() && "text-muted-foreground",
-              )}
-            >
-              {name.trim() || t("you.name")}
+            <span className="block truncate text-base font-semibold tracking-[-0.01em]">
+              {name.trim() || tShell("screens.clone")}
             </span>
             {role.trim() && (
               <span className="block truncate text-[13.5px] text-muted-foreground">
@@ -1581,52 +1541,53 @@ function ReadyStep({
       </div>
 
       <div className="mt-6 flex flex-col gap-2">
-        <span className="flex items-baseline justify-between gap-3">
+        <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
           <span className="text-[13px] font-medium">{t("ready.mode")}</span>
           <span className="text-xs text-muted-foreground">
             {t("ready.modeNote")}
           </span>
         </span>
-        <Segmented<Autonomy>
-          aria-label={t("ready.mode")}
-          className="w-full *:flex-1"
-          value={autonomy}
-          onChange={onAutonomy}
-          options={(["ask", "auto"] as const).map((value) => ({
-            value,
-            label: tModes(`${value}.title`),
-          }))}
-        />
-        <p className="min-h-11 px-0.5 text-[13px] leading-relaxed text-muted-foreground">
-          {tModes(`${autonomy}.body`)}
-        </p>
+        <AutonomyChoice value={autonomy} onChange={onAutonomy} />
       </div>
 
-      <ul className="mt-3 flex flex-col">
-        {rows.map((row) => (
-          <li key={row.label} className="flex h-10 items-center gap-3">
-            {row.done ? (
-              <Check className="size-4 shrink-0" strokeWidth={2.25} />
-            ) : (
-              <span className="grid size-4 shrink-0 place-items-center">
-                <span className="size-1.5 rounded-full bg-foreground/25" />
+      {/* Each part as it stands; one not done yet opens its step again, a chevron on its row. */}
+      <ul className="mt-4 flex flex-col gap-0.5">
+        {rows.map((row) => {
+          const line = (
+            <>
+              {row.done ? (
+                <Check className="size-4 shrink-0" strokeWidth={2.25} />
+              ) : (
+                <span className="grid size-4 shrink-0 place-items-center">
+                  <span className="size-1.5 rounded-full bg-foreground/25" />
+                </span>
+              )}
+              <span className="w-28 shrink-0 text-[13.5px] text-muted-foreground">
+                {row.label}
               </span>
-            )}
-            <span className="w-24 shrink-0 text-[13.5px] text-muted-foreground">
-              {row.label}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-sm">{row.value}</span>
-            {row.change && (
-              <button
-                type="button"
-                onClick={row.change}
-                className="shrink-0 text-[13px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
-              >
-                {t("ready.change")}
-              </button>
-            )}
-          </li>
-        ))}
+              <span className="min-w-0 flex-1 truncate text-sm">
+                {row.value}
+              </span>
+            </>
+          );
+          return (
+            <li key={row.label}>
+              {row.change ? (
+                <button
+                  type="button"
+                  onClick={row.change}
+                  aria-label={`${row.label} · ${t("ready.change")}`}
+                  className="group -mx-2 flex h-10 w-[calc(100%+1rem)] items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+                >
+                  {line}
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+                </button>
+              ) : (
+                <div className="flex h-10 items-center gap-3">{line}</div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </>
   );

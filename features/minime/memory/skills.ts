@@ -851,6 +851,25 @@ export class SkillStore {
   }
 
   /** The skills added from the open registry, by name, with where each came from. */
+  /**
+   * The skills the app ships, by name, with the hash each had when it was brought in
+   * (`.bundled.json`): one whose files still hash so is as it came, not adapted since.
+   */
+  async bundledOrigins(): Promise<Record<string, string>> {
+    try {
+      const origins = JSON.parse(
+        (await readText(join(/*turbopackIgnore: true*/ this.dir, BUNDLED)))
+          .raw || "{}",
+      );
+      return Object.assign(
+        Object.create(null),
+        origins && typeof origins === "object" ? origins : {},
+      );
+    } catch {
+      return {};
+    }
+  }
+
   async hubOrigins(): Promise<
     Record<string, { id: string; hash: string; added: string }>
   > {

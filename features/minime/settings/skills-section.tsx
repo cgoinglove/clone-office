@@ -26,6 +26,8 @@ interface OwnSkill {
   problem?: string;
   /** Shared with the office: as it is here, or changed here since. */
   shared?: "yes" | "changed";
+  /** One the app ships, as it came: named in the person's language. */
+  shipped?: boolean;
 }
 
 interface OfficeSkill {
@@ -168,11 +170,21 @@ function OwnRow({
   const problemText = useProblem();
   const [sure, setSure] = useState(false);
   const shareable = inOffice && skill.from === "own";
+  // The app's own skills are written in English; one as it came reads in the person's language.
+  const named =
+    skill.shipped && t.has(`shipped.${skill.name}.title` as never)
+      ? {
+          title: t(`shipped.${skill.name}.title` as never),
+          body: t(`shipped.${skill.name}.body` as never),
+        }
+      : { title: skill.name, body: skill.description };
   return (
     <li className="flex flex-col gap-2 px-3.5 py-3">
       <div className="flex items-start gap-3">
         <span className="min-w-0 flex-1">
-          <span className="font-medium">{skill.name}</span>
+          <span className="font-medium" title={skill.name}>
+            {named.title}
+          </span>
           {skill.from !== "own" && (
             <span className="ml-2 text-xs text-muted-foreground">
               {skill.from === "app"
@@ -181,7 +193,7 @@ function OwnRow({
             </span>
           )}
           <span className="block text-xs leading-relaxed text-muted-foreground">
-            {skill.description}
+            {named.body}
           </span>
         </span>
         {shareable &&

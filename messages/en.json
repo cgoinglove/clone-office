@@ -267,16 +267,16 @@
     "hello": "Hi, I'm your clone. To work the way you do, I first need to learn how you work. Here is how I'll learn.",
     "plan": {
       "read": {
-        "title": "What I read",
-        "body": "Your AI instruction and memory files; the folders you changed lately and their file names; your projects' READMEs; what you asked your AI tools and what those chats were about; your commits. Not what the AI answered, nor what documents say."
+        "title": "Reads",
+        "body": "what you asked your AI tools, your notes and commits, recent folders and file names, the opening of each README. Not the AI's answers, nor any other file."
       },
       "keep": {
-        "title": "What I keep",
-        "body": "What you do, what you're working on and where it lives, a map of your folders, the people and tools around you, how you work and decide. Projects are kept as dated notes it updates as you work."
+        "title": "Keeps",
+        "body": "what you do, what you're working on and where, the people you work with, how you work."
       },
       "skip": {
-        "title": "What I don't keep",
-        "body": "Passwords and keys, health, money, and anything private about other people."
+        "title": "Never keeps",
+        "body": "passwords and keys, health, money, or anything private about other people."
       },
       "time": {
         "body": "About 30 seconds. It keeps reading if you go on."
@@ -1096,7 +1096,29 @@
       "unshare": "Stop sharing",
       "remove": "Take out",
       "removeSure": "Take it out of the office? Copies colleagues added stay theirs.",
-      "removeYes": "Take it out"
+      "removeYes": "Take it out",
+      "shipped": {
+        "skill-creator": {
+          "title": "Make a skill",
+          "body": "Keeps a way of working that comes back as a skill, so it's done your way next time."
+        },
+        "find-skills": {
+          "title": "Find skills",
+          "body": "Looks in the open skills registry when a task needs a method it lacks. You approve each one it adds."
+        },
+        "learn-by-watching": {
+          "title": "Learn by watching",
+          "body": "Learns a task the way you show it, or from a chat, an example or a document you point to."
+        },
+        "browser": {
+          "title": "Use its browser",
+          "body": "Opens, reads, clicks and fills in pages in a browser of its own. Asks before paying, sending or agreeing."
+        },
+        "artifact": {
+          "title": "Make documents and pages",
+          "body": "Makes documents, sheets, charts and small pages as files that open in the app."
+        }
+      }
     },
     "office": {
       "thisOffice": "This office",
@@ -1165,11 +1187,11 @@
       "modes": {
         "ask": {
           "title": "Ask me first",
-          "body": "It asks before it reads a file, opens a web page, runs a command or uses one of your services. Tick “Don't ask again” on any card to let one kind through."
+          "body": "Asks before it reads files, opens pages, runs commands or uses your services. What you tick “Don't ask again for this” on goes through."
         },
         "auto": {
           "title": "On its own",
-          "body": "It reads files and web pages, works in your connected services, runs commands inside its sandbox and asks colleagues without asking you first. You see all it did in the conversation."
+          "body": "Reads, works in your connected services, runs commands in its sandbox and asks colleagues without asking you first. All it does stays in the conversation."
         }
       },
       "always": "Whatever you pick, files leaving your computer, flows, adding a skill, and work in your Claude Code or Codex conversations are always shown to you first. Colleagues' requests don't use this: each kind there has its own trust level, under Requests you take.",
@@ -1325,13 +1347,7 @@
     "yourTurn": "Your turn",
     "yourTurnCount": "{count, plural, one {# waits on you} other {# wait on you}}",
     "recentChats": "Recent chats",
-    "noChats": "Your conversations with your clone show up here.",
     "chatWaits": "A question waits in this chat",
-    "cloneOf": "{name}'s clone",
-    "yourClone": "Your clone",
-    "learning": "Learning how you work · {percent}%",
-    "likeMe": "{percent}% like you",
-    "cloneHint": "Open your clone",
     "statusLabel": "Your status: {status}",
     "statusTitle": "Your status in the office",
     "settings": "Settings",
@@ -1546,7 +1562,9 @@
       "missing": "This file is not in your clone's workspace anymore.",
       "moreRows": "{count, plural, one {# more row} other {# more rows}}: save the file to see them all.",
       "other": "This kind of file opens in its own app: save it."
-    }
+    },
+    "meetingOn": "Clones meeting",
+    "chatAnswering": "Your clone is answering here"
   },
   "page": {
     "notFound": {

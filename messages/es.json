@@ -267,16 +267,16 @@
     "hello": "Hola, soy tu clon. Para trabajar como tú, primero necesito aprender cómo trabajas. Así voy a aprender.",
     "plan": {
       "read": {
-        "title": "Qué leo",
-        "body": "Tus archivos de instrucciones y memoria de IA; las carpetas que cambiaste hace poco y los nombres de sus archivos; los README de tus proyectos; lo que pediste a tus herramientas de IA y de qué trataban esos chats; tus commits. No lo que respondió la IA ni el contenido de los documentos."
+        "title": "Lee",
+        "body": "lo que pediste a tus herramientas de IA, tus notas y commits, carpetas recientes y nombres de archivo, el inicio de cada README. No las respuestas de la IA ni otros archivos."
       },
       "keep": {
-        "title": "Qué guardo",
-        "body": "Qué haces, en qué estás y dónde vive, un mapa de tus carpetas, las personas y herramientas a tu alrededor, cómo trabajas y decides. Los proyectos quedan como notas con fecha que actualiza mientras trabajan juntos."
+        "title": "Guarda",
+        "body": "lo que haces, en qué trabajas y dónde, con quién trabajas y cómo trabajas."
       },
       "skip": {
-        "title": "Qué no guardo",
-        "body": "Contraseñas y claves, salud, dinero y nada privado de otras personas."
+        "title": "Nunca guarda",
+        "body": "contraseñas y claves, salud, dinero ni nada privado de otras personas."
       },
       "time": {
         "body": "Unos 30 segundos. Sigue leyendo aunque continúes."
@@ -1096,7 +1096,29 @@
       "unshare": "Dejar de compartir",
       "remove": "Quitar",
       "removeSure": "¿Quitarla de la oficina? Las copias que añadieron tus colegas siguen siendo suyas.",
-      "removeYes": "Quitarla"
+      "removeYes": "Quitarla",
+      "shipped": {
+        "skill-creator": {
+          "title": "Crear una habilidad",
+          "body": "Guarda como habilidad una forma de trabajar que se repite, para hacerlo a tu manera la próxima vez."
+        },
+        "find-skills": {
+          "title": "Buscar habilidades",
+          "body": "Busca en el registro abierto de habilidades cuando a una tarea le falta un método. Tú apruebas cada una que agrega."
+        },
+        "learn-by-watching": {
+          "title": "Aprender observando",
+          "body": "Aprende una tarea como se la muestras, o de un chat, un ejemplo o un documento que le indiques."
+        },
+        "browser": {
+          "title": "Usar su navegador",
+          "body": "Abre, lee, pulsa y rellena páginas en su propio navegador. Pregunta antes de pagar, enviar o aceptar."
+        },
+        "artifact": {
+          "title": "Crear documentos y páginas",
+          "body": "Crea documentos, hojas, gráficos y páginas pequeñas como archivos que se abren en la app."
+        }
+      }
     },
     "office": {
       "thisOffice": "Esta oficina",
@@ -1165,11 +1187,11 @@
       "modes": {
         "ask": {
           "title": "Preguntar antes",
-          "body": "Pregunta antes de leer un archivo, abrir una página web, ejecutar un comando o usar uno de tus servicios. Marca “No volver a preguntar” en cualquier tarjeta para dejar pasar ese tipo."
+          "body": "Pregunta antes de leer archivos, abrir páginas, ejecutar comandos o usar tus servicios. Lo que marques con “No volver a preguntar por esto” ya no lo pregunta."
         },
         "auto": {
           "title": "Por su cuenta",
-          "body": "Lee archivos y páginas web, trabaja en tus servicios conectados, ejecuta comandos dentro de su entorno aislado y les pregunta a tus colegas sin preguntarte antes. Ves todo lo que hizo en la conversación."
+          "body": "Lee, trabaja en tus servicios conectados, ejecuta comandos en su entorno aislado y pregunta a tus colegas sin preguntarte antes. Todo lo que hace queda en la conversación."
         }
       },
       "always": "Elijas lo que elijas, los archivos que salen de tu computadora, las rutinas, agregar una habilidad y el trabajo en tus conversaciones de Claude Code o Codex siempre se te muestran antes. Las solicitudes de colegas no usan esto: cada tipo tiene su propio nivel de confianza, en Solicitudes que aceptas.",
@@ -1325,13 +1347,7 @@
     "yourTurn": "Te toca",
     "yourTurnCount": "{count, plural, one {# te espera} other {# te esperan}}",
     "recentChats": "Chats recientes",
-    "noChats": "Aquí aparecen tus conversaciones con tu clon.",
     "chatWaits": "Hay una pregunta esperando en este chat",
-    "cloneOf": "Clon de {name}",
-    "yourClone": "Tu clon",
-    "learning": "Aprendiendo cómo trabajas · {percent}%",
-    "likeMe": "{percent}% como tú",
-    "cloneHint": "Abrir tu clon",
     "statusLabel": "Tu estado: {status}",
     "statusTitle": "Tu estado en la oficina",
     "settings": "Configuración",
@@ -1546,7 +1562,9 @@
       "missing": "Este archivo ya no está en el espacio de trabajo de tu clon.",
       "moreRows": "{count, plural, one {# fila más} other {# filas más}}: guarda el archivo para verlas todas.",
       "other": "Este tipo de archivo se abre en su propia app: guárdalo."
-    }
+    },
+    "meetingOn": "Reunión de clones",
+    "chatAnswering": "Tu clon está respondiendo aquí"
   },
   "page": {
     "notFound": {

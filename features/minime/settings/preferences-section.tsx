@@ -6,6 +6,7 @@
 
 import { BookOpen, Feather, Hand, Moon, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { ChoiceList } from "@/components/ui/choice-list";
 import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Switch } from "@/components/ui/switch";
@@ -17,6 +18,34 @@ const MODES: { value: Autonomy; icon: typeof Hand }[] = [
   { value: "ask", icon: Hand },
   { value: "auto", icon: Zap },
 ];
+
+/**
+ * How much the clone does alone in its person's own work, as two explained choices, in Settings and
+ * on the first steps' last step alike.
+ */
+export function AutonomyChoice({
+  value,
+  onChange,
+}: {
+  value: Autonomy;
+  onChange: (value: Autonomy) => void;
+}) {
+  const t = useTranslations("settings.preferences");
+  return (
+    <ChoiceList<Autonomy>
+      aria-label={t("autonomy")}
+      value={value}
+      onChange={onChange}
+      options={MODES.map(({ value: mode, icon }) => ({
+        value: mode,
+        icon,
+        title: t(`modes.${mode}.title`),
+        body: t(`modes.${mode}.body`),
+        tag: mode === "ask" ? t("default") : undefined,
+      }))}
+    />
+  );
+}
 
 /** The hours a person might want questions at: a working day, with room either side. */
 const HOURS = Array.from({ length: 15 }, (_, i) => i + 7);
@@ -52,51 +81,10 @@ export function PreferencesSection({
     <Groups>
       {show("autonomy") && (
         <Group title={t("autonomy")} hint={t("autonomyHint")}>
-          <div
-            className="flex flex-col gap-2"
-            role="radiogroup"
-            aria-label={t("autonomy")}
-          >
-            {MODES.map(({ value, icon: Icon }) => {
-              const picked = preferences.autonomy === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  role="radio"
-                  aria-checked={picked}
-                  onClick={() => void onChange({ autonomy: value })}
-                  className={cn(
-                    "flex items-start gap-3 rounded-xl border border-border bg-background px-4 py-3 text-left transition-[border-color,background-color] hover:bg-muted/50",
-                    picked &&
-                      "border-foreground/70 ring-1 ring-foreground ring-inset hover:bg-background",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
-                      picked ? "bg-foreground text-background" : "bg-muted",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="flex items-center gap-2 font-medium">
-                      {t(`modes.${value}.title`)}
-                      {value === "ask" && (
-                        <span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-normal text-muted-foreground">
-                          {t("default")}
-                        </span>
-                      )}
-                    </span>
-                    <span className="mt-0.5 block text-[13px] leading-relaxed text-muted-foreground">
-                      {t(`modes.${value}.body`)}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <AutonomyChoice
+            value={preferences.autonomy}
+            onChange={(autonomy) => void onChange({ autonomy })}
+          />
           <p className="text-xs leading-relaxed text-muted-foreground">
             {t("always")}
           </p>

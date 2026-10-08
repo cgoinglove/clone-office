@@ -13,22 +13,37 @@ export const APP_NAME = "Clone Office";
 export function LogoMark({
   className,
   label,
+  outline = false,
+  nav = false,
 }: {
   className?: string;
   /** What a screen reader hears when the mark stands alone. */
   label?: string;
+  /** Drawn as a line with its eyes filled, as the app's other marks are drawn outlined. */
+  outline?: boolean;
+  /**
+   * Set in a nav icon's frame: as much room round it as Phosphor leaves round its glyphs
+   * (nav-icons.tsx), so it stands as tall as the marks beside it.
+   */
+  nav?: boolean;
 }) {
+  const eye = outline ? "fill-current" : "fill-background";
   return (
     <svg
-      viewBox="14 12 212 220"
+      viewBox={nav ? "-9 -7 258 258" : "14 12 212 220"}
       className={cn("size-6 shrink-0", className)}
       role={label ? "img" : undefined}
       aria-label={label}
       aria-hidden={label ? undefined : true}
     >
-      <path d={REST.body} fill="currentColor" />
-      <path d={REST.eyes[0]} className="fill-background" />
-      <path d={REST.eyes[1]} className="fill-background" />
+      <path
+        d={REST.body}
+        fill={outline ? "none" : "currentColor"}
+        stroke={outline ? "currentColor" : undefined}
+        strokeWidth={outline ? 16 : undefined}
+      />
+      <path d={REST.eyes[0]} className={eye} />
+      <path d={REST.eyes[1]} className={eye} />
     </svg>
   );
 }

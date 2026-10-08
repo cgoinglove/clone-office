@@ -2,7 +2,7 @@
 
 // The app's frame around every screen: the column on the left, the open screen, and settings over
 // them. It holds what the screens share (app-state.tsx) so a conversation keeps streaming while the
-// person looks at the office. An invite kept by the launcher opens the office's settings once. Keys: ⌘, opens settings, ⌘N starts a new conversation; the tab's
+// person looks at the office. An invite kept by the launcher opens the office's settings once. Keys: ⌘, opens settings, ⇧⌘N starts a new conversation; the tab's
 // title carries what waits on the person, so a tab in the back still says it.
 
 import { usePathname, useRouter } from "next/navigation";
@@ -13,6 +13,19 @@ import { AppProvider, useApp, useAppState } from "./app-state";
 import { Sidebar } from "./sidebar";
 import { useTurnNotices } from "./turn-notices";
 import { yourTurn } from "./your-turn";
+
+/** The screen each address opens, by its first part, as the tab's title names it. */
+const SCREENS: Record<
+  string,
+  "home" | "chat" | "requests" | "office" | "clone" | "file"
+> = {
+  home: "home",
+  chat: "chat",
+  requests: "requests",
+  office: "office",
+  clone: "clone",
+  files: "file",
+};
 
 export function AppShell({ children }: { children: ReactNode }) {
   const state = useAppState();
@@ -31,14 +44,7 @@ function Frame({ children }: { children: ReactNode }) {
   const waiting = yourTurn(app.office, app.chatAsks).length;
   useTurnNotices(app.office, app.chatAsks);
 
-  const screen = pathname.split("/")[1] || "chat";
-  const title = t(
-    `screens.${
-      (["chat", "requests", "office", "clone"] as const).find(
-        (key) => key === screen,
-      ) ?? "chat"
-    }`,
-  );
+  const title = t(`screens.${SCREENS[pathname.split("/")[1] ?? ""] ?? "chat"}`);
   useEffect(() => {
     document.title = waiting
       ? `(${waiting}) ${title} · Clone Office`

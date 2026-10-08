@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { skillsDir } from "@/features/minime/brain/session";
+import { bringShippedSkills, skillsDir } from "@/features/minime/brain/session";
 import { SkillStore } from "@/features/minime/memory/skills";
 import { loadOffice, problemCode } from "@/features/minime/office/client";
 import {
@@ -24,9 +24,12 @@ type From = "app" | "office" | "own";
 // where that is needed (what one of the person's own would send, a copy from the office's hash).
 async function snapshot() {
   const store = new SkillStore(skillsDir(), "person");
-  const [local, office] = await Promise.all([
+  // The skills the app ships are in place before they are listed, as before a session lists them.
+  await bringShippedSkills();
+  const [local, office, bundled] = await Promise.all([
     store.survey().catch(() => []),
     loadOffice(),
+    store.bundledOrigins(),
   ]);
   let shared: OfficeSkill[] = [];
   let problem: string | undefined;
@@ -51,9 +54,15 @@ async function snapshot() {
     // What sharing it would send, or why it may not go, shown before the person confirms.
     const packed = office && from === "own" ? await skill.pack() : undefined;
     const sharedAs = mine.get(skill.name);
+    // One the app ships, as it came: the page names it in the person's language.
+    const shipped =
+      from === "app" &&
+      typeof bundled[skill.name] === "string" &&
+      (await skill.hash()) === bundled[skill.name];
     own.push({
       name: skill.name,
       description: skill.description,
+      ...(shipped ? { shipped: true } : {}),
       ...(skill.category ? { category: skill.category } : {}),
       from,
       ...(skill.origin ? { by: skill.origin.byName } : {}),

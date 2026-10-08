@@ -33,13 +33,14 @@ Two things hold everywhere:
 ## Where things are
 
 - **The column on the left** is always there. At its top, **New chat** (새 대화), then the four
-  screens: **Home** (홈, with how many things wait on them), **Requests** (부탁), **Chat** (대화)
-  and **Office** (오피스). **Your turn** (내 차례) appears below them only when something waits on
-  them, one line each (a question about a colleague's request, or one in a conversation); a click
-  goes where it is answered. Then **Recent chats** (최근 대화), with a dot where a question waits.
-  At the bottom: their clone (how far it has learned, or how like them it answers; it opens **Your
-  clone**, 내 클론), their status in the office once they are in one (working, in a meeting, away,
-  off), and **Settings** (설정).
+  places: **Home** (홈), **Requests** (부탁, with how many are open), **Office** (오피스, which says
+  when the clones are meeting) and **Your clone** (내 클론, with how far it has read while it
+  reads); the place open is drawn filled. **Your turn** (내 차례) appears below them only when
+  something waits on them, one line each (a question about a colleague's request, or one in a
+  conversation); a click goes where it is answered. Then **Recent chats** (최근 대화), once there
+  are any, with a dot where a question waits and a turning mark where the clone is answering. At
+  the bottom: **Settings** (설정), and beside it their status in the office once they are in one
+  (working, in a meeting, away, off).
 - **Home** (홈) is where the app opens: what is happening, what waits on them, and what to do
   about it. One box at the top asks their clone anything (name a colleague, and it asks theirs),
   with a few things to try under it; **Getting started** (시작하기) while the app is new; **Decide
@@ -107,9 +108,11 @@ asks** (동료가 이렇게 물으면), what it would answer a colleague in thei
 on the computer, it simply learns as they work); who they are (name, what they do, what they look
 after and the tools they work in, filled in from what it read for them to correct) and whether a
 team is in it (`office.md`; started from an invite, this comes first, with the office they were invited to picked already, so the team's models are there when they pick one);
-then their card as colleagues will see it, with **Change** (바꾸기) on what can still be changed, and
-Home. The arrow at the bottom left goes back (**Back**, 이전), a line beside it with a blue dot says what to do now, and **Skip this step** (이 단계 건너뛰기) beside the step's
-own button passes over the step on screen only. The screen's language is one button at the top
+then their card as colleagues will see it, how much their clone does on its own in their own work
+(**Ask me first**, 수동, or **On its own**, 자동, each explained under its name), and each part as
+it stands, a chevron on one that can still be changed; then Home. The arrow at the bottom left goes
+back (**Back**, 이전), a line beside it with a blue dot says what to do now, and **Skip** (건너뛰기)
+beside the step's own button passes over the step on screen only. The screen's language is one button at the top
 right of the first steps (**Follow the browser**, 브라우저 언어 따르기, until they pick one), and
 under Settings › General.
 

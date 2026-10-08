@@ -6,18 +6,11 @@
 // it calls, the office, and the app itself. Who the clone is (its memory, the requests it takes,
 // its flows) has its own screen.
 
-import {
-  Building2,
-  Plug,
-  Settings2,
-  ShieldCheck,
-  Smartphone,
-  Sparkles,
-} from "lucide-react";
 import { useTranslations } from "next-intl";
-import { type ComponentType, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
 import { cn } from "@/lib/utils";
 import { BrainPanel, brainReady } from "../brain-panel";
 import { ConnectorsPanel } from "../connectors-panel";
@@ -40,16 +33,14 @@ export type SectionId =
   | "office"
   | "general";
 
-const SECTIONS: {
-  id: SectionId;
-  icon: ComponentType<{ className?: string }>;
-}[] = [
-  { id: "brain", icon: Sparkles },
-  { id: "permissions", icon: ShieldCheck },
-  { id: "connectors", icon: Plug },
-  { id: "phone", icon: Smartphone },
-  { id: "office", icon: Building2 },
-  { id: "general", icon: Settings2 },
+/** The sections down the left, each marked as the app's column marks its places (nav-icons.tsx). */
+const SECTIONS: { id: SectionId; icon: NavIconName }[] = [
+  { id: "brain", icon: "brain" },
+  { id: "permissions", icon: "permissions" },
+  { id: "connectors", icon: "connectors" },
+  { id: "phone", icon: "phone" },
+  { id: "office", icon: "office" },
+  { id: "general", icon: "general" },
 ];
 
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
@@ -168,14 +159,18 @@ export function SettingsDialog({
                   variant="ghost"
                   onClick={() => onSection(item.id)}
                   className={cn(
-                    "h-8 justify-start gap-2.5 px-2.5 font-normal max-sm:shrink-0",
+                    "h-8 justify-start gap-2.5 px-2.5 text-[14px] max-sm:shrink-0",
                     picked
-                      ? "bg-[color-mix(in_oklch,var(--muted),var(--foreground)_6%)] text-foreground"
-                      : "text-muted-foreground hover:text-foreground",
+                      ? "bg-foreground/[0.07] font-medium text-foreground hover:bg-foreground/[0.07]"
+                      : "font-normal text-foreground/75 hover:bg-foreground/[0.045] hover:text-foreground",
                   )}
                 >
-                  <item.icon className="size-4" />
-                  <span className="truncate text-sm">
+                  <NavIcon
+                    name={item.icon}
+                    on={picked}
+                    className={picked ? undefined : "text-foreground/65"}
+                  />
+                  <span className="truncate">
                     {t(`sections.${item.id}.label`)}
                   </span>
                   {item.id === "brain" && marks.brain && (

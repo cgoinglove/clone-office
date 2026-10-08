@@ -25,15 +25,19 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
 - `messages/<language>.json` and `i18n/` — every word a person reads (next-intl, no language in
   the address): `useTranslations` in a component, English as the source and the fallback,
   `useProblem` for an error code, `LanguageSwitch` to pick a language.
-- `features/brand/` — the app's mark (`Logo`, `LogoMark`) and every service's or AI vendor's own
-  mark (`BrandMark`): use these rather than drawing a logo or typing a vendor's name alone.
+- `features/brand/` — the app's mark (`Logo`, `LogoMark`), the places' marks (`NavIcon`: a
+  column's rows, outlined and filled while open) and every service's or AI vendor's own mark
+  (`BrandMark`): use these rather than drawing a logo or typing a vendor's name alone.
+- `components/ui/choice-list.tsx` — `ChoiceList`: a choice between a few options, each explained
+  under its name (a radio group as cards, the picked one ringed in the brand colour).
 - `features/minime/settings/parts.tsx` — how a Settings section is laid out (`Groups`, `Group`,
   `Rows`, `Empty`); a new section uses them, so every section reads the same.
 
 ## The app's screens
 One frame around every screen (`app/(app)/layout.tsx`, `features/minime/shell/`): the column on the
-left (`sidebar.tsx`: new chat, Home, Requests, Chat, Office, what waits on the person, recent
-chats, the clone, status, Settings) and the open screen: `/home` first (`home-screen.tsx`: what
+left (`sidebar.tsx`: New chat; the places Home, Requests, Office and Your clone, the open one's mark
+filled; what waits on the person; recent chats once there are any; Settings and, in an office, the
+person's status) and the open screen: `/home` first (`home-screen.tsx`: what
 waits on the person answered in place, the requests on their way, what the clone did today, today;
 the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`, with the
 office's live column `office-rail.tsx`), `/requests` and

@@ -133,11 +133,14 @@ These words help discussion. They do not mandate separate services, tables or UI
 - The app's screens share one frame (`app/(app)/layout.tsx`, `features/minime/shell/`), after
   work apps with a short column on the left: `app-shell.tsx` holds what every screen shares
   (`app-state.tsx`, `useApp`: the conversation, the office, the reading, preferences, the
-  profile, the questions waiting in the person's own conversations), the column (`sidebar.tsx`:
-  new chat, Chat, Requests, Office, **Your turn** when something waits (`your-turn.ts`: questions
-  about colleagues' requests, live at the gate or kept for later, and those in conversations, each
-  knowing where it is answered), recent chats, the clone with how far it learned or how like the
-  person it answers, their status, Settings) and Settings over them. `/home` comes first
+  profile, the questions waiting in the person's own conversations), the column (`sidebar.tsx`,
+  after the columns ChatGPT, Claude and Paperclip keep: New chat, then the four places, Home,
+  Requests, Office and Your clone, each saying what goes on there (open requests, a meeting of the
+  clones, the reading) and marked by a glyph drawn filled while it is open (`features/brand/nav-icons.tsx`);
+  **Your turn** when something waits (`your-turn.ts`: questions about colleagues' requests, live at
+  the gate or kept for later, and those in conversations, each knowing where it is answered); the
+  recent chats once there are any, scrolling on their own, the one the clone is answering in
+  turning; at the foot Settings, with their status beside it in an office) and Settings over them. `/home` comes first
   (`home-screen.tsx`: what is happening, what waits on the person and what to do about it, after
   Paperclip's rule and the agent apps that left a chat as home: one box that asks the clone and
   starts that conversation (`/chat?send=`), the first steps while the app is new (`welcome.tsx`
@@ -161,7 +164,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   `DoneStamp`, the split-flap `Flap`). `use-office.ts` is the office as the screens read it;
   `home/colleague.tsx` asks a colleague with files. `use-learn.ts` follows a reading wherever it
   started. Settings is one dialog of six sections (`features/minime/settings/`, after
-  Thursday's; an ember dot where something wants the person, red where something is broken),
+  Thursday's, marked as the column marks its places; an ember dot where something wants the
+  person, red where something is broken),
   each laid out with `parts.tsx`: AI model (the brain, learning after each conversation, the lighter
   model), Permissions (`permissions-section.tsx`: how much it does alone, rules taken back,
   the folders it reads), Connectors, Notifications & phone (the messenger, kept questions' hours,
@@ -173,10 +177,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   `app/api/me/skills`: share one of theirs after seeing its files, add or update a colleague's),
   reading again, bringing what their usual AI remembers, starting over),
   `requests-section.tsx` (the menu, trust levels, the like-me score, ME.md lines) and the flows;
-  `preferences-section.tsx` draws the preferences' parts wherever they belong (`parts`). Keys:
+  `preferences-section.tsx` draws the preferences' parts wherever they belong (`parts`; how much
+  it does alone is `AutonomyChoice`, the same on the first steps' last step, on
+  `components/ui/choice-list.tsx`, the explained choice the first steps' team uses too). Keys:
   ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, / the box; the tab's title carries what
   waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at rest, also
-  `app/icon.svg`), the services' and AI vendors' marks (`marks.ts`, generated from
+  `app/icon.svg`, outlined as the clone's place in the column), the places' marks (`nav-icons.tsx`,
+  from Phosphor (MIT), each outlined and filled), the services' and AI vendors' marks (`marks.ts`, generated from
   lobe-icons (MIT) and simple-icons (CC0), drawn by `brand-mark.tsx`) and the languages' flags
   (`flags.ts`, from country-flag-icons (MIT), drawn as a picture by `language-switch.tsx` `Flag`).
   `/files/<path>` (`app/(app)/files/[...path]`, `shell/file-screen.tsx`) opens what the clone
@@ -228,8 +235,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   tools. `skills/` (top level) holds the skills the app ships, laid out as the store is and shipped
   in the package: methods, never a report template nor a restatement of a tool (what is the app's
   own is a tool): making a skill, finding one in the open registry, learning a task by watching
-  the person, driving its browser, making an artifact; `SkillStore.syncBundled`
-  brings them in before a session first lists skills, after Hermes Agent's skills_sync
+  the person, driving its browser, making an artifact (each named on the clone's page in the
+  person's language while it is as it came, `settings.skills.shipped`, `bundledOrigins`); `SkillStore.syncBundled`
+  brings them in when the server starts and before a session or the clone's page first lists
+  skills, after Hermes Agent's skills_sync
   (`.bundled.json` keeps each one's origin hash: a later version replaces one only while it is as
   it came, one set aside is not brought back, a skill of the person's by the same name is never
   touched, and one the app no longer ships is set aside while it is as it came and becomes the

@@ -440,6 +440,48 @@ test("the skills in this repository load: each has a name, a short description a
       categories[found.category ?? ""],
       `${found.category} is described`,
     );
+  // Each is named on the clone's page in the person's language (every language file has what
+  // English has: i18n/sync.ts).
+  const shipped = JSON.parse(
+    readFileSync(join(process.cwd(), "messages", "en.json"), "utf8"),
+  ).settings.skills.shipped;
+  for (const found of skills)
+    assert.ok(
+      shipped[found.name]?.title && shipped[found.name]?.body,
+      `${found.name} is named on the page`,
+    );
+});
+
+test("a shipped skill counts as it came until it is adapted", async () => {
+  const shipped = fresh();
+  await atomicWrite(
+    join(shipped.dir, "work", "brief", "SKILL.md"),
+    skill("brief", "Short."),
+  );
+  const store = fresh("person");
+  await store.syncBundled(shipped.dir);
+  const origins = await store.bundledOrigins();
+  const [found] = await store.survey();
+  assert.equal(found.createdBy, "bundled");
+  assert.equal(await found.hash(), origins.brief, "as it came");
+
+  const review = new SkillStore(store.dir, "review");
+  await review.view("brief");
+  await review.apply([
+    {
+      action: "patch",
+      name: "brief",
+      old_string: "Short.",
+      new_string: "Shorter.",
+    },
+  ]);
+  const [adapted] = await store.survey();
+  assert.notEqual(await adapted.hash(), origins.brief, "adapted since");
+  assert.equal(
+    (await new SkillStore(store.dir).bundledOrigins()).constructor,
+    undefined,
+    "read with no prototype",
+  );
 });
 
 test("a skill from the open registry comes in checked, never over the person's own, and updates only while untouched", async () => {
