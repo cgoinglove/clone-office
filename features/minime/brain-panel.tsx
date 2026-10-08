@@ -5,16 +5,18 @@
 // in to, or an API key), Claude (their Claude subscription through their own Claude Code, or a
 // key), Gemini, OpenRouter, or a model running on this computer. What this computer already has is
 // marked. A key is checked for free before it is kept and never comes back to the page.
+//
+// It is one field wherever it is picked (the first steps, Settings › AI model): a button with what
+// is in use, opening on two columns, the vendors and what the one in hand offers. The models the
+// office's team keys reach are offered first, as the team's; the keys themselves are kept in
+// Settings › Office (`TeamKeys`), never here.
 
 import {
   Check,
   ChevronsUpDown,
   CircleAlert,
-  CircleCheck,
-  Cpu,
-  KeyRound,
-  LogIn,
-  Terminal,
+  ExternalLink,
+  Loader2,
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -37,6 +39,7 @@ import {
   provider as providerOf,
   VENDORS,
   type Vendor,
+  vendorOf,
   type Way,
 } from "./brain/providers";
 
@@ -100,26 +103,27 @@ export function brainLabel(state: BrainState, claudeCode: string): string {
   return `${vendor?.name ?? choice.provider} · ${model}`;
 }
 
-/** The vendor and way a saved choice belongs to. */
-function placeOf(choice: Choice): { vendor: Vendor["id"]; way: number } {
-  if (choice.kind === "claude-code") return { vendor: "claude", way: 0 };
-  for (const vendor of VENDORS) {
-    const way = vendor.ways.findIndex((w) =>
-      choice.team
-        ? w.kind === "team" && w.provider === choice.provider
-        : (w.kind === "key" || w.kind === "sign-in") &&
-          w.provider === choice.provider,
-    );
-    if (way >= 0) return { vendor: vendor.id, way };
-    if (choice.provider === "local" && vendor.id === "local")
-      return { vendor: "local", way: 0 };
-  }
-  return { vendor: "claude", way: 0 };
+/** The vendor and way a saved choice belongs to; a team key's model is the team's, not a way. */
+function placeOf(choice: Choice): {
+  vendor: Vendor["id"];
+  way: number;
+  team: boolean;
+} {
+  if (choice.kind === "claude-code")
+    return { vendor: "claude", way: 0, team: false };
+  const vendor = vendorOf(choice.provider);
+  const ways = VENDORS.find((v) => v.id === vendor)?.ways ?? [];
+  const way = ways.findIndex(
+    (w) =>
+      (w.kind === "key" || w.kind === "sign-in") &&
+      w.provider === choice.provider,
+  );
+  return { vendor, way: Math.max(0, way), team: Boolean(choice.team) };
 }
 
 /** The provider a way reaches models through (Claude Code has none of its own here). */
 const providerOfWay = (way: Way): ProviderId | undefined =>
-  way.kind === "key" || way.kind === "sign-in" || way.kind === "team"
+  way.kind === "key" || way.kind === "sign-in"
     ? way.provider
     : way.kind === "local"
       ? "local"
@@ -147,19 +151,6 @@ function VendorMark({
   return <BrandMark id={vendor} className={small ? "size-4" : "size-5"} />;
 }
 
-const WAY_ICONS = {
-  "sign-in": LogIn,
-  "claude-code": Terminal,
-  key: KeyRound,
-  team: Users,
-  local: Cpu,
-} as const;
-
-function WayIcon({ kind }: { kind: Way["kind"] }) {
-  const Icon = WAY_ICONS[kind];
-  return <Icon className="size-3.5" aria-hidden />;
-}
-
 /** Whose model it is: the vendor's own, or for OpenRouter the maker its id names. */
 const MAKERS: Record<string, MarkId> = {
   anthropic: "claude",
@@ -184,13 +175,9 @@ function modelMark(model: string, provider: ProviderId): MarkId | undefined {
   return PROVIDER_MARKS[provider];
 }
 
-/** Settings › Brain: what the clone thinks with, and changing it. */
+/** Settings › AI model: what the clone thinks with, the same one field as the first steps. */
 export function BrainPanel() {
-  return (
-    <div className="flex flex-col gap-4 text-sm">
-      <BrainChooser />
-    </div>
-  );
+  return <BrainPicker />;
 }
 
 /** A model as the lists show it; one read from the ChatGPT plan has no size. */
@@ -201,9 +188,7 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
   const [state, setState] = useState<BrainState | null>(null);
   const [vendorId, setVendorId] = useState<Vendor["id"] | null>(null);
   const [wayAt, setWayAt] = useState(0);
-  const [model, setModel] = useState("");
   const [other, setOther] = useState("");
-  const [key, setKey] = useState("");
   const [address, setAddress] = useState(providerOf("local")?.baseUrl ?? "");
   const [busy, setBusy] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
@@ -224,25 +209,8 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
       const place = placeOf(data.choice);
       setVendorId(place.vendor);
       setWayAt(place.way);
-      if (data.choice.kind === "api") {
-        const known =
-          providerOf(data.choice.provider)?.models.some(
-            (m) => m.id === (data.choice as { model: string }).model,
-          ) ||
-          data.chatgpt?.models.some(
-            (m) => m.id === (data.choice as { model: string }).model,
-          );
-        setModel(known ? data.choice.model : "");
-        setOther(known ? "" : data.choice.model);
-        if (data.choice.baseUrl) setAddress(data.choice.baseUrl);
-      } else if (data.choice.model) {
-        // The Claude their Claude Code thinks with: one of its aliases, or a name typed in.
-        const known = CLAUDE_CODE_MODELS.some(
-          (m) => m.id === (data.choice as { model?: string }).model,
-        );
-        setModel(known ? data.choice.model : "");
-        setOther(known ? "" : data.choice.model);
-      }
+      if (data.choice.kind === "api" && data.choice.baseUrl)
+        setAddress(data.choice.baseUrl);
     }
     return data;
   }, [onChange]);
@@ -307,9 +275,8 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
         ? state.chatgpt.models.map((m) => ({ id: m.id, label: m.label }))
         : (entry?.models ?? []);
   // The model a way starts on when nothing is picked yet: the vendor's middle one, as Thursday's
-  // picker and Hermes Agent's setup suggest one, so "Use this" is one press away.
+  // picker and Hermes Agent's setup suggest one.
   const suggested = models.find((m) => m.tier === "mid") ?? models[0];
-  const chosenModel = other.trim() || model || suggested?.id || "";
   // Whether the way being looked at can think now: signed in, a key kept, Claude Code here, or a
   // model on this computer to name; only then are its models offered.
   const wayOpen = !state
@@ -320,18 +287,16 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
         ? Boolean(state.chatgpt)
         : way?.kind === "key"
           ? state.keyed.includes(way.provider)
-          : way?.kind === "team"
-            ? teamHas(state, way.provider)
-            : way?.kind === "local";
+          : way?.kind === "local";
   const isCurrentModel = (modelId: string) =>
     Boolean(state?.chosen) &&
     (way?.kind === "claude-code"
       ? state?.choice.kind === "claude-code" &&
         (state.choice.model ?? "sonnet") === modelId
       : state?.choice.kind === "api" &&
+        !state.choice.team &&
         state.choice.provider === id &&
-        state.choice.model === modelId &&
-        Boolean(state.choice.team) === (way?.kind === "team"));
+        state.choice.model === modelId);
 
   /** Keeps the way being looked at, with this model, as what the clone thinks with. */
   const use = (modelId: string) =>
@@ -344,7 +309,6 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
                 provider: id,
                 model: modelId,
                 ...(way.kind === "local" ? { baseUrl: address } : {}),
-                ...(way.kind === "team" ? { team: true } : {}),
               },
         )
       : Promise.resolve(undefined);
@@ -352,14 +316,11 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
   const lookAt = (next: Vendor["id"]) => {
     setVendorId(next);
     setWayAt(0);
-    setModel("");
     setOther("");
-    setKey("");
     setProblem(null);
   };
   const lookAtWay = (at: number) => {
     setWayAt(at);
-    setModel("");
     setOther("");
     setProblem(null);
   };
@@ -372,15 +333,10 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
     entry,
     models,
     suggested,
-    model,
-    setModel,
     other,
     setOther,
-    key,
-    setKey,
     address,
     setAddress,
-    chosenModel,
     wayOpen,
     isCurrentModel,
     busy,
@@ -407,23 +363,25 @@ function foundHere(state: BrainState, v: Vendor) {
         : false;
 }
 
-/** What a way needs before its models: Claude Code here, the sign-in, a key, the team's key, an address. */
-function WayBody({
-  choice,
-  compact,
+/**
+ * A key typed in, with its own save inside the field: pasted, then Enter or Save. It is checked
+ * with the vendor before it is kept, and never shown again.
+ */
+function KeyField({
+  busy,
+  onSave,
 }: {
-  choice: BrainChoice;
-  compact?: boolean;
+  busy: boolean;
+  onSave: (key: string) => Promise<unknown>;
 }) {
   const t = useTranslations("brain");
-  const { state, way, entry, busy, signingIn, key, setKey, post } = choice;
-  if (!state || !way) return null;
-  const keyForm = (action: "key" | "team-key", provider: ProviderId) => (
+  const [key, setKey] = useState("");
+  return (
     <form
-      className="flex items-center gap-2"
+      className="relative"
       onSubmit={(event) => {
         event.preventDefault();
-        void post({ action, provider, key }).then((ok) => {
+        void onSave(key.trim()).then((ok) => {
           if (ok) setKey("");
         });
       }}
@@ -432,7 +390,7 @@ function WayBody({
         type="password"
         autoComplete="off"
         spellCheck={false}
-        className={cn("min-w-0 flex-1", compact && "h-8 text-[13px]")}
+        className="h-9 pr-17 text-[13px]"
         value={key}
         aria-label={t("key")}
         placeholder={t("keyPlaceholder")}
@@ -440,353 +398,194 @@ function WayBody({
       />
       <Button
         type="submit"
-        size={compact ? "default" : "sm"}
+        size="sm"
+        variant="secondary"
+        loading={busy}
         disabled={busy || key.trim().length < 8}
+        className="absolute top-1/2 right-1 h-7 -translate-y-1/2 px-2.5"
       >
         {t("save")}
       </Button>
     </form>
   );
-  return (
-    <>
-      {way.kind === "claude-code" && (
-        <p
-          className={cn(
-            "flex items-start gap-2 rounded-lg px-3 py-2",
-            state.claudeCode ? "bg-muted" : "bg-waiting/8 text-waiting",
-          )}
+}
+
+/** What a way needs before its models, in a line or a field: Claude Code here, the sign-in, a key, an address. */
+function WaySetup({ choice }: { choice: BrainChoice }) {
+  const t = useTranslations("brain");
+  const { state, way, entry, busy, signingIn, post } = choice;
+  if (!state || !way) return null;
+  const line = "px-1 text-xs leading-relaxed text-muted-foreground";
+  if (way.kind === "claude-code")
+    return state.claudeCode ? null : (
+      <p className="flex items-start gap-2 rounded-lg bg-waiting/8 px-2.5 py-2 text-xs leading-relaxed text-waiting">
+        <CircleAlert className="mt-px size-3.5 shrink-0" />
+        <span>
+          {t("claudeMissing")}{" "}
+          <a
+            href="https://claude.com/code"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-4"
+          >
+            claude.com/code
+          </a>
+        </span>
+      </p>
+    );
+  if (way.kind === "sign-in")
+    return state.chatgpt ? (
+      <p className={line}>
+        {state.chatgpt.email
+          ? t("chatgpt.signedIn", { email: state.chatgpt.email })
+          : t("chatgpt.signedInNoEmail")}{" "}
+        <button
+          type="button"
+          className="underline underline-offset-4 hover:text-foreground"
+          disabled={busy}
+          onClick={() => void post({ action: "chatgpt-sign-out" })}
         >
-          {state.claudeCode ? (
-            <BrandMark id="claudecode" className="mt-0.5" />
+          {t("chatgpt.signOut")}
+        </button>
+      </p>
+    ) : (
+      <div className="flex flex-col gap-1.5">
+        <Button
+          variant="outline"
+          className="h-9 w-full"
+          disabled={busy || signingIn}
+          onClick={() => void choice.signIn()}
+        >
+          {signingIn ? (
+            <Loader2 className="animate-spin" />
           ) : (
-            <CircleAlert className="mt-0.5 size-4 shrink-0" />
+            <BrandMark id="openai" />
           )}
-          <span>
-            {state.claudeCode ? t("claudeCodeFound") : t("claudeMissing")}
-          </span>
-        </p>
-      )}
-
-      {way.kind === "sign-in" &&
-        (state.chatgpt ? (
-          <p>
-            {state.chatgpt.email
-              ? t("chatgpt.signedIn", { email: state.chatgpt.email })
-              : t("chatgpt.signedInNoEmail")}{" "}
-            <button
-              type="button"
-              className="text-muted-foreground underline underline-offset-4"
-              disabled={busy}
-              onClick={() => void post({ action: "chatgpt-sign-out" })}
+          {t("chatgpt.signIn")}
+        </Button>
+        {signingIn && <p className={line}>{t("chatgpt.signingIn")}</p>}
+      </div>
+    );
+  if (way.kind === "key")
+    return state.keyed.includes(way.provider) ? (
+      <p className={line}>
+        {t("keySaved")}{" "}
+        <button
+          type="button"
+          className="underline underline-offset-4 hover:text-foreground"
+          disabled={busy}
+          onClick={() =>
+            void post({ action: "forget-key", provider: way.provider })
+          }
+        >
+          {t("forgetKey")}
+        </button>
+      </p>
+    ) : (
+      <div className="flex flex-col gap-1.5">
+        <span className="flex items-center justify-between gap-2 px-1 text-xs">
+          <span className="font-medium">{t("key")}</span>
+          {entry?.keysAt && (
+            <a
+              href={entry.keysAt}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
             >
-              {t("chatgpt.signOut")}
-            </button>
-          </p>
-        ) : (
-          <div className="flex flex-col items-start gap-2">
-            <Button
-              size={compact ? "default" : "lg"}
-              disabled={busy || signingIn}
-              loading={signingIn}
-              onClick={() => void choice.signIn()}
-            >
-              {!signingIn && <BrandMark id="openai" />}
-              {t("chatgpt.signIn")}
-            </Button>
-            {signingIn && (
-              <p className="text-muted-foreground">{t("chatgpt.signingIn")}</p>
-            )}
-          </div>
-        ))}
-
-      {way.kind === "key" &&
-        (state.keyed.includes(way.provider) ? (
-          <p className="text-muted-foreground">
-            {t("keySaved")}{" "}
-            <button
-              type="button"
-              className="underline underline-offset-4"
-              disabled={busy}
-              onClick={() =>
-                void post({ action: "forget-key", provider: way.provider })
-              }
-            >
-              {t("forgetKey")}
-            </button>
-          </p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {keyForm("key", way.provider)}
-            {entry?.keysAt && (
-              <a
-                href={entry.keysAt}
-                target="_blank"
-                rel="noreferrer"
-                className="self-start text-xs text-muted-foreground underline underline-offset-4 hover:text-foreground"
-              >
-                {t("makeKey")}
-              </a>
-            )}
-          </div>
-        ))}
-
-      {way.kind === "team" &&
-        (!state.team ? (
-          <p className="text-muted-foreground">{t("team.notIn")}</p>
-        ) : teamHas(state, way.provider) ? (
-          <div className="flex flex-col gap-1 text-muted-foreground">
-            {state.team.keys
-              .filter((kept) => kept.provider === way.provider)
-              .map((kept) => (
-                <p key={kept.provider}>
-                  {t("team.kept", { hint: kept.hint, name: kept.by })}{" "}
-                  <button
-                    type="button"
-                    className="underline underline-offset-4"
-                    disabled={busy}
-                    onClick={() =>
-                      void post({
-                        action: "forget-team-key",
-                        provider: way.provider,
-                      })
-                    }
-                  >
-                    {t("team.remove")}
-                  </button>
-                </p>
-              ))}
-            <p className="text-xs">
-              {t("team.calls", {
-                mine: state.team.calls.mine,
-                all: state.team.calls.all,
-              })}
-            </p>
-          </div>
-        ) : !state.team.sealing ? (
-          <p className="text-muted-foreground">{t("team.unsealed")}</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            <p className="text-muted-foreground">{t("team.add")}</p>
-            {keyForm("team-key", way.provider)}
-          </div>
-        ))}
-
-      {way.kind === "local" && (
-        <div className="flex flex-col gap-2">
-          <p className="text-muted-foreground">
-            {state.local.ollama || state.local.lmstudio
-              ? t("localRunning", {
-                  name: [
-                    state.local.ollama ? "Ollama" : "",
-                    state.local.lmstudio ? "LM Studio" : "",
-                  ]
-                    .filter(Boolean)
-                    .join(", "),
-                })
-              : t("localMissing")}
-          </p>
-          <Input
-            spellCheck={false}
-            className={cn(compact && "h-8 text-[13px]")}
-            value={choice.address}
-            aria-label={t("address")}
-            placeholder={t("address")}
-            onChange={(event) => choice.setAddress(event.target.value)}
-          />
-        </div>
-      )}
-    </>
+              {t("makeKey")}
+              <ExternalLink className="size-3" />
+            </a>
+          )}
+        </span>
+        <KeyField
+          busy={busy}
+          onSave={(key) => post({ action: "key", provider: way.provider, key })}
+        />
+      </div>
+    );
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className={line}>
+        {state.local.ollama || state.local.lmstudio
+          ? t("localRunning", {
+              name: [
+                state.local.ollama ? "Ollama" : "",
+                state.local.lmstudio ? "LM Studio" : "",
+              ]
+                .filter(Boolean)
+                .join(", "),
+            })
+          : t("localMissing")}
+      </p>
+      <Input
+        spellCheck={false}
+        className="h-8 text-[13px]"
+        value={choice.address}
+        aria-label={t("address")}
+        placeholder={t("address")}
+        onChange={(event) => choice.setAddress(event.target.value)}
+      />
+    </div>
   );
 }
 
-/** Picking the brain on a page of its own (Settings): a vendor, its way in, then a model. */
-export function BrainChooser({
-  onChange,
+/** A model's row: its maker's mark and name, then on the right what it is and whether it is in use. */
+function ModelButton({
+  mark,
+  label,
+  sub,
+  tier,
+  suggested,
+  on,
+  busy,
+  onPick,
 }: {
-  /** Hears the brain as it stands, after it is read and after each change. */
-  onChange?: (state: BrainState) => void;
+  mark?: MarkId;
+  label: string;
+  sub?: string;
+  tier?: ModelChoice["tier"];
+  suggested?: boolean;
+  on: boolean;
+  busy: boolean;
+  onPick: () => void;
 }) {
   const t = useTranslations("brain");
-  const problemText = useProblem();
-  const choice = useBrainChoice(onChange);
-  const {
-    state,
-    vendor,
-    way,
-    id,
-    models,
-    suggested,
-    model,
-    other,
-    chosenModel,
-    busy,
-    problem,
-  } = choice;
-
-  if (!state) return null;
-  const inUse = (v: Vendor) =>
-    state.chosen && placeOf(state.choice).vendor === v.id;
-  const wayReady = choice.wayOpen && Boolean(chosenModel);
-  const isCurrent = choice.isCurrentModel(chosenModel);
-
   return (
-    <div className="flex flex-col gap-4 text-sm">
-      <div
-        className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-        role="radiogroup"
-        aria-label={t("title")}
-      >
-        {VENDORS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            role="radio"
-            aria-checked={vendor?.id === v.id}
-            className={cn(
-              "flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-3 text-left transition-[border-color,background-color,box-shadow] hover:bg-muted/50",
-              vendor?.id === v.id &&
-                "border-foreground/70 shadow-[0_0_0_1px_var(--foreground)] hover:bg-background",
-            )}
-            onClick={() => choice.lookAt(v.id)}
-          >
-            <span className="grid size-10 shrink-0 place-items-center rounded-lg border border-border bg-background">
-              <VendorMark vendor={v.id} />
-            </span>
-            <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="flex items-center justify-between gap-2">
-                <span className="truncate font-medium">
-                  {v.name ?? t("local")}
-                </span>
-                {inUse(v) ? (
-                  <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-brand">
-                    <CircleCheck className="size-3.5" />
-                    {t("inUse")}
-                  </span>
-                ) : foundHere(state, v) ? (
-                  <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                    {t("found")}
-                  </span>
-                ) : null}
-              </span>
-              <span className="text-xs leading-snug text-muted-foreground">
-                {t(`vendor.${v.id}`)}
-              </span>
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {vendor && way && (
-        <div className="flex flex-col gap-3">
-          {vendor.ways.length > 1 && (
-            <Segmented<string>
-              aria-label={vendor.name ?? t("local")}
-              className="w-full *:flex-1"
-              value={String(vendor.ways.indexOf(way))}
-              onChange={(next) => choice.lookAtWay(Number(next))}
-              options={vendor.ways.map((w, at) => ({
-                value: String(at),
-                label: (
-                  <span className="flex items-center justify-center gap-1.5">
-                    <WayIcon kind={w.kind} />
-                    {t(`way.${w.kind}`)}
-                  </span>
-                ),
-              }))}
-            />
-          )}
-          <p className="text-muted-foreground">{t(`wayNote.${way.kind}`)}</p>
-
-          <WayBody choice={choice} />
-
-          {(way.kind !== "claude-code" || state.claudeCode) && (
-            <fieldset className="flex flex-col gap-1.5">
-              <legend className="mb-1.5 font-medium">{t("model")}</legend>
-              <div className="flex flex-col overflow-hidden rounded-xl border border-border">
-                {models.map((option) => {
-                  const picked =
-                    !other.trim() && (model || suggested?.id) === option.id;
-                  const mark =
-                    way.kind === "claude-code"
-                      ? ("claude" as const)
-                      : id
-                        ? modelMark(option.id, id)
-                        : undefined;
-                  return (
-                    <label
-                      key={option.id}
-                      className={cn(
-                        "flex cursor-pointer items-center gap-2.5 border-b border-border/70 px-3 py-2.5 transition-colors last:border-b-0 hover:bg-muted/50",
-                        picked && "bg-muted/70 hover:bg-muted/70",
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="brain-model"
-                        className="sr-only"
-                        checked={picked}
-                        onChange={() => {
-                          choice.setModel(option.id);
-                          choice.setOther("");
-                        }}
-                      />
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "grid size-4 shrink-0 place-items-center rounded-full border",
-                          picked
-                            ? "border-foreground bg-foreground"
-                            : "border-foreground/30",
-                        )}
-                      >
-                        {picked && (
-                          <span className="size-1.5 rounded-full bg-background" />
-                        )}
-                      </span>
-                      {mark && <BrandMark id={mark} />}
-                      <span className="min-w-0 flex-1 truncate">
-                        {option.label}
-                      </span>
-                      {option.id === suggested?.id && (
-                        <span className="shrink-0 rounded-md bg-brand/10 px-1.5 py-0.5 text-[11px] font-medium text-brand">
-                          {t("suggested")}
-                        </span>
-                      )}
-                      {option.tier && (
-                        <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                          {t(`tier.${option.tier}`)}
-                        </span>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-              <Input
-                spellCheck={false}
-                className="mt-1"
-                value={other}
-                aria-label={t("modelOther")}
-                placeholder={
-                  way.kind === "local" ? t("modelLocal") : t("modelOther")
-                }
-                onChange={(event) => choice.setOther(event.target.value)}
-              />
-            </fieldset>
-          )}
-
-          <Button
-            variant={isCurrent ? "outline" : "brand"}
-            className="self-start"
-            disabled={busy || !wayReady || isCurrent}
-            onClick={() => void choice.use(chosenModel)}
-          >
-            {isCurrent && <Check />}
-            {isCurrent ? t("inUse") : t("use")}
-          </Button>
-        </div>
+    <button
+      type="button"
+      disabled={busy}
+      onClick={onPick}
+      className={cn(
+        "flex shrink-0 items-center gap-2 rounded-lg px-2.5 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
+        sub ? "min-h-11 py-1.5" : "h-10",
+        on ? "bg-muted" : "hover:bg-muted/60",
       )}
-      {problem && <p className="text-destructive">{problemText(problem)}</p>}
-    </div>
+    >
+      {mark && <BrandMark id={mark} className="size-3.5" />}
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[13.5px] font-medium">
+          {label}
+        </span>
+        {sub && (
+          <span className="block truncate text-[11.5px] text-muted-foreground">
+            {sub}
+          </span>
+        )}
+      </span>
+      {suggested && (
+        <span className="shrink-0 rounded-full bg-brand/10 px-2 text-[10.5px] leading-4.5 font-medium text-brand">
+          {t("suggested")}
+        </span>
+      )}
+      {tier && (
+        <span className="shrink-0 rounded-full px-2 text-[10.5px] leading-4.5 text-muted-foreground ring-1 ring-border ring-inset">
+          {t(`tier.${tier}`)}
+        </span>
+      )}
+      <span className="grid size-3.5 shrink-0 place-items-center">
+        {on && <Check className="size-3.5" />}
+      </span>
+    </button>
   );
 }
 
@@ -821,9 +620,9 @@ function PickedLabel({ state }: { state: BrainState }) {
       )}
       <span className="min-w-0 truncate font-medium">{modelName}</span>
       <span className="flex-1" />
-      {way && (
-        <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-          {t(`way.${way.kind}`)}
+      {(place.team || way) && (
+        <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+          {place.team ? t("ourTeam") : way && t(`way.${way.kind}`)}
         </span>
       )}
     </>
@@ -854,7 +653,6 @@ export function BrainPicker({
   const { state, vendor, way, id, models, suggested, busy, problem } = choice;
   if (!state) return <div className="h-12 rounded-[10px] bg-muted/60" />;
 
-  const shown = vendor ?? VENDORS[0];
   const teamModels = (state.team?.keys ?? []).flatMap((key) => {
     const entry = providerOf(key.provider as ProviderId);
     if (!entry || entry.signIn) return [];
@@ -928,6 +726,9 @@ export function BrainPicker({
             : null
       : null;
 
+  const column =
+    "flex h-9.5 shrink-0 items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50";
+
   return (
     <div className="flex flex-col gap-3">
       <Popover
@@ -953,7 +754,7 @@ export function BrainPicker({
       >
         <PopoverTrigger
           aria-label={t("title")}
-          className="flex h-12 w-full min-w-0 items-center gap-2.5 rounded-[10px] bg-background pr-3 pl-3.5 text-left text-[14.5px] ring-1 ring-foreground/15 outline-none ring-inset transition-shadow hover:ring-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:ring-foreground/40 aria-expanded:shadow-[0_0_0_3px_var(--alpha-08)]"
+          className="flex h-12 w-full min-w-0 items-center gap-2.5 rounded-[10px] bg-background pr-3 pl-3.5 text-left text-[14.5px] ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:ring-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:ring-foreground/40"
         >
           {state.chosen ? (
             <PickedLabel state={state} />
@@ -965,32 +766,30 @@ export function BrainPicker({
         <PopoverContent
           align="start"
           sideOffset={6}
-          className="h-68 w-(--anchor-width) min-w-[26rem] flex-row gap-0 overflow-hidden rounded-xl p-0"
+          className="h-76 w-(--anchor-width) min-w-[28rem] flex-row gap-0 overflow-hidden rounded-xl p-0"
         >
           <div className="flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-muted/40 p-1.5">
             {teamModels.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setTeamView(true)}
-                  className={cn(
-                    "flex h-9.5 shrink-0 items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
-                    teamView ? "bg-muted font-medium" : "hover:bg-muted/60",
-                  )}
-                >
-                  <span className="grid size-5 place-items-center rounded-[5px] bg-foreground text-background">
-                    <Users className="size-3" strokeWidth={2.5} />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate">
-                    {t("ourTeam")}
-                  </span>
-                </button>
-                <span className="mx-1.5 my-1 h-px shrink-0 bg-border" />
-              </>
+              <button
+                type="button"
+                onClick={() => setTeamView(true)}
+                className={cn(
+                  column,
+                  "mb-1.5",
+                  teamView ? "bg-muted font-medium" : "hover:bg-muted/60",
+                )}
+              >
+                <span className="grid size-5 place-items-center">
+                  <Users className="size-4 text-foreground/80" />
+                </span>
+                <span className="min-w-0 flex-1 truncate">{t("ourTeam")}</span>
+              </button>
             )}
             {VENDORS.map((v) => {
               const inUse =
-                state.chosen && placeOf(state.choice).vendor === v.id;
+                state.chosen &&
+                !placeOf(state.choice).team &&
+                placeOf(state.choice).vendor === v.id;
               return (
                 <button
                   key={v.id}
@@ -1000,8 +799,8 @@ export function BrainPicker({
                     choice.lookAt(v.id);
                   }}
                   className={cn(
-                    "flex h-9.5 shrink-0 items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
-                    v.id === shown.id && !teamView
+                    column,
+                    v.id === vendor?.id && !teamView
                       ? "bg-muted font-medium"
                       : "hover:bg-muted/60",
                   )}
@@ -1031,50 +830,20 @@ export function BrainPicker({
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-2.5 overflow-y-auto p-2 text-[13px]">
             {teamView && (
-              <>
-                <p className="px-1 text-xs leading-relaxed text-muted-foreground">
-                  {t("teamNote")}
-                </p>
-                <div className="flex flex-col gap-0.5">
-                  {teamModels.map((option) => {
-                    const mark = modelMark(option.id, option.provider);
-                    const on = onTeam(option.provider, option.id);
-                    return (
-                      <button
-                        key={`${option.provider}:${option.id}`}
-                        type="button"
-                        disabled={busy}
-                        onClick={() =>
-                          void pickTeam(option.provider, option.id)
-                        }
-                        className={cn(
-                          "flex min-h-11 shrink-0 items-center gap-2 rounded-lg px-2.5 py-1.5 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
-                          on ? "bg-muted" : "hover:bg-muted/60",
-                        )}
-                      >
-                        {mark && <BrandMark id={mark} className="size-3.5" />}
-                        <span className="min-w-0">
-                          <span className="flex items-center gap-1.5">
-                            <span className="truncate text-[13.5px] font-medium">
-                              {option.label}
-                            </span>
-                            {option === teamFirst && (
-                              <span className="shrink-0 rounded-md bg-brand/10 px-1.5 text-[10.5px] leading-4 font-medium text-brand">
-                                {t("suggested")}
-                              </span>
-                            )}
-                          </span>
-                          <span className="block text-[11.5px] text-muted-foreground">
-                            {t("teamVia", { vendor: option.vendor })}
-                          </span>
-                        </span>
-                        <span className="flex-1" />
-                        {on && <Check className="size-3.5 shrink-0" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
+              <div className="flex flex-col gap-0.5">
+                {teamModels.map((option) => (
+                  <ModelButton
+                    key={`${option.provider}:${option.id}`}
+                    mark={modelMark(option.id, option.provider)}
+                    label={option.label}
+                    sub={t("teamVia", { vendor: option.vendor })}
+                    suggested={option === teamFirst}
+                    on={onTeam(option.provider, option.id)}
+                    busy={busy}
+                    onPick={() => void pickTeam(option.provider, option.id)}
+                  />
+                ))}
+              </div>
             )}
             {!teamView && vendor && way && (
               <>
@@ -1092,54 +861,27 @@ export function BrainPicker({
                     }))}
                   />
                 )}
-                <p className="px-1 text-xs leading-relaxed text-muted-foreground">
-                  {t(`wayNote.${way.kind}`)}
-                </p>
-                {!(way.kind === "claude-code" && state.claudeCode) && (
-                  <div className="flex flex-col gap-2 px-1">
-                    <WayBody choice={choice} compact />
-                  </div>
-                )}
+                <WaySetup choice={choice} />
                 {choice.wayOpen ? (
                   <div className="flex flex-col gap-0.5">
-                    {models.map((option) => {
-                      const mark =
-                        way.kind === "claude-code"
-                          ? ("claude" as const)
-                          : id
-                            ? modelMark(option.id, id)
-                            : undefined;
-                      const on = choice.isCurrentModel(option.id);
-                      return (
-                        <button
-                          key={option.id}
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void pick(option.id)}
-                          className={cn(
-                            "flex h-10 shrink-0 items-center gap-2 rounded-lg px-2.5 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
-                            on ? "bg-muted" : "hover:bg-muted/60",
-                          )}
-                        >
-                          {mark && <BrandMark id={mark} className="size-3.5" />}
-                          <span className="min-w-0 truncate text-[13.5px] font-medium">
-                            {option.label}
-                          </span>
-                          {option.tier && (
-                            <span className="shrink-0 rounded-md px-1.5 text-[10.5px] leading-4 text-muted-foreground ring-1 ring-border ring-inset">
-                              {t(`tier.${option.tier}`)}
-                            </span>
-                          )}
-                          {option.id === suggested?.id && (
-                            <span className="shrink-0 rounded-md bg-brand/10 px-1.5 text-[10.5px] leading-4 font-medium text-brand">
-                              {t("suggested")}
-                            </span>
-                          )}
-                          <span className="flex-1" />
-                          {on && <Check className="size-3.5 shrink-0" />}
-                        </button>
-                      );
-                    })}
+                    {models.map((option) => (
+                      <ModelButton
+                        key={option.id}
+                        mark={
+                          way.kind === "claude-code"
+                            ? "claude"
+                            : id
+                              ? modelMark(option.id, id)
+                              : undefined
+                        }
+                        label={option.label}
+                        tier={option.tier}
+                        suggested={option.id === suggested?.id}
+                        on={choice.isCurrentModel(option.id)}
+                        busy={busy}
+                        onPick={() => void pick(option.id)}
+                      />
+                    ))}
                     <form
                       className="mt-1 px-1 pb-1"
                       onSubmit={(event) => {
@@ -1164,7 +906,7 @@ export function BrainPicker({
                     </form>
                   </div>
                 ) : (
-                  <p className="mx-1 border-t border-dashed border-border pt-2.5 text-xs text-muted-foreground">
+                  <p className="px-1 text-xs text-muted-foreground">
                     {t("modelsAfter")}
                   </p>
                 )}
@@ -1180,7 +922,7 @@ export function BrainPicker({
       </Popover>
 
       {offer && (
-        <div className="flex items-center gap-3 rounded-xl bg-muted/50 py-3 pr-3 pl-4 ring-1 ring-foreground/5 ring-inset">
+        <div className="flex items-center gap-3 rounded-xl bg-muted/50 py-3 pr-3 pl-4">
           <BrandMark id={offer.mark} className="size-5" />
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-medium">{offer.title}</span>
@@ -1194,5 +936,123 @@ export function BrainPicker({
         </div>
       )}
     </div>
+  );
+}
+
+/** The vendors an office can keep a key for: every one that takes a key. */
+const TEAM_PROVIDERS: ProviderId[] = [
+  "anthropic",
+  "openai",
+  "google",
+  "openrouter",
+];
+
+/**
+ * Settings › Office: the office's own keys, one per vendor, that every clone in it may think with
+ * (team billing, features/relay/team-ai.ts). Each is checked with the vendor and kept sealed on the
+ * office's server; this page only sees its last characters and who added it.
+ */
+export function TeamKeys() {
+  const t = useTranslations("brain.team");
+  const tBrain = useTranslations("brain");
+  const problemText = useProblem();
+  const choice = useBrainChoice();
+  const [adding, setAdding] = useState<ProviderId>("anthropic");
+  const { state, busy, problem } = choice;
+  if (!state?.team) return null;
+  const team = state.team;
+  const free = TEAM_PROVIDERS.filter((p) => !teamHas(state, p));
+  const vendorName = (p: string) => providerOf(p as ProviderId)?.name ?? p;
+  const pickFirstFree = free.includes(adding) ? adding : free[0];
+  return (
+    <section className="flex flex-col gap-3">
+      <div className="space-y-0.5">
+        <h3 className="text-sm font-medium">{t("title")}</h3>
+        <p className="text-[13px] leading-relaxed text-muted-foreground">
+          {t("hint")}
+        </p>
+      </div>
+      {team.keys.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {team.keys.map((kept) => (
+            <li
+              key={kept.provider}
+              className="flex h-11 items-center gap-3 rounded-[10px] bg-muted/50 px-3.5"
+            >
+              <BrandMark
+                id={PROVIDER_MARKS[kept.provider as ProviderId] ?? "openrouter"}
+                className="size-4"
+              />
+              <span className="min-w-0 flex-1 truncate text-sm">
+                <span className="font-medium">{vendorName(kept.provider)}</span>
+                <span className="text-muted-foreground">
+                  {" · "}
+                  {t("kept", { hint: kept.hint, name: kept.by })}
+                </span>
+              </span>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  void choice.post({
+                    action: "forget-team-key",
+                    provider: kept.provider,
+                  })
+                }
+                className="shrink-0 text-[13px] text-muted-foreground underline underline-offset-4 hover:text-destructive"
+              >
+                {t("remove")}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!team.sealing ? (
+        <p className="text-[13px] text-muted-foreground">{t("unsealed")}</p>
+      ) : (
+        pickFirstFree && (
+          <div className="flex flex-col gap-2">
+            <Segmented<string>
+              view
+              size="sm"
+              aria-label={t("title")}
+              className="w-full *:flex-1"
+              value={pickFirstFree}
+              onChange={(next) => setAdding(next as ProviderId)}
+              options={free.map((p) => ({ value: p, label: vendorName(p) }))}
+            />
+            <KeyField
+              busy={busy}
+              onSave={(key) =>
+                choice.post({
+                  action: "team-key",
+                  provider: pickFirstFree,
+                  key,
+                })
+              }
+            />
+            {providerOf(pickFirstFree)?.keysAt && (
+              <a
+                href={providerOf(pickFirstFree)?.keysAt}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 self-start text-xs text-muted-foreground hover:text-foreground"
+              >
+                {tBrain("makeKey")}
+                <ExternalLink className="size-3" />
+              </a>
+            )}
+          </div>
+        )
+      )}
+      {team.keys.length > 0 && (
+        <p className="text-xs text-muted-foreground">
+          {t("calls", { mine: team.calls.mine, all: team.calls.all })}
+        </p>
+      )}
+      {problem && (
+        <p className="text-xs text-destructive">{problemText(problem)}</p>
+      )}
+    </section>
   );
 }

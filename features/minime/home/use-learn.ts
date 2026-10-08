@@ -28,8 +28,17 @@ export interface Source {
 export interface Knows {
   user: { kind: "work" | "decide" | "voice"; text: string }[];
   work: string[];
-  projects: { name: string; summary: string; now?: string; path: string }[];
+  projects: {
+    name: string;
+    summary: string;
+    now?: string;
+    path: string;
+    /** Where it lives on the computer. */
+    folder?: string;
+  }[];
   people: { name: string; summary: string; path: string }[];
+  /** Where their work lives: each folder with what it holds. */
+  places?: { path: string; about: string }[];
 }
 
 export interface LearnState {
@@ -44,7 +53,7 @@ export interface LearnState {
   /** What the clone would answer a colleague in the person's place, from the last reading. */
   example?: { question: string; answer: string };
   /** Who they are at work, as the last reading saw it, for them to confirm. */
-  about?: { role: string; owns: string[]; tools: string[] };
+  about?: { role: string; owns: string[]; tools: string[]; name?: string };
   /** Everything the last reading learned: how they work, their work, projects and people. */
   knows?: Knows;
   /** How many new conversations are worth reading again, when it has been a while. */

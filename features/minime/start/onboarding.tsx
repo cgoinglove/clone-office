@@ -13,19 +13,17 @@
 // (`.claude/rules/taste.md`, No growing panes), and what is under way always shows it (Under way).
 
 import {
-  ArrowLeft,
-  ArrowRight,
   Bookmark,
   BookOpen,
   Check,
+  ChevronLeft,
+  ChevronRight,
   CircleCheck,
   EyeOff,
-  Folder as FolderIcon,
   Link2,
   Loader2,
   Monitor,
   ScanSearch,
-  Search,
   Send,
   UserCheck,
   UserRound,
@@ -44,7 +42,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
@@ -64,7 +61,12 @@ import {
   brainLabel,
   brainReady,
 } from "../brain-panel";
-import type { Folder, LeftOut } from "../folder-list";
+import {
+  FolderField,
+  type Folders,
+  TOOL_MARKS,
+  useFolders,
+} from "../folder-list";
 import { useLearn } from "../home/use-learn";
 import { HEADERS, splitList } from "../home/use-office";
 import { LanguageSwitch } from "../language-switch";
@@ -74,30 +76,27 @@ import { type DemoWords, useDemoRoom } from "./demo";
 
 type Step = "brain" | "learn" | "you" | "ready";
 type Team = "alone" | "join" | "open";
-type Autonomy = "ask" | "reads" | "auto";
+type Autonomy = "ask" | "auto";
 
 /** The steps in order; someone invited joins their office first, so its models are there to pick. */
 const ORDER: Step[] = ["brain", "learn", "you", "ready"];
 const INVITED_ORDER: Step[] = ["you", "brain", "learn", "ready"];
 
-/** The tools a person may already use, shown on the first screen: the clone keeps to them. */
+/**
+ * The AI a person may already use, shown on the first screen: the clone thinks with their plan or
+ * key (Claude Code, ChatGPT) and learns from the conversations kept on this computer (Claude Code,
+ * Codex, Cursor, Hermes Agent).
+ */
 const USED: [MarkId, string][] = [
   ["claude", "Claude Code"],
   ["openai", "ChatGPT"],
   ["codex", "Codex"],
   ["cursor", "Cursor"],
+  ["hermes", "Hermes"],
 ];
 
-/** Each tool whose records the reading finds, by its own mark and name. */
-const TOOL_MARKS: Record<string, [MarkId, string]> = {
-  claude: ["claude", "Claude Code"],
-  codex: ["codex", "Codex"],
-  cursor: ["cursor", "Cursor"],
-  hermes: ["hermes", "Hermes"],
-};
-
-/** What the reading reads, in the order it reads them (learn/learn.ts). */
-const SOURCES = ["notes", "inputs", "commits", "work"] as const;
+/** What the reading reads, in the order it reads them (learn/gather.ts SOURCE_ORDER). */
+const SOURCES = ["notes", "places", "inputs", "commits", "work"] as const;
 
 export function Onboarding() {
   const t = useTranslations("start");
@@ -117,6 +116,7 @@ export function Onboarding() {
   const about = learn.about;
   useEffect(() => {
     if (!about) return;
+    setName((was) => was || about.name || "");
     setRole((was) => was || about.role);
     setOwns((was) => was || about.owns.join(", "));
     setTools((was) => (was.length ? was : about.tools));
@@ -143,8 +143,7 @@ export function Onboarding() {
     void fetch("/api/me/preferences", { headers: HEADERS })
       .then((response) => response.json())
       .then((data) => {
-        if (["ask", "reads", "auto"].includes(data?.autonomy))
-          setAutonomy(data.autonomy);
+        if (data?.autonomy === "auto") setAutonomy("auto");
       })
       .catch(() => undefined);
   }, []);
@@ -359,7 +358,6 @@ export function Onboarding() {
               onAnyway={() => go(next)}
             />
           )}
-          <BrainGuide />
         </div>
       </>
     );
@@ -592,7 +590,7 @@ export function Onboarding() {
               onClick={() => go(at > 0 ? order[at - 1] : "hello")}
               className="-ml-2.5 grid size-10 shrink-0 place-items-center rounded-[10px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              <ArrowLeft className="size-4.5" />
+              <ChevronLeft className="size-5" />
             </button>
           )}
           <div className="flex min-w-0 flex-1 items-center">{bar.guide}</div>
@@ -701,20 +699,21 @@ function Heading({ title, body }: { title: string; body: string }) {
 }
 
 /**
- * The clone's own line on the bar, after Thursday's: a brand dot that breathes, then what to do now.
- * While something runs, the words shine.
+ * The clone's own line on the bar, after Thursday's: a brand dot that pulses in place (it never
+ * grows past itself, so nothing around it is cut), then what to do now. While something runs, the
+ * words shine.
  */
 function Guide({ children, busy }: { children: string; busy?: boolean }) {
   return (
     <p className="flex min-w-0 items-center gap-2.5 text-[13.5px] text-muted-foreground">
-      <span className="relative flex size-2 shrink-0" aria-hidden>
-        <span className="absolute inline-flex size-full animate-ping rounded-full bg-brand/45 motion-reduce:hidden" />
-        <span className="relative inline-flex size-2 rounded-full bg-brand" />
-      </span>
+      <span
+        aria-hidden
+        className="size-2 shrink-0 animate-pulse rounded-full bg-brand motion-reduce:animate-none"
+      />
       {busy ? (
-        <ShinyText text={children} className="truncate" />
+        <ShinyText text={children} className="line-clamp-2" />
       ) : (
-        <span className="truncate">{children}</span>
+        <span className="line-clamp-2">{children}</span>
       )}
     </p>
   );
@@ -737,15 +736,15 @@ function Primary({
     <Button
       variant="brand"
       className={cn(
-        "h-11 gap-2 rounded-[10px] pr-4 pl-5 text-[15px] font-semibold tracking-[-0.01em] shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_8px_18px_-8px_color-mix(in_oklab,var(--brand)_60%,transparent)] disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none",
-        big && "pl-5.5",
+        "h-11 gap-1.5 pr-4.5 pl-6 text-[15px] font-semibold tracking-[-0.01em] disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100",
+        big && "pl-6.5",
       )}
       disabled={disabled}
       loading={busy}
       onClick={onClick}
     >
       {children}
-      {!busy && <ArrowRight className="size-4.5" />}
+      {!busy && <ChevronRight className="size-4.5" />}
     </Button>
   );
 }
@@ -787,15 +786,9 @@ function Hello() {
       <p className="mt-4 animate-in text-[15.5px] leading-relaxed text-muted-foreground delay-150 duration-700 fill-mode-backwards fade-in slide-in-from-bottom-2">
         {t("body")}
       </p>
-      <ul className="mt-5 flex animate-in flex-col delay-300 duration-700 fill-mode-backwards fade-in">
-        {points.map(([part, Icon], index) => (
-          <li
-            key={part}
-            className={cn(
-              "flex gap-3.5 py-3.5",
-              index > 0 && "border-t border-border",
-            )}
-          >
+      <ul className="mt-6 flex animate-in flex-col gap-5 delay-300 duration-700 fill-mode-backwards fade-in">
+        {points.map(([part, Icon]) => (
+          <li key={part} className="flex gap-3.5">
             <span
               className={cn(
                 "grid size-9 shrink-0 place-items-center rounded-[10px]",
@@ -817,18 +810,16 @@ function Hello() {
           </li>
         ))}
       </ul>
-      <div className="mt-3.5 flex animate-in flex-col gap-2.5 rounded-xl bg-muted/50 p-3.5 delay-500 duration-700 fill-mode-backwards fade-in">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-          <span className="text-sm font-semibold">{t("uses.title")}</span>
-          <span className="text-xs text-muted-foreground">
-            {t("uses.note")}
-          </span>
-        </div>
-        <ul className="flex flex-wrap gap-1.5">
+      <div className="mt-7 flex animate-in flex-col gap-2 rounded-xl bg-muted/50 px-4 py-3.5 delay-500 duration-700 fill-mode-backwards fade-in">
+        <span className="text-sm font-semibold">{t("uses.title")}</span>
+        <span className="-mt-1 text-xs text-muted-foreground">
+          {t("uses.note")}
+        </span>
+        <ul className="mt-1 flex flex-wrap gap-x-3.5 gap-y-1.5">
           {USED.map(([mark, label]) => (
             <li
               key={mark}
-              className="flex h-7 items-center gap-1.5 rounded-[7px] bg-background px-2 text-[12.5px] shadow-[inset_0_0_0_1px_var(--alpha-10)]"
+              className="flex h-6 items-center gap-1.5 text-[13px]"
             >
               <BrandMark id={mark} className="size-3.5" />
               {label}
@@ -915,54 +906,7 @@ function Answered({
   );
 }
 
-/** What each way of paying for a model means, for someone who has never had to pick one. */
-function BrainGuide() {
-  const t = useTranslations("start.brain.guide");
-  return (
-    <div className="mt-8 flex flex-col gap-2.5">
-      <span className="text-[13px] font-medium">{t("title")}</span>
-      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2 text-[13.5px] leading-snug">
-        {(["plan", "key", "team", "local"] as const).map((kind) => (
-          <div key={kind} className="contents">
-            <dt className="font-medium">{t(`${kind}.title`)}</dt>
-            <dd className="text-muted-foreground">{t(`${kind}.body`)}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
-/** The folders the person worked in lately and what else they keep out, read once for the step. */
-function useFolders() {
-  const [list, setList] = useState<Folder[] | null>(null);
-  const [others, setOthers] = useState<LeftOut[]>([]);
-  const [excludes, setExcludes] = useState<string[]>([]);
-  const load = useCallback(async () => {
-    const data = await fetch("/api/me/sources", { headers: HEADERS })
-      .then((r) => r.json())
-      .catch(() => null);
-    setList(data?.folders ?? []);
-    setExcludes(data?.exclude ?? []);
-    setOthers(data?.others ?? []);
-  }, []);
-  useEffect(() => {
-    void load();
-  }, [load]);
-  const save = async (next: string[]) => {
-    const response = await fetch("/api/me/sources", {
-      method: "POST",
-      headers: HEADERS,
-      body: JSON.stringify({ exclude: next }),
-    }).catch(() => undefined);
-    if (!response?.ok) return;
-    setExcludes(next);
-    await load();
-  };
-  return { list, others, excludes, save };
-}
-
-/** Letting it read: what it reads, keeps and never keeps, the folders to leave out, and the reading. */
+/** Letting it read: what it reads, keeps and never keeps, the folders it reads, and the reading. */
 function LearnStep({
   learn,
   lang,
@@ -972,7 +916,7 @@ function LearnStep({
 }: {
   learn: ReturnType<typeof useLearn>;
   lang: string;
-  folders: ReturnType<typeof useFolders>;
+  folders: Folders;
   nothingToRead: boolean;
   count: number;
 }) {
@@ -1048,19 +992,6 @@ function LearnStep({
           </span>
         </div>
         <ReadingList progress={learn.progress} />
-        {learn.kept.length > 0 && (
-          <ul className="mt-4 flex flex-col gap-1 pl-1">
-            {learn.kept.slice(-4).map((line) => (
-              <li
-                key={line}
-                className="flex animate-in items-baseline gap-2.5 text-[13.5px] text-muted-foreground duration-500 fade-in"
-              >
-                <span className="size-1 shrink-0 -translate-y-0.5 rounded-full bg-foreground/40" />
-                {line}
-              </li>
-            ))}
-          </ul>
-        )}
       </>
     );
 
@@ -1069,8 +1000,8 @@ function LearnStep({
       <>
         <Knowledge learn={learn} count={count} />
         {learn.example && (
-          <div className="mt-7 flex animate-in flex-col gap-3 duration-500 fade-in">
-            <div className="flex max-w-[86%] items-start gap-2.5">
+          <div className="mt-6 flex animate-in flex-col gap-2.5 duration-500 fade-in">
+            <div className="flex max-w-[88%] items-start gap-2.5">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted">
                 <UserRound className="size-3.5 text-muted-foreground" />
               </span>
@@ -1078,16 +1009,16 @@ function LearnStep({
                 <span className="block text-xs text-muted-foreground">
                   {t("learn.example")}
                 </span>
-                <span className="mt-0.5 block text-[14.5px] leading-relaxed">
+                <span className="mt-0.5 line-clamp-2 text-[14px] leading-relaxed">
                   {learn.example.question}
                 </span>
               </span>
             </div>
-            <div className="flex max-w-[86%] flex-col items-end gap-1 self-end">
+            <div className="flex max-w-[88%] flex-col items-end gap-1 self-end">
               <span className="text-xs text-muted-foreground">
                 {t("learn.exampleAnswer")}
               </span>
-              <span className="rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[14.5px] leading-relaxed">
+              <span className="line-clamp-3 rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[14px] leading-relaxed">
                 {learn.example.answer}
               </span>
             </div>
@@ -1103,17 +1034,11 @@ function LearnStep({
 
   return (
     <>
-      <ul className="mt-5 flex flex-col">
-        {plan.map(([part, Icon], index) => (
-          <li
-            key={part}
-            className={cn(
-              "flex gap-3 py-3",
-              index > 0 && "border-t border-border",
-            )}
-          >
-            <Icon className="mt-0.5 size-4 shrink-0" />
-            <span className="w-28 shrink-0 text-sm font-medium">
+      <ul className="mt-6 flex flex-col gap-3.5">
+        {plan.map(([part, Icon]) => (
+          <li key={part} className="flex gap-3">
+            <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <span className="w-24 shrink-0 text-sm font-medium">
               {tRun(`plan.${part}.title`)}
             </span>
             <span className="min-w-0 flex-1 text-sm leading-relaxed text-muted-foreground">
@@ -1122,36 +1047,29 @@ function LearnStep({
           </li>
         ))}
       </ul>
-      {found.length > 0 && (
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-[12.5px] text-muted-foreground">
-            {t("learn.found")}
-          </span>
-          {found.map((tool) => (
-            <span
-              key={tool}
-              className="flex h-6 items-center gap-1.5 rounded-md bg-muted px-2 text-xs"
-            >
-              <BrandMark id={TOOL_MARKS[tool][0]} className="size-3" />
-              {TOOL_MARKS[tool][1]}
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="mt-6 flex flex-col gap-2">
+      <div className="mt-7 flex flex-col gap-2">
         <span className="flex items-baseline justify-between gap-3">
           <span className="text-[13px] font-medium">{t("learn.folders")}</span>
-          {folders.list && (
-            <span className="text-xs text-muted-foreground">
-              {t("learn.foldersRecent", { count: folders.list.length })}
-            </span>
-          )}
+          <span className="text-xs text-muted-foreground">
+            {t("learn.foldersHint")}
+          </span>
         </span>
-        <FolderPicker folders={folders} />
+        <FolderField folders={folders} />
+        {found.length > 0 && (
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
+            <span className="text-muted-foreground">{t("learn.found")}</span>
+            {found.map((tool) => (
+              <span key={tool} className="flex items-center gap-1.5">
+                <BrandMark id={TOOL_MARKS[tool][0]} className="size-3.5" />
+                {TOOL_MARKS[tool][1]}
+              </span>
+            ))}
+          </div>
+        )}
         <button
           type="button"
           onClick={() => setBringing(true)}
-          className="mt-1 self-start text-[13px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          className="mt-1 self-start text-[12.5px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
         >
           {t("learn.bring")}
         </button>
@@ -1206,7 +1124,19 @@ function ReadingList({
   );
 }
 
-/** Everything the reading learned, by where it went: their work, what they are on, how they work. */
+/** One kind of thing the reading learned: its first lines on the row, and all of them in a dialog. */
+interface KnownRow {
+  id: string;
+  label: string;
+  /** One line each, the first shown on the row. */
+  items: { title: string; detail?: string; note?: string }[];
+}
+
+/**
+ * Everything the reading learned, one row a kind (what they do, what they are on, the people, where
+ * their work lives, its surroundings, how they work): each row one line however much it holds, with
+ * how many and a chevron, and the whole list a press away, so the step never grows.
+ */
 function Knowledge({
   learn,
   count,
@@ -1215,94 +1145,62 @@ function Knowledge({
   count: number;
 }) {
   const t = useTranslations("start.learn");
+  const [open, setOpen] = useState<KnownRow | null>(null);
   const knows = learn.knows;
-  const more = (left: number) =>
-    left > 0 ? (
-      <span className="text-[13px] text-muted-foreground">
-        {t("knows.more", { count: left })}
-      </span>
-    ) : null;
-  const rows: { label: string; body: ReactNode }[] = [];
+  const rows: KnownRow[] = [];
   if (learn.about?.role)
     rows.push({
+      id: "role",
       label: t("knows.role"),
-      body: (
-        <span className="text-[14px]">
-          {learn.about.role}
-          {learn.about.owns.length > 0 && (
-            <span className="text-muted-foreground">
-              {" · "}
-              {learn.about.owns.join(", ")}
-            </span>
-          )}
-        </span>
-      ),
+      items: [{ title: learn.about.role, detail: learn.about.owns.join(", ") }],
     });
   if (knows?.projects.length)
     rows.push({
+      id: "projects",
       label: t("knows.projects"),
-      body: (
-        <ul className="flex flex-col gap-1.5">
-          {knows.projects.slice(0, 4).map((project) => (
-            <li key={project.path} className="text-[14px] leading-snug">
-              <span className="font-medium">{project.name}</span>
-              {project.summary && (
-                <span className="text-muted-foreground">
-                  {" · "}
-                  {project.summary}
-                </span>
-              )}
-              {project.now && (
-                <span className="mt-0.5 block text-[13px] text-muted-foreground">
-                  {project.now}
-                </span>
-              )}
-            </li>
-          ))}
-          {more(knows.projects.length - 4)}
-        </ul>
-      ),
+      items: knows.projects.map((project) => ({
+        title: project.name,
+        detail: project.summary,
+        note: [project.folder, project.now].filter(Boolean).join(" · "),
+      })),
     });
   if (knows?.people.length)
     rows.push({
+      id: "people",
       label: t("knows.people"),
-      body: (
-        <ul className="flex flex-col gap-1">
-          {knows.people.slice(0, 4).map((person) => (
-            <li key={person.path} className="text-[14px] leading-snug">
-              <span className="font-medium">{person.name}</span>
-              {person.summary && (
-                <span className="text-muted-foreground">
-                  {" · "}
-                  {person.summary}
-                </span>
-              )}
-            </li>
-          ))}
-          {more(knows.people.length - 4)}
-        </ul>
-      ),
+      items: knows.people.map((person) => ({
+        title: person.name,
+        detail: person.summary,
+      })),
+    });
+  if (knows?.places?.length)
+    rows.push({
+      id: "places",
+      label: t("knows.places"),
+      items: knows.places.map((place) => ({
+        title: place.path.split("/").filter(Boolean).at(-1) ?? place.path,
+        detail: place.about,
+        note: place.path,
+      })),
     });
   if (knows?.work.length)
     rows.push({
+      id: "work",
       label: t("knows.work"),
-      body: <Lines lines={knows.work} more={more} />,
+      items: knows.work.map((line) => ({ title: line })),
     });
-  for (const kind of ["work", "decide", "voice"] as const) {
-    const lines = (knows?.user ?? [])
-      .filter((trait) => trait.kind === kind)
-      .map((trait) => trait.text);
-    if (lines.length)
-      rows.push({
-        label: t(`knows.traits.${kind}`),
-        body: <Lines lines={lines} more={more} />,
-      });
-  }
-  // A reading from before it learned this broadly kept only lines about them.
-  if (!knows)
+  const traits = knows?.user ?? [];
+  if (traits.length || !knows)
     rows.push({
-      label: t("knows.traits.work"),
-      body: <Lines lines={learn.kept} more={more} />,
+      id: "traits",
+      label: t("knows.traits.all"),
+      items: knows
+        ? traits.map((trait) => ({
+            title: trait.text,
+            note: t(`knows.traits.${trait.kind}`),
+          }))
+        : // A reading from before it learned this broadly kept only lines about them.
+          learn.kept.map((line) => ({ title: line })),
     });
 
   return (
@@ -1313,240 +1211,67 @@ function Knowledge({
           {t("knows.saved", { count })}
         </span>
       </span>
-      <div className="flex flex-col">
-        {rows.map((row, index) => (
-          <div
-            key={row.label}
-            className={cn(
-              "flex animate-in gap-4 py-2.5 duration-500 fade-in",
-              index > 0 && "border-t border-border",
-            )}
+      <div className="flex flex-col gap-0.5">
+        {rows.map((row) => (
+          <button
+            key={row.id}
+            type="button"
+            onClick={() => setOpen(row)}
+            className="group -mx-2 flex h-10 animate-in items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors duration-500 fade-in hover:bg-muted/60 focus-visible:bg-muted/60"
           >
-            <span className="w-24 shrink-0 pt-px text-[13px] text-muted-foreground">
+            <span className="w-28 shrink-0 text-[13px] text-muted-foreground">
               {row.label}
             </span>
-            <div className="min-w-0 flex-1">{row.body}</div>
-          </div>
+            <span className="min-w-0 flex-1 truncate text-[14px]">
+              {row.items.map((item) => item.title).join(", ")}
+            </span>
+            {row.items.length > 1 && (
+              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11.5px] text-muted-foreground tabular-nums">
+                {row.items.length}
+              </span>
+            )}
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+          </button>
         ))}
       </div>
-    </div>
-  );
-}
-
-function Lines({
-  lines,
-  more,
-}: {
-  lines: string[];
-  more: (left: number) => ReactNode;
-}) {
-  return (
-    <ul className="flex flex-col gap-0.5">
-      {lines.slice(0, 4).map((line) => (
-        <li
-          key={line}
-          className="flex items-baseline gap-2 text-[14px] leading-relaxed"
-        >
-          <span className="size-1 shrink-0 -translate-y-0.5 rounded-full bg-foreground" />
-          {line}
-        </li>
-      ))}
-      {more(lines.length - 4)}
-    </ul>
-  );
-}
-
-/** The folders to leave out as one field; pressing it opens them all in a dialog, with a search. */
-function FolderPicker({ folders }: { folders: ReturnType<typeof useFolders> }) {
-  const t = useTranslations("start.learn");
-  const tRun = useTranslations("firstRun");
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [path, setPath] = useState("");
-  const { list, others, excludes, save } = folders;
-  const out = [
-    ...(list ?? []).filter((folder) => folder.excluded).map((f) => f.name),
-    ...others.map((other) => other.name),
-  ];
-  const needle = query.trim().toLowerCase();
-  const shown = (list ?? []).filter(
-    (folder) =>
-      !needle ||
-      folder.name.toLowerCase().includes(needle) ||
-      folder.path.toLowerCase().includes(needle),
-  );
-  const toggle = (folder: Folder) =>
-    void save(
-      folder.excluded
-        ? excludes.filter((p) => p !== folder.path)
-        : [...excludes, folder.path],
-    );
-
-  return (
-    <>
-      <button
-        type="button"
-        disabled={list === null}
-        onClick={() => setOpen(true)}
-        className="flex h-11 w-full min-w-0 items-center gap-2.5 rounded-[10px] bg-background px-3.5 text-left text-[14.5px] ring-1 ring-foreground/15 outline-none ring-inset transition-shadow hover:ring-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+      <Dialog
+        open={open !== null}
+        onOpenChange={(next) => !next && setOpen(null)}
       >
-        <FolderIcon className="size-4 shrink-0 text-muted-foreground" />
-        {out.length === 0 ? (
-          <span className="flex-1 text-muted-foreground">
-            {t("foldersNone")}
-          </span>
-        ) : (
-          <>
-            <span className="shrink-0 font-medium">
-              {t("foldersSome", { count: out.length })}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-muted-foreground">
-              {out.join(", ")}
-            </span>
-          </>
-        )}
-        <span className="shrink-0 text-[13px] text-muted-foreground">
-          {t("pick")}
-        </span>
-      </button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-2xl">
-          <div className="flex flex-col gap-1 px-6 pt-5.5 pb-3.5">
+        <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl">
+          <div className="flex flex-col gap-1 px-6 pt-5.5 pb-3">
             <DialogTitle className="text-lg font-semibold tracking-[-0.01em]">
-              {t("folders")}
+              {open?.label}
             </DialogTitle>
-            <DialogDescription className="pr-6 text-[13.5px] leading-relaxed">
-              {t("foldersNote")}
+            <DialogDescription className="text-[13.5px]">
+              {t("knows.where")}
             </DialogDescription>
           </div>
-          <div className="relative px-6 pb-2.5">
-            <Search className="pointer-events-none absolute top-1/2 left-9 size-4 -translate-y-[calc(50%+5px)] text-muted-foreground" />
-            <Input
-              autoFocus
-              value={query}
-              spellCheck={false}
-              aria-label={t("foldersSearch")}
-              placeholder={t("foldersSearch")}
-              onChange={(event) => setQuery(event.target.value)}
-              className="h-10 pl-9"
-            />
-          </div>
-          <ul className="flex max-h-[min(24rem,50vh)] flex-col gap-0.5 overflow-y-auto px-3 pb-3">
-            {shown.map((folder) => {
-              // Kept out by a name pattern rather than by itself: the pattern's row brings it back.
-              const byPattern =
-                folder.excluded && !excludes.includes(folder.path);
-              return (
-                <li key={folder.path}>
-                  <button
-                    type="button"
-                    role="checkbox"
-                    aria-checked={folder.excluded}
-                    disabled={byPattern}
-                    onClick={() => toggle(folder)}
-                    className={cn(
-                      "flex w-full items-center gap-3.5 rounded-[10px] px-3 py-2.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted disabled:opacity-60",
-                      folder.excluded && "bg-muted/50",
-                    )}
-                  >
-                    <Tick on={folder.excluded} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[14.5px] font-medium">
-                        {folder.name}
-                      </span>
-                      <span className="block truncate font-mono text-xs text-muted-foreground">
-                        {folder.path}
-                      </span>
-                    </span>
-                    <span className="flex shrink-0 gap-1">
-                      {(folder.tools ?? [])
-                        .filter((tool) => TOOL_MARKS[tool])
-                        .map((tool) => (
-                          <BrandMark
-                            key={tool}
-                            id={TOOL_MARKS[tool][0]}
-                            className="size-3.5"
-                          />
-                        ))}
-                    </span>
-                    <span className="w-20 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-                      {tRun("sessions", { count: folder.sessions })}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-            {!needle &&
-              others.map((other) => (
-                <li key={other.pattern}>
-                  <button
-                    type="button"
-                    role="checkbox"
-                    aria-checked
-                    title={other.pattern}
-                    onClick={() =>
-                      void save(excludes.filter((p) => p !== other.pattern))
-                    }
-                    className="flex w-full items-center gap-3.5 rounded-[10px] bg-muted/50 px-3 py-2.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted"
-                  >
-                    <Tick on />
-                    <span className="min-w-0 flex-1 truncate font-mono text-[13px]">
-                      {other.pattern}
-                    </span>
-                  </button>
-                </li>
-              ))}
+          <ul className="flex max-h-[min(28rem,60vh)] flex-col gap-3.5 overflow-y-auto px-6 pt-1 pb-6">
+            {open?.items.map((item) => (
+              <li
+                key={`${item.title}${item.note ?? ""}`}
+                className="flex flex-col gap-0.5"
+              >
+                <span className="text-[14.5px] leading-snug font-medium">
+                  {item.title}
+                </span>
+                {item.detail && (
+                  <span className="text-[13.5px] leading-relaxed text-muted-foreground">
+                    {item.detail}
+                  </span>
+                )}
+                {item.note && (
+                  <span className="font-mono text-xs break-all text-muted-foreground">
+                    {item.note}
+                  </span>
+                )}
+              </li>
+            ))}
           </ul>
-          <form
-            className="flex items-center gap-2.5 border-t border-border bg-muted/40 px-6 py-3.5"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const pattern = path.trim();
-              if (!pattern || excludes.includes(pattern)) return;
-              void save([...excludes, pattern]).then(() => setPath(""));
-            }}
-          >
-            <Input
-              value={path}
-              spellCheck={false}
-              aria-label={t("foldersPath")}
-              placeholder={t("foldersPath")}
-              onChange={(event) => setPath(event.target.value)}
-              className="h-10 flex-1 bg-background"
-            />
-            {path.trim() ? (
-              <Button type="submit" variant="outline" className="h-10 px-3.5">
-                {tRun("leaveOut")}
-              </Button>
-            ) : (
-              <DialogClose
-                render={
-                  <Button variant="brand" className="h-10 px-4.5">
-                    {t("foldersDone")}
-                  </Button>
-                }
-              />
-            )}
-          </form>
         </DialogContent>
       </Dialog>
-    </>
-  );
-}
-
-function Tick({ on }: { on: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "grid size-4.5 shrink-0 place-items-center rounded-[5px]",
-        on
-          ? "bg-foreground text-background"
-          : "shadow-[inset_0_0_0_1.5px_var(--alpha-20)]",
-      )}
-    >
-      {on && <Check className="size-3" strokeWidth={3} />}
-    </span>
+    </div>
   );
 }
 
@@ -1659,9 +1384,9 @@ function YouStep({
         <div
           role="radiogroup"
           aria-label={t("team")}
-          className="flex flex-col overflow-hidden rounded-xl ring-1 ring-foreground/12 ring-inset"
+          className="flex flex-col gap-1"
         >
-          {options.map(([value, Icon], index) => (
+          {options.map(([value, Icon]) => (
             <button
               key={value}
               type="button"
@@ -1670,11 +1395,10 @@ function YouStep({
               disabled={joined && team !== value}
               onClick={() => setTeam(value)}
               className={cn(
-                "flex min-h-11 items-center gap-3 px-3.5 py-2.5 text-left text-sm outline-none transition-colors focus-visible:bg-muted disabled:opacity-50",
-                index > 0 && "border-t border-border",
+                "flex min-h-11 items-center gap-3 rounded-[10px] px-3.5 py-2.5 text-left text-sm outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50",
                 team === value
-                  ? "bg-muted/60 font-medium"
-                  : "hover:bg-muted/40",
+                  ? "bg-muted font-medium"
+                  : "ring-1 ring-foreground/10 ring-inset hover:bg-muted/40",
               )}
             >
               <span
@@ -1823,7 +1547,7 @@ function ReadyStep({
   const tModes = useTranslations("settings.preferences.modes");
   return (
     <>
-      <div className="mt-6 flex flex-col gap-3.5 rounded-[14px] p-4.5 shadow-[inset_0_0_0_1px_var(--alpha-12),0_1px_2px_var(--alpha-05)]">
+      <div className="mt-6 flex flex-col gap-3.5 rounded-[14px] p-4.5 shadow-[inset_0_0_0_1px_var(--alpha-12)]">
         <div className="flex items-center gap-3.5">
           <LogoMark className="size-10" />
           <span className="min-w-0">
@@ -1868,7 +1592,7 @@ function ReadyStep({
           className="w-full *:flex-1"
           value={autonomy}
           onChange={onAutonomy}
-          options={(["ask", "reads", "auto"] as const).map((value) => ({
+          options={(["ask", "auto"] as const).map((value) => ({
             value,
             label: tModes(`${value}.title`),
           }))}
@@ -1879,14 +1603,8 @@ function ReadyStep({
       </div>
 
       <ul className="mt-3 flex flex-col">
-        {rows.map((row, index) => (
-          <li
-            key={row.label}
-            className={cn(
-              "flex h-11 items-center gap-3",
-              index > 0 && "border-t border-border",
-            )}
-          >
+        {rows.map((row) => (
+          <li key={row.label} className="flex h-10 items-center gap-3">
             {row.done ? (
               <Check className="size-4 shrink-0" strokeWidth={2.25} />
             ) : (

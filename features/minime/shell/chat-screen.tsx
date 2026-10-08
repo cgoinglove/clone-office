@@ -145,7 +145,7 @@ function Helpers({ insert }: { insert: (text: string) => void }) {
     .map((member, index) => ({ member, index }))
     .filter(({ member }) => member.id !== me);
   const chip =
-    "flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-[12.5px] text-foreground/80 shadow-[inset_0_0_0_1px_var(--alpha-10)] transition-colors hover:bg-muted hover:text-foreground aria-expanded:bg-muted";
+    "flex h-7 items-center gap-1.5 rounded-full px-3 text-[12.5px] text-foreground/80 shadow-[inset_0_0_0_1px_var(--alpha-10)] transition-colors hover:bg-muted hover:text-foreground aria-expanded:bg-muted";
   return (
     <>
       {colleagues.length > 0 ? (

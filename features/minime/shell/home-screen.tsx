@@ -8,11 +8,11 @@
 
 import {
   ArrowDownLeft,
-  ArrowRight,
   ArrowUp,
   ArrowUpRight,
   CalendarClock,
   Check,
+  ChevronRight,
   Link2,
   MessagesSquare,
   Sparkles,
@@ -282,7 +282,7 @@ export function HomeScreen() {
                   className="flex items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {t("allRequests")}
-                  <ArrowRight className="size-3.5" />
+                  <ChevronRight className="size-3.5" />
                 </Link>
               }
             >
@@ -504,7 +504,7 @@ function AskBox({
           event.preventDefault();
           if (text.trim()) onSend(text.trim());
         }}
-        className="flex items-center gap-2 rounded-2xl bg-background py-2 pr-2 pl-5 shadow-[0_0_0_1px_var(--alpha-12),0_10px_28px_-18px_var(--alpha-20)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_0_0_4px_var(--alpha-05),0_10px_28px_-18px_var(--alpha-20)]"
+        className="flex items-center gap-2 rounded-[26px] bg-background py-1.5 pr-1.5 pl-5 shadow-[0_0_0_1px_var(--alpha-12),0_10px_28px_-18px_var(--alpha-20)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_0_0_4px_var(--alpha-05),0_10px_28px_-18px_var(--alpha-20)]"
       >
         <input
           id="home-ask"
@@ -521,7 +521,7 @@ function AskBox({
           aria-label={t("askSend")}
           title={t("askSend")}
           disabled={!text.trim()}
-          className="size-10 rounded-[10px] disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
+          className="size-10 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
         >
           <ArrowUp className="size-4.5" />
         </Button>
@@ -532,7 +532,7 @@ function AskBox({
             key={suggestion}
             type="button"
             onClick={() => onSend(suggestion)}
-            className="flex h-8 items-center rounded-[10px] bg-muted/60 px-3 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-8 items-center rounded-full bg-muted/60 px-3.5 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             {suggestion}
           </button>

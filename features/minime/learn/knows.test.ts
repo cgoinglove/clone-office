@@ -112,3 +112,59 @@ test("a page's name is its words, joined", () => {
   assert.equal(pageSlug("  결제 / 정산  ", "x"), "결제-정산");
   assert.equal(pageSlug("!!!", "projects-1"), "projects-1");
 });
+
+test("where their work lives is one map page, and a project's page starts with its folder", async () => {
+  const { knows } = await keepKnowledge(
+    {
+      user: [],
+      work: [],
+      places: {
+        title: "일하는 곳",
+        entries: [
+          { path: "~/code/app", about: "결제 서버 저장소" },
+          { path: "~/Pictures/shoots", about: "촬영 원본" },
+          { path: "bad `path`", about: "dropped" },
+        ],
+      },
+      projects: [
+        {
+          name: "Checkout",
+          path: "~/code/app",
+          summary: "결제 화면",
+          page: "결제 화면을 고친다.",
+        },
+      ],
+    },
+    "reading",
+  );
+  assert.deepEqual(
+    knows.places?.map((spot) => spot.path),
+    ["~/code/app", "~/Pictures/shoots"],
+  );
+  const map = readFileSync(
+    join(root, "notes", "topics", "where-work-lives.md"),
+    "utf8",
+  );
+  assert.match(map, /- `~\/code\/app` — 결제 서버 저장소/);
+  assert.equal(knows.projects[0].folder, "~/code/app");
+  assert.match(
+    readFileSync(join(root, "notes", "projects", "checkout.md"), "utf8"),
+    /`~\/code\/app`\n\n결제 화면을 고친다/,
+  );
+  // A later reading adds what it found and says anew what it found again; nothing is lost.
+  const later = await keepKnowledge(
+    {
+      user: [],
+      work: [],
+      places: {
+        title: "일하는 곳",
+        entries: [{ path: "~/code/app", about: "결제 서버와 관리자 화면" }],
+      },
+    },
+    "reading",
+  );
+  assert.deepEqual(later.knows.places, [
+    { path: "~/code/app", about: "결제 서버와 관리자 화면" },
+    { path: "~/Pictures/shoots", about: "촬영 원본" },
+  ]);
+});

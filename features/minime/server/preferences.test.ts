@@ -46,3 +46,9 @@ test("quiet hours wrap past midnight and end at their hour", () => {
     45 * 60 * 1000,
   );
 });
+
+test("the clone's own way is one of two, and the middle mode kept from before reads as asking", () => {
+  assert.equal(cleanPreferences({ autonomy: "auto" }).autonomy, "auto");
+  assert.equal(cleanPreferences({ autonomy: "ask" }).autonomy, "ask");
+  assert.equal(cleanPreferences({ autonomy: "reads" }).autonomy, "ask");
+});

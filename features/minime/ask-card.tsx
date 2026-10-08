@@ -8,7 +8,13 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { type AskShown, askDetails, changeOf, describe } from "./ask-text";
+import {
+  type AskShown,
+  alwaysLabel,
+  askDetails,
+  changeOf,
+  describe,
+} from "./ask-text";
 
 export { changeOf, describe };
 
@@ -166,11 +172,7 @@ export function AskCard({
                 checked={always}
                 onChange={(event) => setAlways(event.target.checked)}
               />
-              {ask.task
-                ? t("alwaysTask", { folder: ask.task })
-                : ask.reads
-                  ? t("alwaysReads", { service: ask.reads })
-                  : t("always")}
+              {alwaysLabel(t, ask)}
             </label>
           )}
           <div className="flex gap-2">

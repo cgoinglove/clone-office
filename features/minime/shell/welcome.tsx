@@ -4,7 +4,7 @@
 // say to it. The first steps with the app (each ticked when it is really done, from what the app
 // keeps, never from a click on the list) are here too, and Home shows them first.
 
-import { ArrowRight, Check, Clock, Sparkles, X } from "lucide-react";
+import { Check, ChevronRight, Clock, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -288,7 +288,7 @@ function StepButton({
       className="flex h-8.5 items-center gap-1.5 rounded-[10px] bg-background px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
     >
       {children}
-      <ArrowRight className="size-3.5" />
+      <ChevronRight className="size-3.5" />
     </button>
   );
 }
@@ -306,7 +306,7 @@ function StepLink({
       className="flex h-8.5 items-center gap-1.5 rounded-[10px] bg-background px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
     >
       {children}
-      <ArrowRight className="size-3.5" />
+      <ChevronRight className="size-3.5" />
     </Link>
   );
 }

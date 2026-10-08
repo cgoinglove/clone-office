@@ -3,7 +3,7 @@
 // and answered the way the page answers it: a question at the gate through answerPerson, one kept
 // for later through answerLater, so the request it belongs to goes on.
 
-import { askDetails, changeOf, describe } from "../ask-text.ts";
+import { alwaysLabel, askDetails, changeOf, describe } from "../ask-text.ts";
 import { readChat } from "../chat/store.ts";
 import { answerPerson } from "../gate/answer.ts";
 import { type Ask, isRequestChat, pendingAsks } from "../gate/gate.ts";
@@ -59,11 +59,7 @@ export function wordAsk(
         ...(ask.always
           ? [
               {
-                label: ask.task
-                  ? tAsk("alwaysTask", { folder: ask.task })
-                  : ask.reads
-                    ? tAsk("alwaysReads", { service: ask.reads })
-                    : tAsk("always"),
+                label: alwaysLabel(tAsk, ask),
                 value: `ask:${id}:always`,
               },
             ]

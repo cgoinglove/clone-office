@@ -4,7 +4,7 @@
 // on its own (after Claude Code's permission modes), where a new kind of request starts, when the
 // questions it kept for later come, whether it learns after each conversation, and the lobby.
 
-import { BookOpen, Eye, Feather, Hand, Moon, Zap } from "lucide-react";
+import { BookOpen, Feather, Hand, Moon, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
@@ -15,7 +15,6 @@ import { Group, Groups } from "./parts";
 
 const MODES: { value: Autonomy; icon: typeof Hand }[] = [
   { value: "ask", icon: Hand },
-  { value: "reads", icon: Eye },
   { value: "auto", icon: Zap },
 ];
 
@@ -68,9 +67,9 @@ export function PreferencesSection({
                   aria-checked={picked}
                   onClick={() => void onChange({ autonomy: value })}
                   className={cn(
-                    "flex items-start gap-3 rounded-xl border border-border bg-background px-4 py-3 text-left transition-[border-color,box-shadow,background-color] hover:bg-muted/50",
+                    "flex items-start gap-3 rounded-xl border border-border bg-background px-4 py-3 text-left transition-[border-color,background-color] hover:bg-muted/50",
                     picked &&
-                      "border-foreground/70 shadow-[0_0_0_1px_var(--foreground)] hover:bg-background",
+                      "border-foreground/70 ring-1 ring-foreground ring-inset hover:bg-background",
                   )}
                 >
                   <span

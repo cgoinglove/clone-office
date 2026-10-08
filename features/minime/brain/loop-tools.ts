@@ -15,7 +15,9 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { dynamicTool, jsonSchema, type ToolSet } from "ai";
 import type { Connector } from "../connectors/catalog.ts";
 import { accessToken } from "../connectors/oauth.ts";
+import { BROWSER, BROWSER_NEVER } from "../hands/browser.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
+import { workspaceDir } from "../server/paths.ts";
 import { untrusted } from "./untrusted.ts";
 import { TOOL_WAIT_MS } from "./waits.ts";
 
@@ -374,6 +376,8 @@ export interface Servers {
 export async function connectServers(options: {
   toolServer: { command: string; args: string[]; env: Record<string, string> };
   connectors: Connector[];
+  /** The clone's own browser (hands/browser.ts), in the person's own work; left out if it fails. */
+  browser?: { command: string; args: string[]; env: Record<string, string> };
   /** Stands in for a server in tests. */
   extra?: { name: string; transport: Transport }[];
 }): Promise<Servers> {
@@ -402,6 +406,17 @@ export async function connectServers(options: {
       }),
     ).catch(() => {});
   }
+  if (options.browser)
+    await join(
+      BROWSER,
+      new StdioClientTransport({
+        command: options.browser.command,
+        args: options.browser.args,
+        env: options.browser.env,
+        cwd: workspaceDir(),
+        stderr: "ignore",
+      }),
+    ).catch(() => {});
   for (const server of options.extra ?? [])
     await join(server.name, server.transport);
   return {
@@ -682,9 +697,12 @@ export async function loopTools(options: {
       if (server !== "minime") {
         if (!options.only) {
           const only = options.readsOnly?.get(server);
-          const offered = only
-            ? page.tools.filter((tool) => only.has(tool.name))
-            : page.tools;
+          const offered = (
+            only ? page.tools.filter((tool) => only.has(tool.name)) : page.tools
+          ).filter(
+            // Code run in the browser's own process is never offered (hands/browser.ts).
+            (tool) => server !== BROWSER || !BROWSER_NEVER.has(tool.name),
+          );
           const found = services.find((entry) => entry.server === server);
           if (found) found.tools.push(...offered);
           else services.push({ server, client, tools: offered });

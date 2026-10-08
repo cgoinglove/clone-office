@@ -97,7 +97,7 @@
     },
     "next": "继续",
     "back": "返回",
-    "later": "跳过这一步",
+    "later": "跳过",
     "hello": {
       "title": "像你一样工作的\n另一个你。",
       "body": "团队里每个人都派出自己的分身。分身之间互相提问和回答，只有需要决定的事才交给人。一个人用时，它像助理一样帮你做事。",
@@ -119,7 +119,7 @@
       },
       "uses": {
         "title": "继续用你在用的 AI",
-        "note": "无需新账号，用你自己的订阅或密钥"
+        "note": "用你自己的订阅或密钥思考，从你已有的 AI 对话中学习"
       }
     },
     "demo": {
@@ -160,30 +160,11 @@
       "anyway": "仍然继续",
       "answered": "它回答了",
       "answeredIn": "{model} · 用时 {seconds} 秒",
-      "guide": {
-        "title": "选哪个？",
-        "plan": {
-          "title": "订阅",
-          "body": "ChatGPT 或 Claude 订阅：在你已付费的套餐内回答。"
-        },
-        "key": {
-          "title": "API 密钥",
-          "body": "用多少，服务商就按你的密钥收多少费用。"
-        },
-        "local": {
-          "title": "本机",
-          "body": "Ollama 或 LM Studio：免费，什么都不离开这台电脑。"
-        },
-        "team": {
-          "title": "团队密钥",
-          "body": "办公室共用的密钥，费用由团队支付。"
-        }
-      },
       "probingNote": "只问一句，几秒就好。"
     },
     "learn": {
       "title": "了解你的工作方式",
-      "body": "它会读取这台电脑上的 AI 记录，了解你做什么、正在做的事、身边的人和工具，以及你的工作方式。然后告诉你它会怎样回答同事。",
+      "body": "它读取这台电脑上的 AI 记录和你最近工作的文件夹，了解你做什么、正在做的事及其位置、身边的人和工具、你的工作方式，然后演示它会如何替你回答同事。",
       "none": "这台电脑上没有可读的 AI 对话。可以把你常用的 AI 记得的关于你的内容带过来：",
       "read": "读取并学习",
       "reading": "你可以继续，它会接着读。",
@@ -192,25 +173,18 @@
       "example": "如果同事问",
       "exampleAnswer": "我会替你这样回答",
       "doneTitle": "我是这样理解你的",
-      "folders": "不读取的文件夹",
-      "foldersRecent": "最近 {count} 个文件夹",
-      "foldersNone": "无 · 全部读取",
-      "foldersSome": "排除 {count} 个",
-      "foldersSearch": "查找文件夹",
+      "folders": "要读取的文件夹",
       "doneBody": "它了解了关于你和你工作的 {count} 件事。 之后可以在“你的分身 › 它知道的”里修改或删除任何一条。",
       "found": "找到的记录",
-      "pick": "选择",
       "bring": "主要用 ChatGPT 或 Claude 应用？把它们的记忆也带过来",
       "bringTitle": "带入你常用 AI 的记忆",
-      "foldersNote": "最近 14 天用 AI 工具工作过的文件夹。勾选的文件夹里做过的事不会被读取或搜索。",
-      "foldersPath": "用名称或路径排除列表外的文件夹",
-      "foldersDone": "完成",
       "sources": {
         "notes": "AI 指令和记忆文件",
-        "inputs": "你让 AI 做的事",
+        "inputs": "你让 AI 做的事，以及对话的主题",
         "commits": "你的提交",
         "work": "文档类型和应用",
-        "learn": "整理学到的内容"
+        "learn": "整理学到的内容",
+        "places": "你的文件夹和项目"
       },
       "knows": {
         "saved": "{count} 项 · 已存入记忆和笔记",
@@ -221,10 +195,13 @@
         "traits": {
           "work": "工作方式",
           "decide": "判断标准",
-          "voice": "说话方式"
+          "voice": "说话方式",
+          "all": "工作方式和说话方式"
         },
-        "more": "还有 {count} 项"
-      }
+        "places": "工作所在之处",
+        "where": "已存入它的记忆和笔记。可随时在“我的分身 › 它知道的”里修改或删除。"
+      },
+      "foldersHint": "点开确认，不想读的取消勾选"
     },
     "you": {
       "title": "你和你的团队",
@@ -291,11 +268,11 @@
     "plan": {
       "read": {
         "title": "我读什么",
-        "body": "最近 14 天你让 AI 做的事、AI 指令和记忆文件、你的提交。不读 AI 的回答，也不读文档内容。"
+        "body": "AI 指令和记忆文件、最近改动过的文件夹及文件名、项目的 README、你让 AI 做的事和对话主题、你的提交。不读 AI 的回答，也不读文档内容。"
       },
       "keep": {
         "title": "我记住什么",
-        "body": "你做什么、正在做的事、和谁用什么一起工作、你的工作方式和判断标准。项目记成带日期的笔记，边工作边更新。"
+        "body": "你做什么、正在做的事及其所在文件夹、你的文件夹地图、身边的人和工具、你的工作方式和判断标准。项目记成带日期的笔记，边工作边更新。"
       },
       "skip": {
         "title": "我不记什么",
@@ -305,14 +282,6 @@
         "body": "大约 30 秒。你继续下一步，它也会接着读。"
       }
     },
-    "folders": "这些是你最近用过的文件夹。把不想让我读的排除掉。",
-    "noFolders": "这台电脑上没找到 AI 对话。把你常用的 AI 对你的了解带过来，是最快的开始方式。",
-    "sessions": "{count, plural, other {工作 # 次}}",
-    "leaveOut": "排除",
-    "leftOut": "已排除",
-    "foldersOpen": "已排除的文件夹",
-    "foldersNote": "这些文件夹我从不读取或搜索。排除一个文件夹，也会删掉我从中收集来用于搜索的内容。",
-    "folderPlaceholder": "文件夹名称或路径",
     "start": "开始吧",
     "phase": {
       "index": "正在整理你的对话记录",
@@ -323,13 +292,15 @@
       "notes": "正在读你的 AI 指令和记忆文件",
       "inputs": "正在读你最近向 AI 工具提的问题",
       "commits": "正在看你的提交记录",
-      "work": "正在看你用的文档和应用的类型"
+      "work": "正在看你用的文档和应用的类型",
+      "places": "正在浏览你的文件夹和项目"
     },
     "sourceLabel": {
       "notes": "AI 指令和记忆文件",
       "inputs": "向 AI 工具提的问题",
       "commits": "提交记录",
-      "work": "文档类型和应用"
+      "work": "文档类型和应用",
+      "places": "文件夹和项目"
     },
     "read": "已读",
     "saved": "已保存",
@@ -411,7 +382,9 @@
       "mcp__minime__work_session": "让你的一个 Claude Code 或 Codex 对话去做事",
       "mcp__minime__apply_changes": "把一个 Codex 对话做的修改放进你的文件",
       "mcp__minime__leave_out_folder": "从现在起排除一个文件夹",
-      "mcp__minime__ask_by_link": "生成链接，问一个没有分身的人"
+      "mcp__minime__ask_by_link": "生成链接，问一个没有分身的人",
+      "bash": "在沙箱中运行命令",
+      "bashOutside": "在你的电脑上运行命令（这里没有沙箱）"
     },
     "ruleTitle": "定成规则？",
     "rule": "你最近三次都原样发送了我对“{menu}”的回答。以后这类由我直接回答，再告诉你，好吗？",
@@ -436,6 +409,37 @@
       "add": "把 {from} 的技能加到你的分身：{name}",
       "addScripts": "把 {from} 的技能加到你的分身：{name}（其中有脚本，你的分身绝不会自己运行）",
       "unshare": "不再向办公室共享技能：{name}"
+    },
+    "alwaysBash": "以后沙箱里的命令不用再问",
+    "alwaysBrowser": "以后用它的浏览器查看网页不用再问",
+    "ruleBash": "在沙箱里运行命令",
+    "ruleBrowser": "用它的浏览器查看网页",
+    "hubSkill": {
+      "install": "从公开技能库添加技能：{name}（来自 {from}）",
+      "installScripts": "从公开技能库添加技能：{name}（来自 {from}；含脚本，只会作为你看得到的命令运行）"
+    },
+    "browser": {
+      "other": "使用它的浏览器：{tool}",
+      "browser_navigate": "用它的浏览器打开网页",
+      "browser_navigate_back": "在它的浏览器里返回上一页",
+      "browser_snapshot": "读取浏览器里的页面",
+      "browser_take_screenshot": "截取页面截图",
+      "browser_click": "在页面上点击",
+      "browser_type": "在页面上输入",
+      "browser_fill_form": "填写页面上的表单",
+      "browser_select_option": "在页面上选择选项",
+      "browser_press_key": "在页面上按键",
+      "browser_hover": "把鼠标移到页面上的某处",
+      "browser_drag": "在页面上拖动",
+      "browser_drop": "在页面上放下",
+      "browser_file_upload": "向页面上传文件",
+      "browser_evaluate": "在页面里运行代码",
+      "browser_handle_dialog": "回应页面上的对话框",
+      "browser_tabs": "使用它浏览器的标签页",
+      "browser_wait_for": "在页面上等待",
+      "browser_close": "关闭它的浏览器",
+      "browser_install": "为它安装浏览器",
+      "browser_find": "在页面上查找"
     }
   },
   "office": {
@@ -739,42 +743,25 @@
   },
   "brain": {
     "title": "AI 模型",
-    "intro": "你的分身使用的 AI 模型：你的 ChatGPT 或 Claude 订阅、下面某个服务的密钥，或者在这台电脑上运行的模型。登录信息和密钥都只留在这台电脑上。",
     "local": "这台电脑",
     "found": "在这里找到",
     "inUse": "使用中",
     "use": "用这个",
-    "vendor": {
-      "openai": "你的 ChatGPT 套餐，或 API 密钥",
-      "claude": "你的 Claude 订阅，或 API 密钥",
-      "gemini": "Google AI Studio 的 API 密钥",
-      "openrouter": "一个密钥，用多家厂商的模型",
-      "local": "Ollama 或 LM Studio：免费，什么都不会离开这台电脑"
-    },
     "way": {
       "sign-in": "我的 ChatGPT 套餐",
       "claude-code": "我的 Claude 订阅",
       "key": "API 密钥",
-      "local": "Ollama / LM Studio",
-      "team": "团队密钥"
-    },
-    "wayNote": {
-      "sign-in": "用你的 ChatGPT 账号登录，之后你的分身使用你套餐里的额度。",
-      "claude-code": "通过这台电脑上的 Claude Code，用你的 Claude 账号登录。",
-      "key": "服务会按你的分身的用量，向这个密钥计费。",
-      "local": "在这台电脑上运行的模型。什么都不会离开这台电脑；可能比在线服务慢，能力也弱一些。",
-      "team": "办公室自己的密钥，加密保存在办公室的服务器上。办公室里的每个分身都能用，密钥不会到任何人的电脑上。"
+      "local": "Ollama / LM Studio"
     },
     "team": {
-      "notIn": "请先加入办公室：团队密钥属于办公室。",
       "kept": "办公室的密钥 …{hint}，由{name}添加。",
       "remove": "从办公室移除",
-      "add": "粘贴一个全办公室共用的密钥。办公室的服务器会先向服务商验证，再加密保存。",
       "unsealed": "这个办公室的服务器暂时没法保存团队密钥：需要运行服务器的人设置 RELAY_ENCRYPTION_KEY。",
-      "calls": "最近 30 天：你的分身调用 {mine} 次，整个办公室 {all} 次"
+      "calls": "最近 30 天：你的分身调用 {mine} 次，整个办公室 {all} 次",
+      "title": "团队密钥",
+      "hint": "办公室共用的 AI 密钥：办公室里的每个分身都能用它思考，费用由团队承担。每个密钥会先向厂商验证，然后密封保存在团队服务器上。"
     },
-    "claudeCodeFound": "这台电脑上有 Claude Code。",
-    "claudeMissing": "这台电脑上没有 Claude Code。请从 claude.com/code 安装并登录，然后重新打开这个页面；或者换一种方式。",
+    "claudeMissing": "这台电脑上没有 Claude Code。请安装并登录后再打开这里：",
     "chatgpt": {
       "signIn": "用 ChatGPT 登录",
       "signingIn": "请在新打开的标签页里同意…",
@@ -794,8 +781,7 @@
     "save": "保存",
     "keySaved": "密钥已保存在这台电脑上。",
     "forgetKey": "移除密钥",
-    "makeKey": "创建密钥",
-    "model": "模型",
+    "makeKey": "获取密钥",
     "modelOther": "或者输入其他模型名称",
     "modelLocal": "你下载的模型（例如 qwen3:8b）",
     "address": "地址",
@@ -817,7 +803,6 @@
       "teamNote": "使用团队密钥 · {model}"
     },
     "ourTeam": "我们团队",
-    "teamNote": "办公室共用的密钥：费用由团队支付，密钥只保存在团队服务器上。",
     "teamVia": "{vendor} · 团队密钥"
   },
   "messenger": {
@@ -1025,7 +1010,7 @@
       },
       "permissions": {
         "label": "权限",
-        "hint": "你的分身自己做到什么程度、哪些事可以不问就做，以及它从不读取的文件夹。"
+        "hint": "你的分身自己做到什么程度、哪些事可以不问就做，以及它读取哪些文件夹。"
       },
       "office": {
         "label": "办公室",
@@ -1146,8 +1131,8 @@
       "emptyMenu": "还没有列出。让你的分身起草你通常接的请求，或者自己添加一类。"
     },
     "permissions": {
-      "folders": "已排除的文件夹",
-      "foldersHint": "在任何 AI 工具的记录里，你的分身都从不读取这些文件夹。"
+      "folders": "要读取的文件夹",
+      "foldersHint": "它只读取勾选的文件夹。排除的文件夹在任何 AI 工具的记录里都不会被读取或搜索。"
     },
     "files": {
       "loading": "加载中…",
@@ -1179,19 +1164,15 @@
       "autonomyHint": "适用于你自己的工作：和它的对话，以及你的自动流程。",
       "modes": {
         "ask": {
-          "title": "先问我",
-          "body": "读取文件、打开网页或使用你的某个服务前，它都会先问。在任意卡片上勾选“以后这类不用再问”，就能放行这一类。"
-        },
-        "reads": {
-          "title": "自己读取",
-          "body": "它不问就会读取文件（从不读排除的文件夹）、网页和你连接的服务。任何会改动东西的操作仍然会先问。"
+          "title": "手动",
+          "body": "读取文件、打开网页、运行命令或使用你的某个服务前，它都会先问。在任意卡片上勾选“以后这类不用再问”，就能放行这一类。"
         },
         "auto": {
-          "title": "先做，再告诉我",
-          "body": "它还会在你连接的服务里执行操作、向同事提问，都不先问你。所有事都能在对话里看到。"
+          "title": "自动",
+          "body": "它会读取文件和网页、在你连接的服务里工作、在沙箱里运行命令、向同事提问，都不先问你。它做的一切都能在对话里看到。"
         }
       },
-      "always": "无论选哪一项，文件离开你的电脑、自动流程以及你的 Claude Code 或 Codex 对话里的工作，都会先给你看。同事的请求不受这里影响：那里的每一类都有自己的信任级别，在“你接的请求”里设置。",
+      "always": "无论选哪一项，文件离开你的电脑、自动流程、添加技能以及你的 Claude Code 或 Codex 对话里的工作，都会先给你看。同事的请求不受这里影响：那里的每一类都有自己的信任级别，在“你接的请求”里设置。",
       "trust": "新类别请求的初始级别",
       "trustHint": "你添加一类请求、或你的分身起草一类时，它从哪个级别开始。承诺和决定总会交给你。",
       "batch": "暂存的问题何时送来",
@@ -1242,7 +1223,8 @@
       "chat": "对话",
       "requests": "请求",
       "office": "办公室",
-      "clone": "你的分身"
+      "clone": "你的分身",
+      "file": "文件"
     },
     "chat": {
       "new": "新对话",
@@ -1556,6 +1538,14 @@
       "handBack": "交还给我的分身",
       "takeOver": "我来接手",
       "answerClose": "我自己回答并结束"
+    },
+    "file": {
+      "where": "分身的工作文件夹 · {path}",
+      "save": "保存",
+      "opening": "正在打开…",
+      "missing": "这个文件已不在分身的工作文件夹里。",
+      "moreRows": "{count, plural, other {还有 # 行}}，保存文件即可全部查看。",
+      "other": "这种文件需要用它自己的应用打开，请先保存。"
     }
   },
   "page": {
@@ -1577,5 +1567,23 @@
     "stop": "先到这里",
     "none": "没有等你处理的事。",
     "status": "{count} 件待你处理 · /office"
+  },
+  "folders": {
+    "title": "要读取的文件夹",
+    "note": "最近 30 天改动过的文件夹，以及你用 AI 工具工作过的文件夹。只读取勾选的：只看文件名和日期，从不打开文件内容，项目只读 README 开头。排除的文件夹在任何地方都不会被读取或搜索。",
+    "search": "查找文件夹",
+    "count": "{count, plural, other {# 个}}",
+    "finding": "正在查找你的工作文件夹",
+    "noneRead": "没有勾选",
+    "leftOut": "已排除 {count} 个",
+    "check": "查看",
+    "sessions": "{count, plural, other {# 次对话}}",
+    "files": "{count, plural, other {# 个文件}}",
+    "repo": "仓库",
+    "noMatch": "没有匹配的文件夹",
+    "none": "最近没有改动过的文件夹",
+    "leaveOutOther": "按名称或路径排除其他文件夹",
+    "leaveOut": "排除",
+    "done": "完成"
   }
 }

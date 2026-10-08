@@ -24,9 +24,11 @@ Two things hold everywhere:
 - **It is theirs and it stays on their computer.** Everything the clone keeps is files on this
   computer. What it reads goes only to the AI it thinks with, the one they picked under **AI model**
   (AI 모델): their own Claude Code, or a model with their key (`reading.md`, `brain.md`).
-- **It learns while working, not all at once.** The first time, it reads a little and keeps only
-  a few lines about how they work. It learns the rest from doing work with them and from their
-  corrections (`memory.md`).
+- **It learns their work first, then the rest while working.** The first time, it reads their AI
+  records and the folders they worked in lately, and keeps what they do, what they are working on
+  (a dated page for each piece of work, starting with its folder), a map of where their work lives
+  on the computer, the people around them and how they work. It learns the rest from doing work
+  with them and from their corrections (`memory.md`, `reading.md`).
 
 ## Where things are
 
@@ -124,14 +126,14 @@ the same steps with the one line that also joins their office (`office.md`).
 
 ## Settings in more detail
 
-- **How much it does on its own** (혼자 할 수 있는 범위, Settings › Permissions): **Ask me first**
-  (먼저 묻기, the default) asks before reading a file, opening a web page or using a connected
-  service; **Read on its own** (읽기는 알아서) reads files (never in folders left out), web pages and
-  connected services without asking, and still asks before anything that changes something; **Do
-  it, then tell me** (하고 나서 알려 주기) also acts in connected services and asks colleagues
-  without asking first. In every mode, files leaving the computer, flows, and work in their Claude
-  Code conversations are shown to them first, and colleagues' requests never use this: there,
-  each kind of request has its own trust level under Your clone › Requests it takes.
+- **How much it does on its own** (혼자 할 수 있는 범위, Settings › Permissions), one of two: **Ask me
+  first** (수동, the default) asks before reading a file, opening a web page, running a command,
+  using its browser or a connected service; **On its own** (자동) does all of that without asking
+  (reading files never in folders left out, commands only inside its sandbox, never uploading a file
+  or running code in a web page) and shows what it did in the conversation. In both, files leaving
+  the computer, flows, adding a skill, and work in their Claude Code or Codex conversations are
+  shown to them first, and colleagues' requests never use this: there, each kind of request has its
+  own trust level under Your clone › Requests it takes.
 - **New kinds of request start at** (새 부탁 종류의 시작 단계, Your clone › Requests it takes): on its
   own, tell me, or ask me first.
 - **When kept questions come** (미뤄 둔 질문 받는 시간, Settings › Notifications & phone): the hours
@@ -204,6 +206,27 @@ This is version 0.1, an early one.
   in, when they ask for it, after a card (`flows.md`).
 - Keep a folder out of everything it reads and searches when they say so, after a card
   (`reading.md`).
+
+- Work with its own hands, in their own work only (never for a colleague's request):
+  - **A workspace** of its own, the `workspace` folder in the clone's folder, where it makes what
+    it makes, downloads and installs.
+  - **Commands** in that workspace, inside the computer's own sandbox (as Claude Code's are, on
+    macOS and on Linux with bubblewrap): they may read their files but never their keys, passwords
+    or the folders they left out, may write only in the workspace, and never reach the computer's
+    own services. The card shows the command; **Don't ask again for commands in its sandbox**
+    (앞으로 샌드박스 안의 명령은 묻지 않기) lets them run alone. Where there is no sandbox (Windows,
+    or folders left out by name on Linux), every command is asked, every time.
+  - **Its own browser** (Chrome where it is installed, else Edge or Chromium), on a profile of its
+    own, not signed in to their accounts until they sign in there; its window shows while they are
+    in the conversation. Looking at pages can be let once (**Don't ask again for looking at pages
+    in its browser**); clicking, typing and filling forms are asked each time by hand; uploading a
+    file or running code in a page is asked every time. It never pays, buys, books, posts or
+    accepts terms without their yes, and never types a password or a card number.
+  - **What it makes** (a document, a report, a sheet, a chart, a page) comes as a link in its
+    answer; it opens in the app (a page runs walled off from the app), with **Save** to keep it.
+  - **Skills from the open registry** (skills.sh): it can look for one when a task needs a method
+    it lacks, and adds one only after a card listing its files; its scripts run only as commands
+    they see.
 
 - Work in the services they connected under **Connectors** (도구 연결): Notion, Linear, Jira and
   Confluence, GitHub, and Google's Gmail, Calendar, Drive, Docs and Sheets, through each one's own

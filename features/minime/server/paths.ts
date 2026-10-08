@@ -44,6 +44,11 @@ export function appDir(): string {
   return process.env.CLONE_OFFICE_APP_DIR ?? process.cwd();
 }
 
+/** Where the clone works: what it makes, downloads and installs for a task (hands/shell.ts). */
+export function workspaceDir(): string {
+  return join(/*turbopackIgnore: true*/ minimeHome(), "workspace");
+}
+
 /** The mini-me's tool server: one bundled file in the package, the TypeScript itself in development. */
 export function toolServerPath(): string {
   return process.env.CLONE_OFFICE_APP_DIR
@@ -75,6 +80,26 @@ export function connectorHeadersPath(): string {
         "minime",
         "connectors",
         "headers.ts",
+      );
+}
+
+/**
+ * The process that walks the person's folders (places-walk.ts), apart from the app so a folder that
+ * waits on the system never holds the app: bundled in the package, the TypeScript in development.
+ */
+export function placesWalkPath(): string {
+  return process.env.CLONE_OFFICE_APP_DIR
+    ? join(
+        /*turbopackIgnore: true*/ process.env.CLONE_OFFICE_APP_DIR,
+        "dist",
+        "places-walk.mjs",
+      )
+    : join(
+        /*turbopackIgnore: true*/ process.cwd(),
+        "features",
+        "minime",
+        "server",
+        "places-walk.ts",
       );
 }
 

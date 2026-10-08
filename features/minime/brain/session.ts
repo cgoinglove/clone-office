@@ -17,8 +17,9 @@ import { connectedConnectors } from "../connectors/oauth.ts";
 import { sessionRules } from "../connectors/tools.ts";
 import { ownModeRules } from "../gate/autonomy.ts";
 import { ASKABLE_TOOLS, TRUSTED_FROM_START } from "../gate/rules.ts";
+import { BROWSER, BROWSER_NEVER, browserServer } from "../hands/browser.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
-import { NoteStore } from "../memory/notes.ts";
+import { NoteStore, WORK_MAP } from "../memory/notes.ts";
 import { SkillStore } from "../memory/skills.ts";
 import { MemoryStore, type Target } from "../memory/store.ts";
 import { MEMORY_GUIDANCE } from "../memory/tool.ts";
@@ -55,9 +56,13 @@ A skill is how to do a class of task the way your person wants it. Before you do
 
 const NOTES_GUIDANCE = `## Notes
 Notes are pages about the people your person works with (people/), their ongoing work — projects, clients, cases, products (projects/) — and recurring subjects (topics/). When a person or piece of work comes up, look for its page with note_search or note_view before asking or guessing. Keep what you learn about one of them in that page with note_write.
+Where their work lives on this computer — every folder and repository with what it holds — is on the page ${WORK_MAP}: open it before you look for a file, a folder or a project, and go to the path it gives rather than asking where something is. A project's page starts with its folder. When you find a place of theirs the map does not list, add it there.
 
 ## Past conversations
 Your person's own conversations with their AI tools on this computer can be searched with conversation_search and read with conversation_read. Look there before asking them what they did, decided or left unfinished.
+
+## Your hands
+In your person's own work (a conversation with them, or one of their flows) you also have a workspace folder of your own, a shell that runs in it inside this computer's sandbox (bash, write_file), and a browser of your own (its tools are on the "browser" server). What you make for them goes in the workspace, and you give it as a link, /files/<its path in the workspace>, which opens in the app. Each skill says how to use these for its kind of work.
 
 ## This app
 How Clone Office works for your person — what you can do for them now, what you keep and never keep, what you read from their computer, how they leave something out — is written in its guide. Read it with guide_read (index.md first) whenever an answer depends on how the app works, and answer from it rather than from what you assume.
@@ -246,12 +251,18 @@ export interface SessionResult {
   context?: number;
 }
 
-/** The mini-me's own tools it uses alone in every session, whichever brain thinks. */
+/**
+ * The mini-me's own tools it uses alone in every session, whichever brain thinks. Its shell and
+ * workspace (hands/shell.ts) are among them because they decide for themselves: a command runs
+ * alone only where the person let it, and asks them (or is refused) otherwise; the tool server
+ * offers them only in the person's own work.
+ */
 export const ALLOWED_TOOLS = [
   "memory",
   "skills_list",
   "skill_view",
   "skill_manage",
+  "skills_find",
   "note_search",
   "note_view",
   "note_write",
@@ -261,6 +272,8 @@ export const ALLOWED_TOOLS = [
   "flows",
   "office_inbox",
   "office_skills",
+  "bash",
+  "write_file",
 ].map((tool) => `mcp__minime__${tool}`);
 
 /**
@@ -268,7 +281,10 @@ export const ALLOWED_TOOLS = [
  * show (office/skills-tool.ts): the session lets them through its own check so nobody is asked
  * twice. Only with the gate, where the person can be asked.
  */
-export const SELF_ASKING_TOOLS = ["mcp__minime__office_skill_manage"];
+export const SELF_ASKING_TOOLS = [
+  "mcp__minime__office_skill_manage",
+  "mcp__minime__skill_install",
+];
 
 /** The few fields of Claude Code's stream-json events this reads. */
 interface StreamEvent {
@@ -308,8 +324,11 @@ export function toolServerEnv(
   readsOnly: string[] = [],
   /** What runs this session and the conversation it is for: kept beside each memory line it writes. */
   origin?: { from: string; chat?: string },
+  /** The person's own work (a conversation with them, a flow): the clone's shell and workspace. */
+  own = false,
 ): Record<string, string> {
   return {
+    ...(own ? { MINIME_OWN_WORK: "1" } : {}),
     ...(origin ? { MINIME_ORIGIN: origin.from } : {}),
     ...(origin?.chat ? { MINIME_ORIGIN_CHAT: origin.chat } : {}),
     ...(audience ? { MINIME_AUDIENCE: audience } : {}),
@@ -344,7 +363,10 @@ export function sessionOrigin(options: {
   };
 }
 
-/** The session's MCP servers: its own tools, and the services the person connected. */
+/**
+ * The session's MCP servers: its own tools, the services the person connected, and in their own
+ * work its browser (hands/browser.ts), with a window while they can watch.
+ */
 export function mcpConfig(
   actor: "minime" | "review",
   gate?: SessionGate,
@@ -352,9 +374,12 @@ export function mcpConfig(
   audience?: "colleagues",
   readsOnly: string[] = [],
   origin?: { from: string; chat?: string },
+  own?: { watched: boolean },
 ): string {
+  const browser = own ? browserServer(own) : undefined;
   return JSON.stringify({
     mcpServers: {
+      ...(browser ? { [BROWSER]: browser } : {}),
       // Each service the person connected, its token handed over fresh at every connection
       // (connectors/headers.ts), never written into the session's arguments.
       ...Object.fromEntries(
@@ -372,7 +397,14 @@ export function mcpConfig(
         // Node runs the TypeScript server as is (bundled in the package); warnings would only
         // clutter its stderr.
         args: ["--no-warnings", toolServerPath()],
-        env: toolServerEnv(actor, gate, audience, readsOnly, origin),
+        env: toolServerEnv(
+          actor,
+          gate,
+          audience,
+          readsOnly,
+          origin,
+          Boolean(own),
+        ),
       },
     },
   });
@@ -451,7 +483,20 @@ export async function runSession(
       : [];
   const colleagueRule = await colleagueRules(colleague);
   allowed.push(...colleagueRule.allow);
-  const deny = [...((gate ?? standing)?.deny ?? []), ...colleagueRule.deny];
+  // The person's own work: their conversation (watched) or one of their flows.
+  const own =
+    options.connectors &&
+    actor === "minime" &&
+    options.audience !== "colleagues"
+      ? { watched: Boolean(gate) }
+      : undefined;
+  const deny = [
+    ...((gate ?? standing)?.deny ?? []),
+    ...colleagueRule.deny,
+    ...(own
+      ? [...BROWSER_NEVER].map((tool) => `mcp__${BROWSER}__${tool}`)
+      : []),
+  ];
   const args = [
     "-p",
     "--output-format",
@@ -471,6 +516,7 @@ export async function runSession(
       options.audience,
       colleagueRule.services,
       sessionOrigin(options),
+      own,
     ),
     "--strict-mcp-config",
     "--tools",

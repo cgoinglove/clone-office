@@ -159,6 +159,7 @@ try {
     ["features/minime/memory/mcp-server.ts", "mcp-server.mjs"],
     ["features/relay/server.ts", "relay.mjs"],
     ["features/minime/connectors/headers.ts", "connector-headers.mjs"],
+    ["features/minime/server/places-walk.ts", "places-walk.mjs"],
   ])
     await build({
       entryPoints: [join(source, entry)],
@@ -168,8 +169,14 @@ try {
       format: "esm",
       target: "node22",
       // The relay's database packages come from npm with the package: PGlite loads its own files
-      // at run time, and pg-native is a choice pg makes only when asked.
-      external: ["pg", "pg-native", "@electric-sql/pglite"],
+      // at run time, and pg-native is a choice pg makes only when asked. The sandbox runtime
+      // (hands/shell.ts) finds its own helper programs beside itself, so it stays a package too.
+      external: [
+        "pg",
+        "pg-native",
+        "@electric-sql/pglite",
+        "@anthropic-ai/sandbox-runtime",
+      ],
       // Packages written as CommonJS still find require.
       banner: {
         js: "import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);",
@@ -238,6 +245,9 @@ try {
           "react-dom",
           "pg",
           "@electric-sql/pglite",
+          // The clone's sandbox for its commands, and its browser (features/minime/hands/).
+          "@anthropic-ai/sandbox-runtime",
+          "@playwright/mcp",
         ]),
       },
       null,

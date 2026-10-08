@@ -97,7 +97,7 @@
     },
     "next": "다음",
     "back": "이전",
-    "later": "이 단계 건너뛰기",
+    "later": "건너뛰기",
     "hello": {
       "title": "나처럼 일하는\n나를 하나 더.",
       "body": "팀원 모두가 각자 자기 클론을 하나씩. 클론끼리 묻고 답하고, 사람에게는 정할 것만 와요. 혼자 써도 비서처럼 일해요.",
@@ -119,7 +119,7 @@
       },
       "uses": {
         "title": "쓰던 AI 그대로 써요",
-        "note": "새 계정 없이, 내 구독이나 키로"
+        "note": "쓰던 구독·키로 생각하고, 쓰던 AI 대화에서 배워요"
       }
     },
     "demo": {
@@ -160,30 +160,11 @@
       "anyway": "그래도 계속하기",
       "answered": "답했어요",
       "answeredIn": "{model} · {seconds}초 만에",
-      "guide": {
-        "title": "무엇을 고를까요?",
-        "plan": {
-          "title": "구독",
-          "body": "ChatGPT·Claude 요금제. 쓰던 요금제 안에서 답해요."
-        },
-        "key": {
-          "title": "API 키",
-          "body": "쓴 만큼 그 회사에 요금이 나가요."
-        },
-        "local": {
-          "title": "내 컴퓨터",
-          "body": "Ollama·LM Studio. 무료, 밖으로 나가는 게 없어요."
-        },
-        "team": {
-          "title": "팀 키",
-          "body": "오피스가 함께 쓰는 키. 요금은 팀이 내요."
-        }
-      },
       "probingNote": "한 마디만 물어봐요. 몇 초면 돼요."
     },
     "learn": {
       "title": "내 일하는 방식을 배워요",
-      "body": "이 컴퓨터의 AI 기록을 읽고 하는 일, 진행 중인 일, 같이 일하는 사람과 도구, 일하는 방식을 알아 둬요. 그다음 동료에게 어떻게 답할지 보여 드려요.",
+      "body": "이 컴퓨터의 AI 기록과 최근 작업한 폴더를 읽고 하는 일, 진행 중인 일과 그 위치, 같이 일하는 사람과 도구, 일하는 방식을 알아 둬요. 그다음 동료에게 어떻게 답할지 보여 드려요.",
       "none": "이 컴퓨터에는 읽을 AI 대화가 없어요. 대신 평소 쓰는 AI가 나에 대해 기억하는 걸 가져와 주세요.",
       "read": "읽고 배우기",
       "reading": "다음으로 넘어가도 계속 읽어요.",
@@ -192,25 +173,18 @@
       "example": "동료가 이렇게 물으면",
       "exampleAnswer": "제가 대신 이렇게 답해요",
       "doneTitle": "이렇게 이해했어요",
-      "folders": "읽지 않을 폴더",
-      "foldersRecent": "최근 폴더 {count}개",
-      "foldersNone": "없음 · 전부 읽어요",
-      "foldersSome": "{count}개 빼기",
-      "foldersSearch": "폴더 이름으로 찾기",
+      "folders": "읽을 폴더",
       "doneBody": "나와 내 일에 대해 {count}가지를 알아 뒀어요. 어느 것이든 나중에 내 클론 › 아는 것에서 고치거나 지울 수 있어요.",
       "found": "찾은 기록",
-      "pick": "고르기",
       "bring": "ChatGPT·Claude 앱을 주로 쓰나요? 그 기억도 가져오기",
       "bringTitle": "평소 쓰는 AI의 기억 가져오기",
-      "foldersNote": "최근 14일 동안 AI 도구로 일한 폴더예요. 고른 폴더에서 한 일은 읽지도, 찾지도 않아요.",
-      "foldersPath": "목록에 없는 폴더는 이름이나 경로로 빼기",
-      "foldersDone": "완료",
       "sources": {
         "notes": "AI 지침·메모 파일",
-        "inputs": "AI에게 시킨 말",
+        "inputs": "AI에게 시킨 말과 대화 제목",
         "commits": "내 커밋",
         "work": "문서 종류와 앱",
-        "learn": "배운 것 정리하기"
+        "learn": "배운 것 정리하기",
+        "places": "폴더와 프로젝트"
       },
       "knows": {
         "saved": "{count}가지 · 기억과 노트에 저장됨",
@@ -221,10 +195,13 @@
         "traits": {
           "work": "일하는 방식",
           "decide": "판단 기준",
-          "voice": "말투"
+          "voice": "말투",
+          "all": "일하는 방식과 말투"
         },
-        "more": "외 {count}개"
-      }
+        "places": "일하는 곳",
+        "where": "기억과 노트에 저장했어요. 내 클론 › 아는 것에서 언제든 고치거나 지울 수 있어요."
+      },
+      "foldersHint": "눌러서 확인하고, 뺄 폴더는 빼 주세요"
     },
     "you": {
       "title": "나와 우리 팀",
@@ -291,11 +268,11 @@
     "plan": {
       "read": {
         "title": "읽는 것",
-        "body": "최근 14일 동안 내가 AI에게 시킨 말, AI 지침·메모 파일, 내 커밋. AI의 답과 문서 내용은 읽지 않아요."
+        "body": "AI 지침·메모 파일, 최근에 바꾼 폴더와 파일 이름, 프로젝트의 README, AI에게 시킨 말과 대화 제목, 내 커밋. AI의 답과 문서 내용은 읽지 않아요."
       },
       "keep": {
         "title": "기억하는 것",
-        "body": "하는 일, 진행 중인 일, 같이 일하는 사람과 도구, 일하는 방식과 판단 기준. 프로젝트는 날짜를 붙인 노트로 두고 일하면서 고쳐 가요."
+        "body": "하는 일, 진행 중인 일과 그 폴더, 일하는 곳의 지도, 같이 일하는 사람과 도구, 일하는 방식과 판단 기준. 프로젝트는 날짜를 붙인 노트로 두고 일하면서 고쳐 가요."
       },
       "skip": {
         "title": "기억하지 않는 것",
@@ -305,14 +282,6 @@
         "body": "30초쯤 걸려요. 다음 단계로 넘어가도 계속 읽어요."
       }
     },
-    "folders": "최근에 작업한 폴더예요. 읽으면 안 되는 폴더는 빼 주세요.",
-    "noFolders": "이 컴퓨터에서 AI 대화를 찾지 못했어요. 평소 쓰는 AI가 나에 대해 기억하는 걸 가져오면 가장 빨리 시작할 수 있어요.",
-    "sessions": "{count, plural, one {작업 #번} other {작업 #번}}",
-    "leaveOut": "빼기",
-    "leftOut": "뺐어요",
-    "foldersOpen": "읽지 않는 폴더",
-    "foldersNote": "이 폴더들은 읽지도, 검색하지도 않아요. 폴더를 빼면 검색용으로 모아 둔 내용도 함께 지워요.",
-    "folderPlaceholder": "폴더 이름이나 경로",
     "start": "시작하기",
     "phase": {
       "index": "대화 기록을 정리하는 중",
@@ -323,13 +292,15 @@
       "notes": "AI 지침과 메모리 파일을 읽는 중",
       "inputs": "최근 AI 도구에 한 말을 읽는 중",
       "commits": "커밋을 살펴보는 중",
-      "work": "쓰는 문서 종류와 앱을 살펴보는 중"
+      "work": "쓰는 문서 종류와 앱을 살펴보는 중",
+      "places": "폴더와 프로젝트를 둘러보는 중"
     },
     "sourceLabel": {
       "notes": "AI 지침·메모리 파일",
       "inputs": "AI 도구에 한 말",
       "commits": "커밋",
-      "work": "문서 종류와 앱"
+      "work": "문서 종류와 앱",
+      "places": "폴더와 프로젝트"
     },
     "read": "읽은 것",
     "saved": "기억한 것",
@@ -411,7 +382,9 @@
       "mcp__minime__work_session": "내 Claude Code·Codex 대화에 일 맡기기",
       "mcp__minime__apply_changes": "Codex 대화가 고친 내용을 내 파일에 반영하기",
       "mcp__minime__leave_out_folder": "앞으로 이 폴더는 읽지 않기",
-      "mcp__minime__ask_by_link": "클론이 없는 사람에게 물을 링크 만들기"
+      "mcp__minime__ask_by_link": "클론이 없는 사람에게 물을 링크 만들기",
+      "bash": "샌드박스에서 명령 실행",
+      "bashOutside": "내 컴퓨터에서 명령 실행 (여기는 샌드박스가 없어요)"
     },
     "ruleTitle": "앞으로도 이렇게 할까요?",
     "rule": "‘{menu}’에 대한 제 답을 최근 세 번 그대로 보내셨어요. 앞으로는 제가 답하고 알려 드릴까요?",
@@ -436,6 +409,37 @@
       "add": "{from} 님의 스킬을 내 클론에 추가하기: {name}",
       "addScripts": "{from} 님의 스킬을 내 클론에 추가하기: {name} (스크립트가 있지만 클론이 혼자 실행하지는 않아요)",
       "unshare": "오피스에 스킬 공유 그만하기: {name}"
+    },
+    "alwaysBash": "앞으로 샌드박스 안의 명령은 묻지 않기",
+    "alwaysBrowser": "앞으로 브라우저로 페이지 보는 건 묻지 않기",
+    "ruleBash": "샌드박스 안에서 명령 실행",
+    "ruleBrowser": "브라우저로 페이지 보기",
+    "hubSkill": {
+      "install": "공개 스킬 목록에서 스킬 추가: {name} ({from})",
+      "installScripts": "공개 스킬 목록에서 스킬 추가: {name} ({from} · 스크립트가 있어요. 보여 드리는 명령으로만 실행돼요)"
+    },
+    "browser": {
+      "other": "브라우저 사용: {tool}",
+      "browser_navigate": "브라우저로 페이지 열기",
+      "browser_navigate_back": "브라우저에서 이전 페이지로",
+      "browser_snapshot": "브라우저의 페이지 읽기",
+      "browser_take_screenshot": "페이지 화면 찍기",
+      "browser_click": "페이지에서 클릭",
+      "browser_type": "페이지에 입력",
+      "browser_fill_form": "페이지의 양식 채우기",
+      "browser_select_option": "페이지에서 항목 고르기",
+      "browser_press_key": "페이지에서 키 누르기",
+      "browser_hover": "페이지의 무언가에 마우스 올리기",
+      "browser_drag": "페이지에서 끌기",
+      "browser_drop": "페이지에 놓기",
+      "browser_file_upload": "페이지에 파일 올리기",
+      "browser_evaluate": "페이지에서 코드 실행",
+      "browser_handle_dialog": "페이지의 대화상자에 답하기",
+      "browser_tabs": "브라우저 탭 쓰기",
+      "browser_wait_for": "페이지에서 기다리기",
+      "browser_close": "브라우저 닫기",
+      "browser_install": "브라우저 설치",
+      "browser_find": "페이지에서 찾기"
     }
   },
   "office": {
@@ -739,42 +743,25 @@
   },
   "brain": {
     "title": "AI 모델",
-    "intro": "클론이 쓸 AI 모델을 골라요. 내 ChatGPT나 Claude 구독, 이 서비스들의 API 키, 또는 이 컴퓨터에서 돌아가는 모델을 쓸 수 있어요. 로그인 정보와 키는 이 컴퓨터에만 저장돼요.",
     "local": "내 컴퓨터",
     "found": "이 컴퓨터에 있음",
     "inUse": "사용 중",
     "use": "이걸로 쓰기",
-    "vendor": {
-      "openai": "내 ChatGPT 요금제 또는 API 키",
-      "claude": "내 Claude 구독 또는 API 키",
-      "gemini": "Google AI Studio에서 받은 API 키",
-      "openrouter": "키 하나로 여러 회사의 모델을 써요",
-      "local": "Ollama 또는 LM Studio. 무료이고, 아무것도 컴퓨터 밖으로 나가지 않아요"
-    },
     "way": {
       "sign-in": "내 ChatGPT 요금제",
       "claude-code": "내 Claude 구독",
       "key": "API 키",
-      "local": "Ollama / LM Studio",
-      "team": "팀 키"
-    },
-    "wayNote": {
-      "sign-in": "ChatGPT 계정으로 로그인하면 클론이 내 요금제 사용량 안에서 답해요.",
-      "claude-code": "이 컴퓨터의 Claude Code를 통해, 로그인된 내 Claude 계정으로 써요.",
-      "key": "클론이 쓴 만큼 그 서비스에서 내 키로 요금이 나가요.",
-      "local": "이 컴퓨터에서 돌아가는 모델이에요. 아무것도 밖으로 나가지 않지만, 온라인 서비스보다 느리고 성능이 낮을 수 있어요.",
-      "team": "오피스가 함께 쓰는 키예요. 팀 서버에 봉인돼 보관되고, 오피스의 모든 클론이 이 키로 답해요. 키는 누구의 컴퓨터로도 가지 않아요."
+      "local": "Ollama / LM Studio"
     },
     "team": {
-      "notIn": "먼저 오피스에 들어가야 해요. 팀 키는 오피스에 두는 키예요.",
       "kept": "오피스 키 …{hint} · {name} 님이 등록했어요.",
       "remove": "오피스에서 빼기",
-      "add": "오피스 모두가 함께 쓸 키를 붙여 넣어 주세요. 팀 서버가 그 회사에 먼저 확인한 뒤 봉인해서 보관해요.",
       "unsealed": "이 오피스의 서버는 아직 팀 키를 둘 수 없어요. 서버를 운영하는 사람이 RELAY_ENCRYPTION_KEY를 설정해야 해요.",
-      "calls": "최근 30일: 내 클론 {mine}번 · 오피스 전체 {all}번"
+      "calls": "최근 30일: 내 클론 {mine}번 · 오피스 전체 {all}번",
+      "title": "팀 키",
+      "hint": "오피스가 함께 쓰는 AI 키예요. 오피스의 모든 클론이 이 키로 생각하고, 요금은 팀이 내요. 그 회사에 먼저 확인한 뒤 팀 서버에 봉인해서 보관해요."
     },
-    "claudeCodeFound": "이 컴퓨터에 Claude Code가 설치돼 있어요.",
-    "claudeMissing": "이 컴퓨터에 Claude Code가 없어요. claude.com/code에서 설치하고 로그인한 뒤 이 화면을 다시 열어 주세요. 다른 방법을 골라도 돼요.",
+    "claudeMissing": "이 컴퓨터에 Claude Code가 없어요. 설치하고 로그인한 뒤 다시 열어 주세요:",
     "chatgpt": {
       "signIn": "ChatGPT로 로그인",
       "signingIn": "새로 열린 탭에서 허용해 주세요…",
@@ -794,8 +781,7 @@
     "save": "저장",
     "keySaved": "키를 이 컴퓨터에 저장했어요.",
     "forgetKey": "키 삭제",
-    "makeKey": "키 발급받기",
-    "model": "모델",
+    "makeKey": "키 받기",
     "modelOther": "다른 모델 이름 직접 입력",
     "modelLocal": "내려받은 모델 이름 (예: qwen3:8b)",
     "address": "주소",
@@ -817,7 +803,6 @@
       "teamNote": "팀 키로 · {model}"
     },
     "ourTeam": "우리 팀",
-    "teamNote": "오피스가 함께 쓰는 키예요. 요금은 팀에서 내고, 키는 팀 서버에만 있어요.",
     "teamVia": "{vendor} · 팀 키"
   },
   "messenger": {
@@ -1025,7 +1010,7 @@
       },
       "permissions": {
         "label": "권한",
-        "hint": "클론이 어디까지 혼자 할지, 묻지 않고 해도 되는 일, 절대 읽지 않을 폴더를 정해요."
+        "hint": "클론이 어디까지 혼자 할지, 묻지 않고 해도 되는 일, 읽을 폴더를 정해요."
       },
       "office": {
         "label": "오피스",
@@ -1146,8 +1131,8 @@
       "emptyMenu": "아직 없어요. 평소 받는 부탁을 클론에게 초안으로 써 달라고 하거나, 직접 추가해 보세요."
     },
     "permissions": {
-      "folders": "읽지 않는 폴더",
-      "foldersHint": "어느 AI 도구의 기록이든, 클론은 이 폴더를 읽지 않아요."
+      "folders": "읽을 폴더",
+      "foldersHint": "체크한 폴더만 읽어요. 뺀 폴더는 어느 AI 도구의 기록이든 읽지도 찾지도 않아요."
     },
     "files": {
       "loading": "불러오는 중…",
@@ -1179,19 +1164,15 @@
       "autonomyHint": "내 일에만 적용돼요. 클론과의 대화와 내 플로우예요.",
       "modes": {
         "ask": {
-          "title": "먼저 묻기",
-          "body": "파일을 읽거나, 웹 페이지를 열거나, 내 서비스를 쓰기 전에 물어요. 카드에서 “앞으로 이런 건 묻지 않기”를 고르면 그런 일은 묻지 않고 해요."
-        },
-        "reads": {
-          "title": "읽기는 알아서",
-          "body": "파일(읽지 않는 폴더는 빼고), 웹 페이지, 연결한 서비스는 묻지 않고 읽어요. 무언가를 바꾸는 일은 계속 먼저 물어요."
+          "title": "수동",
+          "body": "파일을 읽거나, 웹 페이지를 열거나, 명령을 실행하거나, 내 서비스를 쓰기 전에 먼저 물어요. 카드에서 “앞으로 이런 건 묻지 않기”를 고르면 그런 일은 묻지 않고 해요."
         },
         "auto": {
-          "title": "하고 나서 알려 주기",
-          "body": "연결한 서비스에서 작업하거나 동료에게 부탁하는 것도 먼저 묻지 않고 해요. 한 일은 모두 대화에서 볼 수 있어요."
+          "title": "자동",
+          "body": "파일과 웹 페이지를 읽고, 연결한 서비스에서 일하고, 샌드박스 안에서 명령을 실행하고, 동료에게 부탁하는 것까지 먼저 묻지 않고 해요. 한 일은 모두 대화에서 볼 수 있어요."
         }
       },
-      "always": "무엇을 고르든, 내 컴퓨터 밖으로 나가는 파일, 플로우, 내 Claude Code·Codex 대화에서 하는 작업은 언제나 먼저 보여 드려요. 동료의 부탁에는 이 설정이 적용되지 않아요. 부탁은 “받는 부탁”에서 종류마다 정한 신뢰 단계를 따라요.",
+      "always": "무엇을 고르든, 내 컴퓨터 밖으로 나가는 파일, 플로우, 스킬 추가, 내 Claude Code·Codex 대화에서 하는 작업은 언제나 먼저 보여 드려요. 동료의 부탁에는 이 설정이 적용되지 않아요. 부탁은 “받는 부탁”에서 종류마다 정한 신뢰 단계를 따라요.",
       "trust": "새 부탁 종류의 시작 단계",
       "trustHint": "부탁 종류를 직접 추가하거나 클론이 초안을 쓸 때 처음 정해지는 단계예요. 약속과 결정은 언제나 나에게 와요.",
       "batch": "미뤄 둔 질문 받는 시간",
@@ -1242,7 +1223,8 @@
       "chat": "대화",
       "requests": "부탁",
       "office": "오피스",
-      "clone": "내 클론"
+      "clone": "내 클론",
+      "file": "파일"
     },
     "chat": {
       "new": "새 대화",
@@ -1556,6 +1538,14 @@
       "handBack": "클론에게 다시 맡기기",
       "takeOver": "내가 맡기",
       "answerClose": "직접 답하고 끝내기"
+    },
+    "file": {
+      "where": "클론의 작업 폴더 · {path}",
+      "save": "저장",
+      "opening": "여는 중…",
+      "missing": "이 파일은 클론의 작업 폴더에 더는 없어요.",
+      "moreRows": "{count, plural, other {#줄 더 있어요}}. 전부 보려면 파일을 저장하세요.",
+      "other": "이 파일은 그 파일을 여는 앱에서 열려요. 저장해 주세요."
     }
   },
   "page": {
@@ -1577,5 +1567,23 @@
     "stop": "그만하기",
     "none": "기다리는 일이 없어요.",
     "status": "{count}개가 기다려요 · /office"
+  },
+  "folders": {
+    "title": "읽을 폴더",
+    "note": "최근 30일 동안 바꾼 폴더와 AI 도구로 일한 폴더예요. 체크한 폴더만 읽어요. 파일은 열지 않고 이름과 날짜만 보고, 프로젝트는 README 첫머리까지 읽어요. 뺀 폴더는 어디서도 읽거나 찾지 않아요.",
+    "search": "폴더 찾기",
+    "count": "{count, plural, other {#곳}}",
+    "finding": "일하는 폴더를 찾는 중",
+    "noneRead": "고른 폴더가 없어요",
+    "leftOut": "{count}곳 뺌",
+    "check": "확인",
+    "sessions": "{count, plural, other {대화 #개}}",
+    "files": "{count, plural, other {파일 #개}}",
+    "repo": "저장소",
+    "noMatch": "맞는 폴더가 없어요",
+    "none": "최근에 바꾼 폴더가 없어요",
+    "leaveOutOther": "목록에 없는 폴더 빼기 (이름이나 경로)",
+    "leaveOut": "빼기",
+    "done": "완료"
   }
 }

@@ -8,13 +8,14 @@ import { settingsPath, writeSettings } from "./exclude.ts";
 import { minimeHome } from "./paths.ts";
 
 /**
- * How much the clone does in the person's own work without asking first, after Claude Code's
- * permission modes: `ask` asks before anything not allowed one by one; `reads` reads files (never
- * in folders left out), web pages and the services it is connected to on its own; `auto` also
- * acts in connected services and asks colleagues on its own. Files leaving the computer, flows,
- * and work in Claude Code or Codex conversations are asked every time, in every mode.
+ * How much the clone does in the person's own work without asking first, one of two (10-08: a
+ * person cannot weigh which tool only reads, so there is no middle): `ask`, by hand, asks before
+ * anything not allowed one by one; `auto` reads files (never in folders left out), web pages and the
+ * services it is connected to, acts in those services, runs commands in its sandbox and asks
+ * colleagues on its own. Files leaving the computer, flows, and work in Claude Code or Codex
+ * conversations are asked every time, in every mode. A `reads` kept from before reads as `ask`.
  */
-export type Autonomy = "ask" | "reads" | "auto";
+export type Autonomy = "ask" | "auto";
 export type Trust = "auto" | "tell" | "ask";
 
 export interface Preferences {
@@ -70,7 +71,7 @@ const hourOf = (value: unknown, fallback: number) =>
     ? (value as number)
     : fallback;
 
-const AUTONOMIES: Autonomy[] = ["ask", "reads", "auto"];
+const AUTONOMIES: Autonomy[] = ["ask", "auto"];
 const TRUSTS: Trust[] = ["auto", "tell", "ask"];
 
 /** Takes what was kept or sent, keeping only values that make sense and filling in defaults. */

@@ -97,7 +97,7 @@
     },
     "next": "Continuar",
     "back": "Voltar",
-    "later": "Pular esta etapa",
+    "later": "Pular",
     "hello": {
       "title": "Mais um você,\nque trabalha como você.",
       "body": "Cada pessoa da equipe envia o próprio clone. Os clones perguntam e respondem entre si, e às pessoas só chega o que elas precisam decidir. Sozinho, ele trabalha como um assistente.",
@@ -119,7 +119,7 @@
       },
       "uses": {
         "title": "Continue com a IA que você já usa",
-        "note": "Sem conta nova: seu plano ou sua chave"
+        "note": "Pensa com seu próprio plano ou chave e aprende com as conversas que você já tem"
       }
     },
     "demo": {
@@ -160,30 +160,11 @@
       "anyway": "Continuar mesmo assim",
       "answered": "Respondeu",
       "answeredIn": "{model} · em {seconds} s",
-      "guide": {
-        "title": "Qual escolher?",
-        "plan": {
-          "title": "Assinatura",
-          "body": "Seu plano do ChatGPT ou Claude: responde dentro do que você já paga."
-        },
-        "key": {
-          "title": "Chave de API",
-          "body": "O serviço cobra na sua chave o que for usado."
-        },
-        "local": {
-          "title": "Este computador",
-          "body": "Ollama ou LM Studio: grátis, e nada sai do computador."
-        },
-        "team": {
-          "title": "Chave da equipe",
-          "body": "Uma chave que o escritório compartilha; a equipe paga."
-        }
-      },
       "probingNote": "Só uma palavra. Alguns segundos."
     },
     "learn": {
       "title": "Aprende como você trabalha",
-      "body": "Lê os registros de IA deste computador e aprende o que você faz, em que está trabalhando, as pessoas e ferramentas ao seu redor e como você trabalha. Depois mostra como responderia a um colega.",
+      "body": "Ele lê os registros de IA e as pastas em que você trabalhou neste computador e aprende o que você faz, em que está trabalhando e onde fica, as pessoas e ferramentas ao seu redor e como você trabalha. Depois mostra como responderia a um colega.",
       "none": "Não há conversas com IA para ler neste computador. Traga o que sua IA de sempre lembra sobre você:",
       "read": "Ler e aprender",
       "reading": "Pode seguir; ele continua lendo.",
@@ -192,25 +173,18 @@
       "example": "Se um colega perguntar",
       "exampleAnswer": "Eu responderia por você",
       "doneTitle": "Foi isto que entendi",
-      "folders": "Pastas que ele não lê",
-      "foldersRecent": "{count, plural, one {# pasta recente} other {# pastas recentes}}",
-      "foldersNone": "Nenhuma · lê todas",
-      "foldersSome": "{count} de fora",
-      "foldersSearch": "Buscar uma pasta",
+      "folders": "Pastas que ele lê",
       "doneBody": "Aprendeu {count, plural, one {# coisa} other {# coisas}} sobre você e seu trabalho. Altere ou remova qualquer coisa depois em Seu clone › O que ele sabe.",
       "found": "Encontrado aqui",
-      "pick": "Escolher",
       "bring": "Usa os apps do ChatGPT ou Claude? Traga a memória deles também",
       "bringTitle": "Traga o que sua IA de sempre lembra",
-      "foldersNote": "Pastas em que você trabalhou com ferramentas de IA nos últimos 14 dias. O que você fez nas marcadas nunca é lido nem buscado.",
-      "foldersPath": "Deixe de fora outra pasta pelo nome ou caminho",
-      "foldersDone": "Pronto",
       "sources": {
         "notes": "Arquivos de instruções e memória de IA",
-        "inputs": "O que você pediu às ferramentas de IA",
+        "inputs": "O que você pediu às ferramentas de IA e sobre o que eram as conversas",
         "commits": "Seus commits",
         "work": "Tipos de documentos e apps",
-        "learn": "Organizando o que aprendeu"
+        "learn": "Organizando o que aprendeu",
+        "places": "Suas pastas e projetos"
       },
       "knows": {
         "saved": "{count, plural, one {# coisa} other {# coisas}} · guardado na memória e nas notas",
@@ -221,10 +195,13 @@
         "traits": {
           "work": "Como você trabalha",
           "decide": "Como você decide",
-          "voice": "Como você fala"
+          "voice": "Como você fala",
+          "all": "Como você trabalha e fala"
         },
-        "more": "e mais {count}"
-      }
+        "places": "Onde está seu trabalho",
+        "where": "Guardado na memória e nas notas dele. Mude ou remova qualquer coisa em Seu clone › O que ele sabe."
+      },
+      "foldersHint": "Confira e desmarque as que quiser deixar de fora"
     },
     "you": {
       "title": "Você e sua equipe",
@@ -291,11 +268,11 @@
     "plan": {
       "read": {
         "title": "O que eu leio",
-        "body": "O que você pediu às ferramentas de IA nos últimos 14 dias, seus arquivos de instruções e memória de IA, seus commits. Não o que a IA respondeu, nem o conteúdo dos documentos."
+        "body": "Seus arquivos de instruções e memória de IA; as pastas que você mudou recentemente e os nomes dos arquivos; os README dos seus projetos; o que você pediu às ferramentas de IA e sobre o que eram essas conversas; seus commits. Não o que a IA respondeu, nem o conteúdo dos documentos."
       },
       "keep": {
         "title": "O que eu guardo",
-        "body": "O que você faz, em que está trabalhando, com quem e com o que trabalha, como trabalha e decide. Os projetos ficam como notas com data que ele atualiza enquanto vocês trabalham."
+        "body": "O que você faz, em que está trabalhando e onde fica, um mapa das suas pastas, as pessoas e ferramentas ao seu redor, como você trabalha e decide. Os projetos ficam como notas com data que ele atualiza enquanto vocês trabalham."
       },
       "skip": {
         "title": "O que eu não guardo",
@@ -305,14 +282,6 @@
         "body": "Uns 30 segundos. Continua lendo se você seguir em frente."
       }
     },
-    "folders": "Estas são as pastas em que você trabalhou ultimamente. Ignore as que eu não devo ler.",
-    "noFolders": "Não encontrei conversas com IA neste computador. O jeito mais rápido de começar é trazer o que sua IA de sempre sabe sobre você.",
-    "sessions": "{count, plural, one {# sessão} other {# sessões}}",
-    "leaveOut": "Ignorar",
-    "leftOut": "Ignorada",
-    "foldersOpen": "Pastas ignoradas",
-    "foldersNote": "Nunca leio nem pesquiso nessas pastas. Ao ignorar uma, também apago o que eu tinha juntado dela para as buscas.",
-    "folderPlaceholder": "Nome ou caminho da pasta",
     "start": "Vamos lá",
     "phase": {
       "index": "Organizando seus registros de conversas",
@@ -323,13 +292,15 @@
       "notes": "Lendo suas instruções e arquivos de memória de IA",
       "inputs": "Lendo o que você pediu às suas ferramentas de IA ultimamente",
       "commits": "Olhando seus commits",
-      "work": "Olhando os tipos de documentos e apps que você usa"
+      "work": "Olhando os tipos de documentos e apps que você usa",
+      "places": "Olhando suas pastas e projetos"
     },
     "sourceLabel": {
       "notes": "arquivos de instruções e memória de IA",
       "inputs": "o que você pediu às ferramentas de IA",
       "commits": "commits",
-      "work": "tipos de documentos e apps"
+      "work": "tipos de documentos e apps",
+      "places": "pastas e projetos"
     },
     "read": "Ler",
     "saved": "Salvo",
@@ -411,7 +382,9 @@
       "mcp__minime__work_session": "Pôr uma das suas conversas do Claude Code ou do Codex para trabalhar",
       "mcp__minime__apply_changes": "Levar para os seus arquivos as mudanças de uma conversa do Codex",
       "mcp__minime__leave_out_folder": "Ignorar uma pasta daqui em diante",
-      "mcp__minime__ask_by_link": "Criar um link para perguntar a alguém sem clone"
+      "mcp__minime__ask_by_link": "Criar um link para perguntar a alguém sem clone",
+      "bash": "Executar um comando na área isolada",
+      "bashOutside": "Executar um comando no seu computador (aqui não há área isolada)"
     },
     "ruleTitle": "Virar regra?",
     "rule": "Você enviou minhas três últimas respostas a “{menu}” do jeito que estavam. Daqui em diante, eu mesmo respondo esses pedidos e aviso você?",
@@ -436,6 +409,37 @@
       "add": "Adicionar ao seu clone a habilidade de {from}: {name}",
       "addScripts": "Adicionar ao seu clone a habilidade de {from}: {name} (tem scripts, que seu clone nunca roda sozinho)",
       "unshare": "Parar de compartilhar uma habilidade com seu escritório: {name}"
+    },
+    "alwaysBash": "Não perguntar de novo por comandos na área isolada",
+    "alwaysBrowser": "Não perguntar de novo por olhar páginas no navegador dele",
+    "ruleBash": "Executar comandos na área isolada",
+    "ruleBrowser": "Olhar páginas no navegador dele",
+    "hubSkill": {
+      "install": "Adicionar uma habilidade do registro aberto: {name} (de {from})",
+      "installScripts": "Adicionar uma habilidade do registro aberto: {name} (de {from}; tem scripts, que só rodam como comandos que você vê)"
+    },
+    "browser": {
+      "other": "Usar o navegador dele: {tool}",
+      "browser_navigate": "Abrir uma página no navegador dele",
+      "browser_navigate_back": "Voltar uma página no navegador dele",
+      "browser_snapshot": "Ler a página no navegador dele",
+      "browser_take_screenshot": "Tirar uma captura da página",
+      "browser_click": "Clicar na página",
+      "browser_type": "Digitar na página",
+      "browser_fill_form": "Preencher um formulário na página",
+      "browser_select_option": "Escolher uma opção na página",
+      "browser_press_key": "Pressionar uma tecla na página",
+      "browser_hover": "Apontar para algo na página",
+      "browser_drag": "Arrastar na página",
+      "browser_drop": "Soltar na página",
+      "browser_file_upload": "Enviar um arquivo para a página",
+      "browser_evaluate": "Executar código na página",
+      "browser_handle_dialog": "Responder a uma caixa de diálogo na página",
+      "browser_tabs": "Usar as abas do navegador dele",
+      "browser_wait_for": "Esperar na página",
+      "browser_close": "Fechar o navegador dele",
+      "browser_install": "Instalar um navegador para ele",
+      "browser_find": "Procurar na página"
     }
   },
   "office": {
@@ -739,42 +743,25 @@
   },
   "brain": {
     "title": "Modelo de IA",
-    "intro": "O modelo de IA que seu clone usa: sua assinatura do ChatGPT ou do Claude, uma chave de um destes serviços ou um modelo rodando neste computador. Logins e chaves ficam neste computador.",
     "local": "Este computador",
     "found": "Encontrado aqui",
     "inUse": "Em uso",
     "use": "Usar este",
-    "vendor": {
-      "openai": "Seu plano do ChatGPT ou uma chave de API",
-      "claude": "Sua assinatura do Claude ou uma chave de API",
-      "gemini": "Uma chave de API do Google AI Studio",
-      "openrouter": "Uma chave só para modelos de vários fabricantes",
-      "local": "Ollama ou LM Studio: grátis, nada sai do computador"
-    },
     "way": {
       "sign-in": "Meu plano do ChatGPT",
       "claude-code": "Minha assinatura do Claude",
       "key": "Chave de API",
-      "local": "Ollama / LM Studio",
-      "team": "Chave da equipe"
-    },
-    "wayNote": {
-      "sign-in": "Entre com sua conta do ChatGPT; seu clone passa a usar a cota do seu plano.",
-      "claude-code": "Pelo Claude Code neste computador, conectado à sua conta do Claude.",
-      "key": "O serviço cobra na sua chave o que seu clone usar.",
-      "local": "Um modelo rodando neste computador. Nada sai dele; pode ser mais lento e menos capaz que os serviços.",
-      "team": "A chave própria do escritório, guardada lacrada no servidor dele. Todos os clones do escritório podem usá-la, e a chave nunca chega ao computador de ninguém."
+      "local": "Ollama / LM Studio"
     },
     "team": {
-      "notIn": "Entre em um escritório primeiro: uma chave da equipe pertence a um escritório.",
       "kept": "A chave do escritório …{hint}, adicionada por {name}.",
       "remove": "Remover do escritório",
-      "add": "Cole uma chave que o escritório todo vai compartilhar. O servidor do escritório confere com o fornecedor e depois a guarda lacrada.",
       "unsealed": "O servidor deste escritório ainda não pode guardar uma chave da equipe: quem o administra precisa configurar RELAY_ENCRYPTION_KEY.",
-      "calls": "Últimos 30 dias: {mine} chamadas do seu clone, {all} do escritório"
+      "calls": "Últimos 30 dias: {mine} chamadas do seu clone, {all} do escritório",
+      "title": "Chaves da equipe",
+      "hint": "Chaves de IA que o escritório compartilha: todo clone dele pode pensar com elas e a equipe paga. Cada uma é verificada primeiro com o fornecedor e guardada lacrada no servidor da equipe."
     },
-    "claudeCodeFound": "O Claude Code está neste computador.",
-    "claudeMissing": "O Claude Code não está neste computador. Instale em claude.com/code, entre na sua conta e reabra esta página; ou escolha outra opção.",
+    "claudeMissing": "O Claude Code não está neste computador. Instale, entre na sua conta e abra isto de novo:",
     "chatgpt": {
       "signIn": "Entrar com o ChatGPT",
       "signingIn": "Aprove na aba que abriu…",
@@ -794,8 +781,7 @@
     "save": "Salvar",
     "keySaved": "Chave salva neste computador.",
     "forgetKey": "Remover a chave",
-    "makeKey": "Criar uma chave",
-    "model": "Modelo",
+    "makeKey": "Obter uma chave",
     "modelOther": "Ou digite o nome de outro modelo",
     "modelLocal": "O modelo que você baixou (ex.: qwen3:8b)",
     "address": "Endereço",
@@ -817,7 +803,6 @@
       "teamNote": "Com a chave da equipe · {model}"
     },
     "ourTeam": "Nossa equipe",
-    "teamNote": "Chaves que seu escritório compartilha: a equipe paga e elas ficam no servidor da equipe.",
     "teamVia": "{vendor} · chave da equipe"
   },
   "messenger": {
@@ -1025,7 +1010,7 @@
       },
       "permissions": {
         "label": "Permissões",
-        "hint": "Quanto seu clone faz por conta própria, o que pode fazer sem perguntar e as pastas que ele nunca lê."
+        "hint": "Quanto seu clone faz por conta própria, o que pode fazer sem perguntar e quais pastas ele lê."
       },
       "office": {
         "label": "Escritório",
@@ -1146,8 +1131,8 @@
       "emptyMenu": "Nada na lista ainda. Deixe seu clone sugerir o que você costuma aceitar ou adicione um."
     },
     "permissions": {
-      "folders": "Pastas ignoradas",
-      "foldersHint": "Seu clone nunca lê estas pastas, nos registros de nenhuma ferramenta de IA."
+      "folders": "Pastas que ele lê",
+      "foldersHint": "Ele só lê as pastas marcadas. Uma deixada de fora nunca é lida nem pesquisada, nos registros de nenhuma ferramenta de IA."
     },
     "files": {
       "loading": "Carregando…",
@@ -1179,19 +1164,15 @@
       "autonomyHint": "No seu próprio trabalho: as conversas com ele e suas rotinas.",
       "modes": {
         "ask": {
-          "title": "Me pergunte antes",
-          "body": "Ele pergunta antes de ler um arquivo, abrir uma página da web ou usar um dos seus serviços. Marque “Não perguntar de novo” em qualquer cartão para liberar aquele tipo."
-        },
-        "reads": {
-          "title": "Lê por conta própria",
-          "body": "Ele lê arquivos (nunca em pastas ignoradas), páginas da web e seus serviços conectados sem perguntar. Tudo o que muda alguma coisa continua sendo perguntado."
+          "title": "Perguntar antes",
+          "body": "Ele pergunta antes de ler um arquivo, abrir uma página da web, executar um comando ou usar um dos seus serviços. Marque “Não perguntar de novo” em qualquer cartão para liberar aquele tipo."
         },
         "auto": {
-          "title": "Faça e depois me avise",
-          "body": "Ele também age nos seus serviços conectados e pergunta aos colegas sem perguntar a você antes. Você vê tudo na conversa."
+          "title": "Por conta própria",
+          "body": "Ele lê arquivos e páginas da web, trabalha nos seus serviços conectados, executa comandos dentro da sua área isolada e pergunta aos colegas sem perguntar a você antes. Você vê tudo o que ele fez na conversa."
         }
       },
-      "always": "Seja qual for a escolha, arquivos que saem do seu computador, rotinas e trabalho nas suas conversas do Claude Code ou do Codex sempre são mostrados a você antes. Pedidos de colegas não usam isto: cada tipo tem seu próprio nível de confiança, em Pedidos que você aceita.",
+      "always": "Seja qual for a escolha, arquivos que saem do seu computador, rotinas, adicionar uma habilidade e trabalho nas suas conversas do Claude Code ou do Codex sempre são mostrados a você antes. Pedidos de colegas não usam isto: cada tipo tem seu próprio nível de confiança, em Pedidos que você aceita.",
       "trust": "Novos tipos de pedido começam em",
       "trustHint": "Onde um tipo de pedido começa quando você o adiciona ou seu clone o sugere. Promessas e decisões sempre chegam a você.",
       "batch": "Quando chegam as perguntas guardadas",
@@ -1242,7 +1223,8 @@
       "chat": "Chat",
       "requests": "Pedidos",
       "office": "Escritório",
-      "clone": "Seu clone"
+      "clone": "Seu clone",
+      "file": "Arquivo"
     },
     "chat": {
       "new": "Novo chat",
@@ -1556,6 +1538,14 @@
       "handBack": "Devolver ao meu clone",
       "takeOver": "Assumir",
       "answerClose": "Eu respondo e encerro"
+    },
+    "file": {
+      "where": "Na área de trabalho do seu clone · {path}",
+      "save": "Salvar",
+      "opening": "Abrindo…",
+      "missing": "Este arquivo não está mais na área de trabalho do seu clone.",
+      "moreRows": "{count, plural, one {Mais # linha} other {Mais # linhas}}: salve o arquivo para ver todas.",
+      "other": "Este tipo de arquivo abre no próprio app: salve-o."
     }
   },
   "page": {
@@ -1577,5 +1567,23 @@
     "stop": "Parar aqui",
     "none": "Nada esperando por você.",
     "status": "{count, plural, one {# esperando por você} other {# esperando por você}} · /office"
+  },
+  "folders": {
+    "title": "Pastas que ele lê",
+    "note": "As pastas que você mudou nos últimos 30 dias e onde trabalhou com ferramentas de IA. Só lê as marcadas: nomes de arquivos e datas, nunca o que um arquivo diz, e o início do README de um projeto. Uma pasta deixada de fora nunca é lida nem pesquisada, em lugar nenhum.",
+    "search": "Procurar uma pasta",
+    "count": "{count, plural, one {# pasta} other {# pastas}}",
+    "finding": "Procurando onde está seu trabalho",
+    "noneRead": "nenhuma marcada",
+    "leftOut": "{count} de fora",
+    "check": "Revisar",
+    "sessions": "{count, plural, one {# conversa} other {# conversas}}",
+    "files": "{count, plural, one {# arquivo} other {# arquivos}}",
+    "repo": "repositório",
+    "noMatch": "Nenhuma pasta corresponde",
+    "none": "Nenhuma pasta mudou recentemente",
+    "leaveOutOther": "Deixar de fora outra pasta por nome ou caminho",
+    "leaveOut": "Deixar de fora",
+    "done": "Pronto"
   }
 }

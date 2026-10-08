@@ -97,7 +97,7 @@
     },
     "next": "Continue",
     "back": "Back",
-    "later": "Skip this step",
+    "later": "Skip",
     "hello": {
       "title": "One more you,\nworking the way you do.",
       "body": "Everyone on the team sends a clone of their own. Clones ask and answer each other, and only the calls come to people. On your own, it works like an assistant.",
@@ -119,7 +119,7 @@
       },
       "uses": {
         "title": "Keep the AI you already use",
-        "note": "No new account: your own plan or key"
+        "note": "Thinks with your own plan or key, learns from the chats you already have"
       }
     },
     "demo": {
@@ -160,30 +160,11 @@
       "anyway": "Go on anyway",
       "answered": "It answered",
       "answeredIn": "{model} · in {seconds}s",
-      "guide": {
-        "title": "Which to pick?",
-        "plan": {
-          "title": "Subscription",
-          "body": "Your ChatGPT or Claude plan: it answers within what you already pay for."
-        },
-        "key": {
-          "title": "API key",
-          "body": "The service bills your key for what it uses."
-        },
-        "local": {
-          "title": "This computer",
-          "body": "Ollama or LM Studio: free, and nothing leaves the computer."
-        },
-        "team": {
-          "title": "Team key",
-          "body": "A key the office shares; the team pays."
-        }
-      },
       "probingNote": "One word to it. A few seconds."
     },
     "learn": {
       "title": "It learns how you work",
-      "body": "It reads the AI records on this computer and learns what you do, what you are working on, the people and tools around you and how you work. Then it shows you how it would answer a colleague.",
+      "body": "It reads the AI records and the folders you worked in on this computer, and learns what you do, what you're working on and where it lives, the people and tools around you and how you work. Then it shows how it would answer a colleague.",
       "none": "There are no AI conversations to read on this computer. Bring what your usual AI remembers about you instead:",
       "read": "Read and learn",
       "reading": "You can go on; it keeps reading.",
@@ -192,25 +173,18 @@
       "example": "If a colleague asks",
       "exampleAnswer": "I'd answer for you",
       "doneTitle": "Here's what I understood",
-      "folders": "Folders to leave out",
-      "foldersRecent": "{count, plural, one {# recent folder} other {# recent folders}}",
-      "foldersNone": "None · it reads them all",
-      "foldersSome": "{count} left out",
-      "foldersSearch": "Find a folder",
+      "folders": "Folders it reads",
       "doneBody": "It learned {count, plural, one {# thing} other {# things}} about you and your work. Change or remove any of it later under Your clone › What it knows.",
       "found": "Found here",
-      "pick": "Choose",
       "bring": "Use ChatGPT or Claude apps? Bring their memory too",
       "bringTitle": "Bring what your usual AI remembers",
-      "foldersNote": "Folders you worked in with AI tools in the last 14 days. What you did in a folder you tick is never read or searched.",
-      "foldersPath": "Leave out another folder by name or path",
-      "foldersDone": "Done",
       "sources": {
         "notes": "AI instruction and memory files",
-        "inputs": "What you asked your AI tools",
+        "inputs": "What you asked your AI tools, and what the chats were about",
         "commits": "Your commits",
         "work": "Kinds of documents and apps",
-        "learn": "Putting together what it learned"
+        "learn": "Putting together what it learned",
+        "places": "Your folders and projects"
       },
       "knows": {
         "saved": "{count, plural, one {# thing} other {# things}} · kept in its memory and notes",
@@ -221,10 +195,13 @@
         "traits": {
           "work": "How you work",
           "decide": "How you decide",
-          "voice": "How you put things"
+          "voice": "How you put things",
+          "all": "How you work and talk"
         },
-        "more": "and {count} more"
-      }
+        "places": "Where your work is",
+        "where": "Kept in its memory and notes. Change or remove any of it under Your clone › What it knows."
+      },
+      "foldersHint": "Check them; untick any to leave out"
     },
     "you": {
       "title": "You and your team",
@@ -291,11 +268,11 @@
     "plan": {
       "read": {
         "title": "What I read",
-        "body": "What you asked your AI tools in the last 14 days, your AI instruction and memory files, your commits. Not what the AI answered, nor what documents say."
+        "body": "Your AI instruction and memory files; the folders you changed lately and their file names; your projects' READMEs; what you asked your AI tools and what those chats were about; your commits. Not what the AI answered, nor what documents say."
       },
       "keep": {
         "title": "What I keep",
-        "body": "What you do, what you are working on, who and what you work with, how you work and decide. Projects are kept as dated notes it updates as you work."
+        "body": "What you do, what you're working on and where it lives, a map of your folders, the people and tools around you, how you work and decide. Projects are kept as dated notes it updates as you work."
       },
       "skip": {
         "title": "What I don't keep",
@@ -305,14 +282,6 @@
         "body": "About 30 seconds. It keeps reading if you go on."
       }
     },
-    "folders": "These are the folders you worked in lately. Leave out any I shouldn't read.",
-    "noFolders": "I found no AI conversations on this computer. Bringing what your usual AI knows about you is the quickest start.",
-    "sessions": "{count, plural, one {# session} other {# sessions}}",
-    "leaveOut": "Leave out",
-    "leftOut": "Left out",
-    "foldersOpen": "Folders left out",
-    "foldersNote": "I never read or search these folders. Leaving one out also removes what I had gathered from it for searching.",
-    "folderPlaceholder": "Folder name or path",
     "start": "Go ahead",
     "phase": {
       "index": "Sorting your conversation records",
@@ -323,13 +292,15 @@
       "notes": "Reading your AI instructions and memory files",
       "inputs": "Reading what you asked your AI tools lately",
       "commits": "Looking at your commits",
-      "work": "Looking at the kinds of documents and apps you use"
+      "work": "Looking at the kinds of documents and apps you use",
+      "places": "Looking through your folders and projects"
     },
     "sourceLabel": {
       "notes": "AI instruction and memory files",
       "inputs": "what you asked AI tools",
       "commits": "commits",
-      "work": "document kinds and apps"
+      "work": "document kinds and apps",
+      "places": "folders and projects"
     },
     "read": "Read",
     "saved": "Saved",
@@ -411,7 +382,9 @@
       "mcp__minime__work_session": "Have one of your Claude Code or Codex conversations do work",
       "mcp__minime__apply_changes": "Let a Codex conversation's changes into your files",
       "mcp__minime__leave_out_folder": "Leave a folder out from now on",
-      "mcp__minime__ask_by_link": "Make a link to ask someone without a clone"
+      "mcp__minime__ask_by_link": "Make a link to ask someone without a clone",
+      "bash": "Run a command in its sandbox",
+      "bashOutside": "Run a command on your computer (no sandbox here)"
     },
     "ruleTitle": "Make it a rule?",
     "rule": "You sent my last three answers to “{menu}” as they were. From now on, shall I answer these myself and tell you?",
@@ -436,6 +409,37 @@
       "add": "Add {from}'s skill to your clone: {name}",
       "addScripts": "Add {from}'s skill to your clone: {name} (it has scripts, which your clone never runs on its own)",
       "unshare": "Stop sharing a skill with your office: {name}"
+    },
+    "alwaysBash": "Don't ask again for commands in its sandbox",
+    "alwaysBrowser": "Don't ask again for looking at pages in its browser",
+    "ruleBash": "Run commands in its sandbox",
+    "ruleBrowser": "Look at pages in its browser",
+    "hubSkill": {
+      "install": "Add a skill from the open registry: {name} (from {from})",
+      "installScripts": "Add a skill from the open registry: {name} (from {from}; it has scripts, which run only as commands you see)"
+    },
+    "browser": {
+      "other": "Use its browser: {tool}",
+      "browser_navigate": "Open a page in its browser",
+      "browser_navigate_back": "Go back a page in its browser",
+      "browser_snapshot": "Read the page in its browser",
+      "browser_take_screenshot": "Take a screenshot of the page",
+      "browser_click": "Click on the page",
+      "browser_type": "Type on the page",
+      "browser_fill_form": "Fill in a form on the page",
+      "browser_select_option": "Pick an option on the page",
+      "browser_press_key": "Press a key on the page",
+      "browser_hover": "Point at something on the page",
+      "browser_drag": "Drag on the page",
+      "browser_drop": "Drop on the page",
+      "browser_file_upload": "Upload a file to the page",
+      "browser_evaluate": "Run code in the page",
+      "browser_handle_dialog": "Answer a dialog on the page",
+      "browser_tabs": "Use its browser's tabs",
+      "browser_wait_for": "Wait on the page",
+      "browser_close": "Close its browser",
+      "browser_install": "Install a browser for it",
+      "browser_find": "Find on the page"
     }
   },
   "office": {
@@ -739,42 +743,25 @@
   },
   "brain": {
     "title": "AI model",
-    "intro": "The AI model your clone uses: your ChatGPT or Claude subscription, a key for one of these services, or a model running on this computer. Sign-ins and keys stay on this computer.",
     "local": "This computer",
     "found": "Found here",
     "inUse": "In use",
     "use": "Use this",
-    "vendor": {
-      "openai": "Your ChatGPT plan, or an API key",
-      "claude": "Your Claude subscription, or an API key",
-      "gemini": "An API key from Google AI Studio",
-      "openrouter": "One key for models from many makers",
-      "local": "Ollama or LM Studio: free, nothing leaves the computer"
-    },
     "way": {
       "sign-in": "My ChatGPT plan",
       "claude-code": "My Claude subscription",
       "key": "API key",
-      "local": "Ollama / LM Studio",
-      "team": "Team key"
-    },
-    "wayNote": {
-      "sign-in": "Sign in with your ChatGPT account; your clone then uses your plan's allowance.",
-      "claude-code": "Through Claude Code on this computer, signed in with your Claude account.",
-      "key": "The service bills your key for what your clone uses.",
-      "local": "A model running on this computer. Nothing leaves it; it can be slower and less able than the services.",
-      "team": "The office's own key, kept sealed on its server. Every clone in the office can use it, and the key never reaches anyone's computer."
+      "local": "Ollama / LM Studio"
     },
     "team": {
-      "notIn": "Join an office first: a team key belongs to an office.",
       "kept": "The office's key …{hint}, added by {name}.",
       "remove": "Remove it from the office",
-      "add": "Paste a key the whole office will share. The office's server checks it with the vendor, then keeps it sealed.",
       "unsealed": "This office's server can't keep a team key yet: whoever runs it sets RELAY_ENCRYPTION_KEY.",
-      "calls": "Last 30 days: {mine} calls by your clone, {all} by the office"
+      "calls": "Last 30 days: {mine} calls by your clone, {all} by the office",
+      "title": "Team keys",
+      "hint": "AI keys your office shares: every clone in it can think with them and the team pays. Each is checked with its vendor first, then kept sealed on the team's server."
     },
-    "claudeCodeFound": "Claude Code is on this computer.",
-    "claudeMissing": "Claude Code is not on this computer. Install it from claude.com/code and sign in, then reopen this page; or pick another way.",
+    "claudeMissing": "Claude Code is not on this computer. Install it and sign in, then open this again:",
     "chatgpt": {
       "signIn": "Sign in with ChatGPT",
       "signingIn": "Approve it in the tab that opened…",
@@ -794,8 +781,7 @@
     "save": "Save",
     "keySaved": "Key saved on this computer.",
     "forgetKey": "Remove the key",
-    "makeKey": "Make a key",
-    "model": "Model",
+    "makeKey": "Get a key",
     "modelOther": "Or type another model name",
     "modelLocal": "The model you pulled (e.g. qwen3:8b)",
     "address": "Address",
@@ -817,7 +803,6 @@
       "teamNote": "With the team's key · {model}"
     },
     "ourTeam": "Our team",
-    "teamNote": "Keys your office shares: the team pays, and the keys stay on the team's server.",
     "teamVia": "{vendor} · team key"
   },
   "messenger": {
@@ -1025,7 +1010,7 @@
       },
       "permissions": {
         "label": "Permissions",
-        "hint": "How much your clone does on its own, what it may do without asking, and the folders it never reads."
+        "hint": "How much your clone does on its own, what it may do without asking, and the folders it reads."
       },
       "office": {
         "label": "Office",
@@ -1146,8 +1131,8 @@
       "emptyMenu": "Nothing listed yet. Let your clone draft what you usually take, or add one."
     },
     "permissions": {
-      "folders": "Folders left out",
-      "foldersHint": "Your clone never reads these, in any AI tool's records."
+      "folders": "Folders it reads",
+      "foldersHint": "It reads only the ticked folders. One left out is never read or searched, in any AI tool's records."
     },
     "files": {
       "loading": "Loading…",
@@ -1180,18 +1165,14 @@
       "modes": {
         "ask": {
           "title": "Ask me first",
-          "body": "It asks before it reads a file, opens a web page or uses one of your services. Tick “Don't ask again” on any card to let one kind through."
-        },
-        "reads": {
-          "title": "Read on its own",
-          "body": "It reads files (never in folders you left out), web pages and your connected services without asking. Anything that changes something is still asked."
+          "body": "It asks before it reads a file, opens a web page, runs a command or uses one of your services. Tick “Don't ask again” on any card to let one kind through."
         },
         "auto": {
-          "title": "Do it, then tell me",
-          "body": "It also acts in your connected services and asks colleagues without asking you first. You see everything in the conversation."
+          "title": "On its own",
+          "body": "It reads files and web pages, works in your connected services, runs commands inside its sandbox and asks colleagues without asking you first. You see all it did in the conversation."
         }
       },
-      "always": "Whatever you pick, files leaving your computer, flows, and work in your Claude Code or Codex conversations are always shown to you first. Colleagues' requests don't use this: each kind there has its own trust level, under Requests you take.",
+      "always": "Whatever you pick, files leaving your computer, flows, adding a skill, and work in your Claude Code or Codex conversations are always shown to you first. Colleagues' requests don't use this: each kind there has its own trust level, under Requests you take.",
       "trust": "New kinds of request start at",
       "trustHint": "Where a kind of request starts when you add it or your clone drafts it. Promises and decisions always come to you.",
       "batch": "When kept questions come",
@@ -1242,7 +1223,8 @@
       "chat": "Chat",
       "requests": "Requests",
       "office": "Office",
-      "clone": "Your clone"
+      "clone": "Your clone",
+      "file": "File"
     },
     "chat": {
       "new": "New chat",
@@ -1556,6 +1538,14 @@
       "handBack": "Hand it back to my clone",
       "takeOver": "Take it over",
       "answerClose": "Answer myself and close"
+    },
+    "file": {
+      "where": "In your clone's workspace · {path}",
+      "save": "Save",
+      "opening": "Opening…",
+      "missing": "This file is not in your clone's workspace anymore.",
+      "moreRows": "{count, plural, one {# more row} other {# more rows}}: save the file to see them all.",
+      "other": "This kind of file opens in its own app: save it."
     }
   },
   "page": {
@@ -1577,5 +1567,23 @@
     "stop": "Stop here",
     "none": "Nothing waits on you.",
     "status": "{count, plural, one {# waits on you} other {# wait on you}} · /office"
+  },
+  "folders": {
+    "title": "Folders it reads",
+    "note": "Folders you changed in the last 30 days, and where you worked with AI tools. Only the ticked ones are read: file names and dates, never what a file says, and a project's README head. A folder left out is never read or searched, anywhere.",
+    "search": "Find a folder",
+    "count": "{count, plural, one {# folder} other {# folders}}",
+    "finding": "Finding where your work is",
+    "noneRead": "none ticked",
+    "leftOut": "{count} left out",
+    "check": "Review",
+    "sessions": "{count, plural, one {# chat} other {# chats}}",
+    "files": "{count, plural, one {# file} other {# files}}",
+    "repo": "repository",
+    "noMatch": "No folder matches",
+    "none": "No folder changed lately",
+    "leaveOutOther": "Leave out another folder by name or path",
+    "leaveOut": "Leave out",
+    "done": "Done"
   }
 }

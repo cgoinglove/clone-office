@@ -57,6 +57,8 @@ import { threatMessage } from "./threats.ts";
 const MAX_DESCRIPTION = 1024;
 /** What the session's skill index shows of a description; a new skill's must fit whole. */
 export const INDEX_DESCRIPTION = 60;
+/** The most skills a session's index lists by name; the rest are counted by category. */
+export const INDEX_SKILLS = 40;
 const MAX_CONTENT = 100_000;
 const MAX_FILE_BYTES = 1_048_576;
 /** Past this a SKILL.md body is loaded whole into every later turn; move depth to references/. */
@@ -76,6 +78,8 @@ const ARCHIVE = ".archive";
 const BUNDLED = ".bundled.json";
 /** The skills added from the office, each with the hash it came with and who shared it. */
 const OFFICE = ".office.json";
+/** Where each skill added from the open registry came from, and its folder's hash when added. */
+const HUB = ".hub.json";
 const USAGE = ".usage.json";
 /** A skill from the office written whole aside, before it is put in place (`addShared`). */
 const INCOMING = ".incoming-";
@@ -111,8 +115,9 @@ export interface UsageRecord {
    * "bundled": one the app ships, which the clone adapts to its person and the curator leaves.
    * "office": one a colleague shared that the person added; changed only with them, never set
    * aside by the curator.
+   * "hub": one the person added from the open skills registry (skills.sh), the same way.
    */
-  created_by: "minime" | "person" | "bundled" | "office" | null;
+  created_by: "minime" | "person" | "bundled" | "office" | "hub" | null;
   created_at: string;
   view_count: number;
   last_viewed_at: string | null;
@@ -332,16 +337,52 @@ export class SkillStore {
     return out;
   }
 
-  /** The index a session starts with, grouped by category as in Hermes. */
+  /**
+   * The index a session starts with, grouped by category as in Hermes. Past `INDEX_SKILLS` skills,
+   * the ones used most lately are listed and the rest only counted by category, so a store that
+   * grew to hundreds of skills costs a session no more than a few dozen; skills_list shows them.
+   */
   async index(): Promise<string> {
     const skills = await this.list();
     if (!skills.length) return "";
     const descriptions = await this.categories();
+    let listed = skills;
+    const unlisted = new Map<string, number>();
+    if (skills.length > INDEX_SKILLS) {
+      const usage = await this.usage();
+      const lately = (name: string) => {
+        const record = usage[name];
+        return Math.max(
+          Date.parse(record?.last_viewed_at ?? "") || 0,
+          Date.parse(record?.last_patched_at ?? "") || 0,
+          Date.parse(record?.created_at ?? "") || 0,
+        );
+      };
+      const kept = new Set(
+        [...skills]
+          .sort(
+            (a, b) =>
+              Number(usage[b.name]?.created_by === "bundled") -
+                Number(usage[a.name]?.created_by === "bundled") ||
+              lately(b.name) - lately(a.name),
+          )
+          .slice(0, INDEX_SKILLS)
+          .map((skill) => skill.name),
+      );
+      listed = skills.filter((skill) => kept.has(skill.name));
+      for (const skill of skills)
+        if (!kept.has(skill.name)) {
+          const key = skill.category ?? "general";
+          unlisted.set(key, (unlisted.get(key) ?? 0) + 1);
+        }
+    }
     const groups = new Map<string, SkillInfo[]>();
-    for (const skill of skills) {
+    for (const skill of listed) {
       const key = skill.category ?? "general";
       groups.set(key, [...(groups.get(key) ?? []), skill]);
     }
+    for (const key of unlisted.keys())
+      if (!groups.has(key)) groups.set(key, []);
     const lines: string[] = [];
     for (const key of [...groups.keys()].sort()) {
       lines.push(
@@ -351,6 +392,9 @@ export class SkillStore {
         lines.push(
           `    - ${skill.name}: ${skill.description.length > INDEX_DESCRIPTION ? `${skill.description.slice(0, INDEX_DESCRIPTION - 3)}...` : skill.description}`,
         );
+      const more = unlisted.get(key);
+      if (more)
+        lines.push(`    - and ${more} more: skills_list("${key}") lists them`);
     }
     return `<available_skills>\n${lines.join("\n")}\n</available_skills>`;
   }
@@ -717,6 +761,111 @@ export class SkillStore {
       });
       return { ok: true as const, updated: Boolean(here), same: false };
     });
+  }
+
+  /**
+   * Adds a skill from the open skills registry, once the person saw its files, after the checks a
+   * colleague's skill passes (`inspect`: only a skill's own files, no program, nothing the threat
+   * scan stops, small enough). A later version replaces it only while it is as it was added; a
+   * skill of the person's by that name is never touched. Scripts are kept as files, never runnable.
+   * With `check`, only says whether it would.
+   */
+  async addFromHub(
+    input: { name: string; files: SkillFile[]; id: string },
+    options: { check?: boolean } = {},
+  ): Promise<{ ok: true; updated: boolean } | SkillRefusal> {
+    const checked = inspect(input.name, input.files);
+    if (!checked.ok) return checked;
+    return withLock(this.dir, async () => {
+      const skills = await this.scanTree();
+      const usage = await this.usage();
+      const origins = await this.hubOrigins();
+      const here = skills.find((skill) => skill.name === input.name);
+      const origin =
+        here && usage[input.name]?.created_by === "hub"
+          ? origins[input.name]
+          : undefined;
+      if (here && !origin)
+        return refusal(
+          "skill-name-taken-here",
+          `A skill named '${input.name}' is here already and did not come from the registry; it is never replaced.`,
+        );
+      if (here && origin && (await treeHash(here.path)) !== origin.hash)
+        return refusal(
+          "skill-changed-here",
+          `'${input.name}' was changed here since it was added; a newer version is not put over it.`,
+        );
+      const target =
+        here?.path ?? join(/*turbopackIgnore: true*/ this.dir, input.name);
+      if (!here) {
+        const listed = await readdir(target).then(
+          (entries) => entries,
+          (error: NodeJS.ErrnoException) =>
+            error.code === "ENOENT" ? undefined : ["?"],
+        );
+        if (listed?.length)
+          return refusal(
+            "skill-name-taken-here",
+            `'${input.name}' is a folder here already; nothing was added.`,
+          );
+      }
+      if (options.check) return { ok: true as const, updated: Boolean(here) };
+      const staging = join(
+        /*turbopackIgnore: true*/ this.dir,
+        `${INCOMING}${randomBytes(6).toString("hex")}`,
+      );
+      try {
+        for (const file of input.files) {
+          const to = join(
+            /*turbopackIgnore: true*/ staging,
+            ...file.path.split("/"),
+          );
+          await mkdir(dirname(to), { recursive: true });
+          // Never executable: a script from the registry runs only if the person runs it.
+          await writeFile(to, file.bytes, { mode: 0o644 });
+        }
+        if (here) await rm(here.path, { recursive: true, force: true });
+        else await rm(target, { recursive: true, force: true });
+        await rename(staging, target);
+      } catch (error) {
+        await rm(staging, { recursive: true, force: true });
+        throw error;
+      }
+      origins[input.name] = {
+        id: input.id,
+        hash: await treeHash(target),
+        added: now(),
+      };
+      await atomicWrite(
+        join(/*turbopackIgnore: true*/ this.dir, HUB),
+        `${JSON.stringify(origins, null, 2)}\n`,
+      );
+      await this.updateUsage((usage) => {
+        usage[input.name] =
+          here && usage[input.name]
+            ? { ...usage[input.name], created_by: "hub", state: "active" }
+            : emptyRecord("hub");
+      });
+      return { ok: true as const, updated: Boolean(here) };
+    });
+  }
+
+  /** The skills added from the open registry, by name, with where each came from. */
+  async hubOrigins(): Promise<
+    Record<string, { id: string; hash: string; added: string }>
+  > {
+    try {
+      const origins = JSON.parse(
+        (await readText(join(/*turbopackIgnore: true*/ this.dir, HUB))).raw ||
+          "{}",
+      );
+      return Object.assign(
+        Object.create(null),
+        origins && typeof origins === "object" ? origins : {},
+      );
+    } catch {
+      return {};
+    }
   }
 
   /** Keep a skill from being set aside or changed by the review; for the person. */

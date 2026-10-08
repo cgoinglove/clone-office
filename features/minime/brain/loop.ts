@@ -27,6 +27,7 @@ import { connectedConnectors } from "../connectors/oauth.ts";
 import { sessionRules } from "../connectors/tools.ts";
 import { ownModeRules } from "../gate/autonomy.ts";
 import { TRUSTED_FROM_START } from "../gate/rules.ts";
+import { browserServer } from "../hands/browser.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
 import { atomicWrite, readText } from "../memory/files.ts";
 import { SkillStore } from "../memory/skills.ts";
@@ -406,6 +407,11 @@ export async function runLoop(
         : [];
     const colleagueRule = await colleagueRules(colleague);
     guard.allow.push(...colleagueRule.allow);
+    // The person's own work: their conversation (watched) or one of their flows.
+    const own =
+      options.connectors &&
+      actor === "minime" &&
+      options.audience !== "colleagues";
     servers = await connectServers({
       toolServer: deps.toolServer ?? {
         command: process.execPath,
@@ -419,6 +425,7 @@ export async function runLoop(
             options.audience,
             [],
             sessionOrigin(options),
+            own,
           ),
         },
       },
@@ -426,6 +433,9 @@ export async function runLoop(
         options.connectors && actor === "minime"
           ? await connectedConnectors().catch(() => [])
           : colleague,
+      ...(own && !deps.toolServer
+        ? { browser: browserServer({ watched: Boolean(gate) }) }
+        : {}),
     });
     const tools = {
       ...(await loopTools({

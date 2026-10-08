@@ -6,7 +6,9 @@
 // (USER.md); what surrounds their work, the kinds of work they do again and again, their tools and
 // where their work lives, to its memory of their work (MEMORY.md); what they are working on now
 // and the people they work with to pages in its notes, dated, which it opens when one comes up and
-// keeps current as it works with them (Hermes Agent's wiki of pages, opened by path). Who they
+// keeps current as it works with them (Hermes Agent's wiki of pages, opened by path), and where
+// their work lives on the computer to one map page (WORK_MAP), every folder with what it holds, so
+// it finds their things by path rather than asking. Who they
 // are at work (what they do, look after and work in) is offered for them to confirm onto their
 // profile, which is theirs to change and not memory. It also offers three things to do together
 // right away, so the first experience is doing work, not filling in a form, and shows what it
@@ -14,6 +16,8 @@
 // what is new (f6), and adds to the pages it finds there rather than starting them again.
 
 import { join } from "node:path";
+import { brainChoice } from "../brain/choice.ts";
+import { contextWindow } from "../brain/context.ts";
 import {
   memoryDir,
   notesDir,
@@ -23,31 +27,33 @@ import {
 } from "../brain/session.ts";
 import { openHistoryForRead } from "../history/db.ts";
 import { atomicWrite, readText } from "../memory/files.ts";
-import { NoteStore } from "../memory/notes.ts";
+import { NoteStore, WORK_MAP } from "../memory/notes.ts";
 import { MemoryStore, type Target } from "../memory/store.ts";
 import { ABOUT_WORDS, CARD_SCHEMA } from "../office/card.ts";
 import { cleanRoutines, type Routine } from "../routine.ts";
 import { minimeHome } from "../server/paths.ts";
 import { type About, cleanAbout } from "../server/profile.ts";
-import { gather, type Material } from "./gather.ts";
+import { gather, type Material, SOURCE_ORDER } from "./gather.ts";
 
 const LEARN_FILE = "learn.json";
 
-export const LEARN_PROMPT = `This is the first time you meet your person. Below is what their own computer says about their work: what they wrote for their AI tools, what they asked those tools lately (by the folders they worked in), their own recent commits, the kinds of documents they opened and the apps they use. Learn from it as much as it shows about who they are at work, so that from today you can do their work with them, and answer colleagues in their place, without being told the basics. Learn from it; do not copy it.
+export const LEARN_PROMPT = `This is the first time you meet your person. Below is what their own computer says about their work: hints about who they are, what they wrote for their AI tools, where their work lives (the folders and repositories they changed lately or worked in with AI tools, each with what it holds), what they asked those tools lately and what their conversations were about, their own recent commits, the kinds of documents they opened and the apps they use. Learn from it as much as it shows about who they are at work, so that from today you can do their work with them, find their things without asking, and answer colleagues in their place, without being told the basics. Learn from it; do not copy it.
 
-Write everything in their language, short and concrete, keeping their own names for things. Only what the material shows: never guess a name, a project or a fact, and leave a part empty rather than fill it. Someone who does not write code shows less here (documents, apps, a few questions to an AI): learn what that shows. Do not call any tool now; what you return is saved for you.
+Write everything in their language, short and concrete, keeping their own names for things and every path exactly as the material writes it. Only what the material shows: never guess a name, a project or a fact, and leave a part empty rather than fill it. Someone who does not write code shows less here (documents, pictures, apps, a few questions to an AI): learn what that shows, and what kind of work it points to. Do not call any tool now; what you return is saved for you.
 
-1. \`about\`: who they are at work, for them to confirm and put on their profile and card (this is not memory; they keep or change it). ${ABOUT_WORDS}
+1. \`about\`: who they are at work, for them to confirm and put on their profile and card (this is not memory; they keep or change it). \`name\` is what to call them, as the material shows it (the name they sign with, on their account or their commits; never a handle when a real name is there; empty if unsure). ${ABOUT_WORDS}
 
 2. \`user\`: how they work, each a short line, at most twelve, each with its kind: how they like things done and reported, and the standards they hold their work to (\`work\`); how they decide, what they weigh, and where they want to be asked first (\`decide\`); how they talk and write, to whom (\`voice\`). Lines that will still be true in months. They are saved to your memory of them, read every time; write each as a fact about them, not an instruction to yourself.
 
-3. \`work\`: what you need to know about the surroundings of their work, each a short line, at most fourteen: the kinds of work they do again and again, the tools, services and technology they work in, where their work lives (repositories, folders, documents, channels, by the names the material uses), the conventions they follow, the team and organisation around them. Saved to your memory of their work, read every time: keep to what holds for weeks; where a piece of work stands goes in its project page.
+3. \`work\`: what you need to know about the surroundings of their work, each a short line, at most fourteen: the kinds of work they do again and again, the tools, services and technology they work in, the conventions they follow, the team and organisation around them. Saved to your memory of their work, read every time: keep to what holds for weeks; where a piece of work stands goes in its project page, and where things are goes in the map below.
 
-4. \`projects\`: what they are working on now, at most eight, the most active first. For each: its \`name\` as they call it; a \`summary\`, one line saying what it is; \`now\`, one or two lines on where it stands, as the most recent dates in the material show it; and a \`page\`, the page you keep about it, in Markdown in their language: what it is, their part in it, where it lives (the folder or repository as written in the material), who else is in it, what they did on it lately with the dates, and what is open. Each becomes a page in your notes, dated today; before relying on one later you check what is current, and you keep it up to date as you work together.
+4. \`places\`: the map of where their work lives, kept as one page you open before you look for a file or a project: a \`title\` for it in their language, and \`entries\`, every folder and repository in the material worth knowing (at most thirty, the most used first), each its \`path\` exactly as written and \`about\`, one line on what is there and what it is for ("the Thursday voice agent's code", "pictures for YouTube uploads", "client contracts by year").
 
-5. \`people\`: the people they work with, as the material names them, at most eight: \`name\`; a \`summary\`, one line on who they are to your person; and a \`page\` in Markdown: their role if shown, what the two of them do together, and how your person deals with them. Each becomes a page in your notes. Never anything private about them.
+5. \`projects\`: what they are working on now, at most twelve, the most active first. For each: its \`name\` as they call it; its \`path\`, the folder or repository it lives in, exactly as written in the material (empty if it lives nowhere on this computer); a \`summary\`, one line saying what it is; \`now\`, one or two lines on where it stands, as the most recent dates in the material show it; and a \`page\`, the page you keep about it, in Markdown in their language: what it is, their part in it, where it lives (the path, the repository's address), how it is made and laid out (what it is built on, its main folders, as the material shows), who else is in it, what they did on it lately with the dates, and what is open. Each becomes a page in your notes, dated today; before relying on one later you check what is current, and you keep it up to date as you work together.
 
-Then offer, in \`tasks\`, three things you can do for them right now with what you have — their past AI conversations, which you can search and read, your memory and notes, this app's guide, the web, their files when they allow it, and their own Claude Code and Codex conversations, which you can ask — chosen from what they are actually doing: pulling together what they decided or left open in a project, finding how they handled something before, drafting something the way they write it. Never suggest changing files, running commands or using another app; you cannot do those on your own. Each is a short label and why; the label is sent to you as their request when they tap it, so write it as that request.
+6. \`people\`: the people they work with, as the material names them, at most ten: \`name\`; a \`summary\`, one line on who they are to your person; and a \`page\` in Markdown: their role if shown, what the two of them do together, and how your person deals with them. Each becomes a page in your notes. Never anything private about them.
+
+Then offer, in \`tasks\`, three things you can do for them right now with what you have — their past AI conversations, which you can search and read, your memory and notes, this app's guide, the web, their files when they allow it, and their own Claude Code and Codex conversations, which you can ask — chosen from what they are actually doing: pulling together what they decided or left open in a project, finding how they handled something before, drafting something the way they write it. Each is a short label and why; the label is sent to you as their request when they tap it, so write it as that request.
 
 Then, in \`example\`, show them what you will do for their colleagues: one question a colleague might really ask them about their own current work, as the material shows it, and the short answer you would give in their place, in their language, saying in a few words where you found it ("from your conversations about the payments API yesterday"). Only from what the material shows; if it shows nothing a colleague would ask about, leave it out.
 
@@ -80,15 +86,38 @@ export const LEARN_SCHEMA = {
       },
     },
     work: { type: "array", items: { type: "string" }, maxItems: 14 },
+    places: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        entries: {
+          type: "array",
+          maxItems: 30,
+          items: {
+            type: "object",
+            properties: {
+              path: { type: "string" },
+              about: { type: "string" },
+            },
+            required: ["path", "about"],
+          },
+        },
+      },
+      required: ["title", "entries"],
+    },
     projects: {
       type: "array",
-      maxItems: 8,
+      maxItems: 12,
       items: {
         ...PAGE_SCHEMA,
-        properties: { ...PAGE_SCHEMA.properties, now: { type: "string" } },
+        properties: {
+          ...PAGE_SCHEMA.properties,
+          path: { type: "string" },
+          now: { type: "string" },
+        },
       },
     },
-    people: { type: "array", maxItems: 8, items: PAGE_SCHEMA },
+    people: { type: "array", maxItems: 10, items: PAGE_SCHEMA },
     tasks: {
       type: "array",
       minItems: 3,
@@ -101,7 +130,7 @@ export const LEARN_SCHEMA = {
     },
     about: {
       type: "object",
-      properties: CARD_SCHEMA.properties,
+      properties: { name: { type: "string" }, ...CARD_SCHEMA.properties },
       required: CARD_SCHEMA.required,
     },
     example: {
@@ -168,6 +197,14 @@ export interface Page {
   now?: string;
   /** The page's path in the notes (projects/…, people/…). */
   path: string;
+  /** Where a piece of work lives on the computer, as the reading wrote it. */
+  folder?: string;
+}
+
+/** One place on the map of where the person's work lives. */
+export interface Spot {
+  path: string;
+  about: string;
 }
 
 /** What one reading learned, for the screen: everything it kept, where it kept it. */
@@ -176,9 +213,20 @@ export interface Knows {
   work: string[];
   projects: Page[];
   people: Page[];
+  /** Where their work lives, as kept on the map page (WORK_MAP). */
+  places?: Spot[];
 }
 
-export const NO_KNOWS: Knows = { user: [], work: [], projects: [], people: [] };
+export const NO_KNOWS: Knows = {
+  user: [],
+  work: [],
+  projects: [],
+  people: [],
+  places: [],
+};
+
+/** Who they are at work as a reading saw it: the profile's parts, and what to call them. */
+export type Seen = About & { name?: string };
 
 export interface LearnResult {
   ok: boolean;
@@ -192,7 +240,7 @@ export interface LearnResult {
   routines: Routine[];
   example?: Example;
   /** Who they are at work, as the reading saw it, for them to confirm (not memory). */
-  about?: About;
+  about?: Seen;
   sessionId?: string;
 }
 
@@ -206,7 +254,7 @@ interface LearnRecord {
     tasks?: Task[];
     routines?: Routine[];
     example?: Example;
-    about?: About;
+    about?: Seen;
   };
 }
 
@@ -284,14 +332,21 @@ export async function keepPages(
   const kept: Page[] = [];
   for (const [at, item] of raw.entries()) {
     const value = item as Partial<
-      Record<"name" | "summary" | "page" | "now", unknown>
+      Record<"name" | "summary" | "page" | "now" | "path", unknown>
     >;
     const name = typeof value.name === "string" ? value.name.trim() : "";
     const summary =
       typeof value.summary === "string"
         ? value.summary.trim().slice(0, 160)
         : "";
-    const body = typeof value.page === "string" ? value.page.trim() : "";
+    const folder =
+      typeof value.path === "string" ? value.path.trim().slice(0, 300) : "";
+    const written = typeof value.page === "string" ? value.page.trim() : "";
+    // Where a piece of work lives heads its page, so the clone can go back to it by path.
+    const body =
+      folder && written && !written.includes(folder)
+        ? `\`${folder}\`\n\n${written}`
+        : written;
     const now = typeof value.now === "string" ? value.now.trim() : "";
     if (!name || !body) continue;
     const path = `${section}/${pageSlug(name, `${section}-${at + 1}`)}`;
@@ -323,9 +378,68 @@ export async function keepPages(
       if (!added.success) continue;
     }
     onEvent?.({ type: "note", changes: [path] } as SessionEvent);
-    kept.push({ name: title, summary, ...(now ? { now } : {}), path });
+    kept.push({
+      name: title,
+      summary,
+      ...(now ? { now } : {}),
+      path,
+      ...(folder ? { folder } : {}),
+    });
   }
   return kept;
+}
+
+/** The map's lines as kept on its page: "- `path` — what is there". */
+const MAP_LINE = /^- `([^`]+)` — (.+)$/;
+
+/**
+ * Keeps the map of where the person's work lives as one page (WORK_MAP). A later reading adds
+ * the places it found and says anew what one it found again is, so a place it no longer sees stays
+ * on the map until the clone or the person takes it off.
+ */
+export async function keepMap(
+  raw: unknown,
+  source: string,
+  onEvent?: (event: SessionEvent) => void,
+): Promise<Spot[]> {
+  const value = raw as { title?: unknown; entries?: unknown } | undefined;
+  const entries = (Array.isArray(value?.entries) ? value.entries : [])
+    .map((entry) => entry as Partial<Record<"path" | "about", unknown>>)
+    .map((entry) => ({
+      path: typeof entry.path === "string" ? entry.path.trim() : "",
+      about:
+        typeof entry.about === "string"
+          ? entry.about.replace(/\s+/g, " ").trim().slice(0, 200)
+          : "",
+    }))
+    .filter((entry) => entry.path && entry.about && !entry.path.includes("`"))
+    .slice(0, 30);
+  if (!entries.length) return [];
+  const notes = new NoteStore(notesDir(), "transplant");
+  const seen = await notes.view(WORK_MAP);
+  const kept = new Map<string, string>();
+  if (!("error" in seen))
+    for (const line of seen.content.split("\n")) {
+      const found = MAP_LINE.exec(line.trim());
+      if (found) kept.set(found[1], found[2]);
+    }
+  for (const entry of entries) kept.set(entry.path, entry.about);
+  const title =
+    typeof value?.title === "string" && value.title.trim()
+      ? value.title.trim().slice(0, 80)
+      : "Where work lives";
+  const body = [...kept]
+    .map(([path, about]) => `- \`${path}\` — ${about}`)
+    .join("\n");
+  const summary = [...kept.keys()].slice(0, 4).join(", ").slice(0, 150);
+  const result = await notes.apply([
+    "error" in seen
+      ? { action: "create", path: WORK_MAP, title, summary, body, source }
+      : { action: "rewrite", path: WORK_MAP, summary, body, source },
+  ]);
+  if (!result.success) return [];
+  onEvent?.({ type: "note", changes: [WORK_MAP] } as SessionEvent);
+  return [...kept].map(([path, about]) => ({ path, about }));
 }
 
 /** Everything a structured answer says the clone learned, saved where each part belongs. */
@@ -362,6 +476,7 @@ export async function keepKnowledge(
     onEvent,
   );
   const people = await keepPages("people", structured.people, source, onEvent);
+  const places = await keepMap(structured.places, source, onEvent);
   return {
     kept: [...userKept, ...workKept],
     knows: {
@@ -371,6 +486,7 @@ export async function keepKnowledge(
       work: workKept,
       projects,
       people,
+      places,
     },
   };
 }
@@ -400,9 +516,16 @@ export async function learn(options: {
     options.since ?? (previous ? Date.parse(previous.at) : undefined);
   report({ phase: "index", percent: 2 });
   // Indexing is most of the waiting when the records are large; reading the rest is quick.
-  const order = ["notes", "inputs", "commits", "work"];
+  const order = SOURCE_ORDER;
+  // What it reads is sized to what the picked model can hold: under half its window, about 2.5
+  // characters a token, never past what a long first reading needs.
+  const window = contextWindow(await brainChoice());
   const material = await gather({
     since,
+    budget: Math.max(
+      20_000,
+      Math.min(120_000, Math.floor(window * 0.45 * 2.5)),
+    ),
     onIndexProgress: (done, total) =>
       report({
         phase: "index",
@@ -421,7 +544,7 @@ export async function learn(options: {
     ms: material.ms,
   };
   options.onMaterial?.(meta);
-  if (!material.text.trim())
+  if (material.sources.every((source) => source.items === 0))
     return {
       ok: false,
       error: "nothing-to-read",
@@ -464,15 +587,22 @@ export async function learn(options: {
     tasks?: Task[];
     routines?: unknown;
     example?: unknown;
-    about?: { description?: unknown };
+    about?: { description?: unknown; name?: unknown };
   };
   const tasks = Array.isArray(structured.tasks) ? structured.tasks : [];
   const routines = cleanRoutines(structured.routines);
   const example = cleanExample(structured.example);
-  const about = cleanAbout({
+  const seen = cleanAbout({
     ...structured.about,
     role: structured.about?.description,
   });
+  const name =
+    typeof structured.about?.name === "string"
+      ? structured.about.name.trim().slice(0, 80)
+      : "";
+  const about: Seen | undefined = name
+    ? { ...(seen ?? { role: "", owns: [], tools: [] }), name }
+    : seen;
   const { kept, knows } = result.ok
     ? await keepKnowledge(structured, "reading", options.onEvent)
     : { kept: [], knows: NO_KNOWS };

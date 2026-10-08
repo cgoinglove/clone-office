@@ -9,6 +9,7 @@ import {
   type FlowWords,
 } from "./flows/when-text.ts";
 import type { AskShown } from "./gate/gate.ts";
+import { BASH, BROWSER_READ_RULE, browserTool } from "./hands/names.ts";
 
 export type { AskShown };
 
@@ -39,6 +40,32 @@ export function describe(
     return Number(input.scripts) > 0
       ? t("officeSkill.addScripts", { name, from })
       : t("officeSkill.add", { name, from });
+  }
+  // A skill from the open registry: which, and from where; its files are listed below.
+  if (tool === "mcp__minime__skill_install") {
+    const name = String(input.name ?? "");
+    const from = String(input.id ?? "")
+      .split("/")
+      .slice(0, 2)
+      .join("/");
+    return Number(input.scripts) > 0
+      ? t("hubSkill.installScripts", { name, from })
+      : t("hubSkill.install", { name, from });
+  }
+  // A command in the clone's shell: what it is for, in the clone's own words; the command below.
+  if (tool === BASH) {
+    const why = String(input.description ?? "").trim();
+    return why
+      ? `${t(input.sandboxed === true ? "doing.bash" : "doing.bashOutside")}: ${why}`
+      : t(input.sandboxed === true ? "doing.bash" : "doing.bashOutside");
+  }
+  // The clone's own browser: what it would do there, by the tool's own name.
+  const page = browserTool(tool);
+  if (page) {
+    const key = `browser.${page}` as Parameters<AskWords>[0];
+    const what = t.has(key) ? t(key) : t("browser.other", { tool: page });
+    const on = input.url ?? input.element ?? input.text;
+    return typeof on === "string" && on ? `${what}: ${on}` : what;
   }
   // A connected service's tool: the service by its name, and the tool's own.
   const service = connectorOfTool(tool);
@@ -74,8 +101,22 @@ export function describe(
   return shown ? `${what}: ${shown}` : what;
 }
 
+/** What "from now on" would keep for a card, in words, on the page and the phone alike. */
+export function alwaysLabel(
+  t: AskWords,
+  ask: { tool: string; task?: string; reads?: string },
+): string {
+  if (ask.task) return t("alwaysTask", { folder: ask.task });
+  if (ask.reads) return t("alwaysReads", { service: ask.reads });
+  if (browserTool(ask.tool)) return t("alwaysBrowser");
+  if (ask.tool === BASH) return t("alwaysBash");
+  return t("always");
+}
+
 /** Something allowed "from now on" (a rule gate/rules.ts keeps), as the person reads it. */
 export function ruleText(t: AskWords, rule: string): string {
+  if (rule === BROWSER_READ_RULE) return t("ruleBrowser");
+  if (rule === BASH) return t("ruleBash");
   // Reading in a connected service, every reading tool of it (connectors/tools.ts).
   const reads = /^connector:([a-z0-9-]+):read$/.exec(rule);
   if (reads)
@@ -114,7 +155,7 @@ export function changeOf(
       .join("\n")}`;
   if (tool === "Write" && typeof input.content === "string")
     return clipLines(input.content, 12);
-  if (tool === "Bash" && typeof input.command === "string")
+  if ((tool === "Bash" || tool === BASH) && typeof input.command === "string")
     return `$ ${input.command}`;
   // What a Codex conversation changed in its copy of the project: each file, then the lines.
   if (tool === "mcp__minime__apply_changes" && typeof input.diff === "string")
@@ -123,14 +164,17 @@ export function changeOf(
       "",
       clipLines(input.diff, 200),
     ].join("\n");
-  // What a connected service's tool would be given, each value on its line.
-  if (connectorOfTool(tool)) {
+  // What a connected service's tool, or the clone's browser, would be given, each value on its line.
+  if (connectorOfTool(tool) || browserTool(tool)) {
     const lines = Object.entries(input).map(([key, value]) => {
       const shown = typeof value === "string" ? value : JSON.stringify(value);
       return `${key}: ${shown.length > 200 ? `${shown.slice(0, 200)}…` : shown}`;
     });
     return lines.length ? clipLines(lines.join("\n"), 12) : undefined;
   }
+  // The files a skill from the open registry would bring, each one.
+  if (Array.isArray(input.incoming) && input.incoming.length)
+    return clipLines(input.incoming.map(String).join("\n"), 24);
   // Files that would leave this computer with a request: each one, by where it is.
   if (Array.isArray(input.files) && input.files.length)
     return input.files

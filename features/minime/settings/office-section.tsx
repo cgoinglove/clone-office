@@ -26,6 +26,7 @@ import type { BotShape } from "@/features/office/bot-shape";
 import { looksOf } from "@/features/office/room/looks.mjs";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
+import { TeamKeys } from "../brain-panel";
 import {
   HEADERS,
   type OfficeState,
@@ -144,6 +145,8 @@ export function OfficeSection({
           })}
         </Rows>
       </Group>
+
+      <TeamKeys />
 
       <Meetings
         standup={data.standup ?? undefined}

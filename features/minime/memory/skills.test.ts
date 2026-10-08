@@ -441,3 +441,82 @@ test("the skills in this repository load: each has a name, a short description a
       `${found.category} is described`,
     );
 });
+
+test("a skill from the open registry comes in checked, never over the person's own, and updates only while untouched", async () => {
+  const store = fresh();
+  const files = (body: string) => [
+    {
+      path: "SKILL.md",
+      bytes: new TextEncoder().encode(
+        `---\nname: pdf\ndescription: Use when a task is about a PDF.\n---\n\n${body}\n`,
+      ),
+    },
+    { path: "scripts/fill.py", bytes: new TextEncoder().encode("print(1)\n") },
+  ];
+  const added = await store.addFromHub({
+    name: "pdf",
+    files: files("Read references first."),
+    id: "anthropics/skills/pdf",
+  });
+  assert.deepEqual(added, { ok: true, updated: false });
+  const usage = await store.usage();
+  assert.equal(usage.pdf.created_by, "hub");
+  const updated = await store.addFromHub({
+    name: "pdf",
+    files: files("A newer version."),
+    id: "anthropics/skills/pdf",
+  });
+  assert.deepEqual(updated, { ok: true, updated: true });
+  // Once changed here, a newer version is not put over it.
+  await store.view("pdf");
+  const patched = await store.apply([
+    {
+      action: "patch",
+      name: "pdf",
+      old_string: "A newer",
+      new_string: "My own",
+    },
+  ]);
+  assert.equal(patched.success, true);
+  const refused = await store.addFromHub({
+    name: "pdf",
+    files: files("Another version."),
+    id: "anthropics/skills/pdf",
+  });
+  assert.equal(refused.ok, false);
+  // A program never comes in.
+  const program = await store.addFromHub({
+    name: "tool",
+    files: [
+      ...files("x").map((file) =>
+        file.path === "SKILL.md"
+          ? {
+              path: "SKILL.md",
+              bytes: new TextEncoder().encode(
+                "---\nname: tool\ndescription: Use when x.\n---\nx\n",
+              ),
+            }
+          : file,
+      ),
+      { path: "scripts/run.exe", bytes: new Uint8Array([0, 1, 2]) },
+    ],
+    id: "a/b/tool",
+  });
+  assert.equal(program.ok, false);
+});
+
+test("a store of many skills lists the ones in use lately by name and counts the rest", async () => {
+  const store = fresh();
+  for (let at = 0; at < 45; at++)
+    await store.apply([
+      {
+        action: "create",
+        name: `kind-${String(at).padStart(2, "0")}`,
+        category: "work",
+        content: `---\nname: kind-${String(at).padStart(2, "0")}\ndescription: Use when kind ${at} comes up.\n---\n\nDo it.\n`,
+      },
+    ]);
+  const index = await store.index();
+  assert.equal((index.match(/^ {4}- kind-/gm) ?? []).length, 40);
+  assert.match(index, /and 5 more: skills_list\("work"\)/);
+});

@@ -122,8 +122,6 @@ export type Way =
   | { kind: "sign-in"; provider: "chatgpt" }
   | { kind: "claude-code" }
   | { kind: "key"; provider: ProviderId }
-  /** The office's own key for the vendor, used through its relay (features/relay/team-ai.ts). */
-  | { kind: "team"; provider: ProviderId }
   | { kind: "local" };
 
 export interface Vendor {
@@ -133,7 +131,6 @@ export interface Vendor {
   ways: Way[];
 }
 
-/** The vendors as the person picks among them, each with its ways in, the plan first. */
 /** The Claudes a person's own Claude Code can think with, by the aliases it knows. */
 export const CLAUDE_CODE_MODELS: ModelChoice[] = [
   { id: "haiku", label: "Claude Haiku", tier: "small" },
@@ -148,6 +145,11 @@ export function lighterModel(id: ProviderId, model: string): string {
   return small?.id ?? model;
 }
 
+/**
+ * The vendors as the person picks among them, each with its ways in, the plan first. The office's
+ * team keys are not a way here: they are kept in Settings › Office, and the models they reach are
+ * offered together as the team's, apart from any one vendor.
+ */
 export const VENDORS: Vendor[] = [
   {
     id: "openai",
@@ -155,33 +157,27 @@ export const VENDORS: Vendor[] = [
     ways: [
       { kind: "sign-in", provider: "chatgpt" },
       { kind: "key", provider: "openai" },
-      { kind: "team", provider: "openai" },
     ],
   },
   {
     id: "claude",
     name: "Claude",
-    ways: [
-      { kind: "claude-code" },
-      { kind: "key", provider: "anthropic" },
-      { kind: "team", provider: "anthropic" },
-    ],
+    ways: [{ kind: "claude-code" }, { kind: "key", provider: "anthropic" }],
   },
-  {
-    id: "gemini",
-    name: "Gemini",
-    ways: [
-      { kind: "key", provider: "google" },
-      { kind: "team", provider: "google" },
-    ],
-  },
+  { id: "gemini", name: "Gemini", ways: [{ kind: "key", provider: "google" }] },
   {
     id: "openrouter",
     name: "OpenRouter",
-    ways: [
-      { kind: "key", provider: "openrouter" },
-      { kind: "team", provider: "openrouter" },
-    ],
+    ways: [{ kind: "key", provider: "openrouter" }],
   },
   { id: "local", ways: [{ kind: "local" }] },
 ];
+
+/** The vendor whose models a provider reaches. */
+export function vendorOf(id: ProviderId): Vendor["id"] {
+  if (id === "chatgpt" || id === "openai") return "openai";
+  if (id === "anthropic") return "claude";
+  if (id === "google") return "gemini";
+  if (id === "openrouter") return "openrouter";
+  return "local";
+}

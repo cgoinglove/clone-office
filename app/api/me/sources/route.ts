@@ -1,10 +1,8 @@
 import * as z from "zod";
 import { isExcluded, loadExcludes } from "@/features/minime/server/exclude";
-import { recentFolders } from "@/features/minime/server/folders";
 import { refuse } from "@/features/minime/server/guard";
 import { saveExcludes } from "@/features/minime/server/leave-out";
-
-const DAY = 24 * 60 * 60 * 1000;
+import { findPlaces, publicPlace } from "@/features/minime/server/places";
 
 /** How a left-out entry is shown: a path by its last folder, a name pattern as it is. */
 function entryName(pattern: string): string {
@@ -12,16 +10,17 @@ function entryName(pattern: string): string {
   return parts.at(-1) ?? pattern;
 }
 
-// The folders the person worked in lately (from their AI tools' records), each marked when they
-// keep it out, and what else they keep out, so the screen can offer "leave this out" before
-// anything is read and change it at any time after.
+// Where the person's work lives (server/places.ts: the folders they changed lately and worked in
+// with their AI tools), each marked when they keep it out, and what else they keep out, so the
+// screen can offer the folders to read before anything is read and change them at any time after.
 export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
   const excludes = loadExcludes();
-  const folders = (await recentFolders(Date.now() - 14 * DAY)).map(
-    (folder) => ({ ...folder, excluded: isExcluded(folder.path, excludes) }),
-  );
+  const folders = (await findPlaces()).map((place) => ({
+    ...publicPlace(place),
+    excluded: isExcluded(place.path, excludes),
+  }));
   const others = excludes
     .filter((pattern) => !folders.some((folder) => folder.path === pattern))
     .map((pattern) => ({ pattern, name: entryName(pattern) }));
@@ -33,12 +32,17 @@ const Body = z.object({
 });
 
 // Saves the folders the person keeps out (the rest of settings.json is kept as it is), and removes
-// at once what the search index holds from them.
+// at once what the search index holds from them. A folder taken back in is walked again, so what
+// it holds is there for the next reading.
 export async function POST(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
   const body = Body.safeParse(await request.json().catch(() => ({})));
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
-  return Response.json({ exclude: await saveExcludes(body.data.exclude) });
+  const before = loadExcludes();
+  const exclude = await saveExcludes(body.data.exclude);
+  if (before.some((pattern) => !exclude.includes(pattern)))
+    void findPlaces({ fresh: true });
+  return Response.json({ exclude });
 }

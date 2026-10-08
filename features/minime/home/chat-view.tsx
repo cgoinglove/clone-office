@@ -371,10 +371,10 @@ export function Composer({
     >
       <div
         className={cn(
-          "flex gap-2 rounded-2xl bg-background shadow-[0_0_0_1px_var(--alpha-12),0_6px_20px_var(--alpha-05)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_6px_20px_var(--alpha-08)]",
+          "flex gap-2 rounded-[26px] bg-background shadow-[0_0_0_1px_var(--alpha-12),0_6px_20px_var(--alpha-05)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_6px_20px_var(--alpha-08)]",
           tools
-            ? "flex-wrap items-center px-4 pt-3 pb-2.5"
-            : "items-end px-3.5 py-2",
+            ? "flex-wrap items-center px-5 pt-3.5 pb-2.5"
+            : "items-end py-2 pr-2 pl-4.5",
         )}
       >
         <textarea
@@ -412,7 +412,7 @@ export function Composer({
           aria-label={t("send")}
           disabled={!draft.trim() || (chat.busy && !chat.chatId)}
           loading={chat.busy && !draft.trim()}
-          className="mb-0.5 shrink-0"
+          className="mb-0.5 shrink-0 rounded-full"
         >
           <ArrowUp />
         </Button>

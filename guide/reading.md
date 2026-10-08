@@ -1,32 +1,41 @@
 # What the clone reads
 
-To learn how they work, the first time, it reads (from the last two weeks, newest first, at most
-about 60,000 characters in all; it takes about half a minute):
+To learn their work, the first time, it reads (most of it from the last two weeks, newest first,
+sized to what their AI model can hold; it takes about half a minute):
 
 - what they wrote for their AI tools (such as Claude Code's or Codex's instruction files) and what
   those tools already noted about them;
-- what they typed to their AI tools lately, from the folders they worked in most;
-- their own recent commits in those folders, when the folders are git projects;
-- which kinds of documents they opened lately and which apps they use most — counted by kind,
-  never opened and never read by name.
+- where their work lives: the folders they changed in the last 30 days (on the desktop, in
+  documents, downloads, pictures, videos, music and the usual code folders) and the ones they worked
+  in with AI tools. For a folder, the names and dates of its newest files and how many of each
+  kind; for a project in git, its address, its folders, its README's opening and what it is built
+  on. Never what a file says, never a file named like a key or a password, never what a package
+  manager or a build put there;
+- what they typed to their AI tools lately, from the folders they worked in most, and what their
+  conversations were about (their titles, over the last two months or so);
+- their own recent commits in those projects;
+- which kinds of documents they opened lately and which apps they use most;
+- the name on their computer's account and on their commits, as a hint of what to call them.
 
 It never reads the contents of their documents, their browser history or their screen. **Read
-again** (다시 읽기) reads only what is new or changed since the last time.
+again** (다시 읽기) reads only what is new or changed since the last time. On a Mac, the first time
+it looks in Desktop, Documents or Downloads, macOS may ask whether the app (or Terminal) may
+open that folder: either answer is fine; until they allow it, that folder is passed over and the
+rest is read.
 
-## Leaving something out
+## Folders it reads
 
-Before it reads, the first steps have one field for it (**Folders to leave out**, 읽지 않을 폴더):
-pressing it opens the folders they worked in lately in a dialog, from all their AI tools (Claude
-Code, Codex, Cursor, Hermes Agent), each with the tools' marks and how many sessions ran there;
-ticking one keeps it out of everything the clone reads and searches, from then on, and unticking
-brings it back. A folder's name or path typed at the bottom leaves out any other.
+The first steps show them as one field (**Folders it reads**, 읽을 폴더) with how many and their
+names: pressing it opens every folder in a dialog, each with its AI tools' marks and how many
+conversations or changed files it has; a ticked folder is read, and unticking one keeps it out of
+everything the clone reads and searches, from then on. A folder's name or path typed at the bottom
+leaves out any other.
 
-Later, **Folders left out** (읽지 않는 폴더) under Settings › Permissions shows the same list at any
-time, and they can type any other folder's name or path to leave it out. What the clone had
-gathered from a folder for searching is removed as soon as it is left out. Lines it already
-remembers stay in its memory, where they can remove any of them. They can also just tell the
-clone ("don't look at my client work"): it asks first, with the folder shown, and leaves it out.
-Bringing a folder back is done only in Settings › Permissions.
+Later, the same field is under Settings › Permissions, at any time. What the clone had gathered from
+a folder for searching is removed as soon as it is left out. Lines it already remembers stay in its
+memory, where they can remove any of them. They can also just tell the clone ("don't look at my
+client work"): it asks first, with the folder shown, and leaves it out. Bringing a folder back is
+done only in Settings › Permissions.
 
 ## Their past conversations
 

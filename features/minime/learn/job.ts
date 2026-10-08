@@ -9,7 +9,6 @@ import type { SessionEvent } from "../brain/session.ts";
 import { catchUpIndex } from "../history/indexer.ts";
 import type { Routine } from "../routine.ts";
 import { errorCode } from "../server/ndjson.ts";
-import type { About } from "../server/profile.ts";
 import type { SourceReport } from "./gather.ts";
 import {
   type Example,
@@ -19,6 +18,7 @@ import {
   lastLearn,
   learn,
   NO_KNOWS,
+  type Seen,
   type Task,
 } from "./learn.ts";
 
@@ -37,7 +37,7 @@ export type LearnEvent =
       /** What the clone would answer a colleague in their place. */
       example?: Example;
       /** Who they are at work, as the reading saw it, for them to confirm. */
-      about?: About;
+      about?: Seen;
       at: string;
       /** Conversations with their AI tools since this learning, to offer reading again. */
       fresh?: number;

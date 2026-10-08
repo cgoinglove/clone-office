@@ -6,6 +6,7 @@
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { BROWSER_READ_RULE, browserReadRules } from "../hands/names.ts";
 import { connector, connectorOfTool } from "./catalog.ts";
 import { accessToken, isConnected } from "./oauth.ts";
 import { changeKept, loadKept, type ServiceTool } from "./store.ts";
@@ -97,6 +98,11 @@ export async function readsOnly(tool: string): Promise<boolean> {
 export async function sessionRules(rules: string[]): Promise<string[]> {
   const out: string[] = [];
   for (const rule of rules) {
+    // Looking at pages in the clone's own browser: its looking tools (hands/names.ts).
+    if (rule === BROWSER_READ_RULE) {
+      out.push(...browserReadRules());
+      continue;
+    }
     const service = readRuleService(rule);
     if (!service) {
       out.push(rule);

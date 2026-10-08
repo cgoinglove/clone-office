@@ -1,22 +1,28 @@
 // What the first transplant reads: the material that says the most about how a person works, in
 // the order of how condensed it already is (docs/transplant.local.md, f1–f6):
 //   1. what they wrote for their AI tools and what other AIs already noted about them;
-//   2. what they typed recently, by the folders they worked in most (from the conversation index);
-//   3. their own recent commits in those folders;
-//   4. which kinds of documents they opened lately, and the apps they use most.
-// Every source has a share of one character budget; a share left unused goes to the next source.
-// Every source has a time limit and fails on its own: what could not be read is reported, never
-// guessed. Nothing is read from folders the person excluded, and no file's content is read
-// beyond notes they wrote for AI tools: documents are counted by kind, never opened.
+//   2. where their work lives: the folders and repositories they changed lately or worked in with
+//      AI tools, each with what it is (server/places.ts: names, a README's head, a manifest);
+//   3. what they typed recently, by the folders they worked in most, and what their conversations
+//      were about over a longer stretch (titles, from the conversation index);
+//   4. their own recent commits in those folders;
+//   5. which kinds of documents they opened lately, and the apps they use most;
+// with a few hints about who they are (the name on their account and on their commits).
+// Every source has a share of one character budget, sized to what the model can hold; a share
+// left unused goes to the next source. Every source has a time limit and fails on its own: what
+// could not be read is reported, never guessed. Nothing is read from folders the person excluded,
+// and no file is opened beyond notes they wrote for AI tools and a project's own README and
+// manifest: documents are counted by kind and listed by name, never opened.
 
 import { execFile } from "node:child_process";
 import { readdir, readFile, stat } from "node:fs/promises";
-import { homedir } from "node:os";
+import { homedir, userInfo } from "node:os";
 import { extname, join, relative, sep } from "node:path";
 import { openHistoryForRead } from "../history/db.ts";
 import { indexHistory } from "../history/indexer.ts";
 import { scanApps } from "../server/apps";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
+import { describePlaces, findPlaces } from "../server/places.ts";
 import { folderName } from "../server/sources/common.ts";
 import { mapLimit } from "../server/sources/lines.ts";
 import { findNoteFiles, readNotes } from "../server/sources/notes";
@@ -59,11 +65,15 @@ export interface Material {
 
 /** Shares of the budget, in the order sources are read; an unused share flows to the next. */
 const SHARES: [string, number][] = [
-  ["notes", 0.4],
-  ["inputs", 0.4],
-  ["commits", 0.1],
-  ["work", 0.1],
+  ["notes", 0.22],
+  ["places", 0.28],
+  ["inputs", 0.32],
+  ["commits", 0.06],
+  ["work", 0.12],
 ];
+
+/** The order sources are read in, as the screen ticks them off. */
+export const SOURCE_ORDER = SHARES.map(([id]) => id);
 
 const CODE_EXTENSIONS = new Set(
   "ts tsx js jsx mjs cjs py rb go rs java kt kts swift c h cc cpp hpp cs php sh bash zsh json jsonc yaml yml toml lock map log css scss less sass html htm xml svg vue svelte sql gradle plist ini cfg conf env pyc o a so dylib dll class jar".split(
@@ -83,6 +93,9 @@ function run(command: string, args: string[], timeout = 5000): Promise<string> {
 }
 
 const day = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+
+/** How much further back than the reading's own window conversation titles are listed. */
+const TITLE_DAYS = 60;
 
 export class Budget {
   private left = 0;
@@ -204,12 +217,14 @@ export function inputsSection(
        WHERE m.role = 'user' AND m.at >= ? AND f.project IS ? AND f.tool != 'mini-me' ORDER BY m.at DESC LIMIT 80`,
     );
     const total = counts.reduce((sum, row) => sum + row.n, 0);
+    // Three quarters for what they typed; the rest, and whatever that leaves, for the titles.
+    const typed = Math.floor(limit * 0.75);
     const blocks: string[] = [];
     let used = 0;
     let items = 0;
     for (const { project, n } of counts) {
       // Each folder gets room in proportion to how much they worked there.
-      const room = Math.max(600, Math.floor((limit * n) / Math.max(total, 1)));
+      const room = Math.max(600, Math.floor((typed * n) / Math.max(total, 1)));
       const rows = prompts.all(since, project) as unknown as PromptRow[];
       const name = project ? folderName(project) : "folderless chats";
       const lines: string[] = [];
@@ -217,7 +232,7 @@ export function inputsSection(
       for (const row of rows) {
         const said = row.text.replace(/\s+/g, " ").trim();
         const line = `- ${localTime(row.at)} · ${said.length > 280 ? `${said.slice(0, 280)}…` : said}`;
-        if (size + line.length > room || used + size + line.length > limit)
+        if (size + line.length > room || used + size + line.length > typed)
           break;
         lines.push(line);
         size += line.length + 1;
@@ -229,10 +244,48 @@ export function inputsSection(
       used += size;
       items += lines.length;
     }
+    // What their conversations were about over a longer stretch: the titles their tools gave
+    // them, by folder, newest first, in what is left of this source's share.
+    const titles = db
+      .prepare(
+        `SELECT f.project AS project, f.title AS title, f.last AS last FROM files f
+         WHERE f.title IS NOT NULL AND f.title != '' AND f.last >= ? AND f.tool != 'mini-me'
+         ORDER BY f.last DESC LIMIT 400`,
+      )
+      .all(since - TITLE_DAYS * DAY) as {
+      project: string | null;
+      title: string;
+      last: number;
+    }[];
+    const byFolder = new Map<string, string[]>();
+    for (const row of titles) {
+      const name = row.project ? folderName(row.project) : "folderless chats";
+      const list = byFolder.get(name) ?? [];
+      const title = row.title.replace(/\s+/g, " ").trim().slice(0, 90);
+      if (!list.includes(title)) list.push(title);
+      byFolder.set(name, list);
+    }
+    const listed: string[] = [];
+    let listedSize = 0;
+    const room = Math.max(0, limit - used);
+    for (const [name, list] of byFolder) {
+      const line = `- ${name}: ${list.slice(0, 25).join("; ")}`;
+      if (listedSize + line.length > room) break;
+      listed.push(line);
+      listedSize += line.length + 1;
+    }
+    used += listedSize;
     return {
-      text: blocks.length
-        ? `## What they typed to their AI tools recently, by folder\n${blocks.join("\n\n")}`
-        : "",
+      text: [
+        blocks.length
+          ? `## What they typed to their AI tools recently, by folder\n${blocks.join("\n\n")}`
+          : "",
+        listed.length
+          ? `## What their AI conversations were about, by folder (titles, last ${TITLE_DAYS + Math.round((Date.now() - since) / DAY)} days, newest first)\n${listed.join("\n")}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
       projects: counts
         .map((row) => row.project)
         .filter((p): p is string => Boolean(p)),
@@ -258,12 +311,11 @@ async function commitsSection(
   const globalEmail = (
     await run("git", ["config", "--global", "user.email"])
   ).trim();
-  const results = await mapLimit(projects.slice(0, 6), 3, async (project) => {
-    const isRepo = await stat(
-      join(/*turbopackIgnore: true*/ project, ".git"),
-    ).then(
-      () => true,
-      () => false,
+  const results = await mapLimit(projects.slice(0, 8), 3, async (project) => {
+    // Asked of git, a process of its own with a time limit: a folder that waits on the system
+    // (a consent dialog on macOS) never holds the app's own file reads.
+    const isRepo = Boolean(
+      (await run("git", ["-C", project, "rev-parse", "--git-dir"])).trim(),
     );
     if (!isRepo) return undefined;
     const email =
@@ -313,6 +365,71 @@ async function commitsSection(
       ...(items === 0 ? { note: "no recent commits, or no git" } : {}),
     },
   };
+}
+
+/** Where their work lives: the busiest folders and repositories, each with what it is. */
+async function placesSection(
+  limit: number,
+  excludes: string[],
+): Promise<{ text: string; report: SourceReport; repos: string[] }> {
+  const places = (await findPlaces()).filter(
+    (place) => !isExcluded(place.path, excludes),
+  );
+  const { text, items } = await describePlaces(places, limit);
+  return {
+    repos: places
+      .filter((place) => place.kind === "repo")
+      .map((place) => place.path),
+    text: text
+      ? `## Where their work lives: folders and repositories they changed lately or worked in with AI tools, busiest first (paths as on this computer)\n${text}`
+      : "",
+    report: {
+      id: "places",
+      label: "Folders and projects",
+      items,
+      chars: text.length,
+      ...(items === 0 ? { note: "no folder changed lately" } : {}),
+      ...(items > 0 && items < places.length
+        ? { note: `${places.length - items} left out for length` }
+        : {}),
+    },
+  };
+}
+
+/** The full name on this computer's account, where the system keeps one. */
+async function accountName(): Promise<string> {
+  const user = userInfo().username;
+  if (process.platform === "darwin")
+    return (await run("id", ["-F", user], 2000)).trim();
+  if (process.platform === "linux") {
+    const entry = (await run("getent", ["passwd", user], 2000)).trim();
+    return (entry.split(":")[4] ?? "").split(",")[0].trim();
+  }
+  return "";
+}
+
+/**
+ * A few hints about who they are: the name on their account and on their commits, and the domain
+ * of their commit address (the organisation, when it is a work one). Hints only, for the reading
+ * to weigh; the address itself is never passed on.
+ */
+export async function ownerHints(): Promise<string> {
+  const [account, gitName, gitEmail] = await Promise.all([
+    accountName().catch(() => ""),
+    run("git", ["config", "--global", "user.name"], 2000),
+    run("git", ["config", "--global", "user.email"], 2000),
+  ]);
+  const domain = gitEmail.trim().split("@")[1]?.toLowerCase() ?? "";
+  const lines = [
+    account && `- the name on this computer's account: ${account}`,
+    gitName.trim() && `- the name on their commits: ${gitName.trim()}`,
+    domain &&
+      !/^(gmail|googlemail|naver|daum|hanmail|kakao|icloud|me|mac|outlook|hotmail|live|yahoo|proton|protonmail|qq|163|126|users\.noreply\.github)\./.test(
+        domain,
+      ) &&
+      `- the domain of their commit address: ${domain}`,
+  ].filter(Boolean);
+  return lines.length ? `## Hints about who they are\n${lines.join("\n")}` : "";
 }
 
 /** Documents opened lately, by kind and folder only: names and contents are never read. */
@@ -493,6 +610,16 @@ export async function gather(options: GatherOptions = {}): Promise<Material> {
     budget.spend(notes.report.chars);
   }
 
+  options.onSource?.("places");
+  const places = await placesSection(budget.open("places"), excludes).catch(
+    () => undefined,
+  );
+  if (places) {
+    sections.push(places.text);
+    sources.push(places.report);
+    budget.spend(places.report.chars);
+  }
+
   options.onSource?.("inputs");
   const inputs = inputsSection(since, budget.open("inputs"));
   sections.push(inputs.text);
@@ -513,7 +640,7 @@ export async function gather(options: GatherOptions = {}): Promise<Material> {
 
   options.onSource?.("commits");
   const commits = await commitsSection(
-    inputs.projects,
+    [...new Set([...inputs.projects, ...(places?.repos ?? [])])],
     since,
     budget.open("commits"),
   ).catch(() => undefined);
@@ -533,8 +660,9 @@ export async function gather(options: GatherOptions = {}): Promise<Material> {
     budget.spend(work.report.chars);
   }
 
+  const hints = await ownerHints().catch(() => "");
   return {
-    text: sections.filter(Boolean).join("\n\n"),
+    text: [hints, ...sections].filter(Boolean).join("\n\n"),
     sources,
     since: day(since),
     ms: Date.now() - started,

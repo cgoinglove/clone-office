@@ -19,6 +19,13 @@ import { atomicWrite, readText, withLock } from "./files.ts";
 import { threatMessage } from "./threats.ts";
 
 export const SECTIONS = ["people", "projects", "topics"] as const;
+
+/**
+ * The page that says where the person's work lives on their computer, every folder and repository
+ * with what it is: written by the first reading, named in every session so the clone looks there
+ * before it searches for a file or a project.
+ */
+export const WORK_MAP = "topics/where-work-lives";
 export type Section = (typeof SECTIONS)[number];
 const SECTION_TITLE: Record<Section, string> = {
   people: "People",

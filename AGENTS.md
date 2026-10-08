@@ -119,8 +119,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   office draws as any day); each step in one frame (the name and the language, `language-switch.tsx`,
   on top, the steps named beneath, Back and the step's button on a bar at the bottom), what is
   picked in a popover at its field so no step grows; then its brain (`BrainPicker`, asked one word
-  as soon as it is picked), the first reading with the folders left out (it ends on what
-  it understood and what it would answer a colleague, `learn.ts` `example`), who they are and their
+  as soon as it is picked), the first reading with the folders it reads (`folder-list.tsx`
+  `FolderField`: one field, every folder in a dialog, ticked while read) (it ends on what it
+  understood, one row a kind each opening its whole list, and what it would answer a colleague,
+  `learn.ts` `example`), who they are and their
   team (`server/profile.ts`, `settings.json` `profile`: name, what they do, what they look after
   and the tools they work in, filled in from what the reading saw (`learn.ts` `about`) for them to
   correct, never memory; every session starts with it (`session.ts` `systemPrompt`,
@@ -162,9 +164,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   Thursday's; an ember dot where something wants the person, red where something is broken),
   each laid out with `parts.tsx`: AI model (the brain, learning after each conversation, the lighter
   model), Permissions (`permissions-section.tsx`: how much it does alone, rules taken back,
-  folders left out), Connectors, Notifications & phone (the messenger, kept questions' hours,
-  quiet hours), Office (`office-section.tsx`: open here, join, invite, people, leave, the lobby)
-  and General (language, theme, version, Files from `server/stored.ts`). The clone's screen
+  the folders it reads), Connectors, Notifications & phone (the messenger, kept questions' hours,
+  quiet hours), Office (`office-section.tsx`: open here, join, invite, people, the team's keys
+  (`brain-panel.tsx` `TeamKeys`), leave, the lobby) and General (language, theme, version, Files
+  from `server/stored.ts`). The clone's screen
   reuses `clone-section.tsx` (about them, the memory as saved with each line correctable or
   removable, its skills and, in an office, the office's skills (`skills-section.tsx`, route
   `app/api/me/skills`: share one of theirs after seeing its files, add or update a colleague's),
@@ -173,11 +176,18 @@ These words help discussion. They do not mandate separate services, tables or UI
   `preferences-section.tsx` draws the preferences' parts wherever they belong (`parts`). Keys:
   ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, / the box; the tab's title carries what
   waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at rest, also
-  `app/icon.svg`) and the services' and AI vendors' marks (`marks.ts`, generated from
-  lobe-icons (MIT) and simple-icons (CC0), drawn by `brand-mark.tsx`).
+  `app/icon.svg`), the services' and AI vendors' marks (`marks.ts`, generated from
+  lobe-icons (MIT) and simple-icons (CC0), drawn by `brand-mark.tsx`) and the languages' flags
+  (`flags.ts`, from country-flag-icons (MIT), drawn as a picture by `language-switch.tsx` `Flag`).
+  `/files/<path>` (`app/(app)/files/[...path]`, `shell/file-screen.tsx`) opens what the clone
+  made in its workspace through `app/api/me/workspace` (inside the workspace only, links leading
+  out refused, always an attachment and sandboxed): Markdown drawn, a page in a frame without the
+  app's origin, a picture, a sheet as a table, text, or Save.
 - Preferences (`server/preferences.ts`, `settings.json` `preferences`, `app/api/me/preferences`):
-  how much the clone does on its own in the person's own work (`gate/autonomy.ts`: `ask`, `reads`,
-  `auto`, after Claude Code's permission modes; a session starts with the mode's rules
+  how much the clone does on its own in the person's own work (`gate/autonomy.ts`: `ask` or
+  `auto`, one of two since 10-08, a `reads` kept from before reading as `ask`; `auto` reads, acts in
+  connected services and its browser (never uploading or running code in a page), runs sandboxed
+  commands and asks colleagues; a session starts with the mode's rules
   (`ownModeRules`) and the gate lets the mode's asks through (`alreadyAllowed` with `own`), never
   for a colleague's request; files leaving the computer, flows and Claude Code work are always
   asked), where new kinds of request start, when kept questions come (`batchHours`), learning after
@@ -202,8 +212,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   decides and talks, the corrections they gave, and what surrounds their work. What they are
   working on and the people they work with are kept as note pages, dated, opened when one comes up
   and kept current as it works with them (the first reading writes them, `learn.ts`
-  `keepKnowledge`); the rest that changes (plans, dates, files) is looked up when needed, never
-  stored, as a stale copy misleads.
+  `keepKnowledge`, a project's page starting with its folder), and where their work lives as one
+  map page, every folder with what it holds (`notes.ts` `WORK_MAP`, `learn.ts` `keepMap`, named in
+  every session's prompt so the clone looks there before searching); the rest that changes (plans,
+  dates, files) is looked up when needed, never stored, as a stale copy misleads.
 - `features/minime/memory/`: the clone's memory, following Hermes Agent's layout and learning
   loop. `store.ts` keeps `memories/USER.md` and `MEMORY.md` (small, capped, read every session),
   with each line's source beside them in `.sources.json`, never in a prompt (what kept it, from
@@ -214,9 +226,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   aside long-unused skills weekly; `notes.ts` keeps one page per person, piece of work or topic
   under `notes/`, with an index and log written by code; `mcp-server.ts` serves all of it as
   tools. `skills/` (top level) holds the skills the app ships, laid out as the store is and shipped
-  in the package: each for real work with the clone's own tools (handing work to a session, where
-  a project stands, how something was done before, working in connected services, asking a
-  colleague, writing as the person writes), never a report template; `SkillStore.syncBundled`
+  in the package: methods, never a report template nor a restatement of a tool (what is the app's
+  own is a tool): making a skill, finding one in the open registry, learning a task by watching
+  the person, driving its browser, making an artifact; `SkillStore.syncBundled`
   brings them in before a session first lists skills, after Hermes Agent's skills_sync
   (`.bundled.json` keeps each one's origin hash: a later version replaces one only while it is as
   it came, one set aside is not brought back, a skill of the person's by the same name is never
@@ -263,9 +275,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   from the cache, which Settings › AI model shows as a share.
   The page's part is `features/minime/brain-panel.tsx` (vendor marks, ways, models with one
   suggested and picked to start with; Claude Code's own Haiku, Sonnet or Opus, kept as the
-  choice's `model`; `useBrainChoice` behind both Settings' `BrainChooser` and the first steps'
-  `BrainPicker`, one field opening on vendors and what the one in hand offers, after Thursday's
-  model picker) with the route `app/api/me/brain`.
+  choice's `model`; `useBrainChoice` behind `BrainPicker`, the one field Settings and the first
+  steps share, opening on vendors and what the one in hand offers, after Thursday's model picker,
+  with the team's models first when the office keeps keys; the keys themselves are added in
+  Settings › Office, `TeamKeys`) with the route `app/api/me/brain`.
   `session.ts` runs a session on the person's own Claude Code
   with those tools (the brain is a replaceable process: everything else talks to it only through
   `runSession`); `review.ts` looks back over a finished session and keeps what it taught;
@@ -344,8 +357,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   the key, and the relay passes the call on with the team key and streams the answer back, counting
   calls per member and day, `ai_calls`, and refusing a member's call past the day's limit,
   `team-key-limit`, 1,000 a vendor unless `RELAY_TEAM_AI_DAILY` says otherwise (0 for none), as a 403
-  no clone retries; the clone's side is the brain choice's `team`, a way of its own on the AI model
-  screen; subscriptions are never shared). The relay runs as Node strips
+  no clone retries; the clone's side is the brain choice's `team`, the team's models offered first
+  on the AI model field; subscriptions are never shared). The relay runs as Node strips
   TypeScript, so its code (and all code: `erasableSyntaxOnly`) uses only erasable syntax. Someone without a
   clone is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
   the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,
@@ -498,6 +511,26 @@ These words help discussion. They do not mandate separate services, tables or UI
   person's folder all or none, otherwise it is kept in `hands/changes/`. A folder outside git can
   be asked but given no work. `tools.ts` serves `sessions` (free, both tools with a tool column),
   `ask_session` and `work_session` (asked through the gate) to the brain.
+  The clone's own hands, in the person's own work only (`runSession` `connectors`, never a
+  colleague's request; `MINIME_OWN_WORK` tells the tool server): `shell.ts` serves `bash` and
+  `write_file` in its workspace (`server/paths.ts` `workspaceDir`), commands run inside Anthropic's
+  sandbox runtime as Claude Code's are (Seatbelt on macOS, bubblewrap on Linux; started once per
+  tool server): reading everywhere but keys, secrets, mail, browsers' profiles, the clone's sealed
+  files and the folders left out (by path, or by name where the sandbox takes patterns), writing
+  in the workspace and the temporary folder only, the network through its proxy, never this
+  computer's own addresses, secrets kept out of the environment and caches in the workspace; the
+  tool asks the person itself (`askPermission`), unless `auto` or "from now on" lets a sandboxed
+  command alone; with no sandbox every command is asked and never kept. `browser.ts` starts
+  Microsoft's Playwright MCP as the `browser` server (Chrome where installed, else Edge or
+  Chromium; the clone's own profile; a window while the person watches, none in a flow); looking is
+  one rule (`browser:read`), acting asked by hand, uploading and running code in a page asked every
+  time, running code in its own process never offered. `names.ts` names them with no imports, for
+  the cards on the page. `memory/hub.ts` serves `skills_find` (free: the open registry, skills.sh,
+  searched and a SKILL.md read, as outside text) and `skill_install` (asked every time on a card
+  listing the files; `SkillStore.addFromHub`, the office's checks, `created_by: "hub"`, its origin in
+  `.hub.json`, replaced only while as it came; files outside the four folders moved under
+  references/ or assets/ and SKILL.md's mentions following them, `relayout`). A session's skill
+  index lists 40 skills at most, the shipped ones and those used lately, and counts the rest.
 - `features/minime/history/`: a search index (SQLite FTS5 via `node:sqlite`, under `index/`) of
   what the person typed to their AI tools and what those answered, built in bounded passes that
   resume by byte offset, with CJK text indexed as bigrams; `tools.ts` gives the clone
@@ -505,10 +538,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   only read, and it can be deleted and rebuilt. A learning indexes only the conversations it reads
   and the rest is caught up in the background (`catchUpIndex`; every ten minutes while the app
   runs, `keepIndexFresh`). `features/minime/learn/`: the first
-  transplant, `gather.ts` (budgeted material from instruction and memory files, recent prompts by
-  most active folder, the person's own commits, document kinds and apps; a later reading takes only
-  what changed) and `learn.ts` (one session whose structured answer holds a few lasting lines,
-  saved by code, and three tasks); `export-prompt.ts` and `import.ts` (what another AI remembers,
+  transplant, `gather.ts` (material within a budget sized to the model's window, from instruction
+  and memory files, where their work lives (`server/places.ts`), recent prompts by most active
+  folder and their conversations' titles, the person's own commits, document kinds and apps, and
+  the names on their account and commits as hints; a later reading takes only what changed) and
+  `learn.ts` (one session whose structured answer holds what they do and what to call them, up to
+  twelve lines on how they work and fourteen on their work's surroundings, the map, up to twelve
+  projects and ten people as pages, saved by code, and three tasks); `export-prompt.ts` and `import.ts` (what another AI remembers,
   kept the same way, the pasted text stored nowhere); `reset.ts` (start over: what is kept moves
   into `backup/`, never deleted; when it all came from a reading, with nothing of the person's
   (no conversation, skill or note, no memory written after the reading), it is cleared instead).
@@ -596,9 +632,17 @@ These words help discussion. They do not mandate separate services, tables or UI
 - `features/minime/server/sources/lines.ts`: line readers every record reader uses (lines over
   2 MB are skipped, logs can be read from the end); `server/exclude.ts`: folders the person keeps
   out of everything, from `settings.json`; `server/folders.ts`: the folders they worked in lately,
-  from every tool's lists, which the screen offers to leave out before the first reading and any
-  time after ("Folders left out"); leaving one out removes what the index holds from it at once
-  (`history/indexer.ts` `forgetExcluded`).
+  from every tool's lists; `server/places.ts`: where their work lives, those and the folders they
+  changed in the last 30 days (the usual work folders, four deep, a few hundred entries a folder,
+  a budget of entries and time, hidden and build folders, links, keys and folders left out
+  skipped, a repository by git alone), ranked, which the screen offers as the folders it reads
+  before the first reading and any time after ("Folders it reads"), and which the reading
+  describes (a folder's newest file names and kinds, a repository's address, layout, README head
+  and manifest). Everything that touches their folders runs in a process of its own
+  (`places-walk.ts`, `dist/places-walk.mjs` in the package), killed at its deadline: on macOS
+  opening Desktop, Documents or Downloads waits for a consent dialog, and a wait inside the server
+  would hold its few file threads. Leaving a folder out removes what the index holds from it at
+  once (`history/indexer.ts` `forgetExcluded`).
 - `guide/`: how Clone Office works, written for the person using it; the clone reads it with
   `guide_read` (`features/minime/memory/guide.ts`). A change the person would notice updates
   `guide/` in the same change.

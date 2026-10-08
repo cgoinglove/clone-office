@@ -31,10 +31,11 @@ what to do when it did not.
   key and nothing leaves the computer; slower and less able than the services. The model has to
   be pulled first (for Ollama, `ollama pull <model>`), then its name typed here.
 
-**Team key** (팀 키), under OpenAI, Claude, Gemini and OpenRouter, once they are in an office: one
-API key the whole office shares, so the team pays once. Anyone in the office pastes it there; the
-office's server asks the vendor whether it works, then keeps it sealed, and every clone that picks
-**Team key** thinks with it through that server. The key never reaches anyone's computer: someone
+**Our team** (우리 팀), at the top of the model's list once their office keeps a key: the models the
+office's own keys reach, one API key per vendor the whole office shares, so the team pays once.
+The keys are added under Settings › Office › **Team keys** (팀 키): anyone in the office pastes one
+there; the office's server asks the vendor whether it works, then keeps it sealed, and every clone
+that picks one of the team's models thinks with it through that server. The key never reaches anyone's computer: someone
 who leaves the office stops using it at once, and the line under it says how many calls their clone
 and the whole office made in the last 30 days. What a clone asks passes through the office's server
 on its way and is never kept there. **Remove it from the office** (오피스에서 빼기) forgets it for

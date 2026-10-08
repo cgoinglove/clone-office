@@ -30,6 +30,7 @@ import {
   gateOpen,
   PERMISSION_TOOL,
 } from "../gate/tools.ts";
+import { BASH_TOOL, callShellTool, WRITE_FILE_TOOL } from "../hands/shell.ts";
 import {
   ASK_SESSION_TOOL,
   callHandsTool,
@@ -46,6 +47,7 @@ import {
 import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
 import { appDir, minimeHome } from "../server/paths.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
+import { callHubTool, SKILL_INSTALL_TOOL, SKILLS_FIND_TOOL } from "./hub.ts";
 import { NOTE_TOOLS, NoteStore } from "./notes.ts";
 import { type Actor, SKILL_TOOLS, SkillStore } from "./skills.ts";
 import { MemoryStore } from "./store.ts";
@@ -108,7 +110,15 @@ const PERSON_ONLY = new Set([
   "office_skill_manage",
   "flow_manage",
   "leave_out_folder",
+  "skills_find",
+  "skill_install",
+  "bash",
+  "write_file",
 ]);
+
+// The person's own work (a conversation with them, or one of their flows): the clone's shell and
+// workspace (hands/shell.ts). Never while answering a colleague, nor in background work.
+const ownWork = process.env.MINIME_OWN_WORK === "1" && !answering;
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: (permissionOnly
@@ -126,7 +136,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         GUIDE_TOOL,
         ...(answering
           ? []
-          : [FLOWS_TOOL, OFFICE_INBOX_TOOL, OFFICE_SKILLS_TOOL]),
+          : [
+              FLOWS_TOOL,
+              OFFICE_INBOX_TOOL,
+              OFFICE_SKILLS_TOOL,
+              SKILLS_FIND_TOOL,
+            ]),
+        ...(ownWork ? [BASH_TOOL, WRITE_FILE_TOOL] : []),
         ...(gateOpen
           ? [
               ASK_TOOL,
@@ -136,7 +152,12 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
               WORK_SESSION_TOOL,
               ...(answering
                 ? []
-                : [LEAVE_OUT_TOOL, FLOW_MANAGE_TOOL, OFFICE_SKILL_MANAGE_TOOL]),
+                : [
+                    LEAVE_OUT_TOOL,
+                    FLOW_MANAGE_TOOL,
+                    OFFICE_SKILL_MANAGE_TOOL,
+                    SKILL_INSTALL_TOOL,
+                  ]),
             ]
           : []),
         ...(colleaguesOpen
@@ -155,7 +176,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const operations = Array.isArray(args.operations) ? args.operations : [];
   if (
     (permissionOnly && request.params.name !== PERMISSION_TOOL.name) ||
-    (answering && PERSON_ONLY.has(request.params.name))
+    (answering && PERSON_ONLY.has(request.params.name)) ||
+    (!ownWork &&
+      (request.params.name === BASH_TOOL.name ||
+        request.params.name === WRITE_FILE_TOOL.name))
   )
     return text(`Unknown tool: ${request.params.name}`, true);
   switch (request.params.name) {
@@ -232,6 +256,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case FLOWS_TOOL.name:
     case FLOW_MANAGE_TOOL.name: {
       const { result, isError } = await callFlowTool(request.params.name, args);
+      return text(result, isError);
+    }
+    case BASH_TOOL.name:
+    case WRITE_FILE_TOOL.name: {
+      const { result, isError } = await callShellTool(
+        request.params.name,
+        args,
+      );
+      return text(result, isError);
+    }
+    case SKILLS_FIND_TOOL.name:
+    case SKILL_INSTALL_TOOL.name: {
+      const { result, isError } = await callHubTool(
+        skills,
+        request.params.name,
+        args,
+      );
       return text(result, isError);
     }
     case LEAVE_OUT_TOOL.name: {

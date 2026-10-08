@@ -86,7 +86,7 @@ export function Segmented<T extends string>({
               !picked && "text-muted-foreground hover:text-foreground",
               picked &&
                 (view
-                  ? "bg-background font-medium text-foreground shadow-sm dark:bg-input/60"
+                  ? "bg-background font-medium text-foreground ring-1 ring-foreground/8 dark:bg-input/60"
                   : "bg-brand font-medium text-brand-foreground"),
             )}
           >

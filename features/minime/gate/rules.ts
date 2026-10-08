@@ -7,6 +7,13 @@ import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, isAbsolute, sep } from "node:path";
 import { connectorOfTool } from "../connectors/catalog.ts";
+import {
+  BASH,
+  BROWSER_ALWAYS_ASKED,
+  BROWSER_LOOKS,
+  BROWSER_READ_RULE,
+  browserTool,
+} from "../hands/names.ts";
 import { withLock } from "../memory/files.ts";
 import { logActivity } from "../server/activity.ts";
 import { settingsPath, writeSettings } from "../server/exclude.ts";
@@ -14,6 +21,8 @@ import { minimeHome } from "../server/paths.ts";
 
 /** Tools a mini-me uses alone from the start: searching the web reads, and keeps nothing. */
 export const TRUSTED_FROM_START = ["WebSearch"];
+
+export { BASH } from "../hands/names.ts";
 
 /** Tools a mini-me may ask to use in a conversation: reading only, never writing or running. */
 export const ASKABLE_TOOLS = ["Read", "Glob", "Grep", "WebSearch", "WebFetch"];
@@ -38,6 +47,7 @@ export const ALWAYS_ASKED = new Set([
   "mcp__minime__work_session",
   "mcp__minime__apply_changes",
   "mcp__minime__office_skill_manage",
+  "mcp__minime__skill_install",
 ]);
 
 export async function loadTrust(): Promise<string[]> {
@@ -124,6 +134,14 @@ export function ruleFor(
     const at = folder(dirname(String(input.file_path ?? input.notebook_path)));
     return at ? `Edit(${at}/**)` : undefined;
   }
+  // A command: in the sandbox, every command from now on; outside it, never.
+  if (tool === BASH) return input.sandboxed === true ? BASH : undefined;
+  // The clone's browser: looking at pages from now on as one rule; acting on one, asked each time.
+  const page = browserTool(tool);
+  if (page)
+    return BROWSER_LOOKS.has(page) && !BROWSER_ALWAYS_ASKED.has(page)
+      ? BROWSER_READ_RULE
+      : undefined;
   // The mini-me's own tools that reach out, such as asking a colleague: the tool itself. Files
   // leaving this computer are asked every time.
   if (Array.isArray(input.files) && input.files.length) return undefined;

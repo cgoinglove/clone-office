@@ -46,9 +46,12 @@ other language it reads in English while the clone still keeps what it learns, a
 theirs.
 
 - **The first time**: it reads what is on their computer (`reading.md`) and learns as much as it
-  shows: what they do, what they are working on, the people and tools around them and how they
-  work. **Here's what I understood** (이렇게 이해했어요) shows it all: what they do, what they are
-  working on, who they work with, what surrounds their work, how they work, decide and talk.
+  shows: what they do and what to call them, what they are working on (a dated page for each
+  piece of work, starting with the folder it lives in), a map of where their work lives (one page,
+  every folder with what it holds, which it opens before looking for a file or a project), the
+  people and tools around them and how they work. **Here's what I understood** (이렇게 이해했어요)
+  shows it one line a kind (what they do, what they are working on, who they work with, where their
+  work is, what surrounds it, how they work and talk), each opening the whole list with a press.
   Lines kept this time are marked **New** (새로).
 - **From another AI**: **Bring it from another AI** (다른 AI에서 가져오기) shows the text Claude's own
   memory import uses (**Copy**, 복사), to paste into a chat with the AI they use most — ChatGPT,
@@ -111,14 +114,16 @@ theirs.
 - **Alone**: keeping and tidying its own memory, skills and notes, searching their past
   conversations, reading this guide, and searching the web.
 - **It asks first**, with a card in the conversation (**May I do this?**, 이걸 해도 될까요?): reading
-  one of their files or folders, and opening a web page. **Allow** (허락) or **Don't** (거절). With
-  **Don't ask again for this** (앞으로 이런 건 묻지 않기), it reads that folder (or opens that site)
-  alone from then on. Folders they left out stay out whatever they answer. Settings ›
-  Permissions can let it read on its own, or also act, without these cards (`index.md`,
-  "Settings in more detail").
+  one of their files or folders, opening a web page, running a command in its sandbox, and using its
+  browser. **Allow** (허락) or **Don't** (거절). With **Don't ask again for this** (앞으로 이런 건 묻지
+  않기), it reads that folder (or opens that site, runs commands in its sandbox, looks at pages in
+  its browser) alone from then on. Folders they left out stay out whatever they answer. Settings ›
+  Permissions can let it do all of this on its own (`index.md`, "Settings in more detail").
 - **It asks every time**, whatever they answered before: sharing one of its skills with their
-  office or adding one a colleague shared (the card lists the files that would go or come).
-- **It never does now**: changing their files, running programs, or sending anything to anyone.
+  office or adding one (a colleague's, or one from the open registry; the card lists the files),
+  a command where there is no sandbox, and uploading a file or running code in a web page.
+- **It never does now**: changing their own files outside its workspace (that is work for one of
+  their Claude Code or Codex conversations), or sending anything to anyone without a card.
 - **When only they can decide**, it asks with a card (**Needs you**, 답이 필요해요), with choices or
   their own answer, and waits up to ten minutes; without an answer it does not guess.
 - What they allowed "from now on" holds at once, even later in the same answer. It is listed on

@@ -13,7 +13,7 @@ export async function GET(request: Request) {
 }
 
 const Body = z.object({
-  autonomy: z.enum(["ask", "reads", "auto"]).optional(),
+  autonomy: z.enum(["ask", "auto"]).optional(),
   defaultTrust: z.enum(["auto", "tell", "ask"]).optional(),
   batchHours: z.array(z.number().int().min(0).max(23)).max(6).optional(),
   review: z.boolean().optional(),

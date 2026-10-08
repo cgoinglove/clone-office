@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { HEADERS } from "./use-office";
 
-export type Autonomy = "ask" | "reads" | "auto";
+export type Autonomy = "ask" | "auto";
 export type Trust = "auto" | "tell" | "ask";
 
 export interface Preferences {
