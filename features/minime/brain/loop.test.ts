@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -367,4 +373,52 @@ test("a model on this computer, reached over OpenAI's chat API as Ollama serves 
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test("what the person writes while it works is read before the next step, and kept in the session", async () => {
+  const { runLoop } = await import("./loop");
+  const model = new MockLanguageModelV4({
+    doStream: [
+      toolStep([
+        {
+          id: "s1",
+          tool: "mcp__minime__memory",
+          input: {
+            action: "add",
+            target: "user",
+            content: "Plans on Fridays.",
+          },
+        },
+      ]),
+      textStep("Thursday it is."),
+    ],
+  });
+  let asked = 0;
+  const result = await runLoop(
+    {
+      prompt: "When should we ship?",
+      standing: { allow: [], deny: [] },
+      // Nothing before the first step; after it, the person's word.
+      steer: async () => (asked++ === 0 ? "Thursday, not Friday." : undefined),
+    },
+    CHOICE,
+    { model },
+  );
+  assert.equal(result.ok, true, result.error ?? "");
+  assert.doesNotMatch(sent(model)[0], /Thursday, not Friday/);
+  assert.match(
+    sent(model)[1],
+    /Thursday, not Friday/,
+    "read before the next step",
+  );
+  // The session goes on with it in its place.
+  const kept = JSON.parse(
+    readFileSync(
+      join(root, "brain", "sessions", `${result.sessionId}.json`),
+      "utf8",
+    ),
+  ) as { messages: { role: string; content: unknown }[] };
+  const roles = kept.messages.map((m) => m.role);
+  assert.deepEqual(roles, ["user", "assistant", "tool", "user", "assistant"]);
+  assert.equal(kept.messages[3].content, "Thursday, not Friday.");
 });

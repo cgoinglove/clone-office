@@ -19,6 +19,7 @@ import { denyRules, loadTrust } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { errorCode } from "../server/ndjson.ts";
+import { steerText, takeNotes, working } from "./steer.ts";
 import {
   appendMessage,
   type ChatInfo,
@@ -73,6 +74,10 @@ export type TurnEvent =
   | { type: "saved"; event: SessionEvent }
   | { type: "ask"; id: string; ask: Ask }
   | { type: "reviewed"; ok: boolean }
+  /** A word the person wrote while it worked was read (chat/steer.ts). */
+  | { type: "stepped"; id: string }
+  /** The answer is done and the next turn, on words that came meanwhile, begins. */
+  | { type: "next" }
   | { type: "error"; message: string; code?: string };
 
 /** The end of a conversation's own record, for a session that starts without the brain's copy. */
@@ -147,115 +152,149 @@ export async function runTurn(options: {
   send({ type: "chat", id: info.id, title: info.title });
   await appendMessage(info.id, "me", text);
   const said = withNews(newsSince(before), text);
-
-  const record = (event: SessionEvent) => {
-    if (event.type === "text") return;
-    send({ type: "saved", event });
-    const line = savedText(event as unknown as Record<string, unknown>);
-    if (line) appendMessage(info.id, "saved", line).catch(() => {});
-  };
-
-  let session = info.session;
-  let summary = info.summary;
-  if (session && (info.context ?? 0) > (await carryAt())) {
-    send({ type: "carrying" });
-    // Keep what is worth keeping before the details are summed up, unless that was done already.
-    if (info.reviewed !== session) await reviewSession(session, record);
-    const written = await runSession({
-      resume: session,
-      fork: true,
-      prompt: SUMMARY_PROMPT,
-      language,
-      maxTurns: 1,
-      purpose: "summary",
-    });
-    const since = before.slice(info.carriedFrom ?? 0);
-    const words = theirWords(since);
-    // No summary came (the session may be too full to write one): it goes on from the record
-    // instead, the earlier summary and the end of what was said, as Hermes hands off without one.
-    summary =
-      written.ok && written.text.trim()
-        ? `${written.text.trim()}${words ? `\n\nWhat they said in it, word for word, oldest first:\n${words}` : ""}`
-        : [
-            info.summary,
-            `What was said, oldest first:\n${recap(since, 12_000)}`,
-          ]
-            .filter(Boolean)
-            .join("\n\n");
-    await carryOver(info.id, summary);
-    session = undefined;
-    send({ type: "carried" });
+  // What the person writes while this answer is made waits for it (chat/steer.ts).
+  const end = working(info.id);
+  try {
+    await answer();
+  } finally {
+    end();
   }
 
-  // The person's questions for this conversation go to its screen while the answer is made.
-  const gate: SessionGate | undefined = options.gateUrl
-    ? {
-        url: options.gateUrl,
-        secret: gateSecret(),
-        chat: info.id,
-        allow: [...(await loadTrust()), ...(options.allow ?? [])],
-        deny: denyRules(loadExcludes()),
-        colleagues: true,
-      }
-    : undefined;
-  const stop = onAsk((pending) => {
-    if (pending.chat === info.id)
-      send({ type: "ask", id: pending.id, ask: pending.ask });
-  });
-  const onEvent = (event: SessionEvent) =>
-    event.type === "text" ? send(event) : record(event);
-  let result: Awaited<ReturnType<typeof runSession>>;
-  try {
-    result = await runSession({
-      prompt: session ? said : opening(summary, "", said),
-      resume: session,
-      language,
-      maxTurns: 16,
-      purpose: "task",
-      gate,
-      connectors: true,
-      onEvent,
+  async function answer(): Promise<void> {
+    const record = (event: SessionEvent) => {
+      if (event.type === "text") return;
+      send({ type: "saved", event });
+      const line = savedText(event as unknown as Record<string, unknown>);
+      if (line) appendMessage(info.id, "saved", line).catch(() => {});
+    };
+
+    let session = info.session;
+    let summary = info.summary;
+    if (session && (info.context ?? 0) > (await carryAt())) {
+      send({ type: "carrying" });
+      // Keep what is worth keeping before the details are summed up, unless that was done already.
+      if (info.reviewed !== session) await reviewSession(session, record);
+      const written = await runSession({
+        resume: session,
+        fork: true,
+        prompt: SUMMARY_PROMPT,
+        language,
+        maxTurns: 1,
+        purpose: "summary",
+      });
+      const since = before.slice(info.carriedFrom ?? 0);
+      const words = theirWords(since);
+      // No summary came (the session may be too full to write one): it goes on from the record
+      // instead, the earlier summary and the end of what was said, as Hermes hands off without one.
+      summary =
+        written.ok && written.text.trim()
+          ? `${written.text.trim()}${words ? `\n\nWhat they said in it, word for word, oldest first:\n${words}` : ""}`
+          : [
+              info.summary,
+              `What was said, oldest first:\n${recap(since, 12_000)}`,
+            ]
+              .filter(Boolean)
+              .join("\n\n");
+      await carryOver(info.id, summary);
+      session = undefined;
+      send({ type: "carried" });
+    }
+
+    // The person's questions for this conversation go to its screen while the answer is made.
+    const gate: SessionGate | undefined = options.gateUrl
+      ? {
+          url: options.gateUrl,
+          secret: gateSecret(),
+          chat: info.id,
+          allow: [...(await loadTrust()), ...(options.allow ?? [])],
+          deny: denyRules(loadExcludes()),
+          colleagues: true,
+        }
+      : undefined;
+    const stop = onAsk((pending) => {
+      if (pending.chat === info.id)
+        send({ type: "ask", id: pending.id, ask: pending.ask });
     });
-    if (!result.ok && session && !result.text && sessionLost(result.error)) {
-      // The brain no longer has the session: go on from the conversation's own record, the summary
-      // it was carried over with and what was said since.
+    const onEvent = (event: SessionEvent) =>
+      event.type === "text" ? send(event) : record(event);
+    // Read between the brain's steps: kept in the conversation where it came, and marked read.
+    const steer = async () => {
+      const notes = takeNotes(info.id);
+      if (!notes.length) return undefined;
+      for (const note of notes) {
+        await appendMessage(info.id, "me", note.text);
+        send({ type: "stepped", id: note.id });
+      }
+      return steerText(notes);
+    };
+    let result: Awaited<ReturnType<typeof runSession>>;
+    try {
       result = await runSession({
-        prompt: opening(
-          summary,
-          recap(summary ? before.slice(info.carriedFrom ?? 0) : before),
-          said,
-        ),
+        prompt: session ? said : opening(summary, "", said),
+        resume: session,
         language,
         maxTurns: 16,
         purpose: "task",
         gate,
         connectors: true,
+        steer,
         onEvent,
       });
+      if (!result.ok && session && !result.text && sessionLost(result.error)) {
+        // The brain no longer has the session: go on from the conversation's own record, the summary
+        // it was carried over with and what was said since.
+        result = await runSession({
+          prompt: opening(
+            summary,
+            recap(summary ? before.slice(info.carriedFrom ?? 0) : before),
+            said,
+          ),
+          language,
+          maxTurns: 16,
+          purpose: "task",
+          gate,
+          connectors: true,
+          steer,
+          onEvent,
+        });
+      }
+    } finally {
+      stop();
     }
-  } finally {
-    stop();
+    if (result.ok && !result.text.trim()) {
+      // Nothing to read is no answer: said as a failure, never kept as an empty line.
+      result = { ...result, ok: false, error: "empty-answer" };
+    }
+    if (!result.ok || !result.sessionId) {
+      const message = result.error ?? "task-failed";
+      const code = errorCode(message);
+      // Kept as its code when it has one, so the conversation reads in the person's language.
+      await appendMessage(info.id, "error", code ?? message);
+      send({ type: "error", message, code });
+      return;
+    }
+    await appendMessage(info.id, "minime", result.text);
+    await setSession(info.id, result.sessionId, result.context);
+    // Words that came after the last step, or to a brain that takes none mid-way (Claude Code): the
+    // next turn, at once, in the same conversation.
+    const left = takeNotes(info.id);
+    if (left.length) {
+      for (const note of left) send({ type: "stepped", id: note.id });
+      send({ type: "next" });
+      await runTurn({
+        ...options,
+        chat: info.id,
+        text: left.map((note) => note.text).join("\n\n"),
+      });
+      return;
+    }
+    send({ type: "done", chat: info.id });
+    const review = await reviewSession(
+      result.sessionId,
+      record,
+      result.systemPrompt,
+    );
+    if (review.ok) await markReviewed(info.id, result.sessionId);
+    send({ type: "reviewed", ok: review.ok });
   }
-  if (result.ok && !result.text.trim()) {
-    // Nothing to read is no answer: said as a failure, never kept as an empty line.
-    result = { ...result, ok: false, error: "empty-answer" };
-  }
-  if (!result.ok || !result.sessionId) {
-    const message = result.error ?? "task-failed";
-    const code = errorCode(message);
-    // Kept as its code when it has one, so the conversation reads in the person's language.
-    await appendMessage(info.id, "error", code ?? message);
-    send({ type: "error", message, code });
-    return;
-  }
-  await appendMessage(info.id, "minime", result.text);
-  await setSession(info.id, result.sessionId, result.context);
-  send({ type: "done", chat: info.id });
-  const review = await reviewSession(
-    result.sessionId,
-    record,
-    result.systemPrompt,
-  );
-  if (review.ok) await markReviewed(info.id, result.sessionId);
-  send({ type: "reviewed", ok: review.ok });
 }

@@ -46,7 +46,11 @@ Two things hold everywhere:
   meetings it brought back, flows it ran); and **Today** (오늘: the clones' standup, today's flows,
   their colleagues).
 - **Chat** (대화): the conversation with their clone, and the box, **Ask your clone anything**
-  (클론에게 무엇이든 부탁해 보세요). A new chat starts with the clone's hello and things to try. Under
+  (클론에게 무엇이든 부탁해 보세요). A new chat starts with the clone's hello and things to try.
+  While the clone is answering, what they write still goes: it shows **Waits for its next step**
+  (다음 단계 전에 읽어요) with an X to take it back, and the clone reads it before its next step
+  (with a key's model) or as soon as this answer is done (with Claude Code), then **Read** (읽음),
+  after Thursday's step-in. Under
   the box, **Ask a colleague** (동료에게) and **Every so often** (정해진 때마다) start the sentence
   for them. On a wide screen the right side shows **The office now** (지금 오피스): the office, live;
   the requests in motion; today's flows. The button at the top folds it away.

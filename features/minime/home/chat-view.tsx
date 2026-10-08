@@ -8,12 +8,15 @@
 import {
   ArrowUp,
   BookmarkCheck,
+  Check,
   CircleAlert,
   Clock,
   CornerDownRight,
+  Loader2,
   MessagesSquare,
   Sparkles,
   Users,
+  X,
 } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -179,15 +182,37 @@ function Empty({
 function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
   const t = useTranslations("home");
   const tChat = useTranslations("chat");
+  const tStep = useTranslations("shell.stepIn");
   const problemText = useProblem();
   const format = useFormatter();
   switch (turn.kind) {
     case "me":
       return (
-        <li className="flex justify-end">
+        <li className="flex flex-col items-end gap-1">
           <p className="max-w-[85%] rounded-2xl rounded-br-md bg-muted px-3.5 py-2 text-[14.5px] leading-relaxed whitespace-pre-wrap wrap-break-word">
             {turn.text}
           </p>
+          {turn.note &&
+            (turn.read ? (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Check className="size-3.5" />
+                {tStep("read")}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
+                {tStep("waits")}
+                <button
+                  type="button"
+                  aria-label={tStep("takeBack")}
+                  title={tStep("takeBack")}
+                  onClick={() => void chat.takeBack(turn.note ?? "")}
+                  className="rounded-md p-0.5 hover:bg-muted hover:text-foreground"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </span>
+            ))}
         </li>
       );
     case "minime":
@@ -302,9 +327,10 @@ export function Composer({
   const box = draftRef ?? own;
   const send = () => {
     const text = draft.trim();
-    if (!text || chat.busy) return;
+    if (!text) return;
     setDraft("");
-    void chat.ask(text);
+    // While it works, a word for it, read before its next step (chat/steer.ts).
+    void (chat.busy ? chat.note(text) : chat.ask(text));
   };
   // A helper puts its words at the start of the box and leaves the caret after them.
   const insert = (text: string) => {
@@ -365,8 +391,8 @@ export function Composer({
           type="submit"
           size="icon-sm"
           aria-label={t("send")}
-          disabled={!draft.trim() || chat.busy}
-          loading={chat.busy}
+          disabled={!draft.trim() || (chat.busy && !chat.chatId)}
+          loading={chat.busy && !draft.trim()}
           className="mb-0.5 shrink-0"
         >
           <ArrowUp />

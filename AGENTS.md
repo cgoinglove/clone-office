@@ -236,7 +236,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   long conversation into a fresh session first (look back, then a summary under Hermes' headings,
   `SUMMARY_PROMPT`, with the person's own messages added by code, `theirWords`; no summary, and it
   goes on from the record), goes on from the conversation's own record when the brain lost its
-  session, and looks back after the answer. When to carry follows the brain's window
+  session, and looks back after the answer. What the person writes while it works waits in
+  `steer.ts` (`app/api/me/task/note`, taken back while unread): the app's own loop reads it before
+  its next step (`runSession` `steer`, through `prepareStep`, kept in the session where it came),
+  and what is left when the answer is done (Claude Code runs whole) becomes the next turn at once,
+  in the same stream (`stepped`, `next`). When to carry follows the brain's window
   (`brain/context.ts`: `contextWindow`, `carryPoint`, three quarters of it and at most 100K;
   `sessionLost` knows the services' words for a full window). Inside one turn on the app's own loop,
   earlier tool results are cut once half the window is used (`brain/prune.ts`, Hermes' first phase,

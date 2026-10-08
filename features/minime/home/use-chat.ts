@@ -14,7 +14,14 @@ import { stream } from "../stream";
 const HEADERS = { "content-type": "application/json", "x-clone-office": "1" };
 
 export type Turn =
-  | { id: number; kind: "me"; text: string }
+  | {
+      id: number;
+      kind: "me";
+      text: string;
+      /** Written while the clone worked: its id while it waits, and whether it was read (chat/steer.ts). */
+      note?: string;
+      read?: boolean;
+    }
   | { id: number; kind: "minime"; text: string; live: boolean }
   | { id: number; kind: "saved"; text: string }
   | { id: number; kind: "note"; text: string }
@@ -218,6 +225,19 @@ export function useChat(lang: string) {
                     : turn,
                 ),
               );
+            // A word written meanwhile was read; then the next turn, on words that came after.
+            if (event.type === "stepped")
+              setTurns((all) =>
+                all.map((turn) =>
+                  turn.kind === "me" && turn.note === String(event.id)
+                    ? { ...turn, read: true }
+                    : turn,
+                ),
+              );
+            if (event.type === "next") {
+              finishReply();
+              reply = push({ kind: "minime", text: "", live: true });
+            }
             if (event.type === "done") {
               finishReply();
               setBusy(false);
@@ -245,6 +265,46 @@ export function useChat(lang: string) {
     },
     [lang, push, t, loadChats],
   );
+
+  /**
+   * A word for the clone while it works in this conversation, read before its next step (after
+   * Thursday's step-in). When it is not working after all, the word is asked the usual way.
+   */
+  const note = useCallback(
+    async (text: string) => {
+      const chat = chatRef.current;
+      if (!chat || !text.trim()) return;
+      const response = await fetch("/api/me/task/note", {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ action: "add", chat, text }),
+      }).catch(() => undefined);
+      const data = response?.ok
+        ? ((await response.json().catch(() => ({}))) as { id?: string })
+        : undefined;
+      if (data?.id) push({ kind: "me", text, note: data.id });
+      else if (!busyRef.current) await ask(text);
+    },
+    [ask, push],
+  );
+
+  /** Takes back a word while the clone has not read it yet. */
+  const takeBack = useCallback(async (id: string) => {
+    const chat = chatRef.current;
+    if (!chat) return;
+    const response = await fetch("/api/me/task/note", {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify({ action: "take-back", chat, id }),
+    }).catch(() => undefined);
+    const data = (await response?.json().catch(() => ({}))) as
+      | { taken?: boolean }
+      | undefined;
+    if (data?.taken)
+      setTurns((all) =>
+        all.filter((turn) => !(turn.kind === "me" && turn.note === id)),
+      );
+  }, []);
 
   /** Answers a question from the gate; a conversation opened mid-way is followed until it goes on. */
   const answer = useCallback(
@@ -294,6 +354,8 @@ export function useChat(lang: string) {
     talking,
     kept,
     ask,
+    note,
+    takeBack,
     answer,
     openChat,
     newChat,

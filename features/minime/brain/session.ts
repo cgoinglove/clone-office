@@ -185,6 +185,11 @@ export interface SessionOptions {
    * (connectors/colleagues.ts), with their reading tools only, every other tool refused.
    */
   colleagueReads?: boolean;
+  /**
+   * What the person wrote while the session works, read before its next step (chat/steer.ts). The
+   * app's own loop takes it between steps; Claude Code, run whole, leaves it for the next turn.
+   */
+  steer?: () => Promise<string | undefined>;
   onEvent?: (event: SessionEvent) => void;
 }
 

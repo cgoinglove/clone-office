@@ -349,6 +349,15 @@ export async function runLoop(
     );
     // When the window fills, earlier tool results are cut before the next step (prune.ts).
     const window = contextWindow(choice);
+    // Words read between steps, and where among the answer's messages each came, to keep them.
+    const heard: { at: number; note: ModelMessage }[] = [];
+    const withSteps = (answer: ModelMessage[]) => {
+      const out = [...answer];
+      heard.forEach((one, index) => {
+        out.splice(one.at + index, 0, one.note);
+      });
+      return out;
+    };
     const run = streamText({
       model,
       instructions: system,
@@ -357,10 +366,24 @@ export async function runLoop(
       stopWhen: stepCountIs(options.maxTurns ?? 6),
       abortSignal: timeout,
       providerOptions,
-      prepareStep: ({ messages: going, steps }) =>
-        underPressure(going, window, steps.at(-1)?.usage.inputTokens)
-          ? { messages: pruneToolResults(going) }
-          : undefined,
+      prepareStep: async ({ messages: going, steps }) => {
+        const pressed = underPressure(
+          going,
+          window,
+          steps.at(-1)?.usage.inputTokens,
+        )
+          ? pruneToolResults(going)
+          : undefined;
+        // What the person wrote meanwhile, read before this step (after Thursday's step-in).
+        const added = steps.length ? await options.steer?.() : undefined;
+        if (!added) return pressed ? { messages: pressed } : undefined;
+        const note: ModelMessage = { role: "user", content: added };
+        heard.push({
+          at: going.length - messages.length - heard.length,
+          note,
+        });
+        return { messages: [...(pressed ?? going), note] };
+      },
     });
     let error: unknown;
     let turns = 0;
@@ -417,7 +440,7 @@ export async function runLoop(
       };
     }
     let structured: unknown;
-    let kept: ModelMessage[] = [...messages, ...answered];
+    let kept: ModelMessage[] = [...messages, ...withSteps(answered)];
     // A session that ends in a shape (a request's answer, what a reading kept) is asked for it last,
     // without tools: not every vendor takes tools and a shape in one call.
     if (options.jsonSchema) {
