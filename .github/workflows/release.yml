@@ -110,10 +110,12 @@ jobs:
       # Trusted publishing needs npm 11.5.1 or later, whatever the Node release ships.
       - run: npm install -g npm@11
 
-      # With trusted publishing set up no token is needed. A package's very first publish happens
-      # before npm can trust anything, so a granular NPM_TOKEN secret, if there is one, is used.
+      # Staged: npm trusts this run (trusted publishing, no token stored) to stage the version, and
+      # it goes out only once a maintainer approves it with their own second factor, on the
+      # package's page or with `npm stage approve <id>`. The trusted publisher is set up without
+      # direct `npm publish`, so a leaked workflow cannot ship a version on its own.
       # The "./" matters: npm reads "dist/x.tgz" as the GitHub repository dist/x.tgz.
-      - run: npm publish "./dist/clone-office-$VERSION.tgz" --provenance --access public --tag "$TAG"
+      - run: npm stage publish "./dist/clone-office-$VERSION.tgz" --provenance --access public --tag "$TAG"
         env:
           VERSION: ${{ steps.what.outputs.version }}
           TAG: ${{ steps.what.outputs.tag }}
