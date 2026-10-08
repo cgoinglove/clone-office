@@ -18,5 +18,9 @@ chooses within its scope, and ask before a major visual change. Keep this list s
   dropdown at the field's own width, as Thursday's model picker does (one button, a two-column
   popover: vendors, then what the one in hand offers). Screens meant to scroll (a conversation, a
   list) scroll. This holds for every new part, not only the model. The user chose this. (10-08)
+- **Under way**: anything still running says so, always: a spinning icon or ShinyText, never a still
+  word. The user chose this. (10-08)
+- **Messages**: as a chat reads, the person's own on the right with a fill, the other side on the
+  left with neither fill nor border; never a bubble drawn as an outline. The user chose this. (10-08)
 - **Words**: what a first-time user reads is plain everyday English with no jargon. (09-19)
 - **Theme**: Light is the default, whatever the computer is set to. (10-01)
