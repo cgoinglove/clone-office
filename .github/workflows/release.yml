@@ -6,7 +6,9 @@ name: Release
 # merge tags the commit, writes the GitHub Release, checks everything again and publishes to npm.
 #
 # Run by hand (Actions › Release › Run workflow), from main only:
-#   next    a test build of main as `npx clone-office@next`, its version <package.json>-next.<run>
+#   next    a test build of main as `npx clone-office@next`, versioned as the next minor's
+#           prerelease (0.1.0 in package.json gives 0.2.0-next.<run>), so semver puts it above the
+#           release out now and below the one it leads to
 #   latest  publish the version package.json says: the first release (0.1.0, which no Release PR
 #           made), or a release whose publish failed after its tag was written
 on:
@@ -78,7 +80,8 @@ jobs:
         run: |
           base="$(node -p "require('./package.json').version")"
           if [ "$CHANNEL" = "next" ]; then
-            echo "version=$base-next.$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+            next="$(node -p "const [major, minor] = '$base'.split('.').map(Number); major + '.' + (minor + 1) + '.0'")"
+            echo "version=$next-next.$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
             echo "tag=next" >> "$GITHUB_OUTPUT"
           else
             echo "version=$base" >> "$GITHUB_OUTPUT"

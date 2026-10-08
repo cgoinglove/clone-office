@@ -14,12 +14,23 @@ const PLAIN = /^\d+\.\d+\.\d+$/;
 
 const EVERY = 6 * 60 * 60_000;
 
-/** Whether `a` is a later plain release than `b`. Anything else (a canary, a build) is not. */
+/** A version as it may run: a plain release, or a canary of the release it leads to. */
+const RUNNING = /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?$/;
+
+/**
+ * Whether the plain release `a` is later than the version `b` that runs. A canary (0.2.0-next.4)
+ * comes before its release (0.2.0) and after the one out before it, as semver orders them, so one
+ * running a canary hears when its release is out.
+ */
 export function isNewer(a: string, b: string): boolean {
-  if (!PLAIN.test(a) || !PLAIN.test(b)) return false;
-  const [x, y] = [a, b].map((version) => version.split(".").map(Number));
+  if (!PLAIN.test(a)) return false;
+  const running = RUNNING.exec(b);
+  if (!running) return false;
+  const x = a.split(".").map(Number);
+  const y = running.slice(1, 4).map(Number);
   for (let at = 0; at < 3; at++) if (x[at] !== y[at]) return x[at] > y[at];
-  return false;
+  // The same numbers: the release is later than its own canary, and not than itself.
+  return b !== a;
 }
 
 /** Pinned: routes can load separate copies of this module, and one answer serves them all. */

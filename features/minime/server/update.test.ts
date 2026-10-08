@@ -12,7 +12,18 @@ test("a newer plain release is offered with the line that starts it; anything el
   assert.equal(isNewer("0.2.0", "0.1.9"), true);
   assert.equal(isNewer("0.10.0", "0.9.0"), true);
   assert.equal(isNewer("0.1.0", "0.1.0"), false);
-  assert.equal(isNewer("0.2.0-next.4", "0.1.0"), false, "a canary is not");
+  assert.equal(
+    isNewer("0.2.0-next.4", "0.1.0"),
+    false,
+    "a canary is never offered",
+  );
+  assert.equal(
+    isNewer("0.2.0", "0.2.0-next.4"),
+    true,
+    "its release, to one on the canary",
+  );
+  assert.equal(isNewer("0.1.0", "0.2.0-next.4"), false);
+  assert.equal(isNewer("0.3.0", "0.2.0-next.4"), true);
 
   (globalThis as { __cloneOfficeLatest?: unknown }).__cloneOfficeLatest =
     undefined;
