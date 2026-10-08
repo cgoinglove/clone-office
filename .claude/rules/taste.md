@@ -13,5 +13,10 @@ chooses within its scope, and ask before a major visual change. Keep this list s
 - **Separation**: groups are split by space; a hairline is only for rows in a list and the edge of a pane. (09-18)
 - **Icons**: an icon on a filled button is filled, not outlined. (09-18)
 - **Triggers**: sit inside what they belong to. (09-18)
+- **No growing panes**: a screen meant to fit at once (the first steps beside the office, a card, a
+  settings row) never grows a scrollbar because something was clicked; choices open in a popover or
+  dropdown at the field's own width, as Thursday's model picker does (one button, a two-column
+  popover: vendors, then what the one in hand offers). Screens meant to scroll (a conversation, a
+  list) scroll. This holds for every new part, not only the model. The user chose this. (10-08)
 - **Words**: what a first-time user reads is plain everyday English with no jargon. (09-19)
 - **Theme**: Light is the default, whatever the computer is set to. (10-01)
