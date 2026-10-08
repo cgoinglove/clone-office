@@ -735,6 +735,19 @@ export class Relay {
     );
   }
 
+  /** The calls a member made today (UTC) with one vendor's team key. */
+  async aiCallsToday(
+    member: Caller,
+    provider: string,
+    now = new Date(),
+  ): Promise<number> {
+    const [row] = await this.db.query<{ calls: unknown }>(
+      "SELECT calls FROM ai_calls WHERE office_id = $1 AND member_id = $2 AND provider = $3 AND day = $4",
+      [member.office, member.id, provider, now.toISOString().slice(0, 10)],
+    );
+    return Number(row?.calls ?? 0);
+  }
+
   /** The calls each member made with the office's team keys since a day. */
   async aiCalls(
     office: string,

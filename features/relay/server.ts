@@ -17,7 +17,7 @@ import { Accounts } from "./accounts.ts";
 import { openDatabase } from "./db.ts";
 import { relayHandler } from "./handler.ts";
 import { Relay } from "./relay.ts";
-import { relaySealKey, TeamAi } from "./team-ai.ts";
+import { DAILY_CALLS, relaySealKey, TeamAi } from "./team-ai.ts";
 
 const { values } = parseArgs({
   options: {
@@ -51,9 +51,13 @@ meetingRounds.unref();
 
 const publicUrl = process.env.RELAY_PUBLIC_URL || undefined;
 // Team keys are sealed with a key kept apart from the database (team-ai.ts).
+const daily = Number(process.env.RELAY_TEAM_AI_DAILY);
 const teamAi = new TeamAi(
   relay,
   await relaySealKey(db.kind === "postgres" ? undefined : target),
+  {},
+  fetch,
+  Number.isFinite(daily) && daily >= 0 ? daily : DAILY_CALLS,
 );
 const accounts = await Accounts.open(db, relay, { publicUrl });
 

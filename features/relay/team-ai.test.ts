@@ -14,6 +14,7 @@ let relay: Relay;
 let vendor: Server;
 let relayServer: Server;
 let at = "";
+let vendorAt = "";
 const folder = mkdtempSync(join(tmpdir(), "relay-team-ai-"));
 /** What the stand-in vendor saw: each call's path, its key header and body. */
 const seen: { path: string; key: string; body: string }[] = [];
@@ -51,7 +52,7 @@ before(async () => {
       setTimeout(() => response.end("data: two\n\n"), 20);
     });
   });
-  const vendorAt = await listen(vendor);
+  vendorAt = await listen(vendor);
   const teamAi = new TeamAi(relay, await relaySealKey(folder, ""), {
     openai: `${vendorAt}/v1`,
   });
@@ -150,6 +151,33 @@ test("an office's team key is kept sealed, and members think with it without eve
   const calls = (await (await call(ana.token, "/team-ai")).json()).calls;
   const benId = (await relay.memberByToken(ben.token)).id;
   assert.deepEqual(calls, [{ member: benId, provider: "openai", calls: 1 }]);
+
+  // A server that lets one call a day: Ben's second is refused, and never reaches the vendor.
+  const limited = createServer(
+    relayHandler(relay, {
+      teamAi: new TeamAi(
+        relay,
+        await relaySealKey(folder, ""),
+        { openai: `${vendorAt}/v1` },
+        fetch,
+        1,
+      ),
+    }),
+  );
+  const limitedAt = await listen(limited);
+  seen.length = 0;
+  const over = await fetch(`${limitedAt}/ai/openai/chat/completions`, {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${ben.token}`,
+      "content-type": "application/json",
+    },
+    body: "{}",
+  });
+  limited.close();
+  assert.equal(over.status, 403);
+  assert.equal((await over.json()).code, "team-key-limit");
+  assert.deepEqual(seen, []);
 
   // Not a member of the office, or a path outside the API: refused.
   assert.equal(

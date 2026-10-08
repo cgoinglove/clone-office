@@ -72,6 +72,7 @@
     "no-team-key": "지금 오피스에 이 회사의 키가 없어요. 키를 넣거나 AI 모델에서 다른 방법을 골라 주세요.",
     "team-key-unsealed": "RELAY_ENCRYPTION_KEY가 설정되기 전에는 이 오피스의 서버에 팀 키를 둘 수 없어요.",
     "team-key-not-yours": "오피스 키는 넣은 사람이나 오피스 주인만 바꾸거나 뺄 수 있어요.",
+    "team-key-limit": "오늘 오피스 키로 쓸 수 있는 만큼을 다 썼어요. 내일 다시 쓸 수 있고, 그 전에는 AI 모델에서 다른 방법을 고르세요.",
     "service-failed": "컴퓨터와 함께 켜기를 설정하지 못했어요. 터미널에서 `npx clone-office service install`을 실행해 보세요."
   },
   "start": {

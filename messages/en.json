@@ -72,6 +72,7 @@
     "no-team-key": "The office has no key for this vendor now. Add one, or pick another way under AI model.",
     "team-key-unsealed": "This office's server can't keep a team key until RELAY_ENCRYPTION_KEY is set.",
     "team-key-not-yours": "Only whoever added the office's key, or an owner of the office, can change or remove it.",
+    "team-key-limit": "Today's calls with the office's key are used up for you. They start again tomorrow, or pick another way under AI model.",
     "service-failed": "Starting with this computer could not be set up. Try `npx clone-office service install` in a terminal."
   },
   "start": {

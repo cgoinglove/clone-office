@@ -33,7 +33,10 @@ and the whole office made in the last 30 days. What a clone asks passes through 
 on its way and is never kept there. **Remove it from the office** (오피스에서 빼기) forgets it for
 everyone. A Claude or ChatGPT subscription is never shared this way: each is its person's own, and
 the vendors' terms say so. A server on its own Postgres keeps a team key only once whoever runs it
-sets RELAY_ENCRYPTION_KEY; an office opened on someone's computer always can.
+sets RELAY_ENCRYPTION_KEY; an office opened on someone's computer always can. So that a clone caught
+in a loop cannot spend the team's money, each person's clone makes at most 1,000 calls a day with
+one vendor's team key (a team's own server can set another number, `RELAY_TEAM_AI_DAILY`, or none);
+past it, the clone says so, and it starts again the next day.
 
 A key is checked by asking the service for its list of models, which costs nothing. Keys and the
 ChatGPT sign-in are kept on this computer only, in files only they can read, sealed with the

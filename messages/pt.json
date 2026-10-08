@@ -72,6 +72,7 @@
     "no-team-key": "O escritório não tem chave para este fornecedor agora. Adicione uma ou escolha outra opção em Modelo de IA.",
     "team-key-unsealed": "O servidor deste escritório não pode guardar uma chave da equipe até que RELAY_ENCRYPTION_KEY seja configurada.",
     "team-key-not-yours": "Só quem adicionou a chave do escritório, ou um dono do escritório, pode alterá-la ou removê-la.",
+    "team-key-limit": "Você já usou as chamadas de hoje com a chave do escritório. Amanhã elas voltam, ou escolha outra opção em Modelo de IA.",
     "service-failed": "Não foi possível configurar o início com o computador. Tente `npx clone-office service install` em um terminal."
   },
   "start": {

@@ -206,9 +206,25 @@ export class LoopError extends Error {
 }
 
 /** What went wrong, as the code the screen says it with when there is one. */
+/** What the office's server says when it refuses a team key's call (features/relay/team-ai.ts). */
+const TEAM_CODES = new Set([
+  "team-key-limit",
+  "no-team-key",
+  "team-key-unsealed",
+  "office-member-unknown",
+]);
+
 function failure(error: unknown): string {
   if (error instanceof LoopError) return error.code;
   if (APICallError.isInstance(error)) {
+    // The office's server refused (a team key): its own reason, in the person's language.
+    try {
+      const code = (JSON.parse(error.responseBody ?? "") as { code?: unknown })
+        .code;
+      if (typeof code === "string" && TEAM_CODES.has(code)) return code;
+    } catch {
+      // A vendor's own answer.
+    }
     if (error.statusCode === 401 || error.statusCode === 403)
       return "brain-key-wrong";
     // The same codes as a busy or slow Claude Code, so a request is retried alike (office/handle.ts).

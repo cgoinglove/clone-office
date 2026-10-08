@@ -104,23 +104,30 @@ interface Kept {
 
 // Fields written out, not as constructor parameters: the relay runs as Node strips TypeScript
 // (`node features/relay/server.ts`), which takes only syntax it can erase.
+/** A member's calls with one vendor's team key a day, unless the server says otherwise. */
+export const DAILY_CALLS = 1000;
+
 export class TeamAi {
   private relay: Relay;
   private key: Buffer | undefined;
   /** Stands in for the vendors in tests. */
   private bases: Partial<Record<TeamProvider, string>>;
   private ask: typeof fetch;
+  /** Calls one member may make with one vendor's key a day; 0 for no limit. */
+  private daily: number;
 
   constructor(
     relay: Relay,
     key: Buffer | undefined,
     bases: Partial<Record<TeamProvider, string>> = {},
     ask: typeof fetch = fetch,
+    daily = DAILY_CALLS,
   ) {
     this.relay = relay;
     this.key = key;
     this.bases = bases;
     this.ask = ask;
+    this.daily = daily;
   }
 
   private base(provider: TeamProvider): string {
@@ -243,6 +250,19 @@ export class TeamAi {
       );
     if (request.method !== "GET" && request.method !== "POST")
       throw new RelayError(405, "Only GET and POST.", "bad-request");
+    // A clone caught in a loop must not spend the team's money for the rest of the day (after
+    // Paperclip's budgets): a day's calls per member, which a server sets (RELAY_TEAM_AI_DAILY).
+    // Refused as 403, which no clone retries.
+    if (
+      request.method === "POST" &&
+      this.daily > 0 &&
+      (await this.relay.aiCallsToday(me, provider)) >= this.daily
+    )
+      throw new RelayError(
+        403,
+        "Today's calls with the office's key are used up for you.",
+        "team-key-limit",
+      );
     // Only under the vendor's own API.
     const base = this.base(provider);
     const target = new URL(`${base}${rest}${search}`);

@@ -32,6 +32,8 @@ services:
       RELAY_TRUST_PROXY: ${RELAY_TRUST_PROXY:-}
       RELAY_PUBLIC_URL: ${RELAY_PUBLIC_URL:-}
       RELAY_ENCRYPTION_KEY: ${RELAY_ENCRYPTION_KEY:-}
+      # Calls one person's clone may make with one vendor's team key a day (0 for no limit).
+      RELAY_TEAM_AI_DAILY: ${RELAY_TEAM_AI_DAILY:-1000}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
     ports:
       - "${RELAY_PORT:-3200}:3200"

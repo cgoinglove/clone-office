@@ -72,6 +72,7 @@
     "no-team-key": "La oficina no tiene ahora una clave para este proveedor. Agrega una o elige otra opción en Modelo de IA.",
     "team-key-unsealed": "El servidor de esta oficina no puede guardar una clave del equipo hasta que se configure RELAY_ENCRYPTION_KEY.",
     "team-key-not-yours": "Solo quien agregó la clave de la oficina, o un dueño de la oficina, puede cambiarla o quitarla.",
+    "team-key-limit": "Ya usaste las llamadas de hoy con la clave de la oficina. Mañana vuelven a estar disponibles, o elige otra opción en Modelo de IA.",
     "service-failed": "No se pudo configurar el inicio con la computadora. Prueba `npx clone-office service install` en una terminal."
   },
   "start": {

@@ -302,8 +302,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   `secret.key`, never in the database alone; `GET /team-ai`, `POST /team-ai/:vendor` checks it with
   the vendor first; members' clones call `/ai/:vendor/...` with their own token where the SDK puts
   the key, and the relay passes the call on with the team key and streams the answer back, counting
-  calls per member and day, `ai_calls`; the clone's side is the brain choice's `team`, a way of its
-  own on the AI model screen; subscriptions are never shared). The relay runs as Node strips
+  calls per member and day, `ai_calls`, and refusing a member's call past the day's limit,
+  `team-key-limit`, 1,000 a vendor unless `RELAY_TEAM_AI_DAILY` says otherwise (0 for none), as a 403
+  no clone retries; the clone's side is the brain choice's `team`, a way of its own on the AI model
+  screen; subscriptions are never shared). The relay runs as Node strips
   TypeScript, so its code (and all code: `erasableSyntaxOnly`) uses only erasable syntax. Someone without a
   clone is asked by a link (`POST /links`): the request goes to a guest, and `page.ts` serves
   the page they answer on (`/r/:token`; plain HTML, escaped, no scripts; the token is its only key,

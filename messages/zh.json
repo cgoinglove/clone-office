@@ -72,6 +72,7 @@
     "no-team-key": "办公室现在没有这家服务商的密钥。请添加一个，或者在“AI 模型”里换一种方式。",
     "team-key-unsealed": "设置 RELAY_ENCRYPTION_KEY 之前，这个办公室的服务器没法保存团队密钥。",
     "team-key-not-yours": "只有添加这个密钥的人或办公室的所有者，才能更改或移除它。",
+    "team-key-limit": "你今天用办公室密钥的次数已经用完了。明天会重新开始，或者在 AI 模型中换一种方式。",
     "service-failed": "无法设置随电脑启动。请在终端中运行 `npx clone-office service install`。"
   },
   "start": {
