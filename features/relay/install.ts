@@ -50,6 +50,9 @@ const WORDS = {
       "Open this link on your computer: your clone runs there, not on a phone. Send it to yourself by email or a messenger.",
     already:
       "Already use Clone Office? Open it, then paste this link under Settings › Office.",
+    agent: "Use an AI that works on your computer?",
+    agentHow:
+      "Paste this into Claude Code, Codex or a similar assistant on your computer, and it does the steps above for you.",
   },
   ko: {
     title: "내 클론 만들기",
@@ -87,6 +90,9 @@ const WORDS = {
       "이 링크는 컴퓨터에서 여세요. 클론은 휴대폰이 아니라 컴퓨터에서 돌아요. 메일이나 메신저로 나에게 보내 두세요.",
     already:
       "이미 Clone Office를 쓰고 있다면, 앱을 열고 설정 › 오피스에 이 링크를 붙여 넣어 주세요.",
+    agent: "내 컴퓨터에서 일하는 AI를 쓰나요?",
+    agentHow:
+      "Claude Code, Codex 같은 내 컴퓨터의 AI에게 이걸 붙여 넣으면 위의 단계를 대신 해 줘요.",
   },
   zh: {
     title: "设置你的分身",
@@ -124,6 +130,9 @@ const WORDS = {
       "请在电脑上打开这个链接：你的分身运行在电脑上，不在手机上。可以用邮件或聊天软件发给自己。",
     already:
       "已经在用 Clone Office？打开它，然后在“设置 › 办公室”里粘贴这个链接。",
+    agent: "在用能在你电脑上干活的 AI 吗？",
+    agentHow:
+      "把这段粘贴给你电脑上的 Claude Code、Codex 等助手，它会替你完成上面的步骤。",
   },
   ja: {
     title: "クローンを用意する",
@@ -166,6 +175,9 @@ const WORDS = {
       "このリンクはコンピューターで開いてください。クローンはスマホではなく、コンピューターで動きます。メールやメッセンジャーで自分に送っておきましょう。",
     already:
       "すでにClone Officeを使っている場合は、アプリを開き、設定 › オフィスでこのリンクを貼り付けてください。",
+    agent: "自分のパソコンで動く AI を使っていますか？",
+    agentHow:
+      "Claude Code や Codex など、パソコン上の AI にこれを貼り付けると、上の手順を代わりにやってくれます。",
   },
   es: {
     title: "Crea tu clon",
@@ -206,6 +218,9 @@ const WORDS = {
       "Abre este enlace en tu computadora: tu clon funciona ahí, no en un teléfono. Envíatelo por correo o por una app de mensajería.",
     already:
       "¿Ya usas Clone Office? Ábrelo y pega este enlace en Configuración › Oficina.",
+    agent: "¿Usas una IA que trabaja en tu ordenador?",
+    agentHow:
+      "Pega esto en Claude Code, Codex o un asistente parecido en tu ordenador, y hará los pasos de arriba por ti.",
   },
   pt: {
     title: "Crie seu clone",
@@ -246,6 +261,9 @@ const WORDS = {
       "Abra este link no seu computador: seu clone roda nele, não no celular. Mande o link para o seu e-mail ou para um app de mensagens.",
     already:
       "Já usa o Clone Office? Abra o app e cole este link em Configurações › Escritório.",
+    agent: "Usa uma IA que trabalha no seu computador?",
+    agentHow:
+      "Cole isto no Claude Code, no Codex ou num assistente parecido no seu computador, e ele faz os passos acima por você.",
   },
 };
 // Each page language's guide says everything the English one says, and nothing more.
@@ -383,6 +401,21 @@ ${input.local ? `<p class="note">${say(lang, from ? "local" : "localNobody", fro
     })
     .join("")}</ul>
 </details>
+<details><summary>${say(lang, "agent")}</summary>
+<p>${say(lang, "agentHow")}</p>
+<pre>${escape(agentPrompt(input.command))}</pre>
+</details>
 <p class="note">${say(lang, "already")}</p>
 </section>`;
+}
+
+/**
+ * The same steps as words for the person's own AI on their computer (Claude Code, Codex and the
+ * like), with the line to run in them: in English, which such assistants read whatever the
+ * person's language, and plain about where its questions go.
+ */
+export function agentPrompt(command: string): string {
+  return `Set up Clone Office on this computer for me. It needs Node.js 22.13 or later: check with "node --version" and install it from nodejs.org if it is missing or older. Then run this in a terminal and leave it running:
+${command}
+It opens Clone Office in my browser, where I answer its questions myself. If something does not work, run "npx -y clone-office doctor" and tell me what it says. More: https://github.com/cgoinglove/clone-office/blob/main/llms.txt`;
 }

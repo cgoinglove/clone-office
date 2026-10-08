@@ -70,6 +70,15 @@ test("the invite page names who invites, escaped, and guides the setup with one 
       "npx -y clone-office join &quot;http://office.example.com/i/key?from=%3Cb%3EBen%3C%2Fb%3E&quot;",
     ),
   );
+  // The same steps for the person's own AI on their computer, folded, with the same line in them.
+  assert.ok(page.includes("내 컴퓨터에서 일하는 AI를 쓰나요?"));
+  assert.ok(page.includes("Set up Clone Office on this computer for me."));
+  assert.equal(
+    page.split("npx -y clone-office join &quot;http://office.example.com/i/key")
+      .length,
+    3,
+    "the line to run, and again in the words for the AI",
+  );
 });
 
 test("the join line quotes the link and encodes what a shell would act on", () => {

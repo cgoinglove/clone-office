@@ -46,6 +46,16 @@ computer?**, 다른 컴퓨터인가요?), about five minutes and no coding.
    joins that office at the end. Someone set up already finds Settings › Office open with the link
    in place.
 
+Someone who uses an AI that works on their computer (Claude Code, Codex and the like) can open
+**Use an AI that works on your computer?** (내 컴퓨터에서 일하는 AI를 쓰나요?) below the steps and
+paste what it shows into that AI: the same steps, with the same line, for it to do. The choices in
+the first steps stay theirs. The repository's `llms.txt` says the same for any AI that reads it.
+
+Someone who uses an AI that works on their computer (Claude Code, Codex and the like) can open
+**Use an AI that works on your computer?** (내 컴퓨터에서 일하는 AI를 쓰나요?) below the steps and
+paste what it shows into that AI: the same steps, with the same line, for it to do. The choices in
+the first steps stay theirs. The repository's `llms.txt` says the same for any AI that reads it.
+
 When the office is open on a teammate's computer, the page says to join from the same Wi-Fi or
 network while that teammate's app is open; the line says the same if it cannot reach it. Opened on
 a phone, the page asks them to open the link on their computer, since the clone runs there.

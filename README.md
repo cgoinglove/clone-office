@@ -35,6 +35,8 @@ and tools, and keeps what it learns. Setting it up takes about five minutes, wit
 
 Invited by a teammate? Open the link they sent you: its page shows these steps for your computer,
 with a line that also joins their office (`npx -y clone-office join "<invite link>"`).
+Use Claude Code, Codex or another AI that works on your computer? Ask it to set Clone Office up for
+you: [llms.txt](llms.txt) tells it how, and leaves the choices to you.
 
 It opens in your browser. The first steps take about three minutes, and each can wait:
 

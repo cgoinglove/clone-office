@@ -136,7 +136,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`home-screen.tsx`: what is happening, what waits on the person and what to do about it, after
   Paperclip's rule and the agent apps that left a chat as home: one box that asks the clone and
   starts that conversation (`/chat?send=`), the first steps while the app is new (`welcome.tsx`
-  `FirstSteps`; they tick off from what is there), what to decide now answered in place
+  `FirstSteps`; they tick off from what is there), one line asking for a star on GitHub once the
+  clone has answered a colleague (`star-note.tsx`, once per browser, after Orca's timing), what to
+  decide now answered in place
   (`turn-rows.tsx`, shared with the office's board), the requests on their way, what the clone did
   today, and today's standup, flows and colleagues); `/chat` (`chat-screen.tsx`: one
   conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's hello and things to try
@@ -321,7 +323,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   `npx -y clone-office join "<link>"`, or with the app taken from the relay itself when it serves its
   own package, `CLONE_OFFICE_PACKAGE_FILE` at `/clone-office.tgz`, for a team's own build or before
   the app is on npm; the steps for the computer its User-Agent names and the
-  others folded; on a phone, open it on a computer; on a private network, join from the same one),
+  others folded; on a phone, open it on a computer; on a private network, join from the same one;
+  folded below, the same steps as words for the person's own AI on their computer, `agentPrompt`,
+  as the repository's `llms.txt` gives any AI),
   and the join form fills in the relay and key from it (`office/invite.ts`).
   People sign in on the server, after Paperclip (Better Auth) and OpenClaw (a one-time setup
   link): `accounts.ts` runs Better Auth over the relay's own database (pg's pool, or PGlite through

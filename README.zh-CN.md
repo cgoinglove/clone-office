@@ -25,6 +25,7 @@ Clone Office 运行在你自己的电脑上：你的分身要在这里学习你�
    ```
 
 是同事邀请你来的？打开他们发给你的链接：页面会按你的电脑给出这些步骤，其中那一行命令还会顺便加入他们的办公室（`npx -y clone-office join "<invite link>"`）。
+在用 Claude Code、Codex 这类能在你电脑上干活的 AI？可以让它替你装好 Clone Office：[llms.txt](llms.txt) 会告诉它怎么做，需要选择的地方留给你。
 
 应用会在浏览器里打开。入门步骤大约三分钟，每一步都可以以后再做：
 

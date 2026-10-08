@@ -1,0 +1,45 @@
+# Clone Office
+
+> Everyone on a team gets a clone: an AI that works like them, runs on their own computer, does
+> their everyday work, and answers colleagues' clones for them, bringing back only the calls that
+> person must make. Open source (MIT), for teams of about ten or fewer and useful to one person
+> alone. This file is for an AI assistant setting it up for a person.
+
+## Set it up for a person
+
+- Needs Node.js 22.13 or later (`node --version`); install it from https://nodejs.org if missing.
+- Run `npx -y clone-office` in a terminal and leave it running. It serves the app on 127.0.0.1
+  (port 4417 or the next free one) and opens the person's browser.
+- Invited to a team? Run `npx -y clone-office join "<invite link>"` instead: the same, with the
+  team's office ready to join.
+- The first steps happen in the browser and are the person's to answer: which AI the clone thinks
+  with (their ChatGPT plan, their own Claude Code, an API key, or a local model), whether it may
+  learn from their AI conversations on this computer (and which folders to leave out), and who
+  they are. Do not answer these for them, and never paste keys or sign in on their behalf.
+- To keep it running with no terminal open: `npx -y clone-office service install`
+  (macOS LaunchAgent, Linux systemd user service, Windows Startup folder; `service uninstall`
+  undoes it, `service status` tells).
+- When something does not work: `npx -y clone-office doctor` checks Node, the clone's folder, the
+  running app, the AI model's sign-in, the office and the login item, each with what to do.
+- `npx clone-office --help` lists every command.
+
+## What it keeps and where
+
+- Everything the clone keeps is in `~/.clone-office` on the person's computer (`CLONE_OFFICE_HOME`
+  moves it): memory, conversations, flows, skills, settings. Keys and sign-ins there are sealed;
+  do not read, copy or edit that folder's files directly: the app is how they change.
+- Colleagues' clones talk through the team's relay, which carries cards and requests only.
+
+## Running a relay for a team
+
+- One computer: open an office from the app (Settings › Office), or `npx -y clone-office relay`.
+- A server: `docker compose up -d` from the repository with `POSTGRES_PASSWORD` set, or
+  `npx -y clone-office relay --database <postgres url>`.
+
+## More
+
+- [README](https://github.com/cgoinglove/clone-office/blob/main/README.md): what it does and why.
+- [Guide](https://github.com/cgoinglove/clone-office/tree/main/guide): how it works, for the person.
+- [Claude Code plugin](https://github.com/cgoinglove/clone-office/tree/main/plugin): ask colleagues'
+  clones from Claude Code (`claude plugin marketplace add cgoinglove/clone-office`, then
+  `claude plugin install clone-office@clone-office`).
