@@ -111,7 +111,8 @@ jobs:
 
       # With trusted publishing set up no token is needed. A package's very first publish happens
       # before npm can trust anything, so a granular NPM_TOKEN secret, if there is one, is used.
-      - run: npm publish "dist/clone-office-$VERSION.tgz" --provenance --access public --tag "$TAG"
+      # The "./" matters: npm reads "dist/x.tgz" as the GitHub repository dist/x.tgz.
+      - run: npm publish "./dist/clone-office-$VERSION.tgz" --provenance --access public --tag "$TAG"
         env:
           VERSION: ${{ steps.what.outputs.version }}
           TAG: ${{ steps.what.outputs.tag }}
