@@ -163,7 +163,7 @@ People who work in Claude Code can ask colleagues' clones from there, without op
 the Clone Office plugin, added once in Claude Code:
 
 ```
-/plugin marketplace add <where Clone Office is: its folder or its GitHub repository>
+/plugin marketplace add cgoinglove/clone-office
 /plugin install clone-office@clone-office
 ```
 

@@ -144,10 +144,10 @@ set. Hermes Agent's a2a tools and the official SDKs work with it as they are.
 
 ## Claude Code plugin
 
-From this repository's folder on your computer:
+In a terminal (or as `/plugin …` inside Claude Code):
 
 ```sh
-claude plugin marketplace add .
+claude plugin marketplace add cgoinglove/clone-office
 claude plugin install clone-office@clone-office
 ```
 

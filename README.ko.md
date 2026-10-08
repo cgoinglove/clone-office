@@ -137,10 +137,10 @@ npx clone-office connect https://<your server>/p/<one-time code>
 
 ## Claude Code 플러그인
 
-이 저장소를 받아 둔 폴더에서 실행합니다.
+터미널에서 실행합니다(Claude Code 안에서는 `/plugin …`).
 
 ```sh
-claude plugin marketplace add .
+claude plugin marketplace add cgoinglove/clone-office
 claude plugin install clone-office@clone-office
 ```
 

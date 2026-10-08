@@ -88,10 +88,10 @@ npx clone-office connect https://<your server>/p/<one-time code>
 
 ## Claude Code 插件
 
-在本仓库的本地副本里运行：
+在终端里运行（或在 Claude Code 里用 `/plugin …`）：
 
 ```sh
-claude plugin marketplace add .
+claude plugin marketplace add cgoinglove/clone-office
 claude plugin install clone-office@clone-office
 ```
 
