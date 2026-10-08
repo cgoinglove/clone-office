@@ -502,13 +502,21 @@ These words help discussion. They do not mandate separate services, tables or UI
 - `.claude/rules/ui.md`: map of the current UI. Read it when touching that area.
 - `.claude/rules/taste.md`: working visual directions, not a frozen design specification.
 
-- `bin/clone-office.mjs` and `scripts/pack.mjs`: the npm package. `node scripts/pack.mjs [--working]`
+- `bin/clone-office.cjs` (the entry: any Node parses it, and one older than 22.13 is told what to do
+  instead of failing on the module), `bin/clone-office.mjs` and `scripts/pack.mjs`: the npm package. `node scripts/pack.mjs [--working]`
   builds it in a temporary folder from the repository's own files only (committed, or with
   `--working` every file git tracks or would track; ignored files never), so nothing private
   and no path of this computer reaches it: the app as a standalone server (`next.config.ts`,
   `CLONE_OFFICE_PACKAGE=1`, its own `.next-package/`), the tool server and the relay bundled into
   `dist/*.mjs` (Node does not run TypeScript inside node_modules), the guide, and the launcher;
-  next, react and the relay's pg and PGlite come from npm. It leaves `dist/clone-office-<version>.tgz` and publishes nothing.
+  next, react and the relay's pg and PGlite come from npm. It leaves `dist/clone-office-<version>.tgz` and publishes nothing
+  (`PACK_VERSION` gives a canary its own version). `scripts/smoke.mjs` starts that package as a person
+  would, in a folder of its own, and opens its first page. `.github/workflows/`: `ci.yml` (types, lint,
+  tests, build; the package built once and started on Linux, macOS and Windows; an old Node told
+  what to do), `release.yml` (release-please's Release PR; merging it tags, checks again and
+  publishes to npm with provenance through trusted publishing; by hand, `next` for a test build or
+  `latest` for the first release), `pr-title.yml` (conventional titles); actions are pinned to the
+  commit of their release tag and dependabot moves them.
   The launcher (`npx clone-office`) starts the app on 127.0.0.1 from port 4417 and opens `/`;
   `npx clone-office relay` starts a relay; `npx clone-office join <invite link>` keeps the invite in
   `settings.json` (`invite`, after checking the office answers) and starts the app, whose first

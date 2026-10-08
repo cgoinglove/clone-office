@@ -3,7 +3,7 @@
 ## Run it
 
 ```sh
-git clone <this repository> Clone Office && cd Clone Office
+git clone <this repository> clone-office && cd clone-office
 pnpm install
 pnpm dev       # http://127.0.0.1:3000
 ```
@@ -21,6 +21,7 @@ moves it, so a test never touches your own clone).
 | `pnpm test` | every test, offline: models are stood in for |
 | `pnpm build` | the production build |
 | `node scripts/pack.mjs --working` | the npm package from your working tree, into `dist/`, published nowhere |
+| `node scripts/smoke.mjs` | starts that package as a person would and opens it (CI does this on Linux, macOS and Windows) |
 
 ## Before you open a pull request
 
@@ -35,6 +36,26 @@ moves it, so a test never touches your own clone).
   reads it to answer how the app works.
 - Code, comments, prompts and commit messages are in English. Commit messages say what changed
   for the person using the app.
+
+## Releasing
+
+Nobody tags or publishes by hand ([`.github/workflows/release.yml`](.github/workflows/release.yml),
+after Thursday's):
+
+- Commit messages are conventional (`feat: …`, `fix(office): …`); a pull request's title becomes
+  its squash commit and is checked (`pr-title.yml`).
+- Every push to main updates one open **Release PR** (release-please) with the next version and the
+  changelog its commits earned. Merging it releases: the commit is tagged, the GitHub Release
+  written, CI runs again (the install on all three systems included), and the package goes to npm
+  with provenance.
+- **Run workflow** on *Release* from main: `next` publishes a test build of main as
+  `npx clone-office@next`; `latest` publishes the version `package.json` says, for the first
+  release or a publish that failed after its tag.
+
+Once, before the first publish: on npmjs.com, add this repository and `release.yml` as the package's
+trusted publisher. A package's very first publish happens before npm can trust anything, so for that
+one a granular `NPM_TOKEN` repository secret (publish rights, short expiry) is used if present;
+remove it afterwards.
 
 ## What the project holds to
 

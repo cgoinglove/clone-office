@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # The pull request title is the commit message a squash merge writes, and
+    # .github/workflows/pr-title.yml checks it.
+    commit-message:
+      prefix: chore
+      include: scope
+    open-pull-requests-limit: 5
+    # One pull request per group, not one per package: the AI SDKs move together and release often
+    # enough to bury everything else.
+    groups:
+      ai-sdk:
+        patterns: ["ai", "@ai-sdk/*", "@openrouter/*"]
+      next:
+        patterns: ["next", "next-intl", "react", "react-dom", "@types/react*"]
+      dev:
+        dependency-type: development
+      rest:
+        patterns: ["*"]
+        update-types: [minor, patch]
+
+  # The workflows pin each action to a commit; this moves the pins with their releases.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: chore
+      include: scope

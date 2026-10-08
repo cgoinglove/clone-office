@@ -5,9 +5,11 @@
 // app is built as a standalone server (next.config.ts, CLONE_OFFICE_PACKAGE), and the mini-me's
 // tool server and the relay are bundled into one file each, since Node does not run TypeScript
 // from inside node_modules. Before it builds, the types and every language are checked, and a
-// language out of step stops it. The package is left in dist/; nothing is published.
+// language out of step stops it. The package is left in dist/; nothing is published (the release
+// workflow publishes it, .github/workflows/release.yml).
 //
 //   node scripts/pack.mjs [--working]
+//   PACK_VERSION=0.2.0-next.4 node scripts/pack.mjs   a build carrying another version (a canary)
 
 import { execFileSync, spawnSync } from "node:child_process";
 import {
@@ -65,6 +67,20 @@ try {
     });
     const tar = spawnSync("tar", ["-x", "-C", source], { input: archive });
     if (tar.status !== 0) throw new Error("Could not unpack the archive.");
+  }
+
+  // A canary carries its own version, into the screen's too (next.config.ts reads package.json).
+  const version = process.env.PACK_VERSION?.trim();
+  if (version) {
+    if (!/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version))
+      throw new Error(`Not a version: ${version}`);
+    const manifest = JSON.parse(
+      readFileSync(join(source, "package.json"), "utf8"),
+    );
+    writeFileSync(
+      join(source, "package.json"),
+      `${JSON.stringify({ ...manifest, version }, null, 2)}\n`,
+    );
   }
 
   console.log("==> Installing dependencies");
@@ -145,7 +161,7 @@ try {
         version: own.version,
         description: own.description,
         license: own.license,
-        bin: { "clone-office": "bin/clone-office.mjs" },
+        bin: { "clone-office": "bin/clone-office.cjs" },
         engines: { node: ">=22.13" },
         files: ["app", "bin", "dist", "guide", "skills"],
         dependencies: pick([

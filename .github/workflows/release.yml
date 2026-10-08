@@ -1,0 +1,132 @@
+name: Release
+
+# After Thursday's release. Nobody tags anything by hand: every push to main updates one open
+# "Release PR" that carries the next version and the changelog its commits earned (conventional
+# commits: feat, fix, perf, …), and merging that PR is the decision to release. The run on that
+# merge tags the commit, writes the GitHub Release, checks everything again and publishes to npm.
+#
+# Run by hand (Actions › Release › Run workflow), from main only:
+#   next    a test build of main as `npx clone-office@next`, its version <package.json>-next.<run>
+#   latest  publish the version package.json says: the first release (0.1.0, which no Release PR
+#           made), or a release whose publish failed after its tag was written
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "next: a test build (npx clone-office@next). latest: publish package.json's version."
+        type: choice
+        options: [next, latest]
+        default: next
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Keeps the Release PR in step with main. On the push that merges it, this tags the commit,
+  # publishes the GitHub Release, and says so in `released`.
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      released: ${{ steps.release.outputs.release_created }}
+      # The version release-please decided, rather than taken apart from its tag (what stopped
+      # Thursday's 0.1.0 from reaching npm).
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        id: release
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  # The same check CI runs on every push, the install on three systems included, before anything
+  # reaches npm.
+  check:
+    needs: prepare
+    if: needs.prepare.outputs.released == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: [prepare, check]
+    # A branch's own workflow file must not publish.
+    if: (needs.prepare.outputs.released == 'true' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      # Writing the tag and the GitHub Release of a first (or recovered) `latest`.
+      contents: write
+      # npm trusts this run itself (trusted publishing, set on the package's npm settings for this
+      # repository and this file), so no token need be stored; the same identity signs the
+      # package with a link back to this commit (--provenance).
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Decide the version and the tag
+        id: what
+        run: |
+          base="$(node -p "require('./package.json').version")"
+          if [ "$CHANNEL" = "next" ]; then
+            echo "version=$base-next.$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+            echo "tag=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=$base" >> "$GITHUB_OUTPUT"
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          # Empty on a push: a release is always `latest`.
+          CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.channel || 'latest' }}
+
+      # The same gates a local `node scripts/pack.mjs` runs: types, every language, the build.
+      - run: node scripts/pack.mjs
+        env:
+          PACK_VERSION: ${{ steps.what.outputs.tag == 'next' && steps.what.outputs.version || '' }}
+
+      # release-please bumped package.json in the commit being built, so the two cannot disagree;
+      # checked anyway, since a mismatch is permanent once published.
+      - name: Release matches the version
+        if: needs.prepare.outputs.released == 'true'
+        run: |
+          [ "$RELEASED" = "$PACKED" ] || { echo "released $RELEASED != package $PACKED"; exit 1; }
+        env:
+          RELEASED: ${{ needs.prepare.outputs.version }}
+          PACKED: ${{ steps.what.outputs.version }}
+
+      # Trusted publishing needs npm 11.5.1 or later, whatever the Node release ships.
+      - run: npm install -g npm@11
+
+      # With trusted publishing set up no token is needed. A package's very first publish happens
+      # before npm can trust anything, so a granular NPM_TOKEN secret, if there is one, is used.
+      - run: npm publish "dist/clone-office-$VERSION.tgz" --provenance --access public --tag "$TAG"
+        env:
+          VERSION: ${{ steps.what.outputs.version }}
+          TAG: ${{ steps.what.outputs.tag }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # A `latest` run by hand publishes what no Release PR tagged (the first release): it gets its
+      # tag and its GitHub Release, the notes being that version's CHANGELOG section, so
+      # release-please counts the next version from there.
+      - name: Tag and note a release made by hand
+        if: github.event_name == 'workflow_dispatch' && inputs.channel == 'latest'
+        run: |
+          if gh release view "v$VERSION" > /dev/null 2>&1; then exit 0; fi
+          awk -v v="$VERSION" '
+            $0 ~ "^## \\[?" v "[] ]" || $0 == "## " v { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file notes.md
+        env:
+          VERSION: ${{ steps.what.outputs.version }}
+          GH_TOKEN: ${{ github.token }}

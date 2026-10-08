@@ -1,14 +1,11 @@
 # Changelog
 
-## Unreleased
+Versions after 0.1.0 are written here by release-please from the commits on main
+(CONTRIBUTING.md, "Releasing").
 
-- Named Clone Office (before: sub-office). The command is `npx clone-office`, the plugin
-  `clone-office`, and the clone's folder `~/.clone-office`; a `~/.sub-office` already there is used
-  where it is. MIT licensed.
+## 0.1.0
 
-## 0.1.0 (2026-10-07)
-
-The first release.
+The first release, MIT licensed. `npx clone-office` starts it.
 
 ### Your clone
 
