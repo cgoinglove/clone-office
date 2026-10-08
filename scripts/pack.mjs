@@ -134,6 +134,10 @@ try {
     join(out, "app", ".next-package", "static"),
     { recursive: true },
   );
+  // A standalone server serves public/ from beside itself, and does not copy it there.
+  cpSync(join(source, "public"), join(out, "app", "public"), {
+    recursive: true,
+  });
   // The server and its chunks are CommonJS; the package says nothing about module type itself.
   writeFileSync(
     join(out, "app", "package.json"),

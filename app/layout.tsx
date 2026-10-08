@@ -20,8 +20,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Clone Office",
+  applicationName: "Clone Office",
   description:
     "Send your clone: an AI that works like you, for everyone on your team.",
+  // The app runs on this computer: nothing of it is for a search engine.
+  robots: { index: false, follow: false },
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
