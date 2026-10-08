@@ -28,10 +28,21 @@ const DAYS = [
 
 /** A schedule in plain English, for the mini-me (the screen writes it in the person's language). */
 export function describeWhen(when: When): string {
-  if (when.kind === "request")
-    return when.menu
-      ? `when a colleague's request of the kind ${when.menu} comes in`
-      : "when any colleague's request comes in";
+  if (when.kind === "request") {
+    const base = when.menu
+      ? `when a colleague's request of the kind ${when.menu}`
+      : when.about
+        ? "when a colleague's request"
+        : "when any colleague's request";
+    const about = when.about ? ` about ${when.about}` : "";
+    const first =
+      when.first === "ask"
+        ? ", your person seeing the answer before it goes"
+        : when.first === "tell"
+          ? ", your person told what went"
+          : "";
+    return `${base}${about} comes in${first}`;
+  }
   if (when.kind === "every")
     return when.minutes % 60 === 0
       ? `every ${when.minutes / 60} hour(s)`
@@ -49,7 +60,7 @@ export function describeWhen(when: When): string {
 const WHEN_SCHEMA = {
   type: "object",
   description:
-    'When it runs, worked out by you from their words. weekly: `days` (0 Sunday … 6 Saturday; all seven for every day) and `time` ("HH:MM", their own clock). every: `minutes`, at least 30. once: `in_minutes` from now (for "in an hour": never work out the clock yourself), or `at` ("YYYY-MM-DDTHH:MM", their own clock). request: when a colleague\'s request comes in, of the kind `menu` (an id from `flows`), or any request without one; `what` is then how they want those handled, which you follow while answering such a request.',
+    'When it runs, worked out by you from their words. weekly: `days` (0 Sunday … 6 Saturday; all seven for every day) and `time` ("HH:MM", their own clock). every: `minutes`, at least 30. once: `in_minutes` from now (for "in an hour": never work out the clock yourself), or `at` ("YYYY-MM-DDTHH:MM", their own clock). request: when a colleague\'s request comes in, of the kind `menu` (an id from `flows`), or any request without one; `what` is then how they want those handled, which you follow while answering such a request. When they name a topic rather than a kind ("anything about salaries", "when the launch date comes up"), put it in `about`, in their words: the flow then applies only to a request you find is about it. `first`: "ask" when they want to see your answer before it goes ("ask me first when…"), "tell" when they want to hear what went; code holds to it whatever the kind\'s trust level.',
   properties: {
     kind: { type: "string", enum: ["weekly", "every", "once", "request"] },
     days: { type: "array", items: { type: "integer", minimum: 0, maximum: 6 } },
@@ -58,6 +69,8 @@ const WHEN_SCHEMA = {
     in_minutes: { type: "integer", minimum: 1 },
     at: { type: "string" },
     menu: { type: "string" },
+    about: { type: "string", maxLength: 200 },
+    first: { type: "string", enum: ["ask", "tell"] },
   },
   required: ["kind"],
 };
@@ -72,7 +85,7 @@ export const FLOWS_TOOL = {
 export const FLOW_MANAGE_TOOL = {
   name: "flow_manage",
   description:
-    'Make, change, pause, resume or remove one of your person\'s flows: something you do on your own at set times, again and again or once later, or how to handle a kind of colleague\'s request when it comes in. Only when they ask for that ("every Friday at 5, list what I finished this week", "remind me in an hour to call Ana", "when someone asks for a code review, have my web-app conversation look first"); for anything to do now, just do it. For a set time, `what` is the request you will get then with nobody to ask and none of this conversation, so make it complete on its own: what to look at, what to bring back, how short. For a colleague\'s request, `what` is how they want it handled. They are asked first, with the flow shown. A timed flow\'s answer goes into its own conversation on their page. You cannot run one now from here; do it in this conversation instead if they want to see it.',
+    'Make, change, pause, resume or remove one of your person\'s flows: something you do on your own at set times, again and again or once later, or how to handle a kind of colleague\'s request when it comes in. Only when they ask for that ("every Friday at 5, list what I finished this week", "remind me in an hour to call Ana", "when someone asks for a code review, have my web-app conversation look first", "if anything about salaries comes up, ask me first"); for anything to do now, just do it. For a set time, `what` is the request you will get then with nobody to ask and none of this conversation, so make it complete on its own: what to look at, what to bring back, how short. For a colleague\'s request, `what` is how they want it handled. They are asked first, with the flow shown. A timed flow\'s answer goes into its own conversation on their page. You cannot run one now from here; do it in this conversation instead if they want to see it.',
   inputSchema: {
     type: "object",
     properties: {

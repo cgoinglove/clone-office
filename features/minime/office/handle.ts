@@ -15,7 +15,7 @@ import {
 } from "../brain/session.ts";
 import { untrusted } from "../brain/untrusted.ts";
 import { appendMessage, createChat, listChats } from "../chat/store.ts";
-import { changeFlow, listFlows } from "../flows/store.ts";
+import { changeFlow, type Flow, listFlows } from "../flows/store.ts";
 import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
 import { denyRules, loadTrust, pathRule } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
@@ -69,6 +69,7 @@ export const REQUEST_SCHEMA = {
     waiting_on_person: { type: "boolean" },
     files: { type: "array", items: { type: "string" }, maxItems: 10 },
     sources: { type: "array", items: { type: "string" }, maxItems: 12 },
+    ways: { type: "array", items: { type: "string" }, maxItems: 20 },
   },
   required: ["reply"],
 };
@@ -77,6 +78,11 @@ export const REQUEST_SCHEMA = {
 export interface Way {
   menu?: string;
   what: string;
+  /** The flow's id, which the clone gives back when a request is about `about`. */
+  id?: string;
+  /** Only a request about this, in the person's words. */
+  about?: string;
+  first?: "ask" | "tell";
 }
 
 /** The person's own instructions for requests, as the prompt gives them; empty without any. */
@@ -84,8 +90,33 @@ export function waysText(menu: MenuItem[], ways: Way[]): string {
   if (!ways.length) return "";
   const kind = (id?: string) =>
     id ? (menu.find((item) => item.id === id)?.name ?? id) : "Any request";
+  const line = (way: Way) => {
+    const about = way.about ? ` about ${way.about} [${way.id}]` : "";
+    const first =
+      way.first === "ask"
+        ? " (your person sees your answer before it goes)"
+        : way.first === "tell"
+          ? " (your person is told what you answered)"
+          : "";
+    return `- ${kind(way.menu)}${about}: ${way.what}${first}`;
+  };
+  const topics = ways.some((way) => way.about)
+    ? "\nFor each one about a topic (an id in brackets), follow it only when this request is about that, and then put its id in ways."
+    : "";
   return `How your person wants these handled, in their own words; follow them as theirs, still asking them first for what only they can give:
-${ways.map((way) => `- ${kind(way.menu)}: ${way.what}`).join("\n")}`;
+${ways.map(line).join("\n")}${topics}`;
+}
+
+/** A request flow as the prompt names it. */
+function wayOf(flow: Flow): Way {
+  if (flow.when.kind !== "request") return { what: flow.what };
+  const { menu, about, first } = flow.when;
+  return {
+    what: flow.what,
+    ...(menu ? { menu } : {}),
+    ...(about ? { about, id: flow.id } : {}),
+    ...(first ? { first } : {}),
+  };
 }
 
 export function requestPrompt(
@@ -422,18 +453,9 @@ async function answer(options: {
             `\n\nThey sent files that could not be taken from the office: ${came.map((file) => file.name).join(", ")}. Say so if the answer needs them.`,
         );
     const text = `${words}${attached}`;
-    const howTo = waysText(
-      menu,
-      ways.map((flow) => ({
-        menu: flow.when.kind === "request" ? flow.when.menu : undefined,
-        what: flow.what,
-      })),
-    );
+    const howTo = waysText(menu, ways.map(wayOf));
     const stepped = notes.length ? `\n\n${stepInText(notes)}` : "";
-    const wayList = ways.map((flow) => ({
-      menu: flow.when.kind === "request" ? flow.when.menu : undefined,
-      what: flow.what,
-    }));
+    const wayList = ways.map(wayOf);
     const first = task.history.find((m) => m.role === "user");
     // A fresh session from the request's own record: when it went on long, or the brain lost it.
     const fromRecord = () =>
@@ -536,6 +558,7 @@ async function answer(options: {
       waiting_on_person?: boolean;
       files?: unknown;
       sources?: unknown;
+      ways?: unknown;
     };
     // The person was asked and has not answered: the question waits for them, and the colleague
     // hears that they will get back to them.
@@ -554,14 +577,30 @@ async function answer(options: {
       return;
     }
     // What the person set for this kind of request; code decides, the brain only named the kind.
-    const { item, trust } = trustFor(menu, answer.menu || resume?.menu);
+    const found = trustFor(menu, answer.menu || resume?.menu);
+    const { item } = found;
+    let { trust } = found;
     // The flows that applied to it: the check hears them as the person's own words, and the page
-    // shows when each was last followed.
+    // shows when each was last followed. One about a topic applies when the clone found the
+    // request is about it.
+    const about = new Set(
+      Array.isArray(answer.ways)
+        ? answer.ways.filter((id): id is string => typeof id === "string")
+        : [],
+    );
     const applied = ways.filter(
       (flow) =>
         flow.when.kind === "request" &&
-        (!flow.when.menu || flow.when.menu === item?.id),
+        (!flow.when.menu || flow.when.menu === item?.id) &&
+        (!flow.when.about || about.has(flow.id)),
     );
+    // What the person asked for when such a request comes, held to by code whatever the kind's
+    // trust level: "ask me first" shows the answer first, "tell me" at least tells them.
+    const firsts = applied.map((flow) =>
+      flow.when.kind === "request" ? flow.when.first : undefined,
+    );
+    if (firsts.includes("ask")) trust = "ask";
+    else if (firsts.includes("tell") && trust === "auto") trust = "tell";
     for (const flow of applied)
       await changeFlow(flow.id, (f) => ({
         ...f,

@@ -609,6 +609,9 @@
       "inMinutes": "Once, in {minutes, plural, one {# minute} other {# minutes}}",
       "request": "When a colleague asks: {kind}",
       "anyRequest": "When any colleague asks",
+      "about": "When a colleague asks about {about}",
+      "firstAsk": "you see the answer first",
+      "firstTell": "you're told what went",
       "invalid": "Your clone can't keep this schedule."
     },
     "next": "Next: {at}",

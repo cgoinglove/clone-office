@@ -609,6 +609,9 @@
       "inMinutes": "{minutes, plural, other {# 分钟后运行一次}}",
       "request": "同事请求时：{kind}",
       "anyRequest": "任何同事请求时",
+      "about": "同事问到{about}时",
+      "firstAsk": "发送前先给我看",
+      "firstTell": "发送后告诉我",
       "invalid": "你的分身没法按这个时间执行。"
     },
     "next": "下次：{at}",

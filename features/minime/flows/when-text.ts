@@ -18,10 +18,20 @@ export function whenText(
   when: When,
   kind?: string,
 ): string {
-  if (when.kind === "request")
-    return when.menu
-      ? t("when.request", { kind: kind ?? when.menu.replaceAll("-", " ") })
-      : t("when.anyRequest");
+  if (when.kind === "request") {
+    const base = when.about
+      ? t("when.about", { about: when.about })
+      : when.menu
+        ? t("when.request", { kind: kind ?? when.menu.replaceAll("-", " ") })
+        : t("when.anyRequest");
+    const first =
+      when.first === "ask"
+        ? t("when.firstAsk")
+        : when.first === "tell"
+          ? t("when.firstTell")
+          : "";
+    return first ? `${base} · ${first}` : base;
+  }
   const clock = (time: string) => {
     const [hour, minute] = time.split(":").map(Number);
     return format.dateTime(new Date(2000, 0, 1, hour, minute), {

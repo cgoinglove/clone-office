@@ -31,10 +31,7 @@ test("what a piece of work changed: files whose changes moved, and new files", a
   writeFileSync(join(repo, "c.ts"), "new\n");
   const after = await snapshot(repo);
   assert.ok(after);
-  assert.deepEqual(changedSince(before, after), [
-    "a.ts (+2 −1)",
-    "c.ts (new)",
-  ]);
+  assert.deepEqual(changedSince(before, after), ["a.ts (+2 −1)", "c.ts (new)"]);
 });
 
 test("outside a git repository nothing is said", async () => {

@@ -459,7 +459,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   (no conversation, skill or note, no memory written after the reading), it is cleared instead).
 - `features/minime/flows/`: flows, the person's "when this happens, do this" for set times (after
   Hermes Agent's cronjob tool). `schedule.ts` (weekly days and time, every N minutes from 30, or
-  once; the clone writes this shape, the code never reads words; a missed run is made up once:
+  once, or when a colleague's request comes in: of a menu kind, or `about` a topic in the person's
+  words, which the brain says a request is about (`ways` in `office/handle.ts`'s answer), with
+  `first` ("ask" or "tell") that code then holds to over the kind's trust level; the clone writes
+  this shape, the code never reads words; a missed run is made up once:
   on set days up to 12 hours late, every N minutes within half the period (2 hours at most), once
   within 2 minutes; each flow's time is decided and claimed under its own lock, so it never runs
   twice), `store.ts` (one file each under `flows/`), `run.ts` (a run

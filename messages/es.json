@@ -609,6 +609,9 @@
       "inMinutes": "Una vez, en {minutes, plural, one {# minuto} other {# minutos}}",
       "request": "Cuando un colega pide: {kind}",
       "anyRequest": "Cuando cualquier colega pide algo",
+      "about": "Cuando un colega pregunta por {about}",
+      "firstAsk": "ves la respuesta antes",
+      "firstTell": "se te avisa de lo enviado",
       "invalid": "Tu clon no puede seguir este horario."
     },
     "next": "Próxima: {at}",

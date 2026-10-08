@@ -14,8 +14,21 @@ export type When =
   | { kind: "every"; minutes: number }
   /** Local date and time, "YYYY-MM-DDTHH:MM". */
   | { kind: "once"; at: string }
-  /** A colleague's request of this menu kind comes in; any request when there is none. */
-  | { kind: "request"; menu?: string };
+  /**
+   * A colleague's request of this menu kind comes in; any request when there is none. With
+   * `about`, only one the clone finds is about that (in the person's words); `first` is what code
+   * then holds to whatever the kind's trust level: "ask" shows the answer to the person before it
+   * goes, "tell" sends it and tells them.
+   */
+  | {
+      kind: "request";
+      menu?: string;
+      about?: string;
+      first?: "ask" | "tell";
+    };
+
+/** What a request flow is about, in the person's words: a topic, not a page. */
+export const ABOUT_MAX = 200;
 
 /** Each run costs the person's AI usage: nothing more often than this. */
 export const MIN_EVERY = 30;
@@ -77,7 +90,17 @@ export function cleanWhen(value: unknown, now = new Date()): When | undefined {
   }
   if (raw.kind === "request") {
     const menu = typeof raw.menu === "string" ? raw.menu.trim() : "";
-    return menu ? { kind: "request", menu } : { kind: "request" };
+    const about = typeof raw.about === "string" ? raw.about.trim() : "";
+    // Refused rather than cut, as a flow's name and request are: what was approved is what is kept.
+    if (about.length > ABOUT_MAX) return undefined;
+    const first =
+      raw.first === "ask" || raw.first === "tell" ? raw.first : undefined;
+    return {
+      kind: "request",
+      ...(menu ? { menu } : {}),
+      ...(about ? { about } : {}),
+      ...(first ? { first } : {}),
+    };
   }
   if (raw.kind === "once") {
     const after = Number(raw.in_minutes);

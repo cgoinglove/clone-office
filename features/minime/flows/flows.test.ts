@@ -246,3 +246,25 @@ test("a flow whose words hide instructions or invisible characters is refused", 
   );
   assert.ok(result.isError);
 });
+
+test("a request flow about a topic keeps its words and what to do first; a topic too long is refused, not cut", async () => {
+  const { cleanWhen } = await import("./schedule");
+  const { describeWhen } = await import("./tools");
+  const when = cleanWhen({
+    kind: "request",
+    about: " salaries ",
+    first: "ask",
+  });
+  assert.deepEqual(when, { kind: "request", about: "salaries", first: "ask" });
+  assert.equal(
+    when && describeWhen(when),
+    "when a colleague's request about salaries comes in, your person seeing the answer before it goes",
+  );
+  assert.deepEqual(cleanWhen({ kind: "request", first: "later" }), {
+    kind: "request",
+  });
+  assert.equal(
+    cleanWhen({ kind: "request", about: "x".repeat(201) }),
+    undefined,
+  );
+});

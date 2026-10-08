@@ -292,3 +292,54 @@ test("answering oneself goes as one's own words; the clone leaves the request to
   assert.equal(last?.parts[0]?.text, "Confirmed.");
   assert.equal(last?.metadata.by, "person");
 });
+
+test("a flow about a topic holds the answer for the person when the clone finds the request is about it", async () => {
+  const { addFlow, changeFlow } = await import("../flows/store");
+  const { answerAsk, onAsk } = await import("../gate/gate");
+  await addFlow({
+    id: "flow-salary1",
+    name: "Salaries",
+    when: { kind: "request", about: "salaries", first: "ask" },
+    what: "Never give numbers yourself.",
+    created: new Date().toISOString(),
+  });
+  const shown: string[] = [];
+  const stop = onAsk((pending) => {
+    if (!pending.chat?.startsWith("office-request-")) return;
+    shown.push(pending.id);
+    answerAsk(pending.id, "Don't send");
+  });
+  try {
+    answers([{ reply: "The band is 80 to 90.", ways: ["flow-salary1"] }]);
+    const about = await ask("What is the salary band for the new role?");
+    await handle(about.id);
+    const prompt =
+      said()
+        .filter((call) => /A request came to you/.test(call.prompt))
+        .at(-1)?.prompt ?? "";
+    assert.match(
+      prompt,
+      /- Any request about salaries \[flow-salary1\]: Never give numbers yourself\. \(your person sees your answer before it goes\)/,
+    );
+    assert.match(prompt, /put its id in ways/);
+    assert.equal(shown.length, 1, "shown to the person first");
+    const { task: held } = await current(about.id);
+    assert.ok(
+      !held.history.some((m) =>
+        m.parts.some((p) => p.text.includes("80 to 90")),
+      ),
+      "nothing went before the person said so",
+    );
+
+    // Not about it: answered as the kind's trust says, nobody asked.
+    answers([{ reply: "Friday works.", ways: [] }]);
+    const other = await ask("Can we meet on Friday?");
+    await handle(other.id);
+    assert.equal(shown.length, 1);
+    const { task: sent } = await current(other.id);
+    assert.equal(sent.status.state, "COMPLETED");
+  } finally {
+    stop();
+    await changeFlow("flow-salary1", (flow) => ({ ...flow, paused: true }));
+  }
+});

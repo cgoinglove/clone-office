@@ -609,6 +609,9 @@
       "inMinutes": "한 번, {minutes, plural, one {#분 뒤} other {#분 뒤}}",
       "request": "동료가 부탁할 때: {kind}",
       "anyRequest": "동료가 어떤 부탁이든 할 때",
+      "about": "동료가 {about}에 대해 물을 때",
+      "firstAsk": "보내기 전에 나에게 먼저",
+      "firstTell": "보낸 뒤 나에게 알림",
       "invalid": "지킬 수 없는 일정이라 만들 수 없어요."
     },
     "next": "다음: {at}",
