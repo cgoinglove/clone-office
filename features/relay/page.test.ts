@@ -25,6 +25,16 @@ test("everything a person wrote is escaped on the page", () => {
   assert.ok(page.includes("&lt;script&gt;alert(1)&lt;/script&gt; Friday?"));
   assert.ok(page.includes("&lt;b&gt;Ben&lt;/b&gt; asks you"));
   assert.match(page, /<form method="post">/);
+  // A messenger's preview of the link says who asks, never what.
+  assert.match(
+    page,
+    /<meta property="og:title" content="&lt;b&gt;Ben&lt;\/b&gt; asks you"/,
+  );
+  const preview = /<meta property="og:description" content="([^"]*)"/.exec(
+    page,
+  )?.[1];
+  assert.ok(preview?.includes("Clone Office"));
+  assert.doesNotMatch(preview ?? "", /Friday/);
   assert.doesNotMatch(
     replyPage({
       lang: "ko",
