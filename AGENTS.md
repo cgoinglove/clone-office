@@ -219,7 +219,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   is), written aside and put in place whole, never runnable, `created_by: "office"` (the review
   leaves it, the curator too), its origin in `.office.json`: a later version replaces it only while
   it is as it came, and a skill of the person's by that name is never touched, after Hermes Agent's
-  skills hub (quarantine, scan, install, `_has_local_edits`).
+  skills hub (quarantine, scan, install, `_has_local_edits`). A version set aside while its newer
+  one is put in place goes back on the next look if the process died between the two, and what is
+  left over goes once shown to be the office's copy as it came, or old (`recoverLocked`); an origin
+  goes with its skill, and one not `created_by: "office"` is the person's whatever `.office.json`
+  says. The relay's `skillFrontMatter` and name rule are the store's too, and a name is checked
+  before it goes into a relay address (`office/client.ts`).
   `features/minime/brain/`: what the clone thinks with is the person's pick
   (`choice.ts`, `settings.json` `brain`; keys apart in `brain/keys.json`, 0600, checked by listing
   the vendor's models for free; `providers.ts` the vendors and suggested models, after Thursday's
