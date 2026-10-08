@@ -626,6 +626,7 @@
       "request": "Cuando un colega pide: {kind}",
       "anyRequest": "Cuando cualquier colega pide algo",
       "about": "Cuando un colega pregunta por {about}",
+      "requestAbout": "Cuando un colega pregunta por {about}: {kind}",
       "firstAsk": "ves la respuesta antes",
       "firstTell": "se te avisa de lo enviado",
       "invalid": "Tu clon no puede seguir este horario."

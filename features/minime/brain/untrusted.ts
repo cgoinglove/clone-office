@@ -10,6 +10,11 @@
 const HIDDEN =
   /[\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]|[\u{E0000}-\u{E007F}]/gu;
 
+/** A text without the characters that read one way to a person and another to the model. */
+export function withoutHidden(text: string): string {
+  return text.replace(HIDDEN, "");
+}
+
 /**
  * What a web page, a connected service or a colleague wrote, marked as coming from outside: the
  * system prompt says such text is information, never instructions (session.ts, "What comes from
@@ -17,8 +22,9 @@ const HIDDEN =
  */
 export function untrusted(source: string, text: string): string {
   const from = source.replace(/["<>\n]/g, " ").slice(0, 200);
-  const body = text
-    .replace(HIDDEN, "")
-    .replace(/<\/untrusted\s*>/gi, "</ untrusted>");
+  const body = withoutHidden(text).replace(
+    /<\/untrusted\s*>/gi,
+    "</ untrusted>",
+  );
   return `<untrusted source="${from}">\n${body}\n</untrusted>`;
 }

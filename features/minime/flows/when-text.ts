@@ -10,7 +10,8 @@ export type DateFormat = ReturnType<typeof useFormatter>;
 
 /**
  * A schedule in the person's language, with their own way of writing days and times. A request
- * flow shows the kind it is for (`kind`, its name when known).
+ * flow shows the kind it is for (`kind`, its name when known) and the topic it is about: code
+ * applies one with both only to that kind, so neither is left out.
  */
 export function whenText(
   t: FlowWords,
@@ -19,10 +20,15 @@ export function whenText(
   kind?: string,
 ): string {
   if (when.kind === "request") {
+    const named = when.menu
+      ? (kind ?? when.menu.replaceAll("-", " "))
+      : undefined;
     const base = when.about
-      ? t("when.about", { about: when.about })
-      : when.menu
-        ? t("when.request", { kind: kind ?? when.menu.replaceAll("-", " ") })
+      ? named
+        ? t("when.requestAbout", { kind: named, about: when.about })
+        : t("when.about", { about: when.about })
+      : named
+        ? t("when.request", { kind: named })
         : t("when.anyRequest");
     const first =
       when.first === "ask"

@@ -93,6 +93,8 @@ export interface Later {
   menu?: string;
   trust?: "auto" | "tell" | "ask";
   approving?: boolean;
+  /** check: shown first only because a flow asked for that, so not counted toward a rule. */
+  forced?: boolean;
   note?: string;
   at: string;
 }

@@ -626,6 +626,7 @@
       "request": "同僚から依頼が来たとき：{kind}",
       "anyRequest": "同僚から依頼が来たとき（すべて）",
       "about": "同僚が{about}について聞いたとき",
+      "requestAbout": "同僚が{about}について聞いたとき：{kind}",
       "firstAsk": "送る前に自分が確認",
       "firstTell": "送ったら知らせる",
       "invalid": "クローンはこのスケジュールを守れません。"

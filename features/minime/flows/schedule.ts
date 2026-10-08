@@ -8,6 +8,8 @@
 // noted as missed and the flow waits for its next time. Resuming a paused flow keeps where it was,
 // so a time passed while it was paused follows the same rule.
 
+import { withoutHidden } from "../brain/untrusted.ts";
+
 export type When =
   /** 0 is Sunday, 6 is Saturday; time is "HH:MM". Every day is all seven. */
   | { kind: "weekly"; days: number[]; time: string }
@@ -90,7 +92,10 @@ export function cleanWhen(value: unknown, now = new Date()): When | undefined {
   }
   if (raw.kind === "request") {
     const menu = typeof raw.menu === "string" ? raw.menu.trim() : "";
-    const about = typeof raw.about === "string" ? raw.about.trim() : "";
+    // The topic goes into every colleague's request prompt: what hides in it from the card is
+    // dropped, so what is kept reads the same to the person and to the model.
+    const about =
+      typeof raw.about === "string" ? withoutHidden(raw.about).trim() : "";
     // Refused rather than cut, as a flow's name and request are: what was approved is what is kept.
     if (about.length > ABOUT_MAX) return undefined;
     const first =

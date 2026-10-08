@@ -13,7 +13,7 @@ import {
   type SessionEvent,
   type SessionGate,
 } from "../brain/session.ts";
-import { untrusted } from "../brain/untrusted.ts";
+import { untrusted, withoutHidden } from "../brain/untrusted.ts";
 import { appendMessage, createChat, listChats } from "../chat/store.ts";
 import { changeFlow, type Flow, listFlows } from "../flows/store.ts";
 import { askPerson, gateSecret, onAsk, waitFor } from "../gate/gate.ts";
@@ -21,7 +21,12 @@ import { denyRules, loadTrust, pathRule } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
 import { logActivity } from "../server/activity.ts";
 import { loadExcludes } from "../server/exclude.ts";
-import { type CheckOutcome, checkBeforeSending, decideCheck } from "./check.ts";
+import {
+  type CheckOutcome,
+  checkBeforeSending,
+  decideCheck,
+  type Topic,
+} from "./check.ts";
 import {
   type Card,
   findTask,
@@ -91,7 +96,8 @@ export function waysText(menu: MenuItem[], ways: Way[]): string {
   const kind = (id?: string) =>
     id ? (menu.find((item) => item.id === id)?.name ?? id) : "Any request";
   const line = (way: Way) => {
-    const about = way.about ? ` about ${way.about} [${way.id}]` : "";
+    const about =
+      way.about !== undefined ? ` about ${way.about} [${way.id}]` : "";
     const first =
       way.first === "ask"
         ? " (your person sees your answer before it goes)"
@@ -100,7 +106,7 @@ export function waysText(menu: MenuItem[], ways: Way[]): string {
           : "";
     return `- ${kind(way.menu)}${about}: ${way.what}${first}`;
   };
-  const topics = ways.some((way) => way.about)
+  const topics = ways.some((way) => way.about !== undefined)
     ? "\nFor each one about a topic (an id in brackets), follow it only when this request is about that, and then put its id in ways."
     : "";
   return `How your person wants these handled, in their own words; follow them as theirs, still asking them first for what only they can give:
@@ -114,9 +120,34 @@ function wayOf(flow: Flow): Way {
   return {
     what: flow.what,
     ...(menu ? { menu } : {}),
-    ...(about ? { about, id: flow.id } : {}),
+    // Kept without hidden characters since they were made; one kept before is read so here too.
+    ...(about ? { about: withoutHidden(about), id: flow.id } : {}),
     ...(first ? { first } : {}),
   };
+}
+
+/** A flow about a topic with something for code to hold to, as the check looks for it. */
+function topicOf(flow: Flow): Topic | undefined {
+  if (flow.when.kind !== "request" || !flow.when.about || !flow.when.first)
+    return undefined;
+  return {
+    id: flow.id,
+    about: withoutHidden(flow.when.about),
+    first: flow.when.first,
+  };
+}
+
+/**
+ * What the person asked for when such a request comes, held to by code whatever the kind's trust
+ * level: "ask me first" shows the answer first, "tell me" at least tells them.
+ */
+function heldTo(trust: Trust, flows: Flow[]): Trust {
+  const firsts = flows.map((flow) =>
+    flow.when.kind === "request" ? flow.when.first : undefined,
+  );
+  if (firsts.includes("ask")) return "ask";
+  if (firsts.includes("tell") && trust === "auto") return "tell";
+  return trust;
 }
 
 export function requestPrompt(
@@ -577,36 +608,33 @@ async function answer(options: {
       return;
     }
     // What the person set for this kind of request; code decides, the brain only named the kind.
-    const found = trustFor(menu, answer.menu || resume?.menu);
-    const { item } = found;
-    let { trust } = found;
+    const kind = trustFor(menu, answer.menu || resume?.menu);
+    const { item } = kind;
     // The flows that applied to it: the check hears them as the person's own words, and the page
     // shows when each was last followed. One about a topic applies when the clone found the
     // request is about it.
-    const about = new Set(
+    const named = new Set(
       Array.isArray(answer.ways)
         ? answer.ways.filter((id): id is string => typeof id === "string")
         : [],
     );
-    const applied = ways.filter(
+    const forKind = ways.filter(
       (flow) =>
         flow.when.kind === "request" &&
-        (!flow.when.menu || flow.when.menu === item?.id) &&
-        (!flow.when.about || about.has(flow.id)),
+        (!flow.when.menu || flow.when.menu === item?.id),
     );
-    // What the person asked for when such a request comes, held to by code whatever the kind's
-    // trust level: "ask me first" shows the answer first, "tell me" at least tells them.
-    const firsts = applied.map((flow) =>
-      flow.when.kind === "request" ? flow.when.first : undefined,
+    const applied = forKind.filter(
+      (flow) =>
+        flow.when.kind !== "request" || !flow.when.about || named.has(flow.id),
     );
-    if (firsts.includes("ask")) trust = "ask";
-    else if (firsts.includes("tell") && trust === "auto") trust = "tell";
-    for (const flow of applied)
-      await changeFlow(flow.id, (f) => ({
-        ...f,
-        last: { at: new Date().toISOString(), ok: true },
-      }));
-    const approving = trust === "ask" && said.length === 0;
+    // The topics with something to hold to that the clone did not name: it read the colleague's
+    // words, which may be worded to steer it, so the check looks for them too.
+    const unnamed = forKind
+      .filter((flow) => !named.has(flow.id))
+      .map(topicOf)
+      .filter((topic): topic is Topic => topic !== undefined);
+    let trust = heldTo(kind.trust, applied);
+    let approving = trust === "ask" && said.length === 0;
     // Woken by a step-in with nothing to send now: nothing goes.
     if (result.ok && resume?.wake && !answer.reply?.trim()) return;
     if (!result.ok || !answer.reply?.trim()) {
@@ -639,7 +667,8 @@ async function answer(options: {
         : "COMPLETED";
     // A second look before it leaves; what it holds back goes to the person (product 2.8a).
     const outcome = await checkBeforeSending({
-      request: userText(task),
+      // The colleague's words, marked as from outside: the check weighs them, never follows them.
+      request: untrusted(whoWrote(from, first), userText(task)),
       reply,
       chat: gate.chat ?? requestChat(task),
       language,
@@ -657,12 +686,29 @@ async function answer(options: {
             .filter((source): source is string => typeof source === "string")
             .slice(0, 12)
         : [],
+      topics: unnamed,
     });
+    // A topic either look found counts: the check showed the answer first for one the person sees
+    // first, and one they are told about tells them.
+    const followed = [
+      ...applied,
+      ...forKind.filter((flow) => outcome.about?.includes(flow.id)),
+    ];
+    trust = heldTo(kind.trust, followed);
+    approving = trust === "ask" && said.length === 0;
+    for (const flow of followed)
+      await changeFlow(flow.id, (f) => ({
+        ...f,
+        last: { at: new Date().toISOString(), ok: true },
+      }));
     if (officeClosing()) return;
     const sending = {
       state,
       reply,
       approving,
+      // Shown first only because a flow about its topic asked for that, not because of the kind:
+      // it says nothing about doing the kind alone, so it does not count toward that offer.
+      ...(approving && kind.trust !== "ask" ? { forced: true } : {}),
       menu: item?.id,
       trust,
       note: answer.note?.trim(),
@@ -737,6 +783,8 @@ async function finish(
     state: "COMPLETED" | "INPUT_REQUIRED" | "REJECTED";
     reply: string;
     approving?: boolean;
+    /** Shown first only because a flow asked for that: not counted toward making the kind a rule. */
+    forced?: boolean;
     menu?: string;
     trust?: Trust;
     note?: string;
@@ -745,9 +793,14 @@ async function finish(
     files?: string[];
   },
 ): Promise<void> {
-  const item = sending.menu
-    ? (await loadMenu()).find((m) => m.id === sending.menu)
-    : undefined;
+  // The like-me score counts every answer the person was shown first, whatever showed it: each is
+  // one more look at whether the clone answers as they would. Making the kind a rule counts only
+  // those its own setting showed; one a flow made them see says nothing about doing the kind alone,
+  // and offering to would lower a kind already done alone, again and again.
+  const item =
+    sending.menu && !sending.forced
+      ? (await loadMenu()).find((m) => m.id === sending.menu)
+      : undefined;
   if ("hold" in outcome) {
     await logActivity({ kind: "held", task: task.id, to: sending.from });
     if (sending.approving) await recordOutcome(sending.menu, "held");
@@ -916,6 +969,7 @@ export async function answerLater(
             state: kept.state ?? "COMPLETED",
             reply: kept.reply,
             approving: kept.approving,
+            ...(kept.forced ? { forced: true } : {}),
             menu: kept.menu,
             trust: kept.trust,
             note: kept.note,

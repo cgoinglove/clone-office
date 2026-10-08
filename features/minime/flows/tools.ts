@@ -4,8 +4,9 @@
 // complete on its own, and changing a flow the person has rather than making a near-copy. A flow
 // may also be how the person wants a kind of colleague's request handled, read while answering one.
 
+import { withoutHidden } from "../brain/untrusted.ts";
 import { threatMessage } from "../memory/threats.ts";
-import { loadMenu } from "../office/menu.ts";
+import { loadMenu, type MenuItem } from "../office/menu.ts";
 import { cleanWhen, localStamp, nextRun, type When } from "./schedule.ts";
 import {
   addFlow,
@@ -26,11 +27,18 @@ const DAYS = [
   "Saturday",
 ];
 
-/** A schedule in plain English, for the mini-me (the screen writes it in the person's language). */
-export function describeWhen(when: When): string {
+/**
+ * A schedule in plain English, for the mini-me (the screen writes it in the person's language). A
+ * request flow says both its kind, by id and by the name the page shows, and its topic.
+ */
+export function describeWhen(
+  when: When,
+  menu: Pick<MenuItem, "id" | "name">[] = [],
+): string {
   if (when.kind === "request") {
+    const name = menu.find((item) => item.id === when.menu)?.name;
     const base = when.menu
-      ? `when a colleague's request of the kind ${when.menu}`
+      ? `when a colleague's request of the kind ${when.menu}${name ? ` (${name})` : ""}`
       : when.about
         ? "when a colleague's request"
         : "when any colleague's request";
@@ -112,7 +120,7 @@ export const FLOW_MANAGE_TOOL = {
   },
 };
 
-function view(flow: Flow, now: Date) {
+function view(flow: Flow, now: Date, menu: MenuItem[]) {
   const next = flow.paused
     ? undefined
     : nextRun(
@@ -123,7 +131,7 @@ function view(flow: Flow, now: Date) {
   return {
     id: flow.id,
     name: flow.name,
-    when: describeWhen(flow.when),
+    when: describeWhen(flow.when, menu),
     what: flow.what,
     paused: Boolean(flow.paused),
     next: next ? localStamp(next) : null,
@@ -151,7 +159,7 @@ export async function callFlowTool(
       result: {
         now: `${localStamp(now).replace("T", " ")} (${DAYS[now.getDay()]})`,
         menu: menu.map((item) => ({ id: item.id, name: item.name })),
-        flows: (await listFlows()).map((flow) => view(flow, now)),
+        flows: (await listFlows()).map((flow) => view(flow, now, menu)),
       },
       isError: false,
     };
@@ -164,8 +172,11 @@ export async function callFlowTool(
     ? `The kinds they take: ${menu.map((item) => `${item.id} (${item.name})`).join(", ")}.`
     : "They take no kinds yet: leave out menu for any request.";
   const action = String(args.action ?? "");
+  const raw = (value: unknown) => (typeof value === "string" ? value : "");
+  // What is kept reads the same to the person and to the model: what hides from the card (tag
+  // characters, bidirectional marks) is dropped, as it is from what comes from outside.
   const text = (value: unknown, _max: number) =>
-    typeof value === "string" ? value.trim() : "";
+    withoutHidden(raw(value)).trim();
   // What the person approved is what is kept: too long is refused, never cut.
   if (text(args.name, 80).length > 80 || text(args.what, 4000).length > 4000)
     return {
@@ -175,9 +186,17 @@ export async function callFlowTool(
     };
   // What runs later with nobody watching is checked as memory is: no hidden instructions, no
   // invisible characters behind what the card showed (Hermes Agent scans its jobs the same way).
-  const threat = threatMessage(
-    `${text(args.name, 80)}\n${text(args.what, 4000)}`,
-  );
+  // A request flow's topic goes into every colleague's request prompt, so it is checked too. The
+  // words are looked at as given and again with what hides in them dropped, so a character slipped
+  // between the letters of an instruction does not hide it.
+  const given = [
+    args.name,
+    args.what,
+    (args.when as { about?: unknown } | undefined)?.about,
+  ]
+    .map(raw)
+    .join("\n");
+  const threat = threatMessage(given) ?? threatMessage(withoutHidden(given));
   if (threat) return { result: threat, isError: true };
   if (action === "create") {
     const flowName = text(args.name, 80);
@@ -199,7 +218,7 @@ export async function callFlowTool(
       created: now.toISOString(),
     };
     await addFlow(flow);
-    return { result: { made: view(flow, now) }, isError: false };
+    return { result: { made: view(flow, now, menu) }, isError: false };
   }
   const id = text(args.id, 80);
   if (!id || !(await getFlow(id)))
@@ -236,5 +255,5 @@ export async function callFlowTool(
   if (action === "remove") return { result: `Removed ${id}.`, isError: false };
   if (!changed)
     return { result: `No flow '${id}'. See \`flows\`.`, isError: true };
-  return { result: { flow: view(changed, now) }, isError: false };
+  return { result: { flow: view(changed, now, menu) }, isError: false };
 }
