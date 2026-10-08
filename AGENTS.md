@@ -212,7 +212,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   the app's own loop on the Vercel AI SDK, as Hermes Agent, OpenClaw and Thursday run theirs: the
   same tool server and connectors over MCP and Claude Code's Read, Glob, Grep and WebFetch
   (`loop-tools.ts`; a connected service's tools are only named, and reached through `tool_search`
-  and `tool_call`, after Thursday, so their schemas do not fill a small model's window), with the same names and permission rules, asking through the gate route as
+  and `tool_call`, after Thursday, so their schemas do not fill a small model's window; what a web
+  page or a service returns comes inside `<untrusted>` marks with hidden characters taken out,
+  `untrusted`, and the system prompt's "What comes from outside" says what that means), with the same names and permission rules, asking through the gate route as
   the permission prompt does; its conversations in `brain/sessions/<id>.json` so a session goes on
   or is copied for the review, and a session it never kept answers `session-missing` so a
   conversation goes on from its own record; a shaped answer is asked for last, without tools.
