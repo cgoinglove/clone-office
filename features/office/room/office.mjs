@@ -1825,20 +1825,21 @@ export function createOffice(
       );
     }
   }
+  /** Whether a piece stands in front of a mover at plan point (bx, by), so it hides what of the mover is behind it. */
+  function hides(o, bx, by) {
+    const self = { x0: bx - 0.4, y0: by - 0.4, x1: bx + 0.4, y1: by + 0.4 },
+      fr = inFront(self, o),
+      bk = inFront(o, self);
+    if (fr !== bk) return bk;
+    return !(bx + by > (fr ? o.x1 + o.y0 : (o.x0 + o.x1 + o.y0 + o.y1) / 2));
+  }
+  /** Where a mover goes among the movers: after the last piece behind it, before the first in front. */
   function slotOf(p) {
-    const bx = p.pos[0],
-      by = p.pos[1],
-      self = { x0: bx - 0.4, y0: by - 0.4, x1: bx + 0.4, y1: by + 0.4 };
+    const [bx, by] = p.pos;
     let lastBehind = -1,
       firstFront = sceneOrder.length;
     for (let i = 0; i < sceneOrder.length; i++) {
-      const o = sceneOrder[i],
-        fr = inFront(self, o),
-        bk = inFront(o, self);
-      let front = fr;
-      if (fr === bk)
-        front = bx + by > (fr ? o.x1 + o.y0 : (o.x0 + o.x1 + o.y0 + o.y1) / 2);
-      if (front) lastBehind = i;
+      if (!hides(sceneOrder[i], bx, by)) lastBehind = i;
       else if (i < firstFront) firstFront = i;
     }
     return Math.min(lastBehind + 1, firstFront);
@@ -1910,7 +1911,9 @@ export function createOffice(
         nb = [rect[0] - m, rect[1] - m, rect[2] + m, rect[3] + m],
         list = [];
       let key = "";
-      for (let i = Math.max(0, s); i < sceneOrder.length; i++) {
+      // what stands before it where it is drawn: each piece judged on its own, as the order of
+      // pieces far apart on the floor says nothing about which is nearer to it
+      for (let i = 0; i < sceneOrder.length; i++) {
         const o = sceneOrder[i],
           b = o.tb;
         if (
@@ -1918,7 +1921,8 @@ export function createOffice(
           nb[0] < b[2] &&
           b[1] < nb[3] &&
           nb[1] < b[3] &&
-          o.node
+          o.node &&
+          hides(o, a.pos[0], a.pos[1])
         ) {
           list.push(o);
           key += `${i},`;
@@ -2789,14 +2793,16 @@ export function createOffice(
         !bubbles.has(p.id) &&
         !moving &&
         liveOn(p);
-      // a clone at ease holds still: nothing about it means anything until something happens
-      if (still && p.bot.mood === "idle") {
+      // a clone at ease holds still: nothing about it means anything until something happens (once
+      // what stands before it is copied in again after the drawing was rebuilt)
+      const atEase = still && p.bot.mood === "idle";
+      if (atEase && p.occKey !== null) {
         p.bot.still(simT);
         placed.push(p);
         continue;
       }
       // one at work or asking moves just as well at half the rate
-      if (still && !(close ? EVEN : restDue(p))) {
+      if (still && p.occKey !== null && !(close ? EVEN : restDue(p))) {
         placed.push(p);
         continue;
       }
@@ -2815,7 +2821,7 @@ export function createOffice(
       );
       p.bot.dotScale = clamp(52 / (BODY_PX * sc), 1, 2.4);
       // walking, it goes where it goes every frame; its face and breath change slowly enough to be drawn every other frame
-      if (REDUCED) p.bot.still(simT);
+      if (REDUCED || atEase) p.bot.still(simT);
       else if (EVEN || close || p.leap) {
         p.bot.update(simT, p.udt);
         p.udt = 0;
