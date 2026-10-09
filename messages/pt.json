@@ -193,7 +193,6 @@
       },
       "knows": {
         "saved": "{count, plural, one {# coisa} other {# coisas}} · guardado na memória e nas notas",
-        "role": "O que você faz",
         "projects": "Em andamento",
         "people": "Trabalha com",
         "work": "Em volta do seu trabalho",
@@ -207,7 +206,6 @@
         "where": "Remova com × o que estiver errado ou você não quiser que ele guarde. Também dá para mudar depois em Seu clone › O que ele sabe.",
         "more": "mais {count}",
         "forget": "Remover: {item}",
-        "whereRole": "O que você faz e cuida é ajustado no próximo passo, Você e a equipe.",
         "lines": "{count, plural, one {# linha} other {# linhas}}"
       },
       "foldersHint": "Confira e desmarque as que quiser deixar de fora",

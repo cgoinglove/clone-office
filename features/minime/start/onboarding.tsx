@@ -19,6 +19,7 @@ import {
   AppWindow,
   Bookmark,
   BookOpen,
+  Briefcase,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -33,6 +34,7 @@ import {
   UserCheck,
   UserRound,
   Users,
+  Wrench,
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -406,6 +408,8 @@ export function Onboarding() {
       <>
         <Heading
           title={learned ? t("learn.doneTitle") : t("learn.title")}
+          // What they do, as the reading took it, leads what it understood.
+          lead={learned ? learn.about?.role || undefined : undefined}
           body={
             learned
               ? t("learn.doneBody", { count: knowsCount })
@@ -867,13 +871,32 @@ function Stepper({ order, at }: { order: Step[]; at: number }) {
   );
 }
 
-function Heading({ title, body }: { title: string; body: string }) {
+function Heading({
+  title,
+  lead,
+  body,
+}: {
+  title: string;
+  /** A line in the ink between the title and its note: who the reading took them for. */
+  lead?: string;
+  body: string;
+}) {
   return (
     <>
       <h1 className="mt-6 text-[26px] leading-tight font-semibold tracking-[-0.022em] text-balance">
         {title}
       </h1>
-      <p className="mt-2 text-[14.5px] leading-relaxed text-pretty text-muted-foreground">
+      {lead && (
+        <p className="mt-2.5 line-clamp-2 text-[16px] leading-snug font-medium tracking-[-0.01em] text-pretty break-keep">
+          {lead}
+        </p>
+      )}
+      <p
+        className={cn(
+          "text-pretty text-muted-foreground",
+          lead ? "mt-1.5 text-[13.5px]" : "mt-2 text-[14.5px] leading-relaxed",
+        )}
+      >
         {body}
       </p>
     </>
@@ -1316,12 +1339,6 @@ function useKnownRows(learn: ReturnType<typeof useLearn>): KnownRow[] {
   const t = useTranslations("start.learn");
   const knows = learn.knows;
   const rows: KnownRow[] = [];
-  if (learn.about?.role)
-    rows.push({
-      id: "role",
-      label: t("knows.role"),
-      items: [{ title: learn.about.role, detail: learn.about.owns.join(", ") }],
-    });
   if (knows?.projects.length)
     rows.push({
       id: "projects",
@@ -1408,10 +1425,7 @@ function KnownDialog({
             {row?.label}
           </DialogTitle>
           <DialogDescription className="text-[13.5px]">
-            {/* What they do is not taken back here: the next step is where they set it. */}
-            {row?.items.some((item) => item.known)
-              ? t("knows.where")
-              : t("knows.whereRole")}
+            {t("knows.where")}
           </DialogDescription>
         </div>
         <ul className="flex max-h-[min(28rem,60vh)] flex-col gap-1 overflow-y-auto px-3 pt-1 pb-4">
@@ -1515,7 +1529,6 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const open = rows.find((row) => row.id === openId) ?? null;
   const row = (id: string) => rows.find((one) => one.id === id);
-  const role = row("role");
   const tools = learn.about?.tools ?? [];
   const lines = (["traits", "work"] as const).flatMap((id) => {
     const found = row(id);
@@ -1523,21 +1536,6 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
   });
   return (
     <div className="mt-6 flex flex-col gap-4 break-keep">
-      {role && (
-        <button
-          type="button"
-          onClick={() => setOpenId(role.id)}
-          className={cn(SUMMARY_ROW, "flex-row items-center gap-3")}
-        >
-          <span className="shrink-0 text-[13px] text-muted-foreground">
-            {role.label}
-          </span>
-          <span className="line-clamp-2 min-w-0 flex-1 text-[14.5px] leading-snug font-medium">
-            {role.items[0]?.title}
-          </span>
-          <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
-        </button>
-      )}
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 max-sm:grid-cols-1">
         {(["projects", "people", "places"] as const).map((id) => {
           const found = row(id);
@@ -1545,17 +1543,17 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
           return (
             <SummaryKind
               key={id}
+              icon={KIND_ICON[id]}
               label={found.label}
               count={found.items.length}
               onOpen={() => setOpenId(id)}
               names={found.items.map((item, index) => ({
                 key: `${item.title}${item.note ?? ""}`,
                 text: item.title,
+                // A person is drawn as the office draws their clone; folders are named alone.
                 mark:
                   id === "people" ? (
                     <Mark id={item.title} index={index + 1} size={16} />
-                  ) : id === "places" ? (
-                    <Folder className="size-3.5 text-muted-foreground" />
                   ) : null,
               }))}
             />
@@ -1564,6 +1562,7 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
         {tools.length > 0 && (
           // What they work in is set on the next step (the card), so this one opens nothing.
           <SummaryKind
+            icon={Wrench}
             label={tYou("tools")}
             count={tools.length}
             names={tools.map((tool) => {
@@ -1594,7 +1593,6 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
               <span className="text-muted-foreground tabular-nums">
                 {t("knows.lines", { count: found.items.length })}
               </span>
-              <ChevronRight className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" />
             </button>
           ))}
         </div>
@@ -1608,17 +1606,29 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
   );
 }
 
+/** Each kind's mark beside its name in the summary. */
+const KIND_ICON = { projects: Briefcase, people: Users, places: Folder };
+
+/**
+ * The chevron of a summary row that opens its whole list, shown while pointed at or focused: the
+ * summary is many rows that each open, and a chevron on every one at rest would be all one sees.
+ */
+const OPENS =
+  "size-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+
 /** A summary row's look: a whole row to press, filled while pointed at. */
 const SUMMARY_ROW =
   "group -mx-2 flex min-w-0 rounded-[10px] px-2 py-1.5 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50";
 
 /** One kind in the summary: its name and how many, and the first few names, each with its mark. */
 function SummaryKind({
+  icon: Icon,
   label,
   count,
   names,
   onOpen,
 }: {
+  icon: typeof Folder;
   label: string;
   count: number;
   names: { key: string; text: string; mark: ReactNode }[];
@@ -1629,11 +1639,10 @@ function SummaryKind({
   const body = (
     <>
       <span className="flex w-full items-center gap-1.5 text-[13px] text-muted-foreground">
+        <Icon aria-hidden className="size-3.5 shrink-0" />
         {label}
         <span className="tabular-nums">{count}</span>
-        {onOpen && (
-          <ChevronRight className="ml-auto size-3.5 transition-colors group-hover:text-foreground" />
-        )}
+        {onOpen && <ChevronRight className={cn(OPENS, "ml-auto")} />}
       </span>
       <span className="flex min-w-0 flex-wrap gap-1">
         {shown.map((name) => (

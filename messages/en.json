@@ -193,7 +193,6 @@
       },
       "knows": {
         "saved": "{count, plural, one {# thing} other {# things}} · kept in its memory and notes",
-        "role": "What you do",
         "projects": "Working on",
         "people": "Works with",
         "work": "Around your work",
@@ -207,7 +206,6 @@
         "where": "Take back with × anything wrong or you'd rather it didn't keep. You can also change it later under Your clone › What it knows.",
         "more": "{count} more",
         "forget": "Take back: {item}",
-        "whereRole": "What you do and look after is set on the next step, You & team.",
         "lines": "{count, plural, one {# line} other {# lines}}"
       },
       "foldersHint": "Check them; untick any to leave out",
