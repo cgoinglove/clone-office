@@ -120,9 +120,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   other: the office, playing the app's loop, then, once the reading has understood them, a
   colleague's clone asking what the reading expects and theirs answering it their way, the
   exchange laid over it (`ExampleTalk`, the demo's `ask` mode), and still behind the card
-  colleagues will see while it is written; what the reading understood is summed up beside it in
-  names (`KnownSummary`: what they do, projects, people drawn as the office draws clones, tools by
-  their own marks, folders, the lines about how they work counted); each step in one frame (the
+  colleagues will see while it is written; what the reading understood is summed up beside it,
+  what they do leading under the title and the rest in names (`KnownSummary`: projects, people drawn
+  as the office draws clones, folders, tools by their own marks, each kind marked, the lines about
+  how they work counted); each step in one frame (the
   name with the clone's dot and the language, `language-switch.tsx`, on top, the steps named
   beneath, only Back and the step's button at the bottom), fitting a 1280×720 window, what is
   picked in a popover at its field so no step grows; then its brain (`BrainPicker`, asked one word
