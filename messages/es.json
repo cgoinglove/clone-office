@@ -1236,7 +1236,7 @@
       "received": "Recibidas",
       "sent": "Enviadas",
       "groups": {
-        "yours": "Te toca",
+        "yours": "Por decidir",
         "working": "En camino",
         "waiting": "Esperando a otros",
         "done": "Terminadas"
@@ -1263,7 +1263,7 @@
       "alone": "Por ahora, solo tú",
       "invite": "Invitar",
       "setUp": "Configura tu oficina",
-      "yourTurn": "Te toca",
+      "yourTurn": "Por decidir",
       "answerHere": "Responde aquí mismo",
       "fromColleague": "El clon de {name} pregunta",
       "fromClone": "Tu clon pregunta",
@@ -1307,15 +1307,15 @@
       }
     },
     "newChat": "Nuevo chat",
-    "yourTurn": "Te toca",
-    "yourTurnCount": "{count, plural, one {# te espera} other {# te esperan}}",
+    "yourTurn": "Por decidir",
+    "yourTurnCount": "{count, plural, one {# por decidir} other {# por decidir}}",
     "recentChats": "Chats recientes",
     "chatWaits": "Hay una pregunta esperando en este chat",
     "statusLabel": "Tu estado: {status}",
     "statusTitle": "Tu estado en la oficina",
     "settings": "Configuración",
     "phase": {
-      "yours": "Te toca",
+      "yours": "Por decidir",
       "working": "En curso",
       "waiting": "Esperando a otros",
       "done": "Terminada",
@@ -1400,7 +1400,7 @@
       "theirClone": "Clon de {name}",
       "theyWork": "El clon de {name} está en eso.",
       "cloneWorks": "Tu clon está en eso.",
-      "yourTurn": "Te toca",
+      "yourTurn": "Por decidir",
       "addPlaceholder": "Agrega algo para el clon de {name}",
       "add": "Agregar",
       "about": "Sobre esta solicitud",
@@ -1527,7 +1527,41 @@
       "other": "Este tipo de archivo se abre en su propia app: guárdalo."
     },
     "meetingOn": "Reunión de clones",
-    "chatAnswering": "Tu clon está respondiendo aquí"
+    "chatAnswering": "Tu clon está respondiendo aquí",
+    "search": "Buscar",
+    "fold": "Ocultar barra lateral",
+    "unfold": "Mostrar barra lateral",
+    "openMenu": "Abrir menú",
+    "me": {
+      "label": "{name}: tu menú",
+      "you": "Tú",
+      "office": "Oficina",
+      "here": "Abierta en este ordenador · {count, plural, one {# persona} other {# personas}}",
+      "at": "{host} · {count, plural, one {# persona} other {# personas}}",
+      "invite": "Invitar a un compañero",
+      "invited": "Enlace de invitación copiado",
+      "shortcuts": "Atajos de teclado"
+    },
+    "keys": {
+      "fold": "Ocultar o mostrar la barra lateral",
+      "section": "Una sección de Ajustes",
+      "box": "Escribir a tu clon",
+      "list": "Esta lista"
+    },
+    "palette": {
+      "title": "Buscar e ir",
+      "placeholder": "Busca chats, peticiones y compañeros, o ve a otro sitio",
+      "chats": "Chats",
+      "requests": "Peticiones",
+      "people": "Compañeros",
+      "go": "Ir a",
+      "ask": "Pregunta a tu clon: «{text}»",
+      "askColleague": "Pedir a {name}",
+      "empty": "No hay coincidencias",
+      "move": "Moverse",
+      "open": "Abrir",
+      "askKey": "Preguntar al clon"
+    }
   },
   "page": {
     "notFound": {
@@ -1543,7 +1577,7 @@
     }
   },
   "plugin": {
-    "header": "Te toca",
+    "header": "Por decidir",
     "later": "Más tarde",
     "stop": "Parar aquí",
     "none": "No hay nada pendiente para ti.",

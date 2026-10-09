@@ -4,6 +4,7 @@ import Script from "next/script";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import "./globals.css";
+import { DialogWords } from "@/components/ui/dialog";
 import { ThemeSync } from "@/components/ui/theme-sync";
 import { Toaster } from "@/components/ui/toast";
 import { THEME_BOOT } from "@/lib/theme";
@@ -41,7 +42,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {THEME_BOOT}
         </Script>
         <ThemeSync />
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <DialogWords>{children}</DialogWords>
+        </NextIntlClientProvider>
         <Toaster />
       </body>
     </html>

@@ -34,7 +34,7 @@ export type SectionId =
   | "general";
 
 /** The sections down the left, each marked as the app's column marks its places (nav-icons.tsx). */
-const SECTIONS: { id: SectionId; icon: NavIconName }[] = [
+export const SECTIONS: { id: SectionId; icon: NavIconName }[] = [
   { id: "brain", icon: "brain" },
   { id: "permissions", icon: "permissions" },
   { id: "connectors", icon: "connectors" },

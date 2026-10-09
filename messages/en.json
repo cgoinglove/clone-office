@@ -1236,7 +1236,7 @@
       "received": "Received",
       "sent": "Sent",
       "groups": {
-        "yours": "Your turn",
+        "yours": "To decide",
         "working": "On its way",
         "waiting": "Waiting on them",
         "done": "Done"
@@ -1263,7 +1263,7 @@
       "alone": "Just you so far",
       "invite": "Invite",
       "setUp": "Set up your office",
-      "yourTurn": "Your turn",
+      "yourTurn": "To decide",
       "answerHere": "Answer right here",
       "fromColleague": "{name}'s clone asks",
       "fromClone": "Your clone asks",
@@ -1307,15 +1307,15 @@
       }
     },
     "newChat": "New chat",
-    "yourTurn": "Your turn",
-    "yourTurnCount": "{count, plural, one {# waits on you} other {# wait on you}}",
+    "yourTurn": "To decide",
+    "yourTurnCount": "{count, plural, one {# to decide} other {# to decide}}",
     "recentChats": "Recent chats",
     "chatWaits": "A question waits in this chat",
     "statusLabel": "Your status: {status}",
     "statusTitle": "Your status in the office",
     "settings": "Settings",
     "phase": {
-      "yours": "Your turn",
+      "yours": "To decide",
       "working": "Working",
       "waiting": "Waiting on them",
       "done": "Done",
@@ -1400,7 +1400,7 @@
       "theirClone": "{name}'s clone",
       "theyWork": "{name}'s clone is on it.",
       "cloneWorks": "Your clone is on it.",
-      "yourTurn": "Your turn",
+      "yourTurn": "To decide",
       "addPlaceholder": "Add something for {name}'s clone",
       "add": "Add",
       "about": "About this request",
@@ -1527,7 +1527,41 @@
       "other": "This kind of file opens in its own app: save it."
     },
     "meetingOn": "Clones meeting",
-    "chatAnswering": "Your clone is answering here"
+    "chatAnswering": "Your clone is answering here",
+    "search": "Search",
+    "fold": "Hide sidebar",
+    "unfold": "Show sidebar",
+    "openMenu": "Open menu",
+    "me": {
+      "label": "{name}: your menu",
+      "you": "You",
+      "office": "Office",
+      "here": "Open on this computer · {count, plural, one {# person} other {# people}}",
+      "at": "{host} · {count, plural, one {# person} other {# people}}",
+      "invite": "Invite a colleague",
+      "invited": "Invite link copied",
+      "shortcuts": "Keyboard shortcuts"
+    },
+    "keys": {
+      "fold": "Hide or show the sidebar",
+      "section": "A section of Settings",
+      "box": "Write to your clone",
+      "list": "This list"
+    },
+    "palette": {
+      "title": "Search and go",
+      "placeholder": "Search chats, requests and colleagues, or go somewhere",
+      "chats": "Chats",
+      "requests": "Requests",
+      "people": "Colleagues",
+      "go": "Go to",
+      "ask": "Ask your clone: “{text}”",
+      "askColleague": "Ask {name}",
+      "empty": "Nothing matches",
+      "move": "Move",
+      "open": "Open",
+      "askKey": "Ask your clone"
+    }
   },
   "page": {
     "notFound": {
@@ -1543,7 +1577,7 @@
     }
   },
   "plugin": {
-    "header": "Your turn",
+    "header": "To decide",
     "later": "Later",
     "stop": "Stop here",
     "none": "Nothing waits on you.",

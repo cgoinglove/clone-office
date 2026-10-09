@@ -1236,7 +1236,7 @@
       "received": "受け取った",
       "sent": "送った",
       "groups": {
-        "yours": "あなたの番",
+        "yours": "決めること",
         "working": "進行中",
         "waiting": "相手待ち",
         "done": "完了"
@@ -1263,7 +1263,7 @@
       "alone": "今のところあなただけ",
       "invite": "招待",
       "setUp": "オフィスを用意する",
-      "yourTurn": "あなたの番",
+      "yourTurn": "決めること",
       "answerHere": "ここで答えられます",
       "fromColleague": "{name}さんのクローンからの質問",
       "fromClone": "あなたのクローンからの質問",
@@ -1307,15 +1307,15 @@
       }
     },
     "newChat": "新しいチャット",
-    "yourTurn": "あなたの番",
-    "yourTurnCount": "{count, plural, other {あなた待ち #件}}",
+    "yourTurn": "決めること",
+    "yourTurnCount": "{count, plural, other {決めること #件}}",
     "recentChats": "最近のチャット",
     "chatWaits": "このチャットで質問が待っています",
     "statusLabel": "ステータス：{status}",
     "statusTitle": "オフィスでのステータス",
     "settings": "設定",
     "phase": {
-      "yours": "あなたの番",
+      "yours": "決めること",
       "working": "対応中",
       "waiting": "相手待ち",
       "done": "完了",
@@ -1400,7 +1400,7 @@
       "theirClone": "{name}さんのクローン",
       "theyWork": "{name}さんのクローンが対応中です。",
       "cloneWorks": "あなたのクローンが対応中です。",
-      "yourTurn": "あなたの番",
+      "yourTurn": "決めること",
       "addPlaceholder": "{name}さんのクローンに伝えたいことを追加",
       "add": "追加",
       "about": "この依頼について",
@@ -1527,7 +1527,41 @@
       "other": "この種類のファイルは専用のアプリで開きます。保存してください。"
     },
     "meetingOn": "クローン会議中",
-    "chatAnswering": "クローンがここで答えています"
+    "chatAnswering": "クローンがここで答えています",
+    "search": "検索",
+    "fold": "サイドバーを隠す",
+    "unfold": "サイドバーを表示",
+    "openMenu": "メニューを開く",
+    "me": {
+      "label": "{name}：自分のメニュー",
+      "you": "自分",
+      "office": "オフィス",
+      "here": "このコンピューターで開いています · {count}人",
+      "at": "{host} · {count}人",
+      "invite": "同僚を招待",
+      "invited": "招待リンクをコピーしました",
+      "shortcuts": "キーボードショートカット"
+    },
+    "keys": {
+      "fold": "サイドバーの表示・非表示",
+      "section": "設定の各セクションへ",
+      "box": "クローンへの入力欄へ",
+      "list": "この一覧"
+    },
+    "palette": {
+      "title": "検索と移動",
+      "placeholder": "会話・依頼・同僚を探す、または移動",
+      "chats": "会話",
+      "requests": "依頼",
+      "people": "同僚",
+      "go": "移動",
+      "ask": "クローンに聞く：「{text}」",
+      "askColleague": "{name} さんに依頼",
+      "empty": "一致するものがありません",
+      "move": "選ぶ",
+      "open": "開く",
+      "askKey": "クローンに聞く"
+    }
   },
   "page": {
     "notFound": {
@@ -1543,7 +1577,7 @@
     }
   },
   "plugin": {
-    "header": "あなたの番",
+    "header": "決めること",
     "later": "あとで",
     "stop": "ここまで",
     "none": "あなた待ちのものはありません。",

@@ -1236,7 +1236,7 @@
       "received": "Recebidos",
       "sent": "Enviados",
       "groups": {
-        "yours": "Sua vez",
+        "yours": "Para decidir",
         "working": "A caminho",
         "waiting": "Esperando os outros",
         "done": "Concluídos"
@@ -1263,7 +1263,7 @@
       "alone": "Só você, por enquanto",
       "invite": "Convidar",
       "setUp": "Configurar seu escritório",
-      "yourTurn": "Sua vez",
+      "yourTurn": "Para decidir",
       "answerHere": "Responda aqui mesmo",
       "fromColleague": "O clone de {name} pergunta",
       "fromClone": "Seu clone pergunta",
@@ -1307,15 +1307,15 @@
       }
     },
     "newChat": "Novo chat",
-    "yourTurn": "Sua vez",
-    "yourTurnCount": "{count, plural, one {# esperando por você} other {# esperando por você}}",
+    "yourTurn": "Para decidir",
+    "yourTurnCount": "{count, plural, one {# para decidir} other {# para decidir}}",
     "recentChats": "Chats recentes",
     "chatWaits": "Uma pergunta está esperando neste chat",
     "statusLabel": "Seu status: {status}",
     "statusTitle": "Seu status no escritório",
     "settings": "Configurações",
     "phase": {
-      "yours": "Sua vez",
+      "yours": "Para decidir",
       "working": "Em andamento",
       "waiting": "Esperando os outros",
       "done": "Concluído",
@@ -1400,7 +1400,7 @@
       "theirClone": "Clone de {name}",
       "theyWork": "O clone de {name} está cuidando disso.",
       "cloneWorks": "Seu clone está cuidando disso.",
-      "yourTurn": "Sua vez",
+      "yourTurn": "Para decidir",
       "addPlaceholder": "Acrescente algo para o clone de {name}",
       "add": "Adicionar",
       "about": "Sobre este pedido",
@@ -1527,7 +1527,41 @@
       "other": "Este tipo de arquivo abre no próprio app: salve-o."
     },
     "meetingOn": "Reunião de clones",
-    "chatAnswering": "Seu clone está respondendo aqui"
+    "chatAnswering": "Seu clone está respondendo aqui",
+    "search": "Buscar",
+    "fold": "Ocultar barra lateral",
+    "unfold": "Mostrar barra lateral",
+    "openMenu": "Abrir menu",
+    "me": {
+      "label": "{name}: seu menu",
+      "you": "Você",
+      "office": "Escritório",
+      "here": "Aberto neste computador · {count, plural, one {# pessoa} other {# pessoas}}",
+      "at": "{host} · {count, plural, one {# pessoa} other {# pessoas}}",
+      "invite": "Convidar um colega",
+      "invited": "Link de convite copiado",
+      "shortcuts": "Atalhos de teclado"
+    },
+    "keys": {
+      "fold": "Ocultar ou mostrar a barra lateral",
+      "section": "Uma seção das Configurações",
+      "box": "Escrever para seu clone",
+      "list": "Esta lista"
+    },
+    "palette": {
+      "title": "Buscar e ir",
+      "placeholder": "Busque conversas, pedidos e colegas, ou vá para outro lugar",
+      "chats": "Conversas",
+      "requests": "Pedidos",
+      "people": "Colegas",
+      "go": "Ir para",
+      "ask": "Pergunte ao seu clone: “{text}”",
+      "askColleague": "Pedir a {name}",
+      "empty": "Nada encontrado",
+      "move": "Mover",
+      "open": "Abrir",
+      "askKey": "Perguntar ao clone"
+    }
   },
   "page": {
     "notFound": {
@@ -1543,7 +1577,7 @@
     }
   },
   "plugin": {
-    "header": "Sua vez",
+    "header": "Para decidir",
     "later": "Depois",
     "stop": "Parar aqui",
     "none": "Nada esperando por você.",

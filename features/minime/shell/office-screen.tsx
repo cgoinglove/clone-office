@@ -15,7 +15,6 @@ import { OfficeRoom } from "@/features/office/room/office-room";
 import { useApp } from "./app-state";
 import { MeetingPanel, MeetingStart, useMeetings } from "./meeting";
 import { OfficeTrouble } from "./office-trouble";
-import { Flap, twoDigits } from "./parts";
 import { TurnRows } from "./turn-rows";
 import { type TurnItem, turnHref, yourTurn } from "./your-turn";
 
@@ -201,7 +200,9 @@ function Board({
         <h2 id="o-turn" className="text-sm font-semibold">
           {t("yourTurn")}
         </h2>
-        <Flap value={twoDigits(turns.length)} tone="ember" />
+        <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+          {turns.length}
+        </span>
         <span className="ml-auto text-xs text-muted-foreground">
           {t("answerHere")}
         </span>

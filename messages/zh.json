@@ -1236,7 +1236,7 @@
       "received": "收到的",
       "sent": "发出的",
       "groups": {
-        "yours": "待你处理",
+        "yours": "待你决定",
         "working": "进行中",
         "waiting": "等对方",
         "done": "完成"
@@ -1263,7 +1263,7 @@
       "alone": "目前只有你",
       "invite": "邀请",
       "setUp": "设置你的办公室",
-      "yourTurn": "待你处理",
+      "yourTurn": "待你决定",
       "answerHere": "直接在这里回答",
       "fromColleague": "{name}的分身问",
       "fromClone": "你的分身问",
@@ -1307,15 +1307,15 @@
       }
     },
     "newChat": "新对话",
-    "yourTurn": "待你处理",
-    "yourTurnCount": "{count, plural, other {# 件等你处理}}",
+    "yourTurn": "待你决定",
+    "yourTurnCount": "{count, plural, other {# 件待你决定}}",
     "recentChats": "最近对话",
     "chatWaits": "这个对话里有问题在等你",
     "statusLabel": "你的状态：{status}",
     "statusTitle": "你在办公室的状态",
     "settings": "设置",
     "phase": {
-      "yours": "待你处理",
+      "yours": "待你决定",
       "working": "处理中",
       "waiting": "等对方",
       "done": "完成",
@@ -1400,7 +1400,7 @@
       "theirClone": "{name}的分身",
       "theyWork": "{name}的分身正在处理。",
       "cloneWorks": "你的分身正在处理。",
-      "yourTurn": "待你处理",
+      "yourTurn": "待你决定",
       "addPlaceholder": "给{name}的分身补充点什么",
       "add": "补充",
       "about": "关于这个请求",
@@ -1527,7 +1527,41 @@
       "other": "这种文件需要用它自己的应用打开，请先保存。"
     },
     "meetingOn": "分身会议中",
-    "chatAnswering": "你的分身正在这里回答"
+    "chatAnswering": "你的分身正在这里回答",
+    "search": "搜索",
+    "fold": "收起侧栏",
+    "unfold": "展开侧栏",
+    "openMenu": "打开菜单",
+    "me": {
+      "label": "{name}：我的菜单",
+      "you": "我",
+      "office": "办公室",
+      "here": "在这台电脑上打开 · {count} 人",
+      "at": "{host} · {count} 人",
+      "invite": "邀请同事",
+      "invited": "已复制邀请链接",
+      "shortcuts": "键盘快捷键"
+    },
+    "keys": {
+      "fold": "收起或展开侧栏",
+      "section": "设置中的某一栏",
+      "box": "给克隆写消息",
+      "list": "此列表"
+    },
+    "palette": {
+      "title": "搜索与跳转",
+      "placeholder": "搜索对话、请求和同事，或直接跳转",
+      "chats": "对话",
+      "requests": "请求",
+      "people": "同事",
+      "go": "跳转",
+      "ask": "问你的克隆：“{text}”",
+      "askColleague": "请 {name} 帮忙",
+      "empty": "没有匹配项",
+      "move": "选择",
+      "open": "打开",
+      "askKey": "问克隆"
+    }
   },
   "page": {
     "notFound": {
@@ -1543,7 +1577,7 @@
     }
   },
   "plugin": {
-    "header": "待你处理",
+    "header": "待你决定",
     "later": "稍后",
     "stop": "先到这里",
     "none": "没有等你处理的事。",

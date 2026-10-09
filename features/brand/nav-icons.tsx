@@ -9,6 +9,7 @@ import {
   House,
   ListChecks,
   type LucideIcon,
+  Search,
   Settings2,
   ShieldCheck,
   SlidersHorizontal,
@@ -21,6 +22,7 @@ import { LogoMark } from "./logo";
 /** Thursday's choices where it has the same place (Models, Connectors, Phone, its settings). */
 const ICONS = {
   compose: SquarePen,
+  search: Search,
   home: House,
   requests: ListChecks,
   office: Building2,

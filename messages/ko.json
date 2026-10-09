@@ -486,7 +486,7 @@
     "leave": "오피스 나가기",
     "asksTitle": "부탁에 내 답이 필요해요",
     "team": "우리 팀",
-    "needsYou": "내 차례",
+    "needsYou": "정할 것 있음",
     "menu": {
       "title": "받는 부탁",
       "intro": "동료의 클론이 나에게 가져올 수 있는 부탁이에요. 종류마다 내 클론이 얼마나 알아서 할지 정해요. 동료에게는 종류만 보이고, 얼마나 알아서 하는지는 보이지 않아요.",
@@ -518,7 +518,7 @@
     "miniMe": "{name} 님의 클론",
     "floor": {
       "you": "{name} (나)",
-      "needsYou": "내 차례",
+      "needsYou": "정할 것",
       "waitingOnDecision": "결정을 기다리는 중",
       "computerOff": "컴퓨터 꺼짐",
       "working": "일하는 중",
@@ -565,7 +565,7 @@
       "plate": {
         "youShort": "나",
         "you": "{name} (나)",
-        "needsYou": "내 차례",
+        "needsYou": "정할 것",
         "deciding": "결정 기다림",
         "away": "자리 비움",
         "goingTo": "→ {name}",
@@ -584,7 +584,7 @@
         "close": "닫기",
         "atDesk": "자리에 있음",
         "away": "자리 비움",
-        "needsYou": "내 차례",
+        "needsYou": "정할 것 있음",
         "waitingOn": "{name} 님의 결정을 기다리는 중",
         "onDesk": "책상 위",
         "doneToday": "오늘 끝냄",
@@ -608,7 +608,7 @@
         "evening": "좋은 저녁이에요, {name} 님",
         "in": "동료 {count, plural, one {#명} other {#명}} 중 {in}명 출근",
         "alone": "아직 동료가 없어요",
-        "waiting": "{count, plural, one {나를 기다리는 일 #건} other {나를 기다리는 일 #건}}",
+        "waiting": "{count, plural, other {정할 것 #건}}",
         "clockIn": "출근하기",
         "enter": "Enter",
         "foot": "내 클론은 이 컴퓨터에서 일해요.",
@@ -907,7 +907,7 @@
     "panel": "옆 패널",
     "closePanel": "닫기",
     "settings": "설정",
-    "waitingCount": "{count, plural, one {나를 기다리는 일 #개} other {나를 기다리는 일 #개}}",
+    "waitingCount": "{count, plural, other {정할 것 #개}}",
     "learning": "일하는 방식을 배우는 중",
     "statusLabel": "오피스에서 내 상태",
     "composer": "클론에게 무엇이든 부탁해 보세요…",
@@ -1236,9 +1236,9 @@
       "received": "받은 부탁",
       "sent": "보낸 부탁",
       "groups": {
-        "yours": "내 차례",
+        "yours": "정할 것",
         "working": "진행 중",
-        "waiting": "상대 차례",
+        "waiting": "답 기다리는 중",
         "done": "완료"
       },
       "noAnswerYet": "아직 답이 없어요",
@@ -1263,7 +1263,7 @@
       "alone": "아직 나 혼자예요",
       "invite": "초대하기",
       "setUp": "오피스 준비하기",
-      "yourTurn": "내 차례",
+      "yourTurn": "정할 것",
       "answerHere": "여기서 바로 답할 수 있어요",
       "fromColleague": "{name} 님의 클론이 물어요",
       "fromClone": "내 클론이 물어요",
@@ -1307,17 +1307,17 @@
       }
     },
     "newChat": "새 대화",
-    "yourTurn": "내 차례",
-    "yourTurnCount": "나를 기다리는 일 {count}개",
+    "yourTurn": "정할 것",
+    "yourTurnCount": "정할 것 {count}개",
     "recentChats": "최근 대화",
     "chatWaits": "이 대화에 답을 기다리는 질문이 있어요",
     "statusLabel": "내 상태: {status}",
     "statusTitle": "오피스에서 내 상태",
     "settings": "설정",
     "phase": {
-      "yours": "내 차례",
+      "yours": "정할 것",
       "working": "처리 중",
-      "waiting": "상대 차례",
+      "waiting": "답 기다림",
       "done": "완료",
       "failed": "전달 안 됨"
     },
@@ -1400,7 +1400,7 @@
       "theirClone": "{name} 님의 클론",
       "theyWork": "{name} 님의 클론이 처리하고 있어요.",
       "cloneWorks": "내 클론이 처리하고 있어요.",
-      "yourTurn": "내 차례",
+      "yourTurn": "정할 것",
       "addPlaceholder": "{name} 님의 클론에게 덧붙일 말",
       "add": "덧붙이기",
       "about": "부탁 정보",
@@ -1456,7 +1456,7 @@
         "afternoon": "안녕하세요",
         "evening": "좋은 저녁이에요"
       },
-      "summary": "{decide, plural, =0 {나를 기다리는 일 없음} other {나를 기다리는 일 #개}} · {moving, plural, =0 {오가는 부탁 없음} other {오가는 부탁 #개}} · {answered, plural, =0 {오늘 클론이 답한 동료 없음} other {오늘 클론이 동료 #명에게 답함}}",
+      "summary": "{decide, plural, =0 {정할 것 없음} other {정할 것 #개}} · {moving, plural, =0 {오가는 부탁 없음} other {오가는 부탁 #개}} · {answered, plural, =0 {오늘 클론이 답한 동료 없음} other {오늘 클론이 동료 #명에게 답함}}",
       "askPlaceholder": "클론에게 무엇이든 말해 보세요. 동료 이름을 넣으면 그 동료의 클론에게 물어요…",
       "askSend": "보내기",
       "try": {
@@ -1527,7 +1527,41 @@
       "other": "이 파일은 그 파일을 여는 앱에서 열려요. 저장해 주세요."
     },
     "meetingOn": "클론 회의 중",
-    "chatAnswering": "클론이 여기서 답하는 중"
+    "chatAnswering": "클론이 여기서 답하는 중",
+    "search": "검색",
+    "fold": "사이드바 접기",
+    "unfold": "사이드바 펼치기",
+    "openMenu": "메뉴 열기",
+    "me": {
+      "label": "{name} · 내 메뉴",
+      "you": "나",
+      "office": "오피스",
+      "here": "이 컴퓨터에서 열림 · {count}명",
+      "at": "{host} · {count}명",
+      "invite": "동료 초대",
+      "invited": "초대 링크를 복사했어요",
+      "shortcuts": "단축키"
+    },
+    "keys": {
+      "fold": "사이드바 접기·펼치기",
+      "section": "설정의 칸으로",
+      "box": "클론에게 쓰는 칸으로",
+      "list": "이 목록"
+    },
+    "palette": {
+      "title": "찾기와 이동",
+      "placeholder": "대화·부탁·동료를 찾거나 바로 가기",
+      "chats": "대화",
+      "requests": "부탁",
+      "people": "동료",
+      "go": "이동",
+      "ask": "클론에게 묻기: “{text}”",
+      "askColleague": "{name} 님에게 부탁하기",
+      "empty": "맞는 게 없어요",
+      "move": "고르기",
+      "open": "열기",
+      "askKey": "클론에게 묻기"
+    }
   },
   "page": {
     "notFound": {
@@ -1543,7 +1577,7 @@
     }
   },
   "plugin": {
-    "header": "내 차례",
+    "header": "정할 것",
     "later": "나중에",
     "stop": "그만하기",
     "none": "기다리는 일이 없어요.",

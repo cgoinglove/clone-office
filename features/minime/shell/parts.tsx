@@ -155,17 +155,15 @@ export function DoneStamp({ className }: { className?: string }) {
 }
 
 /**
- * Digits as the office's departures board shows them: one card per character, its lower half a
- * shade darker. The ember board counts what waits on the person; the paper one tells times.
+ * Digits as a departures board shows them, one card per character with its lower half a shade
+ * darker: times and rounds. A count of what waits on the person is a plain number (10-10).
  */
 export function Flap({
   value,
-  tone = "paper",
   label,
   className,
 }: {
   value: string;
-  tone?: "paper" | "ember";
   /** What a screen reader hears instead of the cards. */
   label?: string;
   className?: string;
@@ -184,12 +182,7 @@ export function Flap({
         /[0-9A-Z]/.test(char) ? (
           <span
             key={at}
-            className={cn(
-              "grid h-[18px] w-[13px] place-items-center rounded-[3px]",
-              tone === "ember"
-                ? "bg-[linear-gradient(var(--waiting)_0_50%,color-mix(in_oklab,var(--waiting),black_14%)_50%_100%)] text-white"
-                : "bg-[linear-gradient(var(--background)_0_50%,var(--muted)_50%_100%)] text-foreground shadow-[inset_0_0_0_1px_var(--alpha-12)]",
-            )}
+            className="grid h-[18px] w-[13px] place-items-center rounded-[3px] bg-[linear-gradient(var(--background)_0_50%,var(--muted)_50%_100%)] text-foreground shadow-[inset_0_0_0_1px_var(--alpha-12)]"
           >
             {char}
           </span>
@@ -203,17 +196,20 @@ export function Flap({
   );
 }
 
-/** Two digits, as the board counts. */
-export const twoDigits = (n: number) =>
-  String(Math.min(99, n)).padStart(2, "0");
-
 /** A person's office status as a dot: the brand while working, a ring when gone home. */
-export function StatusDot({ status }: { status: string }) {
+export function StatusDot({
+  status,
+  className,
+}: {
+  status: string;
+  className?: string;
+}) {
   return (
     <span
       aria-hidden
       className={cn(
         "size-1.5 shrink-0 rounded-full",
+        className,
         status === "working"
           ? "bg-brand"
           : status === "off"

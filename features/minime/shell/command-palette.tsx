@@ -1,0 +1,357 @@
+"use client";
+
+// One box that finds anything and goes there (⌘K, or Search in the column), after the palettes
+// ChatGPT, Claude and Linear keep: the person's conversations by title, the requests between
+// clones by what was asked, colleagues (asking one starts the sentence in the conversation box),
+// the places and Settings' sections; and, for anything typed, asking the clone it in a new
+// conversation (⌘↵). Keys: ↑↓ move, ↵ opens, Esc closes and gives the focus back.
+
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { Command } from "cmdk";
+import { CornerDownLeft, MessageSquare, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useFormatter, useNow, useTranslations } from "next-intl";
+import { type ReactNode, useState } from "react";
+import { NavIcon } from "@/features/brand/nav-icons";
+import { SECTIONS } from "../settings/settings";
+import { useApp } from "./app-state";
+import { Mark, PhaseChip, phaseOf } from "./parts";
+import { yourTurn } from "./your-turn";
+
+const PLACES = [
+  { href: "/home", key: "home" },
+  { href: "/requests", key: "requests" },
+  { href: "/office", key: "office" },
+  { href: "/clone", key: "clone" },
+] as const;
+
+const item =
+  "flex min-h-9 cursor-default items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[14px] outline-none select-none data-[selected=true]:bg-muted [&_svg]:shrink-0";
+const group =
+  "px-1.5 pt-1.5 pb-1 **:[[cmdk-group-heading]]:flex **:[[cmdk-group-heading]]:h-7 **:[[cmdk-group-heading]]:items-center **:[[cmdk-group-heading]]:px-2.5 **:[[cmdk-group-heading]]:text-xs **:[[cmdk-group-heading]]:font-medium **:[[cmdk-group-heading]]:text-muted-foreground";
+
+function Row({
+  lead,
+  title,
+  sub,
+  right,
+}: {
+  lead: ReactNode;
+  title: string;
+  sub?: string;
+  right?: ReactNode;
+}) {
+  return (
+    <>
+      <span className="grid w-4 place-items-center">{lead}</span>
+      <span className="flex min-w-0 flex-1 flex-col leading-snug">
+        <span className="truncate">{title}</span>
+        {sub && (
+          <span className="truncate text-xs text-muted-foreground">{sub}</span>
+        )}
+      </span>
+      {right}
+    </>
+  );
+}
+
+export function CommandPalette({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("shell");
+  const tSettings = useTranslations("settings.sections");
+  const tChat = useTranslations("shell.chat");
+  const app = useApp();
+  const router = useRouter();
+  const format = useFormatter();
+  const now = useNow({ updateInterval: 60_000 });
+  const [query, setQuery] = useState("");
+  const data = app.office.office;
+  const members = data?.members ?? [];
+  const me = data?.me?.id;
+  const indexOf = (id?: string) =>
+    Math.max(
+      0,
+      members.findIndex((member) => member.id === id),
+    );
+  const nameOf = (id?: string) =>
+    members.find((member) => member.id === id)?.card.name ?? "";
+  const yours = new Set(
+    yourTurn(app.office, app.chatAsks).flatMap((entry) =>
+      entry.where.kind === "request" && entry.where.task
+        ? [entry.where.task]
+        : [],
+    ),
+  );
+  const asked = query.trim();
+
+  const go = (run: () => void) => {
+    onOpenChange(false);
+    setQuery("");
+    run();
+  };
+  const ask = () => {
+    if (!asked) return;
+    go(() => router.push(`/chat?send=${encodeURIComponent(asked)}`));
+  };
+
+  return (
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(next) => {
+        onOpenChange(next);
+        if (!next) setQuery("");
+      }}
+    >
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/15 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+        <DialogPrimitive.Popup
+          aria-label={t("palette.title")}
+          className="fixed top-[12vh] left-1/2 z-50 w-[min(640px,calc(100%-2rem))] -translate-x-1/2 overflow-hidden rounded-[14px] bg-popover text-popover-foreground shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)] outline-none duration-100 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-98 data-closed:animate-out data-closed:fade-out-0"
+        >
+          <Command
+            label={t("palette.title")}
+            loop
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                ask();
+              }
+            }}
+          >
+            <div className="flex h-14 items-center gap-3 border-b border-border/60 px-[18px]">
+              <Search className="size-[18px] shrink-0 text-muted-foreground" />
+              <Command.Input
+                value={query}
+                onValueChange={setQuery}
+                placeholder={t("palette.placeholder")}
+                className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground/80"
+              />
+              <kbd className="font-mono text-[11px] text-muted-foreground">
+                esc
+              </kbd>
+            </div>
+            <Command.List className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto pb-1.5">
+              <Command.Empty className="px-4 py-8 text-center text-sm text-muted-foreground">
+                {t("palette.empty")}
+              </Command.Empty>
+
+              {asked && (
+                <Command.Group forceMount className={group}>
+                  <Command.Item
+                    forceMount
+                    value={`ask ${asked}`}
+                    onSelect={ask}
+                    className={item}
+                  >
+                    <Row
+                      lead={
+                        <MessageSquare className="size-4 text-muted-foreground" />
+                      }
+                      title={t("palette.ask", { text: asked })}
+                      right={
+                        <kbd className="font-mono text-[11px] text-muted-foreground">
+                          ⌘↵
+                        </kbd>
+                      }
+                    />
+                  </Command.Item>
+                </Command.Group>
+              )}
+
+              {app.chat.chats.length > 0 && (
+                <Command.Group heading={t("palette.chats")} className={group}>
+                  {app.chat.chats.map((chat) => (
+                    <Command.Item
+                      key={chat.id}
+                      value={`chat ${chat.id} ${chat.title}`}
+                      keywords={[chat.title]}
+                      onSelect={() =>
+                        go(() =>
+                          router.push(`/chat?c=${encodeURIComponent(chat.id)}`),
+                        )
+                      }
+                      className={item}
+                    >
+                      <Row
+                        lead={
+                          <MessageSquare className="size-4 text-muted-foreground" />
+                        }
+                        title={chat.title}
+                        right={
+                          chat.updated && (
+                            <span className="shrink-0 text-xs text-muted-foreground">
+                              {format.relativeTime(new Date(chat.updated), {
+                                now,
+                                style: "narrow",
+                              })}
+                            </span>
+                          )
+                        }
+                      />
+                    </Command.Item>
+                  ))}
+                </Command.Group>
+              )}
+
+              {(data?.tasks?.length ?? 0) > 0 && (
+                <Command.Group
+                  heading={t("palette.requests")}
+                  className={group}
+                >
+                  {(data?.tasks ?? []).map((task) => {
+                    const text =
+                      task.history[0]?.parts
+                        .map((part) => part.text ?? "")
+                        .join(" ")
+                        .trim() ?? "";
+                    const other =
+                      task.metadata.from === me
+                        ? task.metadata.to
+                        : task.metadata.from;
+                    return (
+                      <Command.Item
+                        key={task.id}
+                        value={`request ${task.id} ${text}`}
+                        keywords={[text, nameOf(other)]}
+                        onSelect={() =>
+                          go(() =>
+                            router.push(
+                              `/requests/${encodeURIComponent(task.id)}`,
+                            ),
+                          )
+                        }
+                        className={item}
+                      >
+                        <Row
+                          lead={
+                            <Mark id={other} index={indexOf(other)} size={16} />
+                          }
+                          title={text}
+                          sub={nameOf(other)}
+                          right={
+                            <PhaseChip
+                              phase={phaseOf(
+                                task.status.state,
+                                yours.has(task.id),
+                              )}
+                            />
+                          }
+                        />
+                      </Command.Item>
+                    );
+                  })}
+                </Command.Group>
+              )}
+
+              {members.length > 1 && (
+                <Command.Group heading={t("palette.people")} className={group}>
+                  {members
+                    .filter((member) => member.id !== me)
+                    .map((member) => (
+                      <Command.Item
+                        key={member.id}
+                        value={`person ${member.id} ${member.card.name}`}
+                        keywords={[
+                          member.card.name,
+                          member.card.description ?? "",
+                          ...(member.card.owns ?? []),
+                        ]}
+                        onSelect={() =>
+                          go(() =>
+                            router.push(
+                              `/chat?say=${encodeURIComponent(
+                                tChat("askStarter", { name: member.card.name }),
+                              )}`,
+                            ),
+                          )
+                        }
+                        className={item}
+                      >
+                        <Row
+                          lead={
+                            <Mark
+                              id={member.id}
+                              index={indexOf(member.id)}
+                              size={16}
+                            />
+                          }
+                          title={t("palette.askColleague", {
+                            name: member.card.name,
+                          })}
+                          sub={[
+                            member.card.description,
+                            ...(member.card.owns ?? []),
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        />
+                      </Command.Item>
+                    ))}
+                </Command.Group>
+              )}
+
+              <Command.Group heading={t("palette.go")} className={group}>
+                {PLACES.map((place) => (
+                  <Command.Item
+                    key={place.href}
+                    value={`go ${place.key} ${t(`screens.${place.key}`)}`}
+                    onSelect={() => go(() => router.push(place.href))}
+                    className={item}
+                  >
+                    <Row
+                      lead={
+                        <NavIcon
+                          name={place.key}
+                          className="size-4 text-muted-foreground"
+                        />
+                      }
+                      title={t(`screens.${place.key}`)}
+                    />
+                  </Command.Item>
+                ))}
+                {SECTIONS.map((section) => (
+                  <Command.Item
+                    key={section.id}
+                    value={`settings ${section.id} ${tSettings(`${section.id}.label`)}`}
+                    keywords={[t("settings")]}
+                    onSelect={() => go(() => app.setSettings(section.id))}
+                    className={item}
+                  >
+                    <Row
+                      lead={
+                        <NavIcon
+                          name={section.icon}
+                          className="size-4 text-muted-foreground"
+                        />
+                      }
+                      title={`${t("settings")} › ${tSettings(`${section.id}.label`)}`}
+                    />
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            </Command.List>
+            <div className="flex h-10 items-center gap-4 border-t border-border/60 px-[18px] text-xs text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <kbd className="font-mono text-[11px]">↑↓</kbd>
+                {t("palette.move")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <CornerDownLeft className="size-3" />
+                {t("palette.open")}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <kbd className="font-mono text-[11px]">⌘↵</kbd>
+                {t("palette.askKey")}
+              </span>
+            </div>
+          </Command>
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
+  );
+}
