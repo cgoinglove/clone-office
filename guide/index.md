@@ -103,10 +103,11 @@ the loop out as an example with nobody real in it. **Get started** (시작하기
 named in a bar at the top: what it thinks with, picked from one field that opens on the vendors and
 what each offers, and checked to answer at once (`brain.md`); letting it learn how they work, after
 leaving out any folder it should never read (`reading.md`, `memory.md`): when it has read, it shows
-**What I understood about you** (제가 이해한 내용) beside the steps, in the office's place, a card
-for each kind of thing it kept (pressing one lists all of it, each line with a × to take it back),
-and, under **If a colleague asks** (동료가 이렇게 물으면), what it
-would answer a colleague in their place (with no AI records
+**What I understood about you** (제가 이해한 내용) in short, by names (what they do, their projects,
+the people, their tools, their folders; pressing one lists all of it, each line with a × to take
+it back), while beside it, in the office, a colleague's clone brings the question it expects a
+colleague to ask and theirs answers it in their place (on a narrow window, under **If a colleague
+asks**, 동료가 이렇게 물으면) (with no AI records
 on the computer, it simply learns as they work); who they are (name, what they do, what they look
 after and the tools they work in, filled in from what it read for them to correct, with their card
 as colleagues will see it laid over the office as they write) and whether a team is in it

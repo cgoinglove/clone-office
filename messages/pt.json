@@ -179,7 +179,7 @@
       "exampleAnswer": "Eu responderia por você",
       "doneTitle": "Foi isto que entendi",
       "folders": "Pastas que ele lê",
-      "doneBody": "Aprendeu {count, plural, one {# coisa} other {# coisas}} sobre você e seu trabalho. Altere ou remova qualquer coisa depois em Seu clone › O que ele sabe.",
+      "doneBody": "Aprendeu {count, plural, one {# coisa} other {# coisas}} sobre você e seu trabalho. Toque em qualquer uma para ver tudo e tirar o que estiver errado.",
       "found": "Encontrado aqui",
       "bring": "Usa os apps do ChatGPT ou Claude? Traga a memória deles também",
       "bringTitle": "Traga o que sua IA de sempre lembra",
@@ -207,9 +207,13 @@
         "where": "Remova com × o que estiver errado ou você não quiser que ele guarde. Também dá para mudar depois em Seu clone › O que ele sabe.",
         "more": "mais {count}",
         "forget": "Remover: {item}",
-        "whereRole": "O que você faz e cuida é ajustado no próximo passo, Você e a equipe."
+        "whereRole": "O que você faz e cuida é ajustado no próximo passo, Você e a equipe.",
+        "lines": "{count, plural, one {# linha} other {# linhas}}"
       },
-      "foldersHint": "Confira e desmarque as que quiser deixar de fora"
+      "foldersHint": "Confira e desmarque as que quiser deixar de fora",
+      "exampleFrom": "O clone de {name} pergunta",
+      "bringing": "Levando à sua mesa…",
+      "answering": "Seu clone está respondendo do seu jeito…"
     },
     "you": {
       "title": "Você e sua equipe",

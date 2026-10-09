@@ -6,15 +6,17 @@
 // and their office. Someone invited to an office joins it first, so their team's models are there
 // to pick. No step holds anyone: each can be passed and done later in Settings.
 //
-// The steps take one half of the window and what stands beside them the other: the office playing
-// the app's loop, what the reading understood once it has (KnowledgePane), and the card colleagues
-// will see while it is written. Every step stands in one frame: the name (with the clone's dot,
+// The steps take one half of the window and the office the other: playing the app's loop; once the
+// reading has understood them, a colleague's clone asking what it expects and theirs answering
+// (ExampleTalk), while the steps sum up what it understood in names (KnownSummary); and still
+// behind the card colleagues will see while it is written. Every step stands in one frame: the name (with the clone's dot,
 // after Thursday's brand dot) and the language on top, the steps beneath, the title in the same
 // place each time, and at the bottom only Back and the step's button. A screen meant to be seen at
 // once never grows because something was clicked: what is picked opens in a popover or a dialog at
 // its field (`.claude/rules/taste.md`, No growing panes), and what is under way always shows it.
 
 import {
+  AppWindow,
   Bookmark,
   BookOpen,
   Check,
@@ -22,6 +24,7 @@ import {
   ChevronRight,
   CircleCheck,
   EyeOff,
+  Folder,
   Link2,
   Loader2,
   Monitor,
@@ -77,6 +80,7 @@ import { parseInvite } from "../office/invite";
 import { PROFILE_LIMITS } from "../profile-limits";
 import { BringFromAnotherAi } from "../settings/clone-section";
 import { AutonomyChoice } from "../settings/preferences-section";
+import { Mark } from "../shell/parts";
 import { type DemoWords, useDemoRoom } from "./demo";
 
 type Step = "brain" | "learn" | "you" | "ready";
@@ -165,9 +169,13 @@ export function Onboarding() {
   }, []);
 
   // While they write their card, and on the last step, the office stands still with their own clone
-  // named after them.
+  // named after them. Once the reading has understood them, a colleague's clone brings the question
+  // the reading expects and their own clone answers it their way: what it learned, put to work.
   const calm = step === "you" || step === "ready";
-  const yourName = calm ? name.trim() : "";
+  const example =
+    step === "learn" && learn.stage === "done" ? learn.example : undefined;
+  const yourName =
+    calm || example ? name.trim() || learn.about?.name?.trim() || "" : "";
   const words = useMemo<DemoWords>(
     () => ({
       you: yourName || t("demo.you"),
@@ -176,15 +184,19 @@ export function Onboarding() {
         name: t(`demo.people.${id}.name`),
         role: t(`demo.people.${id}.role`),
       })),
-      ask: t("demo.ask"),
-      answer: t("demo.answer"),
+      ask: example?.question ?? t("demo.ask"),
+      answer: example?.answer ?? t("demo.answer"),
       decide: t("demo.decide"),
       question: t("demo.question"),
       decided: t("demo.decided"),
     }),
-    [t, yourName],
+    [t, yourName, example],
   );
-  const demo = useDemoRoom(words, wide, calm);
+  const demo = useDemoRoom(
+    words,
+    wide,
+    calm ? "still" : example ? "ask" : "loop",
+  );
   const at = step === "hello" ? -1 : order.indexOf(step);
   const next = order[at + 1] ?? "ready";
 
@@ -405,8 +417,7 @@ export function Onboarding() {
           lang={lang}
           folders={folders}
           nothingToRead={nothingToRead}
-          count={knowsCount}
-          // Beside the steps, what it understood fills the office's place (KnowledgePane).
+          // Beside the steps the office plays out the example a colleague would ask (ExampleTalk).
           listed={!wide}
         />
       </>
@@ -535,19 +546,19 @@ export function Onboarding() {
     );
   }
 
-  // What stands beside the steps: the office playing the app's loop, what the reading understood
-  // once it has, and the card colleagues will see while it is written and checked.
-  // The office stays drawn under what the reading understood, so coming back never draws it anew.
-  const knowing = step === "learn" && learned;
+  // Beside the steps, always the office: playing the app's loop; then a colleague's clone asking
+  // what the reading expects and theirs answering it, the exchange laid over it as it happens; and
+  // still behind the card colleagues will see.
   const pane = (
     <div className="relative my-4 mr-4 flex min-w-0 flex-1">
       <OfficePane
-        hidden={knowing}
         room={demo.room}
         beat={demo.beat}
         card={calm ? cardPreview : null}
+        talk={
+          example && !calm ? { ...example, asker: words.people[1].name } : null
+        }
       />
-      {knowing && <KnowledgePane learn={learn} count={knowsCount} />}
     </div>
   );
 
@@ -640,12 +651,12 @@ function OfficePane({
   room,
   beat,
   card,
-  hidden,
+  talk,
 }: {
   room: Parameters<typeof OfficeRoom>[0]["data"];
   beat: number;
-  /** Laid under another pane: kept, not drawn. */
-  hidden: boolean;
+  /** The question a colleague's clone brings and their own clone's answer, shown as it happens. */
+  talk: { question: string; answer: string; asker: string } | null;
   /** The person's own card, laid over the office in the place of the loop's caption. */
   card: ReactNode | null;
 }) {
@@ -654,7 +665,6 @@ function OfficePane({
   return (
     <section
       aria-label={t("demo.example")}
-      hidden={hidden}
       // An example to watch: nothing in it takes the keyboard or a click.
       inert
       className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-foreground/8 bg-background"
@@ -662,7 +672,7 @@ function OfficePane({
       {/* Still behind the card (their own clone named after them), it opens anew rather than
           finishing the loop's walks; an example opens with everyone already seated. */}
       <OfficeRoom
-        key={card ? "still" : "playing"}
+        key={card ? "still" : talk ? "ask" : "playing"}
         full
         example
         data={room}
@@ -672,7 +682,9 @@ function OfficePane({
         <span className="size-1.5 rounded-full bg-muted-foreground/70" />
         {t("demo.example")}
       </span>
-      {card ? (
+      {talk ? (
+        <ExampleTalk talk={talk} beat={beat} />
+      ) : card ? (
         <div className="pointer-events-none absolute bottom-5 left-5 flex w-[min(22rem,calc(100%-2.5rem))] animate-in flex-col gap-2 duration-500 fade-in slide-in-from-bottom-1">
           <span className="self-start rounded-md bg-background/90 px-1.5 py-0.5 text-xs text-muted-foreground backdrop-blur">
             {t("you.cardSeen")}
@@ -706,6 +718,56 @@ function OfficePane({
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * What the office shows happening, in words: a colleague's question as their clone brings it, and
+ * the answer as the person's own clone gives it, from what the reading understood. Under way, it
+ * says so.
+ */
+function ExampleTalk({
+  talk,
+  beat,
+}: {
+  talk: { question: string; answer: string; asker: string };
+  beat: number;
+}) {
+  const t = useTranslations("start.learn");
+  return (
+    <div className="pointer-events-none absolute inset-x-5 bottom-5 flex justify-center">
+      <div
+        aria-live="polite"
+        className="flex w-full max-w-[30rem] flex-col gap-3 rounded-[14px] bg-background/95 p-4 break-keep shadow-[0_0_0_1px_var(--alpha-10),0_12px_32px_-16px_var(--alpha-20)] backdrop-blur"
+      >
+        <div className="flex flex-col gap-1">
+          <span className="text-xs text-muted-foreground">
+            {t("exampleFrom", { name: talk.asker })}
+          </span>
+          <p className="line-clamp-2 text-[14px] leading-relaxed">
+            {talk.question}
+          </p>
+        </div>
+        {beat >= 3 ? (
+          <div
+            key="answer"
+            className="flex max-w-[92%] animate-in flex-col items-end gap-1 self-end duration-500 fade-in slide-in-from-bottom-1"
+          >
+            <span className="text-xs text-muted-foreground">
+              {t("exampleAnswer")}
+            </span>
+            <span className="rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[14px] leading-relaxed">
+              <span className="line-clamp-4">{talk.answer}</span>
+            </span>
+          </div>
+        ) : (
+          <ShinyText
+            text={beat >= 2 ? t("answering") : t("bringing")}
+            className="self-end text-[13px]"
+          />
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -1012,15 +1074,13 @@ function LearnStep({
   lang,
   folders,
   nothingToRead,
-  count,
   listed,
 }: {
   learn: ReturnType<typeof useLearn>;
   lang: string;
   folders: Folders;
   nothingToRead: boolean;
-  count: number;
-  /** What it understood is listed here (no room beside the steps for its own pane). */
+  /** No room beside the steps: the example a colleague would ask is shown here, not over the office. */
   listed: boolean;
 }) {
   const t = useTranslations("start");
@@ -1101,8 +1161,9 @@ function LearnStep({
   if (done)
     return (
       <>
-        {listed && <Knowledge learn={learn} count={count} />}
-        {learn.example && (
+        <KnownSummary learn={learn} />
+        {/* Beside the steps the office plays the example out (ExampleTalk); here when it cannot. */}
+        {listed && learn.example && (
           <div className="mt-7 flex animate-in flex-col gap-2.5 break-keep duration-500 fade-in">
             <div className="flex max-w-[88%] items-start gap-2.5">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted">
@@ -1123,9 +1184,7 @@ function LearnStep({
               </span>
               {/* The lines are cut inside the bubble, so its padding never shows half a line. */}
               <span className="rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[14px] leading-relaxed">
-                <span className={listed ? "line-clamp-4" : "line-clamp-8"}>
-                  {learn.example.answer}
-                </span>
+                <span className="line-clamp-4">{learn.example.answer}</span>
               </span>
             </div>
           </div>
@@ -1398,52 +1457,133 @@ function KnownDialog({
   );
 }
 
+/** How many of a kind's names a summary shows before "+N". */
+const SUMMARY_NAMES = 3;
+
+/** A tool's own mark, when the app draws that service's: matched by its name, any spelling. */
+const TOOL_MARK: Record<string, MarkId> = {
+  claudecode: "claudecode",
+  claude: "claude",
+  codex: "codex",
+  cursor: "cursor",
+  chatgpt: "openai",
+  openai: "openai",
+  gemini: "gemini",
+  hermes: "hermes",
+  hermesagent: "hermes",
+  notion: "notion",
+  github: "github",
+  linear: "linear",
+  jira: "jira",
+  confluence: "atlassian",
+  gmail: "gmail",
+  googlecalendar: "googlecalendar",
+  googledrive: "googledrive",
+  googledocs: "googledocs",
+  googlesheets: "googlesheets",
+  discord: "discord",
+  telegram: "telegram",
+};
+const markOf = (tool: string): MarkId | undefined =>
+  TOOL_MARK[tool.toLowerCase().replace(/[^a-z]/g, "")];
+
 /**
- * What the reading understood, in the steps themselves when there is no room beside them: each kind
- * one line however much it holds, with how many and a chevron, so the step never grows.
+ * What the reading understood, short enough to take in at a glance: what they do in a line, then
+ * the names alone (what they are on, the people as the office draws their clones, the tools by
+ * their own marks, the folders their work lives in), the lines about how they work counted. Each
+ * kind opens its whole list, every line with its × (KnownDialog).
  */
-function Knowledge({
-  learn,
-  count,
-}: {
-  learn: ReturnType<typeof useLearn>;
-  count: number;
-}) {
+function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
   const t = useTranslations("start.learn");
-  const [openId, setOpenId] = useState<string | null>(null);
+  const tYou = useTranslations("start.you");
   const rows = useKnownRows(learn);
+  const [openId, setOpenId] = useState<string | null>(null);
   const open = rows.find((row) => row.id === openId) ?? null;
+  const row = (id: string) => rows.find((one) => one.id === id);
+  const role = row("role");
+  const tools = learn.about?.tools ?? [];
+  const lines = (["traits", "work"] as const).flatMap((id) => {
+    const found = row(id);
+    return found?.items.length ? [found] : [];
+  });
   return (
-    <div className="mt-6 flex flex-col gap-2">
-      <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-        <span className="text-[13px] font-medium">{t("understood")}</span>
-        <span className="text-xs text-muted-foreground">
-          {t("knows.saved", { count })}
-        </span>
-      </span>
-      <div className="flex flex-col gap-0.5">
-        {rows.map((row) => (
-          <button
-            key={row.id}
-            type="button"
-            onClick={() => setOpenId(row.id)}
-            className="group -mx-2 flex h-10 animate-in items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors duration-500 fade-in hover:bg-muted/60 focus-visible:bg-muted/60"
-          >
-            <span className="w-28 shrink-0 text-[13px] text-muted-foreground">
-              {row.label}
-            </span>
-            <span className="min-w-0 flex-1 truncate text-[14px]">
-              {row.items.map((item) => item.title).join(", ")}
-            </span>
-            {row.items.length > 1 && (
-              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11.5px] text-muted-foreground tabular-nums">
-                {row.items.length}
-              </span>
-            )}
-            <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
-          </button>
-        ))}
+    <div className="mt-6 flex flex-col gap-4 break-keep">
+      {role && (
+        <button
+          type="button"
+          onClick={() => setOpenId(role.id)}
+          className={cn(SUMMARY_ROW, "flex-row items-center gap-3")}
+        >
+          <span className="shrink-0 text-[13px] text-muted-foreground">
+            {role.label}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-[14.5px] font-medium">
+            {role.items[0]?.title}
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+        </button>
+      )}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 max-sm:grid-cols-1">
+        {(["projects", "people", "places"] as const).map((id) => {
+          const found = row(id);
+          if (!found?.items.length) return null;
+          return (
+            <SummaryKind
+              key={id}
+              label={found.label}
+              count={found.items.length}
+              onOpen={() => setOpenId(id)}
+              names={found.items.map((item, index) => ({
+                key: `${item.title}${item.note ?? ""}`,
+                text: item.title,
+                mark:
+                  id === "people" ? (
+                    <Mark id={item.title} index={index + 1} size={16} />
+                  ) : id === "places" ? (
+                    <Folder className="size-3.5 text-muted-foreground" />
+                  ) : null,
+              }))}
+            />
+          );
+        })}
+        {tools.length > 0 && (
+          // What they work in is set on the next step (the card), so this one opens nothing.
+          <SummaryKind
+            label={tYou("tools")}
+            count={tools.length}
+            names={tools.map((tool) => {
+              const mark = markOf(tool);
+              return {
+                key: tool,
+                text: tool,
+                mark: mark ? (
+                  <BrandMark id={mark} className="size-3.5" />
+                ) : (
+                  <AppWindow className="size-3.5 text-muted-foreground" />
+                ),
+              };
+            })}
+          />
+        )}
       </div>
+      {lines.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {lines.map((found) => (
+            <button
+              key={found.id}
+              type="button"
+              onClick={() => setOpenId(found.id)}
+              className="group flex h-8 items-center gap-1.5 rounded-[10px] px-3 text-[13px] ring-1 ring-foreground/10 outline-none ring-inset transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
+            >
+              {found.label}
+              <span className="text-muted-foreground tabular-nums">
+                {t("knows.lines", { count: found.items.length })}
+              </span>
+              <ChevronRight className="size-3.5 text-muted-foreground transition-colors group-hover:text-foreground" />
+            </button>
+          ))}
+        </div>
+      )}
       <KnownDialog
         row={open}
         onClose={() => setOpenId(null)}
@@ -1453,102 +1593,63 @@ function Knowledge({
   );
 }
 
-/** How many lines of a kind its card shows before "and N more". */
-const CARD_LINES = 3;
+/** A summary row's look: a whole row to press, filled while pointed at. */
+const SUMMARY_ROW =
+  "group -mx-2 flex min-w-0 rounded-[10px] px-2 py-1.5 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50";
 
-/**
- * What the reading understood, laid out in the office's place beside the steps once it is read: a
- * card a kind, its first lines shown and the rest a press away, so all of it is seen at once and the
- * steps themselves keep to what to do next.
- */
-function KnowledgePane({
-  learn,
+/** One kind in the summary: its name and how many, and the first few names, each with its mark. */
+function SummaryKind({
+  label,
   count,
+  names,
+  onOpen,
 }: {
-  learn: ReturnType<typeof useLearn>;
+  label: string;
   count: number;
+  names: { key: string; text: string; mark: ReactNode }[];
+  onOpen?: () => void;
 }) {
-  const t = useTranslations("start.learn");
-  const [openId, setOpenId] = useState<string | null>(null);
-  const rows = useKnownRows(learn);
-  const open = rows.find((row) => row.id === openId) ?? null;
-  return (
-    <section
-      aria-label={t("understood")}
-      className="flex min-w-0 flex-1 animate-in flex-col overflow-hidden rounded-2xl border border-foreground/8 bg-background duration-500 fade-in"
+  const shown = names.slice(0, SUMMARY_NAMES);
+  const more = names.length - shown.length;
+  const body = (
+    <>
+      <span className="flex w-full items-center gap-1.5 text-[13px] text-muted-foreground">
+        {label}
+        <span className="tabular-nums">{count}</span>
+        {onOpen && (
+          <ChevronRight className="ml-auto size-3.5 transition-colors group-hover:text-foreground" />
+        )}
+      </span>
+      <span className="flex min-w-0 flex-wrap gap-1">
+        {shown.map((name) => (
+          <span
+            key={name.key}
+            className="flex h-6.5 max-w-full min-w-0 items-center gap-1.5 rounded-[7px] bg-foreground/[0.045] px-2 text-[13px]"
+          >
+            {name.mark && <span className="flex shrink-0">{name.mark}</span>}
+            <span className="truncate">{name.text}</span>
+          </span>
+        ))}
+        {more > 0 && (
+          <span className="flex h-6.5 items-center px-1 text-[13px] text-muted-foreground tabular-nums">
+            +{more}
+          </span>
+        )}
+      </span>
+    </>
+  );
+  return onOpen ? (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(SUMMARY_ROW, "flex-col items-start gap-1.5")}
     >
-      <header className="flex shrink-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-6 pt-5.5 pb-4">
-        <h2 className="text-base font-semibold tracking-[-0.01em]">
-          {t("understood")}
-        </h2>
-        <span className="text-xs text-muted-foreground">
-          {t("knows.saved", { count })}
-        </span>
-      </header>
-      {/* A list, so it may scroll on a short window; at the size it was drawn for it fits. */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
-        <div className="columns-2 gap-3 max-[1180px]:columns-1">
-          {rows.map((row, index) => {
-            const shown = row.items.slice(0, CARD_LINES);
-            const more = row.items.length - shown.length;
-            return (
-              <div
-                key={row.id}
-                style={{ animationDelay: `${index * 60}ms` }}
-                className="mb-3 flex animate-in break-inside-avoid flex-col gap-3 rounded-[14px] bg-foreground/[0.035] p-4 break-keep duration-500 fill-mode-backwards fade-in slide-in-from-bottom-1"
-              >
-                <button
-                  type="button"
-                  onClick={() => setOpenId(row.id)}
-                  className="group -m-1 flex items-center gap-2 rounded-lg p-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-                >
-                  <span className="text-[13px] font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-                    {row.label}
-                  </span>
-                  {row.items.length > 1 && (
-                    <span className="text-[12px] text-muted-foreground tabular-nums">
-                      {row.items.length}
-                    </span>
-                  )}
-                  <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
-                </button>
-                <ul className="flex flex-col gap-2.5">
-                  {shown.map((item) => (
-                    <li
-                      key={`${item.title}${item.note ?? ""}`}
-                      className="flex min-w-0 flex-col gap-0.5"
-                    >
-                      <span className="line-clamp-2 text-[14px] leading-snug font-medium">
-                        {item.title}
-                      </span>
-                      {item.detail && (
-                        <span className="line-clamp-2 text-[13px] leading-snug text-muted-foreground">
-                          {item.detail}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {more > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(row.id)}
-                    className="-mx-1 -mb-1 self-start rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
-                  >
-                    {t("knows.more", { count: more })}
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <KnownDialog
-        row={open}
-        onClose={() => setOpenId(null)}
-        onForget={learn.forget}
-      />
-    </section>
+      {body}
+    </button>
+  ) : (
+    <div className="-mx-2 flex min-w-0 flex-col items-start gap-1.5 px-2 py-1.5">
+      {body}
+    </div>
   );
 }
 

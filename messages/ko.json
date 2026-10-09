@@ -179,7 +179,7 @@
       "exampleAnswer": "제가 대신 이렇게 답해요",
       "doneTitle": "이렇게 이해했어요",
       "folders": "읽을 폴더",
-      "doneBody": "나와 내 일에 대해 {count}가지를 알아 뒀어요. 어느 것이든 나중에 내 클론 › 아는 것에서 고치거나 지울 수 있어요.",
+      "doneBody": "나와 내 일에 대해 {count}가지를 알아 뒀어요. 눌러서 전부 보고, 맞지 않는 건 빼 주세요.",
       "found": "찾은 기록",
       "bring": "ChatGPT·Claude 앱을 주로 쓰나요? 그 기억도 가져오기",
       "bringTitle": "평소 쓰는 AI의 기억 가져오기",
@@ -207,9 +207,13 @@
         "where": "틀리거나 남기기 싫은 건 ×로 빼 주세요. 나중에 내 클론 › 아는 것에서도 고칠 수 있어요.",
         "more": "{count}개 더 보기",
         "forget": "빼기: {item}",
-        "whereRole": "하는 일과 맡은 일은 다음 단계 ‘나와 팀’에서 고쳐요."
+        "whereRole": "하는 일과 맡은 일은 다음 단계 ‘나와 팀’에서 고쳐요.",
+        "lines": "{count}줄"
       },
-      "foldersHint": "눌러서 확인하고, 뺄 폴더는 빼 주세요"
+      "foldersHint": "눌러서 확인하고, 뺄 폴더는 빼 주세요",
+      "exampleFrom": "{name} 님의 클론이 물어요",
+      "bringing": "내 책상으로 가져오는 중…",
+      "answering": "내 클론이 나처럼 답하는 중…"
     },
     "you": {
       "title": "나와 우리 팀",

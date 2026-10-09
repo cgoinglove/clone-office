@@ -179,7 +179,7 @@
       "exampleAnswer": "I'd answer for you",
       "doneTitle": "Here's what I understood",
       "folders": "Folders it reads",
-      "doneBody": "It learned {count, plural, one {# thing} other {# things}} about you and your work. Change or remove any of it later under Your clone › What it knows.",
+      "doneBody": "It learned {count, plural, one {# thing} other {# things}} about you and your work. Press any to see all of it and take out what's wrong.",
       "found": "Found here",
       "bring": "Use ChatGPT or Claude apps? Bring their memory too",
       "bringTitle": "Bring what your usual AI remembers",
@@ -207,9 +207,13 @@
         "where": "Take back with × anything wrong or you'd rather it didn't keep. You can also change it later under Your clone › What it knows.",
         "more": "{count} more",
         "forget": "Take back: {item}",
-        "whereRole": "What you do and look after is set on the next step, You & team."
+        "whereRole": "What you do and look after is set on the next step, You & team.",
+        "lines": "{count, plural, one {# line} other {# lines}}"
       },
-      "foldersHint": "Check them; untick any to leave out"
+      "foldersHint": "Check them; untick any to leave out",
+      "exampleFrom": "{name}'s clone asks",
+      "bringing": "Bringing it to your desk…",
+      "answering": "Your clone is answering your way…"
     },
     "you": {
       "title": "You and your team",

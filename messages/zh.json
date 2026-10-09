@@ -179,7 +179,7 @@
       "exampleAnswer": "我会替你这样回答",
       "doneTitle": "我是这样理解你的",
       "folders": "要读取的文件夹",
-      "doneBody": "它了解了关于你和你工作的 {count} 件事。 之后可以在“你的分身 › 它知道的”里修改或删除任何一条。",
+      "doneBody": "它了解了关于你和你工作的 {count} 件事。点开可以看到全部，不对的就移除。",
       "found": "找到的记录",
       "bring": "主要用 ChatGPT 或 Claude 应用？把它们的记忆也带过来",
       "bringTitle": "带入你常用 AI 的记忆",
@@ -207,9 +207,13 @@
         "where": "不对或不想让它记住的，用 × 移除。之后也可以在“我的分身 › 它知道的”里修改。",
         "more": "再看 {count} 条",
         "forget": "移除：{item}",
-        "whereRole": "你做什么、负责什么，在下一步“我和团队”里修改。"
+        "whereRole": "你做什么、负责什么，在下一步“我和团队”里修改。",
+        "lines": "{count} 条"
       },
-      "foldersHint": "点开确认，不想读的取消勾选"
+      "foldersHint": "点开确认，不想读的取消勾选",
+      "exampleFrom": "{name} 的分身问",
+      "bringing": "正送到你的桌上…",
+      "answering": "你的分身正在照你的方式回答…"
     },
     "you": {
       "title": "你和你的团队",

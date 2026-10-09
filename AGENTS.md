@@ -117,8 +117,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   you, one each on a team; it learns, stands in, asks; it keeps to the AI already in use), beside
   the office, framed, playing the app's loop with nobody real in it (`start/demo.ts`, data the
   office draws as any day); the steps take one half of the window and what stands beside them the
-  other (the office; what the reading understood once it has, a card a kind, `KnowledgePane`; the
-  card colleagues will see while it is written, laid over the office); each step in one frame (the
+  other: the office, playing the app's loop, then, once the reading has understood them, a
+  colleague's clone asking what the reading expects and theirs answering it their way, the
+  exchange laid over it (`ExampleTalk`, the demo's `ask` mode), and still behind the card
+  colleagues will see while it is written; what the reading understood is summed up beside it in
+  names (`KnownSummary`: what they do, projects, people drawn as the office draws clones, tools by
+  their own marks, folders, the lines about how they work counted); each step in one frame (the
   name with the clone's dot and the language, `language-switch.tsx`, on top, the steps named
   beneath, only Back and the step's button at the bottom), fitting a 1280×720 window, what is
   picked in a popover at its field so no step grows; then its brain (`BrainPicker`, asked one word

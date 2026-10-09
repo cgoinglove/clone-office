@@ -25,27 +25,37 @@ export interface DemoWords {
  * works (about 4s), walks the answer over, stamps it done and comes back (about 8s); then the
  * request only you can decide comes the same way, waits on you a while, and its answer goes back.
  */
-const LOOP_MS = 37_500;
-const BEATS = [0, 800, 4500, 9000, 17_500, 22_500, 28_500] as const;
+const LOOP = {
+  ms: 37_500,
+  beats: [0, 800, 4500, 9000, 17_500, 22_500, 28_500],
+};
+/** Only the first request, the question a colleague would ask them, its answer taken back. */
+const ASK = { ms: 19_000, beats: [0, 800, 4500, 9000] };
 
-/** The beat the loop is on, 0 to 6, and how many loops have gone. */
-function useBeat(playing: boolean) {
+/**
+ * How the example plays: the whole loop, only one colleague's question and its answer (what the
+ * reading understood, put to work), or nothing between the desks at all.
+ */
+export type DemoMode = "loop" | "ask" | "still";
+
+/** The beat the loop is on, and how many loops have gone. */
+function useBeat(playing: boolean, { ms, beats }: typeof LOOP) {
   const [state, setState] = useState({ beat: 0, round: 0 });
   useEffect(() => {
     if (!playing) return;
     const start = performance.now();
     const timer = setInterval(() => {
       const elapsed = performance.now() - start;
-      const at = elapsed % LOOP_MS;
+      const at = elapsed % ms;
       let beat = 0;
-      for (let i = 0; i < BEATS.length; i++) if (at >= BEATS[i]) beat = i;
-      const round = Math.floor(elapsed / LOOP_MS);
+      for (let i = 0; i < beats.length; i++) if (at >= beats[i]) beat = i;
+      const round = Math.floor(elapsed / ms);
       setState((was) =>
         was.beat === beat && was.round === round ? was : { beat, round },
       );
     }, 200);
     return () => clearInterval(timer);
-  }, [playing]);
+  }, [playing, ms, beats]);
   return state;
 }
 
@@ -54,8 +64,16 @@ function useBeat(playing: boolean) {
  * office stands still behind what the person is writing (their card), their own clone named after
  * them.
  */
-export function useDemoRoom(words: DemoWords, playing: boolean, calm = false) {
-  const { beat, round } = useBeat(playing && !calm);
+export function useDemoRoom(
+  words: DemoWords,
+  playing: boolean,
+  mode: DemoMode = "loop",
+) {
+  const calm = mode === "still";
+  const { beat, round } = useBeat(
+    playing && !calm,
+    mode === "ask" ? ASK : LOOP,
+  );
   const room = useMemo<RoomData>(() => {
     const [first, second, third] = words.people;
     const now = Date.now();
