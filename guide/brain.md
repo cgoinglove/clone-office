@@ -11,7 +11,9 @@ vendors, and what the one in hand offers, its ways in, what a way needs first (a
 then its models; pressing a model picks it. What this computer already has is offered under the
 field, one press away (**Claude Code is on this computer**, 이 컴퓨터에 Claude Code가 있어요). The
 model picked is asked one word at once, and the step says it answered (**It answered**, 답했어요) or
-what to do when it did not.
+what to do when it did not. An answer is remembered for a day with the model it came from, so
+opening the first steps again does not ask again (**Answered 3 hours ago**, 3시간 전 확인했어요);
+**Check again** (다시 확인) asks anew, and another model is always asked.
 
 - **OpenAI**
   - **My ChatGPT plan** (내 ChatGPT 요금제): **Sign in with ChatGPT** (ChatGPT로 로그인) opens

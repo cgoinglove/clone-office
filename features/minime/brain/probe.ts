@@ -3,10 +3,17 @@
 // word is asked of it through the same path every session takes, so a missing login, a model their
 // plan does not include or a local server that is off shows on the step where they pick it, with
 // what to do, rather than as a failed reading a minute later. It reports what failed as it is.
+//
+// An answer is remembered with the choice it came from (brain/checked.json), so the same choice is
+// not asked again for a day, the first steps opened again included; another choice, a day gone or
+// the person asking to check again asks anew. A failure is never remembered.
 
 import { spawn } from "node:child_process";
+import { join } from "node:path";
+import { atomicWrite, readText } from "../memory/files.ts";
 import { claudeCommand, cleanEnv } from "../server/brain.ts";
 import { errorCode } from "../server/ndjson.ts";
+import { minimeHome } from "../server/paths.ts";
 import { brainChoice, brainProblem } from "./choice.ts";
 import { runSession } from "./session.ts";
 
@@ -17,6 +24,36 @@ export interface BrainProbe {
   /** What the brain or its service said, as it said it, when that explains the problem. */
   detail?: string;
   ms?: number;
+  /** When it answered, if this is an earlier answer remembered rather than a new one (ISO). */
+  remembered?: string;
+}
+
+/** How long an answer stands for the same choice before it is asked again. */
+export const CHECKED_FOR_MS = 24 * 60 * 60 * 1000;
+
+const checkedPath = () =>
+  join(/*turbopackIgnore: true*/ minimeHome(), "brain", "checked.json");
+
+/** The last answer, if it came from this very choice and is recent enough to stand. */
+export async function rememberedFor(
+  choice: string,
+  now = Date.now(),
+): Promise<{ at: string; ms: number } | undefined> {
+  const read = await readText(checkedPath());
+  if (!read.ok || !read.raw) return undefined;
+  try {
+    const kept = JSON.parse(read.raw) as {
+      choice?: string;
+      at?: string;
+      ms?: number;
+    };
+    const at = Date.parse(String(kept.at));
+    if (kept.choice !== choice || !(now - at < CHECKED_FOR_MS) || at > now)
+      return undefined;
+    return { at: String(kept.at), ms: Number(kept.ms) || 0 };
+  } catch {
+    return undefined;
+  }
 }
 
 export const PROBE_PROMPT =
@@ -85,10 +122,15 @@ export function probeProblem(
   return "brain-no-answer";
 }
 
-export async function probeBrain(): Promise<BrainProbe> {
+export async function probeBrain(
+  options: { fresh?: boolean } = {},
+): Promise<BrainProbe> {
   const choice = await brainChoice();
   const missing = await brainProblem(choice);
   if (missing) return { ok: false, problem: missing };
+  const signature = JSON.stringify(choice);
+  const before = options.fresh ? undefined : await rememberedFor(signature);
+  if (before) return { ok: true, ms: before.ms, remembered: before.at };
   const claudeCode = choice.kind === "claude-code";
   if (claudeCode && (await claudeSignedIn()) === false)
     return { ok: false, problem: "claude-signed-out" };
@@ -100,7 +142,13 @@ export async function probeBrain(): Promise<BrainProbe> {
     purpose: "probe",
   });
   const ms = Date.now() - started;
-  if (result.ok && result.text.trim()) return { ok: true, ms };
+  if (result.ok && result.text.trim()) {
+    await atomicWrite(
+      checkedPath(),
+      JSON.stringify({ choice: signature, at: new Date().toISOString(), ms }),
+    ).catch(() => undefined);
+    return { ok: true, ms };
+  }
   const local = choice.kind === "api" && choice.provider === "local";
   return {
     ok: false,

@@ -166,7 +166,9 @@
       "anyway": "Continuar mesmo assim",
       "answered": "Respondeu",
       "answeredIn": "{model} · em {seconds} s",
-      "probingNote": "Só uma palavra. Alguns segundos."
+      "probingNote": "Só uma palavra. Alguns segundos.",
+      "answeredBefore": "Respondeu {when}",
+      "checkAgain": "Verificar de novo"
     },
     "learn": {
       "title": "Aprende como você trabalha",

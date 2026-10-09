@@ -166,7 +166,9 @@
       "anyway": "仍然继续",
       "answered": "它回答了",
       "answeredIn": "{model} · 用时 {seconds} 秒",
-      "probingNote": "只问一句，几秒就好。"
+      "probingNote": "只问一句，几秒就好。",
+      "answeredBefore": "{when}已确认",
+      "checkAgain": "重新确认"
     },
     "learn": {
       "title": "了解你的工作方式",

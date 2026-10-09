@@ -166,7 +166,9 @@
       "anyway": "このまま進む",
       "answered": "応答しました",
       "answeredIn": "{model} · {seconds}秒で",
-      "probingNote": "ひとことだけ聞きます。数秒です。"
+      "probingNote": "ひとことだけ聞きます。数秒です。",
+      "answeredBefore": "{when}確認済み",
+      "checkAgain": "もう一度確認"
     },
     "learn": {
       "title": "あなたの働き方を学びます",

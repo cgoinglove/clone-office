@@ -136,7 +136,7 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("forget-team-key"), provider: ProviderId }),
   z.object({ action: z.literal("chatgpt-sign-in") }),
   /** Ask the picked brain one word, to see that it answers (`probe.ts`). */
-  z.object({ action: z.literal("probe") }),
+  z.object({ action: z.literal("probe"), fresh: z.boolean().optional() }),
   z.object({ action: z.literal("chatgpt-sign-out") }),
 ]);
 
@@ -148,7 +148,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "bad-request" }, { status: 400 });
   const input = body.data;
   try {
-    if (input.action === "probe") return Response.json(await probeBrain());
+    if (input.action === "probe")
+      return Response.json(await probeBrain({ fresh: input.fresh }));
     if (input.action === "chatgpt-sign-in") {
       // OpenAI sends the person back to 127.0.0.1 on the port this app answers on.
       const port =

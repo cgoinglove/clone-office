@@ -38,7 +38,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import {
   type ReactNode,
   useCallback,
@@ -203,32 +203,42 @@ export function Onboarding() {
   const next = order[at + 1] ?? "ready";
 
   // The brain picked is asked one word as soon as it is picked, so the step says at once whether it
-  // answers, and what to do when it does not.
+  // answers, and what to do when it does not; an answer from the same choice within a day stands
+  // (probe.ts), and "check again" asks anew.
   const [probe, setProbe] = useState<{
     of: string;
     ok: boolean;
     seconds?: number;
+    /** When it answered, if this is that earlier answer. */
+    remembered?: string;
     problem?: string;
     detail?: string;
   } | null>(null);
+  const [recheck, setRecheck] = useState(0);
   const picked =
     brain?.chosen && brainReady(brain) ? JSON.stringify(brain.choice) : "";
   useEffect(() => {
     if (!picked) return;
     let gone = false;
-    const started = Date.now();
     setProbe(null);
     void (async () => {
       const response = await fetch("/api/me/brain", {
         method: "POST",
         headers: HEADERS,
-        body: JSON.stringify({ action: "probe" }),
+        body: JSON.stringify({ action: "probe", fresh: recheck > 0 }),
       }).catch(() => undefined);
       const data = await response?.json().catch(() => undefined);
       if (gone) return;
       setProbe(
         response?.ok && data?.ok
-          ? { of: picked, ok: true, seconds: (Date.now() - started) / 1000 }
+          ? {
+              of: picked,
+              ok: true,
+              seconds: (Number(data.ms) || 0) / 1000,
+              ...(typeof data.remembered === "string"
+                ? { remembered: data.remembered }
+                : {}),
+            }
           : {
               of: picked,
               ok: false,
@@ -240,7 +250,7 @@ export function Onboarding() {
     return () => {
       gone = true;
     };
-  }, [picked]);
+  }, [picked, recheck]);
   const answered = probe?.of === picked ? probe : null;
   // Stable, as the picker reloads whenever it changes.
   const pickBrain = useCallback((next: BrainState) => setBrain(next), []);
@@ -385,6 +395,7 @@ export function Onboarding() {
               brain={brain}
               probe={answered}
               onAnyway={() => go(next)}
+              onCheckAgain={() => setRecheck((was) => was + 1)}
             />
           )}
         </div>
@@ -590,7 +601,9 @@ export function Onboarding() {
 
           <main
             // Each step fits at the size it was drawn for; a smaller window scrolls rather than cuts.
-            className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-5"
+            // Room at its sides for what takes a fill round itself when pointed at (the summary's
+            // kinds), which the scrolling box would otherwise cut flush.
+            className="-mx-3 flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pt-5"
             onKeyDown={(event) => {
               // Enter in a field of the step itself (never in a popover over it, nor mid-composition
               // in a language typed through an input method) presses the step's button.
@@ -1021,17 +1034,21 @@ function Answered({
   brain,
   probe,
   onAnyway,
+  onCheckAgain,
 }: {
   brain: BrainState;
   probe: {
     ok: boolean;
     seconds?: number;
+    remembered?: string;
     problem?: string;
     detail?: string;
   } | null;
   onAnyway: () => void;
+  onCheckAgain: () => void;
 }) {
   const t = useTranslations("start");
+  const format = useFormatter();
   const problemText = useProblem();
   const label = brainLabel(brain, t("ready.claudeCode"));
   if (!brainReady(brain)) return null;
@@ -1054,9 +1071,16 @@ function Answered({
     return (
       <div className="mt-3 flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3">
         <CircleCheck className="size-5 shrink-0" />
-        <span className="min-w-0">
+        <span className="min-w-0 flex-1">
           <span className="block text-sm font-medium">
-            {t("brain.answered")}
+            {probe.remembered
+              ? t("brain.answeredBefore", {
+                  when: format.relativeTime(
+                    new Date(probe.remembered),
+                    new Date(),
+                  ),
+                })
+              : t("brain.answered")}
           </span>
           <span className="block truncate text-xs text-muted-foreground">
             {t("brain.answeredIn", {
@@ -1065,6 +1089,16 @@ function Answered({
             })}
           </span>
         </span>
+        {/* An earlier answer stands for a day; asking again is the person's to choose. */}
+        {probe.remembered && (
+          <button
+            type="button"
+            onClick={onCheckAgain}
+            className="shrink-0 rounded-lg px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          >
+            {t("brain.checkAgain")}
+          </button>
+        )}
       </div>
     );
   return (
@@ -1535,8 +1569,9 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
     return found?.items.length ? [found] : [];
   });
   return (
-    <div className="mt-6 flex flex-col gap-4 break-keep">
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 max-sm:grid-cols-1">
+    // Each kind keeps room round it, so the fill it takes when pointed at never touches its names.
+    <div className="mt-7 flex flex-col gap-6 break-keep [@media(max-height:760px)]:mt-6 [@media(max-height:760px)]:gap-5">
+      <div className="grid grid-cols-2 gap-x-6 gap-y-6 max-sm:grid-cols-1 [@media(max-height:760px)]:gap-y-5">
         {(["projects", "people", "places"] as const).map((id) => {
           const found = row(id);
           if (!found?.items.length) return null;
@@ -1587,7 +1622,7 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
               key={found.id}
               type="button"
               onClick={() => setOpenId(found.id)}
-              className="group flex h-8 items-center gap-1.5 rounded-[10px] px-3 text-[13px] ring-1 ring-foreground/10 outline-none ring-inset transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="group flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] ring-1 ring-foreground/10 outline-none ring-inset transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
             >
               {found.label}
               <span className="text-muted-foreground tabular-nums">
@@ -1618,7 +1653,7 @@ const OPENS =
 
 /** A summary row's look: a whole row to press, filled while pointed at. */
 const SUMMARY_ROW =
-  "group -mx-2 flex min-w-0 rounded-[10px] px-2 py-1.5 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50";
+  "group -m-3 flex min-w-0 rounded-[14px] p-3 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50";
 
 /** One kind in the summary: its name and how many, and the first few names, each with its mark. */
 function SummaryKind({
@@ -1638,17 +1673,17 @@ function SummaryKind({
   const more = names.length - shown.length;
   const body = (
     <>
-      <span className="flex w-full items-center gap-1.5 text-[13px] text-muted-foreground">
-        <Icon aria-hidden className="size-3.5 shrink-0" />
+      <span className="flex w-full items-center gap-2 text-[13.5px] text-muted-foreground">
+        <Icon aria-hidden className="size-4 shrink-0" />
         {label}
         <span className="tabular-nums">{count}</span>
         {onOpen && <ChevronRight className={cn(OPENS, "ml-auto")} />}
       </span>
-      <span className="flex min-w-0 flex-wrap gap-1">
+      <span className="flex min-w-0 flex-wrap gap-1.5">
         {shown.map((name) => (
           <span
             key={name.key}
-            className="flex h-6.5 max-w-full min-w-0 items-center gap-1.5 rounded-[7px] bg-foreground/[0.045] px-2 text-[13px]"
+            className="flex h-7 max-w-full min-w-0 items-center gap-1.5 rounded-[8px] bg-foreground/[0.045] px-2.5 text-[13.5px]"
           >
             {name.mark && (
               <span aria-hidden className="flex shrink-0">
@@ -1659,7 +1694,7 @@ function SummaryKind({
           </span>
         ))}
         {more > 0 && (
-          <span className="flex h-6.5 items-center px-1 text-[13px] text-muted-foreground tabular-nums">
+          <span className="flex h-7 items-center px-1 text-[13.5px] text-muted-foreground tabular-nums">
             +{more}
           </span>
         )}
@@ -1670,12 +1705,12 @@ function SummaryKind({
     <button
       type="button"
       onClick={onOpen}
-      className={cn(SUMMARY_ROW, "flex-col items-start gap-1.5")}
+      className={cn(SUMMARY_ROW, "flex-col items-start gap-2.5")}
     >
       {body}
     </button>
   ) : (
-    <div className="-mx-2 flex min-w-0 flex-col items-start gap-1.5 px-2 py-1.5">
+    <div className="-m-3 flex min-w-0 flex-col items-start gap-2.5 p-3">
       {body}
     </div>
   );

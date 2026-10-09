@@ -166,7 +166,9 @@
       "anyway": "Go on anyway",
       "answered": "It answered",
       "answeredIn": "{model} · in {seconds}s",
-      "probingNote": "One word to it. A few seconds."
+      "probingNote": "One word to it. A few seconds.",
+      "answeredBefore": "Answered {when}",
+      "checkAgain": "Check again"
     },
     "learn": {
       "title": "It learns how you work",

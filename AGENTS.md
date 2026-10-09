@@ -127,7 +127,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   name with the clone's dot and the language, `language-switch.tsx`, on top, the steps named
   beneath, only Back and the step's button at the bottom), fitting a 1280×720 window, what is
   picked in a popover at its field so no step grows; then its brain (`BrainPicker`, asked one word
-  as soon as it is picked), the first reading with the folders it reads (`folder-list.tsx`
+  as soon as it is picked, an answer kept a day with the choice it came from, `brain/checked.json`,
+  `probe.ts`, unless asked again), the first reading with the folders it reads (`folder-list.tsx`
   `FolderField`: one field, every folder in a dialog, those in one collection under it, ticked
   while read) (it ends on what it understood, each line taken back with its × (`learn/forget.ts`,
   `app/api/me/learn/forget`: a memory line removed, a page archived, a place off the map), and
