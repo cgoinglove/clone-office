@@ -9,9 +9,26 @@ chooses within its scope, and ask before a major visual change. Keep this list s
 - **Colour**: black and white; the brand colour only for buttons and a few points (in the office: your floor, the sign-in button); what waits on the person is the ember (`--waiting`); red only for deleting and the dot badge on a mini-me's mark. The office room adds no colours of its own (no warm lamps, dusk, tinted floors); the mini-mes keep their own colours. The user chose this. (10-06)
 - **New shapes**: start from this app's own screens, not from generic UI (a dark theme, letter avatars, red badges). (09-17)
 - **Corners**: mixed as Thursday mixes them: the brand button (the one thing a screen asks for) and short suggestion chips are round (`rounded-full`); every other button and control is the same rounded rectangle (10px, small sizes 8px; large panels 14px); a box that grows with what is typed (the ask box, the chat box) takes a large radius in pixels (26px), a pill at one line that stays sound at five, as ChatGPT's does. The user chose this. (10-08, replacing 10-04's one corner for all)
+- **Buttons side by side**: share one shape and size, never a round one beside square ones (beside
+  a brand button the others are round too, which `Button` does). No outline buttons: the quiet one
+  of a pair is ghost, a button standing alone a soft fill (`secondary`). The user chose this. (10-10)
+- **Big steps and small ones**: something big or hard to undo (leaving the office, starting over)
+  is asked once in a small dialog (`ConfirmDialog`), only the removing button red; something small
+  that can come back (a memory line, a flow, a conversation) is done at once with Undo in its toast.
+  (10-10)
+- **Toasts and news**: what the person just did says so in one dark line at the bottom centre; news
+  they did not cause (a colleague's clone asks, a colleague answered) is a card at the bottom right
+  with who, what and where to go, and never says what the screen in view already shows. (10-10)
+- **Counts of what waits**: a plain number; the asking clone wears the red dot. No departures-board
+  cards for a count. What waits on the person is called **To decide** (정할 것); "your turn" read as
+  nothing to the user. The user chose this. (10-10)
+- **Tooltips**: every button drawn as an icon alone says what it does, and its key, when pointed at
+  or focused (`Tip`); a button with words needs none, and nothing uses the browser's `title`. (10-10)
+- **Moving pictures**: the lobby's building stands as it is and the lift is a plain pair of doors;
+  nothing grows, rises or streaks for show anywhere. The user chose this. (10-10)
 - **No shadows on buttons**: a button, a segmented pick or a field is flat: a fill or a hairline ring, never a drop shadow; only what floats (a popover, a menu, a toast, a dialog) casts one. The user chose this. (10-08)
 - **No separators between items**: rows in a short list (a step's points, a summary, a card's lines) are split by space, never by a hairline between them; a hairline stays only at the edge of a pane or a long scrolling list. The user chose this. (10-08)
-- **Next and back**: chevrons (`ChevronRight`, `ChevronLeft`), never arrows, on a step's buttons and wherever a row opens more. The user chose this. (10-08) A summary of several kinds that each open (what the reading understood) shows its chevrons only while pointed at, and a bordered pill none, so the summary stays quiet. (10-09)
+- **Next and back**: chevrons (`ChevronRight`, `ChevronLeft`), never arrows, on a step's buttons and wherever a row opens more. The user chose this. (10-08) A row that opens more ends with the chevron alone, never a word like "Open" before it. The user chose this. (10-10) A summary of several kinds that each open (what the reading understood) shows its chevrons only while pointed at, and a bordered pill none, so the summary stays quiet. (10-09)
 - **Icons**: lucide, as Thursday uses it (its own picks where it has the same place: Aperture for the
   AI model, Cable for connectors, Smartphone, Settings2, SquarePen); never sparkles, lightning or
   magic wands, which read dated. A column's open row is told by its fill, not by a filled icon;

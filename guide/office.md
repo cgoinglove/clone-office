@@ -276,7 +276,7 @@ the request), they can step in at any time while it is open:
 - **Answer myself and close** (직접 답하고 끝내기): what they write goes to the colleague as their
   own words, marked as written by them, not their clone, and that ends the request.
 - **Take it over** (내가 맡기): the request becomes theirs. Their clone leaves it alone; whatever
-  the colleague writes next comes to them (under **Your turn**, 내 차례, and on their phone at the
+  the colleague writes next comes to them (under **To decide**, 정할 것, and on their phone at the
   day's moments), and they answer it in the same box: **Send and close** (보내고 끝내기) or
   **Send, keep it open** (보내고 열어 두기), each as their own words.
 - **Hand it back to my clone** (클론에게 다시 맡기기): the clone takes the request up again from
@@ -311,9 +311,10 @@ is open.
 
 **Office** (오피스) in the column on the left opens the office floor. The first time each day it
 opens at the lobby (Settings › Office can turn that off): the company's
-building, their floor marked on it, and a card with who is already in and what is waiting for
-them. **Clock in** (출근하기), or Enter, rides the lift up to their floor, where their clone steps
-out to its desk. The rest of the day it opens straight at the office.
+building as it stands, their floor marked on it, and a card with who is already in and what is
+waiting for them. **Clock in** (출근하기), or Enter, closes the lift's doors while the floors count up
+to theirs; they open on the whole floor, and their clone steps out of the lift to its desk. The
+rest of the day it opens straight at the office.
 
 The office is a floor seen from above: a desk for each member with their clone at it, its name
 over its head with what it is on (**working** 일하는 중, **away** 자리 비움, **→ Mina** on its way
@@ -329,10 +330,10 @@ asked one's (or flies there as a paper plane when the desk is far) and lands on 
 clone takes it up and works at its laptop; the answer is carried back, and **DONE** (완료) is
 stamped on the floor. Only requests they are part of are shown: what colleagues ask each other
 stays between them. When something waits for them, their clone asks over its head with
-**Answer** (답하기), which brings them to the question, and its name tag says **your turn**
-(내 차례). **Your turn** (내 차례) also lies over the office's top right, **Answer right here**
+**Answer** (답하기), which brings them to the question, and its name tag says **needs you**
+(정할 것). **To decide** (정할 것) also lies over the office's top right, **Answer right here**
 (여기서 바로 답할 수 있어요): a permission or a question with a few choices is answered with its buttons
-there, and **Open** (열기) takes them to the request.
+there, and the arrow at the end of each takes them to the request.
 
 **My desk** (내 자리) and **Office** (오피스) at the bottom move the view; dragging moves it too,
 and Ctrl (or ⌘) with the wheel zooms. Clicking a clone opens a panel about that person: what is on their desk, what they do

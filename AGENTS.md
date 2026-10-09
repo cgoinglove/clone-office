@@ -146,14 +146,26 @@ These words help discussion. They do not mandate separate services, tables or UI
   work apps with a short column on the left: `app-shell.tsx` holds what every screen shares
   (`app-state.tsx`, `useApp`: the conversation, the office, the reading, preferences, the
   profile, the questions waiting in the person's own conversations), the column (`sidebar.tsx`,
-  after the columns ChatGPT, Claude and Paperclip keep: New chat, then the four places, Home,
-  Requests, Office and Your clone, each saying what goes on there (open requests, a meeting of the
-  clones, the reading) and marked as Thursday marks its own, lucide's line icons, the open one by
-  its row (`features/brand/nav-icons.tsx`);
-  **Your turn** when something waits (`your-turn.ts`: questions about colleagues' requests, live at
-  the gate or kept for later, and those in conversations, each knowing where it is answered); the
-  recent chats once there are any, scrolling on their own, the one the clone is answering in
-  turning; at the foot Settings, with their status beside it in an office) and Settings over them. `/home` comes first
+  after the columns ChatGPT, Claude and Linear keep: New chat and Search (⌘K,
+  `command-palette.tsx`: conversations, requests, colleagues, places and Settings' sections, or
+  asking the clone what was typed), then the four places, Home, Requests, Office and Your clone,
+  each saying what goes on there (open requests, a meeting of the clones, the reading) and marked
+  as Thursday marks its own, lucide's line icons, the open one by its row
+  (`features/brand/nav-icons.tsx`); **To decide** (정할 것, 10-10, the user found "your turn"
+  unclear) when something waits (`your-turn.ts`: questions about colleagues' requests, live at the
+  gate or kept for later, and those in conversations, each knowing where it is answered), each row
+  the asking clone's mark with the red dot and how long it waited; the recent chats once there are
+  any (`recent-chats.tsx`: under headings by day, a page at a time as the list is scrolled, a menu
+  each to rename (F2) or archive with Undo, a line added to the conversation's file,
+  `chat/store.ts` `renameChat`, `archiveChat`; Settings › General brings archived ones back), the
+  one the clone is answering in turning; at the foot the person, name and office status, opening
+  their menu (status, the office and where it is, inviting, shortcuts, `shortcuts.tsx`), with
+  Settings beside it); it folds away (⌘\, kept in the browser) and below 900px is a drawer behind a
+  thin bar (`app-shell.tsx`). News the person did not cause comes as a card at the bottom right
+  while the page is in view and does not show it already, else as the browser's notice
+  (`turn-notices.ts`); the outcome of what they did is a toast with Undo where it can be taken back
+  (`components/ui/toast.tsx` `say`, `sayUndoable`, `notify`), and a big step is asked once in a
+  small dialog (`components/ui/confirm-dialog.tsx`). Settings over them. `/home` comes first
   (`home-screen.tsx`: what is happening, what waits on the person and what to do about it, after
   Paperclip's rule and the agent apps that left a chat as home: one box that asks the clone and
   starts that conversation (`/chat?send=`), the first steps while the app is new (`welcome.tsx`
@@ -193,7 +205,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   `preferences-section.tsx` draws the preferences' parts wherever they belong (`parts`; how much
   it does alone is `AutonomyChoice`, the same on the first steps' last step, on
   `components/ui/choice-list.tsx`, the explained choice the first steps' team uses too). Keys:
-  ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, / the box; the tab's title carries what
+  ⌘K search, ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, ⌘\ the column, / the box, ?
+  the list of keys; the tab's title carries what
   waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at rest, also
   `app/icon.svg`, outlined as the clone's place in the column), the places' marks (`nav-icons.tsx`,
   lucide's, as Thursday picks them), the services' and AI vendors' marks (`marks.ts`, generated from
@@ -465,7 +478,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   lift, the clock on the left wall, `clockFace`: the time in seven segments, who is in out of
   everyone and their faces), `floor.mjs` (the plan: desk areas split evenly, the commons in the lane
   by the lift, a floor no larger than its desks need; walking on a grid), `office.mjs`
-  (`createOffice`: sheets, scenes, camera, panel, and the lobby with its lift ride, once a day). Only
+  (`createOffice`: sheets, scenes, camera, panel, and the lobby with its lift ride, once a day: the
+  building standing as it is, nobody walking in, the doors a plain panel opening on the whole floor
+  with the person's clone stepping out, 10-10). Only
   what means something moves: a request carried or thrown to a desk and answered with DONE, a clone
   coming in or going home through the lift, one at work, one asking its person; no tea runs, no
   vacuum, no hearts or smiles, and the office opens as it is, everyone in already seated. Each

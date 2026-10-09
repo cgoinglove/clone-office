@@ -32,15 +32,32 @@ Two things hold everywhere:
 
 ## Where things are
 
-- **The column on the left** is always there. At its top, **New chat** (새 대화), then the four
-  places: **Home** (홈), **Requests** (부탁, with how many are open), **Office** (오피스, which says
-  when the clones are meeting) and **Your clone** (내 클론, with how far it has read while it
-  reads); the place open is the shaded row. **Your turn** (내 차례) appears below them only when
-  something waits on them, one line each (a question about a colleague's request, or one in a
-  conversation); a click goes where it is answered. Then **Recent chats** (최근 대화), once there
-  are any, with a dot where a question waits and a turning mark where the clone is answering. At
-  the bottom: **Settings** (설정), and beside it their status in the office once they are in one
-  (working, in a meeting, away, off).
+- **The column on the left** is always there. At its top, **New chat** (새 대화, ⇧⌘N) and **Search**
+  (검색, ⌘K: one box that finds a conversation, a request or a colleague, opens a place or a part of
+  Settings, or asks the clone what was typed with ⌘↵); then the four places: **Home** (홈),
+  **Requests** (부탁, with how many are open), **Office** (오피스, which says when the clones are
+  meeting) and **Your clone** (내 클론, with how far it has read while it reads); the place open is
+  the shaded row. **To decide** (정할 것) appears below them only when something waits on them, one
+  line each: the face of the clone that asked, with a red dot, the question, and how long it has
+  waited; a click goes where it is answered. Then their conversations, under **Today**, **Yesterday**,
+  **Previous 7 days**, **Previous 30 days** and then by month (오늘, 어제, 지난 7일, 지난 30일), a page
+  at a time as they scroll, with a dot where a question waits and a turning mark where the clone is
+  answering. Pointing at one (or pressing F2) gives its menu: **Rename** (이름 바꾸기) and **Archive**
+  (보관하기), which takes it off the list without deleting anything; **Undo** (되돌리기) brings it
+  straight back, and Settings › General › **Archived chats** (보관한 대화) any time later. At the
+  bottom: their name and office status, which opens their menu (their status, the office and where
+  it is, **Invite a colleague** 동료 초대, **Keyboard shortcuts** 단축키), and **Settings** (설정, ⌘,)
+  beside it. The column folds away (⌘\, or the button at its top) and stays folded; on a narrow
+  window it is a drawer behind ☰ in a thin bar at the top.
+- **Keys** (단축키, also `?`): ⌘K search, ⇧⌘N new chat, `/` the box to the clone, ⌘\ the column,
+  ⌘, Settings and ⌘1–6 its sections. Buttons drawn as an icon alone say what they do, and their
+  key, when pointed at.
+- **What happened, and news** (알림): what they just did says so for a moment at the bottom (copied,
+  archived, with **Undo** where it can be taken back); news they did not cause (a colleague's clone
+  asks them something, a colleague answered their request) comes as a card at the bottom right,
+  with who it is from and **Answer** (답하기) or **Open** (열기), unless the screen they are on
+  already shows it. With the app's tab in the back, it comes from the browser instead, once they
+  turn that on in Settings › Notifications & phone.
 - **Home** (홈) is where the app opens: what is happening, what waits on them, and what to do
   about it. One box at the top asks their clone anything (name a colleague, and it asks theirs),
   with a few things to try under it; **Getting started** (시작하기) while the app is new; **Decide
@@ -58,8 +75,8 @@ Two things hold everywhere:
   the box, **Ask a colleague** (동료에게) and **Every so often** (정해진 때마다) start the sentence
   for them. On a wide screen the right side shows **The office now** (지금 오피스): the office, live;
   the requests in motion; today's flows. The button at the top folds it away.
-- **Requests** (부탁): what they and their colleagues asked each other, grouped as **Your turn**,
-  **On its way**, **Waiting on them** and **Done** (내 차례, 진행 중, 상대 차례, 완료), with **All**,
+- **Requests** (부탁): what they and their colleagues asked each other, grouped as **To decide**,
+  **On its way**, **Waiting on them** and **Done** (정할 것, 진행 중, 답 기다리는 중, 완료), with **All**,
   **Received** and **Sent** (모두, 받은 부탁, 보낸 부탁), and **Ask a colleague** (동료에게
   부탁하기) at the top. A request opens on its own page: the clones' exchange, what waits on them
   (answered right there), its files, and who it is with.
@@ -145,7 +162,7 @@ the same steps with the one line that also joins their office (`office.md`).
   own, tell me, or ask me first.
 - **When kept questions come** (미뤄 둔 질문 받는 시간, Settings › Notifications & phone): the hours
   questions kept for later come to the phone together, 10:00, 14:00 and 17:00 unless they choose
-  others. On screen, they are under **Your turn** all the time.
+  others. On screen, they are under **To decide** all the time.
 - **Learn after each conversation** (대화가 끝날 때마다 배우기, Settings › AI model): on by default; off, it
   learns only what they tell it to remember.
 - **Lighter model for background work** (뒤에서 하는 일은 가벼운 모델로, Settings › AI model): looking

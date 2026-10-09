@@ -17,7 +17,12 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
   `features/office/room/room.css`, mapped onto these tokens.
 - `components/ui/button.tsx` — the button variants and `loading`.
 - `components/ui/notify.tsx` — `notify.alert` / `confirm` / `prompt`, a dialog from plain code.
-- `components/ui/toast.tsx` — `Toaster`, mounted once in `app/layout.tsx`.
+- `components/ui/confirm-dialog.tsx` — `ConfirmDialog`: a big step asked once (both buttons one
+  shape, only a removing one red).
+- `components/ui/toast.tsx` — `say` (what the person just did, one line at the bottom centre),
+  `sayUndoable` (done when the toast goes without Undo), `notify` (news they did not cause, a
+  card at the bottom right); `Toaster` is mounted once in `app/layout.tsx`.
+- `components/ui/tooltip.tsx` — `Tip`: what an icon-only button does, and its keys.
 - `components/ui/markdown.tsx` — model text as markdown (Streamdown, with code, math, mermaid, CJK).
 - `components/ui/shiny-text.tsx` — words for something still running.
 - `hooks/use-hotkey.ts` — the keys the window owns: Esc layers, `windowKey`.
@@ -38,9 +43,11 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
 
 ## The app's screens
 One frame around every screen (`app/(app)/layout.tsx`, `features/minime/shell/`): the column on the
-left (`sidebar.tsx`: New chat; the places Home, Requests, Office and Your clone, the open one by its
-row's fill; what waits on the person; recent chats once there are any; Settings and, in an office, the
-person's status) and the open screen: `/home` first (`home-screen.tsx`: what
+left (`sidebar.tsx`: New chat and Search, ⌘K, `command-palette.tsx`; the places Home, Requests,
+Office and Your clone, the open one by its row's fill; To decide, the asking clones with their red
+dot; recent chats by day, a page at a time, each with a menu, `recent-chats.tsx`; the person with
+their menu, and Settings), folding away with ⌘\ and a drawer on a narrow window
+(`app-shell.tsx`), and the open screen: `/home` first (`home-screen.tsx`: what
 waits on the person answered in place, the requests on their way, what the clone did today, today;
 the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`, with the
 office's live column `office-rail.tsx`), `/requests` and
