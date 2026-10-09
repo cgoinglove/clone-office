@@ -838,7 +838,6 @@ export function towerSvg(W, D, H, N) {
   for (let k = 0; k < N; k++) {
     const z0 = z00 + k * H,
       z1 = z0 + H,
-      d = 160 + k * 170,
       last = k === N - 1;
     const slab = withOv(0.5, () =>
       box(0, 0, W, D, z0, z0 + 1.4, {
@@ -864,10 +863,10 @@ export function towerSvg(W, D, H, N) {
     let glass = poly(front, "tw-glass") + poly(side, "tw-glass s");
     for (let i = 0; i < nb; i++)
       if (hash(i * 3.17 + k * 7.71) < 0.38)
-        glass += `<polygon class="tw-lit" style="--d:${1250 + Math.round(hash(i + k * 9) * 700)}ms" points="${P([at((W * i) / nb + 0.7, D, z0 + 2.4), at((W * (i + 1)) / nb - 0.7, D, z0 + 2.4), at((W * (i + 1)) / nb - 0.7, D, z1 - 1.8), at((W * i) / nb + 0.7, D, z1 - 1.8)])}"/>`;
+        glass += `<polygon class="tw-lit" points="${P([at((W * i) / nb + 0.7, D, z0 + 2.4), at((W * (i + 1)) / nb - 0.7, D, z0 + 2.4), at((W * (i + 1)) / nb - 0.7, D, z1 - 1.8), at((W * i) / nb + 0.7, D, z1 - 1.8)])}"/>`;
     for (let i = 0; i < nd; i++)
       if (hash(i * 5.3 + k * 2.9 + 1) < 0.38)
-        glass += `<polygon class="tw-lit" style="--d:${1250 + Math.round(hash(i * 2 + k) * 700)}ms" points="${P([at(W, (D * i) / nd + 0.7, z0 + 2.4), at(W, (D * (i + 1)) / nd - 0.7, z0 + 2.4), at(W, (D * (i + 1)) / nd - 0.7, z1 - 1.8), at(W, (D * i) / nd + 0.7, z1 - 1.8)])}"/>`;
+        glass += `<polygon class="tw-lit" points="${P([at(W, (D * i) / nd + 0.7, z0 + 2.4), at(W, (D * (i + 1)) / nd - 0.7, z0 + 2.4), at(W, (D * (i + 1)) / nd - 0.7, z1 - 1.8), at(W, (D * i) / nd + 0.7, z1 - 1.8)])}"/>`;
     glass += withOv(0, () => {
       let m =
         ln(at(0, D, z1 - 1), at(W, D, z1 - 1), "ol f") +
@@ -885,7 +884,7 @@ export function towerSvg(W, D, H, N) {
       }
       return m;
     });
-    s += `<g class="tw-st${last ? " tw-top" : ""}" style="--d:${d}ms">${slab}<g class="tw-cut">${glass}</g></g>`;
+    s += `<g class="tw-st${last ? " tw-top" : ""}">${slab}<g class="tw-cut">${glass}</g></g>`;
   }
   const zr = top,
     size = Math.min(26, W * 0.07);
@@ -915,30 +914,15 @@ export function towerSvg(W, D, H, N) {
       }),
   );
   roof += `<g class="tw-sign"><text class="tw-name" transform="${plane([W * 0.06, D - 3, zr + 1.8 + size * 0.74], [1, 0, 0], [0, 0, -1])}" font-size="${r2(size)}">${BRAND}</text></g>`;
-  s += `<g class="tw-roof" style="--d:${160 + N * 170}ms">${roof}</g>`;
-  // the rush of it: lines running up past the building as it climbs
-  let gust = "";
-  for (let i = 0; i < 7; i++) {
-    const right = i % 2 === 0,
-      off = 14 + hash(i * 4.4) * 30,
-      t = 140 + i * 150,
-      z1 = z00 + (zr - z00) * (0.5 + hash(i * 2.2) * 0.5);
-    const a = right
-        ? at(W + off, D * (0.25 + hash(i) * 0.6), z00 + 4)
-        : at(W * (0.2 + hash(i + 3) * 0.6), D + off, z00 + 4),
-      b = right
-        ? at(W + off, D * (0.25 + hash(i) * 0.6), z1)
-        : at(W * (0.2 + hash(i + 3) * 0.6), D + off, z1);
-    gust += `<path class="tw-gust" style="--d:${t}ms" pathLength="1" d="M${r1(a[0])} ${r1(a[1])}L${r1(b[0])} ${r1(b[1])}"/>`;
-  }
-  return `<g class="tw">${s}${gust}</g>`;
+  s += `<g class="tw-roof">${roof}</g>`;
+  return `<g class="tw">${s}</g>`;
 }
 /**
- * The way in, for the sign-in screen: the same building with its street. A door and a canopy on the ground
- * floor, a pavement with a few trees, little mini-mes hopping along it and in at the door, and a note
- * pointing at the top storey, which is ours. `walkers` are looks: { color, shape, paint }.
+ * The way in, for the sign-in screen: the same building with its street, standing as it is (nothing
+ * rises or walks in, 10-10). A door and a canopy on the ground floor, a pavement with a few trees, and
+ * a note pointing at the top storey, which is ours.
  */
-export function lobbySvg(W, D, H, N, walkers, words) {
+export function lobbySvg(W, D, H, N, words) {
   const z00 = -(N - 1) * H,
     cx = W * 0.5;
   // the pavement and the kerb, drawn on the ground before anything stands on it
@@ -1021,18 +1005,6 @@ export function lobbySvg(W, D, H, N, walkers, words) {
     [W + 16.5, D * 0.74, 0.92],
   ])
     trees += tree(x, y, k);
-  // people coming to work: along the pavement from either end, a hop each step, and in at the door
-  let walk = "";
-  walkers.slice(0, 5).forEach((look, i) => {
-    const fromLeft = i % 2 === 0,
-      y = D + 13 + (i % 3) * 1.8,
-      x0 = fromLeft ? -80 : W + 70,
-      a = at(x0, y, z00),
-      b = at(cx + (fromLeft ? -4 : 4), y, z00),
-      c = at(cx, D + 1, z00),
-      T = 6.4 + (i % 3) * 0.9;
-    walk += `<g class="cm" style="--x0:${r1(a[0])}px;--y0:${r1(a[1])}px;--x1:${r1(b[0])}px;--y1:${r1(b[1])}px;--x2:${r1(c[0])}px;--y2:${r1(c[1])}px;--T:${T}s;--d:${(1.5 + i * 1.3).toFixed(2)}s;--n:${Math.round(T / 0.36)}"><g class="cm-hop">${ellipseAt(0, 0, 0, 80, 26, "f-soft")}${stillMark(look, -110, -228, 220)}</g></g>`;
-  });
   const note = scribble(
     words.yourFloor,
     at(W * 0.05, D, H * 0.6),
@@ -1040,7 +1012,7 @@ export function lobbySvg(W, D, H, N, walkers, words) {
     30,
     170,
   );
-  return `<g class="lobby-art"><g class="lb-ground">${g}</g>${towerSvg(W, D, H, N)}<g class="tw-door" style="--d:160ms">${door}</g><g class="lb-ours">${ours}</g><g class="lb-trees">${trees}</g><g class="lb-walk">${SM_DEFS}${walk}</g><g class="lb-note">${note}</g></g>`;
+  return `<g class="lobby-art"><g class="lb-ground">${g}</g>${towerSvg(W, D, H, N)}<g class="tw-door">${door}</g><g class="lb-ours">${ours}</g><g class="lb-trees">${trees}</g><g class="lb-note">${note}</g></g>`;
 }
 /** DONE thumped on the floor like a rubber stamp, by the desk whose request is answered. */
 export const stampSvg = (x, y, word) =>

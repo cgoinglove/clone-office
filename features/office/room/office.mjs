@@ -137,7 +137,7 @@ let LOBBY_N = 0;
 function lobbyMarkup(W) {
   const id = `of-lb-${++LOBBY_N}`;
   return `<div class="lobby" data-of="lobby" hidden><div class="lb-card" role="group" aria-labelledby="${id}"><div class="lb-brand"><span class="mk" data-of="lb-mark"></span>Clone Office<small data-of="lb-time"></small></div><h2 id="${id}" data-of="lb-h"></h2><p data-of="lb-sub"></p><div class="lb-acct"><span class="me" data-of="lb-me"></span><div><b data-of="lb-name"></b><span data-of="lb-role"></span></div><span class="tick" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><ul class="lb-facts"><li data-of="lb-in-row"><span class="lb-faces" data-of="lb-faces"></span><span data-of="lb-in"></span></li><li class="hot" data-of="lb-wait-row"><i></i><span data-of="lb-wait"></span></li></ul><button type="button" class="lb-go" data-of="lb-go">${esc(W.lobby.clockIn)}${CHEVRON}<kbd>${esc(W.lobby.enter)}</kbd></button><p class="lb-foot">${esc(W.lobby.foot)}</p></div></div>
-<div class="liftx" data-of="liftx" hidden aria-hidden="true"><div class="door l"></div><div class="door r"></div><div class="lx-ding"></div><div class="lx-head"><svg class="lx-arr" viewBox="0 0 12 12"><path d="M6 1.5 11 9.5H1z"/></svg><svg class="lx-num" data-of="lx-num"></svg></div></div>`;
+<div class="liftx" data-of="liftx" hidden aria-hidden="true"><div class="door l"></div><div class="door r"></div><div class="lx-head"><svg class="lx-arr" viewBox="0 0 12 12"><path d="M6 1.5 11 9.5H1z"/></svg><svg class="lx-num" data-of="lx-num"></svg></div></div>`;
 }
 
 /**
@@ -2378,14 +2378,6 @@ export function createOffice(
       3,
     );
   };
-  const liftView = () =>
-    viewFor(
-      [LIFT_X - 20, -4, LIFT_X + LIFT_W + 20, 22, 0, WALL_H + 2],
-      narrow()
-        ? { t: 40, b: 120, l: 10, r: 10 }
-        : { t: 40, b: 60, l: 40, r: 40 },
-      2.2,
-    );
   const hhmm = (d) =>
     `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
   /** The card says who you are, who is already in, and what waits for you, from the same people the office will show. */
@@ -2423,13 +2415,9 @@ export function createOffice(
     entering = false;
     for (const g of [gFloor, gWalls, gScene, gUnder, gFly]) g.innerHTML = "";
     for (const a of people.values()) liveOff(a);
-    const walkers = [...people.values()]
-      .filter((p) => !p.mine && p.status !== "offline")
-      .slice(0, 5)
-      .map((p) => p.look);
     setScale(cw / lobbyView().w);
     gIntro.innerHTML = merged(
-      lobbySvg(plan.W, plan.D, WALL_H + 2, STOREYS, walkers, W.lobby),
+      lobbySvg(plan.W, plan.D, WALL_H + 2, STOREYS, W.lobby),
     );
     setCam(lobbyView());
     wrap.classList.add("at-lobby");
@@ -2464,12 +2452,12 @@ export function createOffice(
     if (lobbyEl) lobbyEl.hidden = true;
     wrap.classList.remove("at-lobby");
   }
-  /** The lift's doors, drawn like everything else: a panel with a frame, a few strokes of brushed steel, the edge where they meet. */
+  /** The lift's doors, drawn like everything else: a panel with a frame, and the edge where they meet. */
   function doorArt(w, h, left) {
     const art = atScale(1, () => {
       const m = Math.min(26, w * 0.08),
         e = left ? w - 1 : 1;
-      let out =
+      return (
         `<rect class="f-front" width="${r1(w)}" height="${r1(h)}"/>` +
         withOv(
           0.6,
@@ -2478,18 +2466,8 @@ export function createOffice(
             ln([w - m, m], [w - m, h - m], "ol f") +
             ln([w - m, h - m], [m, h - m], "ol f") +
             ln([m, h - m], [m, m], "ol f"),
-        );
-      for (let i = 1; i < 8; i++) {
-        const x =
-          m +
-          ((w - 2 * m) * i) / 8 +
-          (hash(i * 3.1 + (left ? 0 : 9)) - 0.5) * 6;
-        out += withOv(0.3, () => ln([x, m + 14], [x, h - m - 14], "ol c", i));
-      }
-      return (
-        out +
-        ln([e, -4], [e, h + 4], "ol s") +
-        ln([left ? w - 7 : 7, h * 0.47], [left ? w - 7 : 7, h * 0.53], "ol s")
+        ) +
+        ln([e, -4], [e, h + 4], "ol s")
       );
     });
     return `<svg class="of-s" viewBox="0 0 ${r1(w)} ${r1(h)}" preserveAspectRatio="none" aria-hidden="true">${art}</svg>`;
@@ -2501,7 +2479,7 @@ export function createOffice(
     el.setAttribute("width", r1(sg.width));
     el.innerHTML = `<g class="seg-o">${sg.off}</g><g class="seg-l">${sg.on}</g>`;
   }
-  /** Clock in: the card goes, the doors close over the street, the floors count up, a ding, and they open on our floor with our mini-me stepping out. */
+  /** Clock in: the card goes, the doors close over the street, the floors count up, and they open on our floor with our mini-me stepping out. */
   async function clockIn() {
     if (!lobbyOn || entering) return;
     entering = true;
@@ -2541,12 +2519,6 @@ export function createOffice(
     // in: what the page lays over the office comes as the doors part, not over them
     onClockIn?.();
     openLift(2.6);
-    anim = {
-      from: { ...cam },
-      to: floorView(),
-      t0: performance.now() + 220,
-      ms: 1900,
-    };
     await wait(700);
     liftx.hidden = true;
     liftx.className = "liftx";
@@ -2623,7 +2595,8 @@ export function createOffice(
     if (opened || !plan) return;
     opened = true;
     const lift = via === "lift" && !REDUCED;
-    setCam(lift ? liftView() : floorView());
+    // the whole floor at once, the doors opening on it; the camera does not fly in from the lift
+    setCam(floorView());
     if (lift && me) {
       me.present = false;
       me.coming = true;
