@@ -58,6 +58,8 @@ export function useAppState() {
   // Questions waiting in the person's own conversations, whichever is open: the sidebar lists them
   // with the office's, so one asked in a conversation left behind is not lost.
   const [chatAsks, setChatAsks] = useState<ChatAsk[]>([]);
+  // Whether they were read once, so what already waited is never taken for news.
+  const [asksLoaded, setAsksLoaded] = useState(false);
   const loadAsks = useCallback(async () => {
     const data = (await fetch("/api/me/gate", { headers: HEADERS })
       .then((r) => r.json())
@@ -65,6 +67,7 @@ export function useAppState() {
       asks?: { id: string; chat?: string; ask: GateAsk }[];
     } | null;
     if (!data) return;
+    setAsksLoaded(true);
     setChatAsks(
       (data.asks ?? []).flatMap((entry) =>
         entry.chat && !entry.chat.startsWith("office-")
@@ -143,6 +146,7 @@ export function useAppState() {
       settings,
       setSettings,
       chatAsks,
+      asksLoaded,
       answerChatAsk,
       mood,
       joined,
@@ -158,6 +162,7 @@ export function useAppState() {
       changePreferences,
       settings,
       chatAsks,
+      asksLoaded,
       answerChatAsk,
       mood,
       joined,

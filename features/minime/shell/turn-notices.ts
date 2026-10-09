@@ -39,6 +39,8 @@ export function useTurnNotices(
   office: OfficeState,
   chatAsks: ChatAsk[],
   openChat?: string,
+  /** The office and the conversations' questions were each read once: what waits then is not news. */
+  ready = true,
 ) {
   const t = useTranslations("ask");
   const tShell = useTranslations("shell");
@@ -75,6 +77,7 @@ export function useTurnNotices(
 
   // Run when the list's keys change (`keys`), not on every new array of the same items.
   useEffect(() => {
+    if (!ready) return;
     // What already waited when the page opened is not news.
     if (!seen.current) {
       seen.current = new Set(items.map((item) => item.key));
@@ -117,7 +120,7 @@ export function useTurnNotices(
         notice.close();
       };
     }
-  }, [keys]);
+  }, [keys, ready]);
 
   // A request the person sent that a colleague's clone has just answered.
   const states = useRef<Map<string, string> | null>(null);

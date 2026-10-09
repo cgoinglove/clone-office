@@ -58,18 +58,23 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  above = false,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
+  /** Opens over another dialog (a confirm over Settings): one layer up, its own dimming over that one. */
+  above?: boolean;
 }) {
   const closeLabel = useCloseLabel();
   return (
     <DialogPortal>
-      <DialogOverlay />
+      {/* over another dialog too (a confirm over Settings), so the one beneath steps back */}
+      <DialogOverlay forceRender className={above ? "z-[60]" : undefined} />
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[14px] bg-popover p-6 text-sm text-popover-foreground shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)] duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          above && "z-[61]",
           className,
         )}
         {...props}

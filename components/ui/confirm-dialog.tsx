@@ -40,7 +40,7 @@ export function ConfirmDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[26rem]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[26rem]" showCloseButton={false} above>
         <DialogHeader className="pr-0">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
