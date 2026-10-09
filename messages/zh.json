@@ -9,7 +9,8 @@
       "remove": "移除 {item}",
       "add": "添加…",
       "full": "最多 {count} 个"
-    }
+    },
+    "undo": "撤销"
   },
   "language": {
     "label": "语言",
@@ -312,15 +313,13 @@
     "freshRead": "读一下",
     "again": "重新读取",
     "startOver": "重新开始",
-    "startOverSure": "把我记住的内容移到备份里，然后从头开始？不会删除任何东西。",
     "startOverYes": "重新开始",
     "tryNow": "现在一起做一件试试？",
     "routineNow": "这个时间你通常会：",
     "routineDo": "一起做",
     "routineLater": "以后再说",
     "routineFlow": "每次都做",
-    "routineFlowAsk": "建一个自动流程：{label}（{when}）。",
-    "startOverClear": "你还没教过我任何东西，我只有从你的记录里读到的内容。要清空并从头开始吗？重新读取就能找回来。"
+    "routineFlowAsk": "建一个自动流程：{label}（{when}）。"
   },
   "memory": {
     "title": "我记得的关于你的事",
@@ -331,7 +330,7 @@
     "fix": "编辑",
     "fixHint": "应该怎么写？",
     "remove": "删除",
-    "removeSure": "删除这一条？"
+    "removed": "已从记忆中删除一行"
   },
   "import": {
     "open": "从其他 AI 带过来",
@@ -644,7 +643,9 @@
     "owns": "你负责什么",
     "ownsPlaceholder": "例如：支付 API、版本发布",
     "tools": "你常用的工具",
-    "toolsPlaceholder": "例如：Figma、Notion、Claude Code"
+    "toolsPlaceholder": "例如：Figma、Notion、Claude Code",
+    "leaveTitle": "要离开办公室吗？",
+    "closeTitle": "要关闭这台电脑上的办公室吗？"
   },
   "files": {
     "title": "我保存的所有文件",
@@ -697,8 +698,6 @@
     "pause": "暂停",
     "resume": "恢复",
     "remove": "删除",
-    "removeSure": "删除这个自动流程？",
-    "removeYes": "删除",
     "suggest": {
       "topic": "费用和日期先给我看",
       "topicAsk": "帮我建一个流程：同事的请求涉及费用、价格或承诺日期时，回答发出前先给我看。",
@@ -706,7 +705,8 @@
       "notesAsk": "帮我建一个流程：每个工作日晚上 6 点，读今天的 AI 对话和提交，把项目笔记更新到最新。没有变化就什么都别发。"
     },
     "onRequest": "这类请求进来时照此执行",
-    "tooLong": "太长了，存不下：名称最多 80 个字，内容最多 4,000 个字。"
+    "tooLong": "太长了，存不下：名称最多 80 个字，内容最多 4,000 个字。",
+    "removed": "已删除流程“{name}”"
   },
   "brain": {
     "title": "AI 模型",
@@ -1032,7 +1032,10 @@
         "fix": "你的更正",
         "meeting": "在分身会议中",
         "other": "分身记下的"
-      }
+      },
+      "startOverTitle": "要重新开始吗？",
+      "startOverBody": "克隆记住的内容会移入备份，然后从第一步重新开始。不会删除任何内容。",
+      "startOverBodyClear": "它记住的内容都来自读取你的记录，所以会直接清空而不备份；再次读取即可恢复。"
     },
     "skills": {
       "title": "技能",
@@ -1062,7 +1065,6 @@
       "taken": "你有同名的技能",
       "unshare": "停止共享",
       "remove": "撤下",
-      "removeSure": "从办公室撤下它？同事已添加的副本仍归他们。",
       "removeYes": "撤下",
       "shipped": {
         "skill-creator": {
@@ -1081,7 +1083,9 @@
           "title": "做文档和页面",
           "body": "把文档、表格、图表和小页面做成文件，在应用里打开。"
         }
-      }
+      },
+      "removeTitle": "从办公室撤下它？",
+      "removeBody": "同事已添加的副本仍归他们。"
     },
     "office": {
       "thisOffice": "这个办公室",

@@ -194,7 +194,7 @@ export function MessengerPanel() {
                     <Button
                       type="button"
                       size="sm"
-                      variant="outline"
+                      variant="secondary"
                       onClick={() => {
                         navigator.clipboard
                           .writeText(SLACK_MANIFEST)
@@ -290,10 +290,11 @@ export function MessengerPanel() {
                           href={status.invite}
                           target="_blank"
                           rel="noreferrer"
-                          // Merged as Button merges them: the outline's border beats the base's
-                          // transparent one.
                           className={cn(
-                            buttonVariants({ size: "sm", variant: "outline" }),
+                            buttonVariants({
+                              size: "sm",
+                              variant: "secondary",
+                            }),
                           )}
                         >
                           {t(`${using}.addBot`)}

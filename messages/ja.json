@@ -9,7 +9,8 @@
       "remove": "{item}を外す",
       "add": "追加…",
       "full": "{count}件までです"
-    }
+    },
+    "undo": "元に戻す"
   },
   "language": {
     "label": "言語",
@@ -312,15 +313,13 @@
     "freshRead": "読んでみる",
     "again": "もう一度読む",
     "startOver": "最初からやり直す",
-    "startOverSure": "覚えていることをバックアップに移して、最初からやり直しますか？何も削除されません。",
     "startOverYes": "やり直す",
     "tryNow": "今ひとつ一緒にやってみましょうか？",
     "routineNow": "この時間はいつも：",
     "routineDo": "一緒にやる",
     "routineLater": "今はしない",
     "routineFlow": "毎回やる",
-    "routineFlowAsk": "フローを作って：{label}（{when}）。",
-    "startOverClear": "あなたから教わったことはまだなく、記録から読んだことだけです。消去して最初からやり直しますか？もう一度読めば元に戻ります。"
+    "routineFlowAsk": "フローを作って：{label}（{when}）。"
   },
   "memory": {
     "title": "あなたについて覚えていること",
@@ -331,7 +330,7 @@
     "fix": "編集",
     "fixHint": "どう書けばいいですか？",
     "remove": "削除",
-    "removeSure": "この行を削除しますか？"
+    "removed": "記憶から1行を削除しました"
   },
   "import": {
     "open": "ほかのAIから持ってくる",
@@ -644,7 +643,9 @@
     "owns": "受け持っていること",
     "ownsPlaceholder": "例：決済API、リリース",
     "tools": "使っているツール",
-    "toolsPlaceholder": "例：Figma、Notion、Claude Code"
+    "toolsPlaceholder": "例：Figma、Notion、Claude Code",
+    "leaveTitle": "オフィスを退出しますか？",
+    "closeTitle": "このコンピューターで開いたオフィスを閉じますか？"
   },
   "files": {
     "title": "保存しているすべてのファイル",
@@ -697,8 +698,6 @@
     "pause": "一時停止",
     "resume": "再開",
     "remove": "削除",
-    "removeSure": "このフローを削除しますか？",
-    "removeYes": "削除",
     "suggest": {
       "topic": "費用と日程の話は先に私へ",
       "topicAsk": "フローを作って：同僚の頼みが費用や価格、日程の約束についてなら、答えを送る前に先に見せて。",
@@ -706,7 +705,8 @@
       "notesAsk": "フローを作って：平日の夕方6時ごとに、今日の AI との会話とコミットを見て、プロジェクトのノートを最新にして。何も変わっていなければ何も送らないで。"
     },
     "onRequest": "その依頼が届いたときに従います",
-    "tooLong": "長すぎて保存できません。名前は80文字まで、内容は4,000文字までです。"
+    "tooLong": "長すぎて保存できません。名前は80文字まで、内容は4,000文字までです。",
+    "removed": "フロー「{name}」を削除しました"
   },
   "brain": {
     "title": "AIモデル",
@@ -1032,7 +1032,10 @@
         "fix": "あなたの訂正",
         "meeting": "クローンの会議で",
         "other": "クローンが覚えたこと"
-      }
+      },
+      "startOverTitle": "最初からやり直しますか？",
+      "startOverBody": "クローンが覚えていることはバックアップに移し、最初のステップからやり直します。何も削除されません。",
+      "startOverBodyClear": "覚えていることはすべて記録を読んで得たものなので、バックアップせずに消去します。もう一度読めば戻ります。"
     },
     "skills": {
       "title": "スキル",
@@ -1062,7 +1065,6 @@
       "taken": "同じ名前のスキルがあります",
       "unshare": "共有をやめる",
       "remove": "外す",
-      "removeSure": "オフィスから外しますか？同僚がすでに追加したものはそのまま残ります。",
       "removeYes": "外す",
       "shipped": {
         "skill-creator": {
@@ -1081,7 +1083,9 @@
           "title": "文書・ページを作る",
           "body": "文書、表、グラフ、小さなページをファイルにして、アプリで開きます。"
         }
-      }
+      },
+      "removeTitle": "オフィスから外しますか？",
+      "removeBody": "同僚がすでに追加したものはそのまま残ります。"
     },
     "office": {
       "thisOffice": "このオフィス",

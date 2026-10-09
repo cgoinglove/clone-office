@@ -30,7 +30,7 @@ export function OfficeTrouble({ className }: { className?: string }) {
       </span>
       <Button
         size="sm"
-        variant="outline"
+        variant="secondary"
         onClick={() => app.setSettings("office")}
       >
         {t("open")}

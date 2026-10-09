@@ -66,7 +66,7 @@ export function AskCard({
             </Button>
             <Button
               size="sm"
-              variant="outline"
+              variant="ghost"
               onClick={() => onAnswer("no", false)}
             >
               {t("ruleNo")}
@@ -134,7 +134,7 @@ export function AskCard({
                 <Button
                   key={choice}
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => onAnswer(choice, false)}
                 >
                   {choice}
@@ -181,7 +181,7 @@ export function AskCard({
             </Button>
             <Button
               size="sm"
-              variant="outline"
+              variant="ghost"
               onClick={() => onAnswer("deny", false)}
             >
               {t("deny")}

@@ -1,7 +1,7 @@
 "use client";
 
 // A short word that something happened, at the bottom centre: copied, sent, removed with a way
-// back. Drawn in the other theme (`.inverse`), one line, gone after five seconds; something still
+// back (`sayUndoable`). Drawn in the other theme (`.inverse`), one line, gone after a few seconds; something still
 // under way says so with a turning icon until `settle` gives it its outcome. Call `say` from
 // anywhere; `Toaster` is mounted once in `app/layout.tsx`.
 
@@ -31,6 +31,34 @@ function say(
     ...(action
       ? { actionProps: { children: action.label, onClick: action.run } }
       : {}),
+  });
+}
+
+/**
+ * Something small the person can take back (a memory line, a flow): it is hidden at once and done
+ * only when the toast goes without Undo, so leaving the page in between keeps it rather than losing
+ * it. `undo` shows it again.
+ */
+function sayUndoable(
+  title: string,
+  undoLabel: string,
+  { commit, undo }: { commit: () => void; undo: () => void },
+) {
+  let undone = false;
+  return toast.add({
+    title,
+    type: "done",
+    timeout: 6000,
+    actionProps: {
+      children: undoLabel,
+      onClick: () => {
+        undone = true;
+        undo();
+      },
+    },
+    onClose: () => {
+      if (!undone) commit();
+    },
   });
 }
 
@@ -92,4 +120,4 @@ function Toaster({ children }: { children?: React.ReactNode }) {
   );
 }
 
-export { say, settle, Toaster, toast };
+export { say, sayUndoable, settle, Toaster, toast };

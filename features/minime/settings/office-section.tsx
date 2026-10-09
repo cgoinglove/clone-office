@@ -20,6 +20,7 @@ import {
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Bot } from "@/features/office";
 import type { BotShape } from "@/features/office/bot-shape";
@@ -334,7 +335,7 @@ function Join({
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 disabled={drafting}
                 loading={drafting}
                 onClick={() => void draft()}
@@ -409,7 +410,7 @@ function CopyLink({ url, label }: { url?: string; label: string }) {
       <code className="min-w-0 flex-1 truncate text-xs">{url ?? "…"}</code>
       <Button
         size="sm"
-        variant={copied ? "outline" : "default"}
+        variant={copied ? "secondary" : "default"}
         disabled={!url}
         onClick={() => {
           if (!url) return;
@@ -496,6 +497,7 @@ function Leave({
 }) {
   const t = useTranslations("office");
   const tS = useTranslations("settings.office");
+  const tCommon = useTranslations("common");
   const [sure, setSure] = useState(false);
   return (
     <Group
@@ -503,33 +505,28 @@ function Leave({
       hint={here ? t("closeNote") : tS("leaveHint")}
       tone="danger"
     >
-      {sure ? (
-        <div className="flex gap-2">
-          <Button
-            variant="destructive"
-            disabled={busy}
-            loading={busy}
-            onClick={onLeave}
-          >
-            {here ? t("close") : t("leave")}
-          </Button>
-          <Button variant="ghost" onClick={() => setSure(false)}>
-            {t("keepOpen")}
-          </Button>
-        </div>
-      ) : (
-        <div>
-          <Button
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            disabled={busy}
-            onClick={() => setSure(true)}
-          >
-            <LogOut />
-            {here ? t("close") : t("leave")}
-          </Button>
-        </div>
-      )}
+      <div>
+        <Button
+          variant="secondary"
+          className="text-destructive hover:text-destructive"
+          disabled={busy}
+          onClick={() => setSure(true)}
+        >
+          <LogOut />
+          {here ? t("close") : t("leave")}
+        </Button>
+      </div>
+      <ConfirmDialog
+        open={sure}
+        onOpenChange={setSure}
+        title={here ? t("closeTitle") : t("leaveTitle")}
+        description={here ? t("closeNote") : tS("leaveHint")}
+        cancel={here ? t("keepOpen") : tCommon("cancel")}
+        confirm={here ? t("close") : t("leave")}
+        destructive
+        busy={busy}
+        onConfirm={onLeave}
+      />
     </Group>
   );
 }

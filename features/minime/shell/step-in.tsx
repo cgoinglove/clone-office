@@ -113,7 +113,7 @@ export function StepIn({
                 <Button
                   type="button"
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   disabled={!words || busy}
                   onClick={() =>
                     void post({
@@ -157,7 +157,7 @@ export function StepIn({
                 <Button
                   type="button"
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   disabled={!words || busy}
                   onClick={() =>
                     void post({

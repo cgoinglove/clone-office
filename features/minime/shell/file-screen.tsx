@@ -132,7 +132,7 @@ export function FileScreen({ path }: { path: string }) {
           </p>
         </div>
         {"blob" in shown && (
-          <Button variant="outline" onClick={save}>
+          <Button variant="secondary" onClick={save}>
             <Download />
             {t("save")}
           </Button>

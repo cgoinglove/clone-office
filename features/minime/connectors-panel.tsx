@@ -218,7 +218,7 @@ export function ConnectorsPanel() {
         ) : entry.kind === "token" ? null : (
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             className="shrink-0"
             disabled={busy || blocked || waiting !== null}
             loading={waiting === entry.id}
@@ -358,7 +358,7 @@ export function ConnectorsPanel() {
                         </pre>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="secondary"
                           className="self-start"
                           onClick={() =>
                             void navigator.clipboard
@@ -475,7 +475,7 @@ export function ConnectorsPanel() {
                             <Button
                               type="submit"
                               size="sm"
-                              variant="outline"
+                              variant="secondary"
                               className="self-start"
                               disabled={busy || client.id.trim().length < 10}
                             >
@@ -489,7 +489,7 @@ export function ConnectorsPanel() {
                 ) : (
                   <Button
                     size="sm"
-                    variant="outline"
+                    variant="secondary"
                     className="self-start"
                     onClick={() => setSettingUp(true)}
                   >

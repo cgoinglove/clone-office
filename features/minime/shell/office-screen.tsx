@@ -107,7 +107,7 @@ export function OfficeScreen() {
             </Button>
           )}
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => app.setSettings("office")}
           >

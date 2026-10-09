@@ -319,7 +319,7 @@ export function HomeScreen() {
                   </Quiet>
                   <div className="flex flex-wrap gap-2 pl-6.5">
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       className="h-8.5 rounded-[10px] px-3"
                       onClick={() =>
                         router.push(
@@ -331,7 +331,7 @@ export function HomeScreen() {
                       {t("askByLink")}
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       className="h-8.5 rounded-[10px] px-3"
                       onClick={() => app.setSettings("office")}
                     >

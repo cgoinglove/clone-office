@@ -94,7 +94,7 @@ export function MeetingStart({ onStarted }: { onStarted?: () => void }) {
     <div className="flex items-center gap-1.5">
       <Button
         size="sm"
-        variant="outline"
+        variant="secondary"
         disabled={on || app.office.busy}
         onClick={() => void open("standup")}
       >
@@ -103,7 +103,7 @@ export function MeetingStart({ onStarted }: { onStarted?: () => void }) {
       </Button>
       <Button
         size="sm"
-        variant="outline"
+        variant="secondary"
         disabled={on || app.office.busy}
         onClick={() => setAsking(true)}
       >
@@ -297,7 +297,7 @@ export function MeetingPanel({
               </span>
               <Button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 onClick={() => void app.changePreferences({ meetings: true })}
               >
                 {t("letIn")}

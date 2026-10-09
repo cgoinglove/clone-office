@@ -9,7 +9,8 @@
       "remove": "Remove {item}",
       "add": "Add one…",
       "full": "Up to {count}"
-    }
+    },
+    "undo": "Undo"
   },
   "language": {
     "label": "Language",
@@ -312,15 +313,13 @@
     "freshRead": "Read them",
     "again": "Read again",
     "startOver": "Start over",
-    "startOverSure": "Move what I remember into a backup and start from the beginning? Nothing is deleted.",
     "startOverYes": "Start over",
     "tryNow": "Shall we do one together now?",
     "routineNow": "Around now you usually:",
     "routineDo": "Do it together",
     "routineLater": "Not now",
     "routineFlow": "Every time",
-    "routineFlowAsk": "Make a flow: {label} ({when}).",
-    "startOverClear": "Nothing you taught me is kept yet, only what I read from your records. Clear it and start from the beginning? Reading again brings it back."
+    "routineFlowAsk": "Make a flow: {label} ({when})."
   },
   "memory": {
     "title": "What I remember about you",
@@ -331,7 +330,7 @@
     "fix": "Edit",
     "fixHint": "How should it read?",
     "remove": "Remove",
-    "removeSure": "Remove this line?"
+    "removed": "Removed a line from memory"
   },
   "import": {
     "open": "Bring it from another AI",
@@ -644,7 +643,9 @@
     "owns": "What you look after",
     "ownsPlaceholder": "e.g. payments API, releases",
     "tools": "Tools you work in",
-    "toolsPlaceholder": "e.g. Figma, Notion, Claude Code"
+    "toolsPlaceholder": "e.g. Figma, Notion, Claude Code",
+    "leaveTitle": "Leave the office?",
+    "closeTitle": "Close the office on this computer?"
   },
   "files": {
     "title": "All files I keep",
@@ -697,8 +698,6 @@
     "pause": "Pause",
     "resume": "Resume",
     "remove": "Remove",
-    "removeSure": "Remove this flow?",
-    "removeYes": "Remove",
     "suggest": {
       "topic": "Costs and dates come to me first",
       "topicAsk": "Make a flow: when a colleague's request is about costs, prices or promising a date, show me your answer before it goes.",
@@ -706,7 +705,8 @@
       "notesAsk": "Make a flow: every weekday at 6 pm, read today's AI conversations and commits and bring my project notes up to date. Send me nothing when nothing changed."
     },
     "onRequest": "Followed when such a request comes in",
-    "tooLong": "Too long to save: a name can be 80 characters, the request 4,000."
+    "tooLong": "Too long to save: a name can be 80 characters, the request 4,000.",
+    "removed": "Removed the flow “{name}”"
   },
   "brain": {
     "title": "AI model",
@@ -1032,7 +1032,10 @@
         "fix": "Your correction",
         "meeting": "In a meeting of the clones",
         "other": "Kept by your clone"
-      }
+      },
+      "startOverTitle": "Start over?",
+      "startOverBody": "What your clone remembers moves into a backup, and you begin again from the first steps. Nothing is deleted.",
+      "startOverBodyClear": "Everything it remembers came from reading your records, so it is cleared rather than backed up; reading them again brings it back."
     },
     "skills": {
       "title": "Skills",
@@ -1062,7 +1065,6 @@
       "taken": "You have one by this name",
       "unshare": "Stop sharing",
       "remove": "Take out",
-      "removeSure": "Take it out of the office? Copies colleagues added stay theirs.",
       "removeYes": "Take it out",
       "shipped": {
         "skill-creator": {
@@ -1081,7 +1083,9 @@
           "title": "Make documents and pages",
           "body": "Makes documents, sheets, charts and small pages as files that open in the app."
         }
-      }
+      },
+      "removeTitle": "Take it out of the office?",
+      "removeBody": "Copies colleagues already added stay theirs."
     },
     "office": {
       "thisOffice": "This office",

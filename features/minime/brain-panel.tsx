@@ -451,7 +451,7 @@ function WaySetup({ choice }: { choice: BrainChoice }) {
     ) : (
       <div className="flex flex-col gap-1.5">
         <Button
-          variant="outline"
+          variant="secondary"
           className="h-9 w-full"
           disabled={busy || signingIn}
           onClick={() => void choice.signIn()}
@@ -935,7 +935,7 @@ export function BrainPicker({
               {offer.note}
             </span>
           </span>
-          <Button variant="outline" disabled={busy} onClick={offer.take}>
+          <Button variant="secondary" disabled={busy} onClick={offer.take}>
             {t("use")}
           </Button>
         </div>

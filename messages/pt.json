@@ -9,7 +9,8 @@
       "remove": "Remover {item}",
       "add": "Adicionar…",
       "full": "Até {count}"
-    }
+    },
+    "undo": "Desfazer"
   },
   "language": {
     "label": "Idioma",
@@ -312,15 +313,13 @@
     "freshRead": "Ler agora",
     "again": "Ler de novo",
     "startOver": "Começar de novo",
-    "startOverSure": "Mover o que eu lembro para um backup e começar do zero? Nada é apagado.",
     "startOverYes": "Começar de novo",
     "tryNow": "Vamos fazer uma juntos agora?",
     "routineNow": "Por volta desta hora você costuma:",
     "routineDo": "Fazer juntos",
     "routineLater": "Agora não",
     "routineFlow": "Sempre",
-    "routineFlowAsk": "Crie uma rotina: {label} ({when}).",
-    "startOverClear": "Ainda não guardei nada que você me ensinou, só o que li nos seus registros. Apagar e começar do zero? Se eu ler de novo, tudo volta."
+    "routineFlowAsk": "Crie uma rotina: {label} ({when})."
   },
   "memory": {
     "title": "O que eu lembro sobre você",
@@ -331,7 +330,7 @@
     "fix": "Editar",
     "fixHint": "Como deveria ficar?",
     "remove": "Remover",
-    "removeSure": "Remover esta linha?"
+    "removed": "Uma linha foi removida da memória"
   },
   "import": {
     "open": "Trazer de outra IA",
@@ -644,7 +643,9 @@
     "owns": "Do que você cuida",
     "ownsPlaceholder": "ex.: API de pagamentos, lançamentos",
     "tools": "Ferramentas que você usa",
-    "toolsPlaceholder": "ex.: Figma, Notion, Claude Code"
+    "toolsPlaceholder": "ex.: Figma, Notion, Claude Code",
+    "leaveTitle": "Sair do escritório?",
+    "closeTitle": "Fechar o escritório neste computador?"
   },
   "files": {
     "title": "Todos os arquivos que guardo",
@@ -697,8 +698,6 @@
     "pause": "Pausar",
     "resume": "Retomar",
     "remove": "Remover",
-    "removeSure": "Remover esta rotina?",
-    "removeYes": "Remover",
     "suggest": {
       "topic": "Custos e prazos, primeiro para mim",
       "topicAsk": "Crie um fluxo: quando o pedido de um colega for sobre custos, preços ou prometer um prazo, me mostre sua resposta antes de enviar.",
@@ -706,7 +705,8 @@
       "notesAsk": "Crie um fluxo: todo dia útil às 18h, leia as conversas de IA e os commits de hoje e atualize minhas notas de projetos. Não me envie nada se nada mudou."
     },
     "onRequest": "Seguida quando chega um pedido assim",
-    "tooLong": "Longo demais para salvar: o nome pode ter 80 caracteres, e as instruções, 4.000."
+    "tooLong": "Longo demais para salvar: o nome pode ter 80 caracteres, e as instruções, 4.000.",
+    "removed": "O fluxo “{name}” foi removido"
   },
   "brain": {
     "title": "Modelo de IA",
@@ -1032,7 +1032,10 @@
         "fix": "Sua correção",
         "meeting": "Em uma reunião dos clones",
         "other": "Guardado pelo seu clone"
-      }
+      },
+      "startOverTitle": "Começar de novo?",
+      "startOverBody": "O que seu clone lembra vai para um backup, e você recomeça pelos primeiros passos. Nada é apagado.",
+      "startOverBodyClear": "Tudo o que ele lembra veio da leitura dos seus registros, então é apagado em vez de guardado; ler de novo traz tudo de volta."
     },
     "skills": {
       "title": "Habilidades",
@@ -1062,7 +1065,6 @@
       "taken": "Você tem uma com esse nome",
       "unshare": "Parar de compartilhar",
       "remove": "Tirar",
-      "removeSure": "Tirá-la do escritório? As cópias que os colegas adicionaram continuam deles.",
       "removeYes": "Tirar",
       "shipped": {
         "skill-creator": {
@@ -1081,7 +1083,9 @@
           "title": "Criar documentos e páginas",
           "body": "Cria documentos, planilhas, gráficos e páginas pequenas como arquivos que abrem no app."
         }
-      }
+      },
+      "removeTitle": "Tirá-la do escritório?",
+      "removeBody": "As cópias que os colegas já adicionaram continuam deles."
     },
     "office": {
       "thisOffice": "Este escritório",

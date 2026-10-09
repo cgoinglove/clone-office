@@ -7,6 +7,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { sayUndoable } from "@/components/ui/toast";
 import type { When } from "./flows/schedule";
 import { whenText } from "./flows/when-text";
 
@@ -39,10 +40,11 @@ export function FlowsPanel({
   onAsk: (text: string) => void;
 }) {
   const t = useTranslations("flows");
-  const cancel = useTranslations("common")("cancel");
+  const undo = useTranslations("common")("undo");
   const format = useFormatter();
   const [flows, setFlows] = useState<FlowView[] | null>(null);
-  const [sure, setSure] = useState<string>();
+  // Removed flows are hidden at once and removed when their toast goes without Undo.
+  const [gone, setGone] = useState<Set<string>>(new Set());
   const [running, setRunning] = useState<Set<string>>(new Set());
   const watching = useRef<ReturnType<typeof setInterval>>(undefined);
 
@@ -59,11 +61,23 @@ export function FlowsPanel({
     void load();
   }, []);
 
+  const removeLater = (flow: FlowView) => {
+    setGone((all) => new Set(all).add(flow.id));
+    sayUndoable(t("removed", { name: flow.name }), undo, {
+      commit: () => void act("remove", flow),
+      undo: () =>
+        setGone((all) => {
+          const next = new Set(all);
+          next.delete(flow.id);
+          return next;
+        }),
+    });
+  };
+
   const act = async (
     action: "run" | "pause" | "resume" | "remove",
     flow: FlowView,
   ) => {
-    setSure(undefined);
     const response = await fetch("/api/me/flows", {
       method: "POST",
       headers: HEADERS,
@@ -133,7 +147,7 @@ export function FlowsPanel({
                 <Button
                   key={kind}
                   size="sm"
-                  variant="outline"
+                  variant="secondary"
                   onClick={() => onAsk(t(`suggest.${kind}Ask`))}
                 >
                   {t(`suggest.${kind}`)}
@@ -142,105 +156,88 @@ export function FlowsPanel({
             </div>
           )}
           <ul className="flex flex-col">
-            {flows.map((flow) => (
-              <li
-                key={flow.id}
-                className="flex flex-col gap-1 border-b border-border py-2 last:border-b-0"
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-x-3">
-                  <span className="font-medium">{flow.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {whenText(t, format, flow.when, flow.menuName)}
-                  </span>
-                </div>
-                <p className="whitespace-pre-wrap text-muted-foreground">
-                  {flow.what}
-                </p>
-                <p className="text-xs text-muted-foreground tabular-nums">
-                  {[
-                    running.has(flow.id)
-                      ? t("running")
-                      : flow.paused
-                        ? t("paused")
-                        : flow.when.kind === "request"
-                          ? t("onRequest")
-                          : flow.next
-                            ? t("next", { at: at(flow.next) })
-                            : t("finished"),
-                    flow.last &&
-                      t(
-                        flow.last.missed
-                          ? "lastMissed"
-                          : flow.last.ok
-                            ? "lastDone"
-                            : "lastFailed",
-                        { at: at(flow.last.at) },
-                      ),
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                <div className="flex flex-wrap items-center gap-1">
-                  {flow.when.kind !== "request" && (
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      disabled={running.has(flow.id)}
-                      loading={running.has(flow.id)}
-                      onClick={() => void act("run", flow)}
-                    >
-                      {t("runNow")}
-                    </Button>
-                  )}
-                  {flow.chat && (
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      onClick={() => onOpenChat(flow.chat as string)}
-                    >
-                      {t("open")}
-                    </Button>
-                  )}
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    className="text-muted-foreground"
-                    onClick={() =>
-                      void act(flow.paused ? "resume" : "pause", flow)
-                    }
-                  >
-                    {flow.paused ? t("resume") : t("pause")}
-                  </Button>
-                  {sure === flow.id ? (
-                    <>
-                      <span className="text-xs">{t("removeSure")}</span>
+            {flows
+              .filter((flow) => !gone.has(flow.id))
+              .map((flow) => (
+                <li
+                  key={flow.id}
+                  className="flex flex-col gap-1 border-b border-border py-2 last:border-b-0"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                    <span className="font-medium">{flow.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {whenText(t, format, flow.when, flow.menuName)}
+                    </span>
+                  </div>
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    {flow.what}
+                  </p>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {[
+                      running.has(flow.id)
+                        ? t("running")
+                        : flow.paused
+                          ? t("paused")
+                          : flow.when.kind === "request"
+                            ? t("onRequest")
+                            : flow.next
+                              ? t("next", { at: at(flow.next) })
+                              : t("finished"),
+                      flow.last &&
+                        t(
+                          flow.last.missed
+                            ? "lastMissed"
+                            : flow.last.ok
+                              ? "lastDone"
+                              : "lastFailed",
+                          { at: at(flow.last.at) },
+                        ),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {flow.when.kind !== "request" && (
                       <Button
                         size="xs"
-                        onClick={() => void act("remove", flow)}
+                        variant="secondary"
+                        disabled={running.has(flow.id)}
+                        loading={running.has(flow.id)}
+                        onClick={() => void act("run", flow)}
                       >
-                        {t("removeYes")}
+                        {t("runNow")}
                       </Button>
+                    )}
+                    {flow.chat && (
                       <Button
                         size="xs"
                         variant="ghost"
-                        onClick={() => setSure(undefined)}
+                        onClick={() => onOpenChat(flow.chat as string)}
                       >
-                        {cancel}
+                        {t("open")}
                       </Button>
-                    </>
-                  ) : (
+                    )}
                     <Button
                       size="xs"
                       variant="ghost"
                       className="text-muted-foreground"
-                      onClick={() => setSure(flow.id)}
+                      onClick={() =>
+                        void act(flow.paused ? "resume" : "pause", flow)
+                      }
+                    >
+                      {flow.paused ? t("resume") : t("pause")}
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      className="text-muted-foreground"
+                      onClick={() => removeLater(flow)}
                     >
                       {t("remove")}
                     </Button>
-                  )}
-                </div>
-              </li>
-            ))}
+                  </div>
+                </li>
+              ))}
           </ul>
         </div>
       )}

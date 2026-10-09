@@ -18,11 +18,12 @@ import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
+import { sayUndoable } from "@/components/ui/toast";
 import { useProblem } from "@/i18n/client";
-import { cn } from "@/lib/utils";
 import type { Learn } from "../home/use-learn";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import { EXPORT_PROMPT } from "../learn/export-prompt";
@@ -319,7 +320,7 @@ function AboutYou({
             />
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               disabled={drafting}
               loading={drafting}
               onClick={() => void draft()}
@@ -393,7 +394,7 @@ function ReadAgain({ learn }: { learn: Learn }) {
           </span>
         </span>
         <Button
-          variant="outline"
+          variant="secondary"
           disabled={learning}
           loading={learning}
           onClick={() => void learn.start()}
@@ -491,7 +492,7 @@ export function BringFromAnotherAi({
           </span>
         </span>
         {!open && (
-          <Button variant="outline" onClick={() => setOpen(true)}>
+          <Button variant="secondary" onClick={() => setOpen(true)}>
             {tClone("bring")}
           </Button>
         )}
@@ -605,11 +606,13 @@ function MemoryRow({
   onFix: (fix: string) => Promise<void>;
   onRemove: () => Promise<void>;
 }) {
-  const [state, setState] = useState<
-    "open" | "fixing" | "saving" | "removing" | "sure"
-  >("open");
+  const [state, setState] = useState<"open" | "fixing" | "saving" | "gone">(
+    "open",
+  );
   const [text, setText] = useState(entry.text);
   const t = useTranslations();
+  // Removed at once and for good only when its toast goes without Undo.
+  if (state === "gone") return null;
   return (
     <li className="group flex flex-col gap-2 px-3.5 py-3">
       <div className="flex items-start gap-3">
@@ -641,40 +644,24 @@ function MemoryRow({
               variant="ghost"
               aria-label={t("memory.remove")}
               title={t("memory.remove")}
-              onClick={() => setState("sure")}
+              onClick={() => {
+                setState("gone");
+                sayUndoable(t("memory.removed"), t("common.undo"), {
+                  commit: () => void onRemove(),
+                  undo: () => setState("open"),
+                });
+              }}
             >
               <Trash2 />
             </Button>
           </span>
         )}
-        {(state === "saving" || state === "removing") && (
+        {state === "saving" && (
           <span className="shrink-0 text-xs">
-            <ShinyText
-              text={state === "saving" ? t("memory.fix") : t("memory.remove")}
-            />
+            <ShinyText text={t("memory.fix")} />
           </span>
         )}
       </div>
-      {state === "sure" && (
-        <span className="ml-7 flex flex-wrap items-center gap-2">
-          <span className="text-muted-foreground">
-            {t("memory.removeSure")}
-          </span>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => {
-              setState("removing");
-              void onRemove().finally(() => setState("open"));
-            }}
-          >
-            {t("memory.remove")}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setState("open")}>
-            {t("common.cancel")}
-          </Button>
-        </span>
-      )}
       {state === "fixing" && (
         <span className="ml-7 flex flex-col gap-2">
           <Textarea
@@ -729,46 +716,34 @@ function StartOver() {
   };
   return (
     <Group title={t("startOver")} hint={t("startOverHint")} tone="danger">
-      {sure ? (
-        <div
-          className={cn(
-            "flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4",
-          )}
+      <div>
+        <Button
+          variant="secondary"
+          className="text-destructive hover:text-destructive"
+          onClick={() =>
+            void fetch("/api/me/reset", { headers: HEADERS })
+              .then((r) => r.json())
+              .then((data) => setSure(data?.onlyRead ? "clear" : "backup"))
+              .catch(() => setSure("backup"))
+          }
         >
-          <p>
-            {sure === "clear" ? tRun("startOverClear") : tRun("startOverSure")}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="destructive"
-              disabled={busy}
-              loading={busy}
-              onClick={() => void go()}
-            >
-              {tRun("startOverYes")}
-            </Button>
-            <Button variant="ghost" onClick={() => setSure(false)}>
-              {common("cancel")}
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <Button
-            variant="outline"
-            className="text-destructive hover:text-destructive"
-            onClick={() =>
-              void fetch("/api/me/reset", { headers: HEADERS })
-                .then((r) => r.json())
-                .then((data) => setSure(data?.onlyRead ? "clear" : "backup"))
-                .catch(() => setSure("backup"))
-            }
-          >
-            <RotateCcw />
-            {tRun("startOver")}
-          </Button>
-        </div>
-      )}
+          <RotateCcw />
+          {tRun("startOver")}
+        </Button>
+      </div>
+      <ConfirmDialog
+        open={Boolean(sure)}
+        onOpenChange={(open) => !open && setSure(false)}
+        title={t("startOverTitle")}
+        description={
+          sure === "clear" ? t("startOverBodyClear") : t("startOverBody")
+        }
+        cancel={common("cancel")}
+        confirm={tRun("startOverYes")}
+        destructive
+        busy={busy}
+        onConfirm={() => void go()}
+      />
       {problem && <p className="text-destructive">{problemText(problem)}</p>}
     </Group>
   );

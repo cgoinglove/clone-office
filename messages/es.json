@@ -9,7 +9,8 @@
       "remove": "Quitar {item}",
       "add": "Añadir…",
       "full": "Hasta {count}"
-    }
+    },
+    "undo": "Deshacer"
   },
   "language": {
     "label": "Idioma",
@@ -312,15 +313,13 @@
     "freshRead": "Leerlas",
     "again": "Volver a leer",
     "startOver": "Empezar de nuevo",
-    "startOverSure": "¿Paso lo que recuerdo a una copia de seguridad y empiezo desde el principio? No se borra nada.",
     "startOverYes": "Empezar de nuevo",
     "tryNow": "¿Hacemos una juntos ahora?",
     "routineNow": "A esta hora sueles:",
     "routineDo": "Hacerlo juntos",
     "routineLater": "Ahora no",
     "routineFlow": "Cada vez",
-    "routineFlowAsk": "Crea una rutina: {label} ({when}).",
-    "startOverClear": "Todavía no guardé nada que me hayas enseñado, solo lo que leí de tus registros. ¿Lo borro y empiezo desde el principio? Si vuelvo a leer, regresa."
+    "routineFlowAsk": "Crea una rutina: {label} ({when})."
   },
   "memory": {
     "title": "Lo que recuerdo de ti",
@@ -331,7 +330,7 @@
     "fix": "Editar",
     "fixHint": "¿Cómo debería decir?",
     "remove": "Quitar",
-    "removeSure": "¿Quitar esta línea?"
+    "removed": "Se quitó una línea de la memoria"
   },
   "import": {
     "open": "Traerlo de otra IA",
@@ -644,7 +643,9 @@
     "owns": "De qué te encargas",
     "ownsPlaceholder": "p. ej., API de pagos, lanzamientos",
     "tools": "Herramientas que usas",
-    "toolsPlaceholder": "p. ej., Figma, Notion, Claude Code"
+    "toolsPlaceholder": "p. ej., Figma, Notion, Claude Code",
+    "leaveTitle": "¿Salir de la oficina?",
+    "closeTitle": "¿Cerrar la oficina en este ordenador?"
   },
   "files": {
     "title": "Todos los archivos que guardo",
@@ -697,8 +698,6 @@
     "pause": "Pausar",
     "resume": "Reanudar",
     "remove": "Quitar",
-    "removeSure": "¿Quitar esta rutina?",
-    "removeYes": "Quitar",
     "suggest": {
       "topic": "Costos y fechas, primero a mí",
       "topicAsk": "Crea un flujo: cuando la petición de un compañero sea sobre costos, precios o prometer una fecha, muéstrame tu respuesta antes de enviarla.",
@@ -706,7 +705,8 @@
       "notesAsk": "Crea un flujo: cada día laborable a las 6 pm, lee las conversaciones de IA y los commits de hoy y pon al día mis notas de proyectos. No me envíes nada si nada cambió."
     },
     "onRequest": "Se sigue cuando llega una solicitud así",
-    "tooLong": "Es demasiado largo para guardarlo: el nombre puede tener 80 caracteres y las instrucciones, 4000."
+    "tooLong": "Es demasiado largo para guardarlo: el nombre puede tener 80 caracteres y las instrucciones, 4000.",
+    "removed": "Se quitó el flujo «{name}»"
   },
   "brain": {
     "title": "Modelo de IA",
@@ -1032,7 +1032,10 @@
         "fix": "Tu corrección",
         "meeting": "En una reunión de los clones",
         "other": "Guardado por tu clon"
-      }
+      },
+      "startOverTitle": "¿Empezar de nuevo?",
+      "startOverBody": "Lo que recuerda tu clon pasa a una copia de seguridad y empiezas de nuevo desde los primeros pasos. No se borra nada.",
+      "startOverBodyClear": "Todo lo que recuerda salió de leer tus registros, así que se vacía en lugar de guardarse; leerlos de nuevo lo trae de vuelta."
     },
     "skills": {
       "title": "Habilidades",
@@ -1062,7 +1065,6 @@
       "taken": "Tienes una con este nombre",
       "unshare": "Dejar de compartir",
       "remove": "Quitar",
-      "removeSure": "¿Quitarla de la oficina? Las copias que añadieron tus colegas siguen siendo suyas.",
       "removeYes": "Quitarla",
       "shipped": {
         "skill-creator": {
@@ -1081,7 +1083,9 @@
           "title": "Crear documentos y páginas",
           "body": "Crea documentos, hojas, gráficos y páginas pequeñas como archivos que se abren en la app."
         }
-      }
+      },
+      "removeTitle": "¿Quitarla de la oficina?",
+      "removeBody": "Las copias que ya añadieron tus colegas siguen siendo suyas."
     },
     "office": {
       "thisOffice": "Esta oficina",

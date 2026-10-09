@@ -246,7 +246,7 @@ export function RequestScreen({ id }: { id: string }) {
               <Button
                 type="submit"
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 disabled={!reply.trim() || office.busy}
                 className="self-end"
               >
@@ -346,7 +346,7 @@ export function RequestScreen({ id }: { id: string }) {
             </h2>
             <Button
               size="sm"
-              variant="outline"
+              variant="secondary"
               className="self-start"
               onClick={() => {
                 void navigator.clipboard

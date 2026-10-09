@@ -88,7 +88,7 @@ export function Colleague({
           )}
         </span>
         {!asking && (
-          <Button size="sm" variant="outline" onClick={() => setAsking(true)}>
+          <Button size="sm" variant="secondary" onClick={() => setAsking(true)}>
             {t("ask")}
           </Button>
         )}

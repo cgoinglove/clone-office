@@ -9,7 +9,8 @@
       "remove": "{item} 빼기",
       "add": "더하기…",
       "full": "{count}개까지예요"
-    }
+    },
+    "undo": "되돌리기"
   },
   "language": {
     "label": "언어",
@@ -312,15 +313,13 @@
     "freshRead": "읽어 보기",
     "again": "다시 읽기",
     "startOver": "처음부터 다시",
-    "startOverSure": "지금 기억을 보관함으로 옮기고 처음부터 시작할까요? 지워지는 건 없어요.",
     "startOverYes": "처음부터 다시",
     "tryNow": "지금 하나 같이 해 볼까요?",
     "routineNow": "이맘때 보통 하시는 일:",
     "routineDo": "같이 하기",
     "routineLater": "나중에",
     "routineFlow": "매번 하기",
-    "routineFlowAsk": "플로우로 만들어 줘: ‘{label}’ ({when}).",
-    "startOverClear": "아직 가르쳐 주신 건 없고, 기록에서 읽은 것만 있어요. 비우고 처음부터 시작할까요? 다시 읽으면 돌아와요."
+    "routineFlowAsk": "플로우로 만들어 줘: ‘{label}’ ({when})."
   },
   "memory": {
     "title": "제가 기억하는 것",
@@ -331,7 +330,7 @@
     "fix": "고치기",
     "fixHint": "어떻게 고칠까요?",
     "remove": "지우기",
-    "removeSure": "이 줄을 지울까요?"
+    "removed": "기억에서 한 줄을 지웠어요"
   },
   "import": {
     "open": "다른 AI에서 가져오기",
@@ -644,7 +643,9 @@
     "owns": "맡은 일",
     "ownsPlaceholder": "예: 결제 API, 배포",
     "tools": "쓰는 도구",
-    "toolsPlaceholder": "예: Figma, Notion, Claude Code"
+    "toolsPlaceholder": "예: Figma, Notion, Claude Code",
+    "leaveTitle": "오피스에서 나갈까요?",
+    "closeTitle": "이 컴퓨터에서 연 오피스를 닫을까요?"
   },
   "files": {
     "title": "클론이 저장한 파일",
@@ -697,8 +698,6 @@
     "pause": "멈추기",
     "resume": "다시 시작하기",
     "remove": "삭제",
-    "removeSure": "이 플로우를 삭제할까요?",
-    "removeYes": "삭제",
     "suggest": {
       "topic": "비용·일정 얘기는 나에게 먼저",
       "topicAsk": "플로우 만들어 줘: 동료 부탁이 비용, 가격, 일정 약속에 관한 거면 답을 보내기 전에 나에게 먼저 보여 줘.",
@@ -706,7 +705,8 @@
       "notesAsk": "플로우 만들어 줘: 평일 저녁 6시마다 오늘 내 AI 대화와 커밋을 보고 진행 중인 프로젝트 노트를 최신으로 고쳐 줘. 바뀐 게 없으면 아무것도 보내지 마."
     },
     "onRequest": "이런 부탁이 오면 따라요",
-    "tooLong": "너무 길어서 저장할 수 없어요. 이름은 80자, 할 일은 4,000자까지예요."
+    "tooLong": "너무 길어서 저장할 수 없어요. 이름은 80자, 할 일은 4,000자까지예요.",
+    "removed": "‘{name}’ 플로우를 지웠어요"
   },
   "brain": {
     "title": "AI 모델",
@@ -1032,7 +1032,10 @@
         "fix": "내가 고쳐 준 것",
         "meeting": "클론 회의에서",
         "other": "클론이 기억한 것"
-      }
+      },
+      "startOverTitle": "처음부터 다시 할까요?",
+      "startOverBody": "클론이 기억하는 것을 보관함으로 옮기고, 첫 단계부터 다시 시작해요. 지워지는 건 없어요.",
+      "startOverBodyClear": "지금 기억은 모두 내 기록에서 읽은 것이라 보관하지 않고 비워요. 다시 읽으면 돌아와요."
     },
     "skills": {
       "title": "스킬",
@@ -1062,7 +1065,6 @@
       "taken": "같은 이름의 스킬이 있어요",
       "unshare": "공유 그만하기",
       "remove": "빼기",
-      "removeSure": "오피스에서 뺄까요? 동료가 이미 추가한 것은 그대로 남아요.",
       "removeYes": "빼기",
       "shipped": {
         "skill-creator": {
@@ -1081,7 +1083,9 @@
           "title": "문서·페이지 만들기",
           "body": "문서, 표, 차트, 작은 페이지를 파일로 만들어 앱에서 열어요."
         }
-      }
+      },
+      "removeTitle": "오피스에서 뺄까요?",
+      "removeBody": "동료가 이미 추가한 것은 그대로 남아요."
     },
     "office": {
       "thisOffice": "이 오피스",

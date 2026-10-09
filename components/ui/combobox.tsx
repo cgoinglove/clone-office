@@ -117,7 +117,7 @@ export function Combobox({
           in. It stands in for nothing when the field matches what is stored. */}
         {unsaved && !disabled && (
           <Button
-            variant="outline"
+            variant="secondary"
             className="shrink-0"
             onClick={() => onChange(typed)}
           >

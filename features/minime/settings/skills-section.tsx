@@ -9,6 +9,7 @@ import { Check } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { useProblem } from "@/i18n/client";
 import { HEADERS } from "../home/use-office";
@@ -203,7 +204,7 @@ function OwnRow({
           ) : skill.files ? (
             <Button
               size="xs"
-              variant="outline"
+              variant="secondary"
               className="shrink-0"
               onClick={() => setSure(true)}
             >
@@ -281,7 +282,7 @@ function OfficeRow({
           {skill.here === "new" || skill.here === "update" ? (
             <Button
               size="xs"
-              variant="outline"
+              variant="secondary"
               disabled={adding}
               loading={adding}
               onClick={() => void onAct("add")}
@@ -295,7 +296,7 @@ function OfficeRow({
           ) : skill.here === "taken" ? (
             <span className="text-xs text-muted-foreground">{t("taken")}</span>
           ) : null}
-          {skill.removable && !sure && (
+          {skill.removable && (
             <Button
               size="xs"
               variant="ghost"
@@ -307,24 +308,16 @@ function OfficeRow({
           )}
         </span>
       </div>
-      {sure && (
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {t("removeSure")}
-          </span>
-          <Button
-            size="xs"
-            disabled={removing}
-            loading={removing}
-            onClick={() => void onAct("unshare").finally(() => setSure(false))}
-          >
-            {t("removeYes")}
-          </Button>
-          <Button size="xs" variant="ghost" onClick={() => setSure(false)}>
-            {cancel}
-          </Button>
-        </span>
-      )}
+      <ConfirmDialog
+        open={sure}
+        onOpenChange={setSure}
+        title={t("removeTitle")}
+        description={t("removeBody")}
+        cancel={cancel}
+        confirm={t("removeYes")}
+        busy={removing}
+        onConfirm={() => void onAct("unshare").finally(() => setSure(false))}
+      />
     </li>
   );
 }

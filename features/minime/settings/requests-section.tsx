@@ -148,7 +148,7 @@ function Menu({
         <div className="flex gap-1.5">
           <Button
             size="sm"
-            variant="outline"
+            variant="secondary"
             disabled={drafting || busy}
             loading={drafting}
             onClick={() => void draft()}
@@ -357,7 +357,7 @@ function Ways({
       action={
         <Button
           size="sm"
-          variant="outline"
+          variant="secondary"
           disabled={drafting || busy}
           loading={drafting}
           onClick={() => void draft()}
@@ -398,7 +398,7 @@ function Ways({
               <span className="flex shrink-0 gap-1">
                 <Button
                   size="xs"
-                  variant="outline"
+                  variant="secondary"
                   disabled={busy}
                   onClick={() => {
                     save([...mine, line]);
@@ -439,7 +439,7 @@ function Ways({
           onChange={(event) => setTyped(event.target.value)}
         />
         <Button
-          variant="outline"
+          variant="secondary"
           type="submit"
           disabled={busy || !typed.trim()}
         >

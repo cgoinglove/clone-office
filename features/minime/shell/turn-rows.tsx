@@ -1,13 +1,14 @@
 "use client";
 
 // What waits on the person, as rows answered in place (after Paperclip's Decisions): a permission
-// or a question with a few choices takes its answer right on the row, and "Open" goes to where it
-// was asked. The office's board and Home show the same rows.
+// or a question with a few choices takes its answer right on the row, and the chevron at its end
+// goes to where it was asked. The office's board and Home show the same rows.
 
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { Tip } from "@/components/ui/tooltip";
 import { Bot } from "@/features/office";
 import { cn } from "@/lib/utils";
 import { useApp } from "./app-state";
@@ -41,75 +42,77 @@ export function TurnRows({
         return (
           <li
             key={item.key}
-            className="flex flex-col gap-2 border-t border-border/60 px-4 py-3 first:border-t-0"
+            className="flex items-center gap-3 border-t border-border/60 px-4 py-3 first:border-t-0"
           >
-            <div className="flex items-start gap-2.5">
-              {from ? (
-                <Mark
-                  id={from}
-                  index={Math.max(0, members.indexOf(from))}
-                  size={22}
-                  className="mt-0.5"
-                />
-              ) : (
-                <Bot
-                  size={22}
-                  mood="asking"
-                  still
-                  className="mt-0.5 shrink-0"
-                />
+            {from ? (
+              <Mark
+                id={from}
+                index={Math.max(0, members.indexOf(from))}
+                size={22}
+                className="self-start"
+              />
+            ) : (
+              <Bot
+                size={22}
+                mood="asking"
+                still
+                className="shrink-0 self-start"
+              />
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              <span className="text-xs text-muted-foreground">
+                {from
+                  ? t("fromColleague", {
+                      name: app.office.names.get(from) ?? "",
+                    })
+                  : t("fromClone")}
+              </span>
+              <span className="text-[13.5px] leading-snug font-semibold">
+                {askLine(tAsk, ask)}
+              </span>
+              {(ask.kind === "permission" || choices.length > 0) && (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {ask.kind === "permission" ? (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="brand"
+                        onClick={() => answer("allow")}
+                      >
+                        {tAsk("allow")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => answer("deny")}
+                      >
+                        {tAsk("deny")}
+                      </Button>
+                    </>
+                  ) : (
+                    choices.map((choice, at) => (
+                      <Button
+                        key={choice}
+                        size="sm"
+                        variant={at === 0 ? "brand" : "ghost"}
+                        onClick={() => answer(choice)}
+                      >
+                        {choice}
+                      </Button>
+                    ))
+                  )}
+                </div>
               )}
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-xs text-muted-foreground">
-                  {from
-                    ? t("fromColleague", {
-                        name: app.office.names.get(from) ?? "",
-                      })
-                    : t("fromClone")}
-                </span>
-                <span className="text-[13.5px] leading-snug font-semibold">
-                  {askLine(tAsk, ask)}
-                </span>
-              </div>
             </div>
-            <div className="flex flex-wrap gap-1.5 pl-8">
-              {ask.kind === "permission" ? (
-                <>
-                  <Button
-                    size="sm"
-                    variant="brand"
-                    onClick={() => answer("allow")}
-                  >
-                    {tAsk("allow")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => answer("deny")}
-                  >
-                    {tAsk("deny")}
-                  </Button>
-                </>
-              ) : (
-                choices.map((choice, at) => (
-                  <Button
-                    key={choice}
-                    size="sm"
-                    variant={at === 0 ? "brand" : "outline"}
-                    onClick={() => answer(choice)}
-                  >
-                    {choice}
-                  </Button>
-                ))
-              )}
+            <Tip label={t("open")}>
               <Link
                 href={turnHref(item)}
-                className="flex h-8 items-center gap-1 rounded-lg px-2 text-[13px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                aria-label={t("open")}
+                className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
               >
-                {t("open")}
-                <ChevronRight className="size-3.5" />
+                <ChevronRight className="size-4" />
               </Link>
-            </div>
+            </Tip>
           </li>
         );
       })}

@@ -309,7 +309,7 @@ function Empty({
           {alone ? <Link2 /> : <Plus />}
           {alone ? t("byLink") : t("ask")}
         </Button>
-        <Button variant="outline" onClick={onInvite}>
+        <Button variant="secondary" onClick={onInvite}>
           <UserPlus />
           {t("invite")}
         </Button>
