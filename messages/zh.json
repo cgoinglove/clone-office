@@ -584,7 +584,6 @@
         "close": "关闭",
         "atDesk": "在工位",
         "away": "不在工位",
-        "off": "电脑已关",
         "needsYou": "需要你",
         "waitingOn": "等待{name}的决定",
         "onDesk": "桌上",
@@ -599,7 +598,8 @@
         "myMenu": "你接的请求",
         "menu": "{name}接的请求",
         "earlier": "请求",
-        "nothingYet": "还没有"
+        "nothingYet": "还没有",
+        "waitingForYou": "等待你的答复"
       },
       "lobby": {
         "late": "{name}，这么晚还在忙",

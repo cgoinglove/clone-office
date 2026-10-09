@@ -142,7 +142,6 @@ export interface RoomWords {
     close: string;
     atDesk: string;
     away: string;
-    off: string;
     needsYou: string;
     waitingOn: Name;
     onDesk: string;
@@ -151,6 +150,7 @@ export interface RoomWords {
     now: string;
     workingOn: (what: string) => string;
     waitingFor: Name;
+    waitingForYou: string;
     free: string;
     notIn: Name;
     ways: Name;

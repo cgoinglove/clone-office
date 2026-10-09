@@ -584,7 +584,6 @@
         "close": "Fechar",
         "atDesk": "na mesa",
         "away": "longe da mesa",
-        "off": "computador desligado",
         "needsYou": "Precisa de você",
         "waitingOn": "Esperando a decisão de {name}",
         "onDesk": "na mesa",
@@ -599,7 +598,8 @@
         "myMenu": "O que você aceita",
         "menu": "O que {name} aceita",
         "earlier": "Pedidos",
-        "nothingYet": "Nada ainda"
+        "nothingYet": "Nada ainda",
+        "waitingForYou": "Esperando sua resposta"
       },
       "lobby": {
         "late": "Trabalhando até tarde, {name}",

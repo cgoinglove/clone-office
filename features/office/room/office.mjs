@@ -1283,7 +1283,8 @@ export function createOffice(
   function stamp(p) {
     if (REDUCED || p.floor !== plan.index) return;
     const g = document.createElementNS(SVGNS, "g");
-    g.innerHTML = stampSvg(p.desk.x0 + 0.5, p.desk.y1 + 4.5, W.done);
+    // at the desk's left front, clear of where whoever brought the answer stands
+    g.innerHTML = stampSvg(p.desk.x0 - 5, p.desk.y1 + 4.5, W.done);
     (refs.marks || gUnder).appendChild(g);
     setTimeout(() => g.remove(), 3600);
   }
@@ -1642,7 +1643,7 @@ export function createOffice(
   }
   const statusWord = (p) =>
     p.status === "offline"
-      ? W.panel.off
+      ? W.plate.off
       : p.status === "away"
         ? p.inMeeting
           ? W.plate.inMeeting
@@ -1668,7 +1669,9 @@ export function createOffice(
             : p.taskFull
               ? W.panel.workingOn(p.taskFull)
               : p.waitOn
-                ? W.panel.waitingFor(p.waitOn)
+                ? p.waitOnMe
+                  ? W.panel.waitingForYou
+                  : W.panel.waitingFor(p.waitOn)
                 : "";
     body += `<div class="pblock"><small>${esc(W.panel.now)}</small><ul class="rows">${now ? `<li><i></i>${esc(now)}</li>` : `<li class="none">${esc(p.status === "offline" ? W.panel.notIn(p.name) : p.status === "away" ? statusWord(p) : W.panel.free)}</li>`}</ul></div>`;
     if (!p.mine && p.ways?.length)
@@ -2660,6 +2663,7 @@ export function createOffice(
       p.deciding = to.some((q) => q.state === "WORKING" && q.held);
       const waiting = from.find((q) => OPEN.has(q.state));
       p.waitOn = waiting ? nameOf(waiting.to) : "";
+      p.waitOnMe = !!waiting && waiting.to === me?.id;
       // asked and not yet settled, a question back to them included
       p.out = from.filter(
         (q) => OPEN.has(q.state) || q.state === "INPUT_REQUIRED",

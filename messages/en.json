@@ -584,7 +584,6 @@
         "close": "Close",
         "atDesk": "at the desk",
         "away": "away from the desk",
-        "off": "computer off",
         "needsYou": "Needs you",
         "waitingOn": "Waiting on {name}'s decision",
         "onDesk": "on the desk",
@@ -599,7 +598,8 @@
         "myMenu": "What you take on",
         "menu": "What {name} takes on",
         "earlier": "Requests",
-        "nothingYet": "None yet"
+        "nothingYet": "None yet",
+        "waitingForYou": "Waiting for your answer"
       },
       "lobby": {
         "late": "Working late, {name}",

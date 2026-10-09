@@ -45,7 +45,7 @@ test("a floor gives everyone a desk, in areas of up to six, none overlapping", (
   }
 });
 
-test("a team splits evenly over its areas, on a floor nearer square than a strip", () => {
+test("a team splits evenly over its areas, on a floor no larger than its desks need", () => {
   assert.deepEqual(
     plan(7).areas.map((a) => a.names.length),
     [4, 3],
@@ -54,9 +54,11 @@ test("a team splits evenly over its areas, on a floor nearer square than a strip
     plan(13).areas.map((a) => a.names.length),
     [5, 4, 4],
   );
-  for (const n of [2, 6, 7, 10]) {
+  for (const n of [1, 2, 6, 7, 10, 24]) {
     const fl = plan(n);
-    assert.ok(fl.W / fl.D < 2.5, `${n} people: ${fl.W} by ${fl.D}`);
+    // a step past the furthest desk on either side, and deep enough for the commons by the lift
+    assert.equal(fl.W, Math.max(110, ...fl.desks.map((d) => d.x1 + 14)));
+    assert.equal(fl.D, Math.max(92, ...fl.desks.map((d) => d.y1 + 12)));
   }
 });
 

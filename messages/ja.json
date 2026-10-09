@@ -584,7 +584,6 @@
         "close": "閉じる",
         "atDesk": "在席",
         "away": "離席中",
-        "off": "コンピューターオフ",
         "needsYou": "要対応",
         "waitingOn": "{name}さんの決定待ち",
         "onDesk": "机の上",
@@ -599,7 +598,8 @@
         "myMenu": "あなたが受ける依頼",
         "menu": "{name}さんが受ける依頼",
         "earlier": "依頼",
-        "nothingYet": "まだありません"
+        "nothingYet": "まだありません",
+        "waitingForYou": "あなたの返事を待っています"
       },
       "lobby": {
         "late": "遅くまでお疲れさまです、{name}さん",

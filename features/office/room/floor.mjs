@@ -7,9 +7,9 @@ import { LIFT_W, LIFT_X, PD, PW, podAt } from "./pieces.mjs";
 export const ZA = 44,
   AV = 26,
   AH = 26,
-  TOP = 22;
+  TOP = 14;
 /** How deep a floor is at least: the commons by the lift need this much. */
-const COMMONS_D = 104;
+const COMMONS_D = 92;
 /** The walls' height in plan units: the design's middle one. */
 export const WALL_H = 28;
 /**
@@ -86,13 +86,12 @@ export function planFloor(teams, fi) {
     a.x0 = colX[a.c];
     a.y0 = rowY[a.r];
   }
-  fl.W = x - AV + 18;
-  fl.D = Math.max(COMMONS_D, y - AH + 18);
+
   // the commons, in the lane by the lift: clear of the left wall's clock, low enough not to hide it
-  fl.things.push({ kind: "tea", x: 12, y: 24 });
+  fl.things.push({ kind: "tea", x: 12, y: 18 });
   // the nook stands off the wall, so the clones meeting round its table never stand before the clock
   const rx = 22,
-    ry = 58;
+    ry = 46;
   fl.floorArt.push({ kind: "rug", x0: rx, y0: ry, x1: rx + 36, y1: ry + 30 });
   fl.things.push({
     kind: "shelf",
@@ -145,6 +144,9 @@ export function planFloor(teams, fi) {
     }
   }
   fl.desks = desks;
+  // the floor ends a step past the last desk (and the plant beside one's own): no bare floor round it
+  fl.W = Math.max(X0 + 40, ...desks.map((d) => d.x1 + 14));
+  fl.D = Math.max(COMMONS_D, ...desks.map((d) => d.y1 + 12));
   fl.lift = [LIFT_X + LIFT_W / 2, 8];
   fl.door = [LIFT_X + LIFT_W / 2, 1.3];
   return fl;

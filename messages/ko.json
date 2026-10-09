@@ -584,7 +584,6 @@
         "close": "닫기",
         "atDesk": "자리에 있음",
         "away": "자리 비움",
-        "off": "컴퓨터 꺼짐",
         "needsYou": "내 차례",
         "waitingOn": "{name} 님의 결정을 기다리는 중",
         "onDesk": "책상 위",
@@ -599,7 +598,8 @@
         "myMenu": "내가 받는 부탁",
         "menu": "{name} 님이 받는 부탁",
         "earlier": "부탁",
-        "nothingYet": "아직 없어요"
+        "nothingYet": "아직 없어요",
+        "waitingForYou": "내 답을 기다리는 중"
       },
       "lobby": {
         "late": "늦게까지 일하시네요, {name} 님",

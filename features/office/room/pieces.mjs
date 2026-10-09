@@ -636,35 +636,35 @@ export const fitSize = (text, max, width) =>
  * its own plane, a tenth of a plan unit to a unit, from the panel's front top corner (`y` along the
  * wall, `z` up it); nothing on the floor stands tall enough to hide it.
  */
-export const CLOCK = { w: 880, h: 216, y: 96, z: 27 };
+export const CLOCK = { w: 800, h: 216, y: 89, z: 27 };
 export function clockFace(now, crew, words) {
   const h = now.getHours(),
-    hh = words.twelve
-      ? String(h % 12 || 12).padStart(2, " ")
-      : String(h).padStart(2, "0"),
+    // a twelve-hour day shows its hour as it is said (9, not 09); a twenty-four-hour one keeps two digits
+    hh = words.twelve ? String(h % 12 || 12) : String(h).padStart(2, "0"),
     hm = `${hh}:${String(now.getMinutes()).padStart(2, "0")}`,
     sg = segments(hm, 120),
     inNow = crew.filter((c) => c.in).length;
   let s = `<rect class="ck-frame" x="0" y="0" width="${CLOCK.w}" height="${CLOCK.h}" rx="18"/>`;
-  // the half of the day goes where the language says it (PM after, 오후 before), small and up top
+  // the half of the day beside the digits, where the language puts it (PM after, 오후 before)
   const period = words.twelve && words.period ? words.period : "",
-    pw = period ? Math.ceil(emsOf(period) * 28) + 14 : 0;
+    ps = 38,
+    pw = period ? Math.ceil(emsOf(period) * ps) + 12 : 0;
   let x = 36;
   if (period && words.periodFirst) {
-    s += `<text class="ck-cap" x="${x}" y="74" font-size="28">${esc(period)}</text>`;
+    s += `<text class="ck-cap" x="${x}" y="${48 + ps}" font-size="${ps}">${esc(period)}</text>`;
     x += pw;
   }
   s += `<g transform="translate(${x} 48)"><g class="ck-off">${sg.off}</g><g class="ck-on">${sg.on}${sg.colon}</g></g>`;
   x += sg.width;
   if (period && !words.periodFirst) {
-    s += `<text class="ck-cap" x="${x + 14}" y="74" font-size="28">${esc(period)}</text>`;
+    s += `<text class="ck-cap" x="${x + 12}" y="${48 + ps}" font-size="${ps}">${esc(period)}</text>`;
     x += pw;
   }
-  x += 34;
+  x += 32;
   s += `<rect class="ck-rule" x="${x}" y="40" width="2" height="${CLOCK.h - 80}" rx="1"/>`;
-  x += 36;
-  const room = CLOCK.w - x - 34;
-  s += `<text class="ck-num" x="${x}" y="102"><tspan class="ck-word" font-size="${fitSize(words.in, 36, room * 0.45)}">${esc(words.in)} </tspan><tspan font-size="72">${inNow}</tspan><tspan class="ck-of" font-size="44">/${crew.length}</tspan></text>`;
+  x += 34;
+  const room = CLOCK.w - x - 30;
+  s += `<text class="ck-num" x="${x}" y="104"><tspan class="ck-word" font-size="${fitSize(words.in, 42, room * 0.45)}">${esc(words.in)} </tspan><tspan font-size="80">${inNow}</tspan><tspan class="ck-of" font-size="48">/${crew.length}</tspan></text>`;
   // everyone in a row, those in first, as large as the row allows; past what fits, a count
   const gap = 12,
     size = Math.max(
@@ -675,10 +675,10 @@ export function clockFace(now, crew, words) {
     shown = crew.length > fit ? crew.slice(0, fit - 1) : crew;
   s += SM_DEFS;
   shown.forEach((c, i) => {
-    s += `<g class="${c.in ? "ck-in" : "ck-out"}">${stillMark(c.look, x + i * (size + gap), 128, size, !c.in)}</g>`;
+    s += `<g class="${c.in ? "ck-in" : "ck-out"}">${stillMark(c.look, x + i * (size + gap), 130, size, !c.in)}</g>`;
   });
   if (shown.length < crew.length)
-    s += `<text class="ck-more" x="${x + shown.length * (size + gap)}" y="${128 + size * 0.72}" font-size="28">+${crew.length - shown.length}</text>`;
+    s += `<text class="ck-more" x="${x + shown.length * (size + gap)}" y="${130 + size * 0.72}" font-size="28">+${crew.length - shown.length}</text>`;
   return s;
 }
 
