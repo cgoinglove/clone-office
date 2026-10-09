@@ -78,22 +78,17 @@ export interface RoomWords {
   label: string;
   team: string;
   floor: (n: number) => string;
-  people: Count;
   floorGroup: string;
   openSeat: string;
-  lift: string;
-  offTag: string;
   done: string;
   answer: string;
   needsYouChip: string;
   yourMiniMe: string;
   miniMe: Name;
   requestState: (state: RoomState) => string;
-  notes: { myDesk: string; tea: string; lift: string };
   views: {
     label: string;
     desk: string;
-    board: string;
     office: string;
     zoomIn: string;
     zoomOut: string;
@@ -104,40 +99,24 @@ export interface RoomWords {
     askFor: (name: string, what: string) => string;
     askText: (name: string, what: string) => string;
   };
-  board: {
-    you: string;
-    who: string;
-    status: string;
-    on: string;
-    desk: string;
-    to: Name;
-    wait: Name;
-    states: Record<
-      "ask" | "deciding" | "work" | "free" | "away" | "off",
-      string
-    >;
-  };
-  counts: { in: Count; off: Count; waiting: Count };
-  sign: { you: string; work: string; quiet: string };
+  /** The clock on the wall: the word over how many are in. */
+  clock: { in: string };
   plate: {
     youShort: string;
     you: Name;
     needsYou: string;
     deciding: string;
-    computerOff: string;
     working: string;
     away: string;
-    free: string;
-    onDesk: Count;
     goingTo: Name;
+    /** At an empty desk: its person has gone home. */
+    off: string;
   };
   say: {
     isIn: Name;
     bye: Name;
     bring: (to: string, from: string, what: string) => string;
     leftOnDesk: Name;
-    gotIt: string;
-    thanks: Name;
   };
   meeting: {
     /** What a mini-me in the meeting is on, for its plate, the board and its panel. */
@@ -181,8 +160,11 @@ export interface RoomWords {
 export interface Room {
   /** The relay's latest look: what changed since the last plays out on the floor. */
   update(data: RoomData): void;
-  /** Keeps this many pixels clear at the right and left (a panel laid over the office), and reframes. */
-  setInset(right: number, left?: number): void;
+  /**
+   * Keeps this many pixels clear at the right and left (a panel laid over the office), and reframes.
+   * `rightHeight`, when the panel at the right ends partway down: the floor may pass beneath it.
+   */
+  setInset(right: number, left?: number, rightHeight?: number): void;
   /** Closes the panel about one person, if it is open, and goes back to the whole office. */
   closePanel(): void;
   destroy(): void;
@@ -192,7 +174,7 @@ export function createOffice(
   root: HTMLElement,
   options: {
     words: RoomWords;
-    /** The screen's language, for the board's date. */
+    /** The screen's language, for the clock's date. */
     locale: string;
     /** Opens what waits for the viewer (their mini-me's question). */
     onAnswer?: () => void;
@@ -200,7 +182,7 @@ export function createOffice(
     onAsk?: (text: string) => void;
     /** Opens at the lobby: the building and a card to clock in, then the lift up. */
     lobby?: boolean;
-    /** Clocked in at the lobby. */
+    /** Clocked in at the lobby: called as the lift's doors open on the floor. */
     onClockIn?: () => void;
     /** The panel about one person opened (true) or closed (false). */
     onPanel?: (open: boolean) => void;

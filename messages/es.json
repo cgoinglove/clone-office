@@ -545,23 +545,14 @@
     "room": {
       "label": "La oficina: el escritorio de cada persona con su clon, y las solicitudes que van y vienen entre ellos",
       "floor": "Piso {n}",
-      "people": "{count, plural, one {# persona} other {# personas}}",
       "floorGroup": "Piso",
       "openSeat": "LUGAR LIBRE",
-      "lift": "ASCENSOR",
-      "offTag": "APAGADO",
       "done": "LISTO",
       "answer": "Responder",
       "needsYouChip": "Tu clon te necesita",
-      "notes": {
-        "myDesk": "mi escritorio",
-        "tea": "¿un café?",
-        "lift": "entradas y salidas"
-      },
       "views": {
         "label": "Vista",
         "desk": "Mi escritorio",
-        "board": "Tablero",
         "office": "Oficina",
         "zoomIn": "Acercar",
         "zoomOut": "Alejar"
@@ -572,52 +563,21 @@
         "askFor": "{what} · {name}",
         "askText": "Pregúntale a {name}: {what}"
       },
-      "board": {
-        "you": "Tú",
-        "who": "QUIÉN",
-        "status": "ESTADO",
-        "on": "AHORA",
-        "desk": "MESA",
-        "to": "→ {name}",
-        "wait": "ESPERA {name}",
-        "states": {
-          "ask": "TE TOCA",
-          "deciding": "PENDIENTE",
-          "work": "OCUPADO",
-          "free": "LIBRE",
-          "away": "AUSENTE",
-          "off": "APAGADO"
-        }
-      },
-      "counts": {
-        "in": "{count} DENTRO",
-        "off": "{count} FUERA",
-        "waiting": "{count} EN ESPERA"
-      },
-      "sign": {
-        "you": "TE TOCA",
-        "work": "TRABAJANDO",
-        "quiet": "TODO EN ORDEN"
-      },
       "plate": {
         "youShort": "Tú",
         "you": "{name} (tú)",
         "needsYou": "te necesita",
-        "deciding": "esperando una decisión",
-        "computerOff": "computadora apagada",
+        "deciding": "decidiendo",
         "working": "trabajando",
-        "away": "ausente, el clon está de turno",
-        "free": "libre",
-        "onDesk": "{count} en el escritorio",
-        "goingTo": "yendo con {name}"
+        "away": "ausente",
+        "goingTo": "→ {name}",
+        "off": "fuera"
       },
       "say": {
         "isIn": "{name} ya llegó.",
         "bye": "La computadora de {name} se apagó. ¡Hasta luego!",
         "bring": "Hola, {to}. Esto es de {from}: {what}",
-        "leftOnDesk": "La computadora de {name} está apagada. Lo dejo en su escritorio.",
-        "gotIt": "Recibido. Ya me encargo.",
-        "thanks": "¡Gracias, {name}!"
+        "leftOnDesk": "La computadora de {name} está apagada. Lo dejo en su escritorio."
       },
       "panel": {
         "close": "Cerrar",
@@ -656,6 +616,9 @@
       },
       "meeting": {
         "on": "En la reunión"
+      },
+      "clock": {
+        "in": "Aquí"
       }
     },
     "openHere": "Abrir una en esta computadora",

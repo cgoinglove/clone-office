@@ -9,7 +9,7 @@
 import { MessagesSquare, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { OfficeRoom } from "@/features/office/room/office-room";
 import { useApp } from "./app-state";
@@ -74,6 +74,8 @@ export function OfficeScreen() {
         ? latest
         : undefined;
   const meets = app.joined && members.length > 1 && !atLobby;
+  // how far down the board over the office reaches: the floor may pass beneath it
+  const [boardHeight, setBoardHeight] = useState(0);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -124,6 +126,7 @@ export function OfficeScreen() {
             data={office.room}
             lobby={lobby && preferences.lobby}
             inset={turns.length && !atLobby ? BOARD + 32 : 0}
+            insetHeight={boardHeight}
             insetLeft={shown && meets ? MEETING + 32 : 0}
             onClockIn={() => {
               rememberClockIn();
@@ -139,7 +142,11 @@ export function OfficeScreen() {
           />
         )}
         {turns.length > 0 && !atLobby && (
-          <Board turns={turns} members={members.map((m) => m.id)} />
+          <Board
+            turns={turns}
+            members={members.map((m) => m.id)}
+            onHeight={setBoardHeight}
+          />
         )}
         {shown && meets && (
           <MeetingPanel
@@ -157,10 +164,33 @@ export function OfficeScreen() {
 }
 
 /** What waits on the person, hung over the office: answered in place when it is a tap. */
-function Board({ turns, members }: { turns: TurnItem[]; members: string[] }) {
+function Board({
+  turns,
+  members,
+  onHeight,
+}: {
+  turns: TurnItem[];
+  members: string[];
+  /** How far down from the office's top it reaches, as it grows and shrinks. */
+  onHeight: (px: number) => void;
+}) {
   const t = useTranslations("shell.office");
+  const box = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const seen = new ResizeObserver(() =>
+      onHeight(el.offsetTop + el.offsetHeight),
+    );
+    seen.observe(el);
+    return () => {
+      seen.disconnect();
+      onHeight(0);
+    };
+  }, [onHeight]);
   return (
     <section
+      ref={box}
       aria-labelledby="o-turn"
       style={{ width: BOARD }}
       className="absolute top-4 right-4 z-10 flex max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[14px] bg-background/97 shadow-[0_0_0_1px_var(--alpha-08),0_18px_40px_-20px_var(--alpha-20)]"

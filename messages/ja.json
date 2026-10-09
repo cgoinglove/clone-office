@@ -545,23 +545,14 @@
     "room": {
       "label": "オフィス：それぞれの席とクローン、そして行き来する依頼",
       "floor": "{n}階",
-      "people": "{count, plural, other {#人}}",
       "floorGroup": "フロア",
       "openSeat": "空席",
-      "lift": "エレベーター",
-      "offTag": "オフ",
       "done": "完了",
       "answer": "答える",
       "needsYouChip": "クローンがあなたを待っています",
-      "notes": {
-        "myDesk": "わたしの席",
-        "tea": "お茶する？",
-        "lift": "出入口"
-      },
       "views": {
         "label": "表示",
         "desk": "わたしの席",
-        "board": "ボード",
         "office": "オフィス",
         "zoomIn": "拡大",
         "zoomOut": "縮小"
@@ -572,52 +563,21 @@
         "askFor": "{what} · {name}",
         "askText": "{name}さんに聞いて：{what}"
       },
-      "board": {
-        "you": "あなた",
-        "who": "だれ",
-        "status": "状態",
-        "on": "作業",
-        "desk": "机",
-        "to": "→ {name}",
-        "wait": "{name}待ち",
-        "states": {
-          "ask": "要対応",
-          "deciding": "決定中",
-          "work": "仕事中",
-          "free": "手すき",
-          "away": "離席",
-          "off": "オフ"
-        }
-      },
-      "counts": {
-        "in": "{count}人出勤",
-        "off": "{count}人オフ",
-        "waiting": "{count}件待ち"
-      },
-      "sign": {
-        "you": "あなたの番",
-        "work": "仕事中",
-        "quiet": "異常なし"
-      },
       "plate": {
         "youShort": "あなた",
         "you": "{name}（あなた）",
         "needsYou": "要対応",
         "deciding": "決定待ち",
-        "computerOff": "コンピューターオフ",
         "working": "仕事中",
-        "away": "離席中、クローンが対応",
-        "free": "手すき",
-        "onDesk": "机の上に{count}件",
-        "goingTo": "{name}さんのところへ"
+        "away": "離席中",
+        "goingTo": "→ {name}",
+        "off": "退勤"
       },
       "say": {
         "isIn": "{name}さんが出勤しました。",
         "bye": "{name}さんのコンピューターがオフになりました。またね！",
         "bring": "{to}さん、{from}さんからの依頼です：{what}",
-        "leftOnDesk": "{name}さんのコンピューターはオフです。机に置いておきますね。",
-        "gotIt": "了解です。すぐやります。",
-        "thanks": "ありがとう、{name}さん！"
+        "leftOnDesk": "{name}さんのコンピューターはオフです。机に置いておきますね。"
       },
       "panel": {
         "close": "閉じる",
@@ -656,6 +616,9 @@
       },
       "meeting": {
         "on": "会議中"
+      },
+      "clock": {
+        "in": "出勤"
       }
     },
     "openHere": "このコンピューターで開く",

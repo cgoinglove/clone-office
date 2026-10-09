@@ -545,23 +545,14 @@
     "room": {
       "label": "The office: each person's desk with their clone, and the requests going between them",
       "floor": "Floor {n}",
-      "people": "{count, plural, one {# person} other {# people}}",
       "floorGroup": "Floor",
       "openSeat": "OPEN SEAT",
-      "lift": "LIFT",
-      "offTag": "OFF",
       "done": "DONE",
       "answer": "Answer",
       "needsYouChip": "Your clone needs you",
-      "notes": {
-        "myDesk": "my desk",
-        "tea": "tea?",
-        "lift": "in & out"
-      },
       "views": {
         "label": "View",
         "desk": "My desk",
-        "board": "Board",
         "office": "Office",
         "zoomIn": "Zoom in",
         "zoomOut": "Zoom out"
@@ -572,52 +563,21 @@
         "askFor": "{what} · {name}",
         "askText": "Ask {name}: {what}"
       },
-      "board": {
-        "you": "You",
-        "who": "WHO",
-        "status": "STATUS",
-        "on": "ON",
-        "desk": "DESK",
-        "to": "→ {name}",
-        "wait": "WAIT {name}",
-        "states": {
-          "ask": "NEEDS YOU",
-          "deciding": "DECIDING",
-          "work": "WORKING",
-          "free": "FREE",
-          "away": "AWAY",
-          "off": "OFF"
-        }
-      },
-      "counts": {
-        "in": "{count} IN",
-        "off": "{count} OFF",
-        "waiting": "{count} WAITING"
-      },
-      "sign": {
-        "you": "YOUR TURN",
-        "work": "AT WORK",
-        "quiet": "ALL CLEAR"
-      },
       "plate": {
         "youShort": "You",
         "you": "{name} (you)",
         "needsYou": "needs you",
-        "deciding": "waiting on a decision",
-        "computerOff": "computer off",
+        "deciding": "deciding",
         "working": "working",
-        "away": "away, clone on duty",
-        "free": "free",
-        "onDesk": "{count} on the desk",
-        "goingTo": "going to {name}"
+        "away": "away",
+        "goingTo": "→ {name}",
+        "off": "off"
       },
       "say": {
         "isIn": "{name} is in.",
         "bye": "{name}'s computer is off. Bye for now!",
         "bring": "Hi {to}. This is from {from}: {what}",
-        "leftOnDesk": "{name}'s computer is off. I'll leave it on the desk.",
-        "gotIt": "Got it. I'm on it.",
-        "thanks": "Thanks, {name}!"
+        "leftOnDesk": "{name}'s computer is off. I'll leave it on the desk."
       },
       "panel": {
         "close": "Close",
@@ -656,6 +616,9 @@
       },
       "meeting": {
         "on": "In the meeting"
+      },
+      "clock": {
+        "in": "In"
       }
     },
     "openHere": "Open one on this computer",

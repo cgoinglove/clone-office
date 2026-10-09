@@ -545,23 +545,14 @@
     "room": {
       "label": "오피스 그림: 사람마다 클론이 있는 책상과, 그 사이를 오가는 부탁",
       "floor": "{n}층",
-      "people": "{count, plural, one {#명} other {#명}}",
       "floorGroup": "층",
       "openSeat": "빈자리",
-      "lift": "엘리베이터",
-      "offTag": "꺼짐",
       "done": "완료",
       "answer": "답하기",
       "needsYouChip": "내 클론이 기다려요",
-      "notes": {
-        "myDesk": "내 자리",
-        "tea": "차 한잔?",
-        "lift": "출퇴근"
-      },
       "views": {
         "label": "보기",
         "desk": "내 자리",
-        "board": "보드",
         "office": "오피스",
         "zoomIn": "확대",
         "zoomOut": "축소"
@@ -572,52 +563,21 @@
         "askFor": "{what} · {name}",
         "askText": "{name} 님에게 부탁해 줘: {what}"
       },
-      "board": {
-        "you": "나",
-        "who": "누구",
-        "status": "상태",
-        "on": "하는 일",
-        "desk": "책상",
-        "to": "→ {name}",
-        "wait": "{name} 님 대기",
-        "states": {
-          "ask": "내 차례",
-          "deciding": "결정 중",
-          "work": "일하는 중",
-          "free": "한가함",
-          "away": "자리 비움",
-          "off": "꺼짐"
-        }
-      },
-      "counts": {
-        "in": "{count}명 출근",
-        "off": "{count}명 퇴근",
-        "waiting": "{count}건 대기"
-      },
-      "sign": {
-        "you": "내 차례",
-        "work": "일하는 중",
-        "quiet": "이상 없음"
-      },
       "plate": {
         "youShort": "나",
         "you": "{name} (나)",
         "needsYou": "내 차례",
-        "deciding": "결정을 기다리는 중",
-        "computerOff": "컴퓨터 꺼짐",
+        "deciding": "결정 기다림",
         "working": "일하는 중",
-        "away": "자리 비움, 클론이 대신 일해요",
-        "free": "한가함",
-        "onDesk": "책상 위 {count}건",
-        "goingTo": "{name} 님에게 가는 중"
+        "away": "자리 비움",
+        "goingTo": "→ {name}",
+        "off": "퇴근"
       },
       "say": {
         "isIn": "{name} 님이 출근했어요.",
         "bye": "{name} 님 컴퓨터가 꺼졌어요. 다음에 봐요!",
         "bring": "{to} 님, {from} 님이 보낸 부탁이에요: {what}",
-        "leftOnDesk": "{name} 님 컴퓨터가 꺼져 있네요. 책상에 두고 갈게요.",
-        "gotIt": "받았어요. 바로 할게요.",
-        "thanks": "고마워요, {name} 님!"
+        "leftOnDesk": "{name} 님 컴퓨터가 꺼져 있네요. 책상에 두고 갈게요."
       },
       "panel": {
         "close": "닫기",
@@ -656,6 +616,9 @@
       },
       "meeting": {
         "on": "회의 중"
+      },
+      "clock": {
+        "in": "출근"
       }
     },
     "openHere": "이 컴퓨터에서 오피스 열기",

@@ -315,26 +315,27 @@ building, their floor marked on it, and a card with who is already in and what i
 them. **Clock in** (출근하기), or Enter, rides the lift up to their floor, where their clone steps
 out to its desk. The rest of the day it opens straight at the office.
 
-The office is a floor seen from above: a desk for each member
-with their clone at it, their name on the floor in front. Their own clone is the black (in
-dark mode, white) one, with a loop drawn round its desk; each colleague's has a colour of its
-own. A colleague whose computer is off is not in: their desk shows **OFF** (꺼짐), and their
-clone comes in through the lift when the computer is back on.
+The office is a floor seen from above: a desk for each member with their clone at it, its name
+over its head with what it is on (**working** 일하는 중, **away** 자리 비움, **→ Mina** on its way
+to a colleague; nothing when it is at ease). Their own clone is the black (in dark mode, white)
+one, its desk on a rug; each colleague's has a colour of its own. A colleague whose computer is
+off is not in: their desk is empty with its laptop shut and their name marked **off** (퇴근), and
+their clone comes in through the lift when the computer is back on. On the left wall a big clock
+tells the time, the day, and who is in out of everyone, with each of them as their clone's face,
+lit while they are in.
 
 What happens to their requests plays out on it. A request walks from the asker's desk to the
 asked one's (or flies there as a paper plane when the desk is far) and lands on their pile; the
 clone takes it up and works at its laptop; the answer is carried back, and **DONE** (완료) is
 stamped on the floor. Only requests they are part of are shown: what colleagues ask each other
 stays between them. When something waits for them, their clone asks over its head with
-**Answer** (답하기), which brings them to the question, and **YOUR TURN** (내 차례) is written on
-the floor. **Your turn** (내 차례) also lies over the office's top right, **Answer right here**
+**Answer** (답하기), which brings them to the question, and its name tag says **your turn**
+(내 차례). **Your turn** (내 차례) also lies over the office's top right, **Answer right here**
 (여기서 바로 답할 수 있어요): a permission or a question with a few choices is answered with its buttons
 there, and **Open** (열기) takes them to the request.
 
-Behind the wall stands the office board: everyone, those a decision waits on first, with what
-they are on and how much is on their desk. **My desk** (내 자리), **Board** (보드) and **Office**
-(오피스) at the bottom move the view; dragging moves it too, and Ctrl (or ⌘) with the wheel
-zooms. Clicking a clone opens a panel about that person: what is on their desk, what they do
+**My desk** (내 자리) and **Office** (오피스) at the bottom move the view; dragging moves it too,
+and Ctrl (or ⌘) with the wheel zooms. Clicking a clone opens a panel about that person: what is on their desk, what they do
 now, how to work with them, the requests they take, and the requests between them and you.
 
 ## Meetings of the clones
@@ -346,7 +347,7 @@ every clone in the office. The office can also hold the standup every day at a s
 the time, for everyone in the office (anyone in it can change it).
 
 The clones in the office when it starts take part; a clone whose computer is off is left out. They
-gather round the low table in the reading corner and take turns, what each says over its head,
+gather round the low table in the reading nook by the lift and take turns, what each says over its head,
 and the whole meeting is written beside the floor round by round. At the standup each says what
 its person did since the day before, what is next and what they need; in the second round each
 answers only what touches its own person's work (a change that breaks theirs, the same work done

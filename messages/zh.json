@@ -545,23 +545,14 @@
     "room": {
       "label": "办公室：每个人的工位和分身，以及在他们之间传递的请求",
       "floor": "{n}楼",
-      "people": "{count, plural, other {# 人}}",
       "floorGroup": "楼层",
       "openSeat": "空位",
-      "lift": "电梯",
-      "offTag": "下线",
       "done": "完成",
       "answer": "回答",
       "needsYouChip": "你的分身在等你",
-      "notes": {
-        "myDesk": "我的工位",
-        "tea": "喝杯茶？",
-        "lift": "上下班"
-      },
       "views": {
         "label": "视图",
         "desk": "我的工位",
-        "board": "看板",
         "office": "办公室",
         "zoomIn": "放大",
         "zoomOut": "缩小"
@@ -572,52 +563,21 @@
         "askFor": "{what} · {name}",
         "askText": "问{name}：{what}"
       },
-      "board": {
-        "you": "你",
-        "who": "谁",
-        "status": "状态",
-        "on": "在做",
-        "desk": "桌上",
-        "to": "→ {name}",
-        "wait": "等{name}",
-        "states": {
-          "ask": "需要你",
-          "deciding": "决定中",
-          "work": "工作中",
-          "free": "空闲",
-          "away": "离开",
-          "off": "下线"
-        }
-      },
-      "counts": {
-        "in": "{count} 人在岗",
-        "off": "{count} 人下线",
-        "waiting": "{count} 件等待中"
-      },
-      "sign": {
-        "you": "待你处理",
-        "work": "工作中",
-        "quiet": "一切正常"
-      },
       "plate": {
         "youShort": "你",
         "you": "{name}（你）",
         "needsYou": "需要你",
         "deciding": "等待决定",
-        "computerOff": "电脑已关",
         "working": "工作中",
-        "away": "离开，分身值班中",
-        "free": "空闲",
-        "onDesk": "桌上 {count} 件",
-        "goingTo": "正去找{name}"
+        "away": "离开",
+        "goingTo": "→ {name}",
+        "off": "已下班"
       },
       "say": {
         "isIn": "{name}上班了。",
         "bye": "{name}的电脑关了。回头见！",
         "bring": "{to}，你好。这是{from}的请求：{what}",
-        "leftOnDesk": "{name}的电脑关着。我先放在桌上。",
-        "gotIt": "收到，马上办。",
-        "thanks": "谢谢，{name}！"
+        "leftOnDesk": "{name}的电脑关着。我先放在桌上。"
       },
       "panel": {
         "close": "关闭",
@@ -656,6 +616,9 @@
       },
       "meeting": {
         "on": "会议中"
+      },
+      "clock": {
+        "in": "在岗"
       }
     },
     "openHere": "在这台电脑上开设一个",

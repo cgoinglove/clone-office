@@ -1,8 +1,8 @@
 /*
- * The office room, as the confirmed design (v13) draws it. The space is black and white: paper
- * from the app's ladder and ink at an opacity. The brand blue is for buttons and a few marks (the
- * lift's light, our floor), what waits on the viewer is the app's ember, and red is only the dot
- * on a mini-me's mark. The mini-mes keep their own colours. Everything is scoped to `.of-wrap`.
+ * The office room. The space is black and white: paper from the app's ladder and ink at an
+ * opacity. The brand blue is for buttons and a few marks (the lift's light, our floor), what waits
+ * on the viewer is the app's ember, and red is only the dot on a clone's mark. The clones keep
+ * their own colours. Everything is scoped to `.of-wrap`.
  *
  * Nothing in the office animates without end in CSS: what keeps moving is stepped by the frame
  * loop on its half-rate frames (office.mjs), and the rest runs a few steps a second.
@@ -23,8 +23,6 @@
   --shadow: #15171c;
   --sh-0: 0.13;
   --sh-1: 0.055;
-  --veil: color-mix(in oklab, var(--ink) 5%, transparent);
-  --dusk-veil: color-mix(in oklab, var(--ink) 2.5%, transparent);
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
@@ -68,8 +66,6 @@
   --shadow: #000000;
   --sh-0: 0.5;
   --sh-1: 0.22;
-  --veil: rgba(0, 0, 0, 0.3);
-  --dusk-veil: color-mix(in oklab, var(--ink) 2%, transparent);
   --hatch: var(--paper-4);
 }
 .of-wrap.dragging {
@@ -187,20 +183,11 @@
 .of-wrap .f-paper {
   fill: var(--paper);
 }
-.of-wrap .f-veil {
-  fill: var(--veil);
-}
-.of-wrap .f-duskveil {
-  fill: var(--dusk-veil);
-}
 .of-wrap .f-none {
   fill: none;
 }
 .of-wrap .f-rug {
   fill: var(--ink-03);
-}
-.of-wrap .f-plaza {
-  fill: color-mix(in oklab, var(--ink) 1.8%, transparent);
 }
 .of-wrap .f-myrug {
   fill: var(--ink-05);
@@ -275,68 +262,8 @@
 .of-wrap .ftext.faint {
   fill: var(--ink-12);
 }
-.of-wrap .tname {
-  fill: var(--ink-05);
-  stroke: var(--ink-30);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  stroke-linejoin: round;
-  font-family: var(--font-sans);
-  font-weight: 800;
-  letter-spacing: 0.01em;
-}
-.of-wrap .tname.mine {
-  fill: var(--ink-08);
-  stroke: var(--ink-56);
-}
-.of-wrap .tname.brand {
-  fill: var(--ink-03);
-  stroke: var(--ink-20);
-  letter-spacing: 0.06em;
-}
-.of-wrap .tcount {
-  fill: var(--ink-45);
-  font-family: var(--font-mono);
-  font-weight: 500;
-  letter-spacing: 0.1px;
-}
-.of-wrap .tcount .on {
-  fill: var(--waiting);
-}
-.of-wrap .dname {
-  fill: var(--ink-45);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  letter-spacing: 0.12px;
-}
-.of-wrap .dname.off {
-  fill: var(--ink-30);
-}
-.of-wrap .offc {
-  fill: var(--ink-72);
-}
-.of-wrap .offt {
-  fill: var(--paper);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  letter-spacing: 0.08px;
-}
 .of-wrap .lmark {
   fill: var(--ink-03);
-}
-.of-wrap .lmark-l {
-  fill: none;
-  stroke: var(--ink-20);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.of-wrap .lmark-t {
-  fill: var(--ink-30);
-  font-family: var(--font-mono);
-  font-weight: 600;
-  letter-spacing: 0.25px;
 }
 .of-wrap .hand {
   fill: var(--ink-56);
@@ -364,124 +291,8 @@
   fill: var(--paper);
   font: 600 13px var(--font-sans);
 }
-
-/* the departures board: flaps of paper, a split across each, letters that flip in when they change */
-.of-wrap .sb-post {
-  fill: var(--ink-30);
-}
 .of-wrap .sm-eye {
   fill: var(--paper);
-}
-.of-wrap .fb-frame {
-  fill: color-mix(in oklab, var(--paper) 84%, transparent);
-  stroke: var(--ink-30);
-  stroke-width: 2.4;
-}
-.of-wrap .fb-cell {
-  fill: var(--paper-3);
-  stroke: var(--ink-16);
-  stroke-width: 0.8;
-  vector-effect: non-scaling-stroke;
-}
-.of-wrap .fb-split {
-  fill: none;
-  stroke: var(--ink-16);
-  stroke-width: 0.8;
-  vector-effect: non-scaling-stroke;
-}
-.of-wrap .fb-l {
-  fill: var(--ink-72);
-  font-family: var(--font-mono);
-  font-weight: 600;
-}
-.of-wrap .fb-hot {
-  fill: var(--waiting);
-}
-.of-wrap .fb-faint {
-  fill: var(--ink-30);
-}
-.of-wrap .fb-dim {
-  fill: var(--ink-56);
-  font-weight: 500;
-}
-.of-wrap .fb-clock {
-  fill: var(--ink-85);
-  font-family: var(--font-mono);
-  font-weight: 700;
-}
-.of-wrap .fb-head {
-  fill: var(--ink-72);
-  font-family: var(--font-sans);
-  font-weight: 800;
-  font-size: 34px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.of-wrap .fb-sub {
-  fill: var(--ink-45);
-  font-family: var(--font-mono);
-  font-size: 18px;
-  letter-spacing: 0.1em;
-}
-.of-wrap .fb-cap {
-  fill: var(--ink-45);
-  font-family: var(--font-mono);
-  font-size: 14px;
-  letter-spacing: 0.2em;
-}
-/* a flap clacks over in four steps, as the real ones do, and the browser paints four frames rather than twenty */
-.of-wrap .fb-flip {
-  transform-box: fill-box;
-  transform-origin: 50% 50%;
-  animation: room-flap 0.36s steps(4, end) backwards;
-}
-@keyframes room-flap {
-  from {
-    transform: scaleY(0);
-    opacity: 0.3;
-  }
-  55% {
-    transform: scaleY(1.12);
-    opacity: 1;
-  }
-}
-/* the sign painted on the ground at four o'clock: a box, chevrons running while at work, ember for your turn */
-.of-wrap .gs-box {
-  fill: none;
-  stroke: var(--ink-30);
-  stroke-width: 7;
-}
-.of-wrap .gs-box.e {
-  fill: color-mix(in oklab, var(--waiting) 9%, transparent);
-  stroke: color-mix(in oklab, var(--waiting) 80%, transparent);
-}
-.of-wrap .gs-word {
-  fill: var(--ink-56);
-  font-family: var(--font-sans);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-.of-wrap .gs-word.e {
-  fill: color-mix(in oklab, var(--waiting) 92%, transparent);
-}
-.of-wrap .gs-word.q {
-  fill: var(--ink-45);
-}
-.of-wrap :is(.gs-ch, .gs-tick) {
-  fill: none;
-  stroke: var(--ink-45);
-  stroke-width: 15;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.of-wrap .gs-in {
-  animation: room-sign 0.5s steps(6, end) both;
-}
-@keyframes room-sign {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
 }
 /* the lift's floor number, its call buttons */
 .of-wrap :is(.lift-seg, .lift-arr) {
@@ -494,7 +305,45 @@
   vector-effect: non-scaling-stroke;
 }
 
-/* a DONE stamp thumped on the floor, a paper plane and its dotted wake, the robot vacuum's light */
+/* the clock on the left wall: an LED panel, the time lit in seven segments, who is in as their faces */
+.of-wrap .ck-frame {
+  fill: var(--screen);
+}
+.of-wrap .ck-off {
+  fill: var(--screen-faint);
+}
+.of-wrap .ck-on {
+  fill: var(--screen-ink);
+}
+.of-wrap .ck-cap {
+  fill: color-mix(in oklab, var(--screen-ink) 62%, transparent);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+.of-wrap .ck-num {
+  fill: var(--screen-ink);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.of-wrap .ck-word {
+  fill: color-mix(in oklab, var(--screen-ink) 62%, transparent);
+  font-family: var(--font-sans);
+  font-weight: 500;
+}
+.of-wrap .ck-of {
+  fill: color-mix(in oklab, var(--screen-ink) 50%, transparent);
+}
+.of-wrap .ck-out {
+  opacity: 0.22;
+}
+.of-wrap .ck-more {
+  fill: color-mix(in oklab, var(--screen-ink) 62%, transparent);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* a DONE stamp on the floor, a request folded into a paper plane */
 .of-wrap .stamp {
   transform-box: fill-box;
   transform-origin: 50% 50%;
@@ -539,51 +388,7 @@
   fill: none;
   stroke: var(--ink-45);
 }
-.of-wrap .wake {
-  fill: none;
-  stroke: var(--ink-30);
-  stroke-width: 1.3;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 1.5 7;
-  stroke-linecap: round;
-  transition: opacity 0.6s;
-}
-.of-wrap .rb-led {
-  fill: var(--ink-72);
-}
-
-/* the laptop's lines and cursor hold still in the office: the mini-me's bounce shows the work */
-.of-wrap .steam path {
-  fill: none;
-  stroke: var(--ink-30);
-  stroke-width: 1.3;
-  vector-effect: non-scaling-stroke;
-  stroke-linecap: round;
-  opacity: 0;
-}
-.of-wrap .steam.on path {
-  animation: room-steam 2.1s steps(18, end) infinite;
-}
-.of-wrap .steam.on path:nth-child(2) {
-  animation-delay: 0.7s;
-}
-.of-wrap .steam.on path:nth-child(3) {
-  animation-delay: 1.4s;
-}
-@keyframes room-steam {
-  0% {
-    opacity: 0;
-    transform: translateY(2px) scaleY(0.8);
-  }
-  30% {
-    opacity: 0.9;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-22px) scaleY(1.15);
-  }
-}
-.of-wrap :is(.bot-g, [data-person], .board-hit) {
+.of-wrap :is(.bot-g, [data-person]) {
   cursor: pointer;
 }
 .of-wrap .shadow-e {
@@ -610,183 +415,6 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.of-wrap :is(.carry .mug, .carry.cup .sheetg) {
-  display: none;
-}
-.of-wrap .carry.cup .mug {
-  display: inline;
-}
-.of-wrap :is(.mug path, .mug ellipse) {
-  fill: var(--paper);
-  stroke: var(--ink-56);
-  stroke-width: 1.2;
-  vector-effect: non-scaling-stroke;
-}
-.of-wrap .trail {
-  fill: none;
-  stroke: var(--ink-20);
-  stroke-width: 1.1;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 2 6;
-  stroke-linecap: round;
-}
-
-/* doodles that come and go around the mini-mes, at twelve drawings a second like the boil inside them */
-.of-wrap .fx-i {
-  fill: var(--ink-72);
-}
-.of-wrap .fx-l {
-  fill: none;
-  stroke: var(--ink-56);
-  stroke-width: 1.5;
-  vector-effect: non-scaling-stroke;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.of-wrap .fx-e .fx-i {
-  fill: var(--waiting);
-}
-.of-wrap .fx-e .fx-l {
-  stroke: var(--waiting);
-}
-.of-wrap .fx-p {
-  fill: var(--paper);
-}
-.of-wrap .fx-in {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-.of-wrap .fx-pop .fx-in {
-  animation: room-fx-pop var(--dur, 0.9s) steps(11, end) both;
-}
-@keyframes room-fx-pop {
-  0% {
-    transform: scale(0) rotate(-12deg);
-    opacity: 0;
-  }
-  18% {
-    transform: scale(1.16) rotate(4deg);
-    opacity: 1;
-  }
-  30% {
-    transform: scale(0.95) rotate(0);
-  }
-  42%,
-  82% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(0.9) translateY(-6px);
-    opacity: 0;
-  }
-}
-.of-wrap .fx-ring .fx-in {
-  transform-origin: 50% 50%;
-  animation: room-fx-ring var(--dur, 0.55s) steps(6, end) both;
-}
-@keyframes room-fx-ring {
-  0% {
-    transform: scale(0.3);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
-}
-.of-wrap .fx-twinkle .fx-in {
-  transform-origin: 50% 50%;
-  animation: room-fx-twinkle var(--dur, 1.2s) steps(14, end) both;
-}
-@keyframes room-fx-twinkle {
-  0% {
-    transform: scale(0) rotate(-40deg);
-    opacity: 0;
-  }
-  35% {
-    transform: scale(1.15) rotate(8deg);
-    opacity: 1;
-  }
-  60% {
-    transform: scale(0.85);
-  }
-  100% {
-    transform: scale(0) rotate(30deg);
-    opacity: 0;
-  }
-}
-.of-wrap .fx-drip .fx-in {
-  animation: room-fx-drip var(--dur, 1.6s) steps(18, end) both;
-}
-@keyframes room-fx-drip {
-  0% {
-    transform: translateY(-4px) scale(0);
-    opacity: 0;
-  }
-  20% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-  75% {
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(10px) scale(0.9);
-    opacity: 0;
-  }
-}
-/* the hand-drawn wobble: each doodle has two drawings, shown in turn */
-.of-wrap .boil > * {
-  animation: room-boil-a 0.3s steps(1, end) infinite;
-}
-.of-wrap .boil > :nth-child(2) {
-  opacity: 0;
-  animation-name: room-boil-b;
-}
-@keyframes room-boil-a {
-  50% {
-    opacity: 0;
-  }
-}
-@keyframes room-boil-b {
-  50% {
-    opacity: 1;
-  }
-}
-
-/* assembly: the floor is sketched in, walls rise, furniture drops into place, plants grow */
-.of-wrap .asm :is(.k-draw .ol, .k-draw .hand-l) {
-  stroke-dasharray: 1;
-  animation: room-k-line 0.95s cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
-  animation-delay: var(--d, 0ms);
-}
-.of-wrap
-  .asm
-  :is(.k-draw polygon, .k-draw text, .k-draw ellipse, .k-draw rect) {
-  animation: room-k-fade 0.7s ease backwards;
-  animation-delay: calc(var(--d, 0ms) + 160ms);
-}
-.of-wrap .asm .k-fade {
-  animation: room-k-fade 0.6s ease backwards;
-  animation-delay: var(--d, 0ms);
-}
-.of-wrap .asm .k-drop {
-  animation: room-k-drop 0.7s cubic-bezier(0.2, 1.25, 0.4, 1) backwards;
-  animation-delay: var(--d, 0ms);
-}
-.of-wrap .asm .k-rise {
-  animation: room-k-rise 0.6s cubic-bezier(0.25, 1.35, 0.45, 1) backwards;
-  animation-delay: var(--d, 0ms);
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-.of-wrap .asm .k-grow {
-  animation: room-k-grow 0.65s cubic-bezier(0.3, 1.5, 0.5, 1) backwards;
-  animation-delay: var(--d, 0ms);
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
 @keyframes room-k-line {
   from {
     stroke-dashoffset: 1;
@@ -798,29 +426,6 @@
 @keyframes room-k-fade {
   from {
     opacity: 0;
-  }
-}
-@keyframes room-k-drop {
-  from {
-    transform: translateY(var(--drop, -60px));
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-  }
-}
-@keyframes room-k-rise {
-  from {
-    transform: scaleY(0);
-    opacity: 0;
-  }
-  30% {
-    opacity: 1;
-  }
-}
-@keyframes room-k-grow {
-  from {
-    transform: scale(0);
   }
 }
 
@@ -838,13 +443,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 9px 5px 8px;
+  padding: 4px 8px 4px 7px;
   border-radius: 8px;
   background: var(--paper);
   box-shadow:
     0 0 0 1px var(--ink-10),
     0 3px 10px var(--ink-05);
-  font-size: 12px;
+  font-size: 11.5px;
   line-height: 1;
   white-space: nowrap;
   pointer-events: auto;
@@ -867,9 +472,18 @@
 .of-wrap .plate.on i {
   background: var(--ink);
 }
+/* at an empty desk: whose it is, faint, as the desk itself is */
+.of-wrap .plate.off {
+  background: color-mix(in oklab, var(--paper) 70%, transparent);
+  box-shadow: 0 0 0 1px var(--ink-08);
+  color: var(--ink-45);
+}
+.of-wrap .plate.off b {
+  font-weight: 500;
+}
 .of-wrap .plate.off i {
   background: transparent;
-  box-shadow: inset 0 0 0 1.2px var(--ink-45);
+  box-shadow: inset 0 0 0 1.2px var(--ink-30);
 }
 .of-wrap .plate.mine {
   box-shadow:
@@ -1019,22 +633,6 @@
 .of-wrap .hud.bl {
   left: 14px;
   bottom: 14px;
-}
-.of-wrap .note {
-  font: 500 11px / 1.4 var(--font-mono);
-  color: var(--muted);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.of-wrap .note b {
-  color: var(--ink);
-  font-weight: 600;
-}
-.of-wrap .hud.tl .note {
-  padding: 4px 8px;
-  margin-left: -8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--paper) 84%, transparent);
 }
 .of-wrap .chip {
   display: inline-flex;
@@ -1472,27 +1070,8 @@
 .of-wrap .sb-dot.other .sb-pulse {
   display: none;
 }
-.of-wrap .sb-zp {
-  fill: none;
-  stroke: var(--ink-45);
-  stroke-width: 1.4;
-  vector-effect: non-scaling-stroke;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 @media (prefers-reduced-motion: reduce) {
-  .of-wrap
-    :is(
-      .fb-flip,
-      .stamp,
-      .gs-in,
-      .asm *,
-      .bub,
-      .steam.on path,
-      .boil > *,
-      .land,
-      [class^="fx-"] .fx-in
-    ) {
+  .of-wrap :is(.stamp, .bub, .land) {
     animation: none !important;
   }
 }
@@ -2046,14 +1625,13 @@
 .of-wrap.of-full.of-pane .panel {
   top: 16px;
 }
-/* A small live view of the office beside the conversation: the drawing alone, larger than its
-   frame so the desks show, with no controls; the frame around it takes the click. */
+/* A small live view of the office beside the conversation: the drawing alone, the whole floor in
+   its frame (office.mjs fits it), with no controls; the frame around it takes the click. */
 .of-wrap.of-mini {
   position: absolute;
-  left: -46%;
-  top: -30%;
-  width: 192%;
-  height: 192%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   border-radius: 0;
   box-shadow: none;
   pointer-events: none;

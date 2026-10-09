@@ -118,7 +118,9 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
           aria-label={t("openOffice")}
           className="relative block h-[172px] overflow-hidden rounded-xl bg-background shadow-[inset_0_0_0_1px_var(--alpha-08)]"
         >
-          {office.room && <OfficeRoom data={office.room} className="of-mini" />}
+          {office.room && (
+            <OfficeRoom data={office.room} fps={30} className="of-mini" />
+          )}
           <span className="absolute inset-x-2 bottom-2 flex items-center gap-1.5 rounded-lg bg-background/95 px-2 py-1.5 text-[11.5px] text-foreground/85 shadow-[0_0_0_1px_var(--alpha-08)]">
             <span
               aria-hidden

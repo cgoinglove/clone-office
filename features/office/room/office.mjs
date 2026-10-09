@@ -1,15 +1,16 @@
-// The office room: one floor of the team's office as the confirmed design (v13) draws it, moved by
-// what the relay says. Each member sits at a desk with their mini-me. A request walks from the
-// asker's desk to the asked one's (or flies there, folded into a plane, when the desk is far), sits
-// on their pile until their mini-me takes it up, and comes back answered with a DONE stamp. What
-// waits on the viewer shows in ember; the board behind the wall lists everyone.
+// The office room: one floor of the team's office, moved by what the relay says. Each member sits at
+// a desk with their clone, named over its head with what it is on. A request walks from the asker's
+// desk to the asked one's (or flies there, folded into a plane, when the desk is far), sits on their
+// pile until their clone takes it up, and comes back answered with a DONE stamp. What waits on the
+// viewer shows in ember. The clock on the left wall tells the time and who is in.
 //
-// The drawing is split over sheets so that what moves never touches what stands still: the board
-// behind everything, the floor and furniture (redrawn only when something on it changes), and over
-// them each mover in a small sheet of its own, with copies of whatever stands in front of it cut to
-// its outline (`placeLive`). Lines of one kind are merged into one path (`merged`), a mini-me seen
-// from afar is redrawn only when it shows (`restDue`), and what can move at half the rate moves on
-// the same even frames. The office stops while it is off screen.
+// Only what means something moves: a request on its way, a clone coming in or going home, a clone at
+// work, the one asking its person. Nothing wanders for show. The drawing is split over sheets so that
+// what moves never touches what stands still: the floor and furniture (redrawn only when something on
+// it changes), and over them each mover in a small sheet of its own, with copies of whatever stands in
+// front of it cut to its outline (`placeLive`). Lines of one kind are merged into one path (`merged`),
+// a clone seen from afar is redrawn only when it shows (`restDue`), and what can move at half the rate
+// moves on the same even frames. The office stops while it is off screen.
 
 import {
   at,
@@ -19,25 +20,18 @@ import {
   CX,
   CY,
   clamp,
-  DROP_FALL,
-  DROP_LAND,
-  dropAt,
   EVEN,
   easeInOut,
   esc,
-  flat,
   floorText,
   hash,
   hashStr,
   leapAt,
   lerp,
   ln,
-  loopOn,
   merged,
   mountBot,
   onFrame,
-  P,
-  part,
   plane,
   plant,
   poly,
@@ -48,25 +42,21 @@ import {
   r3,
   SVGNS,
   setScale,
-  sideWallM,
   stepAt,
   unmountBot,
   withOv,
 } from "./core.mjs";
-import { buildGrid, FXD, findPath, planFloor, WALL_H, ZA } from "./floor.mjs";
+import { buildGrid, findPath, planFloor, WALL_H } from "./floor.mjs";
 import { looksOf } from "./looks.mjs";
 import {
   armchairSvg,
+  CLOCK,
   chairSvg,
+  clockFace,
   coffeeSvg,
-  countText,
   DK,
   deskFrame,
-  deskLabel,
   deskShade,
-  FB,
-  flapBoard,
-  flapFace,
   ITEMS,
   itemGeo,
   itemSvg,
@@ -85,23 +75,14 @@ import {
   PD,
   PLANE,
   PW,
-  roombaSvg,
-  SIGN,
   SM_DEFS,
-  scribble,
   segments,
   shelfSvg,
-  signWords,
-  skyFor,
   sofaSvg,
   stackSvg,
   stampSvg,
-  steamAt,
-  steamSvg,
   stillMark,
-  teamMark,
   trayGeo,
-  wallBrand,
 } from "./pieces.mjs";
 
 const SEAT_Z = 4,
@@ -131,21 +112,20 @@ const ICON = {
 
 /** The stage's own markup: the sheets and their shared patterns, what floats over them, the controls. */
 function template(W, composer, lobby) {
-  return `<svg class="of-s" data-of="back" aria-hidden="true"><g data-of="g-back"></g></svg>
-<svg class="of-s" data-of="svg" role="img" aria-label="${esc(W.label)}"><defs>
+  return `<svg class="of-s" data-of="svg" role="img" aria-label="${esc(W.label)}"><defs>
 <pattern id="of-hatch" patternUnits="userSpaceOnUse" width="3.4" height="3.4" patternTransform="rotate(-38)"><line data-of="hatch-l" class="hl" x1="0" y1="0" x2="0" y2="3.4" stroke-width=".7"/></pattern>
 <pattern id="of-dots" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="matrix(8.94 4.47 -8.94 4.47 0 0)"><circle class="dot-c" cx="3" cy="3" r=".17"/></pattern>
 <radialGradient id="of-soft"><stop offset="0" class="sh-stop sh-0"/><stop offset=".55" class="sh-stop sh-1"/><stop offset="1" class="sh-stop" stop-opacity="0"/></radialGradient>
 <linearGradient id="of-floorlight" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="dk-stop" stop-opacity=".05"/><stop offset=".5" class="dk-stop" stop-opacity=".014"/><stop offset="1" class="dk-stop" stop-opacity="0"/></linearGradient>
-</defs><g data-of="g-floor"></g><g data-of="g-walls"></g><g data-of="g-scene"></g><g data-of="g-notes"></g><g data-of="g-intro"></g></svg>
+</defs><g data-of="g-floor"></g><g data-of="g-walls"></g><g data-of="g-scene"></g><g data-of="g-intro"></g></svg>
 <svg class="of-s" data-of="mid" aria-hidden="true"><g data-of="g-under"></g></svg>
 <div class="live" data-of="g-live"></div>
-<svg class="of-s" data-of="top" aria-hidden="true"><g data-of="g-fly"></g><g data-of="g-fx"></g></svg>
+<svg class="of-s" data-of="top" aria-hidden="true"><g data-of="g-fly"></g></svg>
 <div class="over" data-of="plates"></div>
 <div class="over" data-of="bubbles"></div>
 <div class="hud tl" data-of="hud-tl"></div>
 <div class="hud tr" data-of="hud-tr"></div>
-<div class="hud bl"><div class="seg" data-of="views" role="group" aria-label="${esc(W.views.label)}"><button type="button" data-view="desk" aria-pressed="false">${esc(W.views.desk)}</button><button type="button" data-view="board" aria-pressed="false">${esc(W.views.board)}</button><button type="button" data-view="office" aria-pressed="true">${esc(W.views.office)}</button></div><div class="zoom"><button type="button" data-of="z-out" aria-label="${esc(W.views.zoomOut)}">${ICON.minus}</button><button type="button" data-of="z-in" aria-label="${esc(W.views.zoomIn)}">${ICON.plus}</button></div></div>
+<div class="hud bl"><div class="seg" data-of="views" role="group" aria-label="${esc(W.views.label)}"><button type="button" data-view="desk" aria-pressed="false">${esc(W.views.desk)}</button><button type="button" data-view="office" aria-pressed="true">${esc(W.views.office)}</button></div><div class="zoom"><button type="button" data-of="z-out" aria-label="${esc(W.views.zoomOut)}">${ICON.minus}</button><button type="button" data-of="z-in" aria-label="${esc(W.views.zoomIn)}">${ICON.plus}</button></div></div>
 ${composer ? `<div class="composer" data-of="composer"><div class="sugs" data-of="sugs"></div><form class="box" data-of="ask-form" autocomplete="off"><span class="me" data-of="me-mark"></span><input data-of="ask-input" type="text" placeholder="${esc(W.composer.placeholder)}" aria-label="${esc(W.composer.placeholder)}"><button type="submit" class="send" aria-label="${esc(W.composer.send)}">${ICON.send}</button></form></div>` : ""}
 <aside class="panel" data-of="panel" hidden></aside>${lobby ? lobbyMarkup(W) : ""}`;
 }
@@ -184,23 +164,21 @@ export function createOffice(
   const W = words,
     HALF = fps === 30;
   root.classList.add("of-wrap");
+  /** A glimpse beside something else, with no controls and nothing laid over it (`of-mini`). */
+  const mini = root.classList.contains("of-mini");
   root.innerHTML = template(W, !!onAsk, lobby);
   const $ = (name) => root.querySelector(`[data-of="${name}"]`);
   const wrap = root,
     svg = $("svg"),
-    backSvg = $("back"),
     liveSvg = $("mid"),
     topSvg = $("top");
-  const gBack = $("g-back"),
-    gFloor = $("g-floor"),
+  const gFloor = $("g-floor"),
     gWalls = $("g-walls"),
     gScene = $("g-scene"),
-    gNotes = $("g-notes"),
     gUnder = $("g-under"),
     gLive = $("g-live"),
-    gFly = $("g-fly"),
-    gFx = $("g-fx");
-  const sheets = new Set([backSvg, svg, liveSvg, topSvg]);
+    gFly = $("g-fly");
+  const sheets = new Set([svg, liveSvg, topSvg]);
   const oPlates = $("plates"),
     oBubbles = $("bubbles"),
     hudTL = $("hud-tl"),
@@ -219,9 +197,9 @@ export function createOffice(
         day: "numeric",
         month: "short",
       });
-      return (d) => f.format(d).toUpperCase();
+      return (d) => f.format(d);
     } catch {
-      return (d) => d.toDateString().toUpperCase();
+      return (d) => d.toDateString();
     }
   })();
 
@@ -257,39 +235,28 @@ export function createOffice(
     panelKey = "",
     hover = null,
     userMoved = false,
-    boardOn = false,
     /** Room kept clear at the sides for what the page lays over the office (a panel, a column). */
     insetR = 0,
     insetL = 0,
+    /** How far down the panel at the right reaches, when it does not take the whole height. */
+    insetH = 0,
     panelShown = false;
   let staticObjs = [],
     sceneOrder = [],
     decision = null,
     liftOpen = 0,
-    asmUntil = 0,
-    asmT0 = 0,
-    lastMin = -1,
-    dataKey = "",
-    dataTick = 0,
+    clockKey = "",
+    clockAt = 0,
     BASE_FLOOR = STOREYS;
   let liftUntil = -10,
     oacc = 0,
     meMark = null;
-  const refs = {
-    board: null,
-    sign: null,
-    signWas: "",
-    flapWas: {},
-    counts: new Map(),
-    dnames: new Map(),
-    steam: null,
-  };
-  const boardM = (B) => plane([B.x, B.y, B.z], [0, -0.1, 0], [0, 0, -0.1]);
-  const signM = (G) => plane([G.x, G.y, -2.6], [0, -0.1, 0], [0.1, 0, 0]);
+  const refs = { clock: null, doors: null, marks: null };
+  /** The clock's plane on the left wall: across toward the back, down the wall, a tenth of a unit each. */
+  const clockM = plane([0.08, CLOCK.y, CLOCK.z], [0, -0.1, 0], [0, 0, -0.1]);
   const timers = [],
     fliers = [],
     bubbles = new Map(),
-    fxs = [],
     chains = new Map();
 
   // ---- the floors: everyone in one team, the viewer first, areas of up to six, floors of up to 24
@@ -298,26 +265,14 @@ export function createOffice(
     for (let i = 0; i < roster.length; i += FLOOR_CAP)
       groups.push(roster.slice(i, i + FLOOR_CAP).map((p) => p.id));
     if (!groups.length) groups.push([]);
-    const fls = groups.map((ids, i) => planFloor([[W.team, ids]], i));
-    // Thursday's places: the board behind the left wall at ten o'clock, the sign on the ground at four
-    for (const f of fls) {
-      f.board = {
-        x: -9,
-        y: clamp(f.D * 0.5 + 48, 98, f.D - 6),
-        z: WALL_H + 34,
-      };
-      f.sign = { x: f.W + 9, y: f.D * 0.45 + 35 };
-    }
-    return fls;
+    return groups.map((ids, i) => planFloor([[W.team, ids]], i));
   }
 
-  // ---- what stands on the floor: plan footprint (depth and walking), screen box (culling), when it arrives
+  // ---- what stands on the floor: plan footprint (depth and walking), screen box (culling)
   function piecesOf(fl) {
     const out = [],
-      blockers = [],
-      maxK = fl.W + fl.D;
-    const when = (x, y) => 700 + ((x + y) / maxK) * 1900;
-    const add = (x0, y0, x1, y1, z1, t0, draw, o = {}) => {
+      blockers = [];
+    const add = (x0, y0, x1, y1, z1, draw, o = {}) => {
       let a0 = Infinity,
         a1 = -Infinity,
         c0 = Infinity,
@@ -338,7 +293,6 @@ export function createOffice(
         y1,
         box: [a0 - 40, c0 - 60, a1 + 40, c1 + 20],
         tb: [a0 - 6, c0 - 8, a1 + 6, c1 + 4],
-        t0,
         draw,
         person: o.person || null,
       });
@@ -352,30 +306,20 @@ export function createOffice(
         });
     };
     for (const d of fl.desks) {
-      const t0 = when(d.px, d.py),
-        p = d.id ? people.get(d.id) : null;
-      d.t0 = t0;
+      const p = d.id ? people.get(d.id) : null;
       const [cx, cy] = d.seat;
-      add(
-        cx - 2.6,
-        cy - 3.5,
-        cx + 2.6,
-        cy + 2.6,
-        11,
-        t0 + 560,
-        (t) => chairSvg(cx, cy, t),
-        { block: false },
-      );
+      add(cx - 2.6, cy - 3.5, cx + 2.6, cy + 2.6, 11, () => chairSvg(cx, cy), {
+        block: false,
+      });
       add(
         d.x0,
         d.y0,
         d.x1,
         d.y1,
         DK.top + 9,
-        t0,
-        (t) =>
-          deskFrame(d, t) +
-          `<g data-item="${d.key}" style="--d:${Math.round(t + 860)}ms"></g><g data-lamp="${d.key}" style="--d:${Math.round(t + 620)}ms"></g><g data-lap="${d.key}" style="--d:${Math.round(t + 700)}ms"></g><g data-stk="${d.key}" style="--d:${Math.round(t + 780)}ms"></g>`,
+        () =>
+          deskFrame(d) +
+          `<g data-item="${d.key}"></g><g data-lamp="${d.key}"></g><g data-lap="${d.key}"></g><g data-stk="${d.key}"></g>`,
         { person: d.id },
       );
       if (p?.mine)
@@ -385,59 +329,29 @@ export function createOffice(
           d.x1 + 6.6,
           d.y0 + 4.6,
           12,
-          t0 + 900,
-          (t) => plant(d.x1 + 4.6, d.y0 + 2.6, "leafy", t),
+          () => plant(d.x1 + 4.6, d.y0 + 2.6, "leafy"),
           { pad: 0.4 },
         );
     }
-    const D = fl.D,
-      a0 = 500;
-    // the lounge by the way in, on the left
-    add(7.4, 64, 30.6, 70.2, 6.2, a0 + 300, (t) => sofaSvg(8, 64, 30, t));
-    add(11, 76, 27, 81, 4, a0 + 420, (t) => lowTableSvg(11, 76, 27, 81, t));
-    add(
-      34.6,
-      64.6,
-      39.4,
-      69.4,
-      12,
-      a0 + 520,
-      (t) => plant(37, 67, "leafy", t),
-      { pad: 0.4 },
-    );
-    add(
-      ZA - 9,
-      D - 13,
-      ZA - 4.4,
-      D - 8.4,
-      14,
-      a0 + 700,
-      (t) => plant(ZA - 6.7, D - 10.7, "tall", t),
-      { pad: 0.4 },
-    );
     for (const th of fl.things) {
-      const t0 = when(th.x ?? th.x0, th.y ?? th.y0);
       if (th.kind === "tea") {
         const w = 20,
           d = 6;
-        add(th.x, th.y, th.x + w, th.y + d, 12.5, t0, (t) =>
-          coffeeSvg(th.x, th.y, true, t, false),
-        );
-        fl.steamAt = steamAt(th.x, th.y, true);
+        add(th.x, th.y, th.x + w, th.y + d, 12.5, () => coffeeSvg(th.x, th.y));
+        // the stools in front of the counter
         add(
           th.x + 2.6,
           th.y + d + 2,
           th.x + 17.4,
           th.y + d + 4.6,
           5.2,
-          t0 + 480,
           () => "",
-          { pad: 0.6 },
+          {
+            pad: 0.6,
+          },
         );
-        fl.spots.tea = [th.x + 10, th.y + d + 8.5];
-        fl.teaAt = [th.x + 10, th.y + 2, 12.4];
       } else if (th.kind === "shelf")
-        add(th.x0, th.y0, th.x1, th.y1, th.h || 15, t0, (t) =>
+        add(th.x0, th.y0, th.x1, th.y1, th.h || 15, () =>
           shelfSvg(
             th.x0,
             th.y0,
@@ -446,22 +360,21 @@ export function createOffice(
             th.h || 15,
             th.face,
             Math.round(th.x0 + th.y0),
-            t,
           ),
         );
       else if (th.kind === "armchairs")
-        add(th.x - 3.6, th.y - 3, th.x + 3.6, th.y + 3, 6.6, t0, (t) =>
-          armchairSvg(th.x, th.y, t),
+        add(th.x - 3.6, th.y - 3, th.x + 3.6, th.y + 3, 6.6, () =>
+          armchairSvg(th.x, th.y),
         );
       else if (th.kind === "sofa")
-        add(th.x0 - 0.6, th.y, th.x1 + 0.6, th.y + 6.2, 6.2, t0, (t) =>
-          sofaSvg(th.x0, th.y, th.x1, t),
+        add(th.x0 - 0.6, th.y, th.x1 + 0.6, th.y + 6.2, 6.2, () =>
+          sofaSvg(th.x0, th.y, th.x1),
         );
       else if (th.kind === "lowtable") {
-        add(th.x0, th.y0, th.x1, th.y1, 4, t0, (t) =>
-          lowTableSvg(th.x0, th.y0, th.x1, th.y1, t),
+        add(th.x0, th.y0, th.x1, th.y1, 4, () =>
+          lowTableSvg(th.x0, th.y0, th.x1, th.y1),
         );
-        // the reading corner's low table is where a meeting of the mini-mes gathers
+        // the reading corner's low table is where a meeting of the clones gathers
         fl.meetAt = [(th.x0 + th.x1) / 2, (th.y0 + th.y1) / 2];
       } else if (th.kind === "plant")
         add(
@@ -470,8 +383,7 @@ export function createOffice(
           th.x + 2.4,
           th.y + 2.4,
           14,
-          t0,
-          (t) => plant(th.x, th.y, th.p, t),
+          () => plant(th.x, th.y, th.p),
           { pad: 0.4 },
         );
     }
@@ -510,46 +422,34 @@ export function createOffice(
     return out;
   }
 
-  // ---- the floor and the walls; with `intro` everything is sketched in on CSS alone
-  function floorSvg(fl, sky) {
+  // ---- the floor and the walls
+  function floorSvg(fl) {
     const { W: FW, D } = fl,
       all = [at(0, 0), at(FW, 0), at(FW, D), at(0, D)];
-    let f = part(
-      "k-draw",
+    let f = withOv(
       0,
-      withOv(
-        0,
-        () =>
-          ln(at(-30, D), at(FW + 30, D), "ol c") +
-          ln(at(FW, -30), at(FW, D + 30), "ol c") +
-          ln(at(-30, 0), at(-1.2, 0), "ol c") +
-          ln(at(0, D), at(0, D + 30), "ol c"),
-      ),
+      () =>
+        ln(at(-30, D), at(FW + 30, D), "ol c") +
+        ln(at(FW, -30), at(FW, D + 30), "ol c") +
+        ln(at(-30, 0), at(-1.2, 0), "ol c") +
+        ln(at(0, D), at(0, D + 30), "ol c"),
     );
-    f += part("k-draw", 60, boxFloor(FW, D));
-    f += part("k-fade", 280, poly(all, "f-dots") + poly(all, "f-floorlight"));
-    if (sky === "night") f += poly(all, "f-veil");
-    else if (sky === "evening") f += poly(all, "f-duskveil");
-    for (const art of fl.floorArt) {
-      const q = [
-        at(art.x0, art.y0),
-        at(art.x1, art.y0),
-        at(art.x1, art.y1),
-        at(art.x0, art.y1),
-      ];
-      if (art.kind === "plaza")
-        f += part(
-          "k-fade",
-          800,
-          poly(q, "f-plaza") + withOv(0, () => flatLine(art)),
-        );
-      else f += part("k-fade", 700, poly(q, "f-rug"));
-    }
+    f += boxFloor(FW, D);
+    f += poly(all, "f-dots") + poly(all, "f-floorlight");
+    for (const art of fl.floorArt)
+      f += poly(
+        [
+          at(art.x0, art.y0),
+          at(art.x1, art.y0),
+          at(art.x1, art.y1),
+          at(art.x0, art.y1),
+        ],
+        "f-rug",
+      );
     for (const d of fl.desks) {
       const p = d.id ? people.get(d.id) : null;
-      let s2 = "";
       if (!d.id)
-        s2 +=
+        f +=
           poly(
             [
               at(d.px + 5, d.py + 5),
@@ -560,7 +460,7 @@ export function createOffice(
             "f-open",
           ) + floorText(W.openSeat, d.px + 9, d.py + 33.4, 2.1, "ftext faint");
       else if (p?.mine)
-        s2 += poly(
+        f += poly(
           [
             at(d.px + 4, d.py + 4),
             at(d.px + 40, d.py + 4),
@@ -569,133 +469,50 @@ export function createOffice(
           ],
           "f-myrug",
         );
-      s2 += deskShade(d);
-      if (d.id) s2 += `<g data-dname="${d.key}"></g>`;
-      f += part("k-fade", (d.t0 || 0) - 80, s2);
-      if (p?.mine)
-        f += part(
-          "k-draw",
-          (d.t0 || 0) + 1500,
-          loopOn(d.x0 - 5.5, d.seat[1] - 5, d.x1 + 6.5, d.y1 + 6, 7),
-        );
+      f += deskShade(d);
     }
-    for (const a of fl.areas)
-      if (!a.secondary) {
-        const [x, y] = [a.x0 + 2, a.y1 + 9];
-        f += teamMark(
-          a,
-          x,
-          y,
-          ((a.x0 + a.y0) / (fl.W + fl.D)) * 1900 + 1100,
-          me && a.names.includes(me.id),
-        );
-      }
-    f += part("k-fade", 1100, liftMark(LIFT_X, W.lift));
+    f += liftMark(LIFT_X);
     return f;
   }
   const boxFloor = (FW, D) =>
     box(0, 0, FW, D, -2.6, 0, { top: "f-floor", line: "ol s", double: true });
-  const flatLine = (art) =>
-    flat(
-      art.x0 + 2.5,
-      art.y0 + 2.5,
-      art.x1 - 2.5,
-      art.y1 - 2.5,
-      0.02,
-      "f-none",
-      "ol c",
-    );
   function wallSvg(fl) {
     const { W: FW, D } = fl;
-    let w = part(
-      "k-draw",
-      150,
+    return (
       box(0, -1.2, FW, 0, 0, WALL_H, {
         front: "f-wall",
         hatch: false,
         line: "ol s",
         double: true,
       }) +
-        box(-1.2, -1.2, 0, D, 0, WALL_H, {
-          side: "f-front",
-          hatch: false,
-          line: "ol s",
-          double: true,
-        }),
+      box(-1.2, -1.2, 0, D, 0, WALL_H, {
+        side: "f-front",
+        hatch: false,
+        line: "ol s",
+        double: true,
+      }) +
+      liftSvg(LIFT_X, liftOpen, BASE_FLOOR + fl.index, WALL_H, false)
     );
-    w += part(
-      "k-fade",
-      900,
-      liftSvg(LIFT_X, liftOpen, BASE_FLOOR + fl.index, WALL_H, false),
-    );
-    w += part("k-draw", 1100, wallBrand(LIFT_X + LIFT_W + 14, WALL_H));
-    w += part(
-      "k-fade",
-      1000,
-      `<text class="wtext" transform="${sideWallM(D - 12, Math.min(13.5, WALL_H - 2.5))}" font-size="2.2">${esc(fl.name.toUpperCase())}</text>`,
-    );
-    return w;
   }
-  function notesSvg(fl) {
-    let s = "";
-    if (me && me.home === fl.index) {
-      const d = me.desk;
-      s += scribble(W.notes.myDesk, at(d.x1 + 6, d.y1 + 6.5), 26, 40, 25);
-    }
-    if (fl.teaAt)
-      s += scribble(
-        W.notes.tea,
-        at(fl.teaAt[0], fl.teaAt[1], fl.teaAt[2] + 1.5),
-        30,
-        -26,
-        23,
-      );
-    s += scribble(W.notes.lift, at(LIFT_X + 15.5, 6), 30, 30, 22);
-    return s;
-  }
-  function buildScene(intro = false, toward = null) {
+  /** Draws the still office around the camera: the floor, the walls, and what stands on the floor in depth order. */
+  function buildScene(toward = null) {
     if (!plan || destroyed) return;
-    const s = toward ? cw / toward.w : sc,
-      sky = skyFor("now");
+    const s = toward ? cw / toward.w : sc;
     setScale(s);
     const hs = 3.4 / s;
     hatchP.setAttribute("width", r2(hs));
     hatchP.setAttribute("height", r2(hs));
     hatchL.setAttribute("y2", r2(hs));
     hatchL.setAttribute("stroke-width", r2(0.7 / s));
-    svg.classList.toggle("asm", intro);
-    backSvg.classList.toggle("asm", intro);
-    svg.style.setProperty("--drop", `${r1(-46 / s)}px`);
-    if (intro) asmT0 = simT;
-    gFloor.innerHTML = merged(floorSvg(plan, sky));
-    gBack.innerHTML = merged(flapBoard(boardM(plan.board), 900));
+    gFloor.innerHTML = merged(floorSvg(plan));
     gWalls.innerHTML = merged(wallSvg(plan));
-    gNotes.innerHTML = merged(part("k-fade", 3400, notesSvg(plan)));
     gUnder.innerHTML =
       `<g data-liftdoors>${merged(liftDoors(LIFT_X, easeInOut(liftOpen), liftH(WALL_H)))}</g>` +
-      (plan.steamAt ? steamSvg(plan.steamAt) : "") +
-      `<g transform="${signM(plan.sign)}" data-sign></g><g data-marks></g>`;
-    refs.board = gBack.querySelector("[data-board]");
-    refs.sign = gUnder.querySelector("[data-sign]");
-    refs.signWas = "";
-    refs.boardKey = "";
-    refs.boardAt = 0;
+      `<g class="clock" transform="${clockM}" data-clock></g><g data-marks></g>`;
     refs.doors = gUnder.querySelector("[data-liftdoors]");
+    refs.clock = gUnder.querySelector("[data-clock]");
     refs.marks = gUnder.querySelector("[data-marks]");
-    refs.counts = new Map(
-      [...gFloor.querySelectorAll("[data-count]")].map((g) => [
-        g.dataset.count,
-        g,
-      ]),
-    );
-    refs.dnames = new Map(
-      [...gFloor.querySelectorAll("[data-dname]")].map((g) => [
-        g.dataset.dname,
-        g,
-      ]),
-    );
-    lastMin = -1;
-    dataKey = "";
+    clockKey = "";
     const c2 = toward || cam,
       ux0 = Math.min(cam.x, c2.x),
       uy0 = Math.min(cam.y, c2.y),
@@ -722,7 +539,7 @@ export function createOffice(
     gScene.innerHTML = shown
       .map(
         (o) =>
-          `<g${o.person ? ` data-person="${esc(o.person)}"` : ""}>${merged(o.draw(o.t0))}</g>`,
+          `<g${o.person ? ` data-person="${esc(o.person)}"` : ""}>${merged(o.draw())}</g>`,
       )
       .join("");
     const nodes = [...gScene.children];
@@ -733,47 +550,28 @@ export function createOffice(
     for (const d of plan.desks) {
       const lampG = gScene.querySelector(`[data-lamp="${d.key}"]`);
       if (!lampG) continue;
-      const lapG = gScene.querySelector(`[data-lap="${d.key}"]`),
-        stkG = gScene.querySelector(`[data-stk="${d.key}"]`),
-        itemG = gScene.querySelector(`[data-item="${d.key}"]`),
-        p = d.id ? people.get(d.id) : null,
-        at0 = (g) =>
-          intro ? parseFloat(g.style.getPropertyValue("--d")) : null;
-      if (p) {
-        p.lampG = lampG;
-        p.lapG = lapG;
-        p.stkG = stkG;
-        p.itemG = itemG;
-      }
-      lampG.innerHTML = merged(
-        lampSvg(
-          lampGeo(d),
-          !!p && p.present && p.status === "active",
-          at0(lampG),
-        ),
+      const p = d.id ? people.get(d.id) : null,
+        g = {
+          lamp: lampG,
+          lap: gScene.querySelector(`[data-lap="${d.key}"]`),
+          stack: gScene.querySelector(`[data-stk="${d.key}"]`),
+          item: gScene.querySelector(`[data-item="${d.key}"]`),
+        };
+      if (p) p.deskG = g;
+      g.lamp.innerHTML = merged(
+        lampSvg(lampGeo(d), !!p && p.present && p.status === "active"),
       );
-      lapG.innerHTML = merged(
+      g.lap.innerHTML = merged(
         lapSvg(
           lapGeo(d),
           p?.present ? p.status : "offline",
           !!p && p.mood === "working",
-          at0(lapG),
         ),
       );
-      stkG.innerHTML = merged(
-        stackSvg(trayGeo(d), p ? p.stack : 0, d.key, at0(stkG)),
-      );
-      itemG.innerHTML = merged(
-        itemSvg(
-          itemGeo(d),
-          itemOf(p),
-          !!p && p.mood === "working",
-          intro ? parseFloat(itemG.style.getPropertyValue("--d")) : 0,
-        ),
-      );
+      g.stack.innerHTML = merged(stackSvg(trayGeo(d), p ? p.stack : 0, d.key));
+      g.item.innerHTML = merged(itemSvg(itemGeo(d), itemOf(p)));
     }
-    refs.steam = gUnder.querySelector("[data-steam]");
-    for (const a of [...people.values(), vac]) {
+    for (const a of people.values()) {
       a.slot = -2;
       a.occKey = null;
       if (a.cl) {
@@ -784,20 +582,14 @@ export function createOffice(
   }
   const itemOf = (p) =>
     !p ? "books" : p.mine ? "mug" : ITEMS[hashStr(p.id) % ITEMS.length];
+  /** Draws one thing on a desk again: its pile, its laptop or its lamp, as the person now is. */
   function redraw(p, what, fresh = false) {
     if (!plan || p.floor !== plan.index) return;
-    const g =
-      what === "stack"
-        ? p.stkG
-        : what === "lap"
-          ? p.lapG
-          : what === "item"
-            ? p.itemG
-            : p.lampG;
+    const g = p.deskG?.[what];
     if (!g?.isConnected) return;
     const d = p.desk;
     if (what === "stack")
-      g.innerHTML = merged(stackSvg(trayGeo(d), p.stack, d.key, null, fresh));
+      g.innerHTML = merged(stackSvg(trayGeo(d), p.stack, d.key, fresh));
     else if (what === "lap")
       g.innerHTML = merged(
         lapSvg(
@@ -806,18 +598,12 @@ export function createOffice(
           p.mood === "working",
         ),
       );
-    else if (what === "item")
-      g.innerHTML = merged(
-        itemSvg(itemGeo(d), itemOf(p), p.mood === "working", 0).replace(
-          /k-drop|k-grow/g,
-          "",
-        ),
-      );
     else
       g.innerHTML = merged(
         lampSvg(lampGeo(d), p.present && p.status === "active"),
       );
-    for (const a of [...people.values(), vac])
+    // whoever carries a copy of this desk takes a fresh one
+    for (const a of people.values())
       if (a.occ?.some((o) => o.node?.contains(g))) {
         a.occKey = null;
         if (a.cl) {
@@ -827,138 +613,24 @@ export function createOffice(
       }
   }
 
-  // ---- what the board, the sign and the floor's words say
+  // ---- the clock on the wall: the time, and who is in out of everyone on this floor
   const asking = (p) => (p.mine ? !!decision : p.deciding);
-  const stateOf = (p) =>
-    asking(p)
-      ? "ask"
-      : p.status === "offline"
-        ? "off"
-        : p.status === "away"
-          ? "away"
-          : p.mood === "working" ||
-              p.doing?.kind === "ask" ||
-              p.doing?.kind === "answer" ||
-              p.doing?.kind === "meeting"
-            ? "work"
-            : "free";
-  const RANK = { ask: 0, work: 1, free: 2, away: 3, off: 4 };
-  /** What someone is on, for the board: the colleague a request is going to, the request being worked on, the one waited on. */
-  const nowOf = (p) => {
-    const d = p.doing;
-    if (d && (d.kind === "ask" || d.kind === "answer"))
-      return W.board.to(d.who.name);
-    if (d?.kind === "meeting") return W.meeting.on;
-    if (p.task) return p.task;
-    if (p.waitOn) return W.board.wait(p.waitOn);
-    return "";
-  };
-  /** The wall and floor marks that show what is going on: the clock each minute, the rest when something changes. */
-  function updateData() {
-    const now = new Date();
-    lastMin = now.getHours() * 60 + now.getMinutes();
-    const everyone = [...people.values()],
-      all = everyone.filter((p) => p.home === plan.index);
-    const st = {
-      in: everyone.filter(
-        (p) => p.status !== "offline" && (p.present || p.inLift),
-      ).length,
-      off: everyone.filter((p) => p.status === "offline").length,
-      moving: data ? data.requests.filter((r) => OPEN.has(r.state)).length : 0,
-    };
-    const teams = new Map();
-    for (const p of all) {
-      const t = teams.get(p.team) || { n: 0, off: 0, ask: 0 };
-      t.n++;
-      if (p.status === "offline") t.off++;
-      if (asking(p)) t.ask++;
-      teams.set(p.team, t);
-    }
-    const crew = all
-      .map((p) => {
-        const state = stateOf(p);
-        return {
-          name: p.mine ? W.board.you : p.name,
-          mine: p.mine,
-          look: p.look,
-          state,
-          status:
-            state === "ask"
-              ? p.mine
-                ? W.board.states.ask
-                : W.board.states.deciding
-              : W.board.states[state],
-          now: state === "off" ? "" : nowOf(p),
-          desk: p.stack,
-        };
-      })
-      .sort(
-        (a, b) =>
-          RANK[a.state] - RANK[b.state] ||
-          b.desk - a.desk ||
-          a.name.localeCompare(b.name),
-      );
-    const sign = decision ? "you" : st.moving ? "work" : "quiet";
-    const key = JSON.stringify([crew, sign, [...teams], lastMin]);
-    if (key === dataKey) return;
-    dataKey = key;
-    // The board turns over at most every 2 s, close up with its flaps clacking over. From across the floor it is a
-    // hand's width on screen and its letters a few pixels: there it changes every 4 s, letters swapped in place.
-    const bkey = JSON.stringify([crew, lastMin, st.in, st.off]);
-    if (refs.board?.isConnected && bkey !== refs.boardKey) {
-      const near = FB.w * 0.1 * 8.94 * sc >= 420,
-        wait = (near ? 2000 : 4000) - (performance.now() - (refs.boardAt || 0));
-      if (wait > 0) {
-        if (!refs.boardLater)
-          refs.boardLater = setTimeout(() => {
-            refs.boardLater = 0;
-            dataKey = "";
-          }, wait + 20);
-      } else {
-        const was = {
-          clock: `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
-          rows: crew.slice(0, 8).map((c) => ({
-            name: c.name,
-            status: c.status,
-            now: c.now,
-            desk: String(c.desk),
-          })),
-        };
-        refs.boardAt = performance.now();
-        refs.boardKey = bkey;
-        refs.board.innerHTML = flapFace(
-          { label: plan.name, in: st.in, off: st.off },
-          crew,
-          now,
-          near ? refs.flapWas : was,
-          { ...W.board, date: dateText, in: W.counts.in, off: W.counts.off },
-        );
-        refs.flapWas = was;
-      }
-    }
-    if (refs.sign?.isConnected && sign !== refs.signWas) {
-      refs.signWas = sign;
-      refs.sign.innerHTML = `<g class="gs-in">${signWords(sign, W.sign)}</g>`;
-    }
-    for (const [team, g] of refs.counts) {
-      const t = teams.get(team);
-      if (!t || !g.isConnected) continue;
-      const [x, y] = g.dataset.at.split(",").map(Number),
-        html = countText(x, y, t, W.counts);
-      if (g.__html !== html) {
-        g.__html = html;
-        g.innerHTML = html;
-      }
-    }
-    for (const [key2, g] of refs.dnames) {
-      const p = [...people.values()].find((q) => q.desk.key === key2);
-      if (!p || !g.isConnected) continue;
-      const html = deskLabel(p.desk, p.name, p.status === "offline", W.offTag);
-      if (g.__html !== html) {
-        g.__html = html;
-        g.innerHTML = html;
-      }
-    }
+  function updateClock() {
+    // an example is framed close on its desks, where the clock would show cut in half: it has none
+    if (example || !refs.clock?.isConnected) return;
+    const now = new Date(),
+      crew = [...people.values()]
+        .filter((p) => p.home === plan.index)
+        .map((p) => ({ in: p.status !== "offline", look: p.look }))
+        .sort((a, b) => Number(b.in) - Number(a.in)),
+      minute = Math.floor(now.getTime() / 60000);
+    const key = JSON.stringify([minute, crew.map((c) => c.in)]);
+    if (key === clockKey) return;
+    clockKey = key;
+    refs.clock.innerHTML = clockFace(now, crew, {
+      date: dateText(now),
+      in: W.clock.in,
+    });
   }
   /**
    * Seen from across the floor a mini-me at rest is a few dozen pixels tall and a breath moves it by less than one,
@@ -984,27 +656,7 @@ export function createOffice(
     }
     return simT - (p.lastUpd || 0) > 0.5;
   }
-  /** The sign's chevrons running and the vacuum's light, stepped by hand on the half-rate frames rather than by CSS on every frame. */
-  function runLights() {
-    if (REDUCED) return;
-    if (refs.signWas === "work" && refs.sign?.isConnected) {
-      const ph = (simT % 1.1) / 1.1;
-      for (const el of refs.sign.querySelectorAll("[data-ch]")) {
-        const d = (((ph - Number(el.dataset.ch) * 0.2) % 1) + 1) % 1,
-          o = d < 0.4 ? "1" : "0.2";
-        if (el.getAttribute("opacity") !== o) el.setAttribute("opacity", o);
-      }
-    }
-    if (vac.led) {
-      const o = Math.floor(simT / 0.7) % 2 ? "0.35" : "1";
-      if (vac.ledO !== o) {
-        vac.ledO = o;
-        vac.led.setAttribute("opacity", o);
-      }
-    }
-  }
-
-  // ---- people and their mini-mes
+  // ---- people and their clones
   function buildPeople(roster) {
     for (const p of people.values()) liveOff(p);
     people = new Map();
@@ -1015,7 +667,7 @@ export function createOffice(
         const r = d.id && byId.get(d.id);
         if (!r) continue;
         const look = looksOf(r, r.index),
-          mood = r.status === "offline" ? "sleep" : "idle";
+          mood = "idle";
         const bot = new Bot({
           color: look.color,
           shape: look.shape,
@@ -1026,7 +678,7 @@ export function createOffice(
         const g = document.createElementNS(SVGNS, "g");
         g.setAttribute("class", "bot-g");
         g.setAttribute("data-person", r.id);
-        g.innerHTML = `<ellipse class="shadow-e" rx="34" ry="11" style="display:none"/><g class="bscale"></g><g class="carry" style="display:none"><g class="sheetg"><rect class="sheet" x="-12" y="-15" width="24" height="30" rx="2.5"/><path class="ln" d="M-7 -8H7M-7 -3H7M-7 2H2"/><path class="tick" d="M-4.5 8.5L-1 11.6L5.5 4.6" style="display:none"/></g><g class="mug"><path d="M-8 -8h14v13a5 5 0 0 1 -5 5h-4a5 5 0 0 1 -5 -5z"/><path d="M6 -4a4 4 0 0 1 0 8" style="fill:none"/></g></g>`;
+        g.innerHTML = `<ellipse class="shadow-e" rx="34" ry="11" style="display:none"/><g class="bscale"></g><g class="carry" style="display:none"><g class="sheetg"><rect class="sheet" x="-12" y="-15" width="24" height="30" rx="2.5"/><path class="ln" d="M-7 -8H7M-7 -3H7M-7 2H2"/><path class="tick" d="M-4.5 8.5L-1 11.6L5.5 4.6" style="display:none"/></g></g>`;
         g.querySelector(".bscale").appendChild(bot.el);
         const plate = document.createElement("div");
         plate.className = "plate";
@@ -1065,14 +717,12 @@ export function createOffice(
           inLift: false,
           present: r.status !== "offline",
           fade: null,
-          popAt: 0,
           mood,
           slot: -2,
           doing: null,
           step: 0,
           stepN: 0,
           dir: 0,
-          sweatAt: 0,
           working: false,
           deciding: false,
           task: "",
@@ -1082,15 +732,9 @@ export function createOffice(
     });
     me = [...people.values()].find((p) => p.mine) || null;
   }
-  /** How a mini-me rests when nothing is moving it: asleep when its computer is off, asking while its person decides, at work on a request. */
+  /** How a clone rests when nothing is moving it: asking while its person decides, at work on a request, else at ease. */
   const restMood = (p) =>
-    p.status === "offline"
-      ? "sleep"
-      : asking(p)
-        ? "asking"
-        : p.working
-          ? "working"
-          : "idle";
+    asking(p) ? "asking" : p.working ? "working" : "idle";
   function refreshMood(p) {
     const b = bubbles.get(p.id);
     p.bot.setMood(
@@ -1105,10 +749,7 @@ export function createOffice(
     const was = p.mood;
     p.mood = m;
     refreshMood(p);
-    if ((was === "working") !== (m === "working")) {
-      redraw(p, "lap");
-      redraw(p, "item");
-    }
+    if ((was === "working") !== (m === "working")) redraw(p, "lap");
   }
   function lookAt(p, q) {
     const dx = q.pos[0] - p.pos[0],
@@ -1139,7 +780,7 @@ export function createOffice(
       p.seated = true;
       redraw(p, "lap");
       redraw(p, "lamp");
-      dataKey = "";
+      clockKey = "";
     }
     if (p.stack !== p.want) {
       const more = p.want > p.stack;
@@ -1154,63 +795,6 @@ export function createOffice(
   }
   /** Whether a change can play out on the floor now, rather than just be so. */
   const lively = () => opened && inView && !REDUCED;
-
-  // ---- the robot vacuum: rests a moment, then wanders off somewhere on the floor
-  const vac = {
-    g: null,
-    pos: [16, 100],
-    walk: null,
-    rest: 0,
-    slot: -2,
-    floor: -1,
-  };
-  function vacHome() {
-    vac.floor = plan.index;
-    vac.pos = [16, Math.min(plan.D - 20, 100)];
-    vac.walk = null;
-    vac.rest = simT + 5;
-    vac.slot = -2;
-    if (!vac.g) {
-      vac.g = document.createElementNS(SVGNS, "g");
-      vac.g.setAttribute("class", "vac");
-    }
-    vac.g.innerHTML = roombaSvg();
-    vac.led = vac.g.querySelector(".rb-led");
-    vac.ledO = "";
-  }
-  function moveVac() {
-    if (!vac.g || vac.floor !== plan.index) {
-      liveOff(vac);
-      return;
-    }
-    if (vac.walk) {
-      const w = vac.walk,
-        u = clamp((simT - w.t0) / w.dur, 0, 1),
-        q = along(w.r, u, w.L);
-      vac.pos = [q[0], q[1]];
-      if (u >= 1) {
-        vac.walk = null;
-        vac.rest = simT + 2 + Math.random() * 4;
-      }
-    } else if (simT > vac.rest && !asmUntil) {
-      const r = rounded(
-          findPath(plan, vac.pos, [
-            10 + Math.random() * (plan.W - 20),
-            10 + Math.random() * (plan.D - 20),
-          ]),
-        ),
-        L = lenOf(r);
-      if (L > 14) vac.walk = { r, L, t0: simT, dur: L / 6.5 };
-      else vac.rest = simT + 1;
-    }
-    const [vx, vy] = at(vac.pos[0], vac.pos[1], 0),
-      t = `translate(${r1(vx)} ${r1(vy)})`;
-    if (t !== vac.t) {
-      vac.t = t;
-      vac.g.setAttribute("transform", t);
-    }
-    placeLive(vac, [vx - 34, vy - 26, vx + 34, vy + 16], t);
-  }
 
   // ---- the clock scenes run on: simulated time, so a scene waits while the office is off screen
   class Stop extends Error {}
@@ -1308,7 +892,7 @@ export function createOffice(
     if (t > time - EO) return 1 - (v * (time - t) ** 2) / (2 * EO);
     return (v * EI) / 2 + v * (t - EI);
   }
-  function walkTo(p, target, carry = null, trail = false) {
+  function walkTo(p, target, carry = null) {
     const g = GEN,
       fl = floors[p.floor];
     return new Promise((res, rej) => {
@@ -1324,7 +908,6 @@ export function createOffice(
         res,
         rej,
         g,
-        trail: trail && p.floor === plan.index ? drawTrail(r) : null,
       };
       p.carry = carry;
       p.seated = false;
@@ -1332,14 +915,6 @@ export function createOffice(
       p.stepN = 0;
       refreshMood(p);
     });
-  }
-  /** A walk's way drawn as a dotted line on the floor, rubbed out as it is walked. */
-  function drawTrail(r) {
-    const el = document.createElementNS(SVGNS, "path");
-    el.setAttribute("class", "trail");
-    el.setAttribute("d", `M${r.map((q) => P([at(q[0], q[1])])).join("L")}`);
-    (refs.marks || gUnder).appendChild(el);
-    return el;
   }
   function flyPlane(from, to, ms) {
     const g = GEN;
@@ -1354,15 +929,13 @@ export function createOffice(
         rej,
         g,
         el: null,
-        wake: null,
-        pts: [],
       }),
     );
   }
-  /** Folded and thrown: the plane arcs high over the floor, trailing dots, and lands on the other's tray. */
+  /** Folded and thrown: the plane arcs over the floor and lands on the other's tray. */
   async function throwPlane(a, b, pile = true) {
     lookAt(a, b);
-    leap(a, "hop");
+    leap(a, "tap");
     await wait(260);
     const from = carryAt(a),
       to = trayOf(b),
@@ -1373,12 +946,6 @@ export function createOffice(
       b.stack++;
       redraw(b, "stack", true);
     }
-    fx("ticks", null, {
-      at: [to[0], to[1] - 4],
-      anim: "pop",
-      dur: 0.55,
-      scale: 0.8,
-    });
   }
   const farOff = (a, b) =>
     a.floor === b.floor &&
@@ -1428,91 +995,13 @@ export function createOffice(
       to.stack++;
       redraw(to, "stack", true);
     }
-    const tp = trayOf(to);
-    fx("ticks", null, {
-      at: [tp[0], tp[1] - 4],
-      anim: "pop",
-      dur: 0.55,
-      scale: 0.8,
-    });
   }
 
-  // ---- doodles that pop up around a mini-me
+  // ---- where a clone's head is, for what is said over it
   const headOfWorld = (p) => {
     const [fx0, fy0] = at(p.pos[0], p.pos[1], p.z);
     return [fx0, fy0 - (p.lift || 0) - BODY_PX * 0.96 * boost];
   };
-  const FX_SPOTS = {
-    bang: [0.36, 0.06],
-    ask: [0.4, 0.08],
-    drip: [-0.36, 0.3],
-    heart: [0.3, 0.02],
-  };
-  function fx(kind, p, o = {}) {
-    if (REDUCED || !inView) return;
-    if (p && p.floor !== plan.index) return;
-    const el = document.createElementNS(SVGNS, "g");
-    el.setAttribute("class", `fx-${o.anim || "pop"}${o.ember ? " fx-e" : ""}`);
-    const dur = o.dur || 0.95;
-    el.style.setProperty("--dur", `${dur}s`);
-    el.innerHTML = `<g class="fx-in"${o.delay ? ` style="animation-delay:${o.delay}s"` : ""}><g class="boil"><g>${FXD[kind](0)}</g><g>${FXD[kind](1)}</g></g></g>`;
-    gFx.appendChild(el);
-    const spot = FX_SPOTS[kind] || [0, 0];
-    fxs.push({
-      el,
-      p,
-      at: o.at,
-      dx: o.dx ?? spot[0] * BODY_PX,
-      dy: o.dy ?? spot[1] * BODY_PX,
-      t0: simT,
-      dur: dur + (o.delay || 0),
-      scale: o.scale || 1,
-      gen: GEN,
-    });
-  }
-  const sparkle = (p) => {
-    fx("spark", p, {
-      anim: "twinkle",
-      dx: -0.5 * BODY_PX,
-      dy: -0.12 * BODY_PX,
-      dur: 1.1,
-      scale: 0.8,
-    });
-    fx("spark", p, {
-      anim: "twinkle",
-      dx: 0.46 * BODY_PX,
-      dy: -0.22 * BODY_PX,
-      dur: 1.2,
-      delay: 0.15,
-    });
-    fx("spark", p, {
-      anim: "twinkle",
-      dx: 0.62 * BODY_PX,
-      dy: 0.3 * BODY_PX,
-      dur: 1,
-      delay: 0.3,
-      scale: 0.65,
-    });
-  };
-  function drawFx() {
-    for (let i = fxs.length - 1; i >= 0; i--) {
-      const f = fxs[i];
-      if (
-        f.gen !== GEN ||
-        simT - f.t0 > f.dur + 0.05 ||
-        (f.p && f.p.floor !== plan.index)
-      ) {
-        f.el.remove();
-        fxs.splice(i, 1);
-        continue;
-      }
-      const [x, y] = f.p ? headOfWorld(f.p) : f.at;
-      f.el.setAttribute(
-        "transform",
-        `translate(${r1(x + f.dx * boost)} ${r1(y + f.dy * boost)}) scale(${r2(f.scale * boost)})`,
-      );
-    }
-  }
 
   // ---- words above heads
   function say(p, text, ms = 2600, kind = "say") {
@@ -1545,7 +1034,7 @@ export function createOffice(
     bubbles.delete(p.id);
     refreshMood(p);
   }
-  /** What waits for the viewer: their mini-me asks, in ember, over its head, with a way to answer. */
+  /** What waits for the viewer: their clone asks, in ember, over its head, with a way to answer. */
   function showDecision(text) {
     if (!me) return;
     const fresh = !decision;
@@ -1553,7 +1042,6 @@ export function createOffice(
     if (fresh) {
       me.bot.gaze = null;
       setMood(me, "asking");
-      fx("ask", me, { ember: true, dur: 1.6 });
     }
     const cur = bubbles.get(me.id);
     if (cur?.kind === "ask mine" && cur.full === text) return;
@@ -1565,7 +1053,6 @@ export function createOffice(
     b.el.addEventListener("click", (e) => {
       if (e.target.closest("[data-a]")) onAnswer?.();
     });
-    dataKey = "";
   }
   function clearDecision() {
     if (!decision || !me) return;
@@ -1573,7 +1060,6 @@ export function createOffice(
     const cur = bubbles.get(me.id);
     if (cur?.kind.startsWith("ask")) unsay(me);
     settle(me);
-    dataKey = "";
   }
 
   // ---- comings and goings: the lift is the way in and out
@@ -1591,7 +1077,7 @@ export function createOffice(
     await wait(350);
     p.inLift = false;
   }
-  /** Computer on: the mini-me steps out of the lift with a hop and goes to its desk; the laptop opens, the lamp comes on. */
+  /** Computer on: the clone steps out of the lift and goes to its desk; the laptop opens, the lamp comes on. */
   async function comeIn(p, solo = false) {
     p.busy = true;
     try {
@@ -1602,10 +1088,8 @@ export function createOffice(
       p.seated = false;
       p.present = true;
       p.carry = null;
-      p.popAt = simT - 9;
       p.fade = { t0: simT, dur: 0.32 };
-      leap(p, "hop");
-      dataKey = "";
+      clockKey = "";
       await wait(260);
       if (solo) say(p, W.say.isIn(p.name), 1500, "say small");
       await walkTo(p, p.desk.seat);
@@ -1619,13 +1103,13 @@ export function createOffice(
       settle(p);
     }
   }
-  /** Computer off: the laptop shuts, the lamp goes out, and the mini-me walks into the lift and is gone. */
+  /** Computer off: the laptop shuts, the lamp goes out, and the clone walks into the lift and is gone. */
   async function goOut(p) {
     p.busy = true;
     try {
       redraw(p, "lap");
       redraw(p, "lamp");
-      dataKey = "";
+      clockKey = "";
       say(p, W.say.bye(p.name), 1700, "say small");
       await wait(1100);
       const fl = floors[p.floor];
@@ -1639,24 +1123,9 @@ export function createOffice(
       p.seated = true;
       p.pos = [...p.desk.seat];
       p.fade = null;
-      dataKey = "";
     } finally {
       p.busy = false;
       settle(p);
-    }
-  }
-  /** As the office opens, a few come in through the lift: a short queue out of the doors, each to their own desk. */
-  async function opening(list, after) {
-    if (!list.length) return;
-    await wait(after);
-    const gap = list.length > 8 ? 260 : 380;
-    openLift((list.length * gap) / 1000 + 1);
-    await wait(420);
-    for (const p of list) {
-      p.coming = false;
-      if (p.status !== "offline") spawn(() => comeIn(p));
-      else settle(p);
-      await wait(gap);
     }
   }
   async function goTo(p, to, carry) {
@@ -1664,7 +1133,7 @@ export function createOffice(
       await walkTo(p, floors[p.floor].lift, carry);
       await liftRide(p, to.floor);
     }
-    await walkTo(p, to.desk.spot, carry, true);
+    await walkTo(p, to.desk.spot, carry);
   }
   async function goHome(p) {
     if (p.floor !== p.home) {
@@ -1682,7 +1151,7 @@ export function createOffice(
   const latest = (id) => data?.requests.find((r) => r.id === id);
 
   // ---- a request's life, as the relay reports it
-  /** Asked: the asker's mini-me carries it over (or throws it, folded, when the desk is far) and it lands on the pile. */
+  /** Asked: the asker's clone carries it over (or throws it, folded, when the desk is far) and it lands on the pile. */
   async function handOver(r) {
     const a = people.get(r.from),
       b = people.get(r.to);
@@ -1695,7 +1164,6 @@ export function createOffice(
     }
     a.busy = b.busy = true;
     a.doing = { kind: "ask", who: b };
-    dataKey = "";
     const far = farOff(a, b),
       what = clip(r.text, 70);
     const home = () => (far ? Promise.resolve() : goHome(a));
@@ -1723,28 +1191,22 @@ export function createOffice(
         return;
       }
       lookAt(b, a);
-      fx("bang", b);
-      leap(b, "flip");
-      setMood(b, "surprised");
-      await wait(820);
-      say(b, W.say.gotIt, 1800);
-      await wait(1400);
+      await wait(900);
       b.bot.gaze = null;
       const back = home();
       if (latest(r.id)?.state !== "SUBMITTED") {
-        await wait(500);
+        await wait(300);
         await takeUp(b);
       }
       await back;
     } finally {
       a.busy = b.busy = false;
       a.doing = null;
-      dataKey = "";
       settle(a);
       settle(b);
     }
   }
-  /** Taken up: the sheet goes from the pile onto the laptop and the mini-me gets to work. */
+  /** Taken up: the sheet goes from the pile onto the laptop and the clone gets to work. */
   async function takeUp(b) {
     if (b.stack > 0) {
       b.stack--;
@@ -1783,7 +1245,6 @@ export function createOffice(
     }
     a.busy = b.busy = true;
     b.doing = { kind: "answer", who: a };
-    dataKey = "";
     const far = farOff(a, b),
       done = r.state === "COMPLETED",
       text = clip(r.answer, 90);
@@ -1805,17 +1266,7 @@ export function createOffice(
         await wait(140);
         await place(b, a, "done", false);
       }
-      if (done) {
-        leap(a, "hop");
-        setMood(a, "happy");
-        sparkle(a);
-        stamp(a);
-        say(a, W.say.thanks(b.name), 1800);
-      } else {
-        lookAt(a, b);
-        fx("ask", a, { ember: a.mine, dur: 1.4 });
-        leap(a, "tap");
-      }
+      if (done) stamp(a);
       await wait(1300);
       const homeB = far ? Promise.resolve() : goHome(b);
       await wait(900);
@@ -1824,12 +1275,11 @@ export function createOffice(
     } finally {
       a.busy = b.busy = false;
       b.doing = null;
-      dataKey = "";
       settle(a);
       settle(b);
     }
   }
-  /** DONE thumped on the floor by the desk whose request came back answered. */
+  /** DONE stamped on the floor by the desk whose request came back answered. */
   function stamp(p) {
     if (REDUCED || p.floor !== plan.index) return;
     const g = document.createElementNS(SVGNS, "g");
@@ -1838,54 +1288,7 @@ export function createOffice(
     setTimeout(() => g.remove(), 3600);
   }
 
-  // ---- the office between requests: now and then someone free goes for tea
-  async function teaRun(p) {
-    const fl = floors[p.floor],
-      spot = fl.spots.tea;
-    if (!spot) return;
-    p.busy = true;
-    p.doing = { kind: "tea" };
-    try {
-      await walkTo(p, spot);
-      p.bot.gaze = [-4, -6];
-      if (refs.steam?.isConnected) refs.steam.classList.add("on");
-      await wait(2600);
-      if (refs.steam) refs.steam.classList.remove("on");
-      leap(p, "bounce");
-      setMood(p, "happy");
-      fx("heart", p, { dur: 1.1, scale: 0.75 });
-      await wait(560);
-      await walkTo(p, p.desk.seat, "cup");
-      p.seated = true;
-      p.pos = [...p.desk.seat];
-      p.carry = null;
-      leap(p, "tap");
-    } finally {
-      p.busy = false;
-      p.doing = null;
-      p.bot.gaze = null;
-      settle(p);
-    }
-  }
-  async function life() {
-    await wait(14000);
-    for (;;) {
-      await wait(9000 + Math.random() * 9000);
-      const free = [...people.values()].filter(
-        (p) =>
-          !p.busy &&
-          !p.mine &&
-          p.status === "active" &&
-          here(p) &&
-          p.seated &&
-          restMood(p) === "idle",
-      );
-      if (free.length)
-        spawn(() => teaRun(free[Math.floor(Math.random() * free.length)]));
-    }
-  }
-
-  // ---- a meeting of the mini-mes: those in it gather round the reading corner's low table, each
+  // ---- a meeting of the clones: those in it gather round the reading corner's low table, each
   // says its piece over its head as it comes in, and they go back to their desks once it is over
   let meet = null;
   /** Places round the low table for `n` mini-mes, on the side away from the shelf. */
@@ -1959,7 +1362,7 @@ export function createOffice(
             const to = said.replyTo && m.posts.get(said.replyTo);
             const other = to && people.get(to.from);
             if (other && other !== who && here(other)) lookAt(who, other);
-            leap(who, "bounce");
+            leap(who, "tap");
             const ms = 5500 + Math.min(4500, said.text.length * 28);
             say(who, clip(said.text, 96), ms, "say meet");
             await wait(ms - 400);
@@ -2076,34 +1479,12 @@ export function createOffice(
     Math.max(a[2], b[2]),
     Math.max(a[3], b[3]),
   ];
-  const rectOf = (pts) => [
-    Math.min(...pts.map((q) => q[0])),
-    Math.min(...pts.map((q) => q[1])),
-    Math.max(...pts.map((q) => q[0])),
-    Math.max(...pts.map((q) => q[1])),
-  ];
-  const boardBounds = (fl) => {
-    const B = fl.board,
-      pts = [];
-    for (const lx of [0, FB.w])
-      for (const ly of [0, FB.h])
-        pts.push(at(B.x, B.y - lx * 0.1, B.z - ly * 0.1));
-    return rectOf(pts);
-  };
-  const signBounds = (fl) => {
-    const G = fl.sign,
-      pts = [];
-    for (const lx of [0, SIGN.w])
-      for (const ly of [0, SIGN.h])
-        pts.push(at(G.x + ly * 0.1, G.y - lx * 0.1, -2.6));
-    return rectOf(pts);
-  };
-  /** Mini-mes are never drawn smaller than this on screen, as Thursday keeps its bots. */
+  /** Clones are never drawn smaller than this on screen, as Thursday keeps its bots. */
   let boost = 1;
   function setCam(v) {
     cam = v;
     sc = cw / v.w;
-    boost = Math.max(1, 36 / (BODY_PX * sc));
+    boost = Math.max(1, (mini ? 18 : 36) / (BODY_PX * sc));
     const vb = `${r1(v.x)} ${r1(v.y)} ${r1(v.w)} ${r1(v.h)}`;
     for (const el of sheets) el.setAttribute("viewBox", vb);
   }
@@ -2113,7 +1494,7 @@ export function createOffice(
       buildScene();
       return;
     }
-    if (!asmUntil) buildScene(false, v);
+    buildScene(v);
     anim = { from: { ...cam }, to: v, t0: performance.now(), ms };
   }
   const narrow = () => cw < 760;
@@ -2125,7 +1506,7 @@ export function createOffice(
     let box = null;
     for (const p of people.values()) {
       if (p.home !== plan.index || !p.desk) continue;
-      // The desk itself with its chair and the spot before it, and a mini-me standing tall there.
+      // The desk itself with its chair and the spot before it, and a clone standing tall there.
       const d = p.desk,
         r = screenBounds([d.x0 - 6, d.y0 - 10, d.x1 + 6, d.y1 + 10, 0, 26]);
       box = box ? union(box, r) : r;
@@ -2142,30 +1523,71 @@ export function createOffice(
           : { t: 120, b: 96, l: 56 + insetL, r: 56 + insetR },
         1.7,
       );
-    return fitRect(
-      union(
-        union(
-          screenBounds([-6, -6, plan.W + 4, plan.D + 4, -2.6, WALL_H]),
-          boardBounds(plan),
-        ),
-        signBounds(plan),
-      ),
-      narrow()
-        ? { t: 48, b: onAsk ? 140 : 70, l: 10, r: 10 }
-        : { t: 44, b: 84, l: 16 + insetL, r: 16 + insetR },
-    );
+    const bounds = screenBounds([-6, -6, plan.W + 4, plan.D + 4, -2.6, WALL_H]);
+    // a glimpse beside the chat: the whole floor, with room for the line laid along its foot
+    if (mini) return fitRect(bounds, { t: 8, b: 54, l: 8, r: 8 });
+    if (narrow())
+      return fitRect(bounds, { t: 48, b: onAsk ? 140 : 70, l: 10, r: 10 });
+    const ins = { t: 44, b: 84, l: 16 + insetL, r: 16 + insetR };
+    if (!insetR || !insetH) return fitRect(bounds, ins);
+    // A panel at the right that ends partway down covers only the empty corner above the floor's
+    // right end: the floor takes as much of the width as keeps it clear of the panel.
+    const panelRect = [cw - insetR, 0, cw, insetH + 12];
+    let lo = 16,
+      hi = 16 + insetR;
+    if (clearOf(fitRect(bounds, { ...ins, r: lo }), panelRect)) hi = lo;
+    else
+      for (let k = 0; k < 8; k++) {
+        const mid = (lo + hi) / 2;
+        if (clearOf(fitRect(bounds, { ...ins, r: mid }), panelRect)) hi = mid;
+        else lo = mid;
+      }
+    return fitRect(bounds, { ...ins, r: hi });
   };
-  /** The scoreboard, as large as it fits. */
-  const boardView = () => {
-    const r = boardBounds(plan);
-    return fitRect(
-      [r[0] - 30, r[1] - 30, r[2] + 30, r[3] + 10],
-      narrow()
-        ? { t: 56, b: onAsk ? 150 : 80, l: 8, r: 8 }
-        : { t: 56, b: 96, l: 40 + insetL, r: 40 + insetR },
-      2.6,
-    );
-  };
+  /** Whether the floor seen through camera `v` keeps clear of a rectangle on the screen, in pixels. */
+  function clearOf(v, [x0, y0, x1, y1]) {
+    const s = cw / v.w,
+      { W: FW, D } = plan,
+      // its outline: the walls' tops at the back, the floor's corners at the front (it is convex)
+      poly = [
+        at(0, D, WALL_H),
+        at(0, 0, WALL_H),
+        at(FW, 0, WALL_H),
+        at(FW, 0, 0),
+        at(FW, D, 0),
+        at(0, D, 0),
+      ].map(([u, w]) => [(u - v.x) * s, (w - v.y) * s]),
+      rect = [
+        [x0, y0],
+        [x1, y0],
+        [x1, y1],
+        [x0, y1],
+      ];
+    // two convex shapes are clear of each other when some edge's normal separates them
+    const axes = [
+      [1, 0],
+      [0, 1],
+      ...poly.map((p, i) => {
+        const q = poly[(i + 1) % poly.length];
+        return [q[1] - p[1], p[0] - q[0]];
+      }),
+    ];
+    return axes.some(([ax, ay]) => {
+      const span = (pts) => {
+        let a = Infinity,
+          b = -Infinity;
+        for (const [px, py] of pts) {
+          const d = px * ax + py * ay;
+          a = Math.min(a, d);
+          b = Math.max(b, d);
+        }
+        return [a, b];
+      };
+      const [p0, p1] = span(poly),
+        [r0, r1] = span(rect);
+      return p1 <= r0 || r1 <= p0;
+    });
+  }
   const deskView = (p) => {
     const d = p.desk;
     return viewFor(
@@ -2214,7 +1636,6 @@ export function createOffice(
   }
   function closeFocus() {
     focus = null;
-    boardOn = false;
     closePanel();
     setViewSeg("office");
     if (plan) glide(floorView());
@@ -2289,14 +1710,6 @@ export function createOffice(
     userMoved = true;
     glide(deskView(p), 850);
   }
-  function showBoard() {
-    focus = null;
-    closePanel();
-    boardOn = true;
-    userMoved = true;
-    setViewSeg("board");
-    glide(boardView(), 900);
-  }
   function setViewSeg(v) {
     for (const b of viewSeg.children)
       b.setAttribute("aria-pressed", String(b.dataset.view === v));
@@ -2312,27 +1725,12 @@ export function createOffice(
       p.pos = [x, y];
       p.z = lerp(p.z, 0, 1 - Math.exp(-dt * 14));
       p.step = (w.L * pr) / STEP;
-      const n = Math.floor(p.step);
-      if (n !== p.stepN && u < 0.98) {
-        p.stepN = n;
-        if (n % 4 === 0 && p.floor === plan.index)
-          fx("puff", null, {
-            at: at(x, y, 0),
-            anim: "ring",
-            dur: 0.5,
-            scale: 0.7,
-          });
-      }
       const sx = (dx - dy) * 0.894,
         sy = (dx + dy) * 0.447,
         L = Math.hypot(sx, sy);
       if (L > 0.001) {
         p.bot.gaze = [(sx / L) * 11, (sy / L) * 5 - 1];
         p.dir = lerp(p.dir, sx / L, 1 - Math.exp(-dt * 10));
-      }
-      if (w.trail) {
-        w.trail.setAttribute("opacity", r2(1 - pr));
-        if (u >= 1) w.trail.remove();
       }
       if (u >= 1) {
         p.walk = null;
@@ -2370,23 +1768,10 @@ export function createOffice(
         sy *= l.sy;
       }
     }
-    const pu = simT - p.popAt;
     if (p.fade) {
       const u = clamp((simT - p.fade.t0) / p.fade.dur, 0, 1);
       alpha = p.fade.out ? 1 - u : u;
       if (u >= 1 && !p.fade.out) p.fade = null;
-    }
-    if (pu < 0) alpha = 0;
-    else if (pu < DROP_FALL + DROP_LAND) {
-      const d = dropAt(pu);
-      lift += d.lift * BODY_PX * boost;
-      sx *= d.sx;
-      sy *= d.sy;
-      alpha = d.alpha;
-      if (!p.landed && pu > DROP_FALL) {
-        p.landed = true;
-        fx("puff", null, { at: [fx0, fy0], anim: "ring", dur: 0.55 });
-      }
     }
     p.lift = lift;
     const k = p.k * boost,
@@ -2428,7 +1813,6 @@ export function createOffice(
     if (ck !== p.ck) {
       p.ck = ck;
       p.carryG.style.display = ck ? "" : "none";
-      p.carryG.setAttribute("class", `carry${ck === "cup" ? " cup" : ""}`);
       p.tickG.style.display = ck === "done" ? "" : "none";
     }
     if (ck) {
@@ -2484,7 +1868,7 @@ export function createOffice(
     a.sv = sheetEl("act");
     a.sv.appendChild(a.g);
     a.cv = sheetEl("cov");
-    a.cv.innerHTML = `<defs><clipPath id="of-lc${n}">${a.bot ? "<path/><ellipse/>" : `<ellipse rx="27" ry="15" cy="-5"/>`}</clipPath></defs><g class="cl" clip-path="url(#of-lc${n})"></g>`;
+    a.cv.innerHTML = `<defs><clipPath id="of-lc${n}"><path/><ellipse/></clipPath></defs><g class="cl" clip-path="url(#of-lc${n})"></g>`;
     a.cl = a.cv.lastChild;
     a.clipP = a.cv.querySelector("clipPath").firstChild;
     a.clipE = a.cv.querySelector("ellipse");
@@ -2504,8 +1888,6 @@ export function createOffice(
     }
     a.slot = -2;
   }
-  /** A piece is copied once it has finished arriving, so a copy never shows it whole while the drawing is still sketching it in. */
-  const settled = (o) => !asmUntil || simT >= asmT0 + (o.t0 + 1500) / 1000;
   const placed = [];
   function placeLive(a, rect, clipT) {
     liveOf(a);
@@ -2515,7 +1897,6 @@ export function createOffice(
     if (
       a.occKey === null ||
       s !== a.slot ||
-      asmUntil ||
       !n ||
       rect[0] < n[0] ||
       rect[1] < n[1] ||
@@ -2535,8 +1916,7 @@ export function createOffice(
           nb[0] < b[2] &&
           b[1] < nb[3] &&
           nb[1] < b[3] &&
-          o.node &&
-          settled(o)
+          o.node
         ) {
           list.push(o);
           key += `${i},`;
@@ -2576,12 +1956,7 @@ export function createOffice(
         a.occ = list;
       }
     }
-    if (!a.bot) {
-      if (clipT !== a.clipT) {
-        a.clipT = clipT;
-        a.clipE.setAttribute("transform", clipT);
-      }
-    } else if (
+    if (
       a.occ.length &&
       (clipT !== a.clipT ||
         a.bot.mood !== a.clipMood ||
@@ -2601,15 +1976,24 @@ export function createOffice(
         a.clipD = d;
         a.clipP.setAttribute("d", d);
       }
-      a.clipP.setAttribute(
-        "transform",
-        `${clipT} translate(${CX} ${ay}) scale(1.05 1.08) translate(${-CX} ${-ay})`,
-      );
-      const sh = a.shadow;
-      if (sh.style.display === "none") a.clipE.setAttribute("rx", "0");
-      else
-        for (const k of ["cx", "cy", "rx", "ry"])
-          a.clipE.setAttribute(k, sh.getAttribute(k));
+      const ct = `${clipT} translate(${CX} ${ay}) scale(1.05 1.08) translate(${-CX} ${-ay})`;
+      if (ct !== a.clipPT) {
+        a.clipPT = ct;
+        a.clipP.setAttribute("transform", ct);
+      }
+      // the shadow's ellipse, or none while it sits: written only when it changes
+      const sh = a.shadow,
+        ek =
+          sh.style.display === "none"
+            ? "0"
+            : ["cx", "cy", "rx", "ry"].map((k) => sh.getAttribute(k)).join(" ");
+      if (ek !== a.clipEK) {
+        a.clipEK = ek;
+        if (ek === "0") a.clipE.setAttribute("rx", "0");
+        else
+          for (const k of ["cx", "cy", "rx", "ry"])
+            a.clipE.setAttribute(k, sh.getAttribute(k));
+      }
     }
     placed.push(a);
   }
@@ -2636,7 +2020,6 @@ export function createOffice(
       const f = fliers[i];
       if (f.g !== GEN) {
         if (f.el) f.el.remove();
-        if (f.wake) f.wake.remove();
         fliers.splice(i, 1);
         continue;
       }
@@ -2645,9 +2028,6 @@ export function createOffice(
           f.el = document.createElementNS(SVGNS, "g");
           f.el.setAttribute("class", "plane");
           f.el.innerHTML = PLANE;
-          f.wake = document.createElementNS(SVGNS, "path");
-          f.wake.setAttribute("class", "wake");
-          gFly.appendChild(f.wake);
           gFly.appendChild(f.el);
         }
         const u = clamp((simT - f.t0) / f.dur, 0, 1),
@@ -2663,20 +2043,12 @@ export function createOffice(
         const [x, y] = pos(u),
           [x2, y2] = pos(Math.min(1, u + 0.02)),
           ang = (Math.atan2(y2 - y, x2 - x) * 180) / Math.PI;
-        f.pts.push([x, y]);
-        f.wake.setAttribute(
-          "d",
-          `M${f.pts.map((q) => `${r1(q[0])} ${r1(q[1])}`).join("L")}`,
-        );
         f.el.setAttribute(
           "transform",
           `translate(${r1(x)} ${r1(y)}) rotate(${r1(ang)}) scale(${r2((1 - 0.3 * u) * boost)})`,
         );
         if (u >= 1) {
           f.el.remove();
-          const w = f.wake;
-          w.style.opacity = "0";
-          setTimeout(() => w.remove(), 700);
           fliers.splice(i, 1);
           f.res();
         }
@@ -2708,29 +2080,38 @@ export function createOffice(
     const [hx, hy] = headOfWorld(p);
     return toScreen(hx, hy - 18);
   }
+  /** What a clone's name tag says beside its name: only what is so now, and nothing for one at ease. */
   function plateOf(p) {
+    if (!p.present) return [W.plate.off, "off"];
     if (asking(p))
       return [
         p.mine ? W.plate.needsYou : W.plate.deciding,
         p.mine ? "mine" : "on",
       ];
-    const n = p.stack,
-      more = n ? ` · ${W.plate.onDesk(n)}` : "";
-    if (p.status === "offline") return [`${W.plate.computerOff}${more}`, "off"];
     const d = p.doing;
     if (d && (d.kind === "ask" || d.kind === "answer"))
       return [W.plate.goingTo(d.who.name), "on"];
     if (d?.kind === "meeting") return [W.meeting.on, "on"];
-    if (p.mood === "working") return [`${W.plate.working}${more}`, "on"];
-    if (p.status === "away") return [`${W.plate.away}${more}`, ""];
-    return [`${W.plate.free}${more}`, ""];
+    if (p.mood === "working") return [W.plate.working, "on"];
+    if (p.status === "away") return [W.plate.away, ""];
+    return ["", ""];
   }
+  /** Over each clone its name and what it is on; at an empty desk, whose it is. Close enough, everyone's shows. */
   function updateOverlays() {
-    const detail = BODY_PX * sc >= 58;
+    const near = example || BODY_PX * sc * boost >= 34,
+      detail = BODY_PX * sc >= 58;
     for (const p of people.values()) {
-      const onFloor = p.floor === plan.index && !p.inLift && p.present,
+      const home = p.home === plan.index,
+        onFloor = p.floor === plan.index && !p.inLift && p.present,
         b = bubbles.get(p.id);
-      const [hx, hy] = onFloor ? headOf(p) : [-9999, -9999];
+      let hx = -9999,
+        hy = -9999;
+      if (onFloor) [hx, hy] = headOf(p);
+      else if (home && !p.present) {
+        const [cx, cy] = p.desk.seat,
+          w = at(cx, cy, SEAT_Z + 10);
+        [hx, hy] = toScreen(w[0], w[1]);
+      }
       const inside = hx > -160 && hx < cw + 160 && hy > -80 && hy < ch + 240;
       if (b) {
         if (b.typed < b.full.length && EVEN) {
@@ -2741,26 +2122,23 @@ export function createOffice(
         const show =
           onFloor &&
           inside &&
-          simT >= p.popAt + 0.6 &&
-          // a meeting is watched from afar too: what the mini-mes say there always shows
+          // a meeting is watched from afar too: what the clones say there always shows
           (detail ||
             p.mine ||
             b.kind.includes("mine") ||
             b.kind.includes("meet"));
         if (b.el.hidden === show) b.el.hidden = !show;
-        if (show)
-          b.el.style.transform = `translate(${r1(hx)}px, ${r1(hy - 4)}px) translate(-50%, -100%)`;
+        const t = `translate(${r1(hx)}px, ${r1(hy - 4)}px) translate(-50%, -100%)`;
+        if (show && b.t !== t) {
+          b.t = t;
+          b.el.style.transform = t;
+        }
       }
       const showPlate =
-        onFloor &&
+        (onFloor || (home && !p.present)) &&
         inside &&
         !bubbles.has(p.id) &&
-        simT >= p.popAt + 0.9 &&
-        (hover === p.id ||
-          focus === p ||
-          p.mine ||
-          example ||
-          (detail && (p.status === "offline" || p.stack >= 8 || asking(p))));
+        (near || hover === p.id || focus === p || p.mine || asking(p));
       if (!showPlate) {
         if (!p.plate.hidden) p.plate.hidden = true;
         continue;
@@ -2771,10 +2149,14 @@ export function createOffice(
       if (key !== p.plateKey) {
         p.plateKey = key;
         p.plate.className = `plate${cls ? ` ${cls}` : ""}${p.mine ? " you" : ""}`;
-        p.plate.innerHTML = `<i></i><b>${esc(p.mine ? W.plate.you(p.name) : p.name)}</b><span>${esc(label)}</span>`;
+        p.plate.innerHTML = `<i></i><b>${esc(p.mine ? W.plate.you(p.name) : p.name)}</b>${label ? `<span>${esc(label)}</span>` : ""}`;
       }
       if (p.plate.hidden) p.plate.hidden = false;
-      p.plate.style.transform = `translate(${r1(hx)}px, ${r1(hy)}px) translate(-50%, -100%)`;
+      const t = `translate(${r1(hx)}px, ${r1(hy)}px) translate(-50%, -100%)`;
+      if (p.plateT !== t) {
+        p.plateT = t;
+        p.plate.style.transform = t;
+      }
     }
     const k = decision ? "1" : "0";
     if (hudTR.dataset.k !== k) {
@@ -2783,16 +2165,14 @@ export function createOffice(
         ? `<button type="button" class="chip need" data-need><span class="dot"></span>${esc(W.needsYouChip)}</button>`
         : "";
     }
-    const mine = [...people.values()].filter((p) => p.home === plan.index),
-      inNow = mine.filter((p) => p.status !== "offline" && p.present).length;
-    const tl = `${plan.index}|${mine.length}|${inNow}|${floors.length}`;
+    // the floors, when the team takes more than one
+    const tl = `${plan.index}|${floors.length}`;
     if (hudTL.dataset.k !== tl) {
       hudTL.dataset.k = tl;
       hudTL.innerHTML =
-        (floors.length > 1
+        floors.length > 1
           ? `<div class="floors" role="group" aria-label="${esc(W.floorGroup)}">${floors.map((_f, i) => `<button type="button" data-f="${i}" aria-pressed="${i === plan.index}">${BASE_FLOOR + i}F</button>`).join("")}</div>`
-          : "") +
-        `<span class="note"><b>${esc(plan.name)}</b> · ${esc(W.people(mine.length))}</span>`;
+          : "";
     }
   }
   function switchFloor(i) {
@@ -2802,10 +2182,9 @@ export function createOffice(
     for (const p of people.values()) {
       liveOff(p);
       p.occKey = null;
-      p.lampG = p.lapG = p.stkG = p.itemG = null;
+      p.deskG = null;
     }
     anim = null;
-    vacHome();
     buildScene();
   }
 
@@ -2845,15 +2224,7 @@ export function createOffice(
       return;
     }
     const t = d.target?.closest ? d.target.closest("[data-person]") : null;
-    if (t?.dataset.person) {
-      const pp = people.get(t.dataset.person);
-      if (pp && here(pp) && !pp.walk) {
-        leap(pp, "hop");
-        fx("heart", pp, { dur: 1, scale: 0.85 });
-      }
-      boardOn = false;
-      focusOn(t.dataset.person);
-    } else if (d.target?.closest?.(".board-hit")) showBoard();
+    if (t?.dataset.person) focusOn(t.dataset.person);
   });
   on(window, "pointercancel", () => {
     drag = null;
@@ -2928,12 +2299,9 @@ export function createOffice(
     const b = e.target.closest("button");
     if (!b || !plan) return;
     if (b.dataset.view === "desk") {
-      boardOn = false;
       if (me) focusOn(me.id);
-    } else if (b.dataset.view === "board") showBoard();
-    else {
+    } else {
       focus = null;
-      boardOn = false;
       closePanel();
       setViewSeg("office");
       if (me && me.home !== plan.index) switchFloor(me.home);
@@ -2952,7 +2320,7 @@ export function createOffice(
     input.value = "";
     ask(v);
   });
-  /** Hands a request to the viewer's mini-me: it hears it over its desk, and the conversation takes it from there. */
+  /** Hands a request to the viewer's clone: it hears it over its desk, and the conversation takes it from there. */
   function ask(text) {
     onAsk?.(text);
     if (!me || !here(me)) return;
@@ -2969,7 +2337,7 @@ export function createOffice(
     }
   }
   on(document, "keydown", (e) => {
-    if (e.key === "Escape" && (focus || boardOn) && inView) closeFocus();
+    if (e.key === "Escape" && focus && inView) closeFocus();
   });
 
   // ---- the way in: the company's building and a card to clock in; clocking in rides the lift up to our floor
@@ -3027,9 +2395,8 @@ export function createOffice(
     if (!lobbyEl || !plan) return;
     lobbyOn = true;
     entering = false;
-    for (const g of [gBack, gFloor, gWalls, gScene, gNotes, gUnder, gFly, gFx])
-      g.innerHTML = "";
-    for (const a of [...people.values(), vac]) liveOff(a);
+    for (const g of [gFloor, gWalls, gScene, gUnder, gFly]) g.innerHTML = "";
+    for (const a of people.values()) liveOff(a);
     const walkers = [...people.values()]
       .filter((p) => !p.mine && p.status !== "offline")
       .slice(0, 5)
@@ -3113,13 +2480,13 @@ export function createOffice(
     if (!lobbyOn || entering) return;
     entering = true;
     wantLobby = false;
-    onClockIn?.();
     const g = GEN;
     lobbyEl.classList.add("go");
     gIntro.firstElementChild?.classList.add("enter");
     if (REDUCED) {
       leaveLobby();
       openOffice("lift");
+      onClockIn?.();
       return;
     }
     const [dl, dr] = liftx.querySelectorAll(".door");
@@ -3145,6 +2512,8 @@ export function createOffice(
     await wait(320);
     liftx.classList.remove("shut");
     liftx.classList.add("open");
+    // in: what the page lays over the office comes as the doors part, not over them
+    onClockIn?.();
     openLift(2.6);
     anim = {
       from: { ...cam },
@@ -3188,24 +2557,19 @@ export function createOffice(
     decision = null;
     gFly.innerHTML = "";
     fliers.length = 0;
-    gFx.innerHTML = "";
-    fxs.length = 0;
     chains.clear();
     floors = floorsOf(roster);
     BASE_FLOOR = STOREYS - floors.length + 1;
     for (const f of floors) f.name = W.floor(BASE_FLOOR + f.index);
     buildPeople(roster);
     plan = floors[me ? me.home : 0];
-    vacHome();
     for (const fl of floors) if (fl !== plan) piecesOf(fl);
     staticObjs = depthSort(piecesOf(plan));
     focus = null;
-    boardOn = false;
     closePanel();
     setViewSeg("office");
     liftUntil = -10;
     liftOpen = 0;
-    refs.flapWas = {};
     userMoved = false;
     opened = false;
     leaveLobby();
@@ -3226,40 +2590,18 @@ export function createOffice(
     else openOffice();
   }
   /**
-   * The day starts: the office sketches itself in, the mini-mes drop into their chairs, and a few come
-   * in through the lift. It waits until the office is on screen, so the drawing is seen.
+   * Opens the office as it is: everyone in is at their desk already. From the lobby the floor is laid out
+   * behind the lift's closed doors, and the viewer's own clone steps out of it once they open.
    */
   function openOffice(via = "") {
     if (opened || !plan) return;
     opened = true;
     const lift = via === "lift" && !REDUCED;
-    // An example opens as a day already under way: everyone in their chair, nothing sketched in.
-    const still = REDUCED || example;
     setCam(lift ? liftView() : floorView());
-    for (const p of people.values()) {
-      p.popAt = lift
-        ? simT - 9
-        : simT + (still ? 0 : ((p.desk.t0 || 0) + 1250) / 1000);
-      p.landed = still || lift;
-    }
-    const coming = still
-      ? []
-      : [...people.values()]
-          .filter(
-            (p) => p.home === plan.index && !p.mine && p.present && !p.busy,
-          )
-          .sort(() => Math.random() - 0.5)
-          .slice(0, 3);
-    for (const p of coming) {
-      p.present = false;
-      p.coming = true;
-    }
     if (lift && me) {
-      // the floor is laid out behind the closed doors, already drawn; we come out of the lift
       me.present = false;
       me.coming = true;
-      buildScene(false, floorView());
-      asmUntil = 0;
+      buildScene(floorView());
       spawn(async () => {
         await wait(1100);
         openLift(2.4);
@@ -3267,13 +2609,7 @@ export function createOffice(
         if (me.status !== "offline") await comeIn(me);
         else settle(me);
       });
-    } else {
-      buildScene(!still);
-      asmUntil = still ? 0 : simT + 4.4;
-    }
-    spawn(() => opening(coming, lift ? 7000 : 3000));
-    // An example keeps to its story: nobody wanders off for tea out of its frame.
-    if (!example) spawn(life);
+    } else buildScene();
   }
   /** The relay's latest look, laid on the people: status, piles, what they work on, who waits for whom. */
   function applyData() {
@@ -3318,7 +2654,6 @@ export function createOffice(
       showDecision(data.waiting.text || W.needsYouChip);
     else clearDecision();
     for (const p of people.values()) settle(p);
-    dataKey = "";
   }
   /** Takes the relay's latest look. What changed since the one before plays out on the floor; the first is laid as it is. */
   function update(next) {
@@ -3365,13 +2700,6 @@ export function createOffice(
     if (!plan || !inView || (!opened && !lobbyOn)) return;
     simT += dt;
     runTimers();
-    if (asmUntil && simT > asmUntil) {
-      asmUntil = 0;
-      svg.classList.remove("asm");
-      backSvg.classList.remove("asm");
-      for (const p of people.values()) p.occKey = null;
-      vac.occKey = null;
-    }
     if (anim) {
       const u = clamp((now - anim.t0) / anim.ms, 0, 1),
         e = easeInOut(u),
@@ -3384,20 +2712,17 @@ export function createOffice(
       setCam({ x: cx - w / 2, y: cy - h / 2, w, h });
       if (u >= 1) {
         anim = null;
-        if (lobbyOn) {
-        } else if (!asmUntil) buildScene();
-        else rebuildAt = performance.now() + (asmUntil - simT) * 1000 + 50;
+        if (!lobbyOn) buildScene();
       }
     }
     if (lobbyOn) return;
-    if (rebuildAt && now > rebuildAt && !asmUntil) {
+    if (rebuildAt && now > rebuildAt) {
       rebuildAt = 0;
       buildScene();
     } else if (
       built &&
       !anim &&
       !rebuildAt &&
-      !asmUntil &&
       (cam.x < built[0] ||
         cam.y < built[1] ||
         cam.x + cam.w > built[2] ||
@@ -3434,13 +2759,12 @@ export function createOffice(
         visible = fx0 > v[0] && fx0 < v[2] && fy0 > v[1] && fy0 < v[3];
       if (!visible) continue;
       p.udt = (p.udt || 0) + dt;
-      // a mini-me sitting still breathes and blinks just as well at half the rate
+      // a clone sitting still breathes and blinks just as well at half the rate
       const still =
         !p.walk &&
         !p.leap &&
         !p.fade &&
         !p.carry &&
-        simT - p.popAt > DROP_FALL + DROP_LAND + 0.2 &&
         !bubbles.has(p.id) &&
         !moving &&
         liveOn(p);
@@ -3464,37 +2788,22 @@ export function createOffice(
       p.bot.dotScale = clamp(52 / (BODY_PX * sc), 1, 2.4);
       // walking, it goes where it goes every frame; its face and breath change slowly enough to be drawn every other frame
       if (REDUCED) p.bot.still(simT);
-      else if (
-        EVEN ||
-        close ||
-        p.leap ||
-        simT - p.popAt < DROP_FALL + DROP_LAND + 0.2
-      ) {
+      else if (EVEN || close || p.leap) {
         p.bot.update(simT, p.udt);
         p.udt = 0;
-      }
-      if (
-        p.seated &&
-        !p.busy &&
-        p.status === "active" &&
-        p.stack >= 8 &&
-        simT > p.sweatAt &&
-        simT > p.popAt + 3
-      ) {
-        p.sweatAt = simT + 4 + Math.random() * 3;
-        fx("drip", p, { anim: "drip", dur: 1.6, scale: 0.85 });
       }
     }
     if (panelRec?.follow) {
       const m = panelRec.follow.bot.mood;
       panelRec.bot.setMood(m === "walk" ? "idle" : m);
     }
-    moveVac();
     orderLive();
     drawFliers();
-    drawFx();
-    if (dataKey === "" || (EVEN && ++dataTick % 3 === 0)) updateData();
-    if (EVEN) runLights();
+    // the clock turns over once a minute, and when someone comes or goes
+    if (!clockKey || (EVEN && simT - clockAt > 2)) {
+      clockAt = simT;
+      updateClock();
+    }
     updateOverlays();
     renderPanel();
   }
@@ -3536,7 +2845,7 @@ export function createOffice(
           ? { ...cam, w: cw / sc, h: ch / sc }
           : floorView(),
     );
-    if (!asmUntil) buildScene();
+    buildScene();
   });
   sized.observe(wrap);
   if (onAsk)
@@ -3572,14 +2881,16 @@ export function createOffice(
       update(next);
       suggest(next.people);
     },
-    setInset(right, left = 0) {
+    setInset(right, left = 0, rightHeight = 0) {
       const nextR = Math.max(0, Math.round(right || 0)),
-        nextL = Math.max(0, Math.round(left || 0));
-      if (nextR === insetR && nextL === insetL) return;
+        nextL = Math.max(0, Math.round(left || 0)),
+        nextH = Math.max(0, Math.round(rightHeight || 0));
+      if (nextR === insetR && nextL === insetL && nextH === insetH) return;
       insetR = nextR;
       insetL = nextL;
+      insetH = nextH;
       if (!plan || lobbyOn || !opened || destroyed) return;
-      glide(focus ? deskView(focus) : boardOn ? boardView() : floorView(), 650);
+      glide(focus ? deskView(focus) : floorView(), 650);
     },
     closePanel() {
       if (panel.hidden) return;
@@ -3592,7 +2903,6 @@ export function createOffice(
       seen.disconnect();
       sized.disconnect();
       ac.abort();
-      clearTimeout(refs.boardLater);
       for (const rec of [panelRec, meMark, lbMark, lbMe]) unmountBot(rec);
       panelRec = meMark = lbMark = lbMe = null;
       root.innerHTML = "";

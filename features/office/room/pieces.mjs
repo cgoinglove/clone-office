@@ -13,14 +13,12 @@ import {
   esc,
   flat,
   floorM,
-  floorText,
   foliage,
   hash,
   hashStr,
   ln,
   P,
   PAINTS,
-  part,
   pathOf,
   plane,
   planeM,
@@ -77,10 +75,8 @@ export const trayGeo = (d) => ({
   z: DK.top,
 });
 export const itemGeo = (d) => ({ x: d.x1 - 1.8, y: d.y1 - 2.1, z: DK.top });
-export const arrive = (t0) => (cls, d, s) =>
-  t0 === null ? s : part(cls, t0 + d, s);
 
-export function chairSvg(cx, cy, t0 = 0) {
+export function chairSvg(cx, cy) {
   return withOv(0, () => {
     let base = "";
     for (let i = 0; i < 5; i++) {
@@ -93,54 +89,41 @@ export function chairSvg(cx, cy, t0 = 0) {
     }
     base += ln(at(cx, cy, 0.55), at(cx, cy, 3.2), "ol s");
     return (
-      part("k-grow", t0, base) +
-      part(
-        "k-drop",
-        t0 + 120,
-        box(cx - 2.3, cy - 3.3, cx + 2.3, cy - 2.6, 4.2, 10.2) +
-          box(cx - 2.5, cy - 2.3, cx + 2.5, cy + 2.3, 3.2, 4),
-      )
+      base +
+      box(cx - 2.3, cy - 3.3, cx + 2.3, cy - 2.6, 4.2, 10.2) +
+      box(cx - 2.5, cy - 2.3, cx + 2.5, cy + 2.3, 3.2, 4)
     );
   });
 }
-/** Closed when the computer is off; open with its screen toward you, lines typing while the mini-me works. */
-export function lapSvg(g, status, working, t0 = null) {
+/** Closed when the computer is off; open with its screen toward you, its lines brighter while the clone works. */
+export function lapSvg(g, status, working) {
   return withOv(0, () => {
     const { x0, x1, y0, y1, z } = g,
-      p = arrive(t0),
       zb = z + 0.32;
-    const s = p(
-      "k-drop",
-      0,
+    const s =
       box(x0, y0, x1, y1, z, zb, { hatch: false }) +
-        ln(
-          at(x0 + 0.7, y0 + 1.4, zb + 0.01),
-          at(x1 - 0.7, y0 + 1.4, zb + 0.01),
-          "ol f",
-        ) +
-        ln(
-          at(x0 + 0.7, y0 + 2.3, zb + 0.01),
-          at(x1 - 0.7, y0 + 2.3, zb + 0.01),
-          "ol f",
-        ) +
-        flat(
-          x0 + 2.1,
-          y1 - 1.35,
-          x1 - 2.1,
-          y1 - 0.45,
-          zb + 0.01,
-          "f-none",
-          "ol f",
-        ),
-    );
+      ln(
+        at(x0 + 0.7, y0 + 1.4, zb + 0.01),
+        at(x1 - 0.7, y0 + 1.4, zb + 0.01),
+        "ol f",
+      ) +
+      ln(
+        at(x0 + 0.7, y0 + 2.3, zb + 0.01),
+        at(x1 - 0.7, y0 + 2.3, zb + 0.01),
+        "ol f",
+      ) +
+      flat(
+        x0 + 2.1,
+        y1 - 1.35,
+        x1 - 2.1,
+        y1 - 0.45,
+        zb + 0.01,
+        "f-none",
+        "ol f",
+      );
     if (status === "offline")
       return (
-        s +
-        p(
-          "k-drop",
-          120,
-          box(x0, y0, x1, y1, zb, zb + 0.3, { top: "f-front", hatch: false }),
-        )
+        s + box(x0, y0, x1, y1, zb, zb + 0.3, { top: "f-front", hatch: false })
       );
     const zt = z + 4.9,
       back = 0.8,
@@ -160,27 +143,20 @@ export function lapSvg(g, status, working, t0 = null) {
       [0, back / Lh, -(zt - zb) / Lh],
     );
     const rows = working ? [0.62, 0.46, 0.7, 0.3] : [0.5, 0.3];
-    const content =
-      (working ? `<g class="typing">` : "<g>") +
-      rows
-        .map(
-          (k, i) =>
-            `<rect class="${working ? "f-scr tln" : "f-scrdim"}" x="${r2(pad + 0.35 + (i % 2) * 0.55)}" y="${r2(pad + 0.75 + i * 0.72)}" width="${r2(iw * k)}" height=".3" rx=".12"/>`,
-        )
-        .join("") +
-      (working
-        ? `<rect class="f-scr caret" x="${r2(pad + 0.35)}" y="${r2(pad + 0.75 + rows.length * 0.72)}" width=".42" height=".34" rx=".08"/>`
-        : "") +
-      "</g>";
+    const content = rows
+      .map(
+        (k, i) =>
+          `<rect class="${working ? "f-scr" : "f-scrdim"}" x="${r2(pad + 0.35 + (i % 2) * 0.55)}" y="${r2(pad + 0.75 + i * 0.72)}" width="${r2(iw * k)}" height=".3" rx=".12"/>`,
+      )
+      .join("");
     const screen = `<g transform="${M}"><rect class="f-screen" x="${r2(pad)}" y="${r2(pad)}" width="${r2(iw)}" height="${r2(Lh - pad * 2)}" rx=".22"/>${content}</g>`;
-    return s + p("k-rise", 120, quad(lid, "f-front", "ol") + screen);
+    return s + quad(lid, "f-front", "ol") + screen;
   });
 }
-/** Lit while the person is at their desk; its light pools on the desk, clear of the mini-me's face, warmer at night. */
-export function lampSvg(g, on, t0 = null) {
+/** Lit while the person is at their desk: its light pools on the desk, clear of the clone's face. */
+export function lampSvg(g, on) {
   return withOv(0, () => {
-    const { bx, by, z } = g,
-      p = arrive(t0);
+    const { bx, by, z } = g;
     const el = at(bx - 0.3, by + 0.1, z + 4.4),
       pv = at(bx + 1.1, by + 1.2, z + 6.6),
       top = at(bx + 1.35, by + 1.5, z + 6.75),
@@ -189,45 +165,24 @@ export function lampSvg(g, on, t0 = null) {
       ry = 3.6,
       nk = 2.2;
     const cone = `M${r1(top[0] - nk)} ${r1(top[1])}L${r1(rim[0] - rx)} ${r1(rim[1])}A${rx} ${ry} 0 0 0 ${r1(rim[0] + rx)} ${r1(rim[1])}L${r1(top[0] + nk)} ${r1(top[1])}Z`;
-    let s = "";
-    // on: light drawn as a few short strokes falling from the shade (and a pale pool, which shows on a dark desk)
-    if (on)
-      s += p(
-        "k-fade",
-        420,
-        ellipseAt(bx + 3.6, by + 4.6, z, 36, 14, "f-lamp", ' opacity=".35"') +
-          [
-            [-6.5, 3.2, -9.5, 10.5],
-            [-0.6, 4.4, -0.8, 13],
-            [5.6, 3.4, 8.6, 10.8],
-          ]
-            .map(([a0, b0, a1, b1]) =>
-              ln(
-                [rim[0] + a0, rim[1] + b0],
-                [rim[0] + a1, rim[1] + b1],
-                "ol g",
-              ),
-            )
-            .join(""),
-      );
+    // on: a pale pool under the shade (which shows on a dark desk)
+    const pool = on
+      ? ellipseAt(bx + 3.6, by + 4.6, z, 36, 14, "f-lamp", ' opacity=".35"')
+      : "";
     return (
-      s +
-      p(
-        "k-rise",
-        0,
-        cyl(bx, by, z, z + 0.3, 0.85, 0.8, { shade: false }) +
-          ln(at(bx, by, z + 0.3), el, "ol") +
-          ln(el, pv, "ol") +
-          `<circle class="f-paper" cx="${r1(el[0])}" cy="${r1(el[1])}" r="1.6"/><circle class="ol" cx="${r1(el[0])}" cy="${r1(el[1])}" r="1.6"/>` +
-          `<path class="${on ? "f-paper" : "f-front"}" d="${cone}"/>` +
-          `<ellipse class="${on ? "f-lamp" : "f-side"}" cx="${r1(rim[0])}" cy="${r1(rim[1])}" rx="${rx}" ry="${ry}"/>` +
-          `<path class="ol" d="${cone}"/><ellipse class="ol" cx="${r1(rim[0])}" cy="${r1(rim[1])}" rx="${rx}" ry="${ry}"/>`,
-      )
+      pool +
+      cyl(bx, by, z, z + 0.3, 0.85, 0.8, { shade: false }) +
+      ln(at(bx, by, z + 0.3), el, "ol") +
+      ln(el, pv, "ol") +
+      `<circle class="f-paper" cx="${r1(el[0])}" cy="${r1(el[1])}" r="1.6"/><circle class="ol" cx="${r1(el[0])}" cy="${r1(el[1])}" r="1.6"/>` +
+      `<path class="${on ? "f-paper" : "f-front"}" d="${cone}"/>` +
+      `<ellipse class="${on ? "f-lamp" : "f-side"}" cx="${r1(rim[0])}" cy="${r1(rim[1])}" rx="${rx}" ry="${ry}"/>` +
+      `<path class="ol" d="${cone}"/><ellipse class="ol" cx="${r1(rim[0])}" cy="${r1(rim[1])}" rx="${rx}" ry="${ry}"/>`
     );
   });
 }
-/** One sheet for each piece of work: up to 8 stack by height, past that a count. The newest lands with a bounce. */
-export function stackSvg(g, n, seedName, t0 = null, fresh = false) {
+/** One sheet for each request waiting on the desk: up to 8 stack by height, past that a count. The newest lands. */
+export function stackSvg(g, n, seedName, fresh = false) {
   return withOv(0, () => {
     const { x0, x1, y0, y1, z } = g,
       seed = hashStr(seedName) % 97,
@@ -236,7 +191,6 @@ export function stackSvg(g, n, seedName, t0 = null, fresh = false) {
       hatch: false,
       top: "f-front",
     });
-    if (t0 !== null) s = part("k-drop", t0, s);
     for (let i = 0; i < show; i++) {
       const zz = z + 0.48 + i * 0.4,
         jx = (hash(i * 3.1 + seed) - 0.5) * 0.7,
@@ -254,25 +208,19 @@ export function stackSvg(g, n, seedName, t0 = null, fresh = false) {
             at(x1 + jx - 2, y0 + jy + 2.8, zz),
             "ol f",
           );
-      if (t0 !== null) sh = part("k-drop", t0 + 140 + i * 70, sh);
-      else if (fresh && i === show - 1) sh = `<g class="land">${sh}</g>`;
+      if (fresh && i === show - 1) sh = `<g class="land">${sh}</g>`;
       s += sh;
     }
     if (n > 8) {
       const c = at(x1 + 0.6, y0, z + 0.48 + show * 0.4 + 1.5),
         w = n > 99 ? 34 : 26;
       const b = `<rect class="badge-c" x="${r1(c[0] - w / 2)}" y="${r1(c[1] - 10)}" width="${w}" height="20" rx="7"/><text class="badge-t" x="${r1(c[0])}" y="${r1(c[1] + 4.6)}" text-anchor="middle">${n}</text>`;
-      s +=
-        t0 === null
-          ? fresh
-            ? `<g class="land">${b}</g>`
-            : b
-          : part("k-grow", t0 + 140 + show * 70 + 80, b);
+      s += fresh ? `<g class="land">${b}</g>` : b;
     }
     return s;
   });
 }
-export function mugSvg(x, y, z, hot) {
+export function mugSvg(x, y, z) {
   const h = 1.55,
     r = 0.72,
     top = at(x, y, z + h),
@@ -282,32 +230,28 @@ export function mugSvg(x, y, z, hot) {
     () =>
       cyl(x, y, z, z + h, r * 0.94, r, { shade: false }) +
       `<path class="ol" d="M${r1(top[0] + rx - 0.6)} ${r1(top[1] + 2.4)}c4.6 -0.4 5 6.4 0 6.6"/>` +
-      `<ellipse class="f-ink72" cx="${r1(top[0])}" cy="${r1(top[1])}" rx="${r1(rx * 0.76)}" ry="${r1(rx * 0.38)}" opacity=".5"/>` +
-      `<g class="steam${hot ? " on" : ""}">${[-3, 3, 0].map((dx) => `<path d="M${r1(top[0] + dx)} ${r1(top[1] - 3)}c3.5 -4 -3.5 -7 0 -12"/>`).join("")}</g>`,
+      `<ellipse class="f-ink72" cx="${r1(top[0])}" cy="${r1(top[1])}" rx="${r1(rx * 0.76)}" ry="${r1(rx * 0.38)}" opacity=".5"/>`,
   );
 }
 export const ITEMS = ["mug", "plant", "books", "photo"];
-export function itemSvg(g, kind, hot, t0 = 0) {
+/** The one thing of its own each desk keeps. */
+export function itemSvg(g, kind) {
   return withOv(0, () => {
     const { x, y, z } = g;
-    if (kind === "mug") return part("k-drop", t0, mugSvg(x, y, z, hot));
+    if (kind === "mug") return mugSvg(x, y, z);
     if (kind === "plant")
       return (
-        part("k-drop", t0, cyl(x, y, z, z + 1.35, 0.62, 0.78)) +
-        part("k-grow", t0 + 200, foliage(at(x, y, z + 1.3), "small", x * 0.3))
+        cyl(x, y, z, z + 1.35, 0.62, 0.78) +
+        foliage(at(x, y, z + 1.3), "small", x * 0.3)
       );
     if (kind === "books")
-      return part(
-        "k-drop",
-        t0,
+      return (
         box(x - 1.8, y - 1, x + 1.6, y + 1.2, z, z + 0.65) +
-          box(x - 1.5, y - 0.8, x + 1.4, y + 1, z + 0.65, z + 1.25, {
-            top: "f-front",
-          }),
+        box(x - 1.5, y - 0.8, x + 1.4, y + 1, z + 0.65, z + 1.25, {
+          top: "f-front",
+        })
       );
-    return part(
-      "k-drop",
-      t0,
+    return (
       quad(
         [
           at(x - 1.5, y, z),
@@ -317,21 +261,21 @@ export function itemSvg(g, kind, hot, t0 = 0) {
         ],
         "f-top",
       ) +
-        quad(
-          [
-            at(x - 1, y - 0.05, z + 0.5),
-            at(x + 1, y - 0.05, z + 0.5),
-            at(x + 1, y - 0.33, z + 2.2),
-            at(x - 1, y - 0.33, z + 2.2),
-          ],
-          "f-side",
-          "ol f",
-        ),
+      quad(
+        [
+          at(x - 1, y - 0.05, z + 0.5),
+          at(x + 1, y - 0.05, z + 0.5),
+          at(x + 1, y - 0.33, z + 2.2),
+          at(x - 1, y - 0.33, z + 2.2),
+        ],
+        "f-side",
+        "ol f",
+      )
     );
   });
 }
-/** The desk: its thin frame rises, a drawer unit drops in, its top lands. Things on it are drawn separately. */
-export function deskFrame(d, t0 = 0) {
+/** The desk: a thin frame on four legs, a drawer unit under one side, its top. Things on it are drawn separately. */
+export function deskFrame(d) {
   const zt = DK.top,
     zb = zt - 0.55;
   const s = withOv(0, () => {
@@ -352,27 +296,18 @@ export function deskFrame(d, t0 = 0) {
       "ol",
     );
     return (
-      part("k-rise", t0, legs) +
-      part(
-        "k-drop",
-        t0 + 160,
-        box(d.x1 - 7.5, d.y0 + 1.2, d.x1 - 1.5, d.y1 - 1.5, zb - 1.3, zb, {
-          hatch: false,
-        }) +
-          ln(
-            at(d.x1 - 5.5, d.y1 - 1.5, zb - 0.65),
-            at(d.x1 - 3.5, d.y1 - 1.5, zb - 0.65),
-            "ol",
-          ),
+      legs +
+      box(d.x1 - 7.5, d.y0 + 1.2, d.x1 - 1.5, d.y1 - 1.5, zb - 1.3, zb, {
+        hatch: false,
+      }) +
+      ln(
+        at(d.x1 - 5.5, d.y1 - 1.5, zb - 0.65),
+        at(d.x1 - 3.5, d.y1 - 1.5, zb - 0.65),
+        "ol",
       )
     );
   });
-  return (
-    s +
-    withOv(0.55, () =>
-      part("k-drop", t0 + 240, box(d.x0, d.y0, d.x1, d.y1, zt - 0.42, zt)),
-    )
-  );
+  return s + withOv(0.55, () => box(d.x0, d.y0, d.x1, d.y1, zt - 0.42, zt));
 }
 /** What the desk throws on the floor: a wide soft shadow and a closer, denser one, dark in either theme. */
 export const deskShade = (d) => {
@@ -386,16 +321,12 @@ export const deskShade = (d) => {
 
 // ---- rooms and commons
 
-export function shelfSvg(x0, y0, x1, y1, h, face, seed, t0 = 0) {
-  let s = withOv(0.35, () =>
-    part(
-      "k-rise",
-      t0,
-      box(x0, y0, x1, y1, 0, h, {
-        hatch: face !== "x",
-        side: face === "x" ? "f-front" : "f-side",
-      }),
-    ),
+export function shelfSvg(x0, y0, x1, y1, h, face, seed) {
+  const s = withOv(0.35, () =>
+    box(x0, y0, x1, y1, 0, h, {
+      hatch: face !== "x",
+      side: face === "x" ? "f-front" : "f-side",
+    }),
   );
   const rows = [1.2, 4.9, 8.6, 12.3].filter((z) => z + 3 < h);
   const books = withOv(0, () => {
@@ -439,40 +370,36 @@ export function shelfSvg(x0, y0, x1, y1, h, face, seed, t0 = 0) {
     });
     return b;
   });
-  return s + part("k-fade", t0 + 260, books);
+  return s + books;
 }
-export const sofaSvg = (x0, y0, x1, t0 = 0) =>
-  withOv(0.25, () =>
-    part(
-      "k-drop",
-      t0,
+export const sofaSvg = (x0, y0, x1) =>
+  withOv(
+    0.25,
+    () =>
       ellipseAt((x0 + x1) / 2 + 1, y0 + 4, 0, (x1 - x0) * 6.4, 40, "f-soft") +
-        box(x0, y0, x1, y0 + 2.5, 0, 6.2) +
-        box(x0, y0 + 2.5, x1, y0 + 6.2, 0, 3.2) +
-        box(x0 + 0.8, y0 + 2.6, (x0 + x1) / 2 - 0.2, y0 + 5.8, 3.2, 3.8, {
-          hatch: false,
-        }) +
-        box((x0 + x1) / 2 + 0.2, y0 + 2.6, x1 - 0.8, y0 + 5.8, 3.2, 3.8, {
-          hatch: false,
-        }) +
-        box(x0 - 0.6, y0, x0 + 1, y0 + 6.2, 0, 4.5) +
-        box(x1 - 1, y0, x1 + 0.6, y0 + 6.2, 0, 4.5),
-    ),
+      box(x0, y0, x1, y0 + 2.5, 0, 6.2) +
+      box(x0, y0 + 2.5, x1, y0 + 6.2, 0, 3.2) +
+      box(x0 + 0.8, y0 + 2.6, (x0 + x1) / 2 - 0.2, y0 + 5.8, 3.2, 3.8, {
+        hatch: false,
+      }) +
+      box((x0 + x1) / 2 + 0.2, y0 + 2.6, x1 - 0.8, y0 + 5.8, 3.2, 3.8, {
+        hatch: false,
+      }) +
+      box(x0 - 0.6, y0, x0 + 1, y0 + 6.2, 0, 4.5) +
+      box(x1 - 1, y0, x1 + 0.6, y0 + 6.2, 0, 4.5),
   );
-export const armchairSvg = (x, y, t0 = 0) =>
-  withOv(0.2, () =>
-    part(
-      "k-drop",
-      t0,
+export const armchairSvg = (x, y) =>
+  withOv(
+    0.2,
+    () =>
       ellipseAt(x + 0.6, y + 0.8, 0, 52, 22, "f-soft") +
-        box(x - 3, y - 3, x + 3, y - 1.4, 0, 6.6) +
-        box(x - 3, y - 1.4, x + 3, y + 3, 0, 3.4) +
-        box(x - 2.4, y - 1.3, x + 2.4, y + 2.6, 3.4, 4, { hatch: false }) +
-        box(x - 3.6, y - 3, x - 2.4, y + 3, 0, 4.6) +
-        box(x + 2.4, y - 3, x + 3.6, y + 3, 0, 4.6),
-    ),
+      box(x - 3, y - 3, x + 3, y - 1.4, 0, 6.6) +
+      box(x - 3, y - 1.4, x + 3, y + 3, 0, 3.4) +
+      box(x - 2.4, y - 1.3, x + 2.4, y + 2.6, 3.4, 4, { hatch: false }) +
+      box(x - 3.6, y - 3, x - 2.4, y + 3, 0, 4.6) +
+      box(x + 2.4, y - 3, x + 3.6, y + 3, 0, 4.6),
   );
-export function lowTableSvg(x0, y0, x1, y1, t0 = 0) {
+export function lowTableSvg(x0, y0, x1, y1) {
   return withOv(0, () => {
     let legs = "";
     for (const [x, y] of [
@@ -483,34 +410,25 @@ export function lowTableSvg(x0, y0, x1, y1, t0 = 0) {
     ])
       legs += box(x, y, x + 0.8, y + 0.8, 0, 2.8, { edges: "leg" });
     return (
-      part("k-rise", t0, legs) +
-      part("k-drop", t0 + 160, box(x0, y0, x1, y1, 2.8, 3.4)) +
-      part(
-        "k-drop",
-        t0 + 300,
-        box(x0 + 2, y0 + 1.2, x0 + 5.6, y0 + 3.6, 3.4, 3.85, {
-          top: "f-paper",
-          hatch: false,
-        }) + mugSvg(x1 - 3, y0 + 2.4, 3.4, false),
-      )
+      legs +
+      box(x0, y0, x1, y1, 2.8, 3.4) +
+      box(x0 + 2, y0 + 1.2, x0 + 5.6, y0 + 3.6, 3.4, 3.85, {
+        top: "f-paper",
+        hatch: false,
+      }) +
+      mugSvg(x1 - 3, y0 + 2.4, 3.4)
     );
   });
 }
-/** A coffee counter: against the back wall, or an island with stools; steam rises while it brews. */
-/** Where the brew's steam starts, and the steam itself: drawn apart from the counter so it can sit on the moving sheet. */
-export const steamAt = (x0, y0, island) =>
-  at(x0 + (island ? 8 : 2) + 2, y0 + 1 + 3.85, 8.6);
-export const steamSvg = (st) =>
-  `<g class="steam" data-steam>${[0, -5, 5].map((dx) => `<path d="M${r1(st[0] + dx)} ${r1(st[1] - 2)}c4.5 -6 -4.5 -10 0 -18"/>`).join("")}</g>`;
-export function coffeeSvg(x0, y0, island, t0 = 0, steam = true) {
-  const w = island ? 20 : 18,
-    d = island ? 6 : 5,
+/** A coffee counter: an island with a machine, cups and stools. */
+export function coffeeSvg(x0, y0) {
+  const w = 20,
+    d = 6,
     x1 = x0 + w,
     y1 = y0 + d;
-  let s = withOv(0.35, () =>
-    part(
-      "k-rise",
-      t0,
+  let s = withOv(
+    0.35,
+    () =>
       ellipseAt(
         (x0 + x1) / 2 + 1,
         y0 + d / 2 + 1,
@@ -519,62 +437,47 @@ export function coffeeSvg(x0, y0, island, t0 = 0, steam = true) {
         w * 2.8,
         "f-soft",
       ) + box(x0, y0, x1, y1, 0, 7.2, { top: "f-top" }),
-    ),
   );
   s += withOv(0, () => {
     let doors = "";
     for (let x = x0 + 4.5; x < x1 - 1; x += 4.5)
       doors += ln(at(x, y1, 0.6), at(x, y1, 6.6), "ol f");
-    return part("k-fade", t0 + 120, doors);
+    return doors;
   });
-  const mx = x0 + (island ? 8 : 2),
+  const mx = x0 + 8,
     my = y0 + 1;
-  s += withOv(0, () =>
-    part(
-      "k-drop",
-      t0 + 240,
+  s += withOv(
+    0,
+    () =>
       box(mx, my, mx + 4, my + 3.2, 7.2, 12.2, { front: "f-front" }) +
-        quad(
-          [
-            at(mx + 0.5, my + 3.21, 8.4),
-            at(mx + 3.5, my + 3.21, 8.4),
-            at(mx + 3.5, my + 3.21, 11.6),
-            at(mx + 0.5, my + 3.21, 11.6),
-          ],
-          "f-lid",
-          "ol f",
-        ) +
-        box(mx + 1.4, my + 3.2, mx + 2.6, my + 3.9, 9.6, 10.4, {
-          hatch: false,
-        }) +
-        cyl(mx + 2, my + 3.85, 7.2, 8.4, 0.55, 0.62, { shade: false }),
-    ),
+      quad(
+        [
+          at(mx + 0.5, my + 3.21, 8.4),
+          at(mx + 3.5, my + 3.21, 8.4),
+          at(mx + 3.5, my + 3.21, 11.6),
+          at(mx + 0.5, my + 3.21, 11.6),
+        ],
+        "f-lid",
+        "ol f",
+      ) +
+      box(mx + 1.4, my + 3.2, mx + 2.6, my + 3.9, 9.6, 10.4, {
+        hatch: false,
+      }) +
+      cyl(mx + 2, my + 3.85, 7.2, 8.4, 0.55, 0.62, { shade: false }) +
+      cyl(mx + 6.4, my + 1.6, 7.2, 8.6, 0.55, 0.62, { shade: false }) +
+      cyl(mx + 8, my + 2.2, 7.2, 8.6, 0.55, 0.62, { shade: false }) +
+      cyl(mx + 7.2, my + 0.9, 7.2, 8.6, 0.55, 0.62, { shade: false }),
   );
   s += withOv(0, () =>
-    part(
-      "k-drop",
-      t0 + 360,
-      cyl(mx + 6.4, my + 1.6, 7.2, 8.6, 0.55, 0.62, { shade: false }) +
-        cyl(mx + 8, my + 2.2, 7.2, 8.6, 0.55, 0.62, { shade: false }) +
-        cyl(mx + 7.2, my + 0.9, 7.2, 8.6, 0.55, 0.62, { shade: false }),
-    ),
+    [x0 + 4, x0 + 10, x0 + 16]
+      .map(
+        (x) =>
+          cyl(x, y1 + 3.2, 4.6, 5.2, 1.25, 1.25, { shade: false }) +
+          ln(at(x, y1 + 3.2, 0.3), at(x, y1 + 3.2, 4.6), "ol s") +
+          ellipseAt(x, y1 + 3.2, 1.6, RX * 0.85, RX * 0.42, "ol f"),
+      )
+      .join(""),
   );
-  if (steam) s += steamSvg(steamAt(x0, y0, island));
-  if (island)
-    s += withOv(0, () =>
-      part(
-        "k-drop",
-        t0 + 480,
-        [x0 + 4, x0 + 10, x0 + 16]
-          .map(
-            (x) =>
-              cyl(x, y1 + 3.2, 4.6, 5.2, 1.25, 1.25, { shade: false }) +
-              ln(at(x, y1 + 3.2, 0.3), at(x, y1 + 3.2, 4.6), "ol s") +
-              ellipseAt(x, y1 + 3.2, 1.6, RX * 0.85, RX * 0.42, "ol f"),
-          )
-          .join(""),
-      ),
-    );
   return s;
 }
 // ---- the walls: the lift, the digital clock, the office board
@@ -676,22 +579,6 @@ export function segments(text, h) {
   }
   return { off, on, colon, width: x - 4.5 * k };
 }
-/**
- * The office board, a departures board standing behind the left wall: the time and each person in
- * rows of flaps (who, status, what they are on, papers on the desk). A flap flips when its letter changes.
- */
-export const FB = { w: 940, h: 400, post: 140, cw: 21, gap: 2.6 };
-export function flapBoard(matrix, t0 = 0) {
-  return (
-    `<g class="board-hit" transform="${matrix}">` +
-    part(
-      "k-fade",
-      t0,
-      `<rect class="sb-post" x="118" y="${FB.h - 8}" width="3" height="${FB.post}"/><rect class="sb-post" x="${FB.w - 121}" y="${FB.h - 8}" width="3" height="${FB.post}"/><rect class="fb-frame" x="1" y="1" width="${FB.w - 2}" height="${FB.h - 2}" rx="12"/>`,
-    ) +
-    `<g data-board></g></g>`
-  );
-}
 /** A mini-me's face held still, `size` across, for the scoreboard's list. */
 export function stillMark(look, x, y, size) {
   const shape = SHAPES[look.shape] || SHAPES.b113,
@@ -722,93 +609,6 @@ export function stillMark(look, x, y, size) {
   return `<g transform="translate(${r1(x)} ${r1(y)}) scale(${r3(k)})"><path d="${pathOf(pts)}" style="fill:${fill}"/><path class="sm-eye" d="${eye(-1)}"/><path class="sm-eye" d="${eye(1)}"/></g>`;
 }
 export const SM_DEFS = `<defs><linearGradient id="sm-rainbow" x1="0" y1="0" x2="0" y2="1">${PAINTS.rainbow.colors.map((c, i, a) => `<stop offset="${r3(i / (a.length - 1))}" stop-color="${c}"/>`).join("")}</linearGradient><linearGradient id="sm-duo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${PAINTS.duo.colors[0]}"/><stop offset="1" stop-color="${PAINTS.duo.colors[1]}"/></linearGradient></defs>`;
-/** A run of flaps: one cell per letter, its split across the middle; letters that changed since `was` flip, one after another. */
-export function flaps(
-  x,
-  y,
-  text,
-  n,
-  cls,
-  was = "",
-  d0 = 0,
-  cw = FB.cw,
-  chH = 30,
-  fs = 21,
-) {
-  const t = text.toUpperCase().padEnd(n).slice(0, n),
-    w = was.toUpperCase().padEnd(n).slice(0, n),
-    step = cw + FB.gap;
-  let bg = "",
-    split = "",
-    letters = "";
-  for (let i = 0; i < n; i++) {
-    const cx = x + i * step;
-    bg += `M${r1(cx)} ${y}h${cw}v${chH}h${-cw}z`;
-    split += `M${r1(cx)} ${y + chH / 2}h${cw}`;
-    if (t[i] !== " ")
-      letters += `<text class="${cls}${t[i] !== w[i] ? " fb-flip" : ""}" x="${r1(cx + cw / 2)}" y="${r1(y + chH / 2 + fs * 0.36)}" font-size="${fs}" text-anchor="middle"${t[i] !== w[i] ? ` style="animation-delay:${Math.round((d0 + i * 32) / 90) * 90}ms"` : ""}>${esc(t[i])}</text>`;
-  }
-  return `<path class="fb-cell" d="${bg}"/><path class="fb-split" d="${split}"/>${letters}`;
-}
-/**
- * What the board shows: the floor, the date and time, and the team, those who need a decision first.
- * `was` holds the last rows, to flip what changed. `W` are its words in the screen's language.
- */
-export function flapFace(st, crew, now, was, W) {
-  const hm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  let s =
-    SM_DEFS +
-    `<text class="fb-head" x="32" y="56">${esc(st.label)}</text><text class="fb-sub" x="32" y="84">${esc(W.date(now))} · ${esc(W.in(st.in))}${st.off ? ` · ${esc(W.off(st.off))}` : ""}</text>`;
-  s += flaps(
-    FB.w - 32 - 5 * 48 - 4 * FB.gap,
-    24,
-    hm,
-    5,
-    "fb-clock",
-    was.clock || "",
-    0,
-    48,
-    64,
-    50,
-  );
-  const cols = {
-    who: 70,
-    status: 70 + 7 * (FB.cw + FB.gap) + 18,
-    now: 70 + 16 * (FB.cw + FB.gap) + 36,
-    desk: FB.w - 32 - 2 * FB.cw - FB.gap,
-  };
-  s += `<text class="fb-cap" x="${cols.who}" y="118">${esc(W.who)}</text><text class="fb-cap" x="${cols.status}" y="118">${esc(W.status)}</text><text class="fb-cap" x="${cols.now}" y="118">${esc(W.on)}</text><text class="fb-cap" x="${cols.desk}" y="118">${esc(W.desk)}</text>`;
-  crew.slice(0, 8).forEach((c, i) => {
-    const y = 130 + i * 33,
-      w =
-        was.rows && was.rows[i]
-          ? was.rows[i]
-          : { name: "", status: "", now: "", desk: "" },
-      hot = c.state === "ask" && c.mine;
-    s += stillMark(c.look, 32, y + 1, 28);
-    s += flaps(
-      cols.who,
-      y,
-      c.name,
-      7,
-      c.state === "off" ? "fb-l fb-faint" : "fb-l",
-      w.name,
-      i * 40,
-    );
-    s += flaps(
-      cols.status,
-      y,
-      c.status,
-      9,
-      hot ? "fb-l fb-hot" : c.state === "off" ? "fb-l fb-faint" : "fb-l",
-      w.status,
-      i * 40 + 60,
-    );
-    s += flaps(cols.now, y, c.now, 14, "fb-l fb-dim", w.now, i * 40 + 120);
-    s += flaps(cols.desk, y, String(c.desk), 2, "fb-l", w.desk, i * 40 + 180);
-  });
-  return s;
-}
 /** Roughly how wide a line of capitals is, in ems: wide scripts take a whole em a letter. */
 const emsOf = (text) =>
   [...text].reduce(
@@ -826,20 +626,37 @@ const emsOf = (text) =>
 /** The largest size up to `max` at which `text` fits `width`. */
 export const fitSize = (text, max, width) =>
   r1(Math.min(max, width / Math.max(1, emsOf(text))));
-/** The office's state painted large on the ground at four o'clock: a boxed sign with chevrons running while
- * the mini-mes are at work, YOUR TURN filled in ember when a decision waits for you, a tick when all is clear. */
-export const SIGN = { w: 700, h: 240 };
-export function signWords(sign, W) {
-  const you = sign === "you";
-  let s = `<rect class="gs-box${you ? " e" : ""}" x="12" y="20" width="676" height="200" rx="34"/>`;
-  if (sign === "work")
-    s += `<g>${[0, 1, 2].map((i) => `<path class="gs-ch" data-ch="${i}" d="M${64 + i * 46} 78l38 42l-38 42"/>`).join("")}</g><text class="gs-word" x="236" y="152" font-size="${fitSize(W.work, 90, 430)}">${esc(W.work)}</text>`;
-  else if (you)
-    s += `<text class="gs-word e" x="52" y="156" font-size="${fitSize(W.you, 98, 600)}">${esc(W.you)}</text>`;
-  else
-    s += `<path class="gs-tick" d="M66 124l34 32l66 -72"/><text class="gs-word q" x="206" y="150" font-size="${fitSize(W.quiet, 78, 450)}">${esc(W.quiet)}</text>`;
+/**
+ * The office's clock on the left wall, an LED panel big enough to read from across the floor: the time
+ * in seven segments, and beside it the day, who is in out of everyone, and each of them as their
+ * clone's face, lit when in. Drawn in its own plane, a tenth of a plan unit to a unit, from the panel's
+ * front top corner (`y` along the wall, `z` up it); nothing on the floor stands tall enough to hide it.
+ */
+export const CLOCK = { w: 800, h: 196, y: 90, z: 27 };
+export function clockFace(now, crew, words) {
+  const hm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
+    sg = segments(hm, 132),
+    inNow = crew.filter((c) => c.in).length;
+  let s = `<rect class="ck-frame" x="0" y="0" width="${CLOCK.w}" height="${CLOCK.h}" rx="18"/>`;
+  s += `<g transform="translate(34 32)"><g class="ck-off">${sg.off}</g><g class="ck-on">${sg.on}${sg.colon}</g></g>`;
+  const x = 34 + sg.width + 48,
+    room = CLOCK.w - x - 30;
+  s += `<text class="ck-cap" x="${x}" y="58" font-size="${fitSize(words.date, 26, room)}">${esc(words.date)}</text>`;
+  s += `<text class="ck-num" x="${x}" y="112"><tspan class="ck-word" font-size="${fitSize(words.in, 26, room * 0.4)}">${esc(words.in)} </tspan><tspan font-size="44">${inNow}</tspan><tspan class="ck-of" font-size="30">/${crew.length}</tspan></text>`;
+  // everyone in a row, those in first; past what fits, a count
+  const size = 34,
+    gap = 9,
+    fit = Math.max(1, Math.floor((room + gap) / (size + gap))),
+    shown = crew.length > fit ? crew.slice(0, fit - 1) : crew;
+  s += SM_DEFS;
+  shown.forEach((c, i) => {
+    s += `<g class="${c.in ? "ck-in" : "ck-out"}">${stillMark(c.look, x + i * (size + gap), 134, size)}</g>`;
+  });
+  if (shown.length < crew.length)
+    s += `<text class="ck-more" x="${x + shown.length * (size + gap)}" y="160" font-size="22">+${crew.length - shown.length}</text>`;
   return s;
 }
+
 export const LIFT_X = 46,
   LIFT_W = 22;
 export const liftH = (wallH) => Math.min(wallH - 3.6, 21);
@@ -932,15 +749,11 @@ export function liftDoors(lx, open, h) {
     return s;
   });
 }
-/** The way in, marked on the floor in front of the lift: a wide mat, the word, and arrows out and in. */
-export function liftMark(lx, word) {
+/** The way in, marked on the floor in front of the lift: a wide mat. */
+export function liftMark(lx) {
   const x0 = lx - 2.5,
     x1 = lx + LIFT_W + 2.5,
     q = [at(x0, 0.6), at(x1, 0.6), at(x1, 12), at(x0, 12)];
-  const arrow = (x, out) => {
-    const [y0, y1] = out ? [6.2, 10] : [10, 6.2];
-    return `<path class="lmark-l" d="M${P([at(x, y0)])}L${P([at(x, y1)])}M${P([at(x - 1.4, y1 + (out ? -1.5 : 1.5))])}L${P([at(x, y1)])}L${P([at(x + 1.4, y1 + (out ? -1.5 : 1.5))])}"/>`;
-  };
   return (
     poly(q, "lmark") +
     withOv(
@@ -950,23 +763,8 @@ export function liftMark(lx, word) {
         ln(q[1], q[2], "ol c") +
         ln(q[2], q[3], "ol c") +
         ln(q[3], q[0], "ol c"),
-    ) +
-    floorText(
-      word,
-      lx + 1,
-      5,
-      Math.min(2.6, 12 / Math.max(1, emsOf(word))),
-      "lmark-t",
-    ) +
-    arrow(lx + LIFT_W - 6, true) +
-    arrow(lx + LIFT_W - 2, false)
+    )
   );
-}
-/** The company's name painted big on the back wall, when the wall is tall enough to carry it. */
-export function wallBrand(x0, wallH) {
-  const size = Math.min(14, (wallH - 12) * 0.62);
-  if (size < 7) return "";
-  return `<text class="tname brand" transform="${wallM(x0, wallH * 0.5 + size * 0.36)}" font-size="${r2(size)}">${BRAND}</text>`;
 }
 /**
  * The company's building, for the opening: storeys stacking up from the ground one after another,
@@ -1205,65 +1003,11 @@ export function lobbySvg(W, D, H, N, walkers, words) {
   );
   return `<g class="lobby-art"><g class="lb-ground">${g}</g>${towerSvg(W, D, H, N)}<g class="tw-door" style="--d:160ms">${door}</g><g class="lb-ours">${ours}</g><g class="lb-trees">${trees}</g><g class="lb-walk">${SM_DEFS}${walk}</g><g class="lb-note">${note}</g></g>`;
 }
-/** The office's robot vacuum, drawn at the origin and moved about whole: a low disc, a bumper, a light. */
-export function roombaSvg() {
-  const top = at(0.6, -0.4, 1.05);
-  return (
-    withOv(
-      0,
-      () =>
-        ellipseAt(0.3, 0.4, 0, 30, 12, "f-soft") +
-        cyl(0, 0, 0, 0.95, 2.4, 2.3) +
-        cyl(0, 0, 0.95, 1.05, 1.5, 1.45, { side: "f-side" }),
-    ) + `<circle class="rb-led" cx="${r1(top[0])}" cy="${r1(top[1])}" r="1.4"/>`
-  );
-}
 /** DONE thumped on the floor like a rubber stamp, by the desk whose request is answered. */
 export const stampSvg = (x, y, word) =>
   `<g transform="${floorM(x, y)}"><g transform="rotate(-8)"><g class="stamp"><rect class="stamp-r" x="-1.1" y="-5.9" width="19.6" height="7.8" rx="1.4"/><text class="stamp-t" x="1.1" y="0" font-size="${fitSize(word, 5, 15)}">${esc(word)}</text></g></g></g>`;
 /** A request folded into a paper plane, nose to the right. */
 export const PLANE = `<path d="M15 0L-13 -7.5L-7 0L-13 9Z"/><path class="fold" d="M15 0L-7 0"/>`;
-export function skyFor(mode) {
-  if (mode !== "now") return mode;
-  const h = new Date().getHours();
-  return h >= 7 && h < 17
-    ? "day"
-    : (h >= 17 && h < 20) || h === 6
-      ? "evening"
-      : "night";
-}
-
-// ---- lettering on the floor: each team's name painted big in the walkway in front of it, who is in, and people's names at their desks
-
-export function teamMark(a, x, y, t0, mine) {
-  const size = Math.min(6.4, 34 / (a.team.length * 0.7));
-  return (
-    part(
-      "k-draw",
-      t0,
-      `<text class="tname${mine ? " mine" : ""}" transform="${floorM(x, y)}" font-size="${r2(size)}">${esc(a.team.toUpperCase())}</text>`,
-    ) +
-    part(
-      "k-fade",
-      t0 + 200,
-      `<g data-count="${esc(a.team)}" data-at="${r2(x + 0.3)},${r2(y + 2.9)}"></g>`,
-    )
-  );
-}
-export const countText = (x, y, t, W) =>
-  `<text class="tcount" transform="${floorM(x, y)}" font-size="1.5">${esc(W.in(t.n - t.off))}${t.off ? ` · ${esc(W.off(t.off))}` : ""}${t.ask ? `<tspan class="on"> · ${esc(W.waiting(t.ask))}</tspan>` : ""}</text>`;
-/** A person's name on the floor at the front of their desk; when their computer is off, an OFF tag beside it. */
-export function deskLabel(d, name, off, offWord) {
-  const x = d.x0 + 0.4,
-    y = d.y1 + 4.6,
-    size = 2,
-    w = emsOf(name.toUpperCase()) * size * 0.86 + name.length * 0.12,
-    tag = Math.max(2.5, emsOf(offWord) * 0.86 + 0.8);
-  let s = `<text class="dname${off ? " off" : ""}" transform="${floorM(x, y)}" font-size="${size}">${esc(name.toUpperCase())}</text>`;
-  if (off)
-    s += `<g transform="${floorM(x + w + 0.9, y)}"><rect class="offc" x="0" y="${r2(-size * 1.02)}" width="${r2(size * tag)}" height="${r2(size * 1.3)}" rx="${r2(size * 0.32)}"/><text class="offt" x="${r2(size * 0.42)}" y="${r2(-size * 0.07)}" font-size="${r2(size * 0.8)}">${esc(offWord)}</text></g>`;
-  return s;
-}
 /** A note written by hand beside a point, with an arrow drawn to it. */
 export function scribble(text, p, dx, dy, size = 24, arrow = true) {
   const tx = p[0] + dx,

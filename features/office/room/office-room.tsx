@@ -28,8 +28,10 @@ export function OfficeRoom({
   data,
   lobby = false,
   example = false,
+  fps = 60,
   full = false,
   inset = 0,
+  insetHeight = 0,
   insetLeft = 0,
   onClockIn,
   onAnswer,
@@ -43,6 +45,8 @@ export function OfficeRoom({
   full?: boolean;
   /** Pixels kept clear at the right for a panel the page lays over the office. */
   inset?: number;
+  /** How far down that panel reaches, when it ends partway: the floor may pass beneath it. */
+  insetHeight?: number;
   /** Pixels kept clear at the left, for a column of words laid over it. */
   insetLeft?: number;
   /** The office's own panel about one person opened or closed. */
@@ -55,6 +59,8 @@ export function OfficeRoom({
    * named, the desks framed close. Read once, as `lobby` is.
    */
   example?: boolean;
+  /** 30 runs the office on every other frame: for a small view beside something else. */
+  fps?: 30 | 60;
   onClockIn?: () => void;
   /** Opens what waits for the viewer, when they tap their mini-me's question. */
   onAnswer?: () => void;
@@ -69,26 +75,17 @@ export function OfficeRoom({
       label: t("room.label"),
       team: t("team"),
       floor: (n) => t("room.floor", { n }),
-      people: (count) => t("room.people", { count }),
       floorGroup: t("room.floorGroup"),
       openSeat: t("room.openSeat"),
-      lift: t("room.lift"),
-      offTag: t("room.offTag"),
       done: t("room.done"),
       answer: t("room.answer"),
       needsYouChip: t("room.needsYouChip"),
       yourMiniMe: t("yourMiniMe"),
       miniMe: (name) => t("miniMe", { name }),
       requestState: (state) => t(`state.${state}`),
-      notes: {
-        myDesk: t("room.notes.myDesk"),
-        tea: t("room.notes.tea"),
-        lift: t("room.notes.lift"),
-      },
       views: {
         label: t("room.views.label"),
         desk: t("room.views.desk"),
-        board: t("room.views.board"),
         office: t("room.views.office"),
         zoomIn: t("room.views.zoomIn"),
         zoomOut: t("room.views.zoomOut"),
@@ -99,52 +96,22 @@ export function OfficeRoom({
         askFor: (name, what) => t("room.composer.askFor", { name, what }),
         askText: (name, what) => t("room.composer.askText", { name, what }),
       },
-      board: {
-        you: t("room.board.you"),
-        who: t("room.board.who"),
-        status: t("room.board.status"),
-        on: t("room.board.on"),
-        desk: t("room.board.desk"),
-        to: (name) => t("room.board.to", { name }),
-        wait: (name) => t("room.board.wait", { name }),
-        states: {
-          ask: t("room.board.states.ask"),
-          deciding: t("room.board.states.deciding"),
-          work: t("room.board.states.work"),
-          free: t("room.board.states.free"),
-          away: t("room.board.states.away"),
-          off: t("room.board.states.off"),
-        },
-      },
-      counts: {
-        in: (count) => t("room.counts.in", { count }),
-        off: (count) => t("room.counts.off", { count }),
-        waiting: (count) => t("room.counts.waiting", { count }),
-      },
-      sign: {
-        you: t("room.sign.you"),
-        work: t("room.sign.work"),
-        quiet: t("room.sign.quiet"),
-      },
+      clock: { in: t("room.clock.in") },
       plate: {
         youShort: t("room.plate.youShort"),
         you: (name) => t("room.plate.you", { name }),
         needsYou: t("room.plate.needsYou"),
         deciding: t("room.plate.deciding"),
-        computerOff: t("room.plate.computerOff"),
         working: t("room.plate.working"),
         away: t("room.plate.away"),
-        free: t("room.plate.free"),
-        onDesk: (count) => t("room.plate.onDesk", { count }),
         goingTo: (name) => t("room.plate.goingTo", { name }),
+        off: t("room.plate.off"),
       },
       say: {
         isIn: (name) => t("room.say.isIn", { name }),
         bye: (name) => t("room.say.bye", { name }),
         bring: (to, from, what) => t("room.say.bring", { to, from, what }),
         leftOnDesk: (name) => t("room.say.leftOnDesk", { name }),
-        gotIt: t("room.say.gotIt"),
-        thanks: (name) => t("room.say.thanks", { name }),
       },
       meeting: { on: t("room.meeting.on") },
       lobby: {
@@ -198,8 +165,12 @@ export function OfficeRoom({
   latest.current = data;
   const handlers = useRef({ onAnswer, onAsk, onClockIn, onPanel });
   handlers.current = { onAnswer, onAsk, onClockIn, onPanel };
-  const insetNow = useRef([inset, insetLeft]);
-  insetNow.current = [inset, insetLeft];
+  const insetNow = useRef<[number, number, number]>([
+    inset,
+    insetLeft,
+    insetHeight,
+  ]);
+  insetNow.current = [inset, insetLeft, insetHeight];
   useImperativeHandle(ref, () => ({
     closePanel: () => room.current?.closePanel(),
   }));
@@ -220,11 +191,12 @@ export function OfficeRoom({
         onAsk: asks ? (text) => handlers.current.onAsk?.(text) : undefined,
         lobby: atLobby,
         example: asExample,
+        fps,
         onClockIn: () => handlers.current.onClockIn?.(),
         onPanel: (open) => handlers.current.onPanel?.(open),
       });
       made.update(latest.current);
-      made.setInset(insetNow.current[0], insetNow.current[1]);
+      made.setInset(...insetNow.current);
       room.current = made;
     });
     return () => {
@@ -232,15 +204,15 @@ export function OfficeRoom({
       made?.destroy();
       room.current = null;
     };
-  }, [words, locale, asks, atLobby, asExample]);
+  }, [words, locale, asks, atLobby, asExample, fps]);
 
   useEffect(() => {
     room.current?.update(data);
   }, [data]);
 
   useEffect(() => {
-    room.current?.setInset(inset, insetLeft);
-  }, [inset, insetLeft]);
+    room.current?.setInset(inset, insetLeft, insetHeight);
+  }, [inset, insetLeft, insetHeight]);
 
   // The class list is set once: the office adds its own (the lobby, a drag) as it runs, and a
   // class changed here later would wipe them.

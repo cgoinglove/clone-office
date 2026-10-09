@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildGrid, findPath, planFloor } from "./floor.mjs";
 import { looksOf } from "./office.mjs";
-import { fitSize, flapFace, signWords } from "./pieces.mjs";
+import { clockFace, fitSize } from "./pieces.mjs";
 
 const ids = (n: number) => Array.from({ length: n }, (_, i) => `m${i}`);
 
@@ -42,6 +42,21 @@ test("a floor gives everyone a desk, in areas of up to six, none overlapping", (
         );
       }
     for (const d of fl.desks) assert.ok(d.x1 <= fl.W && d.y1 <= fl.D);
+  }
+});
+
+test("a team splits evenly over its areas, on a floor nearer square than a strip", () => {
+  assert.deepEqual(
+    plan(7).areas.map((a) => a.names.length),
+    [4, 3],
+  );
+  assert.deepEqual(
+    plan(13).areas.map((a) => a.names.length),
+    [5, 4, 4],
+  );
+  for (const n of [2, 6, 7, 10]) {
+    const fl = plan(n);
+    assert.ok(fl.W / fl.D < 2.5, `${n} people: ${fl.W} by ${fl.D}`);
   }
 });
 
@@ -90,40 +105,27 @@ test("words on the floor fit their space, wide scripts given more room", () => {
   assert.ok(fitSize("내 차례입니다", 98, 300) < fitSize("MY TURN", 98, 300));
 });
 
-test("the board writes its words and the team's names as text, never as markup", () => {
-  const W = {
-    date: () => "TUE 6 OCT",
-    in: (n: number) => `${n} IN`,
-    off: (n: number) => `${n} OFF`,
-    who: "WHO",
-    status: "STATUS",
-    on: "ON",
-    desk: "DESK",
-  };
-  const face = flapFace(
-    { label: "Floor <5>", in: 3, off: 1 },
-    [
-      {
-        name: "<b>",
-        mine: false,
-        look: { color: "#000", shape: "b7" },
-        state: "free",
-        status: "FREE",
-        now: "",
-        desk: 0,
-      },
-    ],
+test("the clock tells the time and who is in, its words as text, never as markup", () => {
+  const look = { color: "#000", shape: "b7", paint: null };
+  const face = clockFace(
     new Date(2026, 9, 6, 9, 5),
-    {},
-    W,
+    [
+      { in: true, look },
+      { in: true, look },
+      { in: false, look },
+    ],
+    { date: "Tue <6> Oct", in: "In" },
   );
-  assert.ok(face.includes("Floor &lt;5&gt;"));
-  assert.ok(!face.includes("<b>"));
-  assert.ok(face.includes("3 IN") && face.includes("1 OFF"));
-  const sign = signWords("you", {
-    you: "YOUR TURN",
-    work: "AT WORK",
-    quiet: "ALL CLEAR",
-  });
-  assert.ok(sign.includes('class="gs-box e"') && sign.includes("YOUR TURN"));
+  assert.ok(face.includes("Tue &lt;6&gt; Oct"));
+  assert.ok(!face.includes("<6>"));
+  assert.ok(face.includes(">2</tspan>") && face.includes(">/3</tspan>"));
+  assert.equal(face.split('class="ck-in"').length - 1, 2);
+  assert.equal(face.split('class="ck-out"').length - 1, 1);
+  // a crowd past what fits the row ends in a count
+  const many = clockFace(
+    new Date(2026, 9, 6, 9, 5),
+    Array.from({ length: 24 }, (_, i) => ({ in: i < 20, look })),
+    { date: "", in: "In" },
+  );
+  assert.ok(/>\+\d+<\/text>/.test(many));
 });

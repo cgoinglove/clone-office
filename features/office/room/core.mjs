@@ -29,7 +29,6 @@ export const hashStr = (str) => {
 };
 export const easeInOut = (x) =>
   x < 0.5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
-export const easeOut = (x) => 1 - (1 - clamp(x, 0, 1)) ** 3;
 export const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 export let REDUCED = false;
@@ -127,52 +126,17 @@ export const HOP_S = track([
   [0.95, [1.04, 0.97]],
   [1, [1, 1]],
 ]);
-export const HOP_SPIN = track([
-  [0, 0],
-  [0.243, 0, bezier(0.3, 0, 0.35, 1)],
-  [0.716, 1],
-  [1, 1],
-]);
-/** Each jump a mini-me makes: how long, how high (share of its height), how much it squashes, whether it turns. */
-export const LEAPS = {
-  hop: { dur: 0.74, rise: 0.27, squash: 0.8 },
-  flip: { dur: 0.86, rise: 0.36, squash: 0.8, spin: true },
-  tap: { dur: 0.42, rise: 0.07, squash: 0.45 },
-  bounce: { dur: 0.62, rise: 0.15, squash: 0.65 },
-};
-export function leapAt(kind, t) {
-  const L = LEAPS[kind],
-    u = clamp(t / L.dur, 0, 1),
+/** A clone's small settle as it sits down or hands something over: how long, how high (share of its height), how much it squashes. */
+const TAP = { dur: 0.42, rise: 0.07, squash: 0.45 };
+export function leapAt(_kind, t) {
+  const u = clamp(t / TAP.dur, 0, 1),
     s = HOP_S(u);
   return {
-    lift: -HOP_Y(u) * L.rise,
-    sx: 1 + (s[0] - 1) * L.squash,
-    sy: 1 + (s[1] - 1) * L.squash,
-    spin: L.spin ? HOP_SPIN(u) * 360 : 0,
+    lift: -HOP_Y(u) * TAP.rise,
+    sx: 1 + (s[0] - 1) * TAP.squash,
+    sy: 1 + (s[1] - 1) * TAP.squash,
+    spin: 0,
     done: u >= 1,
-  };
-}
-/** Dropping in from above onto its spot, then the landing of a jump. */
-export const DROP_FALL = 0.36,
-  DROP_LAND = 0.44;
-export function dropAt(t) {
-  if (t < DROP_FALL) {
-    const q = t / DROP_FALL;
-    return {
-      lift: (1 - q * q) * 0.6,
-      sx: 0.93 + 0.07 * q,
-      sy: 1.1 - 0.1 * q,
-      alpha: Math.min(1, q * 4),
-    };
-  }
-  const u = 0.716 + clamp((t - DROP_FALL) / DROP_LAND, 0, 1) * 0.284,
-    s = HOP_S(u);
-  return {
-    lift: -HOP_Y(u) * 0.27,
-    sx: 1 + (s[0] - 1) * 0.9,
-    sy: 1 + (s[1] - 1) * 0.9,
-    alpha: 1,
-    done: t >= DROP_FALL + DROP_LAND,
   };
 }
 /** One step of a walk: a low hop, squashed where it touches the floor. */
@@ -351,11 +315,9 @@ export const KEYS = [
   "ew",
   "eh",
   "en",
-  "bend",
   "gx",
   "gy",
   "dot",
-  "dim",
 ];
 export const FAST = new Set(["sx", "sy", "ty"]);
 export const BLINKS = new Set([
@@ -379,11 +341,9 @@ export function poseOf(mood, T, ph, still) {
     ew: 1,
     eh: 1,
     en: EYE.n,
-    bend: 0,
     gx: 0,
     gy: 0,
     dot: 0,
-    dim: 1,
   };
   switch (mood) {
     case "idle":
@@ -420,28 +380,6 @@ export function poseOf(mood, T, ph, still) {
       p.rot = 6;
       p.gy = -1;
       p.dot = 1;
-      if (!still) {
-        const u = ((t % 2.6) + 2.6) % 2.6;
-        if (u < 0.5) {
-          const v = u / 0.5;
-          p.ty = -10 * 4 * v * (1 - v);
-        }
-      }
-      break;
-    case "happy":
-      p.bend = 9;
-      p.eh = 0.3;
-      p.ew = 1.12;
-      p.gy = -3;
-      if (!still) p.ty = -2.5 * Math.abs(Math.sin(t * TAU * 0.9));
-      break;
-    case "surprised":
-      p.eh = 1.3;
-      p.ew = 1.15;
-      p.en = 2;
-      p.gy = -5;
-      p.sy += 0.04;
-      p.sx -= 0.02;
       break;
     case "talk":
       p.eh = 1.03;
@@ -456,22 +394,10 @@ export function poseOf(mood, T, ph, still) {
     case "walk":
       p.eh = 0.96;
       break;
-    case "sleep": {
-      const b2 = still ? 0 : Math.sin((t * TAU) / 5.4);
-      p.sy = 0.955 + 0.025 * b2;
-      p.sx = 1.02 - 0.012 * b2;
-      p.eh = 0.13;
-      p.bend = -3.5;
-      p.gy = 7;
-      p.dim = 0.78;
-      p.rot = -3;
-      break;
-    }
   }
   return p;
 }
-export let BOT_SEQ = 0;
-export const Z_PATH = (j) => `M${-7 + j} -7H7L-7 ${7 - j}H${7 + j * 0.5}`;
+let BOT_SEQ = 0;
 export class Bot {
   constructor(o) {
     this.color = o.color;
@@ -498,7 +424,7 @@ export class Bot {
         ? `<linearGradient id="${id}-p" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="320" y2="0" spreadMethod="repeat">${stops}</linearGradient>`
         : `<linearGradient id="${id}-p" gradientUnits="userSpaceOnUse" x1="10" y1="10" x2="230" y2="230">${stops}</linearGradient>`;
     }
-    this.el.innerHTML = `<defs>${defs}</defs><g class="sb-body"><path class="sb-fill"${pt ? ` style="fill:url(#${id}-p)"` : ""}/><path class="sb-eye"/><path class="sb-eye"/></g><g class="sb-z" style="display:none"><g><path class="sb-zp" d="${Z_PATH(0)}"/></g><g><path class="sb-zp" d="${Z_PATH(1.5)}"/></g></g><g class="sb-dot" style="display:none"><circle class="sb-ring" r="21"/><circle class="sb-dotc" r="16"/><circle class="sb-pulse" r="16"/></g>`;
+    this.el.innerHTML = `<defs>${defs}</defs><g class="sb-body"><path class="sb-fill"${pt ? ` style="fill:url(#${id}-p)"` : ""}/><path class="sb-eye"/><path class="sb-eye"/></g><g class="sb-dot" style="display:none"><circle class="sb-ring" r="21"/><circle class="sb-dotc" r="16"/><circle class="sb-pulse" r="16"/></g>`;
     if (!pt)
       this.el.style.setProperty(
         "--bot",
@@ -511,8 +437,6 @@ export class Bot {
     this.eyes = [...this.el.querySelectorAll(".sb-eye")];
     this.dot = q(".sb-dot");
     this.pulse = q(".sb-pulse");
-    this.zs = q(".sb-z");
-    this.zt = [...this.zs.children];
     let maxY = -9,
       minY = 9;
     for (const [, y] of SHAPES[this.shape]) {
@@ -590,23 +514,10 @@ export class Bot {
         const th = (i / 26) * TAU,
           co = Math.cos(th),
           si = Math.sin(th),
-          x = Math.sign(co) * Math.abs(co) ** (2 / n) * hw,
-          u = x / hw;
-        out.push(
-          xf(
-            ex + x,
-            ey +
-              Math.sign(si) * Math.abs(si) ** (2 / n) * hh -
-              c.bend * (1 - u * u),
-          ),
-        );
+          x = Math.sign(co) * Math.abs(co) ** (2 / n) * hw;
+        out.push(xf(ex + x, ey + Math.sign(si) * Math.abs(si) ** (2 / n) * hh));
       }
       this.eyes[s].setAttribute("d", pathOf(out));
-    }
-    const dim = String(r2(c.dim));
-    if (dim !== this.dimW) {
-      this.dimW = dim;
-      this.body.setAttribute("opacity", dim);
     }
     if (this.grad)
       this.grad.setAttribute(
@@ -632,26 +543,6 @@ export class Bot {
     } else if (this.dotOff !== true) {
       this.dotOff = true;
       this.dot.style.display = "none";
-    }
-    if (this.mood === "sleep") {
-      if (this.zOff !== false) {
-        this.zOff = false;
-        this.zs.style.display = "";
-      }
-      this.zt.forEach((z, i) => {
-        const u = still
-            ? 0.3 + i * 0.35
-            : ((((t + this.phase * 3 + i * 1.3) / 2.6) % 1) + 1) % 1,
-          k = (1.6 + i * 0.6) * (0.7 + 0.5 * u);
-        z.setAttribute(
-          "transform",
-          `translate(${r1(CX + 60 + u * 30 + i * 10)} ${r1(CY - 66 - u * 66 - i * 12)}) rotate(${r1(-8 + 16 * Math.sin(u * 5 + i))}) scale(${r2(k)})`,
-        );
-        z.setAttribute("opacity", r2(Math.sin(u * Math.PI) * 0.95));
-      });
-    } else if (this.zOff !== true) {
-      this.zOff = true;
-      this.zs.style.display = "none";
     }
   }
 }
@@ -699,7 +590,6 @@ export function unmountBot(rec) {
 // The sketch: plan units (x across, y back to front, z up) projected 2:1. A line bows a
 // little and runs a little past its corners, as a hand draws it; how far it runs is set
 // per piece (withOv): the building and big furniture overshoot, small things close neatly.
-// A part is wrapped with how it arrives (k-*) and when.
 // ====================================================================================
 
 export const WS = 10;
@@ -707,11 +597,6 @@ export const at = (x, y, z = 0) => [
   (x - y) * 0.894 * WS,
   (x + y) * 0.447 * WS - z * 0.94 * WS,
 ];
-export const unproject = (sx, sy) => {
-  const a = sx / (0.894 * WS),
-    b = sy / (0.447 * WS);
-  return [(a + b) / 2, (b - a) / 2];
-};
 export const P = (list) => list.map(([x, y]) => `${r1(x)},${r1(y)}`).join(" ");
 /** Overshoot and bow in drawing units: a few pixels and under one, whatever the zoom. */
 export let OV = 4,
@@ -742,8 +627,6 @@ export const withOv = (k, f) => {
     KOV = prev;
   }
 };
-export const part = (cls, d, s) =>
-  `<g class="${cls}" style="--d:${Math.round(d)}ms">${s}</g>`;
 /**
  * The same drawing in far fewer elements: neighbouring strokes of one class become one path, and so do
  * neighbouring flat faces of one class (turned the same way round, so they fill as one). The browser
@@ -913,12 +796,9 @@ export function plane(o, u, v) {
 }
 export const planeM = (x, y, z) => plane([x, y, z], [1, 0, 0], [0, 0, -1]);
 export const wallM = (x, z) => planeM(x, 0.05, z);
-export const sideWallM = (y, z) => plane([0.05, y, z], [0, -1, 0], [0, 0, -1]);
 export const floorM = (x, y) => plane([x, y, 0], [1, 0, 0], [0, 1, 0]);
 export const floorText = (s, x, y, size, cls = "ftext") =>
   `<text class="${cls}" transform="${floorM(x, y)}" font-size="${size}">${esc(s)}</text>`;
-export const planeText = (s, x, y, z, size, cls) =>
-  `<text class="${cls}" transform="${planeM(x, y, z)}" font-size="${size}">${esc(s)}</text>`;
 export const ellipseAt = (x, y, z, rx, ry, cls, extra = "") => {
   const c = at(x, y, z);
   return `<ellipse class="${cls}" cx="${r1(c[0])}" cy="${r1(c[1])}" rx="${r1(rx)}" ry="${r1(ry)}"${extra}/>`;
@@ -945,39 +825,6 @@ export function cyl(x, y, z0, z1, rb, rt = rb, o = {}) {
   return s;
 }
 /** A hand-drawn loop on the floor round a plan box, not quite closing, in two passes. */
-export function loopOn(x0, y0, x1, y1, seed) {
-  const cx = (x0 + x1) / 2,
-    cy = (y0 + y1) / 2,
-    rx = (x1 - x0) / 2,
-    ry = (y1 - y0) / 2,
-    out = [];
-  for (let pass = 0; pass < 2; pass++) {
-    const pts = [],
-      a0 = -2.3 + pass * 0.35 + hash(seed + pass) * 0.3,
-      span = TAU * (1.06 + 0.04 * pass);
-    for (let i = 0; i <= 28; i++) {
-      const a = a0 + (i / 28) * span,
-        j =
-          1 + (hash(seed * 3 + i * 1.7 + pass * 11) - 0.5) * 0.07 + pass * 0.03;
-      pts.push(at(cx + Math.cos(a) * rx * j, cy + Math.sin(a) * ry * j));
-    }
-    let d = `M${r1(pts[0][0])} ${r1(pts[0][1])}`;
-    for (let i = 1; i < pts.length - 1; i++) {
-      const m = [
-        (pts[i][0] + pts[i + 1][0]) / 2,
-        (pts[i][1] + pts[i + 1][1]) / 2,
-      ];
-      d += `Q${r1(pts[i][0])} ${r1(pts[i][1])} ${r1(m[0])} ${r1(m[1])}`;
-    }
-    out.push(
-      `<path class="hand-l" pathLength="1"${pass ? ' opacity=".55"' : ""} d="${d}"/>`,
-    );
-  }
-  return out.join("");
-}
-
-// ---- leaves, for plants on the floor and on a desk
-
 export function leaf(bx, by, ang, len, wid) {
   const dx = Math.cos(ang),
     dy = Math.sin(ang),
@@ -1028,56 +875,47 @@ export function foliage(top, kind, seed, size = 1) {
   return s;
 }
 /** A potted plant on the floor: a tapering pot, then the leaves grow. */
-export function plant(x, y, kind = "leafy", t0 = 0) {
+export function plant(x, y, kind = "leafy") {
   return withOv(0, () => {
     const tall = kind === "tall",
       h = tall ? 4.4 : 3.8,
       rt = tall ? 1.55 : 1.85,
       rb = tall ? 1.15 : 1.35;
-    const pot = part(
-      "k-drop",
-      t0,
-      ellipseAt(x, y, 0, rb * RX * 1.6, rb * RX * 0.8, "f-soft") +
-        cyl(x, y, 0, h, rb, rt) +
-        ellipseAt(
-          x,
-          y,
-          h - 0.15,
-          rt * RX * 0.8,
-          rt * RX * 0.4,
-          "f-ink72",
-          ' opacity=".18"',
-        ),
-    );
     return (
-      pot +
-      part(
-        "k-grow",
-        t0 + 280,
-        foliage(at(x, y, h - 0.2), kind, x * 0.37 + y * 0.11),
-      )
+      ellipseAt(x, y, 0, rb * RX * 1.6, rb * RX * 0.8, "f-soft") +
+      cyl(x, y, 0, h, rb, rt) +
+      ellipseAt(
+        x,
+        y,
+        h - 0.15,
+        rt * RX * 0.8,
+        rt * RX * 0.4,
+        "f-ink72",
+        ' opacity=".18"',
+      ) +
+      foliage(at(x, y, h - 0.2), kind, x * 0.37 + y * 0.11)
     );
   });
 }
 
 // ====================================================================================
-// One frame loop for the page: the half-rate frames flip here, the little marks (mountBot)
-// breathe on them, and each office running adds its own tick. It stops when nothing is left.
+// One frame loop for the page: the half-rate frames flip here, the little marks (mountBot) are
+// drawn on them when they change, and each office running adds its own tick. It stops when
+// nothing is left.
 // ====================================================================================
 
 const runners = new Set();
 let raf = 0,
-  lastT = 0,
-  acc = 0;
+  lastT = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   EVEN = !EVEN;
-  acc += dt;
+  // the little marks beside the office (the box's, the panel's, the lobby's) hold still, drawn again
+  // only when their mood changes: a few pixels of breath there is cost for nothing
   if (EVEN) {
     const t = now / 1000;
-    for (const r of live) if (r.visible) r.bot.update(t, acc);
-    acc = 0;
+    for (const r of live) if (r.visible) r.bot.still(t);
   }
   for (const fn of runners) fn(dt, now);
   raf = runners.size ? requestAnimationFrame(frame) : 0;

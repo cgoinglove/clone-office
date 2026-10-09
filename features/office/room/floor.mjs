@@ -1,24 +1,32 @@
 // The office room's floor plan: desks in areas of up to six, bookshelves between them, a reading
 // corner with tea, and the lift on the back wall. Walking is worked out on a grid of what blocks.
 
-import { clamp, lerp, r1 } from "./core.mjs";
+import { clamp, lerp } from "./core.mjs";
 import { LIFT_W, LIFT_X, PD, PW, podAt } from "./pieces.mjs";
 
 export const ZA = 44,
   AV = 26,
   AH = 26,
   TOP = 22;
+/** How deep a floor is at least: the commons by the lift need this much. */
+const COMMONS_D = 104;
 /** The walls' height in plan units: the design's middle one. */
 export const WALL_H = 28;
-/** Each team's people in areas of up to six desks, two to a row. `teams` are [label, ids]. */
+/**
+ * Each team's people in areas of up to six desks, two to a row, as even as they split: seven people
+ * sit four and three rather than six and one. `teams` are [label, ids].
+ */
 export function areasOf(teams) {
   const areas = [];
-  for (const [team, names] of teams)
-    for (let i = 0; i < names.length; i += 6) {
-      const chunk = names.slice(i, i + 6),
-        n = chunk.length,
-        cols = n === 1 ? 1 : 2,
-        rows = Math.ceil(n / cols);
+  for (const [team, names] of teams) {
+    const n = Math.max(1, Math.ceil(names.length / 6)),
+      base = Math.floor(names.length / n),
+      extra = names.length % n;
+    for (let i = 0, at = 0; i < n && at < names.length; i++) {
+      const size = base + (i < extra ? 1 : 0),
+        chunk = names.slice(at, at + size),
+        cols = chunk.length === 1 ? 1 : 2,
+        rows = Math.ceil(chunk.length / cols);
       areas.push({
         team,
         names: chunk,
@@ -28,13 +36,16 @@ export function areasOf(teams) {
         d: rows * PD,
         secondary: i > 0,
       });
+      at += size;
     }
+  }
   return areas;
 }
 /**
- * One floor: the team areas on a grid of walkways, the shared corner as one more cell at the end
- * (so the grid has no hole), bookshelves beside each area's rows, and in the corner a tea island,
- * a rug with a shelf, two armchairs and a low table, and plants.
+ * One floor: the team areas on a grid of walkways, a bookshelf beside each area's rows, and on the
+ * left by the lift the commons, kept small: a coffee island, then a reading nook (a rug, a shelf, two
+ * armchairs and a low table, where the clones meet) and a plant. The floor is no larger than its
+ * desks need, so they are drawn as large as the screen allows.
  */
 export function planFloor(teams, fi) {
   const areas = areasOf(teams);
@@ -48,9 +59,9 @@ export function planFloor(teams, fi) {
   };
   const X0 = ZA + 26;
   const n = areas.length,
-    cells = n + 1,
-    gc = cells <= 3 ? cells : cells <= 4 ? 2 : 3,
-    gr = Math.ceil(cells / gc),
+    // two to a row until there are more than four: a floor near square rather than a long strip
+    gc = n <= 2 ? n : n <= 4 ? 2 : 3,
+    gr = Math.ceil(n / gc),
     colW = [],
     rowH = [];
   areas.forEach((a, i) => {
@@ -59,14 +70,6 @@ export function planFloor(teams, fi) {
     colW[a.c] = Math.max(colW[a.c] || 0, a.w);
     rowH[a.r] = Math.max(rowH[a.r] || 0, a.d);
   });
-  const cc = n % gc,
-    cr = Math.floor(n / gc),
-    CMW = 76,
-    CMD = 62;
-  let span = 0;
-  for (let c = cc; c < gc; c++) span += (colW[c] || 0) + (c > cc ? AV : 0);
-  if (span < CMW) colW[gc - 1] = (colW[gc - 1] || 0) + CMW - span;
-  rowH[cr] = Math.max(rowH[cr] || 0, CMD);
   const colX = [],
     rowY = [];
   let x = X0;
@@ -84,23 +87,33 @@ export function planFloor(teams, fi) {
     a.y0 = rowY[a.r];
   }
   fl.W = x - AV + 26;
-  fl.D = Math.max(120, y - AH + 24);
-  // the corner is only as deep as what stands in it, centred in a deeper cell
-  const x0 = colX[cc],
-    x1 = x - AV,
-    w = x1 - x0,
-    y0 = rowY[cr] + Math.max(0, (rowH[cr] - CMD) / 2),
-    y1 = y0 + CMD,
-    wide = w >= 160;
-  fl.floorArt.push({
-    kind: "plaza",
-    x0: x0 - 5,
-    y0: y0 - 5,
-    x1: x1 + 5,
-    y1: y1 + 3,
+  fl.D = Math.max(COMMONS_D, y - AH + 24);
+  // the commons, in the lane by the lift: clear of the left wall's clock, low enough not to hide it
+  fl.things.push({ kind: "tea", x: 12, y: 24 });
+  const rx = 10,
+    ry = 58;
+  fl.floorArt.push({ kind: "rug", x0: rx, y0: ry, x1: rx + 36, y1: ry + 30 });
+  fl.things.push({
+    kind: "shelf",
+    x0: rx + 3,
+    y0: ry - 9,
+    x1: rx + 33,
+    y1: ry - 5.4,
+    face: "y",
+    h: 9,
   });
-  fl.things.push({ kind: "tea", x: x0 + 6, y: y0 + 6, island: true });
-  fl.things.push({ kind: "plant", x: x1 - 5, y: y1 - 5, p: "tall" });
+  fl.things.push(
+    { kind: "armchairs", x: rx + 11, y: ry + 7 },
+    { kind: "armchairs", x: rx + 25, y: ry + 7 },
+  );
+  fl.things.push({
+    kind: "lowtable",
+    x0: rx + 10,
+    y0: ry + 16,
+    x1: rx + 26,
+    y1: ry + 21.5,
+  });
+  fl.things.push({ kind: "plant", x: 56, y: fl.D - 9, p: "tall" });
   for (const a of areas)
     for (let r = 0; r < a.rows; r++)
       fl.things.push({
@@ -112,35 +125,6 @@ export function planFloor(teams, fi) {
         face: "x",
         h: 13,
       });
-  const rx = wide ? x0 + w * 0.42 : x0 + 32,
-    ry = y0 + 18;
-  fl.floorArt.push({ kind: "rug", x0: rx, y0: ry, x1: rx + 36, y1: ry + 30 });
-  fl.things.push({
-    kind: "shelf",
-    x0: rx + 2,
-    y0: ry - 9,
-    x1: rx + 32,
-    y1: ry - 5.4,
-    face: "y",
-    h: 13,
-  });
-  fl.things.push(
-    { kind: "armchairs", x: rx + 11, y: ry + 7 },
-    { kind: "armchairs", x: rx + 22, y: ry + 7 },
-  );
-  fl.things.push({
-    kind: "lowtable",
-    x0: rx + 9,
-    y0: ry + 16,
-    x1: rx + 24,
-    y1: ry + 21.5,
-  });
-  fl.things.push({ kind: "plant", x: x0 + 8, y: y1 - 6, p: "leafy" });
-  if (wide)
-    fl.things.push(
-      { kind: "sofa", x0: x1 - 34, y: y0 + 26, x1: x1 - 12 },
-      { kind: "plant", x: x1 - 8, y: y0 + 8, p: "leafy" },
-    );
   const desks = [];
   for (const a of areas) {
     a.x1 = a.x0 + a.w;
@@ -159,7 +143,6 @@ export function planFloor(teams, fi) {
       desks.push(d);
     }
   }
-  fl.floorArt.push({ kind: "rug", x0: 5, y0: 58, x1: 40, y1: 90 });
   fl.desks = desks;
   fl.lift = [LIFT_X + LIFT_W / 2, 8];
   fl.door = [LIFT_X + LIFT_W / 2, 1.3];
@@ -319,24 +302,3 @@ export function findPath(fl, from, to) {
   }
   return out;
 }
-
-// ====================================================================================
-// Doodles that come and go around the mini-mes: each drawn twice, shown in turn, so it trembles like ink
-// ====================================================================================
-
-export const FXD = {
-  bang: (j) =>
-    `<path class="fx-i" d="M${r1(-2 + j * 0.4)} -25L${r1(2.1 + j * 0.5)} -24.4L${r1(0.9)} -7.4L${r1(-0.8)} -7.6Z"/><circle class="fx-i" cx="${r1(0.1 + j * 0.3)}" cy="-2.5" r="2"/><path class="fx-l" d="M-8 ${r1(-19.5 + j)}L-12.5 ${r1(-24 + j)}M8 ${r1(-20 - j)}L12.6 ${r1(-24.6 - j * 0.5)}M-9.2 ${r1(-11.2 + j * 0.5)}L-14 -11.8"/>`,
-  ask: (j) =>
-    `<path class="fx-l" d="M-5.6 ${r1(-18 + j * 0.4)}C${r1(-5.6 + j * 0.3)} -26 6.4 -26.4 6.2 -18.6C6 -13.4 ${r1(0.4 + j * 0.4)} -13.2 0.4 -7.8"/><circle class="fx-i" cx="${r1(0.4 + j * 0.3)}" cy="-2.6" r="1.9"/>`,
-  spark: (j) =>
-    `<path class="fx-i" d="M0 ${r1(-9 - j * 0.4)}Q${r1(1.1 + j * 0.2)} -1.1 9 0Q1.1 1.1 0 9Q-1.1 1.1 ${r1(-9 + j * 0.4)} 0Q-1.1 -1.1 0 ${r1(-9 - j * 0.4)}Z"/>`,
-  puff: (j) =>
-    `<ellipse class="fx-l" cx="${r1(j * 0.4)}" cy="0" rx="${r1(11 + j)}" ry="${r1(3.6 + j * 0.3)}"/>`,
-  drip: (j) =>
-    `<path class="fx-l fx-p" d="M0 ${r1(-11 - j * 0.4)}Q6 -2.6 0 1.8Q-6 -2.6 0 ${r1(-11 - j * 0.4)}Z"/>`,
-  ticks: (j) =>
-    `<path class="fx-l" d="M-12 ${r1(-3 + j)}L-17.5 -7.5M0 -7.5L${r1(j * 0.5)} -13.5M12 ${r1(-3 - j)}L17.5 -7.5"/>`,
-  heart: (j) =>
-    `<path class="fx-i" d="M0 ${r1(6 + j * 0.3)}C-9.5 0 -11 -6.8 -5.8 -8.8C-3 -9.9 -0.8 -7.9 0 -6.2C0.8 -7.9 3 -9.9 5.8 -8.8C11 -6.8 9.5 0 0 ${r1(6 + j * 0.3)}Z"/>`,
-};

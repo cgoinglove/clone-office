@@ -458,22 +458,30 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`standupDue`). The office's work starts with the server (`office/boot.ts`
   from `instrumentation.ts`: the office open here, and the loop that answers colleagues), and
   again whenever a page asks about the office.
-- `features/office/room/`: the office floor, ported from the confirmed design
-  (`docs/office-room.local.d/`, v13). Plain ES modules that build SVG as strings: `core.mjs` (the
-  clone mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks,
-  commons, lift, the departures board, the floor sign), `floor.mjs` (the library plan, walking
-  on a grid), `office.mjs` (`createOffice`: sheets, scenes, camera, panel, and the lobby with
-  its lift ride, once a day; a meeting of the clones (`RoomData.meeting`) gathers its members round
-  the reading corner's low table, where they take turns, what each said over its head, and go back
-  once the last word is read; `example` (the first steps) opens with everyone seated and named, the
-  desks framed close and nobody off for tea; `setInset` keeps room at the sides for what the page lays over it,
-  `onPanel` and `closePanel` let the page's own panel and the office's take turns), `looks.mjs`
-  (each clone's colour and shape, for lists outside the floor). Full screen (`of-full`) it fills
-  its frame; `of-pane` fills the office screen and `of-mini` is the chat's small live view, with
-  no controls. Its performance shape
-  is the point: the board, the still drawing and each mover on separate SVG sheets, copies of what
-  stands in front of a mover cut to its outline, merged lines, half-rate frames, stopped off
-  screen. `office-room.tsx` is the React box with the screen's words; `room.css` maps the design
+- `features/office/room/`: the office floor, from the confirmed design (`docs/office-room.local.d/`,
+  v13) as simplified on 10-09 (the user: nothing that moves for show, the board unreadable, a big
+  clock and who is in instead). Plain ES modules that build SVG as strings: `core.mjs` (the clone
+  mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks, commons,
+  lift, the clock on the left wall, `clockFace`: the time in seven segments, who is in out of
+  everyone and their faces), `floor.mjs` (the plan: desk areas split evenly, the commons in the lane
+  by the lift, a floor no larger than its desks need; walking on a grid), `office.mjs`
+  (`createOffice`: sheets, scenes, camera, panel, and the lobby with its lift ride, once a day). Only
+  what means something moves: a request carried or thrown to a desk and answered with DONE, a clone
+  coming in or going home through the lift, one at work, one asking its person; no tea runs, no
+  vacuum, no hearts or smiles, and the office opens as it is, everyone in already seated. Each
+  clone is named over its head with what it is on (`plateOf`; at an empty desk, whose it is), all
+  of them once the floor is near enough to read. A meeting of the clones (`RoomData.meeting`)
+  gathers its members round the reading nook's low table, where they take turns, what each said
+  over its head, and go back once the last word is read; `example` (the first steps) opens with
+  everyone seated and named, the desks framed close, without the clock; `setInset` keeps room at
+  the sides for what the page lays over it (a panel at the right that ends partway down lets the
+  floor pass beneath it, `clearOf`), `onPanel` and `closePanel` let the page's own panel and the
+  office's take turns), `looks.mjs` (each clone's colour and shape, for lists outside the floor).
+  Full screen (`of-full`) it fills its frame; `of-pane` fills the office screen and `of-mini` is
+  the chat's small live view, the whole floor at half rate, with no controls. Its performance shape
+  is the point: the still drawing and each mover on separate SVG sheets, copies of what stands in
+  front of a mover cut to its outline and written only when they change, merged lines, the little
+  marks beside it still between moods, half-rate frames, stopped off screen. `office-room.tsx` is the React box with the screen's words; `room.css` maps the design
   onto the app's tokens (black and white space, ember for what waits, red only for a mark's dot,
   each clone its colour). `features/minime/office/room-data.ts` turns the relay's look into
   what it draws: the members, and the requests between them that the viewer is part of. The
