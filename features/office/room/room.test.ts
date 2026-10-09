@@ -131,6 +131,15 @@ test("the clock tells the time and who is in, its words as text, never as markup
     periodFirst: false,
   });
   assert.ok(pm.includes(">PM</text>"));
+  // a two-digit hour with its half of the day leaves less room: the faces take two rows, all shown
+  const late = clockFace(
+    new Date(2026, 9, 6, 22, 1),
+    Array.from({ length: 10 }, (_, i) => ({ in: i < 7, look })),
+    { in: "In", twelve: true, period: "PM", periodFirst: false },
+  );
+  assert.equal(late.split('class="ck-in"').length - 1, 7);
+  assert.equal(late.split('class="ck-out"').length - 1, 3);
+  assert.ok(!/>\+\d+<\/text>/.test(late));
   // a crowd past what fits the row ends in a count
   const many = clockFace(
     new Date(2026, 9, 6, 9, 5),

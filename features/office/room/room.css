@@ -540,6 +540,9 @@
   padding: 7px 11px 8px;
   font-size: 12.5px;
 }
+.of-wrap .bub.meet::after {
+  left: calc(16% - 6px);
+}
 .of-wrap .bub.small .who {
   display: none;
 }

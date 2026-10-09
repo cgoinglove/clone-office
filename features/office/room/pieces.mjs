@@ -665,20 +665,34 @@ export function clockFace(now, crew, words) {
   x += 34;
   const room = CLOCK.w - x - 30;
   s += `<text class="ck-num" x="${x}" y="104"><tspan class="ck-word" font-size="${fitSize(words.in, 42, room * 0.45)}">${esc(words.in)} </tspan><tspan font-size="80">${inNow}</tspan><tspan class="ck-of" font-size="48">/${crew.length}</tspan></text>`;
-  // everyone in a row, those in first, as large as the row allows; past what fits, a count
-  const gap = 12,
-    size = Math.max(
-      30,
-      Math.min(54, Math.floor((room + gap) / Math.max(1, crew.length)) - gap),
-    ),
-    fit = Math.max(1, Math.floor((room + gap) / (size + gap))),
-    shown = crew.length > fit ? crew.slice(0, fit - 1) : crew;
+  // everyone, those in first, in one row as large as it allows, or two rows when one would make them
+  // small; past what two rows hold, a count
+  const gap = 8,
+    n = Math.max(1, crew.length);
+  let rows = 1,
+    size = Math.min(54, Math.floor((room + gap) / n) - gap);
+  if (size < 30 && n > 1) {
+    rows = 2;
+    size = Math.min(34, Math.floor((room + gap) / Math.ceil(n / 2)) - gap);
+  }
+  size = Math.max(rows === 1 ? 30 : 26, size);
+  const perRow = Math.max(1, Math.floor((room + gap) / (size + gap))),
+    fit = perRow * rows,
+    shown = crew.length > fit ? crew.slice(0, fit - 1) : crew,
+    top = rows === 1 ? 130 : 118,
+    spot = (i) => [
+      x + (i % perRow) * (size + gap),
+      top + Math.floor(i / perRow) * (size + gap),
+    ];
   s += SM_DEFS;
   shown.forEach((c, i) => {
-    s += `<g class="${c.in ? "ck-in" : "ck-out"}">${stillMark(c.look, x + i * (size + gap), 130, size, !c.in)}</g>`;
+    const [fx, fy] = spot(i);
+    s += `<g class="${c.in ? "ck-in" : "ck-out"}">${stillMark(c.look, fx, fy, size, !c.in)}</g>`;
   });
-  if (shown.length < crew.length)
-    s += `<text class="ck-more" x="${x + shown.length * (size + gap)}" y="${130 + size * 0.72}" font-size="28">+${crew.length - shown.length}</text>`;
+  if (shown.length < crew.length) {
+    const [fx, fy] = spot(shown.length);
+    s += `<text class="ck-more" x="${fx}" y="${fy + size * 0.72}" font-size="${Math.round(size * 0.6)}">+${crew.length - shown.length}</text>`;
+  }
   return s;
 }
 

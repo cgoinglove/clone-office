@@ -1302,8 +1302,9 @@ export function createOffice(
         inRing = Math.min(8, n - ring * 8),
         a = -0.12 * Math.PI + (1.24 * Math.PI * ((i % 8) + 0.5)) / inRing;
       out.push([
-        c[0] + Math.cos(a) * (12 + ring * 6),
-        c[1] + Math.sin(a) * (8 + ring * 5),
+        // wide enough apart that each face shows, drawn as large as clones are from afar
+        c[0] + Math.cos(a) * (17 + ring * 7),
+        c[1] + Math.sin(a) * (11 + ring * 6),
       ]);
     }
     return out;
@@ -2147,7 +2148,8 @@ export function createOffice(
             b.kind.includes("meet"));
         if (b.el.hidden === show) b.el.hidden = !show;
         saying = show && bubbles.has(p.id);
-        const t = `translate(${r1(hx)}px, ${r1(hy - 4)}px) translate(-50%, -100%)`;
+        // what is said in a meeting by the nook leans away from the wall, off the clock
+        const t = `translate(${r1(hx)}px, ${r1(hy - 4)}px) translate(${b.kind.includes("meet") ? "-16%" : "-50%"}, -100%)`;
         if (show && b.t !== t) {
           b.t = t;
           b.el.style.transform = t;
