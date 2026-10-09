@@ -1,4 +1,4 @@
-// The office room's drawing kit: a mini-me (Thursday's mark), the hand-drawn line, the plan
+// The office room's drawing kit: a clone (Thursday's mark), the hand-drawn line, the plan
 // projection, and the frame clock everything moves on. Ported from the confirmed design (v13).
 // Plain ES modules on purpose: they build SVG as strings and move a few hundred nodes a frame,
 // and the shape of that work (three sheets, copies cut to a mover, merged lines, half-rate

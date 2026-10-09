@@ -1,6 +1,6 @@
-// The office room's pieces: desks and what stands on them, the commons, the lift, the board, the
-// sign on the floor, the building for the way in. Each returns SVG as a string, in plan units
-// projected by `at` (core.mjs). Words people read come in from the screen's language.
+// The office room's pieces: desks and what stands on them, the commons, the lift, the clock on the
+// wall, the building for the way in. Each returns SVG as a string, in plan units projected by `at`
+// (core.mjs). Words people read come in from the screen's language.
 
 import {
   at,
@@ -480,7 +480,7 @@ export function coffeeSvg(x0, y0) {
   );
   return s;
 }
-// ---- the walls: the lift, the digital clock, the office board
+// ---- the walls: the clock, the lift
 
 /** Seven segments in a 20 by 36 cell, as Thursday's scoreboard draws them; those not lit show as a ghost. */
 export const SEGS = {

@@ -1607,7 +1607,7 @@
   display: none;
 }
 /* The office playing its example beside the first steps: framed, nobody to drive it, so no views
-   or zoom, and its floor sign under the frame's own line saying it is an example. */
+   or zoom, under the frame's own line saying it is an example. */
 .of-wrap.of-full.of-demo .hud.bl {
   display: none;
 }

@@ -1,5 +1,5 @@
-// The office room's floor plan: desks in areas of up to six, bookshelves between them, a reading
-// corner with tea, and the lift on the back wall. Walking is worked out on a grid of what blocks.
+// The office room's floor plan: desks in areas of up to six, bookshelves beside them, and in the lane
+// by the lift a coffee island and a reading nook. Walking is worked out on a grid of what blocks.
 
 import { clamp, lerp } from "./core.mjs";
 import { LIFT_W, LIFT_X, PD, PW, podAt } from "./pieces.mjs";
