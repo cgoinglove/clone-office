@@ -849,3 +849,8 @@
     animation: none !important;
   }
 }
+
+/* A spinner turns on a layer of its own, so the page around it is not painted again every frame. */
+.animate-spin {
+  will-change: transform;
+}
