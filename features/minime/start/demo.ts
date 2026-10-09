@@ -38,25 +38,35 @@ const ASK = { ms: 19_000, beats: [0, 800, 4500, 9000] };
  */
 export type DemoMode = "loop" | "ask" | "still";
 
-/** The beat the loop is on, and how many loops have gone. */
-function useBeat(playing: boolean, { ms, beats }: typeof LOOP) {
-  const [state, setState] = useState({ beat: 0, round: 0 });
+/**
+ * The beat the loop is on, how many loops have gone, and which run of it this is. A new run (the
+ * mode changed, or it plays again) starts at its first beat at once, never showing the last run's
+ * beat for a moment; its requests are new ones, so the office plays them from the start.
+ */
+function useBeat(playing: boolean, timing: typeof LOOP) {
+  const [state, setState] = useState({ timing, beat: 0, round: 0, run: 0 });
   useEffect(() => {
     if (!playing) return;
     const start = performance.now();
+    setState((was) => ({ timing, beat: 0, round: 0, run: was.run + 1 }));
     const timer = setInterval(() => {
       const elapsed = performance.now() - start;
-      const at = elapsed % ms;
+      const at = elapsed % timing.ms;
       let beat = 0;
-      for (let i = 0; i < beats.length; i++) if (at >= beats[i]) beat = i;
-      const round = Math.floor(elapsed / ms);
+      for (let i = 0; i < timing.beats.length; i++)
+        if (at >= timing.beats[i]) beat = i;
+      const round = Math.floor(elapsed / timing.ms);
       setState((was) =>
-        was.beat === beat && was.round === round ? was : { beat, round },
+        was.beat === beat && was.round === round
+          ? was
+          : { ...was, beat, round },
       );
     }, 200);
     return () => clearInterval(timer);
-  }, [playing, ms, beats]);
-  return state;
+  }, [playing, timing]);
+  return state.timing === timing && playing
+    ? state
+    : { beat: 0, round: 0, run: state.run };
 }
 
 /**
@@ -70,15 +80,15 @@ export function useDemoRoom(
   mode: DemoMode = "loop",
 ) {
   const calm = mode === "still";
-  const { beat, round } = useBeat(
+  const { beat, round, run } = useBeat(
     playing && !calm,
     mode === "ask" ? ASK : LOOP,
   );
   const room = useMemo<RoomData>(() => {
     const [first, second, third] = words.people;
     const now = Date.now();
-    const asked = `demo-${round}-ask`;
-    const decide = `demo-${round}-decide`;
+    const asked = `demo-${run}-${round}-ask`;
+    const decide = `demo-${run}-${round}-decide`;
     const requests: RoomData["requests"] = [];
     if (calm)
       return {
@@ -130,6 +140,6 @@ export function useDemoRoom(
       requests,
       waiting: beat === 5 ? { count: 1, text: words.question } : { count: 0 },
     };
-  }, [words, beat, round, calm]);
+  }, [words, beat, round, run, calm]);
   return { room, beat };
 }

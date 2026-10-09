@@ -756,8 +756,8 @@ function ExampleTalk({
             <span className="text-xs text-muted-foreground">
               {t("exampleAnswer")}
             </span>
-            <span className="rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[14px] leading-relaxed">
-              <span className="line-clamp-4">{talk.answer}</span>
+            <span className="rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[13.5px] leading-relaxed">
+              <span className="line-clamp-6">{talk.answer}</span>
             </span>
           </div>
         ) : (
@@ -1295,8 +1295,17 @@ function ReadingList({
 interface KnownRow {
   id: string;
   label: string;
-  /** One line each, the first shown first, and how to take it back (none: it is edited elsewhere). */
-  items: { title: string; detail?: string; note?: string; known?: Known }[];
+  /**
+   * One line each, the first shown first: what it is, where it stands (`now`), its path (`note`,
+   * drawn as a path), and how to take it back (none: it is edited elsewhere).
+   */
+  items: {
+    title: string;
+    detail?: string;
+    now?: string;
+    note?: string;
+    known?: Known;
+  }[];
 }
 
 /**
@@ -1320,7 +1329,8 @@ function useKnownRows(learn: ReturnType<typeof useLearn>): KnownRow[] {
       items: knows.projects.map((project) => ({
         title: project.name,
         detail: project.summary,
-        note: [project.folder, project.now].filter(Boolean).join(" · "),
+        now: project.now,
+        note: project.folder,
         known: { kind: "projects", path: project.path },
       })),
     });
@@ -1421,6 +1431,11 @@ function KnownDialog({
                       {item.detail}
                     </span>
                   )}
+                  {item.now && (
+                    <span className="text-[13px] leading-relaxed text-muted-foreground">
+                      {item.now}
+                    </span>
+                  )}
                   {item.note && (
                     <span className="font-mono text-xs break-all text-muted-foreground">
                       {item.note}
@@ -1517,7 +1532,7 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
           <span className="shrink-0 text-[13px] text-muted-foreground">
             {role.label}
           </span>
-          <span className="min-w-0 flex-1 truncate text-[14.5px] font-medium">
+          <span className="line-clamp-2 min-w-0 flex-1 text-[14.5px] leading-snug font-medium">
             {role.items[0]?.title}
           </span>
           <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
@@ -1626,7 +1641,11 @@ function SummaryKind({
             key={name.key}
             className="flex h-6.5 max-w-full min-w-0 items-center gap-1.5 rounded-[7px] bg-foreground/[0.045] px-2 text-[13px]"
           >
-            {name.mark && <span className="flex shrink-0">{name.mark}</span>}
+            {name.mark && (
+              <span aria-hidden className="flex shrink-0">
+                {name.mark}
+              </span>
+            )}
             <span className="truncate">{name.text}</span>
           </span>
         ))}
