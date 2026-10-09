@@ -2,8 +2,8 @@
 
 // The column on the left of every screen, kept short so the app reads at a glance, after the
 // columns ChatGPT, Claude and Paperclip keep: starting a conversation first; then the four places
-// (Home, the requests between clones, the office, the clone itself), each marked by a glyph that
-// fills while it is the one open (nav-icons.tsx); what waits on the person, their turn, only when
+// (Home, the requests between clones, the office, the clone itself), each marked as Thursday marks
+// its own (nav-icons.tsx), the open one by its row's fill; what waits on the person, their turn, only when
 // something does; their conversations, only once there are some, scrolling on their own between
 // the places and the foot; and at the foot Settings, with their status in the office beside it
 // once they are in one. A place says what goes on there (the requests open, a meeting under way,
@@ -123,7 +123,7 @@ export function Sidebar() {
           }}
           className={row(false)}
         >
-          <NavIcon name="compose" />
+          <NavIcon name="compose" className="text-foreground/60" />
           <span className="flex-1 truncate text-left">{t("newChat")}</span>
           <kbd className="font-mono text-[10.5px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
             ⇧⌘N
@@ -140,8 +140,7 @@ export function Sidebar() {
             >
               <NavIcon
                 name={item.icon}
-                on={on}
-                className={on ? undefined : "text-foreground/70"}
+                className={on ? undefined : "text-foreground/60"}
               />
               <span className="flex-1 truncate">
                 {t(`screens.${item.key}`)}
@@ -228,7 +227,7 @@ export function Sidebar() {
           onClick={() => app.setSettings("brain")}
           className={cn(row(false), "flex-1")}
         >
-          <NavIcon name="settings" className="text-foreground/70" />
+          <NavIcon name="settings" className="text-foreground/60" />
           <span className="flex-1 truncate text-left">{t("settings")}</span>
           <kbd className="font-mono text-[10.5px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
             ⌘,

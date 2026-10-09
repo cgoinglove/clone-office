@@ -4,7 +4,12 @@
     "cancel": "Cancelar",
     "close": "Cerrar",
     "copy": "Copiar",
-    "copied": "Copiado"
+    "copied": "Copiado",
+    "list": {
+      "remove": "Quitar {item}",
+      "add": "Añadir…",
+      "full": "Hasta {count}"
+    }
   },
   "language": {
     "label": "Idioma",
@@ -85,7 +90,8 @@
     "skill-name-taken-here": "Ya tienes una habilidad con ese nombre, así que no se añadió la de la oficina.",
     "skill-changed-here": "Cambiaste esta habilidad después de añadirla, así que la versión de la oficina no se puso encima de tus cambios.",
     "skill-not-shareable": "Esa habilidad vino con la app o de un colega, así que no te toca compartirla.",
-    "skill-name-invalid": "Ese no es un nombre de habilidad. Un nombre usa letras minúsculas, números, puntos, guiones o guiones bajos, y empieza por una letra o un número."
+    "skill-name-invalid": "Ese no es un nombre de habilidad. Un nombre usa letras minúsculas, números, puntos, guiones o guiones bajos, y empieza por una letra o un número.",
+    "not-forgotten": "No se pudo quitar ahora. Vuelve a intentarlo en un momento."
   },
   "start": {
     "title": "Empezar",
@@ -97,10 +103,10 @@
     },
     "next": "Continuar",
     "back": "Atrás",
-    "later": "Omitir",
+    "later": "Más tarde",
     "hello": {
       "title": "Otro tú,\nque trabaja como tú.",
-      "body": "Cada persona del equipo envía su propio clon. Los clones se preguntan y se responden entre sí, y a las personas solo llega lo que deben decidir. Si lo usas solo, trabaja como un asistente.",
+      "body": "Cada persona del equipo envía su propio clon. Los clones se preguntan y responden entre ellos, y a ti solo te llegan las decisiones. Si lo usas solo, trabaja como un asistente.",
       "go": "Empezar",
       "fine": "3 minutos · en tu computadora · puedes omitir",
       "points": {
@@ -119,7 +125,7 @@
       },
       "uses": {
         "title": "Sigue con la IA que ya usas",
-        "note": "Piensa con tu propio plan o clave y aprende de los chats que ya tienes"
+        "note": "Piensa con el plan o la clave que ya pagas y aprende de tus chats con IA"
       }
     },
     "demo": {
@@ -168,7 +174,6 @@
       "none": "No hay conversaciones con IA para leer en esta computadora. Mejor trae lo que tu IA de siempre recuerda de ti:",
       "read": "Leer y aprender",
       "reading": "Puedes seguir; continúa leyendo.",
-      "skip": "Ahora no",
       "understood": "Lo que entendí de ti",
       "example": "Si un colega pregunta",
       "exampleAnswer": "Yo respondería por ti",
@@ -199,39 +204,44 @@
           "all": "Cómo trabajas y hablas"
         },
         "places": "Dónde está tu trabajo",
-        "where": "Guardado en su memoria y sus notas. Cambia o quita cualquier cosa en Tu clon › Lo que sabe."
+        "where": "Quita con × lo que esté mal o no quieras que guarde. También puedes cambiarlo después en Tu clon › Lo que sabe.",
+        "more": "{count} más",
+        "forget": "Quitar: {item}"
       },
       "foldersHint": "Revísalas y desmarca las que quieras dejar fuera"
     },
     "you": {
       "title": "Tú y tu equipo",
-      "body": "Revisa lo que tu clon leyó de tu trabajo. Los clones de tus compañeros eligen a quién preguntar según de qué te encargas.",
-      "name": "Tu nombre",
-      "role": "Qué haces, en una línea",
-      "rolePlaceholder": "p. ej., Diseño de producto",
+      "body": "Los clones de tus compañeros eligen a quién preguntar según de qué te encargas.",
+      "name": "Nombre",
+      "role": "Qué haces",
+      "rolePlaceholder": "En una línea, p. ej., Diseño de producto",
       "team": "Tu equipo",
       "alone": "Por ahora, solo yo",
-      "aloneNote": "Usa tu clon por tu cuenta; suma a tu equipo cuando quieras.",
+      "aloneNote": "Puedes traer a tu equipo cuando quieras",
       "join": "Unirme a la oficina de mi equipo",
-      "joinNote": "Pega el enlace de invitación que te envió un colega.",
+      "joinNote": "Con el enlace de invitación de un compañero",
       "open": "Abrir una oficina aquí",
-      "openNote": "Esta computadora pasa a ser la oficina de tu equipo. Tus colegas en la misma red se unen con tu enlace de invitación.",
+      "openNote": "Este ordenador aloja la oficina de tu equipo",
       "link": "Enlace de invitación",
       "joinGo": "Unirme y continuar",
       "openGo": "Abrir y continuar",
       "notLink": "Eso no parece un enlace de invitación. Copia el enlace completo que te envió tu colega.",
-      "invited": "{from} te invitó a su oficina: tu clon se une cuando continúes.",
-      "invitedNobody": "Te invitaron a una oficina: tu clon se une cuando continúes.",
-      "fromRecords": "De tus registros · cámbialo si quieres",
-      "toolsMore": "Añadir…",
       "invitedOffice": "La oficina de {from}",
       "invitedOfficeNobody": "La oficina a la que te invitaron",
       "invitedTag": "invitación",
-      "bodyFirst": "Tu nombre y luego la oficina a la que te invitaron. Qué haces y de qué te encargas se completan cuando haya leído tus registros."
+      "bodyFirst": "Tu nombre y luego la oficina a la que te invitaron. Qué haces y de qué te encargas se completan cuando haya leído tus registros.",
+      "cardSeen": "Así te ven tus compañeros",
+      "owns": "A cargo de",
+      "tools": "Herramientas",
+      "invitedBody": "Tu clon entra al continuar",
+      "linkPaste": "Pega el enlace que te envió un compañero",
+      "notLinkShort": "No es un enlace de invitación",
+      "nameNeeded": "Hace falta para entrar en una oficina"
     },
     "ready": {
       "title": "Tu clon está listo",
-      "body": "Así te ven tus compañeros y sus clones. Ahora pídele lo que necesites, como a un compañero.",
+      "body": "Por último, elige cuánto hace por su cuenta. Después, pídele lo que necesites como se lo pedirías a un compañero.",
       "brain": "Modelo de IA",
       "claudeCode": "Claude Code",
       "learned": "Te conoce",
@@ -249,17 +259,6 @@
       "mode": "Lo que tu clon hace por su cuenta",
       "modeNote": "Solo tu trabajo · cámbialo en Ajustes",
       "knows": "{count, plural, one {# cosa} other {# cosas}}"
-    },
-    "guide": {
-      "brainPick": "Elige un modelo y se comprueba al momento",
-      "brainOk": "Listo. Sigamos",
-      "brainFailed": "Elige otro modelo o sigue de todos modos",
-      "learn": "Puedes seguir mientras lee",
-      "reading": "Leyendo · {percent}%",
-      "learned": "Corrige luego lo que no encaje",
-      "learnNone": "Trae lo que recuerda tu IA de siempre",
-      "you": "Los clones de tus compañeros te encuentran por lo que llevas",
-      "ready": "Ahora habla con tu clon desde Inicio"
     }
   },
   "firstRun": {
@@ -268,7 +267,7 @@
     "plan": {
       "read": {
         "title": "Lee",
-        "body": "lo que pediste a tus herramientas de IA, tus notas y commits, carpetas recientes y nombres de archivo, el inicio de cada README. No las respuestas de la IA ni otros archivos."
+        "body": "lo que pediste a tus herramientas de IA, tus notas y commits, carpetas recientes y nombres de archivo, el inicio del README de cada proyecto. Nunca lo que respondió la IA ni lo que dice un archivo."
       },
       "keep": {
         "title": "Guarda",
@@ -676,8 +675,7 @@
     "owns": "De qué te encargas",
     "ownsPlaceholder": "p. ej., API de pagos, lanzamientos",
     "tools": "Herramientas que usas",
-    "toolsPlaceholder": "p. ej., Figma, Notion, Claude Code",
-    "listHint": "Sepáralas con comas."
+    "toolsPlaceholder": "p. ej., Figma, Notion, Claude Code"
   },
   "files": {
     "title": "Todos los archivos que guardo",
@@ -1102,10 +1100,6 @@
           "title": "Crear una habilidad",
           "body": "Guarda como habilidad una forma de trabajar que se repite, para hacerlo a tu manera la próxima vez."
         },
-        "find-skills": {
-          "title": "Buscar habilidades",
-          "body": "Busca en el registro abierto de habilidades cuando a una tarea le falta un método. Tú apruebas cada una que agrega."
-        },
         "learn-by-watching": {
           "title": "Aprender observando",
           "body": "Aprende una tarea como se la muestras, o de un chat, un ejemplo o un documento que le indiques."
@@ -1187,11 +1181,11 @@
       "modes": {
         "ask": {
           "title": "Preguntar antes",
-          "body": "Pregunta antes de leer archivos, abrir páginas, ejecutar comandos o usar tus servicios. Lo que marques con “No volver a preguntar por esto” ya no lo pregunta."
+          "body": "Pregunta antes de leer archivos, abrir páginas, ejecutar comandos o usar tus servicios. Cuando le dices “no vuelvas a preguntar” por algo, deja de preguntarlo."
         },
         "auto": {
           "title": "Por su cuenta",
-          "body": "Lee, trabaja en tus servicios conectados, ejecuta comandos en su entorno aislado y pregunta a tus colegas sin preguntarte antes. Todo lo que hace queda en la conversación."
+          "body": "Lee, trabaja en tus servicios conectados, ejecuta comandos en un espacio aislado y seguro y pregunta a tus colegas sin preguntarte antes. Todo lo que hace queda en la conversación."
         }
       },
       "always": "Elijas lo que elijas, los archivos que salen de tu computadora, las rutinas, agregar una habilidad y el trabajo en tus conversaciones de Claude Code o Codex siempre se te muestran antes. Las solicitudes de colegas no usan esto: cada tipo tiene su propio nivel de confianza, en Solicitudes que aceptas.",

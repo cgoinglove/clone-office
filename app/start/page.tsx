@@ -11,8 +11,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function StartPage() {
   return (
-    <main className="flex min-h-0 flex-1 flex-col">
+    // The steps hold the page's one <main>.
+    <div className="flex min-h-0 flex-1 flex-col">
       <Onboarding />
-    </main>
+    </div>
   );
 }

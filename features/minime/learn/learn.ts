@@ -59,6 +59,21 @@ Then, in \`example\`, show them what you will do for their colleagues: one quest
 
 Last, in \`routines\`, at most three things they do at a regular time, read from the times of what they asked (shown in their own time, with the weekday): planning the day on weekday mornings, a report on Friday afternoons. Give each as the request they would send (a label, as for tasks), the days (0 is Sunday, 6 is Saturday), the hour it usually starts, and why. Only when the same kind of request shows up at about the same time at least three times; otherwise give none.`;
 
+/**
+ * How much one reading keeps, held by the code as well as asked of the model: lines about the
+ * person (USER.md, itself capped at its characters), lines about their work's surroundings
+ * (MEMORY.md, likewise), pages of work and of people, and places on the map. The map keeps what
+ * earlier readings found too, the newest first, up to MAP_KEPT lines.
+ */
+export const LEARN_CAPS = {
+  user: 12,
+  work: 14,
+  projects: 12,
+  people: 10,
+  places: 30,
+} as const;
+const MAP_KEPT = 60;
+
 /** A page the reading keeps in the clone's notes: a piece of work, or someone they work with. */
 const PAGE_SCHEMA = {
   type: "object",
@@ -75,7 +90,7 @@ export const LEARN_SCHEMA = {
   properties: {
     user: {
       type: "array",
-      maxItems: 12,
+      maxItems: LEARN_CAPS.user,
       items: {
         type: "object",
         properties: {
@@ -85,14 +100,18 @@ export const LEARN_SCHEMA = {
         required: ["kind", "text"],
       },
     },
-    work: { type: "array", items: { type: "string" }, maxItems: 14 },
+    work: {
+      type: "array",
+      items: { type: "string" },
+      maxItems: LEARN_CAPS.work,
+    },
     places: {
       type: "object",
       properties: {
         title: { type: "string" },
         entries: {
           type: "array",
-          maxItems: 30,
+          maxItems: LEARN_CAPS.places,
           items: {
             type: "object",
             properties: {
@@ -107,7 +126,7 @@ export const LEARN_SCHEMA = {
     },
     projects: {
       type: "array",
-      maxItems: 12,
+      maxItems: LEARN_CAPS.projects,
       items: {
         ...PAGE_SCHEMA,
         properties: {
@@ -117,7 +136,7 @@ export const LEARN_SCHEMA = {
         },
       },
     },
-    people: { type: "array", maxItems: 10, items: PAGE_SCHEMA },
+    people: { type: "array", maxItems: LEARN_CAPS.people, items: PAGE_SCHEMA },
     tasks: {
       type: "array",
       minItems: 3,
@@ -390,7 +409,7 @@ export async function keepPages(
 }
 
 /** The map's lines as kept on its page: "- `path` — what is there". */
-const MAP_LINE = /^- `([^`]+)` — (.+)$/;
+export const MAP_LINE = /^- `([^`]+)` — (.+)$/;
 
 /**
  * Keeps the map of where the person's work lives as one page (WORK_MAP). A later reading adds
@@ -413,7 +432,7 @@ export async function keepMap(
           : "",
     }))
     .filter((entry) => entry.path && entry.about && !entry.path.includes("`"))
-    .slice(0, 30);
+    .slice(0, LEARN_CAPS.places);
   if (!entries.length) return [];
   const notes = new NoteStore(notesDir(), "transplant");
   const seen = await notes.view(WORK_MAP);
@@ -423,7 +442,13 @@ export async function keepMap(
       const found = MAP_LINE.exec(line.trim());
       if (found) kept.set(found[1], found[2]);
     }
+  // What this reading found first, then what earlier ones found and it did not, up to the map's size.
+  for (const entry of entries) kept.delete(entry.path);
+  const earlier = [...kept];
+  kept.clear();
   for (const entry of entries) kept.set(entry.path, entry.about);
+  for (const [path, about] of earlier)
+    if (kept.size < MAP_KEPT) kept.set(path, about);
   const title =
     typeof value?.title === "string" && value.title.trim()
       ? value.title.trim().slice(0, 80)
@@ -457,25 +482,34 @@ export async function keepKnowledge(
         ["work", "decide", "voice"].includes(item.kind as string),
     );
   const userKept = await keep(
-    traits.map((trait) => trait.text),
+    traits.slice(0, LEARN_CAPS.user).map((trait) => trait.text),
     onEvent,
     from,
     "user",
   );
   const workKept = await keep(
-    Array.isArray(structured.work) ? structured.work : [],
+    Array.isArray(structured.work)
+      ? structured.work.slice(0, LEARN_CAPS.work)
+      : [],
     onEvent,
     from,
     "memory",
   );
   const source = from === "import" ? "another AI's memory" : "first reading";
+  const pages = (raw: unknown, most: number) =>
+    Array.isArray(raw) ? raw.slice(0, most) : [];
   const projects = await keepPages(
     "projects",
-    structured.projects,
+    pages(structured.projects, LEARN_CAPS.projects),
     source,
     onEvent,
   );
-  const people = await keepPages("people", structured.people, source, onEvent);
+  const people = await keepPages(
+    "people",
+    pages(structured.people, LEARN_CAPS.people),
+    source,
+    onEvent,
+  );
   const places = await keepMap(structured.places, source, onEvent);
   return {
     kept: [...userKept, ...workKept],

@@ -26,17 +26,20 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
   the address): `useTranslations` in a component, English as the source and the fallback,
   `useProblem` for an error code, `LanguageSwitch` to pick a language.
 - `features/brand/` — the app's mark (`Logo`, `LogoMark`), the places' marks (`NavIcon`: a
-  column's rows, outlined and filled while open) and every service's or AI vendor's own mark
+  column's rows, lucide's as Thursday picks them, the clone's place the app's mark outlined) and every service's or AI vendor's own mark
   (`BrandMark`): use these rather than drawing a logo or typing a vendor's name alone.
 - `components/ui/choice-list.tsx` — `ChoiceList`: a choice between a few options, each explained
-  under its name (a radio group as cards, the picked one ringed in the brand colour).
+  under its name (a radio group as cards, the picked one ringed in the brand colour; `dense` where
+  a step must fit a short window).
+- `features/minime/list-field.tsx` — `ListField`: a short list kept as items (what someone looks
+  after, their tools), one line opening its items in a popover; never a text field split on commas.
 - `features/minime/settings/parts.tsx` — how a Settings section is laid out (`Groups`, `Group`,
   `Rows`, `Empty`); a new section uses them, so every section reads the same.
 
 ## The app's screens
 One frame around every screen (`app/(app)/layout.tsx`, `features/minime/shell/`): the column on the
-left (`sidebar.tsx`: New chat; the places Home, Requests, Office and Your clone, the open one's mark
-filled; what waits on the person; recent chats once there are any; Settings and, in an office, the
+left (`sidebar.tsx`: New chat; the places Home, Requests, Office and Your clone, the open one by its
+row's fill; what waits on the person; recent chats once there are any; Settings and, in an office, the
 person's status) and the open screen: `/home` first (`home-screen.tsx`: what
 waits on the person answered in place, the requests on their way, what the clone did today, today;
 the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`, with the

@@ -13,8 +13,8 @@ import {
   Clock,
   CornerDownRight,
   Loader2,
+  MessageSquare,
   MessagesSquare,
-  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -171,7 +171,7 @@ function Empty({
             onClick={() => void chat.ask(offer.label)}
             className="group flex items-start gap-2.5 rounded-xl border border-border px-3 py-2.5 text-left text-sm transition-colors hover:bg-muted disabled:opacity-50"
           >
-            <Sparkles className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
+            <MessageSquare className="mt-0.5 size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
             <span className="min-w-0">
               <span className="block">{offer.label}</span>
               {offer.why && (

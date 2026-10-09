@@ -753,7 +753,12 @@ export function BrainPicker({
         }}
       >
         <PopoverTrigger
-          aria-label={t("title")}
+          // Its name and what is picked, so a screen reader hears both.
+          aria-label={
+            state.chosen
+              ? `${t("title")}: ${brainLabel(state, "Claude Code")}`
+              : t("title")
+          }
           className="flex h-12 w-full min-w-0 items-center gap-2.5 rounded-[10px] bg-background pr-3 pl-3.5 text-left text-[14.5px] ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:ring-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:ring-foreground/40"
         >
           {state.chosen ? (
@@ -766,7 +771,7 @@ export function BrainPicker({
         <PopoverContent
           align="start"
           sideOffset={6}
-          className="h-76 w-(--anchor-width) min-w-[28rem] flex-row gap-0 overflow-hidden rounded-xl p-0"
+          className="h-76 w-(--anchor-width) min-w-[min(28rem,calc(100vw-2rem))] flex-row gap-0 overflow-hidden rounded-xl p-0"
         >
           <div className="flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-muted/40 p-1.5">
             {teamModels.length > 0 && (

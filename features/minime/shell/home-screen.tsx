@@ -15,7 +15,7 @@ import {
   ChevronRight,
   Link2,
   MessagesSquare,
-  Sparkles,
+  Repeat,
   UserPlus,
 } from "lucide-react";
 import Link from "next/link";
@@ -438,7 +438,7 @@ export function HomeScreen() {
                       }
                       className="flex items-start gap-2 text-left text-[13px] leading-relaxed text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      <Sparkles className="mt-0.5 size-3.5 shrink-0" />
+                      <Repeat className="mt-0.5 size-3.5 shrink-0" />
                       {t("nothingToday")}
                     </button>
                   </li>

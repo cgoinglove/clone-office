@@ -4,7 +4,12 @@
     "cancel": "Cancel",
     "close": "Close",
     "copy": "Copy",
-    "copied": "Copied"
+    "copied": "Copied",
+    "list": {
+      "remove": "Remove {item}",
+      "add": "Add one…",
+      "full": "Up to {count}"
+    }
   },
   "language": {
     "label": "Language",
@@ -85,7 +90,8 @@
     "skill-name-taken-here": "You already have a skill by that name, so the office's one wasn't added.",
     "skill-changed-here": "You changed this skill after adding it, so the office's version wasn't put over your changes.",
     "skill-not-shareable": "That skill came with the app or from a colleague, so it isn't yours to share.",
-    "skill-name-invalid": "That isn't a skill's name. A name uses lowercase letters, digits, dots, dashes or underscores, and starts with a letter or digit."
+    "skill-name-invalid": "That isn't a skill's name. A name uses lowercase letters, digits, dots, dashes or underscores, and starts with a letter or digit.",
+    "not-forgotten": "That couldn't be taken back just now. Try again in a moment."
   },
   "start": {
     "title": "Get started",
@@ -97,10 +103,10 @@
     },
     "next": "Continue",
     "back": "Back",
-    "later": "Skip",
+    "later": "Later",
     "hello": {
       "title": "One more you,\nworking the way you do.",
-      "body": "Everyone on the team sends a clone of their own. Clones ask and answer each other, and only the calls come to people. On your own, it works like an assistant.",
+      "body": "Everyone on the team sends a clone of their own. Clones ask and answer each other, and only the decisions come to you. On your own, it works like an assistant.",
       "go": "Get started",
       "fine": "3 minutes · runs on your computer · skip anything",
       "points": {
@@ -119,7 +125,7 @@
       },
       "uses": {
         "title": "Keep the AI you already use",
-        "note": "Thinks with your own plan or key, learns from the chats you already have"
+        "note": "Thinks with the plan or key you already pay for, learns from your past AI chats"
       }
     },
     "demo": {
@@ -168,7 +174,6 @@
       "none": "There are no AI conversations to read on this computer. Bring what your usual AI remembers about you instead:",
       "read": "Read and learn",
       "reading": "You can go on; it keeps reading.",
-      "skip": "Not now",
       "understood": "What I understood about you",
       "example": "If a colleague asks",
       "exampleAnswer": "I'd answer for you",
@@ -199,39 +204,44 @@
           "all": "How you work and talk"
         },
         "places": "Where your work is",
-        "where": "Kept in its memory and notes. Change or remove any of it under Your clone › What it knows."
+        "where": "Take back with × anything wrong or you'd rather it didn't keep. You can also change it later under Your clone › What it knows.",
+        "more": "{count} more",
+        "forget": "Take back: {item}"
       },
       "foldersHint": "Check them; untick any to leave out"
     },
     "you": {
       "title": "You and your team",
-      "body": "Check what your clone read about your work. Colleagues' clones pick whom to ask by what you look after.",
-      "name": "Your name",
-      "role": "What you do, in a line",
-      "rolePlaceholder": "e.g. Product designer",
+      "body": "Colleagues' clones pick whom to ask by what you look after.",
+      "name": "Name",
+      "role": "Role",
+      "rolePlaceholder": "In a line, e.g. Product designer",
       "team": "Your team",
       "alone": "Just me for now",
-      "aloneNote": "Use your clone on your own; bring your team in any time.",
+      "aloneNote": "Bring your team in any time later",
       "join": "Join my team's office",
-      "joinNote": "Paste the invite link a teammate sent you.",
+      "joinNote": "With the invite link a teammate sent",
       "open": "Open an office here",
-      "openNote": "This computer becomes your team's office. Teammates on the same network join with your invite link.",
+      "openNote": "This computer hosts your team's office",
       "link": "Invite link",
       "joinGo": "Join and continue",
       "openGo": "Open and continue",
       "notLink": "That doesn't look like an invite link. Copy the whole link your teammate sent.",
-      "invited": "{from} invited you to their office: your clone joins it when you go on.",
-      "invitedNobody": "You were invited to an office: your clone joins it when you go on.",
-      "fromRecords": "From your records · edit freely",
-      "toolsMore": "Add…",
       "invitedOffice": "{from}'s office",
       "invitedOfficeNobody": "The office you were invited to",
       "invitedTag": "invited",
-      "bodyFirst": "Your name, then the office you were invited to. What you do and look after are filled in once it has read your records."
+      "bodyFirst": "Your name, then the office you were invited to. What you do and look after are filled in once it has read your records.",
+      "cardSeen": "How colleagues see you",
+      "owns": "Looks after",
+      "tools": "Tools",
+      "invitedBody": "Your clone joins it when you go on",
+      "linkPaste": "Paste the link a teammate sent",
+      "notLinkShort": "Not an invite link",
+      "nameNeeded": "Needed to join an office"
     },
     "ready": {
       "title": "Your clone is ready",
-      "body": "This is how colleagues and their clones see you. Now ask it what you need, as you'd ask a colleague.",
+      "body": "One last choice: how much it does on its own. Then ask it what you need, as you'd ask a colleague.",
       "brain": "AI model",
       "claudeCode": "Claude Code",
       "learned": "Knows you",
@@ -249,17 +259,6 @@
       "mode": "What your clone does on its own",
       "modeNote": "Your own work only · change it in Settings",
       "knows": "{count, plural, one {# thing} other {# things}}"
-    },
-    "guide": {
-      "brainPick": "Pick a model and it is checked at once",
-      "brainOk": "Ready. On to the next step",
-      "brainFailed": "Pick another model, or go on anyway",
-      "learn": "You can go on while it reads",
-      "reading": "Reading · {percent}%",
-      "learned": "Fix anything that is off later",
-      "learnNone": "Bring in what your usual AI remembers",
-      "you": "Colleagues' clones find you by what you look after",
-      "ready": "Now talk to your clone from Home"
     }
   },
   "firstRun": {
@@ -268,7 +267,7 @@
     "plan": {
       "read": {
         "title": "Reads",
-        "body": "what you asked your AI tools, your notes and commits, recent folders and file names, the opening of each README. Not the AI's answers, nor any other file."
+        "body": "what you asked your AI tools, your notes and commits, recent folders and file names, the first lines of each project's README. Never what the AI answered, nor what any file says."
       },
       "keep": {
         "title": "Keeps",
@@ -676,8 +675,7 @@
     "owns": "What you look after",
     "ownsPlaceholder": "e.g. payments API, releases",
     "tools": "Tools you work in",
-    "toolsPlaceholder": "e.g. Figma, Notion, Claude Code",
-    "listHint": "Separate with commas."
+    "toolsPlaceholder": "e.g. Figma, Notion, Claude Code"
   },
   "files": {
     "title": "All files I keep",
@@ -1102,10 +1100,6 @@
           "title": "Make a skill",
           "body": "Keeps a way of working that comes back as a skill, so it's done your way next time."
         },
-        "find-skills": {
-          "title": "Find skills",
-          "body": "Looks in the open skills registry when a task needs a method it lacks. You approve each one it adds."
-        },
         "learn-by-watching": {
           "title": "Learn by watching",
           "body": "Learns a task the way you show it, or from a chat, an example or a document you point to."
@@ -1187,11 +1181,11 @@
       "modes": {
         "ask": {
           "title": "Ask me first",
-          "body": "Asks before it reads files, opens pages, runs commands or uses your services. What you tick “Don't ask again for this” on goes through."
+          "body": "Asks before it reads files, opens pages, runs commands or uses your services. Once you say “don't ask again” for something, it stops asking about it."
         },
         "auto": {
           "title": "On its own",
-          "body": "Reads, works in your connected services, runs commands in its sandbox and asks colleagues without asking you first. All it does stays in the conversation."
+          "body": "Reads, works in your connected services, runs commands in a safe closed-off space and asks colleagues without asking you first. All it does stays in the conversation."
         }
       },
       "always": "Whatever you pick, files leaving your computer, flows, adding a skill, and work in your Claude Code or Codex conversations are always shown to you first. Colleagues' requests don't use this: each kind there has its own trust level, under Requests you take.",

@@ -24,13 +24,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import type { Learn } from "../home/use-learn";
-import {
-  HEADERS,
-  type OfficeState,
-  type Profile,
-  splitList,
-} from "../home/use-office";
+import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import { EXPORT_PROMPT } from "../learn/export-prompt";
+import { ListField } from "../list-field";
+import { PROFILE_LIMITS } from "../profile-limits";
 import { stream } from "../stream";
 import { Empty, Group, Groups, Rows } from "./parts";
 import { SkillsSection } from "./skills-section";
@@ -204,31 +201,34 @@ function AboutYou({
   const card = office.office?.joined ? office.office.me?.card : undefined;
   const [name, setName] = useState(card?.name ?? profile.name ?? "");
   const [role, setRole] = useState(card?.description ?? profile.role ?? "");
-  const ownsNow = (card?.owns ?? profile.owns ?? []).join(", ");
-  const toolsNow = (profile.tools ?? []).join(", ");
-  const [owns, setOwns] = useState(ownsNow);
-  const [tools, setTools] = useState(toolsNow);
+  // Kept as items, never as text split on commas: an item may hold one (list-field.tsx).
+  const ownsNow = card?.owns ?? profile.owns ?? [];
+  const toolsNow = profile.tools ?? [];
+  const ownsKey = JSON.stringify(ownsNow);
+  const toolsKey = JSON.stringify(toolsNow);
+  const [owns, setOwns] = useState<string[]>(ownsNow);
+  const [tools, setTools] = useState<string[]>(toolsNow);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
   useEffect(() => {
     setName(card?.name ?? profile.name ?? "");
     setRole(card?.description ?? profile.role ?? "");
-    setOwns(ownsNow);
-    setTools(toolsNow);
+    setOwns(JSON.parse(ownsKey));
+    setTools(JSON.parse(toolsKey));
   }, [
     card?.name,
     card?.description,
     profile.name,
     profile.role,
-    ownsNow,
-    toolsNow,
+    ownsKey,
+    toolsKey,
   ]);
   const changed =
     name.trim() !== (card?.name ?? profile.name ?? "") ||
     role.trim() !== (card?.description ?? profile.role ?? "") ||
-    splitList(owns).join(", ") !== ownsNow ||
-    splitList(tools).join(", ") !== toolsNow;
+    JSON.stringify(owns) !== ownsKey ||
+    JSON.stringify(tools) !== toolsKey;
 
   const draft = async () => {
     setDrafting(true);
@@ -243,9 +243,9 @@ function AboutYou({
       if (typeof data.description === "string") setRole(data.description);
       // A draft fills in only what is still empty: what they typed stays theirs.
       if (Array.isArray(data.owns))
-        setOwns((was) => was.trim() || data.owns.join(", "));
+        setOwns((was) => (was.length ? was : data.owns));
       if (Array.isArray(data.tools))
-        setTools((was) => was.trim() || data.tools.join(", "));
+        setTools((was) => (was.length ? was : data.tools));
     } finally {
       setDrafting(false);
     }
@@ -260,8 +260,8 @@ function AboutYou({
         body: JSON.stringify({
           name: name.trim(),
           role: role.trim(),
-          owns: splitList(owns),
-          tools: splitList(tools),
+          owns,
+          tools,
         }),
       });
       if (response.ok) onProfile(await response.json());
@@ -273,7 +273,7 @@ function AboutYou({
             ...card,
             name: name.trim(),
             description: role.trim(),
-            owns: splitList(owns),
+            owns,
           },
         });
       setSaved(true);
@@ -333,28 +333,27 @@ function AboutYou({
           <span className="text-xs text-muted-foreground">
             {tOffice("owns")}
           </span>
-          <Input
-            value={owns}
-            maxLength={400}
+          <ListField
+            values={owns}
+            onChange={setOwns}
+            max={PROFILE_LIMITS.owns}
+            maxItem={PROFILE_LIMITS.own}
             placeholder={tOffice("ownsPlaceholder")}
             disabled={drafting}
-            onChange={(e) => setOwns(e.target.value)}
           />
         </label>
         <label className="flex flex-col gap-1.5 sm:col-span-2">
           <span className="text-xs text-muted-foreground">
             {tOffice("tools")}
           </span>
-          <Input
-            value={tools}
-            maxLength={400}
+          <ListField
+            values={tools}
+            onChange={setTools}
+            max={PROFILE_LIMITS.tools}
+            maxItem={PROFILE_LIMITS.tool}
             placeholder={tOffice("toolsPlaceholder")}
             disabled={drafting}
-            onChange={(e) => setTools(e.target.value)}
           />
-          <span className="text-xs text-muted-foreground">
-            {tOffice("listHint")}
-          </span>
         </label>
         <div className="flex items-center gap-2 sm:col-span-2">
           <Button type="submit" disabled={busy || !changed} loading={busy}>

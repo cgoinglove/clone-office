@@ -8,6 +8,7 @@
 
 import { readFile } from "node:fs/promises";
 import { withLock } from "../memory/files.ts";
+import { PROFILE_LIMITS } from "../profile-limits.ts";
 import { settingsPath, writeSettings } from "./exclude.ts";
 import { minimeHome } from "./paths.ts";
 
@@ -23,7 +24,7 @@ export interface Profile {
 /** What a reading suggests for the profile; the person keeps it or changes it. */
 export type About = Required<Pick<Profile, "role" | "owns" | "tools">>;
 
-export const LIMITS = { role: 200, owns: 4, own: 80, tools: 6, tool: 40 };
+export const LIMITS = PROFILE_LIMITS;
 
 const clean = (value: unknown, max: number) =>
   typeof value === "string" ? value.trim().slice(0, max) : undefined;

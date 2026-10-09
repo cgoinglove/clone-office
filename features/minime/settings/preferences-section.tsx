@@ -4,7 +4,7 @@
 // on its own (after Claude Code's permission modes), where a new kind of request starts, when the
 // questions it kept for later come, whether it learns after each conversation, and the lobby.
 
-import { BookOpen, Feather, Hand, Moon, Zap } from "lucide-react";
+import { BookOpen, Feather, Moon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ChoiceList } from "@/components/ui/choice-list";
 import { Segmented } from "@/components/ui/segmented";
@@ -14,10 +14,7 @@ import { cn } from "@/lib/utils";
 import type { Autonomy, Preferences, Trust } from "../home/use-preferences";
 import { Group, Groups } from "./parts";
 
-const MODES: { value: Autonomy; icon: typeof Hand }[] = [
-  { value: "ask", icon: Hand },
-  { value: "auto", icon: Zap },
-];
+const MODES: Autonomy[] = ["ask", "auto"];
 
 /**
  * How much the clone does alone in its person's own work, as two explained choices, in Settings and
@@ -36,9 +33,8 @@ export function AutonomyChoice({
       aria-label={t("autonomy")}
       value={value}
       onChange={onChange}
-      options={MODES.map(({ value: mode, icon }) => ({
+      options={MODES.map((mode) => ({
         value: mode,
-        icon,
         title: t(`modes.${mode}.title`),
         body: t(`modes.${mode}.body`),
         tag: mode === "ask" ? t("default") : undefined,

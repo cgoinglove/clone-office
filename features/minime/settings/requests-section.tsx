@@ -5,7 +5,7 @@
 // they were, and how to work with them (their ME.md): the lines colleagues and their clones read on
 // their card.
 
-import { Building2, Inbox, Pencil, Plus, Sparkles, X } from "lucide-react";
+import { Building2, Inbox, Pencil, PenLine, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -153,7 +153,7 @@ function Menu({
             loading={drafting}
             onClick={() => void draft()}
           >
-            {!drafting && <Sparkles />}
+            {!drafting && <PenLine />}
             {drafting ? t("drafting") : t("draft")}
           </Button>
           {!adding && (

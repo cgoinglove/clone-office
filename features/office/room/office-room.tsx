@@ -27,6 +27,7 @@ export interface OfficeControl {
 export function OfficeRoom({
   data,
   lobby = false,
+  example = false,
   full = false,
   inset = 0,
   insetLeft = 0,
@@ -49,6 +50,11 @@ export function OfficeRoom({
   ref?: Ref<OfficeControl>;
   /** Opens at the lobby (the building, a card to clock in, the lift up) rather than at the office. */
   lobby?: boolean;
+  /**
+   * An example with nobody real in it (the first steps): everyone already in their chair, each
+   * named, the desks framed close. Read once, as `lobby` is.
+   */
+  example?: boolean;
   onClockIn?: () => void;
   /** Opens what waits for the viewer, when they tap their mini-me's question. */
   onAnswer?: () => void;
@@ -199,6 +205,7 @@ export function OfficeRoom({
   }));
   // Read once: the office does not go back to the lobby while it is open.
   const atLobby = useRef(lobby).current;
+  const asExample = useRef(example).current;
   const asks = !!onAsk;
 
   useEffect(() => {
@@ -212,6 +219,7 @@ export function OfficeRoom({
         onAnswer: () => handlers.current.onAnswer?.(),
         onAsk: asks ? (text) => handlers.current.onAsk?.(text) : undefined,
         lobby: atLobby,
+        example: asExample,
         onClockIn: () => handlers.current.onClockIn?.(),
         onPanel: (open) => handlers.current.onPanel?.(open),
       });
@@ -224,7 +232,7 @@ export function OfficeRoom({
       made?.destroy();
       room.current = null;
     };
-  }, [words, locale, asks, atLobby]);
+  }, [words, locale, asks, atLobby, asExample]);
 
   useEffect(() => {
     room.current?.update(data);

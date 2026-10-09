@@ -6,11 +6,13 @@
 // and their office. Someone invited to an office joins it first, so their team's models are there
 // to pick. No step holds anyone: each can be passed and done later in Settings.
 //
-// Every step stands in one frame: the name and the language on top, the steps beneath, the title in
-// the same place each time, and at the bottom one bar: back, the clone's own line about what to do
-// (after Thursday's brand dot), and the step's button. A screen meant to be seen at once never
-// grows because something was clicked: what is picked opens in a popover or a dialog at its field
-// (`.claude/rules/taste.md`, No growing panes), and what is under way always shows it (Under way).
+// The steps take one half of the window and what stands beside them the other: the office playing
+// the app's loop, what the reading understood once it has (KnowledgePane), and the card colleagues
+// will see while it is written. Every step stands in one frame: the name (with the clone's dot,
+// after Thursday's brand dot) and the language on top, the steps beneath, the title in the same
+// place each time, and at the bottom only Back and the step's button. A screen meant to be seen at
+// once never grows because something was clicked: what is picked opens in a popover or a dialog at
+// its field (`.claude/rules/taste.md`, No growing panes), and what is under way always shows it.
 
 import {
   Bookmark,
@@ -47,7 +49,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { APP_NAME, LogoMark } from "@/features/brand/logo";
@@ -68,9 +69,12 @@ import {
   useFolders,
 } from "../folder-list";
 import { useLearn } from "../home/use-learn";
-import { HEADERS, splitList } from "../home/use-office";
+import { HEADERS } from "../home/use-office";
 import { LanguageSwitch } from "../language-switch";
+import type { Known } from "../learn/known";
+import { ListField } from "../list-field";
 import { parseInvite } from "../office/invite";
+import { PROFILE_LIMITS } from "../profile-limits";
 import { BringFromAnotherAi } from "../settings/clone-section";
 import { AutonomyChoice } from "../settings/preferences-section";
 import { type DemoWords, useDemoRoom } from "./demo";
@@ -111,7 +115,8 @@ export function Onboarding() {
   const folders = useFolders();
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
-  const [owns, setOwns] = useState("");
+  // Kept as items: one may hold a comma ("Clone Office (the app, its repository)").
+  const [owns, setOwns] = useState<string[]>([]);
   const [tools, setTools] = useState<string[]>([]);
   // What the reading saw of their work fills in what they have not typed, for them to correct.
   const about = learn.about;
@@ -119,7 +124,7 @@ export function Onboarding() {
     if (!about) return;
     setName((was) => was || about.name || "");
     setRole((was) => was || about.role);
-    setOwns((was) => was || about.owns.join(", "));
+    setOwns((was) => (was.length ? was : about.owns));
     setTools((was) => (was.length ? was : about.tools));
   }, [about]);
   const [team, setTeam] = useState<Team>("alone");
@@ -159,9 +164,13 @@ export function Onboarding() {
     return () => query.removeEventListener("change", sync);
   }, []);
 
+  // While they write their card, and on the last step, the office stands still with their own clone
+  // named after them.
+  const calm = step === "you" || step === "ready";
+  const yourName = calm ? name.trim() : "";
   const words = useMemo<DemoWords>(
     () => ({
-      you: t("demo.you"),
+      you: yourName || t("demo.you"),
       people: (["a", "b", "c"] as const).map((id) => ({
         id,
         name: t(`demo.people.${id}.name`),
@@ -173,9 +182,9 @@ export function Onboarding() {
       question: t("demo.question"),
       decided: t("demo.decided"),
     }),
-    [t],
+    [t, yourName],
   );
-  const demo = useDemoRoom(words, wide);
+  const demo = useDemoRoom(words, wide, calm);
   const at = step === "hello" ? -1 : order.indexOf(step);
   const next = order[at + 1] ?? "ready";
 
@@ -230,7 +239,7 @@ export function Onboarding() {
   const card = () => ({
     name: name.trim(),
     description: role.trim(),
-    owns: splitList(owns),
+    owns,
   });
   const saveProfile = () =>
     fetch("/api/me/profile", {
@@ -239,7 +248,7 @@ export function Onboarding() {
       body: JSON.stringify({
         name: name.trim(),
         role: role.trim(),
-        owns: splitList(owns),
+        owns,
         tools,
       }),
     }).catch(() => undefined);
@@ -318,11 +327,13 @@ export function Onboarding() {
     folders.list.length === 0 &&
     folders.others.length === 0;
   const knows = learn.knows;
+  // Everything it kept, as the cards beside the steps list it: the places on the map too.
   const knowsCount = knows
     ? knows.user.length +
       knows.work.length +
       knows.projects.length +
-      knows.people.length
+      knows.people.length +
+      (knows.places?.length ?? 0)
     : learn.kept.length;
 
   const skip = (label = t("later")) => (
@@ -331,26 +342,29 @@ export function Onboarding() {
     </Ghost>
   );
 
+  // The card colleagues will see, as it stands: beside the steps while it is being written and
+  // checked, else on the last step itself.
+  const cardPreview = (
+    <CardPreview name={name} role={role} owns={owns} tools={tools} />
+  );
+
   let main: ReactNode = null;
-  let bar: { guide: ReactNode; right: ReactNode } = {
-    guide: null,
-    right: null,
-  };
+  let right: ReactNode = null;
+  // What Enter in one of the step's fields does: the step's own button, when it may be pressed.
+  let submit: (() => void) | undefined;
   if (step === "hello") {
     main = <Hello />;
-    bar = {
-      guide: <Guide>{t("hello.fine")}</Guide>,
-      right: (
-        <Primary big onClick={() => go(order[0])}>
-          {t("hello.go")}
-        </Primary>
-      ),
-    };
+    submit = () => go(order[0]);
+    right = (
+      <Primary big onClick={() => go(order[0])}>
+        {t("hello.go")}
+      </Primary>
+    );
   } else if (step === "brain") {
     main = (
       <>
         <Heading title={t("brain.title")} body={t("brain.body")} />
-        <div className="mt-7 flex flex-col">
+        <div className="mt-6 flex flex-col">
           <BrainPicker onChange={pickBrain} suggest />
           {brain?.chosen && (
             <Answered
@@ -362,29 +376,19 @@ export function Onboarding() {
         </div>
       </>
     );
-    bar = {
-      guide: !brain?.chosen ? (
-        <Guide>{t("guide.brainPick")}</Guide>
-      ) : !answered ? (
-        <Guide busy>{`${t("brain.probing")}…`}</Guide>
-      ) : answered.ok ? (
-        <Guide>{t("guide.brainOk")}</Guide>
-      ) : (
-        <Guide>{t("guide.brainFailed")}</Guide>
-      ),
-      right: (
-        <>
-          {skip()}
-          <Primary
-            // Picked by the person, never a vendor on its own, and heard to answer.
-            disabled={!answered?.ok}
-            onClick={() => go(next)}
-          >
-            {t("next")}
-          </Primary>
-        </>
-      ),
-    };
+    if (answered?.ok) submit = () => go(next);
+    right = (
+      <>
+        {skip()}
+        <Primary
+          // Picked by the person, never a vendor on its own, and heard to answer.
+          disabled={!answered?.ok}
+          onClick={() => go(next)}
+        >
+          {t("next")}
+        </Primary>
+      </>
+    );
   } else if (step === "learn") {
     main = (
       <>
@@ -402,36 +406,25 @@ export function Onboarding() {
           folders={folders}
           nothingToRead={nothingToRead}
           count={knowsCount}
+          // Beside the steps, what it understood fills the office's place (KnowledgePane).
+          listed={!wide}
         />
       </>
     );
-    bar = {
-      guide: nothingToRead ? (
-        <Guide>{t("guide.learnNone")}</Guide>
-      ) : reading ? (
-        <Guide busy>
-          {t("guide.reading", { percent: learn.progress?.percent ?? 0 })}
-        </Guide>
-      ) : learned ? (
-        <Guide>{t("guide.learned")}</Guide>
+    right =
+      reading || learned || nothingToRead ? (
+        <Primary onClick={() => go(next)}>{t("next")}</Primary>
       ) : (
-        <Guide>{t("guide.learn")}</Guide>
-      ),
-      right:
-        reading || learned || nothingToRead ? (
-          <Primary onClick={() => go(next)}>{t("next")}</Primary>
-        ) : (
-          <>
-            {skip(t("learn.skip"))}
-            <Primary
-              disabled={folders.list === null}
-              onClick={() => void learn.start()}
-            >
-              {t("learn.read")}
-            </Primary>
-          </>
-        ),
-    };
+        <>
+          {skip()}
+          <Primary
+            disabled={folders.list === null}
+            onClick={() => void learn.start()}
+          >
+            {t("learn.read")}
+          </Primary>
+        </>
+      );
   } else if (step === "you") {
     main = (
       <>
@@ -453,7 +446,6 @@ export function Onboarding() {
           setOwns={setOwns}
           tools={tools}
           setTools={setTools}
-          fromRecords={Boolean(about)}
           team={team}
           setTeam={(value) => {
             setTeam(value);
@@ -466,41 +458,39 @@ export function Onboarding() {
         />
       </>
     );
-    bar = {
-      guide: busy ? (
-        <Guide busy>{t("guide.you")}</Guide>
-      ) : (
-        <Guide>{t("guide.you")}</Guide>
-      ),
-      right: (
-        <>
-          {skip()}
-          <Primary
-            busy={busy}
-            disabled={
-              busy ||
-              (team !== "alone" && office === "alone" && !name.trim()) ||
-              (team === "join" && office === "alone" && !invite.trim())
-            }
-            onClick={() => void saveYou()}
-          >
-            {team === "join" && office === "alone"
-              ? t("you.joinGo")
-              : team === "open" && office === "alone"
-                ? t("you.openGo")
-                : t("next")}
-          </Primary>
-        </>
-      ),
-    };
+    const held =
+      busy ||
+      (team !== "alone" && office === "alone" && !name.trim()) ||
+      (team === "join" && office === "alone" && !invite.trim());
+    if (!held) submit = () => void saveYou();
+    right = (
+      <>
+        {skip()}
+        <Primary busy={busy} disabled={held} onClick={() => void saveYou()}>
+          {team === "join" && office === "alone"
+            ? t("you.joinGo")
+            : team === "open" && office === "alone"
+              ? t("you.openGo")
+              : t("next")}
+        </Primary>
+      </>
+    );
   } else {
     main = (
       <>
         <Heading title={t("ready.title")} body={t("ready.body")} />
         <ReadyStep
-          name={name}
-          role={role}
-          owns={splitList(owns)}
+          card={
+            wide ? null : (
+              <CardPreview
+                name={name}
+                role={role}
+                owns={owns}
+                tools={tools}
+                floating={false}
+              />
+            )
+          }
           autonomy={autonomy}
           onAutonomy={chooseAutonomy}
           rows={[
@@ -537,69 +527,110 @@ export function Onboarding() {
         />
       </>
     );
-    bar = {
-      guide: <Guide>{t("guide.ready")}</Guide>,
-      right: (
-        <Primary big busy={busy} disabled={busy} onClick={() => void finish()}>
-          {t("ready.go")}
-        </Primary>
-      ),
-    };
+    if (!busy) submit = () => void finish();
+    right = (
+      <Primary big busy={busy} disabled={busy} onClick={() => void finish()}>
+        {t("ready.go")}
+      </Primary>
+    );
   }
+
+  // What stands beside the steps: the office playing the app's loop, what the reading understood
+  // once it has, and the card colleagues will see while it is written and checked.
+  // The office stays drawn under what the reading understood, so coming back never draws it anew.
+  const knowing = step === "learn" && learned;
+  const pane = (
+    <div className="relative my-4 mr-4 flex min-w-0 flex-1">
+      <OfficePane
+        hidden={knowing}
+        room={demo.room}
+        beat={demo.beat}
+        card={calm ? cardPreview : null}
+      />
+      {knowing && <KnowledgePane learn={learn} count={knowsCount} />}
+    </div>
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-1 bg-background">
       <div
         className={cn(
-          "flex h-full min-h-0 flex-col px-14 max-sm:px-5",
-          wide ? "w-140 shrink-0" : "w-full",
+          "flex h-full min-h-0 flex-col",
+          wide ? "w-1/2 shrink-0" : "w-full",
         )}
       >
-        <header className="flex h-18 shrink-0 items-center justify-between">
-          <span className="text-[15px] font-semibold tracking-[-0.01em]">
-            {APP_NAME}
-          </span>
-          <LanguageSwitch />
-        </header>
+        <div className="mx-auto flex h-full min-h-0 w-full max-w-[34rem] flex-col px-8 max-sm:px-5">
+          <header className="flex h-16 shrink-0 items-center justify-between">
+            {/* The app's name with the clone's own dot beside it, after Thursday's brand dot: it
+                pulses in place and never grows past itself. */}
+            <span className="flex items-center gap-2.5 text-[15px] font-semibold tracking-[-0.01em]">
+              <span
+                aria-hidden
+                className="size-2 shrink-0 animate-pulse rounded-full bg-brand motion-reduce:animate-none"
+              />
+              {APP_NAME}
+            </span>
+            <LanguageSwitch />
+          </header>
 
-        <main
-          // Each step fits at the size it was drawn for; a smaller window scrolls rather than cuts.
-          className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-12"
-        >
-          {step !== "hello" && <Stepper order={order} at={at} />}
-          <div
-            key={step}
-            className="flex flex-col animate-in duration-500 fade-in slide-in-from-bottom-1"
+          <main
+            // Each step fits at the size it was drawn for; a smaller window scrolls rather than cuts.
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-5"
+            onKeyDown={(event) => {
+              // Enter in a field of the step itself (never in a popover over it, nor mid-composition
+              // in a language typed through an input method) presses the step's button.
+              if (
+                event.key !== "Enter" ||
+                event.defaultPrevented ||
+                event.nativeEvent.isComposing ||
+                !(event.target instanceof HTMLInputElement) ||
+                !event.currentTarget.contains(event.target) ||
+                !submit
+              )
+                return;
+              event.preventDefault();
+              submit();
+            }}
           >
-            {main}
-            {problem && (
-              <p className="mt-4 text-sm text-destructive" role="alert">
-                {problem === "not-invite-link"
-                  ? t("you.notLink")
-                  : problemText(problem)}
-              </p>
-            )}
-          </div>
-        </main>
-
-        <footer className="flex h-28 shrink-0 items-center gap-2.5 pb-1.5">
-          {step !== "hello" && (
-            <button
-              type="button"
-              aria-label={t("back")}
-              title={t("back")}
-              onClick={() => go(at > 0 ? order[at - 1] : "hello")}
-              className="-ml-2.5 grid size-10 shrink-0 place-items-center rounded-[10px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+            {step !== "hello" && <Stepper order={order} at={at} />}
+            <div
+              key={step}
+              // As tall as the room left, so the first screen can stand in its middle.
+              className="flex flex-1 flex-col animate-in duration-500 fade-in slide-in-from-bottom-1"
             >
-              <ChevronLeft className="size-5" />
-            </button>
-          )}
-          <div className="flex min-w-0 flex-1 items-center">{bar.guide}</div>
-          <div className="flex shrink-0 items-center gap-1">{bar.right}</div>
-        </footer>
+              {main}
+              {problem && (
+                <p
+                  ref={(node) => node?.scrollIntoView({ block: "nearest" })}
+                  className="mt-4 text-sm text-destructive"
+                  role="alert"
+                >
+                  {problem === "not-invite-link"
+                    ? t("you.notLink")
+                    : problemText(problem)}
+                </p>
+              )}
+            </div>
+          </main>
+
+          <footer className="flex h-19 shrink-0 items-center gap-1">
+            {step !== "hello" && (
+              <Ghost
+                onClick={() => go(at > 0 ? order[at - 1] : "hello")}
+                className="-ml-3 gap-1 pr-3.5 pl-2"
+              >
+                <ChevronLeft className="size-4.5" />
+                {t("back")}
+              </Ghost>
+            )}
+            <div className="flex flex-1 items-center justify-end gap-1">
+              {right}
+            </div>
+          </footer>
+        </div>
       </div>
 
-      {wide && <OfficePane room={demo.room} beat={demo.beat} />}
+      {wide && pane}
     </div>
   );
 }
@@ -608,47 +639,127 @@ export function Onboarding() {
 function OfficePane({
   room,
   beat,
+  card,
+  hidden,
 }: {
   room: Parameters<typeof OfficeRoom>[0]["data"];
   beat: number;
+  /** Laid under another pane: kept, not drawn. */
+  hidden: boolean;
+  /** The person's own card, laid over the office in the place of the loop's caption. */
+  card: ReactNode | null;
 }) {
   const t = useTranslations("start");
   const line = beat <= 0 ? null : t(`demo.beats.${Math.min(beat, 6)}` as never);
   return (
     <section
       aria-label={t("demo.example")}
-      className="relative my-4 mr-4 min-w-0 flex-1 overflow-hidden rounded-2xl border border-foreground/8 bg-background"
+      hidden={hidden}
+      // An example to watch: nothing in it takes the keyboard or a click.
+      inert
+      className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-foreground/8 bg-background"
     >
-      <OfficeRoom full data={room} className="of-demo" />
+      <OfficeRoom full example data={room} className="of-demo" />
       <span className="pointer-events-none absolute top-4 left-5 flex items-center gap-2 text-xs text-muted-foreground">
         <span className="size-1.5 rounded-full bg-muted-foreground/70" />
         {t("demo.example")}
       </span>
-      <div
-        aria-live="polite"
-        className="pointer-events-none absolute bottom-5 left-5 flex items-center gap-3 rounded-[10px] bg-background/95 py-2.5 pr-4 pl-3.5 shadow-[0_0_0_1px_var(--alpha-08),0_1px_2px_var(--alpha-05)] backdrop-blur"
-      >
-        <span className="flex gap-1" aria-hidden>
-          {[1, 2, 3, 4, 5, 6].map((at) => (
-            <span
-              key={at}
-              className={cn(
-                "size-1.5 rounded-full transition-colors duration-300",
-                at === beat ? "bg-foreground" : "bg-foreground/15",
-              )}
-            />
-          ))}
-        </span>
-        {line && (
-          <span
-            key={beat}
-            className="animate-in text-[13.5px] duration-500 fade-in"
-          >
-            {line}
+      {card ? (
+        <div className="pointer-events-none absolute bottom-5 left-5 flex w-[min(22rem,calc(100%-2.5rem))] animate-in flex-col gap-2 duration-500 fade-in slide-in-from-bottom-1">
+          <span className="text-xs text-muted-foreground">
+            {t("you.cardSeen")}
           </span>
-        )}
-      </div>
+          {card}
+        </div>
+      ) : (
+        <div
+          aria-live="polite"
+          className="pointer-events-none absolute bottom-5 left-5 flex items-center gap-3 rounded-[10px] bg-background/95 py-2.5 pr-4 pl-3.5 shadow-[0_0_0_1px_var(--alpha-08),0_1px_2px_var(--alpha-05)] backdrop-blur"
+        >
+          <span className="flex gap-1" aria-hidden>
+            {[1, 2, 3, 4, 5, 6].map((at) => (
+              <span
+                key={at}
+                className={cn(
+                  "size-1.5 rounded-full transition-colors duration-300",
+                  at === beat ? "bg-foreground" : "bg-foreground/15",
+                )}
+              />
+            ))}
+          </span>
+          {line && (
+            <span
+              key={beat}
+              className="animate-in text-[13.5px] duration-500 fade-in"
+            >
+              {line}
+            </span>
+          )}
+        </div>
+      )}
     </section>
+  );
+}
+
+/** The card colleagues' clones will see and route by, as it stands. */
+function CardPreview({
+  name,
+  role,
+  owns,
+  tools,
+  floating = true,
+}: {
+  name: string;
+  role: string;
+  owns: string[];
+  tools: string[];
+  /** Laid over the office (a shadow, as what floats has), or standing in the steps (a hairline). */
+  floating?: boolean;
+}) {
+  const tShell = useTranslations("shell");
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-[14px] bg-background p-4",
+        floating
+          ? "shadow-[0_0_0_1px_var(--alpha-10),0_12px_32px_-16px_var(--alpha-20)]"
+          : "shadow-[inset_0_0_0_1px_var(--alpha-12)]",
+      )}
+    >
+      <div className="flex items-center gap-3">
+        <LogoMark className="size-9" />
+        <span className="min-w-0">
+          <span className="block truncate text-[15px] font-semibold tracking-[-0.01em]">
+            {name.trim() || tShell("screens.clone")}
+          </span>
+          {role.trim() && (
+            <span className="block truncate text-[13px] text-muted-foreground">
+              {role}
+            </span>
+          )}
+        </span>
+      </div>
+      {owns.length + tools.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {owns.slice(0, 4).map((item) => (
+            <span
+              key={item}
+              className="flex h-6 max-w-full items-center rounded-[7px] px-2 text-[12.5px] shadow-[inset_0_0_0_1px_var(--alpha-12)]"
+            >
+              <span className="truncate">{item}</span>
+            </span>
+          ))}
+          {tools.slice(0, 4).map((item) => (
+            <span
+              key={item}
+              className="flex h-6 max-w-full items-center rounded-[7px] bg-muted px-2 text-[12.5px] text-muted-foreground"
+            >
+              <span className="truncate">{item}</span>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -661,7 +772,7 @@ function Stepper({ order, at }: { order: Step[]; at: number }) {
         <li
           key={name}
           aria-current={index === at ? "step" : undefined}
-          className="flex flex-col gap-2.5"
+          className="flex flex-col gap-2"
         >
           <span
             className={cn(
@@ -689,34 +800,13 @@ function Stepper({ order, at }: { order: Step[]; at: number }) {
 function Heading({ title, body }: { title: string; body: string }) {
   return (
     <>
-      <h1 className="mt-7 text-[28px] leading-tight font-semibold tracking-[-0.022em] text-balance">
+      <h1 className="mt-6 text-[26px] leading-tight font-semibold tracking-[-0.022em] text-balance">
         {title}
       </h1>
-      <p className="mt-2.5 text-[15px] leading-relaxed text-muted-foreground">
+      <p className="mt-2 text-[14.5px] leading-relaxed text-pretty text-muted-foreground">
         {body}
       </p>
     </>
-  );
-}
-
-/**
- * The clone's own line on the bar, after Thursday's: a brand dot that pulses in place (it never
- * grows past itself, so nothing around it is cut), then what to do now. While something runs, the
- * words shine.
- */
-function Guide({ children, busy }: { children: string; busy?: boolean }) {
-  return (
-    <p className="flex min-w-0 items-center gap-2.5 text-[13.5px] text-muted-foreground">
-      <span
-        aria-hidden
-        className="size-2 shrink-0 animate-pulse rounded-full bg-brand motion-reduce:animate-none"
-      />
-      {busy ? (
-        <ShinyText text={children} className="line-clamp-2" />
-      ) : (
-        <span className="line-clamp-2">{children}</span>
-      )}
-    </p>
   );
 }
 
@@ -754,15 +844,20 @@ function Ghost({
   children,
   onClick,
   disabled,
+  className,
 }: {
   children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
+  className?: string;
 }) {
   return (
     <Button
       variant="ghost"
-      className="h-11 rounded-[10px] px-3 text-sm font-normal text-muted-foreground"
+      className={cn(
+        "h-11 rounded-[10px] px-3 text-sm font-normal text-muted-foreground",
+        className,
+      )}
       disabled={disabled}
       onClick={onClick}
     >
@@ -780,14 +875,15 @@ function Hello() {
     ["ask", UserCheck],
   ] as const;
   return (
-    <div className="flex flex-col pt-4">
-      <h1 className="animate-in text-[40px] leading-[1.15] font-semibold tracking-[-0.03em] whitespace-pre-line duration-700 fade-in slide-in-from-bottom-2">
+    // In the middle of its half (its button below is never far), tighter on a short window.
+    <div className="my-auto flex flex-col py-4 [@media(max-height:800px)]:py-0">
+      <h1 className="animate-in text-[40px] leading-[1.15] font-semibold tracking-[-0.03em] whitespace-pre-line duration-700 fade-in slide-in-from-bottom-2 [@media(max-height:800px)]:text-[34px]">
         {t("title")}
       </h1>
       <p className="mt-4 animate-in text-[15.5px] leading-relaxed text-muted-foreground delay-150 duration-700 fill-mode-backwards fade-in slide-in-from-bottom-2">
         {t("body")}
       </p>
-      <ul className="mt-7 flex animate-in flex-col gap-4.5 delay-300 duration-700 fill-mode-backwards fade-in">
+      <ul className="mt-7 flex animate-in flex-col gap-4.5 delay-300 duration-700 fill-mode-backwards fade-in [@media(max-height:800px)]:mt-5 [@media(max-height:800px)]:gap-3">
         {points.map(([part, Icon]) => (
           <li key={part} className="flex gap-3.5">
             {/* A feature list as Apple's welcome screens draw one: each mark in the one ink, no tile. */}
@@ -803,7 +899,7 @@ function Hello() {
           </li>
         ))}
       </ul>
-      <div className="mt-7 flex animate-in flex-col gap-2 rounded-xl bg-muted/50 px-4 py-3.5 delay-500 duration-700 fill-mode-backwards fade-in">
+      <div className="mt-7 flex animate-in flex-col gap-2 rounded-xl bg-foreground/[0.035] px-4 py-3.5 delay-500 duration-700 fill-mode-backwards fade-in [@media(max-height:800px)]:mt-5 [@media(max-height:800px)]:py-3">
         <span className="text-sm font-semibold">{t("uses.title")}</span>
         <span className="-mt-1 text-xs text-muted-foreground">
           {t("uses.note")}
@@ -820,6 +916,9 @@ function Hello() {
           ))}
         </ul>
       </div>
+      <p className="mt-4 animate-in text-[13px] text-muted-foreground delay-700 duration-700 fill-mode-backwards fade-in [@media(max-height:800px)]:mt-3">
+        {t("fine")}
+      </p>
     </div>
   );
 }
@@ -906,12 +1005,15 @@ function LearnStep({
   folders,
   nothingToRead,
   count,
+  listed,
 }: {
   learn: ReturnType<typeof useLearn>;
   lang: string;
   folders: Folders;
   nothingToRead: boolean;
   count: number;
+  /** What it understood is listed here (no room beside the steps for its own pane). */
+  listed: boolean;
 }) {
   const t = useTranslations("start");
   const tRun = useTranslations("firstRun");
@@ -991,9 +1093,9 @@ function LearnStep({
   if (done)
     return (
       <>
-        <Knowledge learn={learn} count={count} />
+        {listed && <Knowledge learn={learn} count={count} />}
         {learn.example && (
-          <div className="mt-6 flex animate-in flex-col gap-2.5 duration-500 fade-in">
+          <div className="mt-7 flex animate-in flex-col gap-2.5 break-keep duration-500 fade-in">
             <div className="flex max-w-[88%] items-start gap-2.5">
               <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted">
                 <UserRound className="size-3.5 text-muted-foreground" />
@@ -1002,7 +1104,7 @@ function LearnStep({
                 <span className="block text-xs text-muted-foreground">
                   {t("learn.example")}
                 </span>
-                <span className="mt-0.5 line-clamp-2 text-[14px] leading-relaxed">
+                <span className="mt-0.5 line-clamp-3 text-[14px] leading-relaxed">
                   {learn.example.question}
                 </span>
               </span>
@@ -1011,8 +1113,11 @@ function LearnStep({
               <span className="text-xs text-muted-foreground">
                 {t("learn.exampleAnswer")}
               </span>
-              <span className="line-clamp-3 rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[14px] leading-relaxed">
-                {learn.example.answer}
+              {/* The lines are cut inside the bubble, so its padding never shows half a line. */}
+              <span className="rounded-[14px] rounded-br-[4px] bg-muted px-3.5 py-2.5 text-[14px] leading-relaxed">
+                <span className={listed ? "line-clamp-4" : "line-clamp-8"}>
+                  {learn.example.answer}
+                </span>
               </span>
             </div>
           </div>
@@ -1119,28 +1224,20 @@ function ReadingList({
   );
 }
 
-/** One kind of thing the reading learned: its first lines on the row, and all of them in a dialog. */
+/** One kind of thing the reading learned: its first lines shown, and all of them a press away. */
 interface KnownRow {
   id: string;
   label: string;
-  /** One line each, the first shown on the row. */
-  items: { title: string; detail?: string; note?: string }[];
+  /** One line each, the first shown first, and how to take it back (none: it is edited elsewhere). */
+  items: { title: string; detail?: string; note?: string; known?: Known }[];
 }
 
 /**
- * Everything the reading learned, one row a kind (what they do, what they are on, the people, where
- * their work lives, its surroundings, how they work): each row one line however much it holds, with
- * how many and a chevron, and the whole list a press away, so the step never grows.
+ * Everything the reading learned, one row a kind: what they do, what they are on, the people,
+ * where their work lives, its surroundings, how they work.
  */
-function Knowledge({
-  learn,
-  count,
-}: {
-  learn: ReturnType<typeof useLearn>;
-  count: number;
-}) {
+function useKnownRows(learn: ReturnType<typeof useLearn>): KnownRow[] {
   const t = useTranslations("start.learn");
-  const [open, setOpen] = useState<KnownRow | null>(null);
   const knows = learn.knows;
   const rows: KnownRow[] = [];
   if (learn.about?.role)
@@ -1157,6 +1254,7 @@ function Knowledge({
         title: project.name,
         detail: project.summary,
         note: [project.folder, project.now].filter(Boolean).join(" · "),
+        known: { kind: "projects", path: project.path },
       })),
     });
   if (knows?.people.length)
@@ -1166,6 +1264,7 @@ function Knowledge({
       items: knows.people.map((person) => ({
         title: person.name,
         detail: person.summary,
+        known: { kind: "people", path: person.path },
       })),
     });
   if (knows?.places?.length)
@@ -1176,13 +1275,17 @@ function Knowledge({
         title: place.path.split("/").filter(Boolean).at(-1) ?? place.path,
         detail: place.about,
         note: place.path,
+        known: { kind: "places", path: place.path },
       })),
     });
   if (knows?.work.length)
     rows.push({
       id: "work",
       label: t("knows.work"),
-      items: knows.work.map((line) => ({ title: line })),
+      items: knows.work.map((line) => ({
+        title: line,
+        known: { kind: "work", text: line },
+      })),
     });
   const traits = knows?.user ?? [];
   if (traits.length || !knows)
@@ -1193,11 +1296,112 @@ function Knowledge({
         ? traits.map((trait) => ({
             title: trait.text,
             note: t(`knows.traits.${trait.kind}`),
+            known: { kind: "user", text: trait.text },
           }))
         : // A reading from before it learned this broadly kept only lines about them.
-          learn.kept.map((line) => ({ title: line })),
+          learn.kept.map((line) => ({
+            title: line,
+            known: { kind: "user", text: line },
+          })),
     });
+  return rows;
+}
 
+/**
+ * One kind's whole list, opened from its row or its card, each line with its × to take it back:
+ * what the reading kept is the clone's guess until the person keeps it (a line of memory is
+ * removed, a page set aside, a place taken off the map; learn/forget.ts).
+ */
+function KnownDialog({
+  row,
+  onClose,
+  onForget,
+}: {
+  row: KnownRow | null;
+  onClose: () => void;
+  onForget: (known: Known) => Promise<boolean>;
+}) {
+  const t = useTranslations("start.learn");
+  const [taking, setTaking] = useState<string | null>(null);
+  return (
+    <Dialog open={row !== null} onOpenChange={(next) => !next && onClose()}>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <div className="flex flex-col gap-1 px-6 pt-5.5 pb-3">
+          <DialogTitle className="text-lg font-semibold tracking-[-0.01em]">
+            {row?.label}
+          </DialogTitle>
+          <DialogDescription className="text-[13.5px]">
+            {t("knows.where")}
+          </DialogDescription>
+        </div>
+        <ul className="flex max-h-[min(28rem,60vh)] flex-col gap-1 overflow-y-auto px-3 pt-1 pb-4">
+          {row?.items.map((item) => {
+            const key = `${item.title}${item.note ?? ""}`;
+            return (
+              <li
+                key={key}
+                className="group flex items-start gap-2 rounded-[10px] py-2 pr-1.5 pl-3 hover:bg-muted/50"
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5 break-keep">
+                  <span className="text-[14.5px] leading-snug font-medium">
+                    {item.title}
+                  </span>
+                  {item.detail && (
+                    <span className="text-[13.5px] leading-relaxed text-muted-foreground">
+                      {item.detail}
+                    </span>
+                  )}
+                  {item.note && (
+                    <span className="font-mono text-xs break-all text-muted-foreground">
+                      {item.note}
+                    </span>
+                  )}
+                </span>
+                {item.known && (
+                  <button
+                    type="button"
+                    disabled={taking === key}
+                    aria-label={t("knows.forget", { item: item.title })}
+                    title={t("knows.forget", { item: item.title })}
+                    onClick={async () => {
+                      if (!item.known) return;
+                      setTaking(key);
+                      await onForget(item.known);
+                      setTaking(null);
+                    }}
+                    className="grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50"
+                  >
+                    {taking === key ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : (
+                      <X className="size-3.5" />
+                    )}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
+ * What the reading understood, in the steps themselves when there is no room beside them: each kind
+ * one line however much it holds, with how many and a chevron, so the step never grows.
+ */
+function Knowledge({
+  learn,
+  count,
+}: {
+  learn: ReturnType<typeof useLearn>;
+  count: number;
+}) {
+  const t = useTranslations("start.learn");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const rows = useKnownRows(learn);
+  const open = rows.find((row) => row.id === openId) ?? null;
   return (
     <div className="mt-6 flex flex-col gap-2">
       <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
@@ -1211,7 +1415,7 @@ function Knowledge({
           <button
             key={row.id}
             type="button"
-            onClick={() => setOpen(row)}
+            onClick={() => setOpenId(row.id)}
             className="group -mx-2 flex h-10 animate-in items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors duration-500 fade-in hover:bg-muted/60 focus-visible:bg-muted/60"
           >
             <span className="w-28 shrink-0 text-[13px] text-muted-foreground">
@@ -1229,44 +1433,111 @@ function Knowledge({
           </button>
         ))}
       </div>
-      <Dialog
-        open={open !== null}
-        onOpenChange={(next) => !next && setOpen(null)}
-      >
-        <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-xl">
-          <div className="flex flex-col gap-1 px-6 pt-5.5 pb-3">
-            <DialogTitle className="text-lg font-semibold tracking-[-0.01em]">
-              {open?.label}
-            </DialogTitle>
-            <DialogDescription className="text-[13.5px]">
-              {t("knows.where")}
-            </DialogDescription>
-          </div>
-          <ul className="flex max-h-[min(28rem,60vh)] flex-col gap-3.5 overflow-y-auto px-6 pt-1 pb-6">
-            {open?.items.map((item) => (
-              <li
-                key={`${item.title}${item.note ?? ""}`}
-                className="flex flex-col gap-0.5"
-              >
-                <span className="text-[14.5px] leading-snug font-medium">
-                  {item.title}
-                </span>
-                {item.detail && (
-                  <span className="text-[13.5px] leading-relaxed text-muted-foreground">
-                    {item.detail}
-                  </span>
-                )}
-                {item.note && (
-                  <span className="font-mono text-xs break-all text-muted-foreground">
-                    {item.note}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </DialogContent>
-      </Dialog>
+      <KnownDialog
+        row={open}
+        onClose={() => setOpenId(null)}
+        onForget={learn.forget}
+      />
     </div>
+  );
+}
+
+/** How many lines of a kind its card shows before "and N more". */
+const CARD_LINES = 3;
+
+/**
+ * What the reading understood, laid out in the office's place beside the steps once it is read: a
+ * card a kind, its first lines shown and the rest a press away, so all of it is seen at once and the
+ * steps themselves keep to what to do next.
+ */
+function KnowledgePane({
+  learn,
+  count,
+}: {
+  learn: ReturnType<typeof useLearn>;
+  count: number;
+}) {
+  const t = useTranslations("start.learn");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const rows = useKnownRows(learn);
+  const open = rows.find((row) => row.id === openId) ?? null;
+  return (
+    <section
+      aria-label={t("understood")}
+      className="flex min-w-0 flex-1 animate-in flex-col overflow-hidden rounded-2xl border border-foreground/8 bg-background duration-500 fade-in"
+    >
+      <header className="flex shrink-0 flex-wrap items-baseline justify-between gap-x-3 gap-y-1 px-6 pt-5.5 pb-4">
+        <h2 className="text-base font-semibold tracking-[-0.01em]">
+          {t("understood")}
+        </h2>
+        <span className="text-xs text-muted-foreground">
+          {t("knows.saved", { count })}
+        </span>
+      </header>
+      {/* A list, so it may scroll on a short window; at the size it was drawn for it fits. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+        <div className="columns-2 gap-3 max-[1180px]:columns-1">
+          {rows.map((row, index) => {
+            const shown = row.items.slice(0, CARD_LINES);
+            const more = row.items.length - shown.length;
+            return (
+              <div
+                key={row.id}
+                style={{ animationDelay: `${index * 60}ms` }}
+                className="mb-3 flex animate-in break-inside-avoid flex-col gap-3 rounded-[14px] bg-foreground/[0.035] p-4 break-keep duration-500 fill-mode-backwards fade-in slide-in-from-bottom-1"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenId(row.id)}
+                  className="group -m-1 flex items-center gap-2 rounded-lg p-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                >
+                  <span className="text-[13px] font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+                    {row.label}
+                  </span>
+                  {row.items.length > 1 && (
+                    <span className="text-[12px] text-muted-foreground tabular-nums">
+                      {row.items.length}
+                    </span>
+                  )}
+                  <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+                </button>
+                <ul className="flex flex-col gap-2.5">
+                  {shown.map((item) => (
+                    <li
+                      key={`${item.title}${item.note ?? ""}`}
+                      className="flex min-w-0 flex-col gap-0.5"
+                    >
+                      <span className="line-clamp-2 text-[14px] leading-snug font-medium">
+                        {item.title}
+                      </span>
+                      {item.detail && (
+                        <span className="line-clamp-2 text-[13px] leading-snug text-muted-foreground">
+                          {item.detail}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {more > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(row.id)}
+                    className="-mx-1 -mb-1 self-start rounded-lg px-1 py-0.5 text-[13px] text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                  >
+                    {t("knows.more", { count: more })}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <KnownDialog
+        row={open}
+        onClose={() => setOpenId(null)}
+        onForget={learn.forget}
+      />
+    </section>
   );
 }
 
@@ -1280,7 +1551,6 @@ function YouStep({
   setOwns,
   tools,
   setTools,
-  fromRecords,
   team,
   setTeam,
   invite,
@@ -1292,11 +1562,10 @@ function YouStep({
   setName: (value: string) => void;
   role: string;
   setRole: (value: string) => void;
-  owns: string;
-  setOwns: (value: string) => void;
+  owns: string[];
+  setOwns: (value: string[]) => void;
   tools: string[];
   setTools: (value: string[]) => void;
-  fromRecords: boolean;
   team: Team;
   setTeam: (value: Team) => void;
   invite: string;
@@ -1306,8 +1575,8 @@ function YouStep({
 }) {
   const t = useTranslations("start.you");
   const tOffice = useTranslations("office");
-  const field = "flex min-w-0 flex-col gap-1.5";
-  const caption = "flex items-baseline justify-between gap-3 text-[13px]";
+  // A link that is not an invite says so in its own field, as it is pasted.
+  const notLink = Boolean(invite.trim()) && !parseInvite(invite);
   // Invited, the office they were asked to comes first and is picked already.
   const options: [Team, typeof Link2][] = invited
     ? [
@@ -1322,61 +1591,55 @@ function YouStep({
       ];
   return (
     <>
-      <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-3 max-sm:grid-cols-1">
-        <label className={field}>
-          <span className={caption}>{t("name")}</span>
-          <Input
+      {/* Each field's name inside it, on its left, so the step reads as the card being filled in;
+          a list is one line that opens its items (ListField), so nothing here grows. */}
+      <div className="mt-5 grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-2 max-sm:grid-cols-1">
+        <Field label={t("name")}>
+          <input
             autoFocus
             value={name}
             maxLength={80}
             autoComplete="name"
-            className="h-10"
+            // Opening or joining an office needs a name: the field says so, not only the button.
+            placeholder={team !== "alone" ? t("nameNeeded") : undefined}
+            className={FIELD_INPUT}
             onChange={(event) => setName(event.target.value)}
           />
-        </label>
-        <label className={field}>
-          <span className={caption}>{t("role")}</span>
-          <Input
+        </Field>
+        <Field label={t("role")}>
+          <input
             value={role}
-            maxLength={200}
+            maxLength={PROFILE_LIMITS.role}
             placeholder={t("rolePlaceholder")}
-            className="h-10"
+            className={FIELD_INPUT}
             onChange={(event) => setRole(event.target.value)}
           />
-        </label>
-        <label className={cn(field, "col-span-full")}>
-          <span className={caption}>
-            {tOffice("owns")}
-            {fromRecords && (
-              <span className="text-xs text-muted-foreground">
-                {t("fromRecords")}
-              </span>
-            )}
-          </span>
-          <Input
-            value={owns}
-            maxLength={400}
-            placeholder={tOffice("ownsPlaceholder")}
-            className="h-10"
-            onChange={(event) => setOwns(event.target.value)}
-          />
-        </label>
-        <div className={cn(field, "col-span-full")}>
-          <span className={caption}>{tOffice("tools")}</span>
-          <Chips
-            values={tools}
-            onChange={setTools}
-            label={tOffice("tools")}
-            placeholder={
-              tools.length ? t("toolsMore") : tOffice("toolsPlaceholder")
-            }
-          />
-        </div>
+        </Field>
+        <ListField
+          label={t("owns")}
+          values={owns}
+          onChange={setOwns}
+          max={PROFILE_LIMITS.owns}
+          maxItem={PROFILE_LIMITS.own}
+          placeholder={tOffice("ownsPlaceholder")}
+          className="col-span-full"
+        />
+        <ListField
+          label={t("tools")}
+          values={tools}
+          onChange={setTools}
+          max={PROFILE_LIMITS.tools}
+          maxItem={PROFILE_LIMITS.tool}
+          placeholder={tOffice("toolsPlaceholder")}
+          className="col-span-full"
+        />
       </div>
 
-      <div className="mt-6 flex flex-col gap-2">
+      <div className="mt-4 flex flex-col gap-2">
         <span className="text-[13px] font-medium">{t("team")}</span>
+        {/* Each choice says what it means under its name, so they are compared before one is picked. */}
         <ChoiceList<Team>
+          dense
           aria-label={t("team")}
           value={team}
           onChange={setTeam}
@@ -1390,36 +1653,34 @@ function YouStep({
                   ? t("invitedOffice", { from: invited.from })
                   : t("invitedOfficeNobody")
                 : t(value),
+            body:
+              value === "join" && invited
+                ? t("invitedBody")
+                : t(`${value}Note`),
             tag: value === "join" && invited ? t("invitedTag") : undefined,
           }))}
         />
-        {/* One place below for what the choice needs, the same height whatever is picked. */}
-        <div className="flex min-h-16 flex-col justify-center gap-1.5">
-          {team === "join" && !invited ? (
-            <>
-              <div className="relative">
-                <Link2 className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  spellCheck={false}
-                  value={invite}
-                  placeholder={t("link")}
-                  aria-label={t("link")}
-                  className="h-10 pl-9 font-mono text-[13px]"
-                  onChange={(event) => setInvite(event.target.value)}
-                />
-              </div>
-              <p className="truncate text-xs text-muted-foreground">
-                {t("joinNote")}
-              </p>
-            </>
-          ) : (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              {team === "join" && invited
-                ? invited.from
-                  ? t("invited", { from: invited.from })
-                  : t("invitedNobody")
-                : t(`${team}Note`)}
-            </p>
+        {/* The link goes in a place kept for it, so picking "join" never grows the step. */}
+        <div className="min-h-10">
+          {team === "join" && !invited && (
+            <Field label={t("link")} invalid={notLink}>
+              <input
+                spellCheck={false}
+                value={invite}
+                aria-invalid={notLink || undefined}
+                placeholder={t("linkPaste")}
+                className={cn(
+                  FIELD_INPUT,
+                  "font-mono text-[13px] placeholder:font-sans",
+                )}
+                onChange={(event) => setInvite(event.target.value)}
+              />
+              {notLink && (
+                <span className="shrink-0 text-xs text-destructive">
+                  {t("notLinkShort")}
+                </span>
+              )}
+            </Field>
           )}
         </div>
       </div>
@@ -1427,78 +1688,49 @@ function YouStep({
   );
 }
 
-/** A short list typed as chips: Enter or a comma adds one, × or Backspace takes one back. */
-function Chips({
-  values,
-  onChange,
+/** What a field's own input looks like inside it. */
+const FIELD_INPUT =
+  "h-10 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground/80";
+
+/** A field with its name inside it on the left, as one ring around both. */
+function Field({
   label,
-  placeholder,
+  children,
+  className,
+  invalid,
 }: {
-  values: string[];
-  onChange: (values: string[]) => void;
   label: string;
-  placeholder: string;
+  children: ReactNode;
+  className?: string;
+  invalid?: boolean;
 }) {
-  const [typed, setTyped] = useState("");
-  const add = (text: string) => {
-    const next = splitList(text).filter((item) => !values.includes(item));
-    if (next.length) onChange([...values, ...next].slice(0, 20));
-    setTyped("");
-  };
   return (
-    <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-[10px] px-2 py-1.5 ring-1 ring-input ring-inset focus-within:ring-3 focus-within:ring-ring/50">
-      {values.map((value) => (
-        <span
-          key={value}
-          className="flex h-6.5 items-center gap-1 rounded-[7px] bg-muted pr-1 pl-2 text-[13px]"
-        >
-          {value}
-          <button
-            type="button"
-            aria-label={`${value} ×`}
-            onClick={() => onChange(values.filter((item) => item !== value))}
-            className="grid size-4 place-items-center rounded text-muted-foreground hover:text-foreground"
-          >
-            <X className="size-3" />
-          </button>
-        </span>
-      ))}
-      <input
-        value={typed}
-        aria-label={label}
-        placeholder={placeholder}
-        maxLength={80}
-        onChange={(event) => {
-          const text = event.target.value;
-          if (/[,，、]/.test(text)) add(text);
-          else setTyped(text);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            add(typed);
-          } else if (event.key === "Backspace" && !typed && values.length)
-            onChange(values.slice(0, -1));
-        }}
-        onBlur={() => typed.trim() && add(typed)}
-        className="h-6.5 min-w-24 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-muted-foreground"
-      />
-    </div>
+    <label
+      className={cn(
+        "flex min-h-10 min-w-0 items-center gap-3 rounded-[10px] pr-2.5 pl-3 ring-1 ring-input ring-inset transition-shadow focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
+        invalid && "ring-destructive/60 focus-within:ring-destructive/30",
+        className,
+      )}
+    >
+      <span className="shrink-0 text-[13px] text-muted-foreground">
+        {label}
+      </span>
+      {children}
+    </label>
   );
 }
 
-/** Done: the card colleagues will see, how much it may do alone, and each part with a way back. */
+/**
+ * Done: how much it may do alone, and each part with a way back; the card colleagues will see is
+ * beside the steps (OfficePane), or here when there is no room for it there.
+ */
 function ReadyStep({
-  name,
-  role,
-  owns,
+  card,
   autonomy,
   onAutonomy,
   rows,
 }: {
-  name: string;
-  role: string;
-  owns: string[];
+  card: ReactNode | null;
   autonomy: Autonomy;
   onAutonomy: (value: Autonomy) => void;
   rows: {
@@ -1509,36 +1741,9 @@ function ReadyStep({
   }[];
 }) {
   const t = useTranslations("start");
-  const tShell = useTranslations("shell");
   return (
     <>
-      <div className="mt-6 flex flex-col gap-3.5 rounded-[14px] p-4.5 shadow-[inset_0_0_0_1px_var(--alpha-12)]">
-        <div className="flex items-center gap-3.5">
-          <LogoMark className="size-10" />
-          <span className="min-w-0">
-            <span className="block truncate text-base font-semibold tracking-[-0.01em]">
-              {name.trim() || tShell("screens.clone")}
-            </span>
-            {role.trim() && (
-              <span className="block truncate text-[13.5px] text-muted-foreground">
-                {role}
-              </span>
-            )}
-          </span>
-        </div>
-        {owns.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            {owns.map((item) => (
-              <span
-                key={item}
-                className="flex h-6.5 items-center rounded-[7px] px-2.5 text-[13px] shadow-[inset_0_0_0_1px_var(--alpha-12)]"
-              >
-                {item}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      {card && <div className="mt-6">{card}</div>}
 
       <div className="mt-6 flex flex-col gap-2">
         <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
@@ -1577,7 +1782,7 @@ function ReadyStep({
                   type="button"
                   onClick={row.change}
                   aria-label={`${row.label} · ${t("ready.change")}`}
-                  className="group -mx-2 flex h-10 w-[calc(100%+1rem)] items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:bg-muted/60"
+                  className="group -mx-2 flex h-10 w-[calc(100%+1rem)] items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
                 >
                   {line}
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />

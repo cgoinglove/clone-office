@@ -116,13 +116,19 @@ These words help discussion. They do not mandate separate services, tables or UI
   `features/minime/start/onboarding.tsx`, after Thursday's first run: what a clone is (one more of
   you, one each on a team; it learns, stands in, asks; it keeps to the AI already in use), beside
   the office, framed, playing the app's loop with nobody real in it (`start/demo.ts`, data the
-  office draws as any day); each step in one frame (the name and the language, `language-switch.tsx`,
-  on top, the steps named beneath, Back and the step's button on a bar at the bottom), what is
+  office draws as any day); the steps take one half of the window and what stands beside them the
+  other (the office; what the reading understood once it has, a card a kind, `KnowledgePane`; the
+  card colleagues will see while it is written, laid over the office); each step in one frame (the
+  name with the clone's dot and the language, `language-switch.tsx`, on top, the steps named
+  beneath, only Back and the step's button at the bottom), fitting a 1280×720 window, what is
   picked in a popover at its field so no step grows; then its brain (`BrainPicker`, asked one word
   as soon as it is picked), the first reading with the folders it reads (`folder-list.tsx`
-  `FolderField`: one field, every folder in a dialog, ticked while read) (it ends on what it
-  understood, one row a kind each opening its whole list, and what it would answer a colleague,
-  `learn.ts` `example`), who they are and their
+  `FolderField`: one field, every folder in a dialog, those in one collection under it, ticked
+  while read) (it ends on what it understood, each line taken back with its × (`learn/forget.ts`,
+  `app/api/me/learn/forget`: a memory line removed, a page archived, a place off the map), and
+  what it would answer a colleague, `learn.ts` `example`), who they are (each field's name inside
+  it; what they look after and their tools as items, `list-field.tsx` `ListField`, never text split
+  on commas, within `profile-limits.ts`) and their
   team (`server/profile.ts`, `settings.json` `profile`: name, what they do, what they look after
   and the tools they work in, filled in from what the reading saw (`learn.ts` `about`) for them to
   correct, never memory; every session starts with it (`session.ts` `systemPrompt`,
@@ -136,7 +142,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   profile, the questions waiting in the person's own conversations), the column (`sidebar.tsx`,
   after the columns ChatGPT, Claude and Paperclip keep: New chat, then the four places, Home,
   Requests, Office and Your clone, each saying what goes on there (open requests, a meeting of the
-  clones, the reading) and marked by a glyph drawn filled while it is open (`features/brand/nav-icons.tsx`);
+  clones, the reading) and marked as Thursday marks its own, lucide's line icons, the open one by
+  its row (`features/brand/nav-icons.tsx`);
   **Your turn** when something waits (`your-turn.ts`: questions about colleagues' requests, live at
   the gate or kept for later, and those in conversations, each knowing where it is answered); the
   recent chats once there are any, scrolling on their own, the one the clone is answering in
@@ -183,7 +190,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, / the box; the tab's title carries what
   waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at rest, also
   `app/icon.svg`, outlined as the clone's place in the column), the places' marks (`nav-icons.tsx`,
-  from Phosphor (MIT), each outlined and filled), the services' and AI vendors' marks (`marks.ts`, generated from
+  lucide's, as Thursday picks them), the services' and AI vendors' marks (`marks.ts`, generated from
   lobe-icons (MIT) and simple-icons (CC0), drawn by `brand-mark.tsx`) and the languages' flags
   (`flags.ts`, from country-flag-icons (MIT), drawn as a picture by `language-switch.tsx` `Flag`).
   `/files/<path>` (`app/(app)/files/[...path]`, `shell/file-screen.tsx`) opens what the clone
@@ -234,8 +241,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   under `notes/`, with an index and log written by code; `mcp-server.ts` serves all of it as
   tools. `skills/` (top level) holds the skills the app ships, laid out as the store is and shipped
   in the package: methods, never a report template nor a restatement of a tool (what is the app's
-  own is a tool): making a skill, finding one in the open registry, learning a task by watching
-  the person, driving its browser, making an artifact (each named on the clone's page in the
+  own is a tool, so finding one in the open registry is `memory/hub.ts`'s tools alone): making a
+  skill, learning a task by watching the person, driving its browser, making an artifact (each named on the clone's page in the
   person's language while it is as it came, `settings.skills.shipped`, `bundledOrigins`); `SkillStore.syncBundled`
   brings them in when the server starts and before a session or the clone's page first lists
   skills, after Hermes Agent's skills_sync
@@ -452,7 +459,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   on a grid), `office.mjs` (`createOffice`: sheets, scenes, camera, panel, and the lobby with
   its lift ride, once a day; a meeting of the clones (`RoomData.meeting`) gathers its members round
   the reading corner's low table, where they take turns, what each said over its head, and go back
-  once the last word is read; `setInset` keeps room at the sides for what the page lays over it,
+  once the last word is read; `example` (the first steps) opens with everyone seated and named, the
+  desks framed close and nobody off for tea; `setInset` keeps room at the sides for what the page lays over it,
   `onPanel` and `closePanel` let the page's own panel and the office's take turns), `looks.mjs`
   (each clone's colour and shape, for lists outside the floor). Full screen (`of-full`) it fills
   its frame; `of-pane` fills the office screen and `of-mini` is the chat's small live view, with
@@ -553,7 +561,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   the names on their account and commits as hints; a later reading takes only what changed) and
   `learn.ts` (one session whose structured answer holds what they do and what to call them, up to
   twelve lines on how they work and fourteen on their work's surroundings, the map, up to twelve
-  projects and ten people as pages, saved by code, and three tasks); `export-prompt.ts` and `import.ts` (what another AI remembers,
+  projects and ten people as pages, saved by code, which holds those limits too (`LEARN_CAPS`; the
+  map keeps sixty places, the newest first), and three tasks); `export-prompt.ts` and `import.ts` (what another AI remembers,
   kept the same way, the pasted text stored nowhere); `reset.ts` (start over: what is kept moves
   into `backup/`, never deleted; when it all came from a reading, with nothing of the person's
   (no conversation, skill or note, no memory written after the reading), it is cleared instead).
@@ -642,9 +651,13 @@ These words help discussion. They do not mandate separate services, tables or UI
   2 MB are skipped, logs can be read from the end); `server/exclude.ts`: folders the person keeps
   out of everything, from `settings.json`; `server/folders.ts`: the folders they worked in lately,
   from every tool's lists; `server/places.ts`: where their work lives, those and the folders they
-  changed in the last 30 days (the usual work folders, four deep, a few hundred entries a folder,
-  a budget of entries and time, hidden and build folders, links, keys and folders left out
-  skipped, a repository by git alone), ranked, which the screen offers as the folders it reads
+  changed in the last 30 days (the usual work folders, four deep, a thousand names and three
+  hundred files a folder, a budget of names and time shared among the work folders, hidden and
+  build folders, links, keys and folders left out skipped, a repository by git alone, its reflog
+  saying how much happened there), none inside another (`rankPlaces`: a repository is one place,
+  a folder worked in with AI another, a folder holding either a collection the page groups them
+  under, other changes going to the folder right under the deepest collection; a work folder of
+  loose files is one place), ranked, which the screen offers as the folders it reads
   before the first reading and any time after ("Folders it reads"), and which the reading
   describes (a folder's newest file names and kinds, a repository's address, layout, README head
   and manifest). Everything that touches their folders runs in a process of its own

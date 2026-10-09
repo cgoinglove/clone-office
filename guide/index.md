@@ -35,7 +35,7 @@ Two things hold everywhere:
 - **The column on the left** is always there. At its top, **New chat** (새 대화), then the four
   places: **Home** (홈), **Requests** (부탁, with how many are open), **Office** (오피스, which says
   when the clones are meeting) and **Your clone** (내 클론, with how far it has read while it
-  reads); the place open is drawn filled. **Your turn** (내 차례) appears below them only when
+  reads); the place open is the shaded row. **Your turn** (내 차례) appears below them only when
   something waits on them, one line each (a question about a colleague's request, or one in a
   conversation); a click goes where it is answered. Then **Recent chats** (최근 대화), once there
   are any, with a dot where a question waits and a turning mark where the clone is answering. At
@@ -103,16 +103,19 @@ the loop out as an example with nobody real in it. **Get started** (시작하기
 named in a bar at the top: what it thinks with, picked from one field that opens on the vendors and
 what each offers, and checked to answer at once (`brain.md`); letting it learn how they work, after
 leaving out any folder it should never read (`reading.md`, `memory.md`): when it has read, it shows
-**What I understood about you** (제가 이해한 내용), the lines it kept, and, under **If a colleague
-asks** (동료가 이렇게 물으면), what it would answer a colleague in their place (with no AI records
+**What I understood about you** (제가 이해한 내용) beside the steps, in the office's place, a card
+for each kind of thing it kept (pressing one lists all of it, each line with a × to take it back),
+and, under **If a colleague asks** (동료가 이렇게 물으면), what it
+would answer a colleague in their place (with no AI records
 on the computer, it simply learns as they work); who they are (name, what they do, what they look
-after and the tools they work in, filled in from what it read for them to correct) and whether a
-team is in it (`office.md`; started from an invite, this comes first, with the office they were invited to picked already, so the team's models are there when they pick one);
-then their card as colleagues will see it, how much their clone does on its own in their own work
-(**Ask me first**, 수동, or **On its own**, 자동, each explained under its name), and each part as
-it stands, a chevron on one that can still be changed; then Home. The arrow at the bottom left goes
-back (**Back**, 이전), a line beside it with a blue dot says what to do now, and **Skip** (건너뛰기)
-beside the step's own button passes over the step on screen only. The screen's language is one button at the top
+after and the tools they work in, filled in from what it read for them to correct, with their card
+as colleagues will see it laid over the office as they write) and whether a team is in it
+(`office.md`; started from an invite, this comes first, with the office they were invited to picked
+already, so the team's models are there when they pick one); then how much their clone does on its
+own in their own work (**Ask me first**, 수동, or **On its own**, 자동, each explained under its
+name), and each part as it stands, a chevron on one that can still be changed; then Home. At the
+bottom, **Back** (이전) goes back, and **Skip** (건너뛰기) beside the step's own button passes over
+the step on screen only. The screen's language is one button at the top
 right of the first steps (**Follow the browser**, 브라우저 언어 따르기, until they pick one), and
 under Settings › General.
 

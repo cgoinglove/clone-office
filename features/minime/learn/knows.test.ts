@@ -1,9 +1,22 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
-import { keepKnowledge, LEARN_PROMPT, LEARN_SCHEMA, pageSlug } from "./learn";
+import { forgetKnown } from "./forget";
+import {
+  keepKnowledge,
+  LEARN_CAPS,
+  LEARN_PROMPT,
+  LEARN_SCHEMA,
+  pageSlug,
+} from "./learn";
 import { onlyRead } from "./reset";
 
 const root = mkdtempSync(join(tmpdir(), "minime-knows-"));
@@ -167,4 +180,152 @@ test("where their work lives is one map page, and a project's page starts with i
     { path: "~/code/app", about: "결제 서버와 관리자 화면" },
     { path: "~/Pictures/shoots", about: "촬영 원본" },
   ]);
+});
+
+test("a reading keeps no more than its caps, whatever the model gives, and the map keeps the newest places", async () => {
+  const many = (n: number, kind: string) =>
+    Array.from({ length: n }, (_, at) => ({
+      name: `${kind} ${at}`,
+      summary: `${kind} ${at}`,
+      page: `${kind} ${at} page`,
+    }));
+  const { knows } = await keepKnowledge(
+    {
+      user: [],
+      work: [],
+      projects: many(LEARN_CAPS.projects + 5, "capped project"),
+      people: many(LEARN_CAPS.people + 5, "capped person"),
+      places: {
+        title: "Where work lives",
+        entries: Array.from({ length: 50 }, (_, at) => ({
+          path: `~/old/${at}`,
+          about: "older",
+        })),
+      },
+    },
+    "reading",
+  );
+  assert.equal(knows.projects.length, LEARN_CAPS.projects);
+  assert.equal(knows.people.length, LEARN_CAPS.people);
+  assert.equal(
+    knows.places?.length,
+    LEARN_CAPS.places + 2,
+    "this reading's, and the two before",
+  );
+  // Readings go on; the map stays the same size, what was found last first.
+  for (let round = 0; round < 4; round++)
+    await keepKnowledge(
+      {
+        user: [],
+        work: [],
+        places: {
+          title: "Where work lives",
+          entries: [{ path: `~/new/${round}`, about: "newer" }],
+        },
+      },
+      "reading",
+    );
+  const last = await keepKnowledge(
+    {
+      user: [],
+      work: [],
+      places: {
+        title: "Where work lives",
+        entries: Array.from({ length: LEARN_CAPS.places }, (_, at) => ({
+          path: `~/latest/${at}`,
+          about: "latest",
+        })),
+      },
+    },
+    "reading",
+  );
+  assert.equal(last.knows.places?.length, 60);
+  assert.equal(last.knows.places?.[0].path, "~/latest/0");
+  assert.equal(last.knows.places?.[LEARN_CAPS.places].path, "~/new/3");
+});
+
+test("what the reading kept is taken back one thing at a time: a line removed, a page archived, a place off the map", async () => {
+  const { knows } = await keepKnowledge(
+    {
+      user: [{ kind: "voice", text: "take-back: answers in one line" }],
+      work: ["take-back: the team ships on Thursdays"],
+      projects: [
+        {
+          name: "Take Back Project",
+          summary: "s",
+          page: "a page to set aside",
+        },
+      ],
+      people: [],
+      places: {
+        title: "Where work lives",
+        entries: [{ path: "~/take/back", about: "a place to take off" }],
+      },
+    },
+    "reading",
+  );
+  writeFileSync(
+    join(root, "learn.json"),
+    JSON.stringify({
+      last: { at: new Date().toISOString(), since: "", kept: [], knows },
+    }),
+  );
+  const page = knows.projects.find((one) => one.name === "Take Back Project");
+  assert.ok(page);
+  assert.equal(
+    await forgetKnown({ kind: "user", text: "take-back: answers in one line" }),
+    true,
+  );
+  assert.equal(
+    await forgetKnown({
+      kind: "work",
+      text: "take-back: the team ships on Thursdays",
+    }),
+    true,
+  );
+  assert.equal(await forgetKnown({ kind: "projects", path: page.path }), true);
+  assert.equal(
+    await forgetKnown({ kind: "places", path: "~/take/back" }),
+    true,
+  );
+  // Gone where it was kept, and from what the screen shows.
+  assert.doesNotMatch(
+    readFileSync(join(root, "memories", "USER.md"), "utf8"),
+    /take-back/,
+  );
+  assert.doesNotMatch(
+    readFileSync(join(root, "memories", "MEMORY.md"), "utf8"),
+    /take-back/,
+  );
+  assert.equal(
+    existsSync(join(root, "notes", `${page.path}.md`)),
+    false,
+    "set aside, never deleted",
+  );
+  assert.doesNotMatch(
+    readFileSync(join(root, "notes", "topics", "where-work-lives.md"), "utf8"),
+    /take\/back/,
+  );
+  const record = JSON.parse(readFileSync(join(root, "learn.json"), "utf8"));
+  assert.equal(
+    record.last.knows.projects.some(
+      (one: { path: string }) => one.path === page.path,
+    ),
+    false,
+  );
+  assert.equal(
+    record.last.knows.places.some(
+      (one: { path: string }) => one.path === "~/take/back",
+    ),
+    false,
+  );
+  // Only the reading's own pages: nothing else in the notes is reached.
+  assert.equal(
+    await forgetKnown({ kind: "projects", path: "topics/where-work-lives" }),
+    false,
+  );
+  assert.equal(
+    await forgetKnown({ kind: "people", path: "people/../topics/x" }),
+    false,
+  );
 });

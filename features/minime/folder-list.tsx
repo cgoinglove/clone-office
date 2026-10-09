@@ -1,9 +1,11 @@
 "use client";
 
 // The folders the clone reads, as one field that opens them all: where the person's work lives
-// (server/places.ts: the folders they changed lately and worked in with their AI tools), each one
-// ticked while it is read. The first steps show it before anything is read, and Settings ›
-// Permissions any time after; a folder left out is never read or searched, whatever is asked.
+// (server/places.ts: the folders they changed lately and worked in with their AI tools, none inside
+// another), each one ticked while it is read, those in one collection (a "projects" folder) under
+// it, so the collection is left out whole with one tick. The first steps show it before anything is
+// read, and Settings › Permissions any time after; a folder left out is never read or searched,
+// whatever is asked.
 
 import {
   Check,
@@ -41,6 +43,18 @@ export interface Folder {
   /** Files changed there lately (a plain folder's), and when the last one did. */
   files?: number;
   changed?: number;
+  /** The collection it lies in, if any. */
+  within?: string;
+  excluded: boolean;
+}
+
+/** A folder holding several of them, and the conversations had in it over all of them. */
+export interface FolderGroup {
+  path: string;
+  shown?: string;
+  name: string;
+  sessions: number;
+  tools?: Folder["tools"];
   excluded: boolean;
 }
 
@@ -61,6 +75,7 @@ export const TOOL_MARKS: Record<string, [MarkId, string]> = {
 /** The folders and what else is kept out, read once and saved as the person ticks them. */
 export function useFolders() {
   const [list, setList] = useState<Folder[] | null>(null);
+  const [groups, setGroups] = useState<FolderGroup[]>([]);
   const [others, setOthers] = useState<LeftOut[]>([]);
   const [excludes, setExcludes] = useState<string[]>([]);
   const load = useCallback(async () => {
@@ -68,6 +83,7 @@ export function useFolders() {
       .then((r) => r.json())
       .catch(() => null);
     setList(data?.folders ?? []);
+    setGroups(data?.groups ?? []);
     setExcludes(data?.exclude ?? []);
     setOthers(data?.others ?? []);
   }, []);
@@ -85,7 +101,7 @@ export function useFolders() {
     setExcludes(next);
     await load();
   };
-  return { list, others, excludes, save };
+  return { list, groups, others, excludes, save };
 }
 
 export type Folders = ReturnType<typeof useFolders>;
@@ -156,20 +172,52 @@ function FolderDialog({
   const t = useTranslations("folders");
   const [query, setQuery] = useState("");
   const [path, setPath] = useState("");
-  const { list, others, excludes, save } = folders;
+  const { list, groups, others, excludes, save } = folders;
   const needle = query.trim().toLowerCase();
-  const shown = (list ?? []).filter(
-    (folder) =>
-      !needle ||
-      folder.name.toLowerCase().includes(needle) ||
-      folder.path.toLowerCase().includes(needle),
-  );
-  const toggle = (folder: Folder) =>
+  const toggle = (item: { path: string; excluded: boolean }) =>
     void save(
-      folder.excluded
-        ? excludes.filter((p) => p !== folder.path)
-        : [...excludes, folder.path],
+      item.excluded
+        ? excludes.filter((p) => p !== item.path)
+        : [...excludes, item.path],
     );
+  // A collection heads the folders in it when it holds several, or was worked in itself (its own
+  // conversations go with it); a search lists the folders alone.
+  const members = new Map<string, Folder[]>();
+  for (const folder of list ?? [])
+    if (folder.within)
+      members.set(folder.within, [
+        ...(members.get(folder.within) ?? []),
+        folder,
+      ]);
+  const heads = new Map(
+    groups
+      .filter(
+        (group) =>
+          (members.get(group.path)?.length ?? 0) > 1 || group.sessions > 0,
+      )
+      .map((group) => [group.path, group]),
+  );
+  const blocks: (
+    | { folder: Folder }
+    | { group: FolderGroup; folders: Folder[] }
+  )[] = [];
+  const headed = new Set<string>();
+  for (const folder of list ?? []) {
+    if (needle) {
+      if (
+        folder.name.toLowerCase().includes(needle) ||
+        folder.path.toLowerCase().includes(needle)
+      )
+        blocks.push({ folder });
+      continue;
+    }
+    const head = folder.within ? heads.get(folder.within) : undefined;
+    if (!head) blocks.push({ folder });
+    else if (!headed.has(head.path)) {
+      headed.add(head.path);
+      blocks.push({ group: head, folders: members.get(head.path) ?? [] });
+    }
+  }
   const leaveOut = () => {
     const pattern = path.trim();
     if (!pattern || excludes.includes(pattern)) return;
@@ -204,58 +252,37 @@ function FolderDialog({
           />
         </div>
         <ul className="flex h-[min(24rem,50vh)] flex-col gap-0.5 overflow-y-auto px-3 pb-3">
-          {shown.map((folder) => {
-            // Kept out by a name pattern rather than by itself: the pattern's row brings it back.
-            const byPattern =
-              folder.excluded && !excludes.includes(folder.path);
-            return (
-              <li key={folder.path}>
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={!folder.excluded}
-                  disabled={byPattern}
-                  onClick={() => toggle(folder)}
-                  className="flex w-full items-center gap-3.5 rounded-[10px] px-3 py-2.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted disabled:opacity-60"
-                >
-                  <Tick on={!folder.excluded} />
-                  <span className="min-w-0 flex-1">
-                    <span
-                      className={cn(
-                        "block truncate text-[14.5px] font-medium",
-                        folder.excluded && "text-muted-foreground",
-                      )}
-                    >
-                      {folder.name}
-                    </span>
-                    <span className="block truncate font-mono text-xs text-muted-foreground">
-                      {folder.shown ?? folder.path}
-                    </span>
-                  </span>
-                  <span className="flex shrink-0 gap-1">
-                    {(folder.tools ?? [])
-                      .filter((tool) => TOOL_MARKS[tool])
-                      .map((tool) => (
-                        <BrandMark
-                          key={tool}
-                          id={TOOL_MARKS[tool][0]}
-                          className="size-3.5"
-                        />
-                      ))}
-                  </span>
-                  <span className="w-24 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-                    {folder.sessions
-                      ? t("sessions", { count: folder.sessions })
-                      : folder.files
-                        ? t("files", { count: folder.files })
-                        : folder.kind === "repo"
-                          ? t("repo")
-                          : ""}
-                  </span>
-                </button>
+          {blocks.map((block) =>
+            "folder" in block ? (
+              <li key={block.folder.path}>
+                <FolderRow
+                  folder={block.folder}
+                  excludes={excludes}
+                  onToggle={toggle}
+                />
               </li>
-            );
-          })}
+            ) : (
+              <li key={block.group.path} className="flex flex-col gap-0.5">
+                <FolderRow
+                  folder={block.group}
+                  excludes={excludes}
+                  onToggle={toggle}
+                  count={block.folders.length}
+                />
+                <ul className="flex flex-col gap-0.5 pl-8">
+                  {block.folders.map((folder) => (
+                    <li key={folder.path}>
+                      <FolderRow
+                        folder={folder}
+                        excludes={excludes}
+                        onToggle={toggle}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ),
+          )}
           {!needle &&
             others.map((other) => (
               <li key={other.pattern}>
@@ -276,7 +303,7 @@ function FolderDialog({
                 </button>
               </li>
             ))}
-          {list !== null && shown.length === 0 && !others.length && (
+          {list !== null && blocks.length === 0 && !others.length && (
             <li className="px-3 py-6 text-center text-sm text-muted-foreground">
               {needle ? t("noMatch") : t("none")}
             </li>
@@ -318,6 +345,83 @@ function FolderDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * One folder, or a collection heading those in it (`count`), with its tick: ticked, it is read.
+ * One kept out by something else (a name pattern, the collection it lies in) shows it, and is
+ * brought back there.
+ */
+function FolderRow({
+  folder,
+  excludes,
+  onToggle,
+  count,
+}: {
+  folder: Folder | FolderGroup;
+  excludes: string[];
+  onToggle: (folder: { path: string; excluded: boolean }) => void;
+  count?: number;
+}) {
+  const t = useTranslations("folders");
+  const byOther = folder.excluded && !excludes.includes(folder.path);
+  const files = "files" in folder ? folder.files : undefined;
+  const repo = "kind" in folder && folder.kind === "repo";
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={!folder.excluded}
+      disabled={byOther}
+      onClick={() => onToggle(folder)}
+      className="flex w-full items-center gap-3.5 rounded-[10px] px-3 py-2.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted disabled:opacity-60"
+    >
+      <Tick on={!folder.excluded} />
+      <span className="min-w-0 flex-1">
+        <span
+          className={cn(
+            "flex items-center gap-1.5 truncate text-[14.5px] font-medium",
+            folder.excluded && "text-muted-foreground",
+          )}
+        >
+          {count !== undefined && (
+            <FolderIcon className="size-3.5 shrink-0 text-muted-foreground" />
+          )}
+          <span className="truncate">{folder.name}</span>
+        </span>
+        <span className="block truncate font-mono text-xs text-muted-foreground">
+          {folder.shown ?? folder.path}
+        </span>
+      </span>
+      <span className="flex shrink-0 gap-1">
+        {(folder.tools ?? [])
+          .filter((tool) => TOOL_MARKS[tool])
+          .map((tool) => (
+            <BrandMark
+              key={tool}
+              id={TOOL_MARKS[tool][0]}
+              className="size-3.5"
+            />
+          ))}
+      </span>
+      <span className="w-28 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+        {count !== undefined
+          ? [
+              t("count", { count }),
+              folder.sessions ? t("sessions", { count: folder.sessions }) : "",
+            ]
+              .filter(Boolean)
+              .join(" · ")
+          : folder.sessions
+            ? t("sessions", { count: folder.sessions })
+            : files
+              ? t("files", { count: files })
+              : repo
+                ? t("repo")
+                : ""}
+      </span>
+    </button>
   );
 }
 

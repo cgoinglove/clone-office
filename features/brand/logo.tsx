@@ -19,11 +19,11 @@ export function LogoMark({
   className?: string;
   /** What a screen reader hears when the mark stands alone. */
   label?: string;
-  /** Drawn as a line with its eyes filled, as the app's other marks are drawn outlined. */
+  /** Drawn as a line with its eyes filled, as lucide's icons beside it are drawn. */
   outline?: boolean;
   /**
-   * Set in a nav icon's frame: as much room round it as Phosphor leaves round its glyphs
-   * (nav-icons.tsx), so it stands as tall as the marks beside it.
+   * Set in a nav icon's frame: as much room round it as lucide leaves round its icons, and its
+   * line as heavy as theirs (nav-icons.tsx), so it stands as one of them.
    */
   nav?: boolean;
 }) {
@@ -40,7 +40,8 @@ export function LogoMark({
         d={REST.body}
         fill={outline ? "none" : "currentColor"}
         stroke={outline ? "currentColor" : undefined}
-        strokeWidth={outline ? 16 : undefined}
+        strokeWidth={outline ? 21 : undefined}
+        strokeLinejoin="round"
       />
       <path d={REST.eyes[0]} className={eye} />
       <path d={REST.eyes[1]} className={eye} />

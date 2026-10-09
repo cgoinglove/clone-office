@@ -6,6 +6,7 @@
 // opened mid-way shows it too.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { type Known, withoutKnown } from "../learn/known";
 import type { Routine } from "../routine";
 import { savedText } from "../saved-text";
 import { stream } from "../stream";
@@ -173,7 +174,24 @@ export function useLearn(lang: string, onDone?: () => void) {
     return true;
   }, [lang, follow]);
 
-  return { ...state, start };
+  /** Takes back one thing the reading kept (learn/forget.ts); the screen follows at once. */
+  const forget = useCallback(async (item: Known) => {
+    const response = await fetch("/api/me/learn/forget", {
+      method: "POST",
+      headers: HEADERS,
+      body: JSON.stringify(item),
+    }).catch(() => undefined);
+    if (!response?.ok) return false;
+    setState((s) => ({
+      ...s,
+      knows: s.knows && withoutKnown(s.knows, item),
+      kept:
+        "text" in item ? s.kept.filter((line) => line !== item.text) : s.kept,
+    }));
+    return true;
+  }, []);
+
+  return { ...state, start, forget };
 }
 
 export type Learn = ReturnType<typeof useLearn>;

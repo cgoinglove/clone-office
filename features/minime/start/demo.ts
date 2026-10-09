@@ -19,9 +19,14 @@ export interface DemoWords {
   decided: string;
 }
 
-/** One pass of the loop, and when each beat of it begins. */
-const LOOP_MS = 22_000;
-const BEATS = [0, 1500, 5000, 9500, 11_000, 14_500, 19_500] as const;
+/**
+ * One pass of the loop, and when each beat of it begins, timed to what the office draws (filmed a
+ * second at a time): the colleague's clone walks over and hands it in (about 4s), yours takes it and
+ * works (about 4s), walks the answer over, stamps it done and comes back (about 8s); then the
+ * request only you can decide comes the same way, waits on you a while, and its answer goes back.
+ */
+const LOOP_MS = 37_500;
+const BEATS = [0, 800, 4500, 9000, 17_500, 22_500, 28_500] as const;
 
 /** The beat the loop is on, 0 to 6, and how many loops have gone. */
 function useBeat(playing: boolean) {
@@ -44,14 +49,33 @@ function useBeat(playing: boolean) {
   return state;
 }
 
-export function useDemoRoom(words: DemoWords, playing: boolean) {
-  const { beat, round } = useBeat(playing);
+/**
+ * The office as the example shows it at this beat. Calm, nothing goes between the desks: the
+ * office stands still behind what the person is writing (their card), their own clone named after
+ * them.
+ */
+export function useDemoRoom(words: DemoWords, playing: boolean, calm = false) {
+  const { beat, round } = useBeat(playing && !calm);
   const room = useMemo<RoomData>(() => {
     const [first, second, third] = words.people;
     const now = Date.now();
     const asked = `demo-${round}-ask`;
     const decide = `demo-${round}-decide`;
     const requests: RoomData["requests"] = [];
+    if (calm)
+      return {
+        people: [
+          { id: "you", name: words.you, mine: true, status: "active" },
+          ...[first, second, third].map((person) => ({
+            id: person.id,
+            name: person.name,
+            role: person.role,
+            status: "active" as const,
+          })),
+        ],
+        requests,
+        waiting: { count: 0 },
+      };
     // A colleague's request the clone answers alone.
     if (beat >= 1)
       requests.push({
@@ -88,6 +112,6 @@ export function useDemoRoom(words: DemoWords, playing: boolean) {
       requests,
       waiting: beat === 5 ? { count: 1, text: words.question } : { count: 0 },
     };
-  }, [words, beat, round]);
+  }, [words, beat, round, calm]);
   return { room, beat };
 }

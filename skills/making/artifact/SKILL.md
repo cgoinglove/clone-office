@@ -30,7 +30,7 @@ the app.
 - Data: CSV (UTF-8, a header row), with an HTML view beside it when they want to see it.
 - A picture or diagram: SVG, inside the HTML or as its own file.
 - A Word, Excel or PowerPoint file, when they need that very format: look for a skill that makes it
-  (find-skills) rather than writing the format by hand. Until there is one, a CSV opens in Excel
+  (`skills_find`) rather than writing the format by hand. Until there is one, a CSV opens in Excel
   and an HTML page in Word.
 
 ## Make it

@@ -29,12 +29,15 @@ export function ChoiceList<T extends string>({
   onChange,
   options,
   className,
+  dense,
   ...rest
 }: {
   value: T;
   onChange: (value: T) => void;
   options: readonly Choice<T>[];
   className?: string;
+  /** Tighter cards, for a step that must fit a short window with others above it. */
+  dense?: boolean;
   "aria-label": string;
 }) {
   return (
@@ -49,7 +52,10 @@ export function ChoiceList<T extends string>({
           key={option.value}
           value={option.value}
           disabled={option.disabled}
-          className="group/choice flex w-full items-start gap-3 rounded-[10px] px-3.5 py-3 text-left ring-1 ring-foreground/10 outline-none ring-inset transition-[box-shadow,background-color] hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring/60 data-checked:ring-[1.5px] data-checked:ring-brand data-checked:hover:bg-transparent data-disabled:pointer-events-none data-disabled:opacity-50"
+          className={cn(
+            "group/choice flex w-full items-start gap-3 rounded-[10px] px-3.5 text-left ring-1 ring-foreground/10 outline-none ring-inset transition-[box-shadow,background-color] hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring/60 data-checked:ring-[1.5px] data-checked:ring-brand data-checked:hover:bg-transparent data-disabled:pointer-events-none data-disabled:opacity-50",
+            dense ? "py-2.5" : "py-3",
+          )}
         >
           <span
             aria-hidden
@@ -70,7 +76,12 @@ export function ChoiceList<T extends string>({
               )}
             </span>
             {option.body && (
-              <span className="text-[13px] leading-relaxed text-muted-foreground">
+              <span
+                className={cn(
+                  "text-[13px] text-muted-foreground",
+                  dense ? "leading-snug" : "leading-relaxed",
+                )}
+              >
                 {option.body}
               </span>
             )}

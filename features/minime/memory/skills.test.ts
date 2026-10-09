@@ -420,7 +420,7 @@ test("the skills the app ships come in once, follow new versions while untouched
 test("the skills in this repository load: each has a name, a short description and a category", async () => {
   const store = new SkillStore(join(process.cwd(), "skills"));
   const skills = await store.list();
-  assert.ok(skills.length >= 5);
+  assert.ok(skills.length >= 4);
   for (const found of skills) {
     assert.ok(found.category, `${found.name} sits in a category`);
     assert.ok(

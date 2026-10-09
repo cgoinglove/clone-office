@@ -12,10 +12,12 @@ chooses within its scope, and ask before a major visual change. Keep this list s
 - **No shadows on buttons**: a button, a segmented pick or a field is flat: a fill or a hairline ring, never a drop shadow; only what floats (a popover, a menu, a toast, a dialog) casts one. The user chose this. (10-08)
 - **No separators between items**: rows in a short list (a step's points, a summary, a card's lines) are split by space, never by a hairline between them; a hairline stays only at the edge of a pane or a long scrolling list. The user chose this. (10-08)
 - **Next and back**: chevrons (`ChevronRight`, `ChevronLeft`), never arrows, on a step's buttons and wherever a row opens more. The user chose this. (10-08)
-- **Places' marks**: a column's rows (the app's, Settings') carry one icon family, outlined, the
-  open one filled, as tab bars mark where you are (Material 3, iOS); `NavIcon` holds them, and the
-  clone's own place is the app's mark. Content keeps lucide. A line with no meaning (a placeholder
-  saying what a list is for, "open my clone") is never drawn in the column. (10-09)
+- **Icons**: lucide, as Thursday uses it (its own picks where it has the same place: Aperture for the
+  AI model, Cable for connectors, Smartphone, Settings2, SquarePen); never sparkles, lightning or
+  magic wands, which read dated. A column's open row is told by its fill, not by a filled icon;
+  `NavIcon` holds the column's marks, the clone's own place the app's mark. A line with no meaning
+  (a placeholder saying what a list is for) is never drawn in the column. The user chose this.
+  (10-09)
 - **Explained choices**: picking one of a few options that need a sentence each is `ChoiceList`
   (cards, the picked one ringed in brand), never a segmented control with a paragraph under it,
   and never a filled black tile. (10-09)
@@ -23,6 +25,10 @@ chooses within its scope, and ask before a major visual change. Keep this list s
 - **Separation**: groups are split by space; a hairline only at the edge of a pane or between the rows of a long list that scrolls (see No separators between items). (09-18, 10-08)
 - **Icons**: an icon on a filled button is filled, not outlined. (09-18)
 - **Triggers**: sit inside what they belong to. (09-18)
+- **Halves**: the first steps take half the window and what stands beside them the other half,
+  and that half changes with the step (the office, what was understood, the card being written)
+  rather than the steps scrolling; the footer holds only Back and the step's button. The user
+  chose this. (10-09)
 - **No growing panes**: a screen meant to fit at once (the first steps beside the office, a card, a
   settings row) never grows a scrollbar because something was clicked; choices open in a popover or
   dropdown at the field's own width, as Thursday's model picker does (one button, a two-column

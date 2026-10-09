@@ -2,7 +2,11 @@ import * as z from "zod";
 import { isExcluded, loadExcludes } from "@/features/minime/server/exclude";
 import { refuse } from "@/features/minime/server/guard";
 import { saveExcludes } from "@/features/minime/server/leave-out";
-import { findPlaces, publicPlace } from "@/features/minime/server/places";
+import {
+  findPlaces,
+  publicGroup,
+  publicPlace,
+} from "@/features/minime/server/places";
 
 /** How a left-out entry is shown: a path by its last folder, a name pattern as it is. */
 function entryName(pattern: string): string {
@@ -11,20 +15,30 @@ function entryName(pattern: string): string {
 }
 
 // Where the person's work lives (server/places.ts: the folders they changed lately and worked in
-// with their AI tools), each marked when they keep it out, and what else they keep out, so the
-// screen can offer the folders to read before anything is read and change them at any time after.
+// with their AI tools, none inside another), each marked when they keep it out, the collections
+// they lie in, and what else they keep out, so the screen can offer the folders to read before
+// anything is read and change them at any time after.
 export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
   const excludes = loadExcludes();
-  const folders = (await findPlaces()).map((place) => ({
+  const found = await findPlaces();
+  const folders = found.places.map((place) => ({
     ...publicPlace(place),
     excluded: isExcluded(place.path, excludes),
   }));
+  const groups = found.groups.map((group) => ({
+    ...publicGroup(group),
+    excluded: isExcluded(group.path, excludes),
+  }));
   const others = excludes
-    .filter((pattern) => !folders.some((folder) => folder.path === pattern))
+    .filter(
+      (pattern) =>
+        !folders.some((folder) => folder.path === pattern) &&
+        !groups.some((group) => group.path === pattern),
+    )
     .map((pattern) => ({ pattern, name: entryName(pattern) }));
-  return Response.json({ folders, exclude: excludes, others });
+  return Response.json({ folders, groups, exclude: excludes, others });
 }
 
 const Body = z.object({

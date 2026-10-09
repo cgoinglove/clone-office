@@ -372,7 +372,7 @@ async function placesSection(
   limit: number,
   excludes: string[],
 ): Promise<{ text: string; report: SourceReport; repos: string[] }> {
-  const places = (await findPlaces()).filter(
+  const places = (await findPlaces()).places.filter(
     (place) => !isExcluded(place.path, excludes),
   );
   const { text, items } = await describePlaces(places, limit);
@@ -381,7 +381,7 @@ async function placesSection(
       .filter((place) => place.kind === "repo")
       .map((place) => place.path),
     text: text
-      ? `## Where their work lives: folders and repositories they changed lately or worked in with AI tools, busiest first (paths as on this computer)\n${text}`
+      ? `## Where their work lives: folders and repositories they changed lately or worked in with AI tools, busiest first, none inside another (paths as on this computer)\n${text}`
       : "",
     report: {
       id: "places",

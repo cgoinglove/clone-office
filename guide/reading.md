@@ -17,6 +17,10 @@ sized to what their AI model can hold; it takes about half a minute):
 - which kinds of documents they opened lately and which apps they use most;
 - the name on their computer's account and on their commits, as a hint of what to call them.
 
+When it has read, the first steps list what it understood beside them; any line can be taken back
+there with its × (a line of memory is removed, a page set aside in the notes' archive, a place
+taken off the map), and later under Your clone › What it knows.
+
 It never reads the contents of their documents, their browser history or their screen. **Read
 again** (다시 읽기) reads only what is new or changed since the last time. On a Mac, the first time
 it looks in Desktop, Documents or Downloads, macOS may ask whether the app (or Terminal) may
@@ -28,7 +32,13 @@ rest is read.
 The first steps show them as one field (**Folders it reads**, 읽을 폴더) with how many and their
 names: pressing it opens every folder in a dialog, each with its AI tools' marks and how many
 conversations or changed files it has; a ticked folder is read, and unticking one keeps it out of
-everything the clone reads and searches, from then on. A folder's name or path typed at the bottom
+everything the clone reads and searches, from then on.
+
+No folder on the list lies inside another, so nothing is read twice: a project in git is one
+folder, and so is a folder they worked in with an AI tool; a folder that holds several of those
+(a "projects" folder, say) is not a folder of its own on the list but heads the ones inside it, and
+unticking it leaves all of them out at once. What changed elsewhere goes to the folder right under
+it, and a downloads folder of loose files is one folder. A folder's name or path typed at the bottom
 leaves out any other.
 
 Later, the same field is under Settings › Permissions, at any time. What the clone had gathered from

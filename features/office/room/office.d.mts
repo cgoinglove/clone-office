@@ -206,6 +206,8 @@ export function createOffice(
     onPanel?: (open: boolean) => void;
     /** 30 runs the office on every other frame. */
     fps?: 30 | 60;
+    /** An example (the first steps): everyone seated from the start, each named, the desks framed close. */
+    example?: boolean;
   },
 ): Room;
 

@@ -167,8 +167,7 @@ export function SettingsDialog({
                 >
                   <NavIcon
                     name={item.icon}
-                    on={picked}
-                    className={picked ? undefined : "text-foreground/65"}
+                    className={picked ? undefined : "text-foreground/60"}
                   />
                   <span className="truncate">
                     {t(`sections.${item.id}.label`)}

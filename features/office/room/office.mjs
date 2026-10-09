@@ -178,6 +178,7 @@ export function createOffice(
     onClockIn,
     onPanel,
     fps = 60,
+    example = false,
   },
 ) {
   const W = words,
@@ -2116,8 +2117,32 @@ export function createOffice(
     anim = { from: { ...cam }, to: v, t0: performance.now(), ms };
   }
   const narrow = () => cw < 760;
-  const floorView = () =>
-    fitRect(
+  /**
+   * An example's frame (the first steps): the desks of those in it, near enough to read what goes
+   * on between them, or nothing before anyone sits.
+   */
+  const teamBounds = () => {
+    let box = null;
+    for (const p of people.values()) {
+      if (p.home !== plan.index || !p.desk) continue;
+      // The desk itself with its chair and the spot before it, and a mini-me standing tall there.
+      const d = p.desk,
+        r = screenBounds([d.x0 - 6, d.y0 - 10, d.x1 + 6, d.y1 + 10, 0, 26]);
+      box = box ? union(box, r) : r;
+    }
+    return box;
+  };
+  const floorView = () => {
+    const team = example ? teamBounds() : null;
+    if (team)
+      return fitRect(
+        team,
+        narrow()
+          ? { t: 56, b: 90, l: 16, r: 16 }
+          : { t: 120, b: 96, l: 56 + insetL, r: 56 + insetR },
+        1.7,
+      );
+    return fitRect(
       union(
         union(
           screenBounds([-6, -6, plan.W + 4, plan.D + 4, -2.6, WALL_H]),
@@ -2129,6 +2154,7 @@ export function createOffice(
         ? { t: 48, b: onAsk ? 140 : 70, l: 10, r: 10 }
         : { t: 44, b: 84, l: 16 + insetL, r: 16 + insetR },
     );
+  };
   /** The scoreboard, as large as it fits. */
   const boardView = () => {
     const r = boardBounds(plan);
@@ -2733,6 +2759,7 @@ export function createOffice(
         (hover === p.id ||
           focus === p ||
           p.mine ||
+          example ||
           (detail && (p.status === "offline" || p.stack >= 8 || asking(p))));
       if (!showPlate) {
         if (!p.plate.hidden) p.plate.hidden = true;
@@ -3205,14 +3232,16 @@ export function createOffice(
     if (opened || !plan) return;
     opened = true;
     const lift = via === "lift" && !REDUCED;
+    // An example opens as a day already under way: everyone in their chair, nothing sketched in.
+    const still = REDUCED || example;
     setCam(lift ? liftView() : floorView());
     for (const p of people.values()) {
       p.popAt = lift
         ? simT - 9
-        : simT + (REDUCED ? 0 : ((p.desk.t0 || 0) + 1250) / 1000);
-      p.landed = REDUCED || lift;
+        : simT + (still ? 0 : ((p.desk.t0 || 0) + 1250) / 1000);
+      p.landed = still || lift;
     }
-    const coming = REDUCED
+    const coming = still
       ? []
       : [...people.values()]
           .filter(
@@ -3238,11 +3267,12 @@ export function createOffice(
         else settle(me);
       });
     } else {
-      buildScene(!REDUCED);
-      asmUntil = REDUCED ? 0 : simT + 4.4;
+      buildScene(!still);
+      asmUntil = still ? 0 : simT + 4.4;
     }
     spawn(() => opening(coming, lift ? 7000 : 3000));
-    spawn(life);
+    // An example keeps to its story: nobody wanders off for tea out of its frame.
+    if (!example) spawn(life);
   }
   /** The relay's latest look, laid on the people: status, piles, what they work on, who waits for whom. */
   function applyData() {

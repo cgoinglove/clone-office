@@ -4,7 +4,7 @@
 // say to it. The first steps with the app (each ticked when it is really done, from what the app
 // keeps, never from a click on the list) are here too, and Home shows them first.
 
-import { Check, ChevronRight, Clock, Sparkles, X } from "lucide-react";
+import { Check, ChevronRight, Clock, MessageSquare, X } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -76,7 +76,7 @@ export function Welcome() {
               onClick={() => void chat.ask(offer.label)}
               className="group flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm shadow-[inset_0_0_0_1px_var(--alpha-10)] transition-colors hover:bg-muted/60 disabled:opacity-50"
             >
-              <Sparkles className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
+              <MessageSquare className="size-4 shrink-0 text-muted-foreground group-hover:text-foreground" />
               <span className="min-w-0 flex-1">{offer.label}</span>
               {offer.why && (
                 <span className="max-w-[40%] truncate text-xs text-muted-foreground">
