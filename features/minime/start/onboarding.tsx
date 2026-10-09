@@ -659,14 +659,22 @@ function OfficePane({
       inert
       className="relative min-w-0 flex-1 overflow-hidden rounded-2xl border border-foreground/8 bg-background"
     >
-      <OfficeRoom full example data={room} className="of-demo" />
-      <span className="pointer-events-none absolute top-4 left-5 flex items-center gap-2 text-xs text-muted-foreground">
+      {/* Still behind the card (their own clone named after them), it opens anew rather than
+          finishing the loop's walks; an example opens with everyone already seated. */}
+      <OfficeRoom
+        key={card ? "still" : "playing"}
+        full
+        example
+        data={room}
+        className="of-demo"
+      />
+      <span className="pointer-events-none absolute top-3 left-3.5 flex items-center gap-2 rounded-md bg-background/90 px-1.5 py-0.5 text-xs text-muted-foreground backdrop-blur">
         <span className="size-1.5 rounded-full bg-muted-foreground/70" />
         {t("demo.example")}
       </span>
       {card ? (
         <div className="pointer-events-none absolute bottom-5 left-5 flex w-[min(22rem,calc(100%-2.5rem))] animate-in flex-col gap-2 duration-500 fade-in slide-in-from-bottom-1">
-          <span className="text-xs text-muted-foreground">
+          <span className="self-start rounded-md bg-background/90 px-1.5 py-0.5 text-xs text-muted-foreground backdrop-blur">
             {t("you.cardSeen")}
           </span>
           {card}
@@ -1132,7 +1140,7 @@ function LearnStep({
 
   return (
     <>
-      <ul className="mt-6 flex flex-col gap-3">
+      <ul className="mt-6 flex flex-col gap-3 [@media(max-height:760px)]:mt-5 [@media(max-height:760px)]:gap-2">
         {plan.map(([part, Icon]) => (
           <li key={part} className="flex gap-3">
             <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
@@ -1146,7 +1154,7 @@ function LearnStep({
           </li>
         ))}
       </ul>
-      <div className="mt-7 flex flex-col gap-2">
+      <div className="mt-7 flex flex-col gap-2 [@media(max-height:760px)]:mt-5">
         <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
           <span className="text-[13px] font-medium">{t("learn.folders")}</span>
           <span className="text-xs text-muted-foreground">
@@ -1331,7 +1339,10 @@ function KnownDialog({
             {row?.label}
           </DialogTitle>
           <DialogDescription className="text-[13.5px]">
-            {t("knows.where")}
+            {/* What they do is not taken back here: the next step is where they set it. */}
+            {row?.items.some((item) => item.known)
+              ? t("knows.where")
+              : t("knows.whereRole")}
           </DialogDescription>
         </div>
         <ul className="flex max-h-[min(28rem,60vh)] flex-col gap-1 overflow-y-auto px-3 pt-1 pb-4">

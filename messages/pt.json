@@ -206,7 +206,8 @@
         "places": "Onde está seu trabalho",
         "where": "Remova com × o que estiver errado ou você não quiser que ele guarde. Também dá para mudar depois em Seu clone › O que ele sabe.",
         "more": "mais {count}",
-        "forget": "Remover: {item}"
+        "forget": "Remover: {item}",
+        "whereRole": "O que você faz e cuida é ajustado no próximo passo, Você e a equipe."
       },
       "foldersHint": "Confira e desmarque as que quiser deixar de fora"
     },
@@ -267,7 +268,7 @@
     "plan": {
       "read": {
         "title": "Lê",
-        "body": "o que você pediu às ferramentas de IA, suas notas e commits, pastas recentes e nomes de arquivos, o início do README de cada projeto. Nunca o que a IA respondeu nem o que um arquivo diz."
+        "body": "o que você pediu à IA, suas notas e commits, nomes recentes de pastas e arquivos, o início do README de cada projeto. Nunca as respostas da IA nem o que os arquivos dizem."
       },
       "keep": {
         "title": "Guarda",

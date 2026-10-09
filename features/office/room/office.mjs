@@ -2765,8 +2765,9 @@ export function createOffice(
         if (!p.plate.hidden) p.plate.hidden = true;
         continue;
       }
+      // Its name too: a name changed on the page (the first steps' card) shows at once.
       const [label, cls] = plateOf(p),
-        key = label + cls;
+        key = `${p.name}|${label}|${cls}`;
       if (key !== p.plateKey) {
         p.plateKey = key;
         p.plate.className = `plate${cls ? ` ${cls}` : ""}${p.mine ? " you" : ""}`;

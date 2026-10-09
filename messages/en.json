@@ -206,7 +206,8 @@
         "places": "Where your work is",
         "where": "Take back with × anything wrong or you'd rather it didn't keep. You can also change it later under Your clone › What it knows.",
         "more": "{count} more",
-        "forget": "Take back: {item}"
+        "forget": "Take back: {item}",
+        "whereRole": "What you do and look after is set on the next step, You & team."
       },
       "foldersHint": "Check them; untick any to leave out"
     },
@@ -267,7 +268,7 @@
     "plan": {
       "read": {
         "title": "Reads",
-        "body": "what you asked your AI tools, your notes and commits, recent folders and file names, the first lines of each project's README. Never what the AI answered, nor what any file says."
+        "body": "your AI requests, notes and commits, recent folder and file names, the top of each project's README. Never the AI's answers or what files say."
       },
       "keep": {
         "title": "Keeps",
