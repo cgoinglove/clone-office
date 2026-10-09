@@ -569,7 +569,8 @@ export function segments(text, h) {
       x += colW;
       continue;
     }
-    const lit = DIGITS[+ch] || "";
+    // a blank place shows only its ghost, as an LED clock leaves an hour's first digit dark
+    const lit = ch === " " ? "" : DIGITS[+ch] || "";
     for (const [name, pts] of Object.entries(SEGS)) {
       const pg = `<polygon points="${pts.map(([px, py]) => `${r2(x + px * k)},${r2(py * k)}`).join(" ")}"/>`;
       if (lit.includes(name)) on += pg;
@@ -579,8 +580,8 @@ export function segments(text, h) {
   }
   return { off, on, colon, width: x - 4.5 * k };
 }
-/** A mini-me's face held still, `size` across, for the scoreboard's list. */
-export function stillMark(look, x, y, size) {
+/** A clone's face held still, `size` across; a `ghost` is its outline alone, for one who is not in. */
+export function stillMark(look, x, y, size, ghost = false) {
   const shape = SHAPES[look.shape] || SHAPES.b113,
     k = size / 240,
     pts = shape.map(([px, py]) => [CX + px * R, CY + py * R]);
@@ -601,12 +602,14 @@ export function stillMark(look, x, y, size) {
     }
     return pathOf(out);
   };
+  if (ghost)
+    return `<g transform="translate(${r1(x)} ${r1(y)}) scale(${r3(k)})"><path class="sm-ghost" d="${pathOf(pts)}"/></g>`;
   const fill = look.paint
     ? `url(#sm-${look.paint})`
     : look.color === "system"
       ? "var(--ink)"
       : look.color;
-  return `<g transform="translate(${r1(x)} ${r1(y)}) scale(${r3(k)})"><path d="${pathOf(pts)}" style="fill:${fill}"/><path class="sm-eye" d="${eye(-1)}"/><path class="sm-eye" d="${eye(1)}"/></g>`;
+  return `<g transform="translate(${r1(x)} ${r1(y)}) scale(${r3(k)})"><path class="sm-body" d="${pathOf(pts)}" style="fill:${fill}"/><path class="sm-eye" d="${eye(-1)}"/><path class="sm-eye" d="${eye(1)}"/></g>`;
 }
 export const SM_DEFS = `<defs><linearGradient id="sm-rainbow" x1="0" y1="0" x2="0" y2="1">${PAINTS.rainbow.colors.map((c, i, a) => `<stop offset="${r3(i / (a.length - 1))}" stop-color="${c}"/>`).join("")}</linearGradient><linearGradient id="sm-duo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${PAINTS.duo.colors[0]}"/><stop offset="1" stop-color="${PAINTS.duo.colors[1]}"/></linearGradient></defs>`;
 /** Roughly how wide a line of capitals is, in ems: wide scripts take a whole em a letter. */
@@ -628,32 +631,54 @@ export const fitSize = (text, max, width) =>
   r1(Math.min(max, width / Math.max(1, emsOf(text))));
 /**
  * The office's clock on the left wall, an LED panel big enough to read from across the floor: the time
- * in seven segments, and beside it the day, who is in out of everyone, and each of them as their
- * clone's face, lit when in. Drawn in its own plane, a tenth of a plan unit to a unit, from the panel's
- * front top corner (`y` along the wall, `z` up it); nothing on the floor stands tall enough to hide it.
+ * in seven segments (with AM or PM where the language keeps a twelve-hour day), and beside it who is in
+ * out of everyone, each of them as their clone's face, lit while in and an outline while not. Drawn in
+ * its own plane, a tenth of a plan unit to a unit, from the panel's front top corner (`y` along the
+ * wall, `z` up it); nothing on the floor stands tall enough to hide it.
  */
-export const CLOCK = { w: 800, h: 196, y: 90, z: 27 };
+export const CLOCK = { w: 880, h: 216, y: 96, z: 27 };
 export function clockFace(now, crew, words) {
-  const hm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`,
-    sg = segments(hm, 132),
+  const h = now.getHours(),
+    hh = words.twelve
+      ? String(h % 12 || 12).padStart(2, " ")
+      : String(h).padStart(2, "0"),
+    hm = `${hh}:${String(now.getMinutes()).padStart(2, "0")}`,
+    sg = segments(hm, 120),
     inNow = crew.filter((c) => c.in).length;
   let s = `<rect class="ck-frame" x="0" y="0" width="${CLOCK.w}" height="${CLOCK.h}" rx="18"/>`;
-  s += `<g transform="translate(34 32)"><g class="ck-off">${sg.off}</g><g class="ck-on">${sg.on}${sg.colon}</g></g>`;
-  const x = 34 + sg.width + 48,
-    room = CLOCK.w - x - 30;
-  s += `<text class="ck-cap" x="${x}" y="58" font-size="${fitSize(words.date, 26, room)}">${esc(words.date)}</text>`;
-  s += `<text class="ck-num" x="${x}" y="112"><tspan class="ck-word" font-size="${fitSize(words.in, 26, room * 0.4)}">${esc(words.in)} </tspan><tspan font-size="44">${inNow}</tspan><tspan class="ck-of" font-size="30">/${crew.length}</tspan></text>`;
-  // everyone in a row, those in first; past what fits, a count
-  const size = 34,
-    gap = 9,
+  // the half of the day goes where the language says it (PM after, 오후 before), small and up top
+  const period = words.twelve && words.period ? words.period : "",
+    pw = period ? Math.ceil(emsOf(period) * 28) + 14 : 0;
+  let x = 36;
+  if (period && words.periodFirst) {
+    s += `<text class="ck-cap" x="${x}" y="74" font-size="28">${esc(period)}</text>`;
+    x += pw;
+  }
+  s += `<g transform="translate(${x} 48)"><g class="ck-off">${sg.off}</g><g class="ck-on">${sg.on}${sg.colon}</g></g>`;
+  x += sg.width;
+  if (period && !words.periodFirst) {
+    s += `<text class="ck-cap" x="${x + 14}" y="74" font-size="28">${esc(period)}</text>`;
+    x += pw;
+  }
+  x += 34;
+  s += `<rect class="ck-rule" x="${x}" y="40" width="2" height="${CLOCK.h - 80}" rx="1"/>`;
+  x += 36;
+  const room = CLOCK.w - x - 34;
+  s += `<text class="ck-num" x="${x}" y="102"><tspan class="ck-word" font-size="${fitSize(words.in, 36, room * 0.45)}">${esc(words.in)} </tspan><tspan font-size="72">${inNow}</tspan><tspan class="ck-of" font-size="44">/${crew.length}</tspan></text>`;
+  // everyone in a row, those in first, as large as the row allows; past what fits, a count
+  const gap = 12,
+    size = Math.max(
+      30,
+      Math.min(54, Math.floor((room + gap) / Math.max(1, crew.length)) - gap),
+    ),
     fit = Math.max(1, Math.floor((room + gap) / (size + gap))),
     shown = crew.length > fit ? crew.slice(0, fit - 1) : crew;
   s += SM_DEFS;
   shown.forEach((c, i) => {
-    s += `<g class="${c.in ? "ck-in" : "ck-out"}">${stillMark(c.look, x + i * (size + gap), 134, size)}</g>`;
+    s += `<g class="${c.in ? "ck-in" : "ck-out"}">${stillMark(c.look, x + i * (size + gap), 128, size, !c.in)}</g>`;
   });
   if (shown.length < crew.length)
-    s += `<text class="ck-more" x="${x + shown.length * (size + gap)}" y="160" font-size="22">+${crew.length - shown.length}</text>`;
+    s += `<text class="ck-more" x="${x + shown.length * (size + gap)}" y="${128 + size * 0.72}" font-size="28">+${crew.length - shown.length}</text>`;
   return s;
 }
 
@@ -992,7 +1017,7 @@ export function lobbySvg(W, D, H, N, walkers, words) {
       b = at(cx + (fromLeft ? -4 : 4), y, z00),
       c = at(cx, D + 1, z00),
       T = 6.4 + (i % 3) * 0.9;
-    walk += `<g class="cm" style="--x0:${r1(a[0])}px;--y0:${r1(a[1])}px;--x1:${r1(b[0])}px;--y1:${r1(b[1])}px;--x2:${r1(c[0])}px;--y2:${r1(c[1])}px;--T:${T}s;--d:${(1.5 + i * 1.3).toFixed(2)}s"><g class="cm-hop">${ellipseAt(0, 0, 0, 80, 26, "f-soft")}${stillMark(look, -110, -228, 220)}</g></g>`;
+    walk += `<g class="cm" style="--x0:${r1(a[0])}px;--y0:${r1(a[1])}px;--x1:${r1(b[0])}px;--y1:${r1(b[1])}px;--x2:${r1(c[0])}px;--y2:${r1(c[1])}px;--T:${T}s;--d:${(1.5 + i * 1.3).toFixed(2)}s;--n:${Math.round(T / 0.36)}"><g class="cm-hop">${ellipseAt(0, 0, 0, 80, 26, "f-soft")}${stillMark(look, -110, -228, 220)}</g></g>`;
   });
   const note = scribble(
     words.yourFloor,

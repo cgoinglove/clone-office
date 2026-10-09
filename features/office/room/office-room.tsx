@@ -28,6 +28,7 @@ export function OfficeRoom({
   data,
   lobby = false,
   example = false,
+  turnShown = false,
   fps = 60,
   full = false,
   inset = 0,
@@ -59,6 +60,11 @@ export function OfficeRoom({
    * named, the desks framed close. Read once, as `lobby` is.
    */
   example?: boolean;
+  /**
+   * The page shows what waits on the viewer itself (the office screen's board): the office only marks
+   * it on their clone, and asks nothing over its head. Read once.
+   */
+  turnShown?: boolean;
   /** 30 runs the office on every other frame: for a small view beside something else. */
   fps?: 30 | 60;
   onClockIn?: () => void;
@@ -76,7 +82,6 @@ export function OfficeRoom({
       team: t("team"),
       floor: (n) => t("room.floor", { n }),
       floorGroup: t("room.floorGroup"),
-      openSeat: t("room.openSeat"),
       done: t("room.done"),
       answer: t("room.answer"),
       needsYouChip: t("room.needsYouChip"),
@@ -102,8 +107,10 @@ export function OfficeRoom({
         you: (name) => t("room.plate.you", { name }),
         needsYou: t("room.plate.needsYou"),
         deciding: t("room.plate.deciding"),
-        working: t("room.plate.working"),
+        workingFor: (name) => t("room.plate.workingFor", { name }),
+        workingForYou: t("room.plate.workingForYou"),
         away: t("room.plate.away"),
+        inMeeting: t("room.plate.inMeeting"),
         goingTo: (name) => t("room.plate.goingTo", { name }),
         off: t("room.plate.off"),
       },
@@ -177,6 +184,7 @@ export function OfficeRoom({
   // Read once: the office does not go back to the lobby while it is open.
   const atLobby = useRef(lobby).current;
   const asExample = useRef(example).current;
+  const turnElsewhere = useRef(turnShown).current;
   const asks = !!onAsk;
 
   useEffect(() => {
@@ -191,6 +199,7 @@ export function OfficeRoom({
         onAsk: asks ? (text) => handlers.current.onAsk?.(text) : undefined,
         lobby: atLobby,
         example: asExample,
+        turnShown: turnElsewhere,
         fps,
         onClockIn: () => handlers.current.onClockIn?.(),
         onPanel: (open) => handlers.current.onPanel?.(open),
@@ -204,7 +213,7 @@ export function OfficeRoom({
       made?.destroy();
       room.current = null;
     };
-  }, [words, locale, asks, atLobby, asExample, fps]);
+  }, [words, locale, asks, atLobby, asExample, turnElsewhere, fps]);
 
   useEffect(() => {
     room.current?.update(data);

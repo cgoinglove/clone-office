@@ -107,25 +107,33 @@ test("words on the floor fit their space, wide scripts given more room", () => {
 
 test("the clock tells the time and who is in, its words as text, never as markup", () => {
   const look = { color: "#000", shape: "b7", paint: null };
-  const face = clockFace(
-    new Date(2026, 9, 6, 9, 5),
-    [
-      { in: true, look },
-      { in: true, look },
-      { in: false, look },
-    ],
-    { date: "Tue <6> Oct", in: "In" },
-  );
-  assert.ok(face.includes("Tue &lt;6&gt; Oct"));
-  assert.ok(!face.includes("<6>"));
+  const crew = [
+    { in: true, look },
+    { in: true, look },
+    { in: false, look },
+  ];
+  const face = clockFace(new Date(2026, 9, 6, 21, 5), crew, {
+    in: "<In>",
+    twelve: false,
+  });
+  assert.ok(face.includes("&lt;In&gt;") && !face.includes("<In>"));
   assert.ok(face.includes(">2</tspan>") && face.includes(">/3</tspan>"));
   assert.equal(face.split('class="ck-in"').length - 1, 2);
-  assert.equal(face.split('class="ck-out"').length - 1, 1);
+  // one not in is an outline, without a face's fill or eyes
+  assert.equal(face.split('class="sm-ghost"').length - 1, 1);
+  // a twelve-hour day: 9 PM, its first digit left dark, the half of the day beside it
+  const pm = clockFace(new Date(2026, 9, 6, 21, 5), crew, {
+    in: "In",
+    twelve: true,
+    period: "PM",
+    periodFirst: false,
+  });
+  assert.ok(pm.includes(">PM</text>"));
   // a crowd past what fits the row ends in a count
   const many = clockFace(
     new Date(2026, 9, 6, 9, 5),
     Array.from({ length: 24 }, (_, i) => ({ in: i < 20, look })),
-    { date: "", in: "In" },
+    { in: "In", twelve: false },
   );
   assert.ok(/>\+\d+<\/text>/.test(many));
 });

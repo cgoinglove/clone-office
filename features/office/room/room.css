@@ -192,13 +192,6 @@
 .of-wrap .f-myrug {
   fill: var(--ink-05);
 }
-.of-wrap .f-open {
-  fill: none;
-  stroke: var(--ink-20);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
-  stroke-dasharray: 4 5;
-}
 .of-wrap .f-lamp {
   fill: var(--lamp);
 }
@@ -250,17 +243,6 @@
   35% {
     opacity: 1;
   }
-}
-
-/* words on the floor and the walls */
-.of-wrap .ftext {
-  fill: var(--ink-20);
-  font-family: var(--font-mono);
-  font-weight: 500;
-  letter-spacing: 0.3px;
-}
-.of-wrap .ftext.faint {
-  fill: var(--ink-12);
 }
 .of-wrap .lmark {
   fill: var(--ink-03);
@@ -334,8 +316,19 @@
 .of-wrap .ck-of {
   fill: color-mix(in oklab, var(--screen-ink) 50%, transparent);
 }
-.of-wrap .ck-out {
-  opacity: 0.22;
+.of-wrap .ck-rule {
+  fill: var(--screen-faint);
+}
+/* a face lit while its person is in, ringed so even the black one shows on the panel; an outline while not */
+.of-wrap .ck-in .sm-body {
+  stroke: color-mix(in oklab, var(--screen-ink) 70%, transparent);
+  stroke-width: 14;
+  paint-order: stroke;
+}
+.of-wrap .ck-out .sm-ghost {
+  fill: none;
+  stroke: color-mix(in oklab, var(--screen-ink) 34%, transparent);
+  stroke-width: 12;
 }
 .of-wrap .ck-more {
   fill: color-mix(in oklab, var(--screen-ink) 62%, transparent);
@@ -456,11 +449,12 @@
   cursor: pointer;
   will-change: transform;
 }
+/* the one dot a tag carries: what waits on the viewer, in ember */
 .of-wrap .plate i {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--ink-30);
+  background: var(--waiting);
   flex: none;
 }
 .of-wrap .plate b {
@@ -468,9 +462,6 @@
 }
 .of-wrap .plate span {
   color: var(--muted);
-}
-.of-wrap .plate.on i {
-  background: var(--ink);
 }
 /* at an empty desk: whose it is, faint, as the desk itself is */
 .of-wrap .plate.off {
@@ -481,17 +472,10 @@
 .of-wrap .plate.off b {
   font-weight: 500;
 }
-.of-wrap .plate.off i {
-  background: transparent;
-  box-shadow: inset 0 0 0 1.2px var(--ink-30);
-}
 .of-wrap .plate.mine {
   box-shadow:
     0 0 0 1px var(--waiting-line),
     0 3px 10px var(--ink-05);
-}
-.of-wrap .plate.mine i {
-  background: var(--waiting);
 }
 .of-wrap .plate.mine span {
   color: var(--waiting);
@@ -499,6 +483,11 @@
 .of-wrap .plate.you {
   box-shadow:
     0 0 0 1.5px var(--ink),
+    0 3px 10px var(--ink-05);
+}
+.of-wrap .plate.you.mine {
+  box-shadow:
+    0 0 0 1.5px var(--waiting),
     0 3px 10px var(--ink-05);
 }
 .of-wrap .bub {
@@ -833,13 +822,24 @@
   width: 14px;
   height: 14px;
 }
+/* narrower, the box starts after the views and zoom at the bottom left; narrower still, above them */
 @container (max-width: 1000px) {
-  .of-wrap .composer {
-    width: calc(100% - 28px);
-    bottom: 60px;
+  .of-wrap .composer,
+  .of-wrap.of-full .composer {
+    left: 232px;
+    right: 14px;
+    width: auto;
+    transform: none;
   }
   .of-wrap .sugs {
     display: none;
+  }
+}
+@container (max-width: 640px) {
+  .of-wrap .composer,
+  .of-wrap.of-full .composer {
+    left: 14px;
+    bottom: 62px;
   }
 }
 
@@ -1001,15 +1001,11 @@
 }
 .of-wrap .rows li {
   font-size: 13.5px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--ink-08);
+  padding: 6px 0;
   display: flex;
   gap: 8px;
   align-items: baseline;
   min-width: 0;
-}
-.of-wrap .rows li:last-child {
-  border-bottom: 0;
 }
 .of-wrap .rows li i {
   width: 6px;
@@ -1195,9 +1191,10 @@
   animation: room-k-fade 0.8s ease 2.1s backwards;
 }
 /* colleagues hopping along the pavement and in at the door */
+/* each walks in once, then is inside: a lobby that keeps people coming is motion for show */
 .of-wrap .cm {
   opacity: 0;
-  animation: room-cm-walk var(--T) linear var(--d) infinite;
+  animation: room-cm-walk var(--T) linear var(--d) 1 both;
 }
 @keyframes room-cm-walk {
   0% {
@@ -1221,7 +1218,7 @@
   }
 }
 .of-wrap .cm-hop {
-  animation: room-cm-hop 0.36s ease-in-out infinite;
+  animation: room-cm-hop 0.36s ease-in-out var(--d) var(--n, 1);
 }
 @keyframes room-cm-hop {
   50% {
@@ -1542,7 +1539,7 @@
   box-shadow: 0 0 22px 6px color-mix(in oklab, var(--brand) 40%, transparent);
   opacity: 0;
 }
-.of-wrap .liftx.ding .lx-ding {
+.of-wrap .liftx.ding:not(.open) .lx-ding {
   height: 70%;
   opacity: 1;
   transition:
@@ -1636,6 +1633,13 @@
   box-shadow: none;
   pointer-events: none;
   cursor: default;
+}
+/* drawn this small, the hand-drawn lines go finer, or the building outweighs the people in it */
+.of-wrap.of-mini .ol {
+  stroke-width: 0.6;
+}
+.of-wrap.of-mini .ol.s {
+  stroke-width: 0.8;
 }
 .of-wrap.of-mini :is(.hud, .composer, .over, .panel) {
   display: none;

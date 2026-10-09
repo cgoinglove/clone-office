@@ -8,8 +8,10 @@ export interface RoomPerson {
   role?: string;
   /** The viewer. */
   mine?: boolean;
-  /** At the desk, away (their mini-me on duty), or computer off. */
+  /** At the desk, away (their clone on duty), or computer off. */
   status: "active" | "away" | "offline";
+  /** Away in a meeting. */
+  inMeeting?: boolean;
   /** How to work with them, their ME.md lines. */
   ways?: string[];
   /** The kinds of request they take. */
@@ -79,7 +81,6 @@ export interface RoomWords {
   team: string;
   floor: (n: number) => string;
   floorGroup: string;
-  openSeat: string;
   done: string;
   answer: string;
   needsYouChip: string;
@@ -106,8 +107,11 @@ export interface RoomWords {
     you: Name;
     needsYou: string;
     deciding: string;
-    working: string;
+    /** At work on a colleague's request, or on the viewer's own. */
+    workingFor: Name;
+    workingForYou: string;
     away: string;
+    inMeeting: string;
     goingTo: Name;
     /** At an empty desk: its person has gone home. */
     off: string;
@@ -190,6 +194,8 @@ export function createOffice(
     fps?: 30 | 60;
     /** An example (the first steps): everyone seated from the start, each named, the desks framed close. */
     example?: boolean;
+    /** The page shows what waits on the viewer itself: the office marks it on their clone (its dot, its tag) and asks nothing over its head. */
+    turnShown?: boolean;
   },
 ): Room;
 

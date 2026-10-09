@@ -546,7 +546,6 @@
       "label": "O escritório: a mesa de cada pessoa com seu clone e os pedidos que vão e vêm entre eles",
       "floor": "Andar {n}",
       "floorGroup": "Andar",
-      "openSeat": "LUGAR VAGO",
       "done": "FEITO",
       "answer": "Responder",
       "needsYouChip": "Seu clone precisa de você",
@@ -568,10 +567,12 @@
         "you": "{name} (você)",
         "needsYou": "precisa de você",
         "deciding": "decidindo",
-        "working": "trabalhando",
         "away": "ausente",
         "goingTo": "→ {name}",
-        "off": "fora"
+        "off": "fora",
+        "workingFor": "no pedido de {name}",
+        "workingForYou": "no seu pedido",
+        "inMeeting": "em reunião"
       },
       "say": {
         "isIn": "{name} chegou.",
@@ -1258,7 +1259,7 @@
     },
     "office": {
       "title": "Escritório",
-      "line": "{count, plural, one {# pessoa dentro} other {# pessoas dentro}} · {moving, plural, =0 {nada a caminho} one {# pedido a caminho} other {# pedidos a caminho}}",
+      "line": "{moving, plural, =0 {Nada a caminho} one {# pedido a caminho} other {# pedidos a caminho}}",
       "alone": "Só você, por enquanto",
       "invite": "Convidar",
       "setUp": "Configurar seu escritório",

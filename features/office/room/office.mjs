@@ -23,7 +23,6 @@ import {
   EVEN,
   easeInOut,
   esc,
-  floorText,
   hash,
   hashStr,
   leapAt,
@@ -130,13 +129,14 @@ ${composer ? `<div class="composer" data-of="composer"><div class="sugs" data-of
 <aside class="panel" data-of="panel" hidden></aside>${lobby ? lobbyMarkup(W) : ""}`;
 }
 
-const ARROW =
-  '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h9.5M8.5 3.5 13 8l-4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/** The way on, as every step's button in the app shows it: a chevron. */
+const CHEVRON =
+  '<svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let LOBBY_N = 0;
 /** The way in: a card over the building to clock in, and the lift ride that follows. */
 function lobbyMarkup(W) {
   const id = `of-lb-${++LOBBY_N}`;
-  return `<div class="lobby" data-of="lobby" hidden><div class="lb-card" role="group" aria-labelledby="${id}"><div class="lb-brand"><span class="mk" data-of="lb-mark"></span>Clone Office<small data-of="lb-time"></small></div><h2 id="${id}" data-of="lb-h"></h2><p data-of="lb-sub"></p><div class="lb-acct"><span class="me" data-of="lb-me"></span><div><b data-of="lb-name"></b><span data-of="lb-role"></span></div><span class="tick" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><ul class="lb-facts"><li data-of="lb-in-row"><span class="lb-faces" data-of="lb-faces"></span><span data-of="lb-in"></span></li><li class="hot" data-of="lb-wait-row"><i></i><span data-of="lb-wait"></span></li></ul><button type="button" class="lb-go" data-of="lb-go">${esc(W.lobby.clockIn)}${ARROW}<kbd>${esc(W.lobby.enter)}</kbd></button><p class="lb-foot">${esc(W.lobby.foot)}</p></div></div>
+  return `<div class="lobby" data-of="lobby" hidden><div class="lb-card" role="group" aria-labelledby="${id}"><div class="lb-brand"><span class="mk" data-of="lb-mark"></span>Clone Office<small data-of="lb-time"></small></div><h2 id="${id}" data-of="lb-h"></h2><p data-of="lb-sub"></p><div class="lb-acct"><span class="me" data-of="lb-me"></span><div><b data-of="lb-name"></b><span data-of="lb-role"></span></div><span class="tick" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><ul class="lb-facts"><li data-of="lb-in-row"><span class="lb-faces" data-of="lb-faces"></span><span data-of="lb-in"></span></li><li class="hot" data-of="lb-wait-row"><i></i><span data-of="lb-wait"></span></li></ul><button type="button" class="lb-go" data-of="lb-go">${esc(W.lobby.clockIn)}${CHEVRON}<kbd>${esc(W.lobby.enter)}</kbd></button><p class="lb-foot">${esc(W.lobby.foot)}</p></div></div>
 <div class="liftx" data-of="liftx" hidden aria-hidden="true"><div class="door l"></div><div class="door r"></div><div class="lx-ding"></div><div class="lx-head"><svg class="lx-arr" viewBox="0 0 12 12"><path d="M6 1.5 11 9.5H1z"/></svg><svg class="lx-num" data-of="lx-num"></svg></div></div>`;
 }
 
@@ -159,6 +159,7 @@ export function createOffice(
     onPanel,
     fps = 60,
     example = false,
+    turnShown = false,
   },
 ) {
   const W = words,
@@ -190,16 +191,23 @@ export function createOffice(
   const ac = new AbortController(),
     on = (el, type, fn, o = {}) =>
       el?.addEventListener(type, fn, { ...o, signal: ac.signal });
-  const dateText = (() => {
+  /** Whether the screen's language keeps a twelve-hour day, the half of it a time is in (PM, 오후), and on which side it goes. */
+  const dayHalf = (() => {
     try {
-      const f = new Intl.DateTimeFormat(locale, {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      });
-      return (d) => f.format(d);
+      const f = new Intl.DateTimeFormat(locale, { hour: "numeric" }),
+        twelve = /^h1[12]$/.test(f.resolvedOptions().hourCycle || "");
+      return (d) => {
+        const parts = f.formatToParts(d),
+          at = parts.findIndex((p) => p.type === "dayPeriod");
+        return {
+          twelve,
+          period: twelve && at >= 0 ? parts[at].value : "",
+          periodFirst:
+            at >= 0 && at < parts.findIndex((p) => p.type === "hour"),
+        };
+      };
     } catch {
-      return (d) => d.toDateString();
+      return () => ({ twelve: false, period: "" });
     }
   })();
 
@@ -305,8 +313,10 @@ export function createOffice(
           pad: o.pad,
         });
     };
+    // a place nobody sits at is left as floor: an empty desk reads as someone missing
     for (const d of fl.desks) {
-      const p = d.id ? people.get(d.id) : null;
+      if (!d.id) continue;
+      const p = people.get(d.id);
       const [cx, cy] = d.seat;
       add(cx - 2.6, cy - 3.5, cx + 2.6, cy + 2.6, 11, () => chairSvg(cx, cy), {
         block: false,
@@ -447,19 +457,9 @@ export function createOffice(
         "f-rug",
       );
     for (const d of fl.desks) {
-      const p = d.id ? people.get(d.id) : null;
-      if (!d.id)
-        f +=
-          poly(
-            [
-              at(d.px + 5, d.py + 5),
-              at(d.px + 39, d.py + 5),
-              at(d.px + 39, d.py + 35),
-              at(d.px + 5, d.py + 35),
-            ],
-            "f-open",
-          ) + floorText(W.openSeat, d.px + 9, d.py + 33.4, 2.1, "ftext faint");
-      else if (p?.mine)
+      if (!d.id) continue;
+      const p = people.get(d.id);
+      if (p?.mine)
         f += poly(
           [
             at(d.px + 4, d.py + 4),
@@ -616,8 +616,9 @@ export function createOffice(
   // ---- the clock on the wall: the time, and who is in out of everyone on this floor
   const asking = (p) => (p.mine ? !!decision : p.deciding);
   function updateClock() {
-    // an example is framed close on its desks, where the clock would show cut in half: it has none
-    if (example || !refs.clock?.isConnected) return;
+    // an example is framed close on its desks, where the clock would show cut in half, and in a glimpse
+    // beside the chat it is a black bar: neither has one
+    if (example || mini || !refs.clock?.isConnected) return;
     const now = new Date(),
       crew = [...people.values()]
         .filter((p) => p.home === plan.index)
@@ -628,14 +629,15 @@ export function createOffice(
     if (key === clockKey) return;
     clockKey = key;
     refs.clock.innerHTML = clockFace(now, crew, {
-      date: dateText(now),
       in: W.clock.in,
+      ...dayHalf(now),
     });
   }
   /**
-   * Seen from across the floor a mini-me at rest is a few dozen pixels tall and a breath moves it by less than one,
-   * so it is redrawn only when something shows: a blink, a glance and a moment after, a change of mood, a breath
-   * every half second, the eyes of one at work ten times a second. Close up it moves on every other frame.
+   * Seen from across the floor a clone at work or asking is a few dozen pixels tall and a breath moves
+   * it by less than one, so it is redrawn only when something shows: a blink, a change of mood and a
+   * moment after, a breath every half second, the eyes of one at work ten times a second. Close up it
+   * moves on every other frame.
    */
   function restDue(p) {
     const b = p.bot;
@@ -646,14 +648,6 @@ export function createOffice(
     if (simT - (p.moodT || 0) < 0.7) return EVEN;
     if ((simT + b.phase * 5.3) % 4.3 < 0.24) return EVEN;
     if (b.mood === "working") return simT - (p.lastUpd || 0) > 0.095;
-    if (b.mood === "idle") {
-      const k = Math.floor((simT + b.phase * 7) / 2.4);
-      if (k !== p.gk) {
-        p.gk = k;
-        p.gazeT = simT;
-      }
-      if (simT - p.gazeT < 0.5) return EVEN;
-    }
     return simT - (p.lastUpd || 0) > 0.5;
   }
   // ---- people and their clones
@@ -1043,6 +1037,8 @@ export function createOffice(
       me.bot.gaze = null;
       setMood(me, "asking");
     }
+    // a page that lays the question over the office itself has it asked once: here only the dot and the tag
+    if (turnShown) return;
     const cur = bubbles.get(me.id);
     if (cur?.kind === "ask mine" && cur.full === text) return;
     const b = say(me, text, 0, "ask mine");
@@ -1174,6 +1170,7 @@ export function createOffice(
         say(a, W.say.bring(b.name, a.name, what), 2400, "say small");
         await wait(900);
         await throwPlane(a, b);
+        a.doing = null;
       } else {
         await goTo(a, b, "sheet");
         lookAt(a, b);
@@ -1182,6 +1179,7 @@ export function createOffice(
         leap(a, "tap");
         await wait(140);
         await place(a, b, "sheet");
+        a.doing = null;
       }
       if (!b.present || b.status === "offline") {
         await wait(420);
@@ -1256,6 +1254,7 @@ export function createOffice(
         if (text) say(b, text, 2600, "say small");
         await wait(800);
         await throwPlane(b, a, false);
+        b.doing = null;
       } else {
         await goTo(b, a, "done");
         lookAt(b, a);
@@ -1265,6 +1264,7 @@ export function createOffice(
         leap(b, "tap");
         await wait(140);
         await place(b, a, "done", false);
+        b.doing = null;
       }
       if (done) stamp(a);
       await wait(1300);
@@ -1283,7 +1283,7 @@ export function createOffice(
   function stamp(p) {
     if (REDUCED || p.floor !== plan.index) return;
     const g = document.createElementNS(SVGNS, "g");
-    g.innerHTML = stampSvg(p.desk.x0 + 1, p.desk.y1 + 10, W.done);
+    g.innerHTML = stampSvg(p.desk.x0 + 0.5, p.desk.y1 + 4.5, W.done);
     (refs.marks || gUnder).appendChild(g);
     setTimeout(() => g.remove(), 3600);
   }
@@ -1644,7 +1644,9 @@ export function createOffice(
     p.status === "offline"
       ? W.panel.off
       : p.status === "away"
-        ? W.panel.away
+        ? p.inMeeting
+          ? W.plate.inMeeting
+          : W.panel.away
         : W.panel.atDesk;
   const nameOf = (id) =>
     id === me?.id ? W.plate.youShort : people.get(id)?.name || "";
@@ -1668,7 +1670,7 @@ export function createOffice(
               : p.waitOn
                 ? W.panel.waitingFor(p.waitOn)
                 : "";
-    body += `<div class="pblock"><small>${esc(W.panel.now)}</small><ul class="rows">${now ? `<li><i></i>${esc(now)}</li>` : `<li class="none">${esc(p.status === "offline" ? W.panel.notIn(p.name) : W.panel.free)}</li>`}</ul></div>`;
+    body += `<div class="pblock"><small>${esc(W.panel.now)}</small><ul class="rows">${now ? `<li><i></i>${esc(now)}</li>` : `<li class="none">${esc(p.status === "offline" ? W.panel.notIn(p.name) : p.status === "away" ? statusWord(p) : W.panel.free)}</li>`}</ul></div>`;
     if (!p.mine && p.ways?.length)
       body += `<div class="pblock"><small>${esc(W.panel.ways(p.name))}</small><ul class="rows">${p.ways
         .slice(0, 4)
@@ -2092,8 +2094,15 @@ export function createOffice(
     if (d && (d.kind === "ask" || d.kind === "answer"))
       return [W.plate.goingTo(d.who.name), "on"];
     if (d?.kind === "meeting") return [W.meeting.on, "on"];
-    if (p.mood === "working") return [W.plate.working, "on"];
-    if (p.status === "away") return [W.plate.away, ""];
+    if (p.mood === "working")
+      return [
+        p.workFrom === me?.id
+          ? W.plate.workingForYou
+          : W.plate.workingFor(nameOf(p.workFrom)),
+        "on",
+      ];
+    if (p.status === "away")
+      return [p.inMeeting ? W.plate.inMeeting : W.plate.away, ""];
     return ["", ""];
   }
   /** Over each clone its name and what it is on; at an empty desk, whose it is. Close enough, everyone's shows. */
@@ -2113,6 +2122,8 @@ export function createOffice(
         [hx, hy] = toScreen(w[0], w[1]);
       }
       const inside = hx > -160 && hx < cw + 160 && hy > -80 && hy < ch + 240;
+      // what is said over a head takes the tag's place only while it shows: from afar it does not
+      let saying = false;
       if (b) {
         if (b.typed < b.full.length && EVEN) {
           b.typed += 3.4;
@@ -2128,6 +2139,7 @@ export function createOffice(
             b.kind.includes("mine") ||
             b.kind.includes("meet"));
         if (b.el.hidden === show) b.el.hidden = !show;
+        saying = show && bubbles.has(p.id);
         const t = `translate(${r1(hx)}px, ${r1(hy - 4)}px) translate(-50%, -100%)`;
         if (show && b.t !== t) {
           b.t = t;
@@ -2137,7 +2149,7 @@ export function createOffice(
       const showPlate =
         (onFloor || (home && !p.present)) &&
         inside &&
-        !bubbles.has(p.id) &&
+        !saying &&
         (near || hover === p.id || focus === p || p.mine || asking(p));
       if (!showPlate) {
         if (!p.plate.hidden) p.plate.hidden = true;
@@ -2149,7 +2161,8 @@ export function createOffice(
       if (key !== p.plateKey) {
         p.plateKey = key;
         p.plate.className = `plate${cls ? ` ${cls}` : ""}${p.mine ? " you" : ""}`;
-        p.plate.innerHTML = `<i></i><b>${esc(p.mine ? W.plate.you(p.name) : p.name)}</b>${label ? `<span>${esc(label)}</span>` : ""}`;
+        // the words say what it is on; a dot only where something waits on the viewer
+        p.plate.innerHTML = `${cls === "mine" ? "<i></i>" : ""}<b>${esc(p.mine ? W.plate.you(p.name) : p.name)}</b>${label ? `<span>${esc(label)}</span>` : ""}`;
       }
       if (p.plate.hidden) p.plate.hidden = false;
       const t = `translate(${r1(hx)}px, ${r1(hy)}px) translate(-50%, -100%)`;
@@ -2633,12 +2646,17 @@ export function createOffice(
       ).length;
       const work = to.find((q) => q.state === "WORKING" && !q.held);
       p.working = !!work;
+      p.workFrom = work ? work.from : "";
       p.task = work ? clip(work.text, 40) : "";
       p.taskFull = work ? clip(work.text, 120) : "";
       p.deciding = to.some((q) => q.state === "WORKING" && q.held);
       const waiting = from.find((q) => OPEN.has(q.state));
       p.waitOn = waiting ? nameOf(waiting.to) : "";
-      p.out = from.filter((q) => OPEN.has(q.state)).length;
+      // asked and not yet settled, a question back to them included
+      p.out = from.filter(
+        (q) => OPEN.has(q.state) || q.state === "INPUT_REQUIRED",
+      ).length;
+      p.inMeeting = !!r.inMeeting;
       p.doneToday = to.filter(
         (q) => q.state === "COMPLETED" && q.at >= today.getTime(),
       ).length;
@@ -2759,7 +2777,6 @@ export function createOffice(
         visible = fx0 > v[0] && fx0 < v[2] && fy0 > v[1] && fy0 < v[3];
       if (!visible) continue;
       p.udt = (p.udt || 0) + dt;
-      // a clone sitting still breathes and blinks just as well at half the rate
       const still =
         !p.walk &&
         !p.leap &&
@@ -2768,6 +2785,13 @@ export function createOffice(
         !bubbles.has(p.id) &&
         !moving &&
         liveOn(p);
+      // a clone at ease holds still: nothing about it means anything until something happens
+      if (still && p.bot.mood === "idle") {
+        p.bot.still(simT);
+        placed.push(p);
+        continue;
+      }
+      // one at work or asking moves just as well at half the rate
       if (still && !(close ? EVEN : restDue(p))) {
         placed.push(p);
         continue;

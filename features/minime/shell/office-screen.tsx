@@ -60,9 +60,6 @@ export function OfficeScreen() {
   const moving = (data?.tasks ?? []).filter((task) =>
     ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
   ).length;
-  const inToday = members.filter(
-    (member) => Date.now() - Date.parse(member.seen) < 120_000,
-  ).length;
   // A meeting going on (or just over) shows beside the floor; the last one, when asked for.
   const { current, latest } = useMeetings();
   const [closedId, setClosedId] = useState<string>();
@@ -76,6 +73,9 @@ export function OfficeScreen() {
   const meets = app.joined && members.length > 1 && !atLobby;
   // how far down the board over the office reaches: the floor may pass beneath it
   const [boardHeight, setBoardHeight] = useState(0);
+  // the office's own panel about one person and the board take turns at the right
+  const [panelOpen, setPanelOpen] = useState(false);
+  const boardShown = turns.length > 0 && !atLobby && !panelOpen;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -85,7 +85,7 @@ export function OfficeScreen() {
             {t("title")}
           </h1>
           <p className="text-[13px] text-muted-foreground">
-            {app.joined ? t("line", { count: inToday, moving }) : t("alone")}
+            {app.joined ? t("line", { moving }) : t("alone")}
           </p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
@@ -125,8 +125,10 @@ export function OfficeScreen() {
             className="of-pane"
             data={office.room}
             lobby={lobby && preferences.lobby}
-            inset={turns.length && !atLobby ? BOARD + 32 : 0}
+            inset={boardShown ? BOARD + 32 : 0}
             insetHeight={boardHeight}
+            turnShown
+            onPanel={setPanelOpen}
             insetLeft={shown && meets ? MEETING + 32 : 0}
             onClockIn={() => {
               rememberClockIn();
@@ -141,7 +143,7 @@ export function OfficeScreen() {
             }
           />
         )}
-        {turns.length > 0 && !atLobby && (
+        {boardShown && (
           <Board
             turns={turns}
             members={members.map((m) => m.id)}

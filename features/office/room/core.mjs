@@ -797,8 +797,6 @@ export function plane(o, u, v) {
 export const planeM = (x, y, z) => plane([x, y, z], [1, 0, 0], [0, 0, -1]);
 export const wallM = (x, z) => planeM(x, 0.05, z);
 export const floorM = (x, y) => plane([x, y, 0], [1, 0, 0], [0, 1, 0]);
-export const floorText = (s, x, y, size, cls = "ftext") =>
-  `<text class="${cls}" transform="${floorM(x, y)}" font-size="${size}">${esc(s)}</text>`;
 export const ellipseAt = (x, y, z, rx, ry, cls, extra = "") => {
   const c = at(x, y, z);
   return `<ellipse class="${cls}" cx="${r1(c[0])}" cy="${r1(c[1])}" rx="${r1(rx)}" ry="${r1(ry)}"${extra}/>`;

@@ -86,8 +86,8 @@ export function planFloor(teams, fi) {
     a.x0 = colX[a.c];
     a.y0 = rowY[a.r];
   }
-  fl.W = x - AV + 26;
-  fl.D = Math.max(COMMONS_D, y - AH + 24);
+  fl.W = x - AV + 18;
+  fl.D = Math.max(COMMONS_D, y - AH + 18);
   // the commons, in the lane by the lift: clear of the left wall's clock, low enough not to hide it
   fl.things.push({ kind: "tea", x: 12, y: 24 });
   const rx = 10,
@@ -113,7 +113,7 @@ export function planFloor(teams, fi) {
     x1: rx + 26,
     y1: ry + 21.5,
   });
-  fl.things.push({ kind: "plant", x: 56, y: fl.D - 9, p: "tall" });
+  fl.things.push({ kind: "plant", x: rx + 40, y: ry + 26, p: "tall" });
   for (const a of areas)
     for (let r = 0; r < a.rows; r++)
       fl.things.push({

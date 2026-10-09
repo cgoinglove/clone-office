@@ -22,7 +22,7 @@ test("a card's status reads as a code, and the words cards kept before codes sti
   assert.equal(statusCode(undefined), undefined);
 });
 
-test("members sit as their cards say, and a computer not heard from for two minutes is off", () => {
+test("members sit as their cards say, a meeting marked as one, and a computer not heard from for two minutes is off", () => {
   const room = roomData(
     {
       me: { id: "me" },
@@ -48,6 +48,11 @@ test("members sit as their cards say, and a computer not heard from for two minu
       ["Dev", "offline", false],
       ["Eun", "offline", false],
     ],
+  );
+  // away in a meeting says so, which their name tag shows rather than just away
+  assert.deepEqual(
+    room.people.filter((p) => p.inMeeting).map((p) => p.name),
+    ["Chloe"],
   );
 });
 

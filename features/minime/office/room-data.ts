@@ -138,6 +138,8 @@ export function roomData(
             : status === "meeting" || status === "away"
               ? "away"
               : "active",
+        // away in a meeting, which their tag says rather than just away
+        ...(status === "meeting" && !gone ? { inMeeting: true } : {}),
         ways: member.card.howToWork ?? [],
         menu: member.card.skills?.map((skill) => skill.name) ?? [],
       };
