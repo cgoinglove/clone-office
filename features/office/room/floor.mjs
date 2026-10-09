@@ -90,7 +90,8 @@ export function planFloor(teams, fi) {
   fl.D = Math.max(COMMONS_D, y - AH + 18);
   // the commons, in the lane by the lift: clear of the left wall's clock, low enough not to hide it
   fl.things.push({ kind: "tea", x: 12, y: 24 });
-  const rx = 10,
+  // the nook stands off the wall, so the clones meeting round its table never stand before the clock
+  const rx = 22,
     ry = 58;
   fl.floorArt.push({ kind: "rug", x0: rx, y0: ry, x1: rx + 36, y1: ry + 30 });
   fl.things.push({
@@ -113,7 +114,7 @@ export function planFloor(teams, fi) {
     x1: rx + 26,
     y1: ry + 21.5,
   });
-  fl.things.push({ kind: "plant", x: rx + 40, y: ry + 26, p: "tall" });
+  fl.things.push({ kind: "plant", x: rx - 8, y: ry + 26, p: "tall" });
   for (const a of areas)
     for (let r = 0; r < a.rows; r++)
       fl.things.push({

@@ -2146,11 +2146,15 @@ export function createOffice(
           b.el.style.transform = t;
         }
       }
+      // round the meeting's table the clones are named in the meeting's own column: tags there would pile up
+      const meeting = p.doing?.kind === "meeting" && !!meet?.at.has(p.id);
       const showPlate =
         (onFloor || (home && !p.present)) &&
         inside &&
         !saying &&
-        (near || hover === p.id || focus === p || p.mine || asking(p));
+        (hover === p.id ||
+          focus === p ||
+          (!meeting && (near || p.mine || asking(p))));
       if (!showPlate) {
         if (!p.plate.hidden) p.plate.hidden = true;
         continue;
