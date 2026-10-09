@@ -11,7 +11,7 @@ export const Variants = () => (
   <div style={row}>
     <Button>Send request</Button>
     <Button variant="brand">Approve</Button>
-    <Button variant="outline">Not yet</Button>
+    <Button variant="ghost">Not yet</Button>
     <Button variant="secondary">Ask later</Button>
     <Button variant="ghost">Skip</Button>
     <Button variant="destructive">Remove access</Button>

@@ -14,7 +14,6 @@
 
 import {
   Building2,
-  Check,
   Keyboard,
   Loader2,
   PanelLeft,
@@ -30,6 +29,8 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ShinyText } from "@/components/ui/shiny-text";
@@ -38,6 +39,7 @@ import { Tip } from "@/components/ui/tooltip";
 import { APP_NAME } from "@/features/brand/logo";
 import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
 import { Bot } from "@/features/office";
+import { useCommandKeys } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { HEADERS } from "../home/use-office";
 import { STATUSES, statusCode } from "../office/room-data";
@@ -92,6 +94,7 @@ export function Sidebar({
 }) {
   const t = useTranslations("shell");
   const tAsk = useTranslations("ask");
+  const keys = useCommandKeys();
   const app = useApp();
   const pathname = usePathname();
   const router = useRouter();
@@ -147,7 +150,7 @@ export function Sidebar({
         >
           {APP_NAME}
         </Link>
-        <Tip label={t("fold")} keys="⌘\">
+        <Tip label={t("fold")} keys={keys.label("Backslash")}>
           <button
             type="button"
             aria-label={t("fold")}
@@ -162,6 +165,7 @@ export function Sidebar({
       <div className="flex shrink-0 flex-col gap-px">
         <button
           type="button"
+          data-closes-drawer
           onClick={() => {
             chat.newChat();
             router.push("/chat");
@@ -170,17 +174,17 @@ export function Sidebar({
         >
           <NavIcon name="compose" className="text-foreground/60" />
           <span className="flex-1 truncate text-left">{t("newChat")}</span>
-          <kbd className={hoverKey}>⇧⌘N</kbd>
+          <kbd className={hoverKey}>{keys.label("KeyN", true)}</kbd>
         </button>
         <button
           type="button"
+          data-closes-drawer
           onClick={onSearch}
-          aria-keyshortcuts="Meta+K"
           className={row(false)}
         >
           <NavIcon name="search" className="text-foreground/60" />
           <span className="flex-1 truncate text-left">{t("search")}</span>
-          <kbd className={hoverKey}>⌘K</kbd>
+          <kbd className={hoverKey}>{keys.label("KeyK")}</kbd>
         </button>
       </div>
 
@@ -242,7 +246,7 @@ export function Sidebar({
 
       <div className="flex shrink-0 items-center gap-1 pt-2 pb-2.5">
         <MeMenu onShortcuts={onShortcuts} />
-        <Tip label={t("settings")} keys="⌘," side="top">
+        <Tip label={t("settings")} keys={keys.label("Comma")} side="top">
           <button
             type="button"
             aria-label={t("settings")}
@@ -277,6 +281,7 @@ function officeWhere(
  */
 function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
   const t = useTranslations("shell");
+  const keys = useCommandKeys();
   const tOffice = useTranslations("office");
   const app = useApp();
   const router = useRouter();
@@ -287,11 +292,13 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
   const name = app.name ?? t("me.you");
   const role = app.profile.role?.trim();
   const line = joined ? tOffice(`status.${status}`) : role;
-  // The invite link is made as the menu opens, so a click copies it at once.
+  // The invite link is asked for each time the menu opens, so a click copies it at once and it is
+  // always the link of the office the person is in now.
   const [invite, setInvite] = useState<string>();
 
   const loadInvite = () => {
-    if (!joined || invite) return;
+    setInvite(undefined);
+    if (!joined) return;
     void fetch("/api/me/office", {
       method: "POST",
       headers: HEADERS,
@@ -310,7 +317,11 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
         render={
           <button
             type="button"
-            aria-label={t("me.label", { name })}
+            aria-label={
+              joined
+                ? `${t("me.label", { name })}, ${t("statusLabel", { status: tOffice(`status.${status}`) })}`
+                : t("me.label", { name })
+            }
             className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-[10px] pr-2 pl-2.5 text-left outline-none transition-colors hover:bg-foreground/[0.045] focus-visible:ring-2 focus-visible:ring-ring/50 aria-expanded:bg-foreground/[0.07]"
           />
         }
@@ -348,23 +359,24 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
         {joined && (
           <DropdownMenuGroup>
             <DropdownMenuLabel>{t("statusTitle")}</DropdownMenuLabel>
-            {STATUSES.map((option) => (
-              <DropdownMenuItem
-                key={option}
-                onClick={() =>
-                  void office.post({
-                    action: "card",
-                    card: { ...data?.me?.card, status: option },
-                  })
-                }
-              >
-                <span className="grid w-4 place-items-center">
-                  <StatusDot status={option} />
-                </span>
-                <span className="flex-1">{tOffice(`status.${option}`)}</span>
-                {option === status && <Check className="size-3.5" />}
-              </DropdownMenuItem>
-            ))}
+            <DropdownMenuRadioGroup
+              value={status}
+              onValueChange={(option) =>
+                void office.post({
+                  action: "card",
+                  card: { ...data?.me?.card, status: option },
+                })
+              }
+            >
+              {STATUSES.map((option) => (
+                <DropdownMenuRadioItem key={option} value={option}>
+                  <span className="grid w-4 place-items-center">
+                    <StatusDot status={option} />
+                  </span>
+                  <span className="flex-1">{tOffice(`status.${option}`)}</span>
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
           </DropdownMenuGroup>
         )}
         {joined && data && (
@@ -405,7 +417,7 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
             <NavIcon name="settings" className="text-muted-foreground" />
             <span className="flex-1">{t("settings")}</span>
             <kbd className="font-mono text-[11px] text-muted-foreground">
-              ⌘,
+              {keys.label("Comma")}
             </kbd>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={onShortcuts}>

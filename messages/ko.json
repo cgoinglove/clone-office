@@ -1148,7 +1148,8 @@
       "archived": "보관한 대화",
       "archivedHint": "목록에서 치운 대화예요. 지워지지 않았고 언제든 다시 꺼낼 수 있어요.",
       "restore": "꺼내기",
-      "restored": "‘{title}’ 대화를 다시 꺼냈어요"
+      "restored": "‘{title}’ 대화를 다시 꺼냈어요",
+      "archivedMore": "더 보기"
     },
     "preferences": {
       "loading": "불러오는 중…",
@@ -1275,7 +1276,8 @@
       "answerHere": "여기서 바로 답할 수 있어요",
       "fromColleague": "{name} 님의 클론이 물어요",
       "fromClone": "내 클론이 물어요",
-      "open": "열기"
+      "open": "열기",
+      "inNow": "출근 {count}/{all}"
     },
     "clone": {
       "title": "내 클론",

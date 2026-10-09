@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useCommandKeys } from "@/hooks/use-hotkey";
 
 export function ShortcutsDialog({
   open,
@@ -18,13 +19,14 @@ export function ShortcutsDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("shell");
+  const { label } = useCommandKeys();
   const keys: [string, string][] = [
-    ["⌘K", t("search")],
-    ["⇧⌘N", t("newChat")],
+    [label("KeyK"), t("search")],
+    [label("KeyN", true), t("newChat")],
     ["/", t("keys.box")],
-    ["⌘\\", t("keys.fold")],
-    ["⌘,", t("settings")],
-    ["⌘1–6", t("keys.section")],
+    [label("Backslash"), t("keys.fold")],
+    [label("Comma"), t("settings")],
+    [`${label("Digit1")}–6`, t("keys.section")],
     ["?", t("keys.list")],
   ];
   return (

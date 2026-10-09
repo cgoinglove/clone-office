@@ -2,6 +2,7 @@
 
 import {
   type KeyboardEvent as ReactKeyboardEvent,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -130,9 +131,21 @@ const SIGN: Record<string, [plain: string, mac: string]> = {
   meta: ["Meta", "⌘"],
 };
 
+/** Keys whose code names a sign rather than a letter. */
+const KEY_SIGNS: Record<string, string> = {
+  Backslash: "\\",
+  Comma: ",",
+  Period: ".",
+  Slash: "/",
+  Enter: "↵",
+};
+
 const keyLabel = (code: string) =>
-  code.replace(/^(Key|Digit|Numpad)/, "").replace(/([a-z])([A-Z])/g, "$1 $2") ||
-  code;
+  KEY_SIGNS[code] ??
+  (code
+    .replace(/^(Key|Digit|Numpad)/, "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2") ||
+    code);
 
 export function hotkeyLabel(combo: string, mac = false): string {
   const parts = combo.split("+");
@@ -158,6 +171,46 @@ export function useCommandLabel(code: string, shift = false): string {
   return hotkeyLabel(
     [...held.filter((part) => shift || part !== "shift"), code].join("+"),
     mac,
+  );
+}
+
+const onMac = () =>
+  typeof navigator !== "undefined" && /mac/i.test(navigator.userAgent);
+
+/**
+ * The app's command keys as this system writes them (`⌘K`, `⇧⌘N` on a Mac; `Ctrl + K`,
+ * `Ctrl + Shift + N` elsewhere), for tips, menus and the list of keys.
+ */
+export function useCommandKeys() {
+  const [mac, setMac] = useState(true);
+  useEffect(() => setMac(onMac()), []);
+  const label = useCallback(
+    (code: string, shift = false) =>
+      hotkeyLabel(
+        [
+          ...(mac ? ["shift", "meta"] : ["ctrl", "shift"]).filter(
+            (part) => shift || part !== "shift",
+          ),
+          code,
+        ].join("+"),
+        mac,
+      ),
+    [mac],
+  );
+  return { mac, label };
+}
+
+/**
+ * Whether a key press is this system's command key with the key at `code` (⌘ on a Mac, Ctrl
+ * elsewhere, by the physical key so any layout reaches it), with Shift only when asked. On a Mac a
+ * Ctrl combination stays the field's own (Ctrl+K deletes to the line's end).
+ */
+export function isCommand(event: KeyboardEvent, code: string, shift = false) {
+  const command = onMac()
+    ? event.metaKey && !event.ctrlKey
+    : event.ctrlKey && !event.metaKey;
+  return (
+    command && !event.altKey && event.shiftKey === shift && event.code === code
   );
 }
 

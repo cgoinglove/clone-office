@@ -17,7 +17,12 @@ import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Tip, TooltipProvider } from "@/components/ui/tooltip";
 import { APP_NAME } from "@/features/brand/logo";
-import { typed, windowKey } from "@/hooks/use-hotkey";
+import {
+  isCommand,
+  typed,
+  useCommandKeys,
+  windowKey,
+} from "@/hooks/use-hotkey";
 import { SettingsDialog } from "../settings/settings";
 import { AppProvider, useApp, useAppState } from "./app-state";
 import { CommandPalette } from "./command-palette";
@@ -81,6 +86,7 @@ function Frame({ children }: { children: ReactNode }) {
   );
 
   const narrow = useNarrow();
+  const keysOf = useCommandKeys();
   const [folded, setFolded] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
@@ -122,20 +128,19 @@ function Frame({ children }: { children: ReactNode }) {
         setKeys(true);
         return;
       }
-      if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
-      if (event.key === ",") {
+      if (isCommand(event, "Comma")) {
         event.preventDefault();
         setSettings((was) => was ?? "brain");
       }
-      if (event.key.toLowerCase() === "k" && !event.shiftKey) {
+      if (isCommand(event, "KeyK")) {
         event.preventDefault();
         setPalette((was) => !was);
       }
-      if (event.key === "\\") {
+      if (isCommand(event, "Backslash")) {
         event.preventDefault();
         foldRef.current();
       }
-      if (event.key.toLowerCase() === "n" && event.shiftKey) {
+      if (isCommand(event, "KeyN", true)) {
         event.preventDefault();
         chat.newChat();
         router.push("/chat");
@@ -171,7 +176,7 @@ function Frame({ children }: { children: ReactNode }) {
           <header className="flex h-12 shrink-0 items-center gap-1 border-b border-border/60 px-2">
             <Tip
               label={narrow ? t("openMenu") : t("unfold")}
-              keys={narrow ? undefined : "⌘\\"}
+              keys={narrow ? undefined : keysOf.label("Backslash")}
             >
               <button
                 type="button"
@@ -202,7 +207,7 @@ function Frame({ children }: { children: ReactNode }) {
                 <span className="tabular-nums">{waiting}</span>
               </Link>
             )}
-            <Tip label={t("search")} keys="⌘K">
+            <Tip label={t("search")} keys={keysOf.label("KeyK")}>
               <button
                 type="button"
                 aria-label={t("search")}
@@ -212,7 +217,7 @@ function Frame({ children }: { children: ReactNode }) {
                 <Search className="size-[18px]" />
               </button>
             </Tip>
-            <Tip label={t("newChat")} keys="⇧⌘N">
+            <Tip label={t("newChat")} keys={keysOf.label("KeyN", true)}>
               <button
                 type="button"
                 aria-label={t("newChat")}
@@ -235,6 +240,16 @@ function Frame({ children }: { children: ReactNode }) {
             <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/25 duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
             <DialogPrimitive.Popup
               aria-label={t("nav")}
+              // Going anywhere from the drawer closes it, a conversation picked on /chat included
+              // (only its query changes) and a new one started.
+              onClick={(event) => {
+                if (
+                  (event.target as HTMLElement).closest?.(
+                    "a[href], [data-closes-drawer]",
+                  )
+                )
+                  setDrawer(false);
+              }}
               className="fixed inset-y-0 left-0 z-40 bg-background shadow-[12px_0_32px_-12px_rgb(0_0_0/0.35)] outline-none duration-200 data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left"
             >
               {sidebar(() => setDrawer(false), "w-[min(18rem,85vw)]")}

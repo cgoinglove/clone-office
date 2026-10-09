@@ -1148,7 +1148,8 @@
       "archived": "Archived chats",
       "archivedHint": "Chats you put away from the list. Nothing in them is deleted, and you can bring each back.",
       "restore": "Bring back",
-      "restored": "“{title}” is back in your chats"
+      "restored": "“{title}” is back in your chats",
+      "archivedMore": "Show more"
     },
     "preferences": {
       "loading": "Loading…",
@@ -1275,7 +1276,8 @@
       "answerHere": "Answer right here",
       "fromColleague": "{name}'s clone asks",
       "fromClone": "Your clone asks",
-      "open": "Open"
+      "open": "Open",
+      "inNow": "{count} of {all} in"
     },
     "clone": {
       "title": "Your clone",

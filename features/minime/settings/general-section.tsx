@@ -103,14 +103,23 @@ function ArchivedChats() {
   const [chats, setChats] = useState<
     { id: string; title: string; updated: string }[] | null
   >(null);
-  const load = () =>
-    fetch("/api/me/chats?archived=1&limit=200", { headers: HEADERS })
-      .then((r) => r.json())
-      .then((data) => setChats(data.chats ?? []))
-      .catch(() => setChats([]));
+  // a page at a time, as the column lists them
+  const [limit, setLimit] = useState(50);
+  const [more, setMore] = useState(false);
   useEffect(() => {
-    void load();
-  }, []);
+    let live = true;
+    void fetch(`/api/me/chats?archived=1&limit=${limit}`, { headers: HEADERS })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!live) return;
+        setChats(data.chats ?? []);
+        setMore(Boolean(data.more));
+      })
+      .catch(() => live && setChats([]));
+    return () => {
+      live = false;
+    };
+  }, [limit]);
   if (!chats?.length) return null;
   return (
     <Group title={t("archived")} hint={t("archivedHint")}>
@@ -152,6 +161,16 @@ function ArchivedChats() {
           </li>
         ))}
       </Rows>
+      {more && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="self-start text-muted-foreground"
+          onClick={() => setLimit((was) => was + 50)}
+        >
+          {t("archivedMore")}
+        </Button>
+      )}
     </Group>
   );
 }

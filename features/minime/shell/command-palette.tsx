@@ -1,18 +1,23 @@
 "use client";
 
 // One box that finds anything and goes there (⌘K, or Search in the column), after the palettes
-// ChatGPT, Claude and Linear keep: the person's conversations by title, the requests between
-// clones by what was asked, colleagues (asking one starts the sentence in the conversation box),
-// the places and Settings' sections; and, for anything typed, asking the clone it in a new
-// conversation (⌘↵). Keys: ↑↓ move, ↵ opens, Esc closes and gives the focus back.
+// ChatGPT, Claude and Linear keep: the person's conversations by name (the latest while nothing is
+// typed, then every one the server holds), the requests between clones by what was asked,
+// colleagues (asking one starts the sentence in the conversation box), the places and Settings'
+// sections; and, for anything typed, asking the clone it in a new conversation (⌘↵, or ↵ when
+// nothing matches). Keys: ↑↓ move, ↵ opens, Esc closes and gives the focus back. Only the words a
+// person reads are matched, never an id.
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Command } from "cmdk";
+import { Command, defaultFilter } from "cmdk";
 import { CornerDownLeft, MessageSquare, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { NavIcon } from "@/features/brand/nav-icons";
+import { isCommand, useCommandKeys } from "@/hooks/use-hotkey";
+import type { ChatSummary } from "../home/use-chat";
+import { HEADERS } from "../home/use-office";
 import { SECTIONS } from "../settings/settings";
 import { useApp } from "./app-state";
 import { Mark, PhaseChip, phaseOf } from "./parts";
@@ -88,6 +93,32 @@ export function CommandPalette({
     ),
   );
   const asked = query.trim();
+  const keys = useCommandKeys();
+
+  // What is typed is looked for among every conversation, not only those the column loaded.
+  const [found, setFound] = useState<ChatSummary[] | null>(null);
+  useEffect(() => {
+    if (!asked) return setFound(null);
+    let live = true;
+    const wait = setTimeout(() => {
+      void fetch(`/api/me/chats?limit=20&q=${encodeURIComponent(asked)}`, {
+        headers: HEADERS,
+      })
+        .then((response) => response.json())
+        .then((data) => live && setFound(data.chats ?? []))
+        .catch(() => {});
+    }, 150);
+    return () => {
+      live = false;
+      clearTimeout(wait);
+    };
+  }, [asked]);
+  const chats = asked
+    ? (found ??
+      app.chat.chats.filter((chat) =>
+        chat.title.toLowerCase().includes(asked.toLowerCase()),
+      ))
+    : app.chat.chats.slice(0, 8);
 
   const go = (run: () => void) => {
     onOpenChange(false);
@@ -116,8 +147,17 @@ export function CommandPalette({
           <Command
             label={t("palette.title")}
             loop
+            filter={(_value, search, keywords) =>
+              defaultFilter(keywords?.join(" ") ?? "", search)
+            }
             onKeyDown={(event) => {
-              if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+              if (event.key !== "Enter" || event.nativeEvent.isComposing)
+                return;
+              const picked = event.currentTarget.querySelector(
+                '[cmdk-item][data-selected="true"]',
+              );
+              // ⌘↵ asks the clone; so does ↵ when nothing matches what was typed.
+              if (isCommand(event.nativeEvent, "Enter") || !picked) {
                 event.preventDefault();
                 ask();
               }
@@ -136,39 +176,29 @@ export function CommandPalette({
               </kbd>
             </div>
             <Command.List className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto pb-1.5">
-              <Command.Empty className="px-4 py-8 text-center text-sm text-muted-foreground">
+              <Command.Empty className="flex flex-col items-center gap-3 px-4 py-7 text-center text-sm text-muted-foreground">
                 {t("palette.empty")}
+                {asked && (
+                  <button
+                    type="button"
+                    onClick={ask}
+                    className="flex h-8 max-w-full items-center gap-2 rounded-lg bg-secondary px-3 text-[13.5px] text-foreground outline-none hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] focus-visible:ring-2 focus-visible:ring-ring/50"
+                  >
+                    <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="truncate">
+                      {t("palette.ask", { text: asked })}
+                    </span>
+                    <CornerDownLeft className="size-3.5 shrink-0 text-muted-foreground" />
+                  </button>
+                )}
               </Command.Empty>
 
-              {asked && (
-                <Command.Group forceMount className={group}>
-                  <Command.Item
-                    forceMount
-                    value={`ask ${asked}`}
-                    onSelect={ask}
-                    className={item}
-                  >
-                    <Row
-                      lead={
-                        <MessageSquare className="size-4 text-muted-foreground" />
-                      }
-                      title={t("palette.ask", { text: asked })}
-                      right={
-                        <kbd className="font-mono text-[11px] text-muted-foreground">
-                          ⌘↵
-                        </kbd>
-                      }
-                    />
-                  </Command.Item>
-                </Command.Group>
-              )}
-
-              {app.chat.chats.length > 0 && (
+              {chats.length > 0 && (
                 <Command.Group heading={t("palette.chats")} className={group}>
-                  {app.chat.chats.map((chat) => (
+                  {chats.map((chat) => (
                     <Command.Item
                       key={chat.id}
-                      value={`chat ${chat.id} ${chat.title}`}
+                      value={`chat:${chat.id}`}
                       keywords={[chat.title]}
                       onSelect={() =>
                         go(() =>
@@ -216,7 +246,7 @@ export function CommandPalette({
                     return (
                       <Command.Item
                         key={task.id}
-                        value={`request ${task.id} ${text}`}
+                        value={`request:${task.id}`}
                         keywords={[text, nameOf(other)]}
                         onSelect={() =>
                           go(() =>
@@ -255,7 +285,7 @@ export function CommandPalette({
                     .map((member) => (
                       <Command.Item
                         key={member.id}
-                        value={`person ${member.id} ${member.card.name}`}
+                        value={`person:${member.id}`}
                         keywords={[
                           member.card.name,
                           member.card.description ?? "",
@@ -299,7 +329,8 @@ export function CommandPalette({
                 {PLACES.map((place) => (
                   <Command.Item
                     key={place.href}
-                    value={`go ${place.key} ${t(`screens.${place.key}`)}`}
+                    value={`go:${place.key}`}
+                    keywords={[t(`screens.${place.key}`)]}
                     onSelect={() => go(() => router.push(place.href))}
                     className={item}
                   >
@@ -317,8 +348,8 @@ export function CommandPalette({
                 {SECTIONS.map((section) => (
                   <Command.Item
                     key={section.id}
-                    value={`settings ${section.id} ${tSettings(`${section.id}.label`)}`}
-                    keywords={[t("settings")]}
+                    value={`settings:${section.id}`}
+                    keywords={[t("settings"), tSettings(`${section.id}.label`)]}
                     onSelect={() => go(() => app.setSettings(section.id))}
                     className={item}
                   >
@@ -345,7 +376,9 @@ export function CommandPalette({
                 {t("palette.open")}
               </span>
               <span className="flex items-center gap-1.5">
-                <kbd className="font-mono text-[11px]">⌘↵</kbd>
+                <kbd className="font-mono text-[11px]">
+                  {keys.label("Enter")}
+                </kbd>
                 {t("palette.askKey")}
               </span>
             </div>

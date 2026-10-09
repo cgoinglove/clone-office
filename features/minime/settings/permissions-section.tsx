@@ -6,10 +6,11 @@
 // dialog over Settings: a folder left out is never read or searched.
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { FolderField, FolderPage, useFolders } from "../folder-list";
 import type { Preferences } from "../home/use-preferences";
 import { TrustPanel } from "../trust-panel";
+import { SettingsBack } from "./back";
 import { Group, Groups } from "./parts";
 import { PreferencesSection } from "./preferences-section";
 
@@ -26,6 +27,11 @@ export function PermissionsSection({
   const folders = useFolders();
   // The folders open as a page of this section, never a dialog over Settings.
   const [paged, setPaged] = useState(false);
+  const setBack = useContext(SettingsBack);
+  useEffect(() => {
+    setBack(paged ? () => setPaged(false) : null);
+    return () => setBack(null);
+  }, [paged, setBack]);
   if (paged)
     return (
       <FolderPage

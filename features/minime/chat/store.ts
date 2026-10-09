@@ -282,11 +282,15 @@ export async function readChat(
 /** Each conversation's summary as last listed, with its file's size and time then. */
 const listedChats = new Map<string, { stamp: string; info: ChatInfo }>();
 
-/** The latest conversations first; those put away only when asked for (`archived`). */
+/**
+ * The latest conversations first; those put away only when asked for (`archived`); with `match`,
+ * only those whose name holds it, whatever its case.
+ */
 export async function listChats(
   limit = 30,
-  { archived = false }: { archived?: boolean } = {},
+  { archived = false, match }: { archived?: boolean; match?: string } = {},
 ): Promise<ChatInfo[]> {
+  const needle = match?.trim().toLowerCase();
   const chats: ChatInfo[] = [];
   for (const file of await chatFiles()) {
     // A conversation is read whole only when its file changed since it was last listed.
@@ -299,7 +303,9 @@ export async function listChats(
       info = chat.info;
       listedChats.set(file.id, { stamp, info });
     }
-    if (Boolean(info.archived) === archived) chats.push(info);
+    if (Boolean(info.archived) !== archived) continue;
+    if (needle && !info.title.toLowerCase().includes(needle)) continue;
+    chats.push(info);
   }
   return (
     chats

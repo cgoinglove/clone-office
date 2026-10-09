@@ -85,6 +85,18 @@ export function OfficeScreen() {
           </h1>
           <p className="text-[13px] text-muted-foreground">
             {app.joined ? t("line", { moving }) : t("alone")}
+            {/* who is in is drawn on the clock; a screen reader hears it here */}
+            {app.joined && (
+              <span className="sr-only">
+                {" · "}
+                {t("inNow", {
+                  count:
+                    office.room?.people.filter((p) => p.status !== "offline")
+                      .length ?? 0,
+                  all: office.room?.people.length ?? 0,
+                })}
+              </span>
+            )}
           </p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-1.5">

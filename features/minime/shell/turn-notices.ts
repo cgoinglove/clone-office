@@ -83,9 +83,11 @@ export function useTurnNotices(
       seen.current = new Set(items.map((item) => item.key));
       return;
     }
+    // Everything ever seen stays seen: a question that drops out while the office cannot be
+    // reached and comes back after is not news again.
     const known = seen.current;
     const fresh = items.filter((item) => !known.has(item.key));
-    seen.current = new Set(items.map((item) => item.key));
+    for (const item of items) known.add(item.key);
     if (!fresh.length) return;
     const visible = document.visibilityState === "visible";
     for (const item of fresh) {

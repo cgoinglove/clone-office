@@ -66,5 +66,7 @@ time** (매번 하기) asks it to make that a flow.
 
 **Flows** (플로우) lists each flow with when it runs, when it runs next and how its last run went,
 and has **Run now** (지금 실행), **See the answers** (답 보기), **Pause** (멈추기) or **Resume**
-(다시 켜기), and **Remove** (지우기). To change what a flow does or when, they tell the clone;
+(다시 켜기), and **Remove** (지우기), which stops the flow at once and removes it after a few seconds
+unless they press **Undo** (되돌리기) in the note at the bottom. To change what a flow does or when,
+they tell the clone;
 it changes the flow they have rather than making a copy, again after a card.

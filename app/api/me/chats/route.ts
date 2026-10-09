@@ -11,9 +11,10 @@ import { refuse } from "@/features/minime/server/guard";
 /** How many conversations one look asks for at most. */
 const MOST = 500;
 
-// The person's conversations with their mini-me, latest first, `limit` at a time (`more` says
-// whether there are others); with ?archived=1 the ones they put away; with ?id=, one conversation
-// with its messages. Brain sessions stay on the server. A conversation is renamed, put away or
+// The person's conversations with their mini-me, latest first, `limit` at a time up to `MOST`
+// (`more` says whether there are others within it); with ?archived=1 the ones they put away; with
+// ?q=, those whose name holds it (search finds any, not only those the column loaded); `asked` says
+// whether there was ever one, put away or not; with ?id=, one conversation with its messages. Brain sessions stay on the server. A conversation is renamed, put away or
 // brought back by a line added to its file, so nothing of it is ever removed.
 export async function GET(request: Request) {
   const refused = refuse(request);
@@ -25,8 +26,10 @@ export async function GET(request: Request) {
       MOST,
       Math.max(1, Number(params.get("limit")) || 30),
     );
+    const archived = params.get("archived") === "1";
     const chats = await listChats(limit + 1, {
-      archived: params.get("archived") === "1",
+      archived,
+      match: params.get("q") ?? undefined,
     });
     return Response.json({
       chats: chats.slice(0, limit).map(({ id, title, updated, turns }) => ({
@@ -35,7 +38,11 @@ export async function GET(request: Request) {
         updated,
         turns,
       })),
-      more: chats.length > limit,
+      // Past `MOST` the list stops growing, so it says there is no more rather than asking forever.
+      more: chats.length > limit && limit < MOST,
+      asked:
+        chats.length > 0 ||
+        (await listChats(1, { archived: !archived })).length > 0,
     });
   }
   const chat = await readChat(id).catch(() => undefined);

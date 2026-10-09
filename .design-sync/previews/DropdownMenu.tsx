@@ -13,7 +13,7 @@ export const Open = () => (
   <div style={{ height: 260 }}>
     <DropdownMenu open>
       <DropdownMenuTrigger
-        render={<Button variant="outline">Reply mode</Button>}
+        render={<Button variant="secondary">Reply mode</Button>}
       />
       <DropdownMenuContent>
         <DropdownMenuGroup>

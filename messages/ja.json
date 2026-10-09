@@ -1148,7 +1148,8 @@
       "archived": "アーカイブした会話",
       "archivedHint": "一覧から片付けた会話です。中身は削除されておらず、いつでも戻せます。",
       "restore": "戻す",
-      "restored": "「{title}」を会話一覧に戻しました"
+      "restored": "「{title}」を会話一覧に戻しました",
+      "archivedMore": "さらに表示"
     },
     "preferences": {
       "loading": "読み込み中…",
@@ -1275,7 +1276,8 @@
       "answerHere": "ここで答えられます",
       "fromColleague": "{name}さんのクローンからの質問",
       "fromClone": "あなたのクローンからの質問",
-      "open": "開く"
+      "open": "開く",
+      "inNow": "出勤 {count}/{all}"
     },
     "clone": {
       "title": "あなたのクローン",

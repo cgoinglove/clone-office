@@ -132,7 +132,7 @@ export function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
 
   const data = app.office.office;
   const done: Record<StepId, boolean> = {
-    ask: app.chat.chats.length > 0,
+    ask: app.chat.asked,
     me: Boolean(facts?.me),
     team:
       (data?.members?.length ?? 0) > 1 ||

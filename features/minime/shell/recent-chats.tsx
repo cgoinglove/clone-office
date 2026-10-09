@@ -8,7 +8,7 @@
 
 import { Archive, Loader2, MoreHorizontal, Pencil } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -26,16 +26,19 @@ type Bucket = "today" | "yesterday" | "week" | "month" | string;
 
 const DAY = 24 * 60 * 60 * 1000;
 
+/** Local midnight of a moment, so days are counted as the calendar counts them. */
+const dayOf = (at: Date) =>
+  new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime();
+
 /** Which heading a conversation goes under, by the last day something was said in it. */
 function bucketOf(updated: string, now: Date): Bucket {
   const at = new Date(updated);
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  const since = today.getTime() - at.getTime();
-  if (since <= 0) return "today";
-  if (since <= DAY) return "yesterday";
-  if (since <= 7 * DAY) return "week";
-  if (since <= 30 * DAY) return "month";
+  // Rounded, so a day of 23 or 25 hours (clocks changing) still counts as one.
+  const days = Math.round((dayOf(now) - dayOf(at)) / DAY);
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days <= 7) return "week";
+  if (days <= 30) return "month";
   return `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, "0")}`;
 }
 
@@ -54,7 +57,7 @@ export function groupChats(chats: ChatSummary[], now: Date) {
 export function RecentChats({ row }: { row: (on: boolean) => string }) {
   const t = useTranslations("shell");
   const format = useFormatter();
-  const now = useNow({ updateInterval: 60 * 60 * 1000 });
+  const now = useNow({ updateInterval: 60_000 });
   const app = useApp();
   const { chat } = app;
   const end = useRef<HTMLButtonElement>(null);
@@ -134,6 +137,7 @@ function ChatRow({
   const undo = useTranslations("common")("undo");
   const app = useApp();
   const pathname = usePathname();
+  const router = useRouter();
   const { chat } = app;
   const on = pathname === "/chat" && chat.chatId === item.id;
   const waiting = app.chatAsks.some((ask) => ask.chat === item.id);
@@ -147,13 +151,20 @@ function ChatRow({
     setName(item.title);
     setEditing(true);
   };
-  const finishRename = (keep: boolean) => {
+  const finishRename = (keep: boolean, refocus: boolean) => {
     setEditing(false);
     if (keep && name.trim() && name.trim() !== item.title)
       void chat.renameChat(item.id, name);
-    requestAnimationFrame(() => link.current?.focus());
+    // Back to the row after Enter or Esc; leaving the field for somewhere else keeps the focus there.
+    if (refocus) requestAnimationFrame(() => link.current?.focus());
   };
   const archive = () => {
+    // The one open goes with it: the screen starts a new conversation rather than keep writing
+    // into one that is no longer listed.
+    if (on) {
+      chat.newChat();
+      router.push("/chat");
+    }
     void chat.archiveChat(item.id, true);
     say(t("chats.archived", { title: item.title }), {
       action: { label: undo, run: () => void chat.archiveChat(item.id, false) },
@@ -169,16 +180,16 @@ function ChatRow({
         aria-label={t("chats.name")}
         onChange={(event) => setName(event.target.value)}
         onFocus={(event) => event.target.select()}
-        onBlur={() => finishRename(true)}
+        onBlur={() => finishRename(true, false)}
         onKeyDown={(event) => {
           if (event.key === "Enter" && !event.nativeEvent.isComposing) {
             event.preventDefault();
-            finishRename(true);
+            finishRename(true, true);
           }
           if (event.key === "Escape") {
             event.preventDefault();
             event.stopPropagation();
-            finishRename(false);
+            finishRename(false, true);
           }
         }}
         className="h-8 rounded-lg bg-background px-2.5 text-[13.5px] shadow-[inset_0_0_0_1.5px_var(--brand)] outline-none"

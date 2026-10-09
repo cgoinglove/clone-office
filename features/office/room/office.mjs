@@ -2910,6 +2910,11 @@ export function createOffice(
     destroy() {
       destroyed = true;
       GEN++;
+      // a panel that goes with the drawing says so, so the page's own panel comes back
+      if (panelShown) {
+        panelShown = false;
+        onPanel?.(false);
+      }
       stopFrames();
       seen.disconnect();
       sized.disconnect();

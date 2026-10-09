@@ -61,14 +61,27 @@ export function ChatScreen() {
   const send = params.get("send");
   const ask = chat.ask;
   const newChat = chat.newChat;
+  const busy = chat.busy;
+  // Each ask is taken once (an effect may run twice for the same address); once the address is the
+  // screen's own again, the same words can be asked again.
   const sent = useRef<string | null>(null);
   useEffect(() => {
-    if (!send || sent.current === send) return;
+    if (!send) {
+      sent.current = null;
+      return;
+    }
+    if (sent.current === send) return;
     sent.current = send;
-    newChat();
     router.replace("/chat");
+    // While the clone is answering, the words wait in the box rather than clearing what it is
+    // writing or being lost: the person sends them when it is done.
+    if (busy) {
+      requestAnimationFrame(() => insertRef.current(send));
+      return;
+    }
+    newChat();
     void ask(send);
-  }, [send, ask, newChat, router]);
+  }, [send, ask, newChat, router, busy]);
 
   const [rail, setRail] = useState(true);
   useEffect(() => {

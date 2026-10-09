@@ -1148,7 +1148,8 @@
       "archived": "Chats archivados",
       "archivedHint": "Chats que quitaste de la lista. No se borra nada y puedes recuperarlos cuando quieras.",
       "restore": "Recuperar",
-      "restored": "«{title}» volvió a tus chats"
+      "restored": "«{title}» volvió a tus chats",
+      "archivedMore": "Mostrar más"
     },
     "preferences": {
       "loading": "Cargando…",
@@ -1275,7 +1276,8 @@
       "answerHere": "Responde aquí mismo",
       "fromColleague": "El clon de {name} pregunta",
       "fromClone": "Tu clon pregunta",
-      "open": "Abrir"
+      "open": "Abrir",
+      "inNow": "{count} de {all} dentro"
     },
     "clone": {
       "title": "Tu clon",

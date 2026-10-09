@@ -19,7 +19,7 @@ export const Decision = () => (
         </DialogDescription>
       </DialogHeader>
       <DialogFooter>
-        <Button variant="outline">Not yet</Button>
+        <Button variant="ghost">Not yet</Button>
         <Button variant="brand">Share</Button>
       </DialogFooter>
     </DialogContent>

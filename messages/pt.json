@@ -1148,7 +1148,8 @@
       "archived": "Conversas arquivadas",
       "archivedHint": "Conversas que você tirou da lista. Nada nelas é apagado e você pode trazê-las de volta quando quiser.",
       "restore": "Trazer de volta",
-      "restored": "“{title}” voltou para suas conversas"
+      "restored": "“{title}” voltou para suas conversas",
+      "archivedMore": "Mostrar mais"
     },
     "preferences": {
       "loading": "Carregando…",
@@ -1275,7 +1276,8 @@
       "answerHere": "Responda aqui mesmo",
       "fromColleague": "O clone de {name} pergunta",
       "fromClone": "Seu clone pergunta",
-      "open": "Abrir"
+      "open": "Abrir",
+      "inNow": "{count} de {all} presentes"
     },
     "clone": {
       "title": "Seu clone",

@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -110,10 +110,12 @@ export function CloneSection({
     await loadMemory();
   };
 
-  const remove = async (entry: Entry) => {
+  const remove = async (entry: Entry): Promise<boolean> => {
     const response = await fetch("/api/me/memory", {
       method: "POST",
       headers: HEADERS,
+      // kept alive so a removal done as the page goes still arrives
+      keepalive: true,
       body: JSON.stringify({
         remove: { target: entry.target, entry: entry.text },
       }),
@@ -121,6 +123,7 @@ export function CloneSection({
     const data = await response?.json().catch(() => ({}));
     if (response?.ok) setMemory(data as Memory);
     else setProblem(String(data?.error ?? response?.status ?? "generic"));
+    return Boolean(response?.ok);
   };
 
   return (
@@ -605,14 +608,16 @@ function MemoryRow({
   source?: Source;
   fresh: boolean;
   onFix: (fix: string) => Promise<void>;
-  onRemove: () => Promise<void>;
+  onRemove: () => Promise<boolean>;
 }) {
   const [state, setState] = useState<"open" | "fixing" | "saving" | "gone">(
     "open",
   );
   const [text, setText] = useState(entry.text);
   const t = useTranslations();
-  // Removed at once and for good only when its toast goes without Undo.
+  // Hidden at once, removed when its Undo runs out or this screen goes, and back if that fails.
+  const removal = useRef<{ commit: () => void } | null>(null);
+  useEffect(() => () => removal.current?.commit(), []);
   if (state === "gone") return null;
   return (
     <li className="group flex flex-col gap-2 px-3.5 py-3">

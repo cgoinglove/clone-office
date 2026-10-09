@@ -61,17 +61,55 @@ export function FlowsPanel({
     void load();
   }, []);
 
+  // A removed flow is paused at once, so it does not run while its Undo waits; it is removed when
+  // the Undo runs out or this panel goes, and shows again (as it was) if that fails or is undone.
+  const removals = useRef(new Map<string, { commit: () => void }>());
+  useEffect(() => {
+    const all = removals.current;
+    return () => {
+      for (const removal of all.values()) removal.commit();
+    };
+  }, []);
+  const show = (id: string) =>
+    setGone((all) => {
+      const next = new Set(all);
+      next.delete(id);
+      return next;
+    });
   const removeLater = (flow: FlowView) => {
     setGone((all) => new Set(all).add(flow.id));
-    sayUndoable(t("removed", { name: flow.name }), undo, {
-      commit: () => void act("remove", flow),
-      undo: () =>
-        setGone((all) => {
-          const next = new Set(all);
-          next.delete(flow.id);
-          return next;
-        }),
-    });
+    if (!flow.paused) void post("pause", flow.id);
+    removals.current.set(
+      flow.id,
+      sayUndoable(t("removed", { name: flow.name }), undo, {
+        commit: () => {
+          removals.current.delete(flow.id);
+          void post("remove", flow.id).then((done) => {
+            if (!done) show(flow.id);
+            void load();
+          });
+        },
+        undo: () => {
+          removals.current.delete(flow.id);
+          if (!flow.paused) void post("resume", flow.id);
+          show(flow.id);
+        },
+      }),
+    );
+  };
+
+  /** One change to a flow, kept alive so a removal done as the page goes still arrives. */
+  const post = async (
+    action: "pause" | "resume" | "remove",
+    id: string,
+  ): Promise<boolean> => {
+    const response = await fetch("/api/me/flows", {
+      method: "POST",
+      headers: HEADERS,
+      keepalive: true,
+      body: JSON.stringify({ action, id }),
+    }).catch(() => undefined);
+    return Boolean(response?.ok);
   };
 
   const act = async (

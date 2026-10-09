@@ -48,8 +48,9 @@ export interface ChatSummary {
   turns: number;
 }
 
-/** How many conversations the list asks for at a time. */
+/** How many conversations the list asks for at a time, and at most (the route's own limit). */
 const PAGE = 30;
+const MOST_SHOWN = 500;
 /** Said when a conversation was put away or brought back somewhere else (Settings). */
 export const CHATS_CHANGED = "clone-office:chats";
 
@@ -68,6 +69,8 @@ export function useChat(lang: string) {
   // The list grows a page at a time as the person scrolls to its end (`loadMore`).
   const shown = useRef(PAGE);
   const [more, setMore] = useState(false);
+  // Whether the person ever had a conversation, put away or not (the first steps tick it).
+  const [asked, setAsked] = useState(false);
   // Something was kept: the clone's face is glad for a moment.
   const [kept, setKept] = useState(0);
   const nextId = useRef(1);
@@ -143,9 +146,11 @@ export function useChat(lang: string) {
         .catch(() => ({ chats: [] }))) as {
         chats?: ChatSummary[];
         more?: boolean;
+        asked?: boolean;
       };
       setChats(data.chats ?? []);
       setMore(Boolean(data.more));
+      setAsked(Boolean(data.asked) || Boolean(data.chats?.length));
       if (openLatest && data.chats?.[0]) await openChat(data.chats[0].id);
     },
     [openChat],
@@ -159,7 +164,7 @@ export function useChat(lang: string) {
   }, [loadChats]);
 
   const loadMore = useCallback(async () => {
-    shown.current += PAGE;
+    shown.current = Math.min(MOST_SHOWN, shown.current + PAGE);
     await loadChats(false);
   }, [loadChats]);
 
@@ -454,6 +459,7 @@ export function useChat(lang: string) {
     chatId,
     chats,
     more,
+    asked,
     loadMore,
     renameChat,
     archiveChat,

@@ -1148,7 +1148,8 @@
       "archived": "已归档的对话",
       "archivedHint": "你从列表中收起的对话。里面的内容都没有删除，随时可以放回列表。",
       "restore": "放回列表",
-      "restored": "“{title}”已放回对话列表"
+      "restored": "“{title}”已放回对话列表",
+      "archivedMore": "显示更多"
     },
     "preferences": {
       "loading": "加载中…",
@@ -1275,7 +1276,8 @@
       "answerHere": "直接在这里回答",
       "fromColleague": "{name}的分身问",
       "fromClone": "你的分身问",
-      "open": "打开"
+      "open": "打开",
+      "inNow": "在岗 {count}/{all}"
     },
     "clone": {
       "title": "你的分身",

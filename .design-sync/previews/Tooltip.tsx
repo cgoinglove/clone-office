@@ -10,7 +10,7 @@ export const Open = () => (
   <div style={{ padding: "56px 24px 8px" }}>
     <TooltipProvider>
       <Tooltip open>
-        <TooltipTrigger render={<Button variant="outline">Away</Button>} />
+        <TooltipTrigger render={<Button variant="secondary">Away</Button>} />
         <TooltipContent>
           Your bot answers what it can and keeps the rest for you
         </TooltipContent>

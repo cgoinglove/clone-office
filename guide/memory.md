@@ -92,8 +92,10 @@ theirs.
 
 - **What it remembers** (기억하는 것) under **Your clone** (내 클론) › **What it knows** (아는 것) shows every line it
   keeps about them, exactly as saved. The pencil (**Correct**, 고치기) lets them write a line the
-  way it should read; the clone then fixes it, in their words. The bin (**Remove**, 지우기) removes
-  the line after one more press. Under each line it says where it came from and when: a
+  way it should read; the clone then fixes it, in their words. The bin (**Remove**, 지우기) takes
+  the line away at once and says so at the bottom with **Undo** (되돌리기) for a few seconds; after
+  that, or when they leave the page, it is gone from what the clone reads. Under each line it says
+  where it came from and when: a
   conversation by its title, the look back after one, the first reading, what another AI
   remembered, answering a colleague, a flow, or their own correction (lines kept before this was
   recorded say nothing).

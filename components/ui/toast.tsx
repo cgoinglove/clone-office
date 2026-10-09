@@ -63,32 +63,46 @@ function say(
   });
 }
 
+/** Removals waiting out their Undo, done at once if the page goes (a reload, a closed tab). */
+const pending = new Set<() => void>();
+if (typeof window !== "undefined")
+  window.addEventListener("pagehide", () => {
+    for (const done of [...pending]) done();
+  });
+
 /**
  * Something small the person can take back (a memory line, a flow): it is hidden at once and done
- * only when the toast goes without Undo, so leaving the page in between keeps it rather than losing
- * it. `undo` shows it again.
+ * after `ms` by a clock of its own (a toast waits while the window is away, a removal does not),
+ * or as soon as the screen holding it goes (`commit` from the handle) or the page does. Undo,
+ * pressed in time, shows it again and nothing is done.
  */
 function sayUndoable(
   title: string,
   undoLabel: string,
   { commit, undo }: { commit: () => void; undo: () => void },
+  ms = 6000,
 ) {
-  let undone = false;
-  return toast.add({
+  let settled = false;
+  let id = "";
+  const settle = (run: () => void) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    pending.delete(done);
+    if (id) toast.close(id);
+    run();
+  };
+  const done = () => settle(commit);
+  const timer = setTimeout(done, ms);
+  pending.add(done);
+  id = toast.add({
     title,
     type: "done",
-    timeout: 6000,
-    actionProps: {
-      children: undoLabel,
-      onClick: () => {
-        undone = true;
-        undo();
-      },
-    },
-    onClose: () => {
-      if (!undone) commit();
-    },
+    timeout: ms,
+    actionProps: { children: undoLabel, onClick: () => settle(undo) },
+    onClose: done,
   });
+  return { id, commit: done };
 }
 
 /** Gives a toast that was under way its outcome. */

@@ -7,7 +7,7 @@
 // its flows) has its own screen.
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
@@ -17,6 +17,7 @@ import { ConnectorsPanel } from "../connectors-panel";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import type { Preferences } from "../home/use-preferences";
 import { MessengerPanel } from "../messenger-panel";
+import { SettingsBack } from "./back";
 import { BrowserNotices } from "./browser-notices";
 import { FilesSection } from "./files-section";
 import { GeneralSection } from "./general-section";
@@ -67,6 +68,10 @@ export function SettingsDialog({
   const current = SECTIONS.find((entry) => entry.id === section) ?? SECTIONS[0];
   const body = useRef<HTMLDivElement>(null);
   const open = section !== null;
+  const back = useRef<(() => void) | null>(null);
+  const setBack = useCallback((next: (() => void) | null) => {
+    back.current = next;
+  }, []);
   // Quiet marks in the list, as Thursday's: the ember where something wants the person (a brain
   // that cannot think yet, a question about a request), red where something is broken (the phone's
   // bot refused), nothing at rest.
@@ -119,154 +124,160 @@ export function SettingsDialog({
   return (
     <Dialog
       open={section !== null}
-      onOpenChange={(open) => {
+      onOpenChange={(open, details) => {
+        if (!open && details.reason === "escape-key" && back.current) {
+          back.current();
+          return;
+        }
         if (!open) onSection(null);
       }}
     >
-      <DialogContent className="block h-[min(50rem,calc(100vh-3rem))] overflow-hidden p-0 sm:max-w-[min(68rem,calc(100vw-3rem))]">
-        <DialogTitle className="sr-only">{t("title")}</DialogTitle>
-        <div className="flex h-full min-h-0 max-sm:flex-col">
-          <nav
-            aria-label={t("nav")}
-            onKeyDown={(event) => {
-              const by =
-                event.key === "ArrowDown"
-                  ? 1
-                  : event.key === "ArrowUp"
-                    ? -1
-                    : 0;
-              if (!by) return;
-              event.preventDefault();
-              const next = step(by);
-              onSection(next);
-              event.currentTarget
-                .querySelector<HTMLButtonElement>(`[data-section="${next}"]`)
-                ?.focus();
-            }}
-            className="flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/60 bg-muted/30 p-3 max-sm:w-full max-sm:flex-row max-sm:border-r-0 max-sm:border-b"
-          >
-            <span className="px-2.5 pt-1 pb-3 text-sm font-semibold max-sm:hidden">
-              {t("title")}
-            </span>
-            {SECTIONS.map((item) => {
-              const picked = item.id === current.id;
-              return (
-                <Button
-                  key={item.id}
-                  data-section={item.id}
-                  tabIndex={picked ? 0 : -1}
-                  aria-current={picked ? "page" : undefined}
-                  variant="ghost"
-                  onClick={() => onSection(item.id)}
-                  className={cn(
-                    "h-8 justify-start gap-2.5 px-2.5 text-[14px] max-sm:shrink-0",
-                    picked
-                      ? "bg-foreground/[0.07] font-medium text-foreground hover:bg-foreground/[0.07]"
-                      : "font-normal text-foreground/75 hover:bg-foreground/[0.045] hover:text-foreground",
-                  )}
-                >
-                  <NavIcon
-                    name={item.icon}
-                    className={picked ? undefined : "text-foreground/60"}
-                  />
-                  <span className="truncate">
-                    {t(`sections.${item.id}.label`)}
-                  </span>
-                  {item.id === "brain" && marks.brain && (
-                    <span
-                      aria-hidden
-                      className="ml-auto size-1.5 rounded-full bg-waiting"
-                    />
-                  )}
-                  {item.id === "phone" && marks.phone && (
-                    <span
-                      aria-hidden
-                      className="ml-auto size-1.5 rounded-full bg-destructive"
-                    />
-                  )}
-                </Button>
-              );
-            })}
-            {APP_VERSION && (
-              <span className="mt-auto px-2.5 pt-4 font-mono text-[10px] text-muted-foreground max-sm:hidden">
-                Clone Office v{APP_VERSION}
+      <SettingsBack.Provider value={setBack}>
+        <DialogContent className="block h-[min(50rem,calc(100vh-3rem))] overflow-hidden p-0 sm:max-w-[min(68rem,calc(100vw-3rem))]">
+          <DialogTitle className="sr-only">{t("title")}</DialogTitle>
+          <div className="flex h-full min-h-0 max-sm:flex-col">
+            <nav
+              aria-label={t("nav")}
+              onKeyDown={(event) => {
+                const by =
+                  event.key === "ArrowDown"
+                    ? 1
+                    : event.key === "ArrowUp"
+                      ? -1
+                      : 0;
+                if (!by) return;
+                event.preventDefault();
+                const next = step(by);
+                onSection(next);
+                event.currentTarget
+                  .querySelector<HTMLButtonElement>(`[data-section="${next}"]`)
+                  ?.focus();
+              }}
+              className="flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/60 bg-muted/30 p-3 max-sm:w-full max-sm:flex-row max-sm:border-r-0 max-sm:border-b"
+            >
+              <span className="px-2.5 pt-1 pb-3 text-sm font-semibold max-sm:hidden">
+                {t("title")}
               </span>
-            )}
-          </nav>
+              {SECTIONS.map((item) => {
+                const picked = item.id === current.id;
+                return (
+                  <Button
+                    key={item.id}
+                    data-section={item.id}
+                    tabIndex={picked ? 0 : -1}
+                    aria-current={picked ? "page" : undefined}
+                    variant="ghost"
+                    onClick={() => onSection(item.id)}
+                    className={cn(
+                      "h-8 justify-start gap-2.5 px-2.5 text-[14px] max-sm:shrink-0",
+                      picked
+                        ? "bg-foreground/[0.07] font-medium text-foreground hover:bg-foreground/[0.07]"
+                        : "font-normal text-foreground/75 hover:bg-foreground/[0.045] hover:text-foreground",
+                    )}
+                  >
+                    <NavIcon
+                      name={item.icon}
+                      className={picked ? undefined : "text-foreground/60"}
+                    />
+                    <span className="truncate">
+                      {t(`sections.${item.id}.label`)}
+                    </span>
+                    {item.id === "brain" && marks.brain && (
+                      <span
+                        aria-hidden
+                        className="ml-auto size-1.5 rounded-full bg-waiting"
+                      />
+                    )}
+                    {item.id === "phone" && marks.phone && (
+                      <span
+                        aria-hidden
+                        className="ml-auto size-1.5 rounded-full bg-destructive"
+                      />
+                    )}
+                  </Button>
+                );
+              })}
+              {APP_VERSION && (
+                <span className="mt-auto px-2.5 pt-4 font-mono text-[10px] text-muted-foreground max-sm:hidden">
+                  Clone Office v{APP_VERSION}
+                </span>
+              )}
+            </nav>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <div
-              key={current.id}
-              className="shrink-0 animate-in px-8 pt-8 pb-5 duration-300 fade-in slide-in-from-bottom-1 max-sm:px-5 max-sm:pt-5"
-            >
-              <div className="mx-auto w-full max-w-[42rem]">
-                <h2 className="text-2xl font-semibold tracking-tight">
-                  {t(`sections.${current.id}.label`)}
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t(`sections.${current.id}.hint`)}
-                </p>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <div
+                key={current.id}
+                className="shrink-0 animate-in px-8 pt-8 pb-5 duration-300 fade-in slide-in-from-bottom-1 max-sm:px-5 max-sm:pt-5"
+              >
+                <div className="mx-auto w-full max-w-[42rem]">
+                  <h2 className="text-2xl font-semibold tracking-tight">
+                    {t(`sections.${current.id}.label`)}
+                  </h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t(`sections.${current.id}.hint`)}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div
-              ref={body}
-              className="min-h-0 flex-1 overflow-y-auto px-8 pb-10 max-sm:px-5"
-            >
-              <div className="mx-auto w-full max-w-[42rem]">
-                {current.id === "brain" && (
-                  <div className="flex flex-col gap-10">
-                    <BrainPanel />
-                    <PreferencesSection
+              <div
+                ref={body}
+                className="min-h-0 flex-1 overflow-y-auto px-8 pb-10 max-sm:px-5"
+              >
+                <div className="mx-auto w-full max-w-[42rem]">
+                  {current.id === "brain" && (
+                    <div className="flex flex-col gap-10">
+                      <BrainPanel />
+                      <PreferencesSection
+                        preferences={preferences}
+                        onChange={onPreferences}
+                        parts={["learning", "models"]}
+                      />
+                      <UsageSection />
+                    </div>
+                  )}
+                  {current.id === "permissions" && (
+                    <PermissionsSection
                       preferences={preferences}
-                      onChange={onPreferences}
-                      parts={["learning", "models"]}
+                      onPreferences={onPreferences}
                     />
-                    <UsageSection />
-                  </div>
-                )}
-                {current.id === "permissions" && (
-                  <PermissionsSection
-                    preferences={preferences}
-                    onPreferences={onPreferences}
-                  />
-                )}
-                {current.id === "connectors" && <ConnectorsPanel />}
-                {current.id === "phone" && (
-                  <div className="flex flex-col gap-10">
-                    <BrowserNotices />
-                    <MessengerPanel />
-                    <PreferencesSection
-                      preferences={preferences}
-                      onChange={onPreferences}
-                      parts={["batch", "phone"]}
-                    />
-                  </div>
-                )}
-                {current.id === "office" && (
-                  <div className="flex flex-col gap-10">
-                    <OfficeSection
-                      lang={lang}
-                      office={office}
-                      profile={profile}
-                    />
-                    <PreferencesSection
-                      preferences={preferences}
-                      onChange={onPreferences}
-                      parts={["office"]}
-                    />
-                  </div>
-                )}
-                {current.id === "general" && (
-                  <div className="flex flex-col gap-10">
-                    <GeneralSection />
-                    <FilesSection />
-                  </div>
-                )}
+                  )}
+                  {current.id === "connectors" && <ConnectorsPanel />}
+                  {current.id === "phone" && (
+                    <div className="flex flex-col gap-10">
+                      <BrowserNotices />
+                      <MessengerPanel />
+                      <PreferencesSection
+                        preferences={preferences}
+                        onChange={onPreferences}
+                        parts={["batch", "phone"]}
+                      />
+                    </div>
+                  )}
+                  {current.id === "office" && (
+                    <div className="flex flex-col gap-10">
+                      <OfficeSection
+                        lang={lang}
+                        office={office}
+                        profile={profile}
+                      />
+                      <PreferencesSection
+                        preferences={preferences}
+                        onChange={onPreferences}
+                        parts={["office"]}
+                      />
+                    </div>
+                  )}
+                  {current.id === "general" && (
+                    <div className="flex flex-col gap-10">
+                      <GeneralSection />
+                      <FilesSection />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
+        </DialogContent>
+      </SettingsBack.Provider>
     </Dialog>
   );
 }

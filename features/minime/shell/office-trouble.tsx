@@ -10,6 +10,9 @@ import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { useApp } from "./app-state";
 
+/** Problems that clear by themselves once the office answers again. */
+const RETRIES = new Set(["relay-unreachable", "relay-failed"]);
+
 export function OfficeTrouble({ className }: { className?: string }) {
   const t = useTranslations("shell.trouble");
   const problemText = useProblem();
@@ -35,11 +38,14 @@ export function OfficeTrouble({ className }: { className?: string }) {
       <span className="min-w-0 flex-1 text-sm leading-snug">
         {problemText(office.problem)}
       </span>
-      {/* the office is looked at again on its own, so that it is under way says so */}
-      <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-        <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
-        {t("retrying")}
-      </span>
+      {/* only an office out of reach comes back by itself as it is looked at again; a wrong key
+          or a port taken waits for the person, so nothing turns for those */}
+      {RETRIES.has(office.problem) && (
+        <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+          <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
+          {t("retrying")}
+        </span>
+      )}
       <Button
         size="sm"
         variant="secondary"
