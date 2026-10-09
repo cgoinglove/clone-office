@@ -9,13 +9,14 @@
 
 import {
   Check,
+  ChevronLeft,
   ChevronRight,
   Folder as FolderIcon,
   Plus,
   Search,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
+import { Tip } from "@/components/ui/tooltip";
 import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { cn } from "@/lib/utils";
 import { HEADERS } from "./home/use-office";
@@ -108,9 +110,17 @@ export type Folders = ReturnType<typeof useFolders>;
 
 /**
  * The folders as one field: how many it reads and the first of them, a chevron that says it
- * opens, and the dialog with every folder to tick. The field never grows; the list is in the dialog.
+ * opens, and the dialog with every folder to tick. The field never grows; the list is in the dialog,
+ * or, where the field is already inside a dialog (Settings), on a page of its own (`onOpen`), so a
+ * dialog never opens over another.
  */
-export function FolderField({ folders }: { folders: Folders }) {
+export function FolderField({
+  folders,
+  onOpen,
+}: {
+  folders: Folders;
+  onOpen?: () => void;
+}) {
   const t = useTranslations("folders");
   const [open, setOpen] = useState(false);
   const { list } = folders;
@@ -123,7 +133,7 @@ export function FolderField({ folders }: { folders: Folders }) {
       <button
         type="button"
         disabled={list === null}
-        onClick={() => setOpen(true)}
+        onClick={() => (onOpen ? onOpen() : setOpen(true))}
         className="group flex h-12 w-full min-w-0 items-center gap-3 rounded-[10px] bg-background pr-2.5 pl-3.5 text-left ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
       >
         <FolderIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -154,20 +164,23 @@ export function FolderField({ folders }: { folders: Folders }) {
           <ChevronRight className="size-4" />
         </span>
       </button>
-      <FolderDialog folders={folders} open={open} onOpenChange={setOpen} />
+      {!onOpen && (
+        <FolderDialog folders={folders} open={open} onOpenChange={setOpen} />
+      )}
     </>
   );
 }
 
 /** Every folder with its tick (ticked: it is read), a search, and leaving out one not listed. */
-function FolderDialog({
+function FolderBody({
   folders,
-  open,
-  onOpenChange,
+  end,
+  listClass,
 }: {
   folders: Folders;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  /** What closes the list beside the field that leaves one out (the dialog's Done). */
+  end?: ReactNode;
+  listClass?: string;
 }) {
   const t = useTranslations("folders");
   const [query, setQuery] = useState("");
@@ -230,6 +243,125 @@ function FolderDialog({
     );
   };
   return (
+    <>
+      <div className="relative px-6 pb-2.5">
+        <Search className="pointer-events-none absolute top-1/2 left-9 size-4 -translate-y-[calc(50%+5px)] text-muted-foreground" />
+        <Input
+          value={query}
+          spellCheck={false}
+          aria-label={t("search")}
+          placeholder={t("search")}
+          onChange={(event) => setQuery(event.target.value)}
+          className="h-9 pl-9"
+        />
+      </div>
+      <ul
+        className={cn(
+          "flex h-[min(24rem,50vh)] flex-col gap-0.5 overflow-y-auto px-3 pb-3",
+          listClass,
+        )}
+      >
+        {blocks.map((block) =>
+          "folder" in block ? (
+            <li key={block.folder.path}>
+              <FolderRow
+                folder={block.folder}
+                excludes={excludes}
+                onToggle={toggle}
+              />
+            </li>
+          ) : (
+            <li key={block.group.path} className="flex flex-col gap-0.5">
+              <FolderRow
+                folder={block.group}
+                excludes={excludes}
+                onToggle={toggle}
+                count={block.folders.length}
+              />
+              <ul className="flex flex-col gap-0.5 pl-8">
+                {block.folders.map((folder) => (
+                  <li key={folder.path}>
+                    <FolderRow
+                      folder={folder}
+                      excludes={excludes}
+                      onToggle={toggle}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </li>
+          ),
+        )}
+        {!needle &&
+          others.map((other) => (
+            <li key={other.pattern}>
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={false}
+                title={other.pattern}
+                onClick={() =>
+                  void save(excludes.filter((p) => p !== other.pattern))
+                }
+                className="flex w-full items-center gap-3.5 rounded-[10px] px-3 py-2.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted"
+              >
+                <Tick on={false} />
+                <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-muted-foreground">
+                  {other.pattern}
+                </span>
+              </button>
+            </li>
+          ))}
+        {list !== null && blocks.length === 0 && !others.length && (
+          <li className="px-3 py-6 text-center text-sm text-muted-foreground">
+            {needle ? t("noMatch") : t("none")}
+          </li>
+        )}
+      </ul>
+      <div className="flex items-center gap-2.5 bg-muted/40 px-6 py-3.5">
+        <form
+          className="relative min-w-0 flex-1"
+          onSubmit={(event) => {
+            event.preventDefault();
+            leaveOut();
+          }}
+        >
+          <Input
+            value={path}
+            spellCheck={false}
+            aria-label={t("leaveOutOther")}
+            placeholder={t("leaveOutOther")}
+            onChange={(event) => setPath(event.target.value)}
+            className="h-9 bg-background pr-10"
+          />
+          <Tip label={t("leaveOut")}>
+            <button
+              type="submit"
+              disabled={!path.trim()}
+              aria-label={t("leaveOut")}
+              className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-[8px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-40"
+            >
+              <Plus className="size-4" />
+            </button>
+          </Tip>
+        </form>
+        {end}
+      </div>
+    </>
+  );
+}
+
+function FolderDialog({
+  folders,
+  open,
+  onOpenChange,
+}: {
+  folders: Folders;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("folders");
+  return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-2xl">
         <div className="flex flex-col gap-1 px-6 pt-5.5 pb-3.5">
@@ -240,111 +372,57 @@ function FolderDialog({
             {t("note")}
           </DialogDescription>
         </div>
-        <div className="relative px-6 pb-2.5">
-          <Search className="pointer-events-none absolute top-1/2 left-9 size-4 -translate-y-[calc(50%+5px)] text-muted-foreground" />
-          <Input
-            value={query}
-            spellCheck={false}
-            aria-label={t("search")}
-            placeholder={t("search")}
-            onChange={(event) => setQuery(event.target.value)}
-            className="h-9 pl-9"
-          />
-        </div>
-        <ul className="flex h-[min(24rem,50vh)] flex-col gap-0.5 overflow-y-auto px-3 pb-3">
-          {blocks.map((block) =>
-            "folder" in block ? (
-              <li key={block.folder.path}>
-                <FolderRow
-                  folder={block.folder}
-                  excludes={excludes}
-                  onToggle={toggle}
-                />
-              </li>
-            ) : (
-              <li key={block.group.path} className="flex flex-col gap-0.5">
-                <FolderRow
-                  folder={block.group}
-                  excludes={excludes}
-                  onToggle={toggle}
-                  count={block.folders.length}
-                />
-                <ul className="flex flex-col gap-0.5 pl-8">
-                  {block.folders.map((folder) => (
-                    <li key={folder.path}>
-                      <FolderRow
-                        folder={folder}
-                        excludes={excludes}
-                        onToggle={toggle}
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ),
-          )}
-          {!needle &&
-            others.map((other) => (
-              <li key={other.pattern}>
-                <button
-                  type="button"
-                  role="checkbox"
-                  aria-checked={false}
-                  title={other.pattern}
-                  onClick={() =>
-                    void save(excludes.filter((p) => p !== other.pattern))
-                  }
-                  className="flex w-full items-center gap-3.5 rounded-[10px] px-3 py-2.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted"
-                >
-                  <Tick on={false} />
-                  <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-muted-foreground">
-                    {other.pattern}
-                  </span>
-                </button>
-              </li>
-            ))}
-          {list !== null && blocks.length === 0 && !others.length && (
-            <li className="px-3 py-6 text-center text-sm text-muted-foreground">
-              {needle ? t("noMatch") : t("none")}
-            </li>
-          )}
-        </ul>
-        <div className="flex items-center gap-2.5 bg-muted/40 px-6 py-3.5">
-          <form
-            className="relative min-w-0 flex-1"
-            onSubmit={(event) => {
-              event.preventDefault();
-              leaveOut();
-            }}
-          >
-            <Input
-              value={path}
-              spellCheck={false}
-              aria-label={t("leaveOutOther")}
-              placeholder={t("leaveOutOther")}
-              onChange={(event) => setPath(event.target.value)}
-              className="h-9 bg-background pr-10"
+        <FolderBody
+          folders={folders}
+          end={
+            <DialogClose
+              render={
+                <Button variant="brand" className="h-9 px-5">
+                  {t("done")}
+                </Button>
+              }
             />
-            <button
-              type="submit"
-              disabled={!path.trim()}
-              aria-label={t("leaveOut")}
-              title={t("leaveOut")}
-              className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-[8px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-40"
-            >
-              <Plus className="size-4" />
-            </button>
-          </form>
-          <DialogClose
-            render={
-              <Button variant="brand" className="h-9 px-5">
-                {t("done")}
-              </Button>
-            }
-          />
-        </div>
+          }
+        />
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * The same list as a page of a dialog the person is already in (Settings › Permissions), with the
+ * way back above its title; a tick is kept at once, so it has no Done.
+ */
+export function FolderPage({
+  folders,
+  back,
+  onBack,
+}: {
+  folders: Folders;
+  back: string;
+  onBack: () => void;
+}) {
+  const t = useTranslations("folders");
+  return (
+    <div className="-mx-6 flex min-h-0 flex-col">
+      <div className="flex flex-col gap-1 px-6 pb-3.5">
+        <button
+          type="button"
+          onClick={onBack}
+          className="-ml-1.5 flex h-7 w-fit items-center gap-1 rounded-md px-1.5 text-[13px] text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+        >
+          <ChevronLeft className="size-4" />
+          {back}
+        </button>
+        <h3 className="text-lg font-semibold tracking-[-0.01em]">
+          {t("title")}
+        </h3>
+        <p className="text-[13.5px] leading-relaxed text-muted-foreground">
+          {t("note")}
+        </p>
+      </div>
+      <FolderBody folders={folders} listClass="h-[min(30rem,52vh)]" />
+    </div>
   );
 }
 

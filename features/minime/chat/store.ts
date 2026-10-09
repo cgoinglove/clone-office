@@ -55,6 +55,8 @@ export interface ChatInfo {
   carriedFrom?: number;
   /** The last brain session that was looked back on (the review after an answer). */
   reviewed?: string;
+  /** Put away by the person: out of the list, kept whole, brought back at any time. */
+  archived?: boolean;
 }
 
 type Line =
@@ -70,7 +72,10 @@ type Line =
     }
   | { type: "session"; session: string; context?: number; at: string }
   | { type: "carried"; summary: string; at: string }
-  | { type: "reviewed"; session: string; at: string };
+  | { type: "reviewed"; session: string; at: string }
+  // The person named it themselves, or put it away and brought it back.
+  | { type: "title"; title: string; at: string }
+  | { type: "archived"; archived: boolean; at: string };
 
 const ID = /^[a-z0-9][a-z0-9-]{5,63}$/;
 
@@ -94,6 +99,34 @@ async function append(id: string, line: Line): Promise<void> {
   await appendFile(chatPath(id), `${JSON.stringify(line)}\n`, "utf8");
 }
 
+/** The longest name a person gives a conversation, as a new one's title is cut. */
+export const TITLE_MAX = 60;
+
+/** The person's own name for a conversation; it does not bring the conversation up the list. */
+export async function renameChat(id: string, title: string): Promise<void> {
+  const clean = title.replace(/\s+/g, " ").trim().slice(0, TITLE_MAX);
+  if (!clean) throw new Error("A conversation needs a name.");
+  if (!(await readChat(id))) throw new Error("No such conversation.");
+  await append(id, {
+    type: "title",
+    title: clean,
+    at: new Date().toISOString(),
+  });
+}
+
+/** Puts a conversation away, or brings it back. Nothing of it is removed either way. */
+export async function archiveChat(
+  id: string,
+  archived: boolean,
+): Promise<void> {
+  if (!(await readChat(id))) throw new Error("No such conversation.");
+  await append(id, {
+    type: "archived",
+    archived,
+    at: new Date().toISOString(),
+  });
+}
+
 export async function createChat(
   title: string,
   now = new Date(),
@@ -101,7 +134,8 @@ export async function createChat(
   const id = newChatId(now);
   const at = now.toISOString();
   const clean = title.replace(/\s+/g, " ").trim();
-  const short = clean.length > 60 ? `${clean.slice(0, 60)}…` : clean;
+  const short =
+    clean.length > TITLE_MAX ? `${clean.slice(0, TITLE_MAX)}…` : clean;
   await append(id, { type: "chat", id, title: short, at });
   return { id, title: short, created: at, updated: at, turns: 0 };
 }
@@ -220,6 +254,8 @@ function parse(raw: string): {
       info.context = line.context;
     }
     if (line.type === "reviewed") info.reviewed = line.session;
+    if (line.type === "title") info.title = line.title;
+    if (line.type === "archived") info.archived = line.archived || undefined;
     if (line.type === "carried") {
       info.session = undefined;
       info.context = undefined;
@@ -246,21 +282,24 @@ export async function readChat(
 /** Each conversation's summary as last listed, with its file's size and time then. */
 const listedChats = new Map<string, { stamp: string; info: ChatInfo }>();
 
-/** The latest conversations first. */
-export async function listChats(limit = 30): Promise<ChatInfo[]> {
+/** The latest conversations first; those put away only when asked for (`archived`). */
+export async function listChats(
+  limit = 30,
+  { archived = false }: { archived?: boolean } = {},
+): Promise<ChatInfo[]> {
   const chats: ChatInfo[] = [];
   for (const file of await chatFiles()) {
     // A conversation is read whole only when its file changed since it was last listed.
     const stamp = `${file.size}:${file.mtimeMs}`;
     const known = listedChats.get(file.id);
-    if (known?.stamp === stamp) {
-      chats.push(known.info);
-      continue;
+    let info = known?.stamp === stamp ? known.info : undefined;
+    if (!info) {
+      const chat = await readChat(file.id);
+      if (!chat) continue;
+      info = chat.info;
+      listedChats.set(file.id, { stamp, info });
     }
-    const chat = await readChat(file.id);
-    if (!chat) continue;
-    listedChats.set(file.id, { stamp, info: chat.info });
-    chats.push(chat.info);
+    if (Boolean(info.archived) === archived) chats.push(info);
   }
   return (
     chats

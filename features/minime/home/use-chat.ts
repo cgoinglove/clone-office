@@ -48,6 +48,11 @@ export interface ChatSummary {
   turns: number;
 }
 
+/** How many conversations the list asks for at a time. */
+const PAGE = 30;
+/** Said when a conversation was put away or brought back somewhere else (Settings). */
+export const CHATS_CHANGED = "clone-office:chats";
+
 type TurnInput = Turn extends infer T
   ? T extends { id: number }
     ? Omit<T, "id">
@@ -60,6 +65,9 @@ export function useChat(lang: string) {
   const [busy, setBusy] = useState(false);
   const [chatId, setChatId] = useState<string | undefined>(undefined);
   const [chats, setChats] = useState<ChatSummary[]>([]);
+  // The list grows a page at a time as the person scrolls to its end (`loadMore`).
+  const shown = useRef(PAGE);
+  const [more, setMore] = useState(false);
   // Something was kept: the clone's face is glad for a moment.
   const [kept, setKept] = useState(0);
   const nextId = useRef(1);
@@ -128,10 +136,16 @@ export function useChat(lang: string) {
 
   const loadChats = useCallback(
     async (openLatest = false) => {
-      const data = (await fetch("/api/me/chats", { headers: HEADERS })
+      const data = (await fetch(`/api/me/chats?limit=${shown.current}`, {
+        headers: HEADERS,
+      })
         .then((r) => r.json())
-        .catch(() => ({ chats: [] }))) as { chats?: ChatSummary[] };
+        .catch(() => ({ chats: [] }))) as {
+        chats?: ChatSummary[];
+        more?: boolean;
+      };
       setChats(data.chats ?? []);
+      setMore(Boolean(data.more));
       if (openLatest && data.chats?.[0]) await openChat(data.chats[0].id);
     },
     [openChat],
@@ -139,7 +153,47 @@ export function useChat(lang: string) {
 
   useEffect(() => {
     void loadChats(true);
+    const changed = () => void loadChats(false);
+    window.addEventListener(CHATS_CHANGED, changed);
+    return () => window.removeEventListener(CHATS_CHANGED, changed);
   }, [loadChats]);
+
+  const loadMore = useCallback(async () => {
+    shown.current += PAGE;
+    await loadChats(false);
+  }, [loadChats]);
+
+  /** The person's own name for a conversation, shown at once. */
+  const renameChat = useCallback(
+    async (id: string, title: string) => {
+      const clean = title.replace(/\s+/g, " ").trim();
+      if (!clean) return;
+      setChats((all) =>
+        all.map((chat) => (chat.id === id ? { ...chat, title: clean } : chat)),
+      );
+      const response = await fetch("/api/me/chats", {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ action: "rename", id, title: clean }),
+      }).catch(() => undefined);
+      if (!response?.ok) await loadChats(false);
+    },
+    [loadChats],
+  );
+
+  /** Puts a conversation away (out of the list, kept whole) or brings it back. */
+  const archiveChat = useCallback(
+    async (id: string, archived: boolean) => {
+      if (archived) setChats((all) => all.filter((chat) => chat.id !== id));
+      await fetch("/api/me/chats", {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ action: "archive", id, archived }),
+      }).catch(() => undefined);
+      await loadChats(false);
+    },
+    [loadChats],
+  );
 
   // News from the office or a flow: the open conversation is read again, unless an answer is
   // streaming into it.
@@ -399,6 +453,10 @@ export function useChat(lang: string) {
     busy,
     chatId,
     chats,
+    more,
+    loadMore,
+    renameChat,
+    archiveChat,
     title,
     asking,
     talking,

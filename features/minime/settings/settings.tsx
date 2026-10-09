@@ -225,14 +225,10 @@ export function SettingsDialog({
                   </div>
                 )}
                 {current.id === "permissions" && (
-                  <div className="flex flex-col gap-10">
-                    <PreferencesSection
-                      preferences={preferences}
-                      onChange={onPreferences}
-                      parts={["autonomy"]}
-                    />
-                    <PermissionsSection />
-                  </div>
+                  <PermissionsSection
+                    preferences={preferences}
+                    onPreferences={onPreferences}
+                  />
                 )}
                 {current.id === "connectors" && <ConnectorsPanel />}
                 {current.id === "phone" && (

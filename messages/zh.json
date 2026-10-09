@@ -1144,7 +1144,11 @@
       "update": "{version} 版已发布。先关掉当前这个（在它的窗口里按 Ctrl+C），再用下面的命令重新启动：",
       "start": "随电脑启动",
       "startBody": "登录后，即使不打开窗口，分身也会继续回复同事。",
-      "startNone": "通过软件包运行时可用（npx clone-office）。"
+      "startNone": "通过软件包运行时可用（npx clone-office）。",
+      "archived": "已归档的对话",
+      "archivedHint": "你从列表中收起的对话。里面的内容都没有删除，随时可以放回列表。",
+      "restore": "放回列表",
+      "restored": "“{title}”已放回对话列表"
     },
     "preferences": {
       "loading": "加载中…",
@@ -1504,7 +1508,8 @@
       "colleagues": "同事"
     },
     "trouble": {
-      "open": "办公室设置"
+      "open": "办公室设置",
+      "retrying": "正在重新连接"
     },
     "stepIn": {
       "title": "介入",
@@ -1565,6 +1570,22 @@
       "move": "选择",
       "open": "打开",
       "askKey": "问克隆"
+    },
+    "chats": {
+      "today": "今天",
+      "yesterday": "昨天",
+      "week": "过去 7 天",
+      "month": "过去 30 天",
+      "more": "显示更多",
+      "menu": "“{title}”的选项",
+      "rename": "重命名",
+      "name": "对话名称",
+      "archive": "归档",
+      "archived": "已归档“{title}”"
+    },
+    "notice": {
+      "answer": "去回答",
+      "answered": "{name} 回复了你的请求"
     }
   },
   "page": {

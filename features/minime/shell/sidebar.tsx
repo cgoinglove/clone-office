@@ -6,16 +6,15 @@
 // Thursday marks its own (nav-icons.tsx), the open one by its row's fill; what the person has to
 // decide, only when something waits, each row the face of the clone that asked with the red dot
 // the office gives a clone asking, and how long it has waited; their conversations, only once
-// there are some, scrolling on their own; and at the foot the person: their name, their office
-// status, opening their menu (status, the office and where it is, inviting, shortcuts), with
-// Settings beside it. A place says what goes on there (the requests open, a meeting under way,
+// there are some, under headings by day and a page at a time (recent-chats.tsx); and at the foot
+// the person: their name and office status, opening their menu (status, the office and where it
+// is, inviting, shortcuts), with Settings beside it. A place says what goes on there (the requests open, a meeting under way,
 // the reading), never a line telling the person what the column is. The column folds away
 // (⌘\), and on a narrow window it is a drawer (app-shell.tsx).
 
 import {
   Building2,
   Check,
-  ChevronsUpDown,
   Keyboard,
   Loader2,
   PanelLeft,
@@ -44,6 +43,7 @@ import { HEADERS } from "../home/use-office";
 import { STATUSES, statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
 import { Mark, StatusDot } from "./parts";
+import { RecentChats } from "./recent-chats";
 import { askLine, type TurnItem, turnHref, yourTurn } from "./your-turn";
 
 /** The places, in the order a day goes through them. */
@@ -237,46 +237,7 @@ export function Sidebar({
           </section>
         )}
 
-        {chat.chats.length > 0 && (
-          <section aria-labelledby="sb-chats" className="flex flex-col gap-px">
-            <h2
-              id="sb-chats"
-              className="flex h-7 items-center px-2.5 text-xs font-medium text-muted-foreground"
-            >
-              {t("recentChats")}
-            </h2>
-            {chat.chats.map((item) => {
-              const on = pathname === "/chat" && chat.chatId === item.id;
-              const waiting = app.chatAsks.some((ask) => ask.chat === item.id);
-              // The conversation the clone is answering in says so wherever the person is.
-              const answering = chat.talking && chat.chatId === item.id;
-              return (
-                <Link
-                  key={item.id}
-                  href={`/chat?c=${encodeURIComponent(item.id)}`}
-                  aria-current={on ? "true" : undefined}
-                  className={cn(row(on), "text-[13.5px]")}
-                >
-                  <span className="min-w-0 flex-1 truncate">{item.title}</span>
-                  {waiting ? (
-                    <span
-                      role="img"
-                      aria-label={t("chatWaits")}
-                      className="size-1.5 shrink-0 rounded-full bg-waiting"
-                    />
-                  ) : (
-                    answering && (
-                      <Loader2
-                        aria-label={t("chatAnswering")}
-                        className="size-3.5 shrink-0 animate-spin text-muted-foreground"
-                      />
-                    )
-                  )}
-                </Link>
-              );
-            })}
-          </section>
-        )}
+        <RecentChats row={row} />
       </div>
 
       <div className="flex shrink-0 items-center gap-1 pt-2 pb-2.5">
@@ -371,7 +332,6 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
             </span>
           )}
         </span>
-        <ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="top" className="w-66">
         <div className="flex items-center gap-2.5 px-2.5 pt-2 pb-2.5">
@@ -422,10 +382,13 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
               disabled={!invite}
               onClick={() => {
                 if (!invite) return;
+                // Where the page cannot write to the clipboard, the link is shown where it is kept.
+                const shown = () => app.setSettings("office");
+                if (!navigator.clipboard) return shown();
                 void navigator.clipboard
-                  ?.writeText(invite)
+                  .writeText(invite)
                   .then(() => say(t("me.invited")))
-                  .catch(() => {});
+                  .catch(shown);
               }}
             >
               <UserPlus className="text-muted-foreground" />

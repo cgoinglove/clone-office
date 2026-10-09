@@ -73,7 +73,7 @@ function Frame({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const waiting = yourTurn(app.office, app.chatAsks).length;
-  useTurnNotices(app.office, app.chatAsks);
+  useTurnNotices(app.office, app.chatAsks, app.chat.chatId);
 
   const narrow = useNarrow();
   const [folded, setFolded] = useState(false);

@@ -17,6 +17,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tip } from "@/components/ui/tooltip";
 import { typed, windowKey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { ChatView } from "../home/chat-view";
@@ -101,19 +102,20 @@ export function ChatScreen() {
           <h1 className="min-w-0 flex-1 truncate text-[15px] font-semibold">
             {empty ? t("new") : (chat.title ?? t("untitled"))}
           </h1>
-          <button
-            type="button"
-            aria-label={rail ? t("hideRail") : t("showRail")}
-            title={rail ? t("hideRail") : t("showRail")}
-            aria-pressed={rail}
-            onClick={toggleRail}
-            className={cn(
-              "grid size-8 place-items-center rounded-lg text-foreground/75 transition-colors hover:bg-muted hover:text-foreground max-[1180px]:hidden",
-              rail && "text-foreground",
-            )}
-          >
-            <PanelRight className="size-[17px]" />
-          </button>
+          <Tip label={rail ? t("hideRail") : t("showRail")}>
+            <button
+              type="button"
+              aria-label={rail ? t("hideRail") : t("showRail")}
+              aria-pressed={rail}
+              onClick={toggleRail}
+              className={cn(
+                "grid size-8 place-items-center rounded-lg text-foreground/75 transition-colors hover:bg-muted hover:text-foreground max-[1180px]:hidden",
+                rail && "text-foreground",
+              )}
+            >
+              <PanelRight className="size-[17px]" />
+            </button>
+          </Tip>
         </header>
         <ChatView
           chat={chat}

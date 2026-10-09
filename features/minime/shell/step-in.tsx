@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Tip } from "@/components/ui/tooltip";
 import type { Steps } from "../home/use-office";
 import { useApp } from "./app-state";
 
@@ -64,17 +65,18 @@ export function StepIn({
                 <span className="flex shrink-0 items-center gap-1.5 text-xs">
                   <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
                   {t("waits")}
-                  <button
-                    type="button"
-                    aria-label={t("takeBack")}
-                    title={t("takeBack")}
-                    onClick={() =>
-                      void post({ action: "take-back", note: note.id })
-                    }
-                    className="rounded-md p-0.5 hover:bg-muted hover:text-foreground"
-                  >
-                    <X className="size-3.5" />
-                  </button>
+                  <Tip label={t("takeBack")}>
+                    <button
+                      type="button"
+                      aria-label={t("takeBack")}
+                      onClick={() =>
+                        void post({ action: "take-back", note: note.id })
+                      }
+                      className="rounded-md p-0.5 hover:bg-muted hover:text-foreground"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </Tip>
                 </span>
               )}
             </li>

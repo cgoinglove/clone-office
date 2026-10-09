@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
+import { Tip } from "@/components/ui/tooltip";
 import { useProblem } from "@/i18n/client";
 import {
   HEADERS,
@@ -220,19 +221,20 @@ function Menu({
                     )
                   }
                 />
-                <Button
-                  size="icon-sm"
-                  variant="ghost"
-                  aria-label={t("menu.remove")}
-                  title={t("menu.remove")}
-                  className="text-muted-foreground"
-                  disabled={busy}
-                  onClick={() =>
-                    void onSave(menu.filter((_, i) => i !== index))
-                  }
-                >
-                  <X />
-                </Button>
+                <Tip label={t("menu.remove")}>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    aria-label={t("menu.remove")}
+                    className="text-muted-foreground"
+                    disabled={busy}
+                    onClick={() =>
+                      void onSave(menu.filter((_, i) => i !== index))
+                    }
+                  >
+                    <X />
+                  </Button>
+                </Tip>
               </li>
             ))}
           </Rows>
@@ -372,17 +374,18 @@ function Ways({
           {mine.map((line) => (
             <li key={line} className="flex items-start gap-3 px-3.5 py-2.5">
               <span className="min-w-0 flex-1 leading-relaxed">{line}</span>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                aria-label={t("menu.remove")}
-                title={t("menu.remove")}
-                className="shrink-0 text-muted-foreground"
-                disabled={busy}
-                onClick={() => save(mine.filter((l) => l !== line))}
-              >
-                <X />
-              </Button>
+              <Tip label={t("menu.remove")}>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={t("menu.remove")}
+                  className="shrink-0 text-muted-foreground"
+                  disabled={busy}
+                  onClick={() => save(mine.filter((l) => l !== line))}
+                >
+                  <X />
+                </Button>
+              </Tip>
             </li>
           ))}
         </Rows>

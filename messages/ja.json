@@ -1144,7 +1144,11 @@
       "update": "バージョン{version}が出ています。今のアプリを閉じて（そのウィンドウでCtrl+C）、次のコマンドで起動し直してください：",
       "start": "パソコンと一緒に起動",
       "startBody": "ログインすると、ウィンドウを開かなくてもクローンが同僚に返事を続けます。",
-      "startNone": "パッケージから実行しているときに使えます（npx clone-office）。"
+      "startNone": "パッケージから実行しているときに使えます（npx clone-office）。",
+      "archived": "アーカイブした会話",
+      "archivedHint": "一覧から片付けた会話です。中身は削除されておらず、いつでも戻せます。",
+      "restore": "戻す",
+      "restored": "「{title}」を会話一覧に戻しました"
     },
     "preferences": {
       "loading": "読み込み中…",
@@ -1504,7 +1508,8 @@
       "colleagues": "同僚"
     },
     "trouble": {
-      "open": "オフィスの設定"
+      "open": "オフィスの設定",
+      "retrying": "再接続中"
     },
     "stepIn": {
       "title": "介入する",
@@ -1565,6 +1570,22 @@
       "move": "選ぶ",
       "open": "開く",
       "askKey": "クローンに聞く"
+    },
+    "chats": {
+      "today": "今日",
+      "yesterday": "昨日",
+      "week": "過去7日間",
+      "month": "過去30日間",
+      "more": "さらに表示",
+      "menu": "「{title}」のメニュー",
+      "rename": "名前を変更",
+      "name": "会話の名前",
+      "archive": "アーカイブ",
+      "archived": "「{title}」をアーカイブしました"
+    },
+    "notice": {
+      "answer": "答える",
+      "answered": "{name} さんが依頼に答えました"
     }
   },
   "page": {

@@ -16,15 +16,19 @@ import {
   Sun,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
+import { say } from "@/components/ui/toast";
+import { Tip } from "@/components/ui/tooltip";
 import { Logo } from "@/features/brand/logo";
 import { setTheme, useTheme } from "@/hooks/use-theme";
 import { pickLanguage, useProblem } from "@/i18n/client";
 import { LOCALE_NAMES, LOCALES, type Locale } from "@/i18n/locales";
 import type { Theme } from "@/lib/theme";
-import { Group, Groups } from "./parts";
+import { CHATS_CHANGED } from "../home/use-chat";
+import { Group, Groups, Rows } from "./parts";
 import { Toggle } from "./preferences-section";
 import { APP_VERSION } from "./settings";
 
@@ -90,6 +94,66 @@ function useStartWithComputer() {
       });
   };
   return { state, problem, change };
+}
+
+/** Chats the person put away from the column: kept whole, each brought back with one click. */
+function ArchivedChats() {
+  const t = useTranslations("settings.general");
+  const format = useFormatter();
+  const [chats, setChats] = useState<
+    { id: string; title: string; updated: string }[] | null
+  >(null);
+  const load = () =>
+    fetch("/api/me/chats?archived=1&limit=200", { headers: HEADERS })
+      .then((r) => r.json())
+      .then((data) => setChats(data.chats ?? []))
+      .catch(() => setChats([]));
+  useEffect(() => {
+    void load();
+  }, []);
+  if (!chats?.length) return null;
+  return (
+    <Group title={t("archived")} hint={t("archivedHint")}>
+      <Rows className="max-h-72 overflow-y-auto">
+        {chats.map((chat) => (
+          <li key={chat.id} className="flex items-center gap-3 px-3.5 py-2.5">
+            <span className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm">{chat.title}</span>
+              <span className="text-xs text-muted-foreground">
+                {format.dateTime(new Date(chat.updated), {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+            </span>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() =>
+                void fetch("/api/me/chats", {
+                  method: "POST",
+                  headers: HEADERS,
+                  body: JSON.stringify({
+                    action: "archive",
+                    id: chat.id,
+                    archived: false,
+                  }),
+                }).then((response) => {
+                  if (!response.ok) return;
+                  setChats((all) => all?.filter((c) => c.id !== chat.id) ?? []);
+                  window.dispatchEvent(new Event(CHATS_CHANGED));
+                  say(t("restored", { title: chat.title }));
+                })
+              }
+            >
+              {t("restore")}
+            </Button>
+          </li>
+        ))}
+      </Rows>
+    </Group>
+  );
 }
 
 export function GeneralSection() {
@@ -159,6 +223,7 @@ export function GeneralSection() {
           )}
         </Group>
       )}
+      <ArchivedChats />
       <Group title={t("about")}>
         <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
           <div className="flex items-center justify-between gap-3">
@@ -186,24 +251,25 @@ export function GeneralSection() {
                 <code className="min-w-0 flex-1 truncate rounded-md bg-background px-2 py-1 font-mono text-xs select-all">
                   {update.command}
                 </code>
-                <button
-                  type="button"
-                  aria-label={copied ? common("copied") : common("copy")}
-                  title={copied ? common("copied") : common("copy")}
-                  onClick={() => {
-                    void navigator.clipboard
-                      ?.writeText(update.command ?? "")
-                      .then(() => setCopied(true))
-                      .catch(() => {});
-                  }}
-                  className="rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground"
-                >
-                  {copied ? (
-                    <Check className="size-3.5" />
-                  ) : (
-                    <Copy className="size-3.5" />
-                  )}
-                </button>
+                <Tip label={copied ? common("copied") : common("copy")}>
+                  <button
+                    type="button"
+                    aria-label={copied ? common("copied") : common("copy")}
+                    onClick={() => {
+                      void navigator.clipboard
+                        ?.writeText(update.command ?? "")
+                        .then(() => setCopied(true))
+                        .catch(() => {});
+                    }}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-background hover:text-foreground"
+                  >
+                    {copied ? (
+                      <Check className="size-3.5" />
+                    ) : (
+                      <Copy className="size-3.5" />
+                    )}
+                  </button>
+                </Tip>
               </div>
             </div>
           )}

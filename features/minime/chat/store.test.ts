@@ -5,11 +5,13 @@ import { join } from "node:path";
 import { after, before, test } from "node:test";
 import {
   appendMessage,
+  archiveChat,
   carryOver,
   chatLineMessage,
   createChat,
   listChats,
   readChat,
+  renameChat,
   setSession,
 } from "./store";
 import { recap } from "./turn";
@@ -74,6 +76,39 @@ test("conversations are listed latest first, and ids cannot leave the folder", a
   assert.ok(ids.indexOf(newer.id) < ids.indexOf(older.id));
   await assert.rejects(appendMessage("../../etc", "me", "x"));
   assert.equal(await readChat("../x"), undefined);
+});
+
+test("a conversation is renamed and put away by a line of its own, keeping its place and everything said", async () => {
+  const first = await createChat(
+    "Plan the launch",
+    new Date("2026-10-07T01:00:00Z"),
+  );
+  await appendMessage(first.id, "me", "Plan the launch");
+  const second = await createChat(
+    "Weekly signups",
+    new Date("2026-10-07T02:00:00Z"),
+  );
+  await appendMessage(second.id, "me", "Weekly signups");
+  const before = (await readChat(first.id))?.info.updated;
+
+  await renameChat(first.id, "  Launch   plan  ");
+  const renamed = await readChat(first.id);
+  assert.equal(renamed?.info.title, "Launch plan");
+  // a new name does not bring it up the list
+  assert.equal(renamed?.info.updated, before);
+  await assert.rejects(renameChat(first.id, "   "));
+
+  await archiveChat(first.id, true);
+  const shown = (await listChats(100)).map((c) => c.id);
+  assert.ok(!shown.includes(first.id));
+  assert.ok(shown.includes(second.id));
+  const away = (await listChats(100, { archived: true })).map((c) => c.id);
+  assert.deepEqual(away, [first.id]);
+  assert.equal((await readChat(first.id))?.messages.length, 1);
+
+  await archiveChat(first.id, false);
+  assert.ok((await listChats(100)).some((c) => c.id === first.id));
+  assert.equal((await listChats(100, { archived: true })).length, 0);
 });
 
 test("the index reads what was said, and a recap keeps the latest within its size", () => {

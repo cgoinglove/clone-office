@@ -854,9 +854,10 @@
   width: 330px;
   background: var(--paper);
   border-radius: 14px;
+  /* the app's floating surface: a hairline and one soft shadow, as its menus and dialogs */
   box-shadow:
-    0 0 0 1px var(--ink-10),
-    0 16px 40px var(--ink-08);
+    0 0 0 1px var(--ink-08),
+    0 16px 40px -12px var(--ink-20);
   padding: 18px;
   display: grid;
   gap: 18px;

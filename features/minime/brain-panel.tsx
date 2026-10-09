@@ -554,6 +554,7 @@ function ModelButton({
     <button
       type="button"
       disabled={busy}
+      aria-pressed={on}
       onClick={onPick}
       className={cn(
         "flex shrink-0 items-center gap-2 rounded-lg px-2.5 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
@@ -635,6 +636,50 @@ function PickedLabel({ state }: { state: BrainState }) {
  * then its models). Looking at another vendor changes nothing; a model pressed is the pick. The
  * screen around it never grows. Below it, what this computer already has, one press away.
  */
+/**
+ * Arrow keys in a picker of columns (vendors, then what the one in hand offers), as Thursday's model
+ * picker moves: up and down within a column, the vendor in view following the focus; left and right
+ * between columns, landing on what is picked there; Home and End to a column's ends. A field keeps
+ * its own arrows.
+ */
+function roveColumns(event: React.KeyboardEvent<HTMLElement>) {
+  const target = event.target as HTMLElement;
+  if (target.closest("input, textarea")) return;
+  const column = target.closest<HTMLElement>("[data-column]");
+  if (!column) return;
+  const columns = [
+    ...event.currentTarget.querySelectorAll<HTMLElement>("[data-column]"),
+  ];
+  const items = (in_: HTMLElement) =>
+    [...in_.querySelectorAll<HTMLElement>("button:not([disabled])")].filter(
+      (item) => item.offsetParent !== null,
+    );
+  const here = items(column);
+  const at = here.indexOf(target.closest("button") as HTMLElement);
+  let next: HTMLElement | undefined;
+  if (event.key === "ArrowDown") next = here[Math.min(here.length - 1, at + 1)];
+  else if (event.key === "ArrowUp") next = here[Math.max(0, at - 1)];
+  else if (event.key === "Home") next = here[0];
+  else if (event.key === "End") next = here.at(-1);
+  else if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+    const other =
+      columns[columns.indexOf(column) + (event.key === "ArrowRight" ? 1 : -1)];
+    if (!other) return;
+    const there = items(other);
+    next =
+      there.find(
+        (item) =>
+          item.hasAttribute("data-picked") ||
+          item.getAttribute("aria-pressed") === "true",
+      ) ?? there[0];
+  } else return;
+  if (!next) return;
+  event.preventDefault();
+  next.focus();
+  // Moving down the vendors shows each one's models, as pointing at it would.
+  if (columns.indexOf(column) === 0 && column.contains(next)) next.click();
+}
+
 export function BrainPicker({
   onChange,
   suggest = false,
@@ -771,9 +816,13 @@ export function BrainPicker({
         <PopoverContent
           align="start"
           sideOffset={6}
-          className="h-76 w-(--anchor-width) min-w-[min(28rem,calc(100vw-2rem))] flex-row gap-0 overflow-hidden rounded-xl p-0"
+          className="h-76 w-(--anchor-width) min-w-[min(28rem,calc(100vw-2rem))] flex-row gap-0 overflow-hidden rounded-[12px] p-0"
+          onKeyDown={roveColumns}
         >
-          <div className="flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-muted/40 p-1.5">
+          <div
+            data-column
+            className="flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-muted/40 p-1.5"
+          >
             {teamModels.length > 0 && (
               <button
                 type="button"
@@ -799,6 +848,9 @@ export function BrainPicker({
                 <button
                   key={v.id}
                   type="button"
+                  data-picked={
+                    v.id === vendor?.id && !teamView ? "" : undefined
+                  }
                   onClick={() => {
                     setTeamView(false);
                     choice.lookAt(v.id);
@@ -833,7 +885,10 @@ export function BrainPicker({
               );
             })}
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-2.5 overflow-y-auto p-2 text-[13px]">
+          <div
+            data-column
+            className="flex min-w-0 flex-1 flex-col gap-2.5 overflow-y-auto p-2 text-[13px]"
+          >
             {teamView && (
               <div className="flex flex-col gap-0.5">
                 {teamModels.map((option) => (

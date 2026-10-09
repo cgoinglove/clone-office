@@ -17,6 +17,7 @@ import {
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { Tip } from "@/components/ui/tooltip";
 import { ruleText } from "../ask-text";
 import { HEADERS } from "../home/use-office";
 import { Empty, Rows } from "../settings/parts";
@@ -124,14 +125,15 @@ export function ActivityList() {
               </span>
             </div>
             {href && (
-              <Link
-                href={href}
-                aria-label={t("open")}
-                title={t("open")}
-                className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <ArrowUpRight className="size-4" />
-              </Link>
+              <Tip label={t("open")}>
+                <Link
+                  href={href}
+                  aria-label={t("open")}
+                  className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <ArrowUpRight className="size-4" />
+                </Link>
+              </Tip>
             )}
           </li>
         );

@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { sayUndoable } from "@/components/ui/toast";
+import { Tip } from "@/components/ui/tooltip";
 import { useProblem } from "@/i18n/client";
 import type { Learn } from "../home/use-learn";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
@@ -630,30 +631,32 @@ function MemoryRow({
         </span>
         {state === "open" && (
           <span className="flex shrink-0 gap-0.5 opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              aria-label={t("memory.fix")}
-              title={t("memory.fix")}
-              onClick={() => setState("fixing")}
-            >
-              <Pencil />
-            </Button>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              aria-label={t("memory.remove")}
-              title={t("memory.remove")}
-              onClick={() => {
-                setState("gone");
-                sayUndoable(t("memory.removed"), t("common.undo"), {
-                  commit: () => void onRemove(),
-                  undo: () => setState("open"),
-                });
-              }}
-            >
-              <Trash2 />
-            </Button>
+            <Tip label={t("memory.fix")}>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label={t("memory.fix")}
+                onClick={() => setState("fixing")}
+              >
+                <Pencil />
+              </Button>
+            </Tip>
+            <Tip label={t("memory.remove")}>
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                aria-label={t("memory.remove")}
+                onClick={() => {
+                  setState("gone");
+                  sayUndoable(t("memory.removed"), t("common.undo"), {
+                    commit: () => void onRemove(),
+                    undo: () => setState("open"),
+                  });
+                }}
+              >
+                <Trash2 />
+              </Button>
+            </Tip>
           </span>
         )}
         {state === "saving" && (

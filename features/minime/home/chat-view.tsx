@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/ui/markdown";
 import { ShinyText } from "@/components/ui/shiny-text";
+import { Tip } from "@/components/ui/tooltip";
 import { Bot, type Mood } from "@/features/office";
 import { composing } from "@/hooks/use-hotkey";
 import { useProblem } from "@/i18n/client";
@@ -406,16 +407,18 @@ export function Composer({
             {tools(insert)}
           </div>
         )}
-        <Button
-          type="submit"
-          size="icon-sm"
-          aria-label={t("send")}
-          disabled={!draft.trim() || (chat.busy && !chat.chatId)}
-          loading={chat.busy && !draft.trim()}
-          className="mb-0.5 shrink-0 rounded-full"
-        >
-          <ArrowUp />
-        </Button>
+        <Tip label={t("send")} keys="↵">
+          <Button
+            type="submit"
+            size="icon-sm"
+            aria-label={t("send")}
+            disabled={!draft.trim() || (chat.busy && !chat.chatId)}
+            loading={chat.busy && !draft.trim()}
+            className="mb-0.5 shrink-0 rounded-full"
+          >
+            <ArrowUp />
+          </Button>
+        </Tip>
       </div>
     </form>
   );

@@ -23,6 +23,8 @@ import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Tip } from "@/components/ui/tooltip";
+import { typed, windowKey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { HEADERS, statusText, type Task } from "../home/use-office";
 import { statusCode } from "../office/room-data";
@@ -497,6 +499,16 @@ function AskBox({
 }) {
   const t = useTranslations("shell.home");
   const [text, setText] = useState("");
+  // "/" writes to the clone from anywhere on Home, as in a conversation.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!windowKey(event) || !typed(event, "/")) return;
+      event.preventDefault();
+      document.getElementById("home-ask")?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
   return (
     <div className="flex flex-col gap-3">
       <form
@@ -508,23 +520,25 @@ function AskBox({
       >
         <input
           id="home-ask"
+          aria-keyshortcuts="/"
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder={t("askPlaceholder")}
           aria-label={t("askPlaceholder")}
           className="h-11 min-w-0 flex-1 bg-transparent text-[15.5px] outline-none placeholder:text-muted-foreground"
         />
-        <Button
-          type="submit"
-          variant="brand"
-          size="icon"
-          aria-label={t("askSend")}
-          title={t("askSend")}
-          disabled={!text.trim()}
-          className="size-10 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
-        >
-          <ArrowUp className="size-4.5" />
-        </Button>
+        <Tip label={t("askSend")} keys="↵">
+          <Button
+            type="submit"
+            variant="brand"
+            size="icon"
+            aria-label={t("askSend")}
+            disabled={!text.trim()}
+            className="size-10 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
+          >
+            <ArrowUp className="size-4.5" />
+          </Button>
+        </Tip>
       </form>
       <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion) => (

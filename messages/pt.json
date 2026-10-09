@@ -1144,7 +1144,11 @@
       "update": "A versão {version} saiu. Feche esta (Ctrl+C na janela dela) e inicie de novo com:",
       "start": "Iniciar com o computador",
       "startBody": "Desde que você entra no computador, seu clone continua respondendo aos colegas sem nenhuma janela aberta.",
-      "startNone": "Disponível quando o Clone Office roda pelo pacote (npx clone-office)."
+      "startNone": "Disponível quando o Clone Office roda pelo pacote (npx clone-office).",
+      "archived": "Conversas arquivadas",
+      "archivedHint": "Conversas que você tirou da lista. Nada nelas é apagado e você pode trazê-las de volta quando quiser.",
+      "restore": "Trazer de volta",
+      "restored": "“{title}” voltou para suas conversas"
     },
     "preferences": {
       "loading": "Carregando…",
@@ -1504,7 +1508,8 @@
       "colleagues": "Colegas"
     },
     "trouble": {
-      "open": "Configurar escritório"
+      "open": "Configurar escritório",
+      "retrying": "Reconectando"
     },
     "stepIn": {
       "title": "Intervir",
@@ -1565,6 +1570,22 @@
       "move": "Mover",
       "open": "Abrir",
       "askKey": "Perguntar ao clone"
+    },
+    "chats": {
+      "today": "Hoje",
+      "yesterday": "Ontem",
+      "week": "Últimos 7 dias",
+      "month": "Últimos 30 dias",
+      "more": "Mostrar mais",
+      "menu": "Opções de “{title}”",
+      "rename": "Renomear",
+      "name": "Nome da conversa",
+      "archive": "Arquivar",
+      "archived": "“{title}” foi arquivada"
+    },
+    "notice": {
+      "answer": "Responder",
+      "answered": "{name} respondeu ao seu pedido"
     }
   },
   "page": {
