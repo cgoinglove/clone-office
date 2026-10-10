@@ -1659,15 +1659,17 @@ export function createOffice(
   const nameOf = (id) =>
     id === me?.id ? W.plate.youShort : people.get(id)?.name || "";
   /**
-   * How an earlier request stands, saying whom it waits on: one asked back waits on whoever asked
-   * it, which may be the viewer.
+   * How an earlier request stands, saying whom it waits on: one held waits on the asked one's
+   * person, one asked back on whoever asked it; either may be the viewer.
    */
+  const waitsOn = (id) =>
+    id === me?.id ? W.panel.waitingForYou : W.panel.waitingFor(nameOf(id));
   const pastState = (r) =>
-    r.state !== "INPUT_REQUIRED"
-      ? W.requestState(r.state)
-      : r.from === me?.id
-        ? W.panel.waitingForYou
-        : W.panel.waitingFor(nameOf(r.from));
+    r.held
+      ? waitsOn(r.to)
+      : r.state === "INPUT_REQUIRED"
+        ? waitsOn(r.from)
+        : W.requestState(r.state);
   function renderPanel() {
     const p = focus;
     if (!p || panel.hidden) return;

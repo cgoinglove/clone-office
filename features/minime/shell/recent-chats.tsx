@@ -33,7 +33,7 @@ import {
 import { say } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
 import { composing } from "@/hooks/use-hotkey";
-import { cn } from "@/lib/utils";
+import { clip, cn } from "@/lib/utils";
 import { TITLE_MAX } from "../chat/limits";
 import type { ChatSummary } from "../home/use-chat";
 import { useApp } from "./app-state";
@@ -300,7 +300,8 @@ const ChatRow = memo(function ChatRow({
     void onArchive(id, true);
     // the keyboard goes on to the row that takes its place
     onFocusAt(place);
-    say(t("chats.archived", { title }), {
+    // the title cut short, so the line fits beside the news cards rather than over the screen
+    say(t("chats.archived", { title: clip(title, 22) }), {
       action: { label: undo, run: () => void onArchive(id, false) },
     });
   };

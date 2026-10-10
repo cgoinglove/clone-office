@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
 import { OfficeRoom } from "@/features/office/room/office-room";
+import { useSlashKey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { useApp } from "./app-state";
 import { MeetingPanel, MeetingStart, useMeetings } from "./meeting";
@@ -104,6 +105,13 @@ export function OfficeScreen() {
   // On a phone the board would cover the floor: it folds into a pill, opened when wanted.
   const small = useSmall();
   const [boardOpen, setBoardOpen] = useState(false);
+  // "/" writes to the clone here too: the office's own box, once the doors are open
+  useSlashKey(() => {
+    const box = document.querySelector<HTMLInputElement>(
+      ".of-wrap [data-of=ask-input]",
+    );
+    if (box?.offsetParent) box.focus();
+  });
   // On a phone a folded board stays mounted, hidden, so an answer waiting out its Undo there is
   // not sent by folding it.
   // It is there, unseen, through the lobby and the ride too, so the floor behind the lift's doors

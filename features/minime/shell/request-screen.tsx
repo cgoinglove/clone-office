@@ -16,6 +16,7 @@ import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot } from "@/features/office";
 import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
+import { clip } from "@/lib/utils";
 import { AskCard } from "../ask-card";
 import { saveFile, statusText, type Waiting } from "../home/use-office";
 import { statusCode } from "../office/room-data";
@@ -23,7 +24,7 @@ import { useApp } from "./app-state";
 import { Mark, PhaseChip, phaseOf, StatusDot } from "./parts";
 import { askedText } from "./requests-screen";
 import { StepIn } from "./step-in";
-import { clip, PendingAnswer, SETTLE_MS } from "./turn-rows";
+import { ANSWER_CHARS, PendingAnswer, SETTLE_MS } from "./turn-rows";
 import { taskOf, turnKey } from "./your-turn";
 
 export function RequestScreen({ id }: { id: string }) {
@@ -97,43 +98,58 @@ export function RequestScreen({ id }: { id: string }) {
         : answer;
     setChosen((all) => ({ ...all, [key]: answer }));
     app.markAnswering(key, true);
-    sending.remove(key, tTurn("answerFor", { name, choice: clip(shown) }), {
-      commit: async () => {
-        const here =
-          !!document
-            .getElementById(`answer-${entry.id}`)
-            ?.contains(document.activeElement) ||
-          document.activeElement === document.body;
-        await office.answer(entry, answer, always);
-        app.markAnswering(key, false);
-        app.announce(tTurn("sentFor", { name, choice: clip(shown) }));
-        // where the request stands now, else its title
-        if (here)
-          requestAnimationFrame(() =>
-            (
-              document.getElementById("request-state") ??
-              document.getElementById("request-title")
-            )?.focus(),
+    // The card shrinks to one line: what stood below it keeps its place for a moment, so a
+    // second tap lands nowhere new (as Home's rows ignore one).
+    const block = document.getElementById(`answer-${entry.id}`);
+    if (block) {
+      block.style.minHeight = `${block.offsetHeight}px`;
+      setTimeout(() => {
+        block.style.minHeight = "";
+      }, SETTLE_MS);
+    }
+    sending.remove(
+      key,
+      tTurn("answerFor", { name, choice: clip(shown, ANSWER_CHARS) }),
+      {
+        commit: async () => {
+          const here =
+            !!document
+              .getElementById(`answer-${entry.id}`)
+              ?.contains(document.activeElement) ||
+            document.activeElement === document.body;
+          await office.answer(entry, answer, always);
+          app.markAnswering(key, false);
+          app.announce(
+            tTurn("sentFor", { name, choice: clip(shown, ANSWER_CHARS) }),
           );
-        return true;
+          // where the request stands now, else its title
+          if (here)
+            requestAnimationFrame(() =>
+              (
+                document.getElementById("request-state") ??
+                document.getElementById("request-title")
+              )?.focus(),
+            );
+          return true;
+        },
+        undo: () => {
+          app.markAnswering(key, false);
+          app.announce(tTurn("undone"));
+          // back on what was chosen (a choice, or the words written), when the keyboard was here
+          const block = document.getElementById(`answer-${entry.id}`);
+          if (block?.contains(document.activeElement))
+            requestAnimationFrame(() => {
+              const again = [
+                ...block.querySelectorAll<HTMLElement>("button, textarea"),
+              ];
+              (
+                again.find((one) => one.textContent === shown) ??
+                again.find((one) => one.tagName === "TEXTAREA")
+              )?.focus();
+            });
+        },
       },
-      undo: () => {
-        app.markAnswering(key, false);
-        app.announce(tTurn("undone"));
-        // back on what was chosen (a choice, or the words written), when the keyboard was here
-        const block = document.getElementById(`answer-${entry.id}`);
-        if (block?.contains(document.activeElement))
-          requestAnimationFrame(() => {
-            const again = [
-              ...block.querySelectorAll<HTMLElement>("button, textarea"),
-            ];
-            (
-              again.find((one) => one.textContent === shown) ??
-              again.find((one) => one.tagName === "TEXTAREA")
-            )?.focus();
-          });
-      },
-    });
+    );
     // the keyboard stays with this question, on its Undo
     requestAnimationFrame(() =>
       document

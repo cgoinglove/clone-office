@@ -20,7 +20,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
 import { Bot } from "@/features/office";
 import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
-import { cn } from "@/lib/utils";
+import { clip, cn } from "@/lib/utils";
 import { useApp } from "./app-state";
 import { Mark } from "./parts";
 import { askLine, type TurnItem, turnHref } from "./your-turn";
@@ -28,11 +28,8 @@ import { askLine, type TurnItem, turnHref } from "./your-turn";
 /** How long rows that just moved ignore a tap: what was under the pointer is not there any more. */
 export const SETTLE_MS = 450;
 
-/** An answer in a line: one written in full is cut short, as a toast or a row has one line. */
-export function clip(text: string, most = 48): string {
-  const line = text.replace(/\s+/g, " ").trim();
-  return line.length > most ? `${line.slice(0, most - 1).trimEnd()}…` : line;
-}
+/** How much of an answer a row or a toast shows: one written in full is cut short. */
+export const ANSWER_CHARS = 48;
 
 /** An answer on its way, in place of the choices: what goes, still under way, with its own Undo. */
 export function PendingAnswer({
@@ -53,7 +50,7 @@ export function PendingAnswer({
       {/* still under way, and says so */}
       <Loader2 className="size-3.5 shrink-0 animate-spin motion-reduce:animate-none" />
       <span className="min-w-0 truncate">
-        {t("answering", { choice: clip(choice) })}
+        {t("answering", { choice: clip(choice, ANSWER_CHARS) })}
       </span>
       <Button
         data-undo
@@ -121,12 +118,18 @@ export function TurnRows({
         // the answer goes to the person's own clone, which answers the colleague as it goes on
         const told = (choice: string) =>
           from
-            ? t("answerFor", { name: fromName, choice: clip(choice) })
-            : t("answerToClone", { choice: clip(choice) });
+            ? t("answerFor", {
+                name: fromName,
+                choice: clip(choice, ANSWER_CHARS),
+              })
+            : t("answerToClone", { choice: clip(choice, ANSWER_CHARS) });
         const gone = (choice: string) =>
           from
-            ? t("sentFor", { name: fromName, choice: clip(choice) })
-            : t("sentToClone", { choice: clip(choice) });
+            ? t("sentFor", {
+                name: fromName,
+                choice: clip(choice, ANSWER_CHARS),
+              })
+            : t("sentToClone", { choice: clip(choice, ANSWER_CHARS) });
         const question = `q-${item.key}`;
         const choose = (option: { reply: string; label: string }) => {
           if (performance.now() - movedAt.current < SETTLE_MS) return;
