@@ -163,6 +163,18 @@ export function useAppState() {
     () => turns.filter((item) => !answering.has(item.key)),
     [turns, answering],
   );
+  /** The requests with a question still waiting on the person, as every list marks them. */
+  const tasksToDecide = useMemo(
+    () =>
+      new Set(
+        toDecide.flatMap((item) =>
+          item.where.kind === "request" && item.where.task
+            ? [item.where.task]
+            : [],
+        ),
+      ),
+    [toDecide],
+  );
 
   const joined = Boolean(office.office?.joined);
   const name =
@@ -185,6 +197,7 @@ export function useAppState() {
       asksLoaded,
       turns,
       toDecide,
+      tasksToDecide,
       answering,
       markAnswering,
       answerChatAsk,
@@ -205,6 +218,7 @@ export function useAppState() {
       asksLoaded,
       turns,
       toDecide,
+      tasksToDecide,
       answering,
       markAnswering,
       answerChatAsk,

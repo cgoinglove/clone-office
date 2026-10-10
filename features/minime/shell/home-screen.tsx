@@ -35,7 +35,6 @@ import { askedText } from "./requests-screen";
 import { StarNote } from "./star-note";
 import { TurnRows } from "./turn-rows";
 import { FirstSteps } from "./welcome";
-import { taskOf } from "./your-turn";
 
 interface FlowLine {
   id: string;
@@ -72,9 +71,7 @@ export function HomeScreen() {
   const turns = app.turns;
   const open = app.toDecide.length;
   const tasks = data?.tasks ?? [];
-  const yours = new Set(
-    office.waiting.map((waiting) => taskOf(waiting)).filter(Boolean),
-  );
+  const yours = app.tasksToDecide;
   const clock = (iso: string) =>
     format.dateTime(new Date(iso), {
       hour: "2-digit",
@@ -262,7 +259,7 @@ export function HomeScreen() {
             <Section id="h-decide" title={t("decide")} count={open}>
               {turns.length ? (
                 <div className="overflow-hidden rounded-[14px] bg-background shadow-[0_0_0_1px_var(--alpha-10)]">
-                  <TurnRows turns={turns} />
+                  <TurnRows turns={turns} heading="h-decide" />
                 </div>
               ) : (
                 <Quiet icon={<Check className="size-4" />}>
@@ -548,34 +545,28 @@ function Section({
   id,
   title,
   count,
-  tone,
   action,
   children,
 }: {
   id: string;
   title: string;
   count?: number;
-  tone?: "ember";
   action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
+        {/* a count is a plain number beside its name, as the column writes it; the heading takes
+            the keyboard when the rows under it are gone */}
         <h2
           id={id}
-          className="flex items-center gap-2 text-[15px] font-semibold"
+          tabIndex={-1}
+          className="flex items-center gap-2 text-[15px] font-semibold outline-none"
         >
           {title}
           {count !== undefined && count > 0 && (
-            <span
-              className={cn(
-                "rounded-md px-1.5 text-[12px] font-medium tabular-nums",
-                tone === "ember"
-                  ? "bg-waiting/10 text-waiting"
-                  : "bg-muted text-muted-foreground",
-              )}
-            >
+            <span className="font-mono text-[12px] font-normal text-muted-foreground tabular-nums">
               {count}
             </span>
           )}

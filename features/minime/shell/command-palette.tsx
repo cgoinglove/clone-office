@@ -98,13 +98,7 @@ function PaletteBody({ close }: { close: () => void }) {
   const me = data?.me?.id;
   const { indexOf } = app.office;
   const nameOf = (id?: string) => (id && app.office.names.get(id)) || "";
-  const yours = new Set(
-    app.turns.flatMap((entry) =>
-      entry.where.kind === "request" && entry.where.task
-        ? [entry.where.task]
-        : [],
-    ),
-  );
+  const yours = app.tasksToDecide;
   const asked = query.trim();
   const keys = useCommandKeys();
 
@@ -177,7 +171,10 @@ function PaletteBody({ close }: { close: () => void }) {
           {keys.key("Escape")}
         </kbd>
       </div>
-      <Command.List className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto pb-1.5">
+      <Command.List
+        label={t("palette.results")}
+        className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto pb-1.5"
+      >
         <Command.Empty className="flex flex-col items-center gap-3 px-4 py-7 text-center text-sm text-muted-foreground">
           {t("palette.empty")}
           {asked && (

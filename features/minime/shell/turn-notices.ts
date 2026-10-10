@@ -32,7 +32,7 @@ export function noticesOn(): boolean {
 }
 
 /** Screens that list what there is to decide, so a card there would say it twice. */
-const LISTS_TURNS = ["/home", "/office"];
+const LISTS_TURNS = ["/home", "/office", "/requests"];
 
 export function useTurnNotices(
   office: OfficeState,

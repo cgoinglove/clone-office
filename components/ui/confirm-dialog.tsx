@@ -52,6 +52,7 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
       <DialogContent
         data-confirm
+        role="alertdialog"
         className="sm:max-w-[26rem]"
         showCloseButton={false}
         above

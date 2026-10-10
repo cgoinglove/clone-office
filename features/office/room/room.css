@@ -671,9 +671,8 @@
 .of-wrap .seg button[aria-pressed="true"] {
   background: var(--paper);
   color: var(--ink);
-  box-shadow:
-    0 1px 2px var(--ink-10),
-    0 0 0 1px var(--ink-05);
+  /* a hairline ring, never a drop shadow, as every picked segment in the app */
+  box-shadow: 0 0 0 1px var(--ink-08);
 }
 /* an icon alone says what it does when pointed at or focused, as the app's own tips do (`Tip`) */
 .of-wrap [data-tip] {
@@ -1304,7 +1303,8 @@
 .of-wrap .lb-go {
   appearance: none;
   border: 0;
-  border-radius: 10px;
+  /* round, as the app's one button a screen asks for is */
+  border-radius: 999px;
   /* flat, as every button is: a fill, no shadow, nothing rising */
   background: var(--brand-fill);
   color: var(--brand-foreground);
@@ -1329,9 +1329,9 @@
 }
 .of-wrap .lb-go kbd {
   font: 500 11px / 1 var(--font-mono);
-  color: color-mix(in oklab, var(--brand-foreground) 72%, transparent);
+  color: color-mix(in oklab, var(--brand-foreground) 92%, transparent);
   border: 1px solid
-    color-mix(in oklab, var(--brand-foreground) 35%, transparent);
+    color-mix(in oklab, var(--brand-foreground) 55%, transparent);
   border-radius: 5px;
   padding: 3px 5px;
   margin-left: 2px;

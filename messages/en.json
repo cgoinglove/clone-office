@@ -609,7 +609,7 @@
         "evening": "Good evening, {name}",
         "in": "{in} of {count} are in",
         "alone": "No colleagues here yet",
-        "waiting": "{count, plural, one {# thing is waiting for you} other {# things are waiting for you}}",
+        "waiting": "{count, plural, other {# to decide}}",
         "clockIn": "Clock in",
         "enter": "Enter",
         "foot": "Your clone runs on this computer.",
@@ -1286,7 +1286,8 @@
       "answering": "“{choice}” goes in a moment",
       "answerTo": "“{choice}” to {who}",
       "cloneOf": "{name}'s clone",
-      "yourClone": "your clone"
+      "yourClone": "your clone",
+      "undone": "Taken back: nothing was sent"
     },
     "clone": {
       "title": "Your clone",
@@ -1475,7 +1476,7 @@
         "afternoon": "Good afternoon",
         "evening": "Good evening"
       },
-      "summary": "{decide, plural, =0 {Nothing waits on you} one {# thing waits on you} other {# things wait on you}} · {moving, plural, =0 {no requests on their way} one {# request on its way} other {# requests on their way}} · {answered, plural, =0 {your clone has answered no one yet today} one {your clone answered # colleague today} other {your clone answered # colleagues today}}",
+      "summary": "{decide, plural, =0 {Nothing to decide} other {# to decide}} · {moving, plural, =0 {no requests on their way} one {# request on its way} other {# requests on their way}} · {answered, plural, =0 {your clone has answered no one yet today} one {your clone answered # colleague today} other {your clone answered # colleagues today}}",
       "askPlaceholder": "Ask your clone anything, or name a colleague to ask theirs…",
       "askSend": "Ask",
       "try": {
@@ -1507,7 +1508,7 @@
       "nothingToday": "Nothing set for today. Try a flow: “every weekday at 9, catch me up”.",
       "flowStarter": "Every weekday at 9, tell me briefly what is waiting on me",
       "in": "In",
-      "off": "Computer off",
+      "off": "Off",
       "star": {
         "text": "Your clone has answered a colleague for you. If Clone Office helps, a star on GitHub helps others find it.",
         "action": "Star on GitHub",
@@ -1585,7 +1586,8 @@
       "empty": "Nothing matches",
       "move": "Move",
       "open": "Open",
-      "askKey": "Ask your clone"
+      "askKey": "Ask your clone",
+      "results": "Results"
     },
     "chats": {
       "today": "Today",

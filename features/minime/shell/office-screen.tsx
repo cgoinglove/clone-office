@@ -102,8 +102,10 @@ export function OfficeScreen() {
   // On a phone the board would cover the floor: it folds into a pill, opened when wanted.
   const small = useSmall();
   const [boardOpen, setBoardOpen] = useState(false);
-  const boardShown =
-    turns.length > 0 && !atLobby && !panelOpen && (!small || boardOpen);
+  // On a phone a folded board stays mounted, hidden, so an answer waiting out its Undo there is
+  // not sent by folding it.
+  const boardOn = turns.length > 0 && !atLobby && !panelOpen;
+  const boardShown = boardOn && (!small || boardOpen);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -189,8 +191,9 @@ export function OfficeScreen() {
             }
           />
         )}
-        {boardShown && (
+        {boardOn && (
           <Board
+            hidden={!boardShown}
             turns={turns}
             count={app.toDecide.length}
             onHeight={setBoardHeight}
@@ -247,11 +250,13 @@ export function OfficeScreen() {
 
 /** What waits on the person, hung over the office: answered in place when it is a tap. */
 function Board({
+  hidden,
   turns,
   count,
   onHeight,
   onFold,
 }: {
+  hidden: boolean;
   turns: TurnItem[];
   /** How many still wait (an answer on its way stays on the board, uncounted). */
   count: number;
@@ -277,20 +282,30 @@ function Board({
   return (
     <section
       ref={box}
+      hidden={hidden}
       aria-labelledby="o-turn"
       style={{ width: BOARD }}
       className="absolute top-4 right-4 z-10 flex max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[14px] bg-background/97 shadow-[0_0_0_1px_var(--alpha-08),0_18px_40px_-20px_var(--alpha-20)]"
     >
       <div className="flex items-center gap-2 px-4 pt-3.5 pb-2.5">
-        <h2 id="o-turn" className="text-sm font-semibold">
+        <h2
+          id="o-turn"
+          tabIndex={-1}
+          className="text-sm font-semibold outline-none"
+        >
           {t("yourTurn")}
         </h2>
-        <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-          {count}
-        </span>
-        <span className="ml-auto text-xs text-muted-foreground">
-          {t("answerHere")}
-        </span>
+        {/* only while something still waits: answers on their way are not counted */}
+        {count > 0 && (
+          <>
+            <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+              {count}
+            </span>
+            <span className="ml-auto text-xs text-muted-foreground">
+              {t("answerHere")}
+            </span>
+          </>
+        )}
         {onFold && (
           <Tip label={t("fold")}>
             <button
@@ -301,6 +316,7 @@ function Board({
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-sm" }),
                 "-mr-1.5 text-muted-foreground",
+                count === 0 && "ml-auto",
               )}
             >
               <ChevronUp className="size-4" />
@@ -308,7 +324,7 @@ function Board({
           </Tip>
         )}
       </div>
-      <TurnRows turns={turns} className="overflow-y-auto" />
+      <TurnRows turns={turns} heading="o-turn" className="overflow-y-auto" />
     </section>
   );
 }

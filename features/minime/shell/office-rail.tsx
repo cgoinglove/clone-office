@@ -8,12 +8,12 @@ import { CalendarClock, Check, Clock, Link2, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { OfficeRoom } from "@/features/office/room/office-room";
 import { HEADERS, type Task } from "../home/use-office";
 import { useApp } from "./app-state";
 import { useMeetings } from "./meeting";
 import { Flap, Mark, PhaseChip, phaseOf } from "./parts";
-import { taskOf } from "./your-turn";
 
 interface FlowLine {
   id: string;
@@ -39,9 +39,7 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
       hourCycle: "h23",
     });
 
-  const yours = new Set(
-    office.waiting.map((waiting) => taskOf(waiting)).filter(Boolean),
-  );
+  const yours = app.tasksToDecide;
   const moving = (data?.tasks ?? [])
     .filter((task) =>
       ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
@@ -138,22 +136,23 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
             {t("aloneBody")}
           </p>
           <div className="flex flex-col gap-1.5">
-            <button
-              type="button"
+            {/* the one thing it asks for, and a quiet way on: both the app's own buttons */}
+            <Button
+              variant="brand"
+              className="justify-start"
               onClick={() => onInsert(t("linkStarter"))}
-              className="flex h-8 items-center gap-2 rounded-lg bg-brand px-3 text-[13px] font-semibold text-brand-foreground transition-colors hover:bg-brand/90"
             >
               <Link2 className="size-3.5" />
               {t("linkAsk")}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="secondary"
+              className="justify-start"
               onClick={() => app.setSettings("office")}
-              className="flex h-8 items-center gap-2 rounded-lg px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
             >
               <UserPlus className="size-3.5" />
               {app.joined ? t("invite") : t("setUp")}
-            </button>
+            </Button>
           </div>
         </section>
       ) : (

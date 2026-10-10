@@ -14,7 +14,7 @@ import { Toast as ToastPrimitive } from "@base-ui/react/toast";
 import { Check, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type * as React from "react";
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -116,8 +116,15 @@ function sayUndoable(
       if (!settled) timer = setTimeout(done, 2500);
     },
   });
-  // `undo` takes it back from elsewhere too (an Undo on the row the toast is about)
-  return { id, commit: done, undo: () => settle(undo) };
+  // `undo` takes it back from elsewhere too (an Undo on the row the toast is about), and `hold` and
+  // `release` pause its clock from there, as pointing at the toast does
+  return {
+    id,
+    commit: done,
+    undo: () => settle(undo),
+    hold: () => holds.get(id)?.hold(),
+    release: () => holds.get(id)?.release(),
+  };
 }
 
 /** How toasts and notices stack, move in and leave; each list sets its own gap and entry. */
@@ -172,11 +179,18 @@ function NoticeList() {
     void toasts;
     const measure = () => {
       let top = window.innerHeight;
-      for (const card of document.querySelectorAll('[data-slot="notice"]'))
-        top = Math.min(top, card.getBoundingClientRect().top);
+      let left = window.innerWidth;
+      for (const card of document.querySelectorAll('[data-slot="notice"]')) {
+        const box = card.getBoundingClientRect();
+        top = Math.min(top, box.top);
+        left = Math.min(left, box.left);
+      }
+      // only where the widest toast, centred, would reach the cards: a wide window keeps both low
+      const reach =
+        window.innerWidth / 2 + Math.min(window.innerWidth * 0.46, 256);
       document.documentElement.style.setProperty(
         "--notice-stack",
-        `${Math.round(window.innerHeight - top)}px`,
+        `${reach > left - 8 ? Math.round(window.innerHeight - top) : 0}px`,
       );
     };
     measure();
@@ -240,9 +254,18 @@ function NoticeList() {
 
 function Toaster() {
   const t = useTranslations("common");
+  // on a phone one card at a time, the next waiting behind it, so news never buries the screen
+  const [phone, setPhone] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 640px)");
+    const follow = () => setPhone(query.matches);
+    follow();
+    query.addEventListener("change", follow);
+    return () => query.removeEventListener("change", follow);
+  }, []);
   return (
     <ToastPrimitive.Provider toastManager={toast} limit={3}>
-      <ToastPrimitive.Provider toastManager={notices} limit={3}>
+      <ToastPrimitive.Provider toastManager={notices} limit={phone ? 1 : 3}>
         <ToastPrimitive.Portal>
           <ToastPrimitive.Viewport
             data-slot="notice-viewport"

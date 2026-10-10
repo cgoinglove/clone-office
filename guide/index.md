@@ -68,7 +68,7 @@ Two things hold everywhere:
   now** (정할 것), answered right there: the answer stays on its row as what is about to go, with
   **Undo** (되돌리기) beside it and in the note at the bottom, and goes after a few seconds (or when
   they leave the screen), so a stray tap is never a decision made in their name; meanwhile it no
-  longer counts as waiting; **Requests on their way** (오가는 부탁), those waiting on
+  longer counts as waiting, and the keyboard moves on to the next question once it is sent; **Requests on their way** (오가는 부탁), those waiting on
   them first; and beside them, **Today** (오늘), the day in one panel: **What your clone did**
   (클론이 한 일: whom it answered for them, meetings it brought back, flows it ran), **Still to
   come** (남은 일정: the clones' standup, today's flows) and their **Colleagues** (동료). A part with

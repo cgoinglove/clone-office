@@ -30,7 +30,7 @@ import type { Task } from "../home/use-office";
 import { useApp } from "./app-state";
 import { OfficeTrouble } from "./office-trouble";
 import { Mark, PageHeader, type Phase, PhaseChip, phaseOf } from "./parts";
-import { askLine, taskOf } from "./your-turn";
+import { askLine } from "./your-turn";
 
 type Side = "all" | "received" | "sent";
 
@@ -55,9 +55,7 @@ export function RequestsScreen() {
   const [side, setSide] = useState<Side>("all");
   const [asking, setAsking] = useState(false);
 
-  const yours = new Set(
-    office.waiting.map((waiting) => taskOf(waiting)).filter(Boolean),
-  );
+  const yours = app.tasksToDecide;
   // what the clone asks the person about each request waiting on them, said on its row
   const questions = new Map(
     app.turns.flatMap((item) =>
@@ -141,21 +139,16 @@ export function RequestsScreen() {
                   <section key={group} aria-labelledby={`g-${group}`}>
                     <h2
                       id={`g-${group}`}
+                      // a heading and its plain count, as the column writes "To decide"
                       className={cn(
                         "flex items-center gap-2 px-3 pb-2 text-[13px] font-semibold",
                         group === "yours"
-                          ? "text-waiting"
+                          ? "text-foreground"
                           : "text-muted-foreground",
                       )}
                     >
-                      {group === "yours" && (
-                        <span
-                          aria-hidden
-                          className="size-1.5 rounded-full bg-waiting"
-                        />
-                      )}
                       {t(`groups.${group}`)}
-                      <span className="font-mono text-xs font-normal tabular-nums">
+                      <span className="font-mono text-xs font-normal text-muted-foreground tabular-nums">
                         {rows.length}
                       </span>
                     </h2>

@@ -463,7 +463,7 @@
       "working": "Trabalhando",
       "meeting": "Em reunião",
       "away": "Ausente",
-      "off": "Desconectado"
+      "off": "Fora"
     },
     "colleagues": "Colegas",
     "nobody": "Ainda não há outros clones. Envie o link de convite para um colega.",
@@ -609,7 +609,7 @@
         "evening": "Boa noite, {name}",
         "in": "{in} de {count} já chegaram",
         "alone": "Nenhum colega aqui ainda",
-        "waiting": "{count, plural, one {# coisa espera por você} other {# coisas esperam por você}}",
+        "waiting": "{count, plural, other {# para decidir}}",
         "clockIn": "Bater ponto",
         "enter": "Enter",
         "foot": "Seu clone roda neste computador.",
@@ -942,7 +942,7 @@
     "inviteSomeone": "Convidar alguém",
     "requests": "Pedidos",
     "noRequests": "Nada ainda. Pergunte a um colega acima ou peça ao seu clone.",
-    "off": "Desconectado",
+    "off": "Fora",
     "in": "Online",
     "fromThem": "{name} perguntou a você",
     "fromYou": "Você perguntou a {name}"
@@ -1097,7 +1097,7 @@
       "people": "Pessoas",
       "count": "{count, plural, one {# pessoa} other {# pessoas}}",
       "you": "Você",
-      "off": "Desconectado",
+      "off": "Fora",
       "in": "Online",
       "startTitle": "Crie seu escritório",
       "leaveHint": "Seu clone sai deste escritório, e os colegas não podem mais pedir nada a ele. Você pode voltar com um link de convite.",
@@ -1286,7 +1286,8 @@
       "answering": "“{choice}” vai em um instante",
       "answerTo": "“{choice}” para {who}",
       "cloneOf": "o clone de {name}",
-      "yourClone": "seu clone"
+      "yourClone": "seu clone",
+      "undone": "Desfeito: nada foi enviado"
     },
     "clone": {
       "title": "Seu clone",
@@ -1475,7 +1476,7 @@
         "afternoon": "Boa tarde",
         "evening": "Boa noite"
       },
-      "summary": "{decide, plural, =0 {Nada esperando por você} one {# coisa esperando por você} other {# coisas esperando por você}} · {moving, plural, =0 {nenhum pedido a caminho} one {# pedido a caminho} other {# pedidos a caminho}} · {answered, plural, =0 {seu clone ainda não respondeu a ninguém hoje} one {seu clone respondeu a # colega hoje} other {seu clone respondeu a # colegas hoje}}",
+      "summary": "{decide, plural, =0 {Nada para decidir} other {# para decidir}} · {moving, plural, =0 {nenhum pedido a caminho} one {# pedido a caminho} other {# pedidos a caminho}} · {answered, plural, =0 {seu clone ainda não respondeu a ninguém hoje} one {seu clone respondeu a # colega hoje} other {seu clone respondeu a # colegas hoje}}",
       "askPlaceholder": "Peça qualquer coisa ao seu clone ou cite um colega para perguntar ao clone dele…",
       "askSend": "Perguntar",
       "try": {
@@ -1507,7 +1508,7 @@
       "nothingToday": "Nada marcado para hoje. Experimente uma rotina: “de segunda a sexta às 9, me atualize”.",
       "flowStarter": "De segunda a sexta às 9, me diga rapidinho o que está esperando por mim",
       "in": "Online",
-      "off": "Computador desligado",
+      "off": "Fora",
       "star": {
         "text": "Seu clone já respondeu a um colega por você. Se o Clone Office ajuda, uma estrela no GitHub ajuda outras pessoas a encontrá-lo.",
         "action": "Estrela no GitHub",
@@ -1585,7 +1586,8 @@
       "empty": "Nada encontrado",
       "move": "Mover",
       "open": "Abrir",
-      "askKey": "Perguntar ao clone"
+      "askKey": "Perguntar ao clone",
+      "results": "Resultados"
     },
     "chats": {
       "today": "Hoje",

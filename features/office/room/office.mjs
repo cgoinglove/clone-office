@@ -217,7 +217,9 @@ export function createOffice(
     rosterKey = "",
     known = new Map(),
     destroyed = false,
-    opened = false;
+    opened = false,
+    // the viewer's own desk is the view (a phone, after the lift), until they pick the whole office
+    atDesk = false;
   let lobbyOn = false,
     entering = false,
     wantLobby = lobby,
@@ -2322,6 +2324,7 @@ export function createOffice(
       if (me) focusOn(me.id);
     } else {
       focus = null;
+      atDesk = false;
       closePanel();
       setViewSeg("office");
       if (me && me.home !== plan.index) switchFloor(me.home);
@@ -2605,8 +2608,10 @@ export function createOffice(
     opened = true;
     const lift = via === "lift" && !REDUCED;
     // the whole floor at once, the doors opening on it; the camera does not fly in from the lift.
-    // On a phone the whole floor is too small to read: the doors open on the viewer's own desk.
-    const near = narrow() && me ? deskView(me) : null;
+    // On a phone the whole floor is too small to read: the doors open on the viewer's own desk,
+    // and it stays the view (`atDesk`) through a resize until they pick the whole office.
+    atDesk = narrow() && Boolean(me);
+    const near = atDesk ? deskView(me) : null;
     const view = near ?? floorView();
     setCam(view);
     if (near) setViewSeg("desk");
@@ -2870,7 +2875,9 @@ export function createOffice(
         ? deskView(focus)
         : userMoved
           ? { ...cam, w: cw / sc, h: ch / sc }
-          : floorView(),
+          : atDesk && me
+            ? deskView(me)
+            : floorView(),
     );
     buildScene();
   });

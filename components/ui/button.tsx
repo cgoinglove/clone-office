@@ -16,14 +16,15 @@ const buttonVariants = cva(
         // side by side share one shape (10-10): beside a brand button the others are round too.
         brand:
           // its focus is the shared ring, set off from the fill so it reads on it
-          "rounded-full bg-brand-fill text-brand-foreground hover:bg-brand-fill/85 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "rounded-full bg-brand-fill text-brand-foreground hover:bg-[color-mix(in_oklab,var(--brand-fill),black_14%)] focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         // `text-background` because the red flips brightness between themes.
         destructive:
-          "bg-destructive text-background hover:bg-destructive/85 focus-visible:border-destructive focus-visible:ring-destructive/30",
+          // its focus is the shared ring, set off from the red as the brand button's is
+          "bg-destructive text-background hover:bg-destructive/85 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

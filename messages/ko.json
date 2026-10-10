@@ -609,7 +609,7 @@
         "evening": "좋은 저녁이에요, {name} 님",
         "in": "{count}명 중 {in}명 출근",
         "alone": "아직 동료가 없어요",
-        "waiting": "{count, plural, other {정할 것 #건}}",
+        "waiting": "{count, plural, other {정할 것 #개}}",
         "clockIn": "출근하기",
         "enter": "Enter",
         "foot": "내 클론은 이 컴퓨터에서 일해요.",
@@ -942,7 +942,7 @@
     "inviteSomeone": "동료 초대하기",
     "requests": "부탁",
     "noRequests": "아직 없어요. 위에서 동료에게 부탁하거나 클론에게 시켜 보세요.",
-    "off": "꺼짐",
+    "off": "퇴근",
     "in": "출근",
     "fromThem": "{name} 님이 부탁했어요",
     "fromYou": "{name} 님에게 부탁했어요"
@@ -1097,7 +1097,7 @@
       "people": "멤버",
       "count": "{count}명",
       "you": "나",
-      "off": "오프라인",
+      "off": "퇴근",
       "in": "출근",
       "startTitle": "오피스 시작하기",
       "leaveHint": "내 클론이 이 오피스에서 나가요. 동료들은 더 이상 내 클론에게 부탁할 수 없어요. 초대 링크로 다시 들어올 수 있어요.",
@@ -1286,7 +1286,8 @@
       "answering": "“{choice}” 답을 곧 보내요",
       "answerTo": "{who}에게 “{choice}”",
       "cloneOf": "{name} 님의 클론",
-      "yourClone": "내 클론"
+      "yourClone": "내 클론",
+      "undone": "되돌렸어요. 아무것도 보내지 않았어요"
     },
     "clone": {
       "title": "내 클론",
@@ -1507,7 +1508,7 @@
       "nothingToday": "오늘 정해진 일이 없어요. 플로우를 만들어 보세요: “평일 9시마다 밀린 일 알려 줘”.",
       "flowStarter": "평일 아침 9시마다 나를 기다리는 일 짧게 알려 줘",
       "in": "출근",
-      "off": "컴퓨터 꺼짐",
+      "off": "퇴근",
       "star": {
         "text": "클론이 나 대신 동료에게 답했어요. Clone Office가 도움이 된다면 GitHub 별 하나가 다른 사람들이 찾는 데 도움이 돼요.",
         "action": "GitHub에 별 주기",
@@ -1585,7 +1586,8 @@
       "empty": "맞는 게 없어요",
       "move": "고르기",
       "open": "열기",
-      "askKey": "클론에게 묻기"
+      "askKey": "클론에게 묻기",
+      "results": "찾은 것"
     },
     "chats": {
       "today": "오늘",

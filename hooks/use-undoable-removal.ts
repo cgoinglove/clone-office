@@ -11,9 +11,7 @@ import { sayUndoable } from "@/components/ui/toast";
  */
 export function useUndoableRemoval(undoLabel: string) {
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
-  const pending = useRef(
-    new Map<string, { commit: () => void; undo: () => void }>(),
-  );
+  const pending = useRef(new Map<string, ReturnType<typeof sayUndoable>>());
   useEffect(() => {
     const all = pending.current;
     return () => {
@@ -55,5 +53,8 @@ export function useUndoableRemoval(undoLabel: string) {
   };
   /** Takes one back before its time, as its toast's Undo does (an Undo shown beside the item). */
   const undo = (key: string) => pending.current.get(key)?.undo();
-  return { hidden, remove, undo };
+  /** Pauses its clock while the Undo beside the item is pointed at or focused, and lets it run on. */
+  const hold = (key: string) => pending.current.get(key)?.hold();
+  const release = (key: string) => pending.current.get(key)?.release();
+  return { hidden, remove, undo, hold, release };
 }

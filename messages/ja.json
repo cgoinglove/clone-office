@@ -463,7 +463,7 @@
       "working": "仕事中",
       "meeting": "会議中",
       "away": "離席中",
-      "off": "オフ"
+      "off": "退勤"
     },
     "colleagues": "同僚",
     "nobody": "ほかのクローンはまだいません。同僚に招待リンクを送りましょう。",
@@ -609,7 +609,7 @@
         "evening": "こんばんは、{name}さん",
         "in": "{count}人中{in}人が出勤",
         "alone": "まだ同僚はいません",
-        "waiting": "{count, plural, other {あなたを待っていることが#件}}",
+        "waiting": "{count, plural, other {決めること #件}}",
         "clockIn": "出勤する",
         "enter": "Enter",
         "foot": "クローンはこのコンピューターで動いています。",
@@ -942,7 +942,7 @@
     "inviteSomeone": "誰かを招待",
     "requests": "依頼",
     "noRequests": "まだありません。上で同僚に聞くか、クローンに頼んで聞いてもらいましょう。",
-    "off": "オフ",
+    "off": "退勤",
     "in": "出勤",
     "fromThem": "{name}さんからの依頼",
     "fromYou": "{name}さんへの依頼"
@@ -1097,7 +1097,7 @@
       "people": "メンバー",
       "count": "{count, plural, other {#人}}",
       "you": "あなた",
-      "off": "オフ",
+      "off": "退勤",
       "in": "出勤",
       "startTitle": "オフィスを始める",
       "leaveHint": "クローンがこのオフィスを退出し、同僚はもうクローンに頼めなくなります。招待リンクがあれば戻れます。",
@@ -1286,7 +1286,8 @@
       "answering": "まもなく「{choice}」と答えます",
       "answerTo": "{who}に「{choice}」",
       "cloneOf": "{name}さんのクローン",
-      "yourClone": "あなたのクローン"
+      "yourClone": "あなたのクローン",
+      "undone": "取り消しました。何も送っていません"
     },
     "clone": {
       "title": "あなたのクローン",
@@ -1475,7 +1476,7 @@
         "afternoon": "こんにちは",
         "evening": "こんばんは"
       },
-      "summary": "{decide, plural, =0 {あなた待ちのことはありません} other {あなた待ち #件}} · {moving, plural, =0 {進行中の依頼なし} other {進行中の依頼 #件}} · {answered, plural, =0 {今日クローンが答えた同僚はまだいません} other {今日クローンが同僚#人に答えました}}",
+      "summary": "{decide, plural, =0 {決めることはありません} other {決めること #件}} · {moving, plural, =0 {進行中の依頼なし} other {進行中の依頼 #件}} · {answered, plural, =0 {今日クローンが答えた同僚はまだいません} other {今日クローンが同僚#人に答えました}}",
       "askPlaceholder": "クローンに何でも頼めます。同僚の名前を出すと、その人のクローンに聞きます…",
       "askSend": "聞く",
       "try": {
@@ -1507,7 +1508,7 @@
       "nothingToday": "今日の予定はありません。フローを試してみましょう：「平日の9時に、状況をまとめて」。",
       "flowStarter": "平日の9時に、わたし待ちのことを手短に教えて",
       "in": "出勤",
-      "off": "コンピューターオフ",
+      "off": "退勤",
       "star": {
         "text": "クローンがあなたの代わりに同僚に答えました。Clone Office が役に立ったら、GitHub のスターが他の人に見つけてもらう助けになります。",
         "action": "GitHub でスター",
@@ -1585,7 +1586,8 @@
       "empty": "一致するものがありません",
       "move": "選ぶ",
       "open": "開く",
-      "askKey": "クローンに聞く"
+      "askKey": "クローンに聞く",
+      "results": "見つかったもの"
     },
     "chats": {
       "today": "今日",

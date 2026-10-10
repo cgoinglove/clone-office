@@ -463,7 +463,7 @@
       "working": "工作中",
       "meeting": "会议中",
       "away": "离开",
-      "off": "下线"
+      "off": "已下班"
     },
     "colleagues": "同事",
     "nobody": "还没有其他分身。把邀请链接发给同事吧。",
@@ -609,7 +609,7 @@
         "evening": "晚上好，{name}",
         "in": "{count} 人中已有 {in} 人上班",
         "alone": "这里还没有同事",
-        "waiting": "{count, plural, other {# 件事在等你}}",
+        "waiting": "{count, plural, other {待你决定 # 件}}",
         "clockIn": "打卡上班",
         "enter": "Enter",
         "foot": "你的分身在这台电脑上运行。",
@@ -942,7 +942,7 @@
     "inviteSomeone": "邀请别人",
     "requests": "请求",
     "noRequests": "还没有。在上面问问同事，或者让你的分身去问。",
-    "off": "下线",
+    "off": "已下班",
     "in": "在岗",
     "fromThem": "{name}问你",
     "fromYou": "你问{name}"
@@ -1097,7 +1097,7 @@
       "people": "成员",
       "count": "{count, plural, other {# 人}}",
       "you": "你",
-      "off": "下线",
+      "off": "已下班",
       "in": "在岗",
       "startTitle": "开设你的办公室",
       "leaveHint": "你的分身会离开这个办公室，同事就不能再找它了。之后可以用邀请链接回来。",
@@ -1286,7 +1286,8 @@
       "answering": "即将发送“{choice}”",
       "answerTo": "回复{who}：“{choice}”",
       "cloneOf": "{name}的分身",
-      "yourClone": "你的分身"
+      "yourClone": "你的分身",
+      "undone": "已撤回，什么也没有发出"
     },
     "clone": {
       "title": "你的分身",
@@ -1475,7 +1476,7 @@
         "afternoon": "下午好",
         "evening": "晚上好"
       },
-      "summary": "{decide, plural, =0 {没有等你处理的事} other {# 件事等你处理}} · {moving, plural, =0 {没有进行中的请求} other {# 个请求进行中}} · {answered, plural, =0 {今天你的分身还没回答任何人} other {今天你的分身回答了 # 位同事}}",
+      "summary": "{decide, plural, =0 {没有待你决定的事} other {待你决定 # 件}} · {moving, plural, =0 {没有进行中的请求} other {# 个请求进行中}} · {answered, plural, =0 {今天你的分身还没回答任何人} other {今天你的分身回答了 # 位同事}}",
       "askPlaceholder": "让你的分身做点什么，或者提到同事的名字去问他们的分身…",
       "askSend": "提问",
       "try": {
@@ -1507,7 +1508,7 @@
       "nothingToday": "今天没有安排。试试自动流程：“每个工作日 9 点，帮我汇总一下”。",
       "flowStarter": "每个工作日 9 点，简单告诉我有什么在等我处理",
       "in": "在岗",
-      "off": "电脑已关",
+      "off": "已下班",
       "star": {
         "text": "你的克隆已经替你回答了同事。如果 Clone Office 对你有帮助，在 GitHub 上点个星能让更多人找到它。",
         "action": "在 GitHub 上加星",
@@ -1585,7 +1586,8 @@
       "empty": "没有匹配项",
       "move": "选择",
       "open": "打开",
-      "askKey": "问克隆"
+      "askKey": "问克隆",
+      "results": "结果"
     },
     "chats": {
       "today": "今天",
