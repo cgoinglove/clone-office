@@ -330,6 +330,17 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
   }
 }
 
+/** Puts the keyboard in the chat box once the conversation's screen is there (after a new chat). */
+export function focusChatBox() {
+  let tries = 0;
+  const step = () => {
+    const box = document.querySelector<HTMLElement>("[data-chat-box]");
+    if (box) box.focus();
+    else if (tries++ < 90) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 /** The box the person writes to their clone in: Enter sends, Shift+Enter starts a new line. */
 export function Composer({
   chat,
@@ -388,6 +399,7 @@ export function Composer({
       >
         <textarea
           ref={box}
+          data-chat-box
           value={draft}
           rows={1}
           placeholder={placeholder}

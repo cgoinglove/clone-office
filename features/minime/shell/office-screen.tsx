@@ -9,7 +9,7 @@
 import { ChevronDown, ChevronUp, MessagesSquare, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
 import { OfficeRoom } from "@/features/office/room/office-room";
@@ -65,6 +65,16 @@ export function OfficeScreen() {
   const data = office.office;
   const members = data?.members ?? [];
   const turns = app.turns;
+  // the floor and its lobby count what waits as the column does
+  const waits = app.toDecide.length;
+  const room = useMemo(
+    () =>
+      office.room && {
+        ...office.room,
+        waiting: { ...office.room.waiting, count: waits },
+      },
+    [office.room, waits],
+  );
   // Read once: the office does not go back to the lobby while the screen is open.
   const [lobby] = useState(
     () => typeof window !== "undefined" && !clockedInToday(),
@@ -153,23 +163,23 @@ export function OfficeScreen() {
       </header>
       <OfficeTrouble className="mx-6 mt-3 shrink-0" />
       <div className="relative min-h-0 flex-1">
-        {office.room && preferences && (
+        {room && preferences && (
           <OfficeRoom
             full
             className="of-pane"
-            data={office.room}
+            data={room}
             lobby={lobby && preferences.lobby}
             inset={boardShown ? BOARD + 32 : 0}
             insetHeight={boardHeight}
             turnShown
             onPanel={setPanelOpen}
             insetLeft={shown && meets ? MEETING + 32 : 0}
-            onClockIn={() => {
+            onEnter={() => {
               rememberClockIn();
-              setClocked(true);
               // the lobby's button goes with the lobby: the keyboard lands on the office
               document.getElementById("office-title")?.focus();
             }}
+            onClockIn={() => setClocked(true)}
             onAnswer={() => {
               const first = turns[0];
               if (first) router.push(turnHref(first));
@@ -182,19 +192,41 @@ export function OfficeScreen() {
         {boardShown && (
           <Board
             turns={turns}
+            count={app.toDecide.length}
             onHeight={setBoardHeight}
-            onFold={small ? () => setBoardOpen(false) : undefined}
+            onFold={
+              small
+                ? () => {
+                    setBoardOpen(false);
+                    // the keyboard goes back to the pill that opened it
+                    requestAnimationFrame(() =>
+                      document
+                        .querySelector<HTMLElement>("[data-board-pill]")
+                        ?.focus(),
+                    );
+                  }
+                : undefined
+            }
           />
         )}
         {small && turns.length > 0 && !atLobby && !panelOpen && !boardOpen && (
           <button
             type="button"
+            data-board-pill
             aria-expanded={false}
-            onClick={() => setBoardOpen(true)}
+            onClick={() => {
+              setBoardOpen(true);
+              // the keyboard goes into the board, on the button that folds it again
+              requestAnimationFrame(() =>
+                document
+                  .querySelector<HTMLElement>("[data-board-fold]")
+                  ?.focus(),
+              );
+            }}
             className="absolute top-4 right-4 z-10 flex h-8 items-center gap-1.5 rounded-full bg-background px-3 text-[13px] font-semibold text-waiting shadow-[0_0_0_1px_var(--alpha-08),0_8px_24px_-12px_var(--alpha-20)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("yourTurn")}
-            <span className="tabular-nums">{turns.length}</span>
+            <span className="tabular-nums">{app.toDecide.length}</span>
             <ChevronDown className="size-3.5" />
           </button>
         )}
@@ -216,10 +248,13 @@ export function OfficeScreen() {
 /** What waits on the person, hung over the office: answered in place when it is a tap. */
 function Board({
   turns,
+  count,
   onHeight,
   onFold,
 }: {
   turns: TurnItem[];
+  /** How many still wait (an answer on its way stays on the board, uncounted). */
+  count: number;
   /** On a phone, folds the board back into its pill. */
   onFold?: () => void;
   /** How far down from the office's top it reaches, as it grows and shrinks. */
@@ -251,7 +286,7 @@ function Board({
           {t("yourTurn")}
         </h2>
         <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-          {turns.length}
+          {count}
         </span>
         <span className="ml-auto text-xs text-muted-foreground">
           {t("answerHere")}
@@ -260,6 +295,7 @@ function Board({
           <Tip label={t("fold")}>
             <button
               type="button"
+              data-board-fold
               aria-expanded
               onClick={onFold}
               className={cn(

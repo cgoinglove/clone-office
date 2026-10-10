@@ -10,7 +10,9 @@
       "add": "追加…",
       "full": "{count}件までです"
     },
-    "undo": "元に戻す"
+    "undo": "元に戻す",
+    "noticesLabel": "お知らせ",
+    "newsLabel": "新着"
   },
   "language": {
     "label": "言語",
@@ -1280,8 +1282,11 @@
       "fromClone": "あなたのクローンからの質問",
       "open": "開く",
       "inNow": "出勤 {count}/{all}",
-      "answered": "「{choice}」と答えました",
-      "fold": "たたむ"
+      "fold": "たたむ",
+      "answering": "まもなく「{choice}」と答えます",
+      "answerTo": "{who}に「{choice}」",
+      "cloneOf": "{name}さんのクローン",
+      "yourClone": "あなたのクローン"
     },
     "clone": {
       "title": "あなたのクローン",
@@ -1564,7 +1569,9 @@
       "list": "この一覧",
       "rename": "選んだチャットの名前を変える",
       "askFromSearch": "検索に書いたことをクローンに聞く",
-      "toast": "出たばかりの通知へ（元に戻す）"
+      "toast": "出たばかりの通知へ（元に戻す）",
+      "chatList": "最近のチャットを移動",
+      "chatMenu": "選んだチャットのメニューを開く"
     },
     "palette": {
       "title": "検索と移動",

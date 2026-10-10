@@ -26,7 +26,7 @@ import { Bot } from "@/features/office";
 import type { BotShape } from "@/features/office/bot-shape";
 import { looksOf } from "@/features/office/room/looks.mjs";
 import { useProblem } from "@/i18n/client";
-import { cn } from "@/lib/utils";
+import { cn, notAfter } from "@/lib/utils";
 import { TeamKeys } from "../brain-panel";
 import {
   HEADERS,
@@ -137,7 +137,7 @@ export function OfficeSection({
                     : statusText(t, member.card.status) || tS("in")}
                   {!mine && (
                     <span className="block text-[11px]">
-                      {format.relativeTime(new Date(member.seen), now)}
+                      {format.relativeTime(notAfter(member.seen, now), now)}
                     </span>
                   )}
                 </span>

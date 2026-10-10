@@ -335,7 +335,7 @@ stays between them. When something waits for them, their clone wears a dot and i
 here** (여기서 바로 답할 수 있어요): a permission or a question with a few choices is answered with
 its buttons there (with **Undo** for a few seconds, as on Home), and the chevron at the end of each
 takes them to the request. On a phone it folds into a **To decide** pill at the top right that opens
-it.
+it, and the office opens near their own desk, where the names over heads can be read.
 
 **My desk** (내 자리) and **Office** (오피스) at the bottom move the view; dragging moves it too,
 and Ctrl (or ⌘) with the wheel zooms. Clicking a clone opens a panel about that person: what is on their desk, what they do

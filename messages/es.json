@@ -10,7 +10,9 @@
       "add": "Añadir…",
       "full": "Hasta {count}"
     },
-    "undo": "Deshacer"
+    "undo": "Deshacer",
+    "noticesLabel": "Avisos",
+    "newsLabel": "Novedades"
   },
   "language": {
     "label": "Idioma",
@@ -1280,8 +1282,11 @@
       "fromClone": "Tu clon pregunta",
       "open": "Abrir",
       "inNow": "{count} de {all} dentro",
-      "answered": "Respondiste «{choice}»",
-      "fold": "Plegar"
+      "fold": "Plegar",
+      "answering": "«{choice}» se envía en un momento",
+      "answerTo": "«{choice}» para {who}",
+      "cloneOf": "el clon de {name}",
+      "yourClone": "tu clon"
     },
     "clone": {
       "title": "Tu clon",
@@ -1564,7 +1569,9 @@
       "list": "Esta lista",
       "rename": "Renombrar el chat seleccionado",
       "askFromSearch": "Preguntar a tu clon lo que escribiste en Buscar",
-      "toast": "Ir al último aviso (y su Deshacer)"
+      "toast": "Ir al último aviso (y su Deshacer)",
+      "chatList": "Moverse por los chats recientes",
+      "chatMenu": "Abrir el menú del chat seleccionado"
     },
     "palette": {
       "title": "Buscar e ir",

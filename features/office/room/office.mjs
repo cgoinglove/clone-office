@@ -153,6 +153,7 @@ export function createOffice(
     onAsk,
     lobby = false,
     onClockIn,
+    onEnter,
     onPanel,
     fps = 60,
     example = false,
@@ -2411,6 +2412,7 @@ export function createOffice(
     if (!lobbyEl || !plan) return;
     lobbyOn = true;
     entering = false;
+    wrap.classList.remove("riding");
     // the drawing is the building now, and says so
     svg.setAttribute("aria-label", W.lobby.label);
     for (const g of [gFloor, gWalls, gScene, gUnder, gFly]) g.innerHTML = "";
@@ -2486,7 +2488,11 @@ export function createOffice(
     const g = GEN;
     lobbyEl.classList.add("go");
     gIntro.firstElementChild?.classList.add("enter");
+    // what lies over the office (its controls, the ask box) waits for the doors to open
+    wrap.classList.add("riding");
+    onEnter?.();
     if (REDUCED) {
+      wrap.classList.remove("riding");
       leaveLobby();
       openOffice("lift");
       onClockIn?.();
@@ -2500,7 +2506,10 @@ export function createOffice(
     await new Promise((r) =>
       requestAnimationFrame(() => requestAnimationFrame(r)),
     );
-    if (g !== GEN || destroyed) return;
+    if (g !== GEN || destroyed) {
+      wrap.classList.remove("riding");
+      return;
+    }
     liftx.classList.add("shut");
     await wait(480);
     // behind the closed doors the floor is laid out, already drawn, the whole floor in view
@@ -2515,12 +2524,13 @@ export function createOffice(
     await wait(320);
     liftx.classList.remove("shut");
     liftx.classList.add("open");
-    // in: what the page lays over the office comes as the doors part, not over them
-    onClockIn?.();
     openLift(2.6);
     await wait(700);
     liftx.hidden = true;
     liftx.className = "liftx";
+    // in: what lies over the office, the office's own and the page's, comes once the doors are open
+    wrap.classList.remove("riding");
+    onClockIn?.();
   }
   on($("lb-go"), "click", () => spawn(clockIn));
   on(lobbyEl, "pointerdown", (e) => e.stopPropagation());
@@ -2594,12 +2604,16 @@ export function createOffice(
     if (opened || !plan) return;
     opened = true;
     const lift = via === "lift" && !REDUCED;
-    // the whole floor at once, the doors opening on it; the camera does not fly in from the lift
-    setCam(floorView());
+    // the whole floor at once, the doors opening on it; the camera does not fly in from the lift.
+    // On a phone the whole floor is too small to read: the doors open on the viewer's own desk.
+    const near = narrow() && me ? deskView(me) : null;
+    const view = near ?? floorView();
+    setCam(view);
+    if (near) setViewSeg("desk");
     if (lift && me) {
       me.present = false;
       me.coming = true;
-      buildScene(floorView());
+      buildScene(view);
       spawn(async () => {
         await wait(1100);
         openLift(2.4);

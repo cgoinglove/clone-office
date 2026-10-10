@@ -10,7 +10,9 @@
       "add": "Adicionar…",
       "full": "Até {count}"
     },
-    "undo": "Desfazer"
+    "undo": "Desfazer",
+    "noticesLabel": "Avisos",
+    "newsLabel": "Novidades"
   },
   "language": {
     "label": "Idioma",
@@ -1280,8 +1282,11 @@
       "fromClone": "Seu clone pergunta",
       "open": "Abrir",
       "inNow": "{count} de {all} presentes",
-      "answered": "Você respondeu “{choice}”",
-      "fold": "Recolher"
+      "fold": "Recolher",
+      "answering": "“{choice}” vai em um instante",
+      "answerTo": "“{choice}” para {who}",
+      "cloneOf": "o clone de {name}",
+      "yourClone": "seu clone"
     },
     "clone": {
       "title": "Seu clone",
@@ -1564,7 +1569,9 @@
       "list": "Esta lista",
       "rename": "Renomear a conversa selecionada",
       "askFromSearch": "Perguntar ao seu clone o que você digitou na busca",
-      "toast": "Ir ao último aviso (e seu Desfazer)"
+      "toast": "Ir ao último aviso (e seu Desfazer)",
+      "chatList": "Andar pelas conversas recentes",
+      "chatMenu": "Abrir o menu da conversa selecionada"
     },
     "palette": {
       "title": "Buscar e ir",

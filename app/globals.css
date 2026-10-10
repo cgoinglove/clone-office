@@ -32,6 +32,7 @@
   --color-primary: var(--primary);
   --color-brand-foreground: var(--brand-foreground);
   --color-brand: var(--brand);
+  --color-brand-fill: var(--brand-fill);
   --color-waiting: var(--waiting);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -171,6 +172,8 @@
   --ring: var(--brand);
 
   --brand: #0169cc; /* blue-500 */
+  /* a button filled with the brand, under white words: the brand itself on this paper */
+  --brand-fill: var(--brand);
   --brand-foreground: #ffffff;
   --destructive: #dc2626; /* Tailwind red-600 */
   --waiting: #c43d18; /* ember: red-600 and orange-700, halfway */
@@ -188,6 +191,8 @@
   --ring: var(--brand);
 
   --brand: #0a84ff; /* the iOS dark system blue: the vivid end that still clears 4.5:1 on this paper */
+  /* under white words the vivid blue is 3.65:1; a deeper one carries them at 5.6:1 */
+  --brand-fill: #0060df;
   --brand-foreground: #ffffff;
   --destructive: #ef4444; /* Tailwind red-500 */
   --waiting: #ff7a55; /* the same ember, at the step this paper needs */

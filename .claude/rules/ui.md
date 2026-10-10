@@ -15,7 +15,8 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
 - `app/globals.css` — every colour token in both themes, `.inverse`, the app's keyframes (the
   bots' body language came over from Thursday with them). The office floor keeps its own in
   `features/office/room/room.css`, mapped onto these tokens.
-- `components/ui/button.tsx` — the button variants and `loading`.
+- `components/ui/button.tsx` — the button variants and `loading`; a brand fill under white words is
+  `bg-brand-fill` (the brand itself in light, a deeper blue in dark), never `bg-brand`.
 - `components/ui/confirm-dialog.tsx` — `ConfirmDialog`: a big step asked once (both buttons one
   shape, only a removing one red; `error` says in it why the step failed; `confirmOpen()` for a
   key that must wait while one is open).

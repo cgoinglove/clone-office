@@ -102,9 +102,18 @@ export function RecentChats({ row }: { row: (on: boolean) => string }) {
     if (loadingRef.current) return;
     loadingRef.current = true;
     setLoading(true);
+    const focused = document.activeElement === end.current;
     void loadMore().finally(() => {
       loadingRef.current = false;
       setLoading(false);
+      // the button had the keyboard: it stays there, or, when no more remain, goes to the last row
+      if (focused)
+        requestAnimationFrame(() => {
+          if (end.current?.isConnected) return end.current.focus();
+          const rows =
+            list.current?.querySelectorAll<HTMLElement>("[data-chat-row]");
+          rows?.[rows.length - 1]?.focus();
+        });
     });
   };
   // The next page comes as the list is scrolled to its end; one watcher while there is more.
@@ -222,7 +231,8 @@ export function RecentChats({ row }: { row: (on: boolean) => string }) {
         <button
           ref={end}
           type="button"
-          disabled={loading}
+          // never disabled while it loads, so the keyboard on it is not dropped
+          aria-busy={loading}
           onClick={() => next.current()}
           className="flex h-8 items-center gap-2 rounded-lg px-2.5 text-[13px] text-muted-foreground outline-none hover:bg-foreground/[0.045] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >

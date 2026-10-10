@@ -10,7 +10,9 @@
       "add": "더하기…",
       "full": "{count}개까지예요"
     },
-    "undo": "되돌리기"
+    "undo": "되돌리기",
+    "noticesLabel": "알림",
+    "newsLabel": "새 소식"
   },
   "language": {
     "label": "언어",
@@ -1280,8 +1282,11 @@
       "fromClone": "내 클론이 물어요",
       "open": "열기",
       "inNow": "출근 {count}/{all}",
-      "answered": "“{choice}”라고 답했어요",
-      "fold": "접기"
+      "fold": "접기",
+      "answering": "“{choice}” 답을 곧 보내요",
+      "answerTo": "{who}에게 “{choice}”",
+      "cloneOf": "{name} 님의 클론",
+      "yourClone": "내 클론"
     },
     "clone": {
       "title": "내 클론",
@@ -1564,7 +1569,9 @@
       "list": "이 목록",
       "rename": "고른 대화 이름 바꾸기",
       "askFromSearch": "검색에 쓴 말을 클론에게 묻기",
-      "toast": "방금 뜬 알림으로(되돌리기)"
+      "toast": "방금 뜬 알림으로(되돌리기)",
+      "chatList": "최근 대화 사이로 움직이기",
+      "chatMenu": "고른 대화의 메뉴 열기"
     },
     "palette": {
       "title": "찾기와 이동",

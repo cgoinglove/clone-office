@@ -24,13 +24,13 @@ import {
 } from "@/components/ui/dialog";
 import { Segmented } from "@/components/ui/segmented";
 import { Bot } from "@/features/office";
-import { cn } from "@/lib/utils";
+import { cn, notAfter } from "@/lib/utils";
 import { Colleague } from "../home/colleague";
 import type { Task } from "../home/use-office";
 import { useApp } from "./app-state";
 import { OfficeTrouble } from "./office-trouble";
 import { Mark, PageHeader, type Phase, PhaseChip, phaseOf } from "./parts";
-import { taskOf } from "./your-turn";
+import { askLine, taskOf } from "./your-turn";
 
 type Side = "all" | "received" | "sent";
 
@@ -43,6 +43,7 @@ export const askedText = (task: Task) =>
 export function RequestsScreen() {
   const t = useTranslations("shell.requests");
   const tOffice = useTranslations("office");
+  const tAsk = useTranslations("ask");
   const format = useFormatter();
   const now = useNow({ updateInterval: 60_000 });
   const app = useApp();
@@ -56,6 +57,14 @@ export function RequestsScreen() {
 
   const yours = new Set(
     office.waiting.map((waiting) => taskOf(waiting)).filter(Boolean),
+  );
+  // what the clone asks the person about each request waiting on them, said on its row
+  const questions = new Map(
+    app.turns.flatMap((item) =>
+      item.where.kind === "request" && item.where.task
+        ? [[item.where.task, askLine(tAsk, item.ask)] as const]
+        : [],
+    ),
   );
   const tasks = (data?.tasks ?? [])
     .filter((task) =>
@@ -192,7 +201,9 @@ export function RequestsScreen() {
                                   {askedText(task)}
                                 </span>
                                 <span className="truncate text-[13px] text-muted-foreground">
-                                  {answer ??
+                                  {(group === "yours" &&
+                                    questions.get(task.id)) ||
+                                    answer ||
                                     t(sent ? "noAnswerYet" : "notAnsweredYet")}
                                 </span>
                               </span>
@@ -224,7 +235,7 @@ export function RequestsScreen() {
                               </span>
                               <span className="text-right text-xs whitespace-nowrap text-muted-foreground tabular-nums max-md:hidden">
                                 {format.relativeTime(
-                                  new Date(task.status.timestamp),
+                                  notAfter(task.status.timestamp, now),
                                   now,
                                 )}
                               </span>

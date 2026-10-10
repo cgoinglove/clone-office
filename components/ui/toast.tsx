@@ -12,7 +12,9 @@
 
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
 import { Check, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type * as React from "react";
+import { useLayoutEffect } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -114,7 +116,8 @@ function sayUndoable(
       if (!settled) timer = setTimeout(done, 2500);
     },
   });
-  return { id, commit: done };
+  // `undo` takes it back from elsewhere too (an Undo on the row the toast is about)
+  return { id, commit: done, undo: () => settle(undo) };
 }
 
 /** How toasts and notices stack, move in and leave; each list sets its own gap and entry. */
@@ -163,6 +166,23 @@ function ToastList() {
 
 function NoticeList() {
   const { toasts, close } = ToastPrimitive.useToastManager();
+  // How high the cards stand, so a toast at the bottom centre stands above them instead of on them
+  // where the window is too narrow to keep them apart.
+  useLayoutEffect(() => {
+    void toasts;
+    const measure = () => {
+      let top = window.innerHeight;
+      for (const card of document.querySelectorAll('[data-slot="notice"]'))
+        top = Math.min(top, card.getBoundingClientRect().top);
+      document.documentElement.style.setProperty(
+        "--notice-stack",
+        `${Math.round(window.innerHeight - top)}px`,
+      );
+    };
+    measure();
+    const settled = setTimeout(measure, 450);
+    return () => clearTimeout(settled);
+  }, [toasts]);
   return toasts.map((item) => {
     const notice = item.data as Notice | undefined;
     return (
@@ -219,12 +239,14 @@ function NoticeList() {
 }
 
 function Toaster() {
+  const t = useTranslations("common");
   return (
     <ToastPrimitive.Provider toastManager={toast} limit={3}>
       <ToastPrimitive.Provider toastManager={notices} limit={3}>
         <ToastPrimitive.Portal>
           <ToastPrimitive.Viewport
             data-slot="notice-viewport"
+            aria-label={t("newsLabel")}
             className="pointer-events-none fixed right-4 bottom-[max(1.5rem,calc(var(--notice-lift,0px)+0.75rem))] z-100 w-[min(22.5rem,calc(100vw-2rem))] outline-none"
           >
             <NoticeList />
@@ -234,7 +256,9 @@ function Toaster() {
       <ToastPrimitive.Portal>
         <ToastPrimitive.Viewport
           data-slot="toast-viewport"
-          className="pointer-events-none fixed inset-x-4 bottom-[max(1.5rem,calc(var(--notice-lift,0px)+0.75rem))] z-100 mx-auto h-11 outline-none"
+          aria-label={t("noticesLabel")}
+          // above the box at the bottom, and above any news card standing there
+          className="pointer-events-none fixed inset-x-4 bottom-[max(1.5rem,calc(var(--notice-lift,0px)+0.75rem),calc(var(--notice-stack,0px)+0.5rem))] z-100 mx-auto h-11 outline-none"
         >
           <ToastList />
         </ToastPrimitive.Viewport>

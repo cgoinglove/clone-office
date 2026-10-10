@@ -189,7 +189,9 @@ export function createOffice(
     onAsk?: (text: string) => void;
     /** Opens at the lobby: the building and a card to clock in, then the lift up. */
     lobby?: boolean;
-    /** Clocked in at the lobby: called as the lift's doors open on the floor. */
+    /** Clocked in at the lobby (its button or Enter): called as the ride starts. */
+    onEnter?: () => void;
+    /** Arrived from the lobby: called once the lift's doors are open on the floor. */
     onClockIn?: () => void;
     /** The panel about one person opened (true) or closed (false). */
     onPanel?: (open: boolean) => void;

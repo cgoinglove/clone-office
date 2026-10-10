@@ -1305,7 +1305,8 @@
   appearance: none;
   border: 0;
   border-radius: 10px;
-  background: var(--brand);
+  /* flat, as every button is: a fill, no shadow, nothing rising */
+  background: var(--brand-fill);
   color: var(--brand-foreground);
   font: 600 15px / 1 var(--font-sans);
   padding: 14px 16px;
@@ -1314,13 +1315,10 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  transition:
-    transform 0.15s,
-    box-shadow 0.15s;
+  transition: background-color 0.15s;
 }
 .of-wrap .lb-go:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 22px color-mix(in oklab, var(--brand) 30%, transparent);
+  background: color-mix(in oklab, var(--brand-fill) 85%, transparent);
 }
 .of-wrap .lb-go:active {
   transform: translateY(1px);
@@ -1358,7 +1356,7 @@
     font-size: 22px;
   }
 }
-.of-wrap.at-lobby :is(.hud, .composer, .over, .panel) {
+.of-wrap:is(.at-lobby, .riding) :is(.hud, .composer, .over, .panel) {
   display: none !important;
 }
 .of-wrap.at-lobby {

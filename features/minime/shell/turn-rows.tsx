@@ -5,11 +5,12 @@
 // goes to where it was asked. The office's board and Home show the same rows.
 //
 // An answer is a call made in the person's name, so a stray tap must not make it: the choices
-// weigh the same, the row answered stays where it was (saying what was chosen) while its Undo
-// lasts, the answer goes when that runs out or the screen goes, and a tap that lands just as the
-// rows moved (one answered elsewhere) is not taken.
+// weigh the same, the row answered stays where it was (saying what goes, with its own Undo, which
+// the keyboard lands on) while the Undo lasts, the answer goes when that runs out or the screen
+// goes, and a tap that lands just as the rows moved, or just after an answer, is not taken.
+// Meanwhile it no longer counts as waiting anywhere (`app.toDecide`).
 
-import { Check, ChevronRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -68,29 +69,35 @@ export function TurnRows({
         const sent = sending.hidden.has(item.key)
           ? chosen[item.key]
           : undefined;
+        const who = from ? t("cloneOf", { name: fromName }) : t("yourClone");
+        const question = `q-${item.key}`;
         const choose = (option: { reply: string; label: string }) => {
           if (performance.now() - movedAt.current < SETTLE_MS) return;
           // nor is a second tap (or Enter) just after, now on the next question
           movedAt.current = performance.now();
           setChosen((all) => ({ ...all, [item.key]: option.label }));
-          sending.remove(item.key, t("answered", { choice: option.label }), {
-            commit: async () => {
-              if (item.waiting)
-                await app.office.answer(item.waiting, option.reply, false);
-              else if (item.chatAsk)
-                await app.answerChatAsk(item.chatAsk.id, option.reply);
-              return true;
+          app.markAnswering(item.key, true);
+          sending.remove(
+            item.key,
+            t("answerTo", { who, choice: option.label }),
+            {
+              commit: async () => {
+                if (item.waiting)
+                  await app.office.answer(item.waiting, option.reply, false);
+                else if (item.chatAsk)
+                  await app.answerChatAsk(item.chatAsk.id, option.reply);
+                app.markAnswering(item.key, false);
+                return true;
+              },
+              undo: () => app.markAnswering(item.key, false),
             },
-          });
-          // The keyboard goes on to the next question, or stays on this row's answer.
-          requestAnimationFrame(() => {
-            const rows = list.current?.children;
-            const next =
-              rows?.[at + 1]?.querySelector<HTMLElement>("[data-choice]");
-            (
-              next ?? rows?.[at]?.querySelector<HTMLElement>("[data-sent]")
-            )?.focus();
-          });
+          );
+          // The keyboard stays on this row, on its Undo: never on the next question's choice.
+          requestAnimationFrame(() =>
+            list.current?.children[at]
+              ?.querySelector<HTMLElement>("[data-undo]")
+              ?.focus(),
+          );
         };
         return (
           <li key={item.key} className="flex items-center gap-3 px-4 py-3">
@@ -113,21 +120,33 @@ export function TurnRows({
               <span className="text-xs text-muted-foreground">
                 {from ? t("fromColleague", { name: fromName }) : t("fromClone")}
               </span>
-              <span className="text-[13.5px] leading-snug font-semibold">
+              <span
+                id={question}
+                className="text-[13.5px] leading-snug font-semibold"
+              >
                 {askLine(tAsk, ask)}
               </span>
               {sent !== undefined ? (
-                <span
-                  data-sent
-                  tabIndex={-1}
-                  className="mt-1.5 flex h-7 items-center gap-1.5 text-[13px] text-muted-foreground outline-none"
-                >
-                  <Check className="size-3.5" />
-                  {t("answered", { choice: sent })}
+                <span className="mt-1.5 flex h-7 items-center gap-2 text-[13px] text-muted-foreground">
+                  <Clock className="size-3.5" />
+                  {t("answering", { choice: sent })}
+                  <Button
+                    data-undo
+                    size="xs"
+                    variant="ghost"
+                    className="text-foreground"
+                    onClick={() => sending.undo(item.key)}
+                  >
+                    {undo}
+                  </Button>
                 </span>
               ) : (
                 options.length > 0 && (
-                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  <div
+                    role="group"
+                    aria-labelledby={question}
+                    className="mt-1.5 flex flex-wrap gap-1.5"
+                  >
                     {options.map((option) => (
                       <Button
                         key={option.reply}

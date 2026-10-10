@@ -145,6 +145,24 @@ export function useAppState() {
     () => yourTurn(office, chatAsks),
     [office.waiting, office.office?.tasks, chatAsks],
   );
+  // Answers on their way (their Undo still open): the row answered stays where it was, but what is
+  // counted as waiting (the column, the tab's title, the counts) no longer holds it.
+  const [answering, setAnswering] = useState<ReadonlySet<string>>(new Set());
+  const markAnswering = useCallback(
+    (key: string, on: boolean) =>
+      setAnswering((all) => {
+        if (all.has(key) === on) return all;
+        const next = new Set(all);
+        if (on) next.add(key);
+        else next.delete(key);
+        return next;
+      }),
+    [],
+  );
+  const toDecide = useMemo(
+    () => turns.filter((item) => !answering.has(item.key)),
+    [turns, answering],
+  );
 
   const joined = Boolean(office.office?.joined);
   const name =
@@ -166,6 +184,9 @@ export function useAppState() {
       chatAsks,
       asksLoaded,
       turns,
+      toDecide,
+      answering,
+      markAnswering,
       answerChatAsk,
       mood,
       joined,
@@ -183,6 +204,9 @@ export function useAppState() {
       chatAsks,
       asksLoaded,
       turns,
+      toDecide,
+      answering,
+      markAnswering,
       answerChatAsk,
       mood,
       joined,

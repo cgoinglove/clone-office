@@ -10,7 +10,9 @@
       "add": "添加…",
       "full": "最多 {count} 个"
     },
-    "undo": "撤销"
+    "undo": "撤销",
+    "noticesLabel": "提示",
+    "newsLabel": "新消息"
   },
   "language": {
     "label": "语言",
@@ -1280,8 +1282,11 @@
       "fromClone": "你的分身问",
       "open": "打开",
       "inNow": "在岗 {count}/{all}",
-      "answered": "已回答“{choice}”",
-      "fold": "收起"
+      "fold": "收起",
+      "answering": "即将发送“{choice}”",
+      "answerTo": "回复{who}：“{choice}”",
+      "cloneOf": "{name}的分身",
+      "yourClone": "你的分身"
     },
     "clone": {
       "title": "你的分身",
@@ -1564,7 +1569,9 @@
       "list": "此列表",
       "rename": "重命名选中的对话",
       "askFromSearch": "把搜索框里的话问分身",
-      "toast": "跳到刚出现的通知（撤销）"
+      "toast": "跳到刚出现的通知（撤销）",
+      "chatList": "在最近的对话间移动",
+      "chatMenu": "打开选中对话的菜单"
     },
     "palette": {
       "title": "搜索与跳转",

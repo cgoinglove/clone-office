@@ -41,7 +41,8 @@ import { APP_NAME } from "@/features/brand/logo";
 import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
 import { Bot } from "@/features/office";
 import { useCommandKeys } from "@/hooks/use-hotkey";
-import { cn } from "@/lib/utils";
+import { cn, notAfter } from "@/lib/utils";
+import { focusChatBox } from "../home/chat-view";
 import { HEADERS } from "../home/use-office";
 import { STATUSES, statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
@@ -102,7 +103,8 @@ export function Sidebar({
   const now = useNow({ updateInterval: 60_000 });
   const { office, chat } = app;
   const data = office.office;
-  const turns = app.turns;
+  // what still waits: an answer on its way (its Undo open) is not listed here
+  const turns = app.toDecide;
   const open = (data?.tasks ?? []).filter((task) =>
     ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
   ).length;
@@ -134,6 +136,7 @@ export function Sidebar({
 
   return (
     <nav
+      data-column
       aria-label={t("nav")}
       className={cn(
         "flex h-full w-60 shrink-0 flex-col border-r border-border/60 bg-muted/40 px-2.5",
@@ -166,6 +169,7 @@ export function Sidebar({
           onClick={() => {
             chat.newChat();
             router.push("/chat");
+            focusChatBox();
           }}
           aria-keyshortcuts={keys.aria("KeyO", true)}
           className={row(false)}
@@ -244,7 +248,7 @@ export function Sidebar({
                 index={indexOf(item.from)}
                 ago={
                   item.since
-                    ? format.relativeTime(new Date(item.since), {
+                    ? format.relativeTime(notAfter(item.since, now), {
                         now,
                         style: "narrow",
                       })

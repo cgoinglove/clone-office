@@ -44,8 +44,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeSync />
         <NextIntlClientProvider>
           <DialogWords>{children}</DialogWords>
+          <Toaster />
         </NextIntlClientProvider>
-        <Toaster />
       </body>
     </html>
   );

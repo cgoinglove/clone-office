@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { NavIcon } from "@/features/brand/nav-icons";
 import { composing, isCommand, useCommandKeys } from "@/hooks/use-hotkey";
+import { notAfter } from "@/lib/utils";
 import type { ChatSummary } from "../home/use-chat";
 import { HEADERS } from "../home/use-office";
 import { SECTIONS } from "../settings/settings";
@@ -216,7 +217,7 @@ function PaletteBody({ close }: { close: () => void }) {
                   right={
                     chat.updated && (
                       <span className="shrink-0 text-xs text-muted-foreground">
-                        {format.relativeTime(new Date(chat.updated), {
+                        {format.relativeTime(notAfter(chat.updated, now), {
                           now,
                           style: "narrow",
                         })}

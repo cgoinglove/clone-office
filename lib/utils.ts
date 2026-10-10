@@ -49,6 +49,14 @@ export function errorToString(cause: unknown): string {
 }
 
 /** 1234 → "1.2k", 1234567 → "1.2M". For numbers read only for their size, like tokens. */
+/**
+ * A moment for "… ago", never after `now`: a clock that ticks once a minute is behind anything
+ * that just came, which would otherwise read "in 5 seconds".
+ */
+export function notAfter(at: string | number | Date, now: Date): Date {
+  return new Date(Math.min(new Date(at).getTime(), now.getTime()));
+}
+
 export function formatCount(n: number): string {
   if (n < 1000) return String(n);
   if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}k`;

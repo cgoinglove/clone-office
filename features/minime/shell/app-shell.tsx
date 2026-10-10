@@ -25,6 +25,7 @@ import {
   useCommandKeys,
   windowKey,
 } from "@/hooks/use-hotkey";
+import { focusChatBox } from "../home/chat-view";
 import { SettingsDialog } from "../settings/settings";
 import {
   AppProvider,
@@ -85,7 +86,7 @@ function Frame({ children }: { children: ReactNode }) {
   const app = useApp();
   const router = useRouter();
   const pathname = usePathname();
-  const waiting = app.turns.length;
+  const waiting = app.toDecide.length;
   useTurnNotices(
     app.office,
     app.turns,
@@ -105,8 +106,10 @@ function Frame({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
   const fold = (next: boolean) => {
-    // the keyboard follows the button that brings the column back (or the one that folds it)
-    const hadFocus = document.activeElement?.closest("[data-fold]") !== null;
+    // the keyboard follows the button that brings the column back (or the one that folds it),
+    // from anywhere in the column that goes
+    const hadFocus =
+      document.activeElement?.closest("[data-fold], [data-column]") != null;
     setFolded(next);
     try {
       localStorage.setItem(FOLDED, next ? "1" : "0");
@@ -164,6 +167,7 @@ function Frame({ children }: { children: ReactNode }) {
         event.preventDefault();
         chat.newChat();
         router.push("/chat");
+        focusChatBox();
       }
     };
     window.addEventListener("keydown", onKey);
@@ -197,7 +201,7 @@ function Frame({ children }: { children: ReactNode }) {
           event.preventDefault();
           document.getElementById("content")?.focus();
         }}
-        className="sr-only rounded-[10px] bg-background px-3.5 py-2 text-sm font-medium shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)] outline-none focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300] focus-visible:ring-2 focus-visible:ring-ring"
+        className="sr-only rounded-[10px] bg-background px-3.5 py-2 text-sm font-medium shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)] outline-none focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300] focus:px-3.5! focus:py-2! focus-visible:ring-2 focus-visible:ring-ring"
       >
         {t("skip")}
       </a>
@@ -236,7 +240,7 @@ function Frame({ children }: { children: ReactNode }) {
             {waiting > 0 && (
               <Link
                 href="/home"
-                className="mr-1 flex h-7 items-center gap-1.5 rounded-full bg-waiting/8 px-2.5 text-[12.5px] font-semibold text-waiting outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mr-1 flex h-7 items-center gap-1.5 rounded-lg px-2 text-[12.5px] font-semibold text-waiting outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {t("yourTurn")}
                 <span className="tabular-nums">{waiting}</span>
@@ -257,6 +261,7 @@ function Frame({ children }: { children: ReactNode }) {
                 onClick={() => {
                   chat.newChat();
                   router.push("/chat");
+                  focusChatBox();
                 }}
                 className={iconButton}
               >

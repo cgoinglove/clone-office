@@ -69,6 +69,7 @@ export function SettingsDialog({
   const t = useTranslations("settings");
   const current = SECTIONS.find((entry) => entry.id === section) ?? SECTIONS[0];
   const body = useRef<HTMLDivElement>(null);
+  const nav = useRef<HTMLElement>(null);
   const open = section !== null;
   const back = useRef<(() => void) | null>(null);
   const setBack = useCallback((next: (() => void) | null) => {
@@ -111,12 +112,18 @@ export function SettingsDialog({
       if (at < 0 || at > 8) return;
       event.preventDefault();
       onSection(SECTIONS[at].id);
+      // the keyboard on the sections follows to the one now open, so one tab reads as picked
+      requestAnimationFrame(() => {
+        if (nav.current?.contains(document.activeElement))
+          nav.current
+            .querySelector<HTMLElement>('[aria-current="page"]')
+            ?.focus();
+      });
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onSection]);
   // A section opens at its top, and its tab is in view (on a phone the tabs scroll).
-  const nav = useRef<HTMLElement>(null);
   useEffect(() => {
     body.current?.scrollTo({ top: 0 });
     nav.current

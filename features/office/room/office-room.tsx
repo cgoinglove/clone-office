@@ -36,6 +36,7 @@ export function OfficeRoom({
   insetHeight = 0,
   insetLeft = 0,
   onClockIn,
+  onEnter,
   onAnswer,
   onAsk,
   onPanel,
@@ -68,6 +69,9 @@ export function OfficeRoom({
   turnShown?: boolean;
   /** 30 runs the office on every other frame: for a small view beside something else. */
   fps?: 30 | 60;
+  /** Clocked in at the lobby: the ride starts (the lobby's button is gone). */
+  onEnter?: () => void;
+  /** Arrived: the lift's doors are open on the floor. */
   onClockIn?: () => void;
   /** Opens what waits for the viewer, when they tap their mini-me's question. */
   onAnswer?: () => void;
@@ -172,8 +176,8 @@ export function OfficeRoom({
   const room = useRef<Room | null>(null);
   const latest = useRef(data);
   latest.current = data;
-  const handlers = useRef({ onAnswer, onAsk, onClockIn, onPanel });
-  handlers.current = { onAnswer, onAsk, onClockIn, onPanel };
+  const handlers = useRef({ onAnswer, onAsk, onClockIn, onEnter, onPanel });
+  handlers.current = { onAnswer, onAsk, onClockIn, onEnter, onPanel };
   const insetNow = useRef<[number, number, number]>([
     inset,
     insetLeft,
@@ -205,6 +209,7 @@ export function OfficeRoom({
         turnShown: turnElsewhere,
         fps,
         onClockIn: () => handlers.current.onClockIn?.(),
+        onEnter: () => handlers.current.onEnter?.(),
         onPanel: (open) => handlers.current.onPanel?.(open),
       });
       made.update(latest.current);

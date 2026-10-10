@@ -67,7 +67,10 @@ export function HomeScreen() {
   const members = data?.members ?? [];
   const { indexOf } = office;
   const nameOf = (id: string) => office.names.get(id) ?? "";
+  // every question still on the list (an answer on its way stays in place, with its Undo); what
+  // is counted is what still waits
   const turns = app.turns;
+  const open = app.toDecide.length;
   const tasks = data?.tasks ?? [];
   const yours = new Set(
     office.waiting.map((waiting) => taskOf(waiting)).filter(Boolean),
@@ -215,7 +218,7 @@ export function HomeScreen() {
             {quiet
               ? t("summaryQuiet")
               : t("summary", {
-                  decide: turns.length,
+                  decide: open,
                   moving: moving.length,
                   answered: answeredToday,
                 })}
@@ -256,12 +259,7 @@ export function HomeScreen() {
 
         <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_19rem]">
           <div className="flex min-w-0 flex-col gap-9">
-            <Section
-              id="h-decide"
-              title={t("decide")}
-              count={turns.length}
-              tone={turns.length ? "ember" : undefined}
-            >
+            <Section id="h-decide" title={t("decide")} count={open}>
               {turns.length ? (
                 <div className="overflow-hidden rounded-[14px] bg-background shadow-[0_0_0_1px_var(--alpha-10)]">
                   <TurnRows turns={turns} />

@@ -10,7 +10,9 @@
       "add": "Add one…",
       "full": "Up to {count}"
     },
-    "undo": "Undo"
+    "undo": "Undo",
+    "noticesLabel": "Notices",
+    "newsLabel": "News"
   },
   "language": {
     "label": "Language",
@@ -1280,8 +1282,11 @@
       "fromClone": "Your clone asks",
       "open": "Open",
       "inNow": "{count} of {all} in",
-      "answered": "Answered “{choice}”",
-      "fold": "Fold"
+      "fold": "Fold",
+      "answering": "“{choice}” goes in a moment",
+      "answerTo": "“{choice}” to {who}",
+      "cloneOf": "{name}'s clone",
+      "yourClone": "your clone"
     },
     "clone": {
       "title": "Your clone",
@@ -1564,7 +1569,9 @@
       "list": "This list",
       "rename": "Rename the chat in focus",
       "askFromSearch": "Ask your clone what you typed in Search",
-      "toast": "Go to the latest notice (and its Undo)"
+      "toast": "Go to the latest notice (and its Undo)",
+      "chatList": "Move through recent chats",
+      "chatMenu": "Open the menu of the chat in focus"
     },
     "palette": {
       "title": "Search and go",

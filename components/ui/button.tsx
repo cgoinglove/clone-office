@@ -15,7 +15,8 @@ const buttonVariants = cva(
         // never a surface, and every other button keeps the one rounded rectangle (10-08). Buttons
         // side by side share one shape (10-10): beside a brand button the others are round too.
         brand:
-          "rounded-full bg-brand text-brand-foreground hover:bg-brand/85 focus-visible:ring-brand/30",
+          // its focus is the shared ring, set off from the fill so it reads on it
+          "rounded-full bg-brand-fill text-brand-foreground hover:bg-brand-fill/85 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
         ghost:

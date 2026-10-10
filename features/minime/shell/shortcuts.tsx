@@ -20,7 +20,7 @@ export function ShortcutsDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations("shell");
-  const { label } = useCommandKeys();
+  const { label, mac } = useCommandKeys();
   const keys: [string, string][] = [
     [label("KeyK"), t("search")],
     [label("KeyO", true), t("newChat")],
@@ -29,6 +29,8 @@ export function ShortcutsDialog({
     [label("Comma"), t("settings")],
     [`${label("Digit1")}–${Math.min(9, SECTIONS.length)}`, t("keys.section")],
     ["?", t("keys.list")],
+    ["↑ ↓", t("keys.chatList")],
+    [mac ? "⇧F10" : "Shift + F10", t("keys.chatMenu")],
     ["F2", t("keys.rename")],
     [label("Enter"), t("keys.askFromSearch")],
     ["F6", t("keys.toast")],
