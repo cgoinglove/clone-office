@@ -68,6 +68,36 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Says on the page's root whether the keyboard moves focus (`data-keys`), for the boxes one types
+ * in: a click into a text field counts as keyboard focus to the browser too, so they ring only
+ * when the keyboard brought focus there (as Base UI and React Aria tell it apart).
+ */
+function useKeyboardFocus() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const key = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target?.isContentEditable ||
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA";
+      if (event.key === "Tab" || event.key === "F6" || !typing)
+        root.dataset.keys = "";
+    };
+    const pointer = () => {
+      delete root.dataset.keys;
+    };
+    window.addEventListener("keydown", key, true);
+    window.addEventListener("pointerdown", pointer, true);
+    return () => {
+      window.removeEventListener("keydown", key, true);
+      window.removeEventListener("pointerdown", pointer, true);
+      delete root.dataset.keys;
+    };
+  }, []);
+}
+
 /** Whether the window is narrow, followed as it is resized. */
 function useNarrow() {
   const [narrow, setNarrow] = useState(false);
@@ -105,6 +135,7 @@ function Frame({ children }: { children: ReactNode }) {
       setFolded(localStorage.getItem(FOLDED) === "1");
     } catch {}
   }, []);
+  useKeyboardFocus();
   const fold = (next: boolean) => {
     // the keyboard follows the button that brings the column back (or the one that folds it),
     // from anywhere in the column that goes

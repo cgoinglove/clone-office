@@ -26,7 +26,49 @@ import { Mark } from "./parts";
 import { askLine, type TurnItem, turnHref } from "./your-turn";
 
 /** How long rows that just moved ignore a tap: what was under the pointer is not there any more. */
-const SETTLE_MS = 450;
+export const SETTLE_MS = 450;
+
+/** An answer in a line: one written in full is cut short, as a toast or a row has one line. */
+export function clip(text: string, most = 48): string {
+  const line = text.replace(/\s+/g, " ").trim();
+  return line.length > most ? `${line.slice(0, most - 1).trimEnd()}…` : line;
+}
+
+/** An answer on its way, in place of the choices: what goes, still under way, with its own Undo. */
+export function PendingAnswer({
+  choice,
+  hold,
+  release,
+  onUndo,
+}: {
+  choice: string;
+  hold: () => void;
+  release: () => void;
+  onUndo: () => void;
+}) {
+  const t = useTranslations("shell.office");
+  const undo = useTranslations("common")("undo");
+  return (
+    <span className="mt-1.5 flex h-7 min-w-0 items-center gap-2 text-[13px] text-muted-foreground">
+      {/* still under way, and says so */}
+      <Loader2 className="size-3.5 shrink-0 animate-spin motion-reduce:animate-none" />
+      <span className="min-w-0 truncate">
+        {t("answering", { choice: clip(choice) })}
+      </span>
+      <Button
+        data-undo
+        size="xs"
+        variant="ghost"
+        className="shrink-0 text-foreground"
+        onPointerEnter={hold}
+        onPointerLeave={release}
+        onClick={onUndo}
+      >
+        {undo}
+      </Button>
+    </span>
+  );
+}
 
 export function TurnRows({
   turns,
@@ -79,12 +121,12 @@ export function TurnRows({
         // the answer goes to the person's own clone, which answers the colleague as it goes on
         const told = (choice: string) =>
           from
-            ? t("answerFor", { name: fromName, choice })
-            : t("answerToClone", { choice });
+            ? t("answerFor", { name: fromName, choice: clip(choice) })
+            : t("answerToClone", { choice: clip(choice) });
         const gone = (choice: string) =>
           from
-            ? t("sentFor", { name: fromName, choice })
-            : t("sentToClone", { choice });
+            ? t("sentFor", { name: fromName, choice: clip(choice) })
+            : t("sentToClone", { choice: clip(choice) });
         const question = `q-${item.key}`;
         const choose = (option: { reply: string; label: string }) => {
           if (performance.now() - movedAt.current < SETTLE_MS) return;
@@ -178,31 +220,18 @@ export function TurnRows({
                 {askLine(tAsk, ask)}
               </span>
               {sent !== undefined ? (
-                <span className="mt-1.5 flex h-7 items-center gap-2 text-[13px] text-muted-foreground">
-                  {/* still under way, and says so */}
-                  <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
-                  {t("answering", { choice: sent })}
-                  <Button
-                    data-undo
-                    size="xs"
-                    variant="ghost"
-                    className="text-foreground"
-                    // its clock waits while it is pointed at; the keyboard is put here by the app,
-                    // so its focus alone holds nothing, or the answer would never go
-                    onPointerEnter={() => sending.hold(item.key, "row-pointer")}
-                    onPointerLeave={() =>
-                      sending.release(item.key, "row-pointer")
-                    }
-                    onClick={() => {
-                      // a second press just after the answer is a bounce, not a change of mind
-                      if (performance.now() - movedAt.current < SETTLE_MS)
-                        return;
-                      sending.undo(item.key);
-                    }}
-                  >
-                    {undo}
-                  </Button>
-                </span>
+                <PendingAnswer
+                  choice={sent}
+                  // its clock waits while it is pointed at; the keyboard is put here by the app,
+                  // so its focus alone holds nothing, or the answer would never go
+                  hold={() => sending.hold(item.key, "row-pointer")}
+                  release={() => sending.release(item.key, "row-pointer")}
+                  onUndo={() => {
+                    // a second press just after the answer is a bounce, not a change of mind
+                    if (performance.now() - movedAt.current < SETTLE_MS) return;
+                    sending.undo(item.key);
+                  }}
+                />
               ) : (
                 options.length > 0 && (
                   <div

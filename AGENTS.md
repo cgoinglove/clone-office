@@ -187,7 +187,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   live beside it (`office-rail.tsx`: the floor small, requests in motion, today's flows));
   `/requests` (`requests-screen.tsx`: grouped by whose turn it is, from the A2A states) and
   `/requests/[id]` (`request-screen.tsx`: the clones' exchange, the person's turn answered in
-  place, files, the colleague); `/office` (`office-screen.tsx`: the floor, its lobby once a day,
+  place, held with Undo as Home's rows hold it, `turn-rows.tsx` `PendingAnswer`, files, the
+  colleague); `/office` (`office-screen.tsx`: the floor, its lobby once a day,
   with the person's turn laid over it to answer there, and the clones' meeting beside it while one
   goes on, round by round, started from its header: `meeting.tsx`); `/clone` (`clone-screen.tsx`: what it
   knows, the requests it takes, flows, and what it did in their name any day, `activity-list.tsx`

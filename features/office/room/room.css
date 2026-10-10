@@ -819,6 +819,11 @@
     0 0 0 4px var(--ink-05),
     0 10px 30px var(--ink-08);
 }
+/* and rings as every focus does when the keyboard brought it there (`data-keys`, the app's frame) */
+:root[data-keys] .of-wrap .box:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
 .of-wrap .box .me {
   width: 24px;
   height: 24px;
@@ -962,11 +967,11 @@
   display: grid;
   gap: 8px;
 }
+/* a label in the reader's own words: the sans face, as a mono one spreads Korean and Japanese apart */
 .of-wrap .pblock > small {
-  font: 500 11px var(--font-mono);
+  font: 600 11.5px var(--font-sans);
   color: var(--muted);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 .of-wrap .stats {
   display: grid;
@@ -997,10 +1002,9 @@
   gap: 8px;
 }
 .of-wrap .decide small {
-  font: 500 11px var(--font-mono);
+  font: 600 11.5px var(--font-sans);
   color: var(--waiting);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 .of-wrap .decide.other {
   background: var(--paper-2);

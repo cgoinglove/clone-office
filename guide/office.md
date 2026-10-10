@@ -148,8 +148,9 @@ clone.
   sending something on their behalf is theirs to allow; with **Don't ask again for this** it sends
   such requests alone from then on. The answer is put into that conversation when it comes.
 - Each request shows under **Requests** (부탁) with how far it has come: **Sent** (보냄),
-  **Working** (처리 중), **Needs an answer** (추가 정보 필요, with a box to answer), **Done** (완료),
-  **Declined** (거절), **Failed** (실패).
+  **Working** (처리 중), **Waiting for an answer** (답 기다리는 중: one clone asked the other
+  back; the office's panel says whose answer it waits for), **Done** (완료), **Declined** (거절됨),
+  **Failed** (실패).
 
 When a colleague asks for work in a project one of their Claude Code or Codex conversations
 knows, and they take it on, their clone can have that conversation do it, and then tells the

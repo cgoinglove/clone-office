@@ -390,6 +390,7 @@ export function Composer({
       }}
     >
       <div
+        data-ask-box
         className={cn(
           "flex gap-2 rounded-[26px] bg-background shadow-[0_0_0_1px_var(--alpha-12),0_6px_20px_var(--alpha-05)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_6px_20px_var(--alpha-08)]",
           tools

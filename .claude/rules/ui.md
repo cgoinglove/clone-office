@@ -52,7 +52,8 @@ left (`sidebar.tsx`: New chat and Search, ⌘K, `command-palette.tsx`; the place
 Office and Your clone, the open one by its row's fill; To decide, the asking clones with their red
 dot; recent chats by day, a page at a time, each with a menu, `recent-chats.tsx`; the person with
 their menu, and Settings), folding away with ⌘\ and a drawer on a narrow window
-(`app-shell.tsx`), and the open screen: `/home` first (`home-screen.tsx`: what
+(`app-shell.tsx`, which also marks the root `data-keys` while the keyboard moves focus, so a box one
+types in, `data-ask-box`, rings only then), and the open screen: `/home` first (`home-screen.tsx`: what
 waits on the person answered in place, the requests on their way, what the clone did today, today;
 the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`, with the
 office's live column `office-rail.tsx`), `/requests` and

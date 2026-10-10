@@ -3,29 +3,36 @@
 // One request between two clones, on its own page: what was asked and every answer, the files that
 // went with it, and, when the person's turn has come, the question waiting on them in place (the
 // answer their clone drafted, a promise only they can make, a permission). Beside it: who it is
-// with, what they take, and how far it has come.
+// with, what they take, and how far it has come. An answer here is a call in the person's name, as
+// on Home's rows: it stays in place, saying what goes, with Undo, and goes when that runs out or
+// the page goes; then the keyboard lands on where the request stands, and that is said aloud.
 
 import { ChevronLeft, Copy, FileText, Link2, Send } from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot } from "@/features/office";
+import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
 import { AskCard } from "../ask-card";
-import { saveFile, statusText } from "../home/use-office";
+import { saveFile, statusText, type Waiting } from "../home/use-office";
 import { statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
 import { Mark, PhaseChip, phaseOf, StatusDot } from "./parts";
 import { askedText } from "./requests-screen";
 import { StepIn } from "./step-in";
-import { taskOf } from "./your-turn";
+import { clip, PendingAnswer, SETTLE_MS } from "./turn-rows";
+import { taskOf, turnKey } from "./your-turn";
 
 export function RequestScreen({ id }: { id: string }) {
   const t = useTranslations("shell.request");
   const tOffice = useTranslations("office");
   const tPhase = useTranslations("shell.phase");
+  const tTurn = useTranslations("shell.office");
+  const tAsk = useTranslations("ask");
+  const undo = useTranslations("common")("undo");
   const format = useFormatter();
   const app = useApp();
   const { office } = app;
@@ -35,6 +42,10 @@ export function RequestScreen({ id }: { id: string }) {
   const task = data?.tasks?.find((entry) => entry.id === id);
   const [reply, setReply] = useState("");
   const [copied, setCopied] = useState(false);
+  // Answers chosen and waiting out their Undo, by question, and when the last one was chosen.
+  const sending = useUndoableRemoval(undo);
+  const [chosen, setChosen] = useState<Record<string, string>>({});
+  const chosenAt = useRef(0);
 
   if (!data)
     return (
@@ -76,6 +87,61 @@ export function RequestScreen({ id }: { id: string }) {
   const moving = ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(
     task.status.state,
   );
+  const choose = (entry: Waiting, answer: string, always: boolean) => {
+    if (performance.now() - chosenAt.current < SETTLE_MS) return;
+    chosenAt.current = performance.now();
+    const key = turnKey(entry);
+    const shown =
+      entry.ask.kind === "permission"
+        ? tAsk(answer === "allow" ? "allow" : "deny")
+        : answer;
+    setChosen((all) => ({ ...all, [key]: answer }));
+    app.markAnswering(key, true);
+    sending.remove(key, tTurn("answerFor", { name, choice: clip(shown) }), {
+      commit: async () => {
+        const here =
+          !!document
+            .getElementById(`answer-${entry.id}`)
+            ?.contains(document.activeElement) ||
+          document.activeElement === document.body;
+        await office.answer(entry, answer, always);
+        app.markAnswering(key, false);
+        app.announce(tTurn("sentFor", { name, choice: clip(shown) }));
+        // where the request stands now, else its title
+        if (here)
+          requestAnimationFrame(() =>
+            (
+              document.getElementById("request-state") ??
+              document.getElementById("request-title")
+            )?.focus(),
+          );
+        return true;
+      },
+      undo: () => {
+        app.markAnswering(key, false);
+        app.announce(tTurn("undone"));
+        // back on what was chosen (a choice, or the words written), when the keyboard was here
+        const block = document.getElementById(`answer-${entry.id}`);
+        if (block?.contains(document.activeElement))
+          requestAnimationFrame(() => {
+            const again = [
+              ...block.querySelectorAll<HTMLElement>("button, textarea"),
+            ];
+            (
+              again.find((one) => one.textContent === shown) ??
+              again.find((one) => one.tagName === "TEXTAREA")
+            )?.focus();
+          });
+      },
+    });
+    // the keyboard stays with this question, on its Undo
+    requestAnimationFrame(() =>
+      document
+        .getElementById(`answer-${entry.id}`)
+        ?.querySelector<HTMLElement>("[data-undo]")
+        ?.focus(),
+    );
+  };
   const time = (iso: string) =>
     format.dateTime(new Date(iso), {
       month: "short",
@@ -96,7 +162,11 @@ export function RequestScreen({ id }: { id: string }) {
             {t("back")}
           </Link>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="min-w-0 text-xl font-semibold tracking-tight text-balance">
+            <h1
+              id="request-title"
+              tabIndex={-1}
+              className="-mx-1 min-w-0 rounded-sm px-1 text-xl font-semibold tracking-tight text-balance outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            >
               {askedText(task)}
             </h1>
             <PhaseChip
@@ -169,7 +239,11 @@ export function RequestScreen({ id }: { id: string }) {
           </ol>
 
           {moving && waiting.length === 0 && (
-            <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+            <p
+              id="request-state"
+              tabIndex={-1}
+              className="-mx-1 flex items-center gap-2 rounded-sm px-1 text-[13px] text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+            >
               <span
                 aria-hidden
                 className="size-1.5 animate-pulse rounded-full bg-brand motion-reduce:animate-none"
@@ -182,32 +256,58 @@ export function RequestScreen({ id }: { id: string }) {
             </p>
           )}
 
-          {waiting.map((entry) => (
-            <div key={entry.id} className="flex flex-col gap-2">
-              <p className="flex items-center gap-2 text-[13px] font-semibold text-waiting">
-                <span
-                  aria-hidden
-                  className="size-1.5 rounded-full bg-waiting"
-                />
-                {entry.self ? t("selfWaiting", { name }) : t("yourTurn")}
-              </p>
-              {/* Theirs to answer: the box below is where they write as themselves. */}
-              {!entry.self && (
-                <AskCard
-                  turn={{
-                    id: 0,
-                    gate: entry.id,
-                    ask: entry.ask,
-                    state: office.answered[entry.id] ? "done" : "open",
-                    answer: office.answered[entry.id],
-                  }}
-                  onAnswer={(answer, always) =>
-                    void office.answer(entry, answer, always)
-                  }
-                />
-              )}
-            </div>
-          ))}
+          {waiting.map((entry) => {
+            const key = turnKey(entry);
+            const label =
+              entry.ask.kind === "permission"
+                ? tAsk(chosen[key] === "allow" ? "allow" : "deny")
+                : (chosen[key] ?? "");
+            return (
+              <div
+                key={entry.id}
+                id={`answer-${entry.id}`}
+                className="flex flex-col gap-2"
+              >
+                <p className="flex items-center gap-2 text-[13px] font-semibold text-waiting">
+                  <span
+                    aria-hidden
+                    className="size-1.5 rounded-full bg-waiting"
+                  />
+                  {entry.self ? t("selfWaiting", { name }) : t("yourTurn")}
+                </p>
+                {/* Theirs to answer: the box below is where they write as themselves. The card
+                    stays, hidden while its answer waits, so Undo gives back what was written */}
+                {!entry.self && sending.hidden.has(key) && (
+                  <PendingAnswer
+                    choice={label}
+                    hold={() => sending.hold(key, "row-pointer")}
+                    release={() => sending.release(key, "row-pointer")}
+                    onUndo={() => {
+                      // a second press just after the answer is a bounce
+                      if (performance.now() - chosenAt.current < SETTLE_MS)
+                        return;
+                      sending.undo(key);
+                    }}
+                  />
+                )}
+                {!entry.self && (
+                  <div hidden={sending.hidden.has(key)}>
+                    <AskCard
+                      turn={{
+                        id: 0,
+                        gate: entry.id,
+                        ask: entry.ask,
+                        state: "open",
+                      }}
+                      onAnswer={(answer, always) =>
+                        choose(entry, answer, always)
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {!sent &&
             !task.metadata.guest &&

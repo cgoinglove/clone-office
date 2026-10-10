@@ -86,7 +86,7 @@ Two things hold everywhere:
   **On its way**, **Waiting on them** and **Done** (정할 것, 진행 중, 답 기다리는 중, 완료), with **All**,
   **Received** and **Sent** (모두, 받은 부탁, 보낸 부탁), and **Ask a colleague** (동료에게
   부탁하기) at the top. A request opens on its own page: the clones' exchange, what waits on them
-  (answered right there), its files, and who it is with.
+  (answered right there, with **Undo** for a few seconds as on Home), its files, and who it is with.
 - **Office** (오피스): the office floor (`office.md`), with what waits on them laid over it to
   answer right there.
 - **Your clone** (내 클론): how like them it answers, and four tabs. **What it knows** (아는 것:

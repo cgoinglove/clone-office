@@ -32,13 +32,18 @@ export function taskOf(waiting: Waiting): string | undefined {
     : undefined;
 }
 
+/** A request's question as the lists know it: a kept one by the id it was first asked live. */
+export function turnKey(waiting: Waiting): string {
+  return `w:${waiting.asked ?? waiting.id}`;
+}
+
 export function yourTurn(office: OfficeState, chatAsks: ChatAsk[]): TurnItem[] {
   const tasks = office.office?.tasks ?? [];
   // A question kept for later keeps the key it had while it was asked live, so it stays the same
   // item (and is never news twice); for the moment both are listed, the first one stands.
   const keys = new Set<string>();
   const fromRequests = office.waiting.flatMap((waiting): TurnItem[] => {
-    const key = `w:${waiting.asked ?? waiting.id}`;
+    const key = turnKey(waiting);
     if (keys.has(key)) return [];
     keys.add(key);
     const task = taskOf(waiting);

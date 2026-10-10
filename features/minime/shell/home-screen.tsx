@@ -502,6 +502,7 @@ function AskBox({
           event.preventDefault();
           if (text.trim()) onSend(text.trim());
         }}
+        data-ask-box
         className="flex items-center gap-2 rounded-[26px] bg-background py-1.5 pr-1.5 pl-5 shadow-[0_0_0_1px_var(--alpha-12),0_10px_28px_-18px_var(--alpha-20)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_0_0_4px_var(--alpha-05),0_10px_28px_-18px_var(--alpha-20)]"
       >
         <input

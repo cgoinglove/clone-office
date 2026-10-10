@@ -1525,9 +1525,15 @@ export function createOffice(
     const bounds = screenBounds([-6, -6, plan.W + 4, plan.D + 4, -2.6, WALL_H]);
     // a glimpse beside the chat: the whole floor, with room for the line laid along its foot
     if (mini) return fitRect(bounds, { t: 8, b: 54, l: 8, r: 8 });
-    if (narrow())
+    // a phone; a narrow pane beside the page's own panel keeps clear of it as a wide one does
+    if (narrow() && !insetR)
       return fitRect(bounds, { t: 48, b: onAsk ? 140 : 70, l: 10, r: 10 });
-    const ins = { t: 44, b: 84, l: 16 + insetL, r: 16 + insetR };
+    const ins = {
+      t: 44,
+      b: narrow() && onAsk ? 140 : 84,
+      l: 16 + insetL,
+      r: 16 + insetR,
+    };
     if (!insetR || !insetH) return fitRect(bounds, ins);
     // A panel at the right that ends partway down covers only the empty corner above the floor's
     // right end: the floor takes as much of the width as keeps it clear of the panel.
@@ -1593,7 +1599,10 @@ export function createOffice(
       [d.px, d.py, d.px + PW, d.py + PD, 0, 24],
       !narrow()
         ? { r: Math.max(360, insetR + 40), t: 70, b: 110 }
-        : { b: Math.round(ch * 0.56) + 20 },
+        : insetR
+          ? // a narrow pane beside the page's own panel: the desk in what is left of it
+            { r: insetR + 24, t: 70, b: onAsk ? 150 : 110 }
+          : { b: Math.round(ch * 0.56) + 20 },
       1.5,
     );
   };
@@ -1649,6 +1658,16 @@ export function createOffice(
         : W.panel.atDesk;
   const nameOf = (id) =>
     id === me?.id ? W.plate.youShort : people.get(id)?.name || "";
+  /**
+   * How an earlier request stands, saying whom it waits on: one asked back waits on whoever asked
+   * it, which may be the viewer.
+   */
+  const pastState = (r) =>
+    r.state !== "INPUT_REQUIRED"
+      ? W.requestState(r.state)
+      : r.from === me?.id
+        ? W.panel.waitingForYou
+        : W.panel.waitingFor(nameOf(r.from));
   function renderPanel() {
     const p = focus;
     if (!p || panel.hidden) return;
@@ -1685,7 +1704,7 @@ export function createOffice(
     const past = (data?.requests || [])
       .filter((r) => r.from === p.id || r.to === p.id)
       .slice(0, 4);
-    body += `<div class="pblock"><small>${esc(W.panel.earlier)}</small><ul class="rows">${past.length ? past.map((r) => `<li><i class="past"></i><span>${esc(clip(r.text, 80))}<em>${esc(`${nameOf(r.from)} → ${nameOf(r.to)} · ${W.requestState(r.state)}`)}</em></span></li>`).join("") : `<li class="none">${esc(W.panel.nothingYet)}</li>`}</ul></div>`;
+    body += `<div class="pblock"><small>${esc(W.panel.earlier)}</small><ul class="rows">${past.length ? past.map((r) => `<li><i class="past"></i><span>${esc(clip(r.text, 80))}<em>${esc(`${nameOf(r.from)} → ${nameOf(r.to)} · ${pastState(r)}`)}</em></span></li>`).join("") : `<li class="none">${esc(W.panel.nothingYet)}</li>`}</ul></div>`;
     const key = p.id + body + p.status;
     if (key === panelKey) return;
     panelKey = key;

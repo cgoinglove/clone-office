@@ -867,3 +867,10 @@
 .animate-spin {
   will-change: transform;
 }
+
+/* A box one types in rings as every focus does when the keyboard brought focus there; a click
+   into it only darkens its edge (`data-keys`, set by the app's frame). */
+:root[data-keys] [data-ask-box]:focus-within {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
