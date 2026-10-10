@@ -136,6 +136,8 @@ export interface Office {
   /** Questions about requests kept for the person: answering one lets the request go on. */
   later?: {
     id: string;
+    /** The id it had when it was first asked live. */
+    asked?: string;
     task: string;
     from?: string;
     at: string;
@@ -170,6 +172,8 @@ export type Waiting = {
   chat?: string;
   /** Kept for later: answering it lets its request go on. */
   later?: boolean;
+  /** For a kept one, the id it had when it was first asked live: the same question, kept. */
+  asked?: string;
   /** When it was kept, for a kept one. */
   at?: string;
   from?: string;
@@ -280,14 +284,24 @@ export function useOffice(
 
   const seen = useRef(new Map<string, string>());
   const looked = useRef(false);
+  // The last answer as it came: a look that finds the office as it was keeps the same office, so
+  // nothing that reads it is drawn again every few seconds.
+  const lastText = useRef("");
   const load = useCallback(async () => {
-    const data = (await fetch(
+    const text = await fetch(
       `/api/me/office?locale=${encodeURIComponent(lang)}`,
       { headers: HEADERS },
     )
-      .then((r) => r.json())
-      .catch(() => null)) as Office | null;
-    if (!data) return;
+      .then((r) => r.text())
+      .catch(() => null);
+    if (!text || text === lastText.current) return;
+    let data: Office;
+    try {
+      data = JSON.parse(text) as Office;
+    } catch {
+      return;
+    }
+    lastText.current = text;
     setOffice(data);
     // A request whose state moved since the last look, or one first seen already answered (sent
     // and answered between two looks): its answer may be in a conversation.
@@ -364,14 +378,23 @@ export function useOffice(
       ].filter((a) => !answered[a.id]),
     [office, answered],
   );
+  // A minute on, a kept question may come due and a colleague fall quiet, with nothing new read.
+  const [minute, setMinute] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setMinute((m) => m + 1), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   // Questions kept for later call the person only at the day's batch moments; the list shows
   // them all the same.
-  const due = waiting.filter(
-    (a) =>
-      !a.later ||
-      !a.at ||
-      Date.now() >= dueAt(new Date(a.at), batchHours).getTime(),
-  );
+  const due = useMemo(() => {
+    void minute;
+    return waiting.filter(
+      (a) =>
+        !a.later ||
+        !a.at ||
+        Date.now() >= dueAt(new Date(a.at), batchHours).getTime(),
+    );
+  }, [waiting, batchHours, minute]);
 
   /** Answers a question about a request: a kept one lets its request go on, a live one the gate. */
   const answer = useCallback(
@@ -383,6 +406,8 @@ export function useOffice(
         await fetch("/api/me/gate/answer", {
           method: "POST",
           headers: HEADERS,
+          // an answer given as the page goes still arrives
+          keepalive: true,
           body: JSON.stringify({ id: pending.id, answer: reply, always }),
         }).catch(() => undefined);
       await load();
@@ -401,6 +426,7 @@ export function useOffice(
 
   const you = tHome("you");
   const room: RoomData | null = useMemo(() => {
+    void minute;
     if (!office) return null;
     if (office.joined)
       return roomData(
@@ -424,9 +450,18 @@ export function useOffice(
       requests: [],
       waiting: { count: due.length, ...(line ? { text: line } : {}) },
     };
-  }, [office, due.length, line, profile?.name, profile?.role, you, meetingsOn]);
+  }, [
+    office,
+    due.length,
+    line,
+    profile?.name,
+    profile?.role,
+    you,
+    meetingsOn,
+    minute,
+  ]);
 
-  const members = office?.members ?? [];
+  const members = useMemo(() => office?.members ?? [], [office]);
   const names = useMemo(
     () => new Map(members.map((m) => [m.id, m.card.name])),
     [members],
@@ -441,24 +476,45 @@ export function useOffice(
     (id?: string) => (id ? (order.get(id) ?? 0) : 0),
     [order],
   );
-  const others = members.filter((m) => m.id !== office?.me?.id);
+  const me = office?.me?.id;
+  const others = useMemo(
+    () => members.filter((m) => m.id !== me),
+    [members, me],
+  );
 
-  return {
-    office,
-    error,
-    setError,
-    busy,
-    load,
-    post,
-    waiting,
-    due,
-    answer,
-    answered,
-    room,
-    names,
-    indexOf,
-    others,
-  };
+  return useMemo(
+    () => ({
+      office,
+      error,
+      setError,
+      busy,
+      load,
+      post,
+      waiting,
+      due,
+      answer,
+      answered,
+      room,
+      names,
+      indexOf,
+      others,
+    }),
+    [
+      office,
+      error,
+      busy,
+      load,
+      post,
+      waiting,
+      due,
+      answer,
+      answered,
+      room,
+      names,
+      indexOf,
+      others,
+    ],
+  );
 }
 
 export type OfficeState = ReturnType<typeof useOffice>;

@@ -605,14 +605,15 @@
         "morning": "早上好，{name}",
         "afternoon": "下午好，{name}",
         "evening": "晚上好，{name}",
-        "in": "{count, plural, other {# 位同事}}中 {in} 位已到",
+        "in": "{count} 人中已有 {in} 人上班",
         "alone": "这里还没有同事",
         "waiting": "{count, plural, other {# 件事在等你}}",
         "clockIn": "打卡上班",
         "enter": "Enter",
         "foot": "你的分身在这台电脑上运行。",
         "floors": "1–{count}楼",
-        "yourFloor": "你的楼层"
+        "yourFloor": "你的楼层",
+        "label": "公司大楼，标出了你所在的楼层"
       },
       "meeting": {
         "on": "会议中"
@@ -1233,7 +1234,8 @@
       "linkStarter": "生成回复链接，然后问：",
       "askSomeone": "问别人",
       "everyTime": "定期做",
-      "flowStarter": "每个工作日上午 9 点，"
+      "flowStarter": "每个工作日上午 9 点，",
+      "asksNext": "分身答完这一条，就会在新对话里接着做。"
     },
     "requests": {
       "title": "请求",
@@ -1277,7 +1279,9 @@
       "fromColleague": "{name}的分身问",
       "fromClone": "你的分身问",
       "open": "打开",
-      "inNow": "在岗 {count}/{all}"
+      "inNow": "在岗 {count}/{all}",
+      "answered": "已回答“{choice}”",
+      "fold": "收起"
     },
     "clone": {
       "title": "你的分身",
@@ -1557,7 +1561,10 @@
       "fold": "收起或展开侧栏",
       "section": "设置中的某一栏",
       "box": "给克隆写消息",
-      "list": "此列表"
+      "list": "此列表",
+      "rename": "重命名选中的对话",
+      "askFromSearch": "把搜索框里的话问分身",
+      "toast": "跳到刚出现的通知（撤销）"
     },
     "palette": {
       "title": "搜索与跳转",
@@ -1583,12 +1590,14 @@
       "rename": "重命名",
       "name": "对话名称",
       "archive": "归档",
-      "archived": "已归档“{title}”"
+      "archived": "已归档“{title}”",
+      "options": "更多"
     },
     "notice": {
       "answer": "去回答",
       "answered": "{name} 回复了你的请求"
-    }
+    },
+    "skip": "跳到正文"
   },
   "page": {
     "notFound": {
@@ -1618,7 +1627,6 @@
     "finding": "正在查找你的工作文件夹",
     "noneRead": "没有勾选",
     "leftOut": "已排除 {count} 个",
-    "check": "查看",
     "sessions": "{count, plural, other {# 次对话}}",
     "files": "{count, plural, other {# 个文件}}",
     "repo": "仓库",

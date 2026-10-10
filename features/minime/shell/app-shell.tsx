@@ -6,8 +6,9 @@
 // The column folds away (⌘\, kept for the next visit) and, on a window narrower than 900px, is a
 // drawer behind a thin bar at the top (☰, the app's name, what there is to decide, search, a new
 // conversation), so no screen is squeezed beside it. Keys: ⌘K finds anything, ⌘, opens settings,
-// ⇧⌘N starts a new conversation, ⌘\ folds the column, ? lists the keys; the tab's title carries
-// what waits on the person, so a tab in the back still says it.
+// ⇧⌘O starts a new conversation (as in ChatGPT; browsers keep ⇧⌘N for a private window), ⌘\
+// folds the column, ? lists the keys; the tab's title carries what waits on the person, so a tab
+// in the back still says it.
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Menu, PanelLeft, Search, SquarePen } from "lucide-react";
@@ -15,6 +16,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import { confirmOpen } from "@/components/ui/confirm-dialog";
 import { Tip, TooltipProvider } from "@/components/ui/tooltip";
 import { APP_NAME } from "@/features/brand/logo";
 import {
@@ -24,7 +26,12 @@ import {
   windowKey,
 } from "@/hooks/use-hotkey";
 import { SettingsDialog } from "../settings/settings";
-import { AppProvider, useApp, useAppState } from "./app-state";
+import {
+  AppProvider,
+  ConversationProvider,
+  useApp,
+  useAppState,
+} from "./app-state";
 import { CommandPalette } from "./command-palette";
 import { ShortcutsDialog } from "./shortcuts";
 import { iconButton, Sidebar } from "./sidebar";
@@ -48,12 +55,14 @@ const NARROW = "(max-width: 899px)";
 const FOLDED = "clone-office.sidebar-folded";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const state = useAppState();
+  const { app, conversation } = useAppState();
   return (
-    <AppProvider value={state}>
-      <TooltipProvider delay={400}>
-        <Frame>{children}</Frame>
-      </TooltipProvider>
+    <AppProvider value={app}>
+      <ConversationProvider value={conversation}>
+        <TooltipProvider delay={400}>
+          <Frame>{children}</Frame>
+        </TooltipProvider>
+      </ConversationProvider>
     </AppProvider>
   );
 }
@@ -96,15 +105,25 @@ function Frame({ children }: { children: ReactNode }) {
     } catch {}
   }, []);
   const fold = (next: boolean) => {
+    // the keyboard follows the button that brings the column back (or the one that folds it)
+    const hadFocus = document.activeElement?.closest("[data-fold]") !== null;
     setFolded(next);
     try {
       localStorage.setItem(FOLDED, next ? "1" : "0");
     } catch {}
+    if (hadFocus)
+      requestAnimationFrame(() =>
+        document.querySelector<HTMLElement>("[data-fold]")?.focus(),
+      );
   };
-  // On a narrow window the column is a drawer, and it goes when the person goes somewhere.
+  // On a narrow window the column is a drawer, and it goes when the person goes somewhere: to
+  // another screen, or to another conversation (opened, new, or the open one put away from its
+  // menu, which sits outside the drawer).
+  const openChat = app.chat.chatId;
   useEffect(() => {
+    void openChat;
     if (pathname) setDrawer(false);
-  }, [pathname]);
+  }, [pathname, openChat]);
   useEffect(() => {
     if (!narrow) setDrawer(false);
   }, [narrow]);
@@ -123,7 +142,7 @@ function Frame({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       // a confirm open waits for its answer: nothing opens over or under it
-      if (document.querySelector("[data-confirm]")) return;
+      if (confirmOpen()) return;
       if (typed(event, "?") && windowKey(event)) {
         event.preventDefault();
         setKeys(true);
@@ -141,7 +160,7 @@ function Frame({ children }: { children: ReactNode }) {
         event.preventDefault();
         foldRef.current();
       }
-      if (isCommand(event, "KeyN", true)) {
+      if (isCommand(event, "KeyO", true)) {
         event.preventDefault();
         chat.newChat();
         router.push("/chat");
@@ -171,8 +190,23 @@ function Frame({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1">
+      {/* the first stop for the keyboard: past the column, straight to the screen */}
+      <a
+        href="#content"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("content")?.focus();
+        }}
+        className="sr-only rounded-[10px] bg-background px-3.5 py-2 text-sm font-medium shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)] outline-none focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300] focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        {t("skip")}
+      </a>
       {column && sidebar(() => fold(true))}
-      <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
+      <main
+        id="content"
+        tabIndex={-1}
+        className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background outline-none"
+      >
         {!column && (
           <header className="flex h-12 shrink-0 items-center gap-1 border-b border-border/60 px-2">
             <Tip
@@ -181,6 +215,7 @@ function Frame({ children }: { children: ReactNode }) {
             >
               <button
                 type="button"
+                data-fold
                 onClick={() => (narrow ? setDrawer(true) : fold(false))}
                 className={iconButton}
               >
@@ -193,7 +228,7 @@ function Frame({ children }: { children: ReactNode }) {
             </Tip>
             <Link
               href="/home"
-              className="ml-1 truncate rounded-md text-[15px] font-semibold tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="ml-1 truncate rounded-md text-[15px] font-semibold tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {APP_NAME}
             </Link>
@@ -201,7 +236,7 @@ function Frame({ children }: { children: ReactNode }) {
             {waiting > 0 && (
               <Link
                 href="/home"
-                className="mr-1 flex h-7 items-center gap-1.5 rounded-full bg-waiting/8 px-2.5 text-[12.5px] font-semibold text-waiting outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+                className="mr-1 flex h-7 items-center gap-1.5 rounded-full bg-waiting/8 px-2.5 text-[12.5px] font-semibold text-waiting outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {t("yourTurn")}
                 <span className="tabular-nums">{waiting}</span>
@@ -216,7 +251,7 @@ function Frame({ children }: { children: ReactNode }) {
                 <Search className="size-[18px]" />
               </button>
             </Tip>
-            <Tip label={t("newChat")} keys={keysOf.label("KeyN", true)}>
+            <Tip label={t("newChat")} keys={keysOf.label("KeyO", true)}>
               <button
                 type="button"
                 onClick={() => {
@@ -235,7 +270,7 @@ function Frame({ children }: { children: ReactNode }) {
       {narrow && (
         <DialogPrimitive.Root open={drawer} onOpenChange={setDrawer}>
           <DialogPrimitive.Portal>
-            <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-black/25 duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+            <DialogPrimitive.Backdrop className="fixed inset-0 z-40 bg-(--scrim) duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
             <DialogPrimitive.Popup
               aria-label={t("nav")}
               // Going anywhere from the drawer closes it, a conversation picked on /chat included
@@ -248,7 +283,7 @@ function Frame({ children }: { children: ReactNode }) {
                 )
                   setDrawer(false);
               }}
-              className="fixed inset-y-0 left-0 z-40 bg-background shadow-[12px_0_32px_-12px_rgb(0_0_0/0.35)] outline-none duration-200 data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left"
+              className="fixed inset-y-0 left-0 z-40 bg-background shadow-[12px_0_32px_-12px_var(--shade)] outline-none duration-200 data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left"
             >
               {sidebar(() => setDrawer(false), "w-[min(18rem,85vw)]")}
             </DialogPrimitive.Popup>

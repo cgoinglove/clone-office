@@ -34,7 +34,7 @@ export function Swatch({
             : undefined
       }
       className={cn(
-        "aspect-square w-5 min-w-0 shrink rounded-full outline-none transition-transform hover:scale-110 focus-visible:ring-3 focus-visible:ring-ring/50",
+        "aspect-square w-5 min-w-0 shrink rounded-full outline-none transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring",
         !color && !background && "bg-foreground",
         picked &&
           "ring-2 ring-foreground/40 ring-offset-2 ring-offset-background",

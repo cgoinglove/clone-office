@@ -596,17 +596,13 @@ export function stillMark(look, x, y, size, ghost = false) {
 }
 export const SM_DEFS = `<defs><linearGradient id="sm-rainbow" x1="0" y1="0" x2="0" y2="1">${PAINTS.rainbow.colors.map((c, i, a) => `<stop offset="${r3(i / (a.length - 1))}" stop-color="${c}"/>`).join("")}</linearGradient><linearGradient id="sm-duo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${PAINTS.duo.colors[0]}"/><stop offset="1" stop-color="${PAINTS.duo.colors[1]}"/></linearGradient></defs>`;
 /** Roughly how wide a line of capitals is, in ems: wide scripts take a whole em a letter. */
-const emsOf = (text) =>
+/** Letters a whole em wide: Hangul, CJK and full-width forms. */
+const WIDE =
+  /[\u1100-\u11ff\u2e80-\ua4cf\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/;
+/** How many ems a line runs, a wide letter one, a space 0.3 and any other `narrow`. */
+const emsOf = (text, narrow = 0.7) =>
   [...text].reduce(
-    (n, ch) =>
-      n +
-      (/[\u1100-\u11ff\u2e80-\ua4cf\uac00-\ud7af\uf900-\ufaff\uff00-\uffef]/.test(
-        ch,
-      )
-        ? 1
-        : ch === " "
-          ? 0.3
-          : 0.7),
+    (n, ch) => n + (WIDE.test(ch) ? 1 : ch === " " ? 0.3 : narrow),
     0,
   );
 /** The largest size up to `max` at which `text` fits `width`. */
@@ -1003,9 +999,10 @@ export const stampSvg = (x, y, word) =>
 export const PLANE = `<path d="M15 0L-13 -7.5L-7 0L-13 9Z"/><path class="fold" d="M15 0L-7 0"/>`;
 /** A note written by hand beside a point, with an arrow drawn to it. */
 export function scribble(text, p, dx, dy, size = 24, arrow = true) {
+  // its width as written, a Korean or Chinese letter a whole em, so the arrow starts past the last one
   const tx = p[0] + dx,
     ty = p[1] + dy,
-    w = text.length * size * 0.36,
+    w = emsOf(text, 0.48) * size,
     k = Math.max(1, size / 24);
   let s = `<text class="hand" x="${r1(tx)}" y="${r1(ty)}" font-size="${size}">${esc(text)}</text>`;
   if (arrow) {

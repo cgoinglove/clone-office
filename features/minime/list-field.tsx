@@ -57,7 +57,7 @@ export function ListField({
           <button
             type="button"
             className={cn(
-              "flex h-10 w-full min-w-0 items-center gap-3 rounded-[10px] pr-2.5 pl-3 text-left ring-1 ring-input outline-none ring-inset transition-shadow focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 aria-expanded:ring-ring/60 dark:bg-input/30",
+              "flex h-10 w-full min-w-0 items-center gap-3 rounded-[10px] pr-2.5 pl-3 text-left ring-1 ring-input outline-none ring-inset transition-shadow focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 aria-expanded:ring-ring/60 dark:bg-input/30",
               className,
             )}
           />
@@ -107,7 +107,7 @@ export function ListField({
                   onClick={() =>
                     onChange(values.filter((item) => item !== value))
                   }
-                  className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                  className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="size-3.5" />
                 </button>
@@ -128,7 +128,7 @@ export function ListField({
               onChange(values.slice(0, -1));
           }}
           onBlur={() => typed.trim() && add()}
-          className="h-9 rounded-lg bg-muted/50 px-2.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-60"
+          className="h-9 rounded-lg bg-muted/50 px-2.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
         />
       </PopoverContent>
     </Popover>

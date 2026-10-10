@@ -64,7 +64,7 @@ const TURNS = 6;
 /** One row of the column: a place, an action or a conversation, picked or not. */
 const row = (on: boolean) =>
   cn(
-    "group flex h-8 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[14px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring/50",
+    "group flex h-8 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[14px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
     on
       ? "bg-foreground/[0.07] font-medium text-foreground"
       : "text-foreground/75 hover:bg-foreground/[0.045] hover:text-foreground",
@@ -143,12 +143,17 @@ export function Sidebar({
       <div className="flex h-[52px] shrink-0 items-center justify-between pr-0.5 pl-2.5">
         <Link
           href="/home"
-          className="truncate rounded-md text-[15px] font-semibold tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="truncate rounded-md text-[15px] font-semibold tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {APP_NAME}
         </Link>
         <Tip label={t("fold")} keys={keys.label("Backslash")}>
-          <button type="button" onClick={onFold} className={iconButton}>
+          <button
+            type="button"
+            data-fold
+            onClick={onFold}
+            className={iconButton}
+          >
             <PanelLeft className="size-[18px]" />
           </button>
         </Tip>
@@ -162,21 +167,27 @@ export function Sidebar({
             chat.newChat();
             router.push("/chat");
           }}
+          aria-keyshortcuts={keys.aria("KeyO", true)}
           className={row(false)}
         >
           <NavIcon name="compose" className="text-foreground/60" />
           <span className="flex-1 truncate text-left">{t("newChat")}</span>
-          <kbd className={hoverKey}>{keys.label("KeyN", true)}</kbd>
+          <kbd aria-hidden className={hoverKey}>
+            {keys.label("KeyO", true)}
+          </kbd>
         </button>
         <button
           type="button"
           data-closes-drawer
           onClick={onSearch}
+          aria-keyshortcuts={keys.aria("KeyK")}
           className={row(false)}
         >
           <NavIcon name="search" className="text-foreground/60" />
           <span className="flex-1 truncate text-left">{t("search")}</span>
-          <kbd className={hoverKey}>{keys.label("KeyK")}</kbd>
+          <kbd aria-hidden className={hoverKey}>
+            {keys.label("KeyK")}
+          </kbd>
         </button>
       </div>
 
@@ -206,16 +217,14 @@ export function Sidebar({
       <div className="-mx-2.5 mt-5 flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-2.5 pb-3">
         {turns.length > 0 && (
           <section aria-labelledby="sb-turn" className="flex flex-col gap-px">
+            {/* said once, with its count: "To decide, 2" */}
             <h2
               id="sb-turn"
+              aria-label={t("yourTurnCount", { count: turns.length })}
               className="flex h-7 items-center gap-2 px-2.5 text-xs font-semibold"
             >
               {t("yourTurn")}
-              <span
-                role="img"
-                aria-label={t("yourTurnCount", { count: turns.length })}
-                className="font-mono text-[11px] font-normal text-muted-foreground tabular-nums"
-              >
+              <span className="font-mono text-[11px] font-normal text-muted-foreground tabular-nums">
                 {turns.length}
               </span>
             </h2>
@@ -224,6 +233,13 @@ export function Sidebar({
                 key={item.key}
                 href={turnHref(item)}
                 from={item.from}
+                who={
+                  item.from
+                    ? t("office.fromColleague", {
+                        name: office.names.get(item.from) ?? "",
+                      })
+                    : t("office.fromClone")
+                }
                 line={askLine(tAsk, item.ask)}
                 index={indexOf(item.from)}
                 ago={
@@ -293,8 +309,9 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
   const role = app.profile.role?.trim();
   const line = joined ? tOffice(`status.${status}`) : role;
   // The invite link is asked for each time the menu opens, so a click copies it at once and it is
-  // always the link of the office the person is in now.
-  const [invite, setInvite] = useState<string>();
+  // always the link of the office the person is in now: undefined while it is asked for, null
+  // when the office could not say (the click then shows Settings › Office, which says why).
+  const [invite, setInvite] = useState<string | null>();
   // only the latest ask is kept, so an answer late from an earlier office never wins
   const asking = useRef(0);
 
@@ -309,10 +326,10 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
     })
       .then((response) => response.json())
       .then((answer) => {
-        if (ask === asking.current && typeof answer?.url === "string")
-          setInvite(answer.url);
+        if (ask !== asking.current) return;
+        setInvite(typeof answer?.url === "string" ? answer.url : null);
       })
-      .catch(() => {});
+      .catch(() => ask === asking.current && setInvite(null));
   };
 
   return (
@@ -326,7 +343,7 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
                 ? `${t("me.label", { name })}, ${t("statusLabel", { status: tOffice(`status.${status}`) })}`
                 : t("me.label", { name })
             }
-            className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-[10px] pr-2 pl-2.5 text-left outline-none transition-colors hover:bg-foreground/[0.045] focus-visible:ring-2 focus-visible:ring-ring/50 aria-expanded:bg-foreground/[0.07]"
+            className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-[10px] pr-2 pl-2.5 text-left outline-none transition-colors hover:bg-foreground/[0.045] focus-visible:ring-2 focus-visible:ring-ring aria-expanded:bg-foreground/[0.07]"
           />
         }
       >
@@ -395,19 +412,23 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              disabled={!invite}
+              disabled={invite === undefined}
               onClick={() => {
-                if (!invite) return;
-                // Where the page cannot write to the clipboard, the link is shown where it is kept.
+                // Where the link could not be had, or the page cannot write to the clipboard, the
+                // office's settings show it (or why not).
                 const shown = () => app.setSettings("office");
-                if (!navigator.clipboard) return shown();
+                if (!invite || !navigator.clipboard) return shown();
                 void navigator.clipboard
                   .writeText(invite)
                   .then(() => say(t("me.invited")))
                   .catch(shown);
               }}
             >
-              <UserPlus className="text-muted-foreground" />
+              {invite === undefined ? (
+                <Loader2 className="animate-spin text-muted-foreground" />
+              ) : (
+                <UserPlus className="text-muted-foreground" />
+              )}
               <span className="flex-1">{t("me.invite")}</span>
             </DropdownMenuItem>
           </DropdownMenuGroup>
@@ -417,17 +438,28 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
             <NavIcon name="clone" className="text-muted-foreground" />
             <span className="flex-1">{t("screens.clone")}</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => app.setSettings("brain")}>
+          <DropdownMenuItem
+            onClick={() => app.setSettings("brain")}
+            aria-keyshortcuts={keys.aria("Comma")}
+          >
             <NavIcon name="settings" className="text-muted-foreground" />
             <span className="flex-1">{t("settings")}</span>
-            <kbd className="font-mono text-[11px] text-muted-foreground">
+            <kbd
+              aria-hidden
+              className="font-mono text-[11px] text-muted-foreground"
+            >
               {keys.label("Comma")}
             </kbd>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onShortcuts}>
+          <DropdownMenuItem onClick={onShortcuts} aria-keyshortcuts="?">
             <Keyboard className="text-muted-foreground" />
             <span className="flex-1">{t("me.shortcuts")}</span>
-            <kbd className="font-mono text-[11px] text-muted-foreground">?</kbd>
+            <kbd
+              aria-hidden
+              className="font-mono text-[11px] text-muted-foreground"
+            >
+              ?
+            </kbd>
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
@@ -452,6 +484,7 @@ function Asking({ children }: { children: ReactNode }) {
 const TurnLink = memo(function TurnLink({
   href,
   from,
+  who,
   line,
   index,
   ago,
@@ -459,6 +492,8 @@ const TurnLink = memo(function TurnLink({
 }: {
   href: string;
   from?: string;
+  /** Who asks, for a screen reader: the face says it to the eye. */
+  who: string;
   line: string;
   index: number;
   ago?: string;
@@ -477,7 +512,10 @@ const TurnLink = memo(function TurnLink({
           <Bot size={16} mood="idle" still mine className="shrink-0" />
         )}
       </Asking>
-      <span className="min-w-0 flex-1 truncate">{line}</span>
+      <span className="min-w-0 flex-1 truncate">
+        <span className="sr-only">{who}: </span>
+        {line}
+      </span>
       {ago && (
         <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
           {ago}

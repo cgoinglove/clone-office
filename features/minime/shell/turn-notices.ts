@@ -49,6 +49,9 @@ export function useTurnNotices(
   const where = useRef({ pathname, openChat });
   where.current = { pathname, openChat };
   const seen = useRef<Set<string> | null>(null);
+  // When the page began watching: a question kept before then is not news when it first shows
+  // (it waited while the office could not be reached).
+  const watching = useRef(0);
   const keys = items.map((item) => item.key).join("|");
   const me = office.office?.me?.id;
 
@@ -107,12 +110,19 @@ export function useTurnNotices(
     // What already waited when the page opened is not news.
     if (!seen.current) {
       seen.current = new Set(items.map((item) => item.key));
+      watching.current = Date.now();
       return;
     }
     // Everything ever seen stays seen: a question that drops out while the office cannot be
     // reached and comes back after is not news again.
     const known = seen.current;
-    const fresh = items.filter((item) => !known.has(item.key));
+    const kept = (item: TurnItem) =>
+      Boolean(
+        item.waiting?.later &&
+          item.since &&
+          Date.parse(item.since) < watching.current,
+      );
+    const fresh = items.filter((item) => !known.has(item.key) && !kept(item));
     for (const item of items) known.add(item.key);
     for (const item of fresh) {
       const from = item.from && office.names.get(item.from);
@@ -141,7 +151,9 @@ export function useTurnNotices(
   useEffect(() => {
     const now = new Map(sent.map((task) => [task.id, task.status.state]));
     const before = states.current;
-    states.current = now;
+    // A look that could not reach the office knows nothing of the requests: what was known stays,
+    // so an answer that came meanwhile is still news on the next look.
+    states.current = new Map([...(before ?? []), ...now]);
     if (!before) return;
     for (const task of sent) {
       const was = before.get(task.id);
@@ -149,8 +161,12 @@ export function useTurnNotices(
       if (task.status.state !== "COMPLETED") continue;
       const href = `/requests/${encodeURIComponent(task.id)}`;
       const to = task.metadata.to;
+      // someone asked by a link has no clone: their name is the guest's
+      const member = office.names.get(to);
       tell({
-        title: tShell("notice.answered", { name: office.names.get(to) ?? "" }),
+        title: tShell("notice.answered", {
+          name: member ?? task.metadata.guest ?? "",
+        }),
         body:
           [...task.history]
             .reverse()
@@ -158,7 +174,7 @@ export function useTurnNotices(
             ?.parts.map((part) => part.text ?? "")
             .join(" ")
             .trim() ?? "",
-        from: to,
+        from: member ? to : undefined,
         href,
         action: tShell("office.open"),
         tag: task.id,

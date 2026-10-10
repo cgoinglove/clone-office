@@ -6,7 +6,7 @@
 // opening one reads its own record, and an answer still coming after a question is followed.
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GateAsk } from "../ask-card";
 import { savedText } from "../saved-text";
 import { stream } from "../stream";
@@ -63,6 +63,8 @@ export function useChat(lang: string) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
   const [chatId, setChatId] = useState<string | undefined>(undefined);
+  // The open conversation's name as its own record gives it, for one not on the list's loaded page.
+  const [openTitle, setOpenTitle] = useState<string>();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   // The list grows a page at a time as the person scrolls to its end (`loadMore`).
   const shown = useRef(PAGE);
@@ -96,6 +98,7 @@ export function useChat(lang: string) {
     if (!response?.ok) return;
     const data = (await response.json()) as {
       id: string;
+      title?: string;
       messages: { role: string; text: string; at: string; person?: boolean }[];
     };
     const waiting = (await fetch(
@@ -107,6 +110,7 @@ export function useChat(lang: string) {
       asks: { id: string; ask: GateAsk }[];
     };
     setChatId(data.id);
+    setOpenTitle(data.title);
     setTurns([
       ...data.messages.map((m): Turn => {
         const id = nextId.current++;
@@ -211,6 +215,7 @@ export function useChat(lang: string) {
   const newChat = useCallback(() => {
     chatRef.current = undefined;
     setChatId(undefined);
+    setOpenTitle(undefined);
     setTurns([]);
   }, []);
 
@@ -352,6 +357,32 @@ export function useChat(lang: string) {
 
   askRef.current = ask;
 
+  /** Words to ask in a new conversation once the clone is free (they came while it answered). */
+  const queued = useRef<string | null>(null);
+  /**
+   * Asks in a new conversation. While the clone is answering, the words wait and are asked the
+   * moment it is done, rather than clearing what it writes or steering it; false says they wait.
+   */
+  const askNew = useCallback(
+    (text: string): boolean => {
+      if (busyRef.current) {
+        queued.current = text;
+        return false;
+      }
+      newChat();
+      void ask(text);
+      return true;
+    },
+    [newChat, ask],
+  );
+  useEffect(() => {
+    if (busy || busyRef.current || !queued.current) return;
+    const text = queued.current;
+    queued.current = null;
+    newChat();
+    void ask(text);
+  }, [busy, newChat, ask]);
+
   /**
    * A word for the clone while it works in this conversation, read before its next step (after
    * Thursday's step-in). When it is not working after all, the word is asked the usual way.
@@ -443,36 +474,70 @@ export function useChat(lang: string) {
     [openChat, t],
   );
 
-  const asking = turns.some(
+  // How many of its questions wait in the open conversation, and whether the clone is writing:
+  // plain values, so what reads them is drawn again only when they change, not on every word.
+  const openAsks = turns.filter(
     (turn) => turn.kind === "ask" && turn.state === "open",
-  );
+  ).length;
+  const asking = openAsks > 0;
   const talking = turns.some((turn) => turn.kind === "minime" && turn.live);
-  const title = chats.find((chat) => chat.id === chatId)?.title;
+  const title = chats.find((chat) => chat.id === chatId)?.title ?? openTitle;
 
-  return {
-    turns,
-    busy,
-    chatId,
-    chats,
-    more,
-    asked,
-    loadMore,
-    renameChat,
-    archiveChat,
-    title,
-    asking,
-    talking,
-    kept,
-    ask,
-    note,
-    resend,
-    takeBack,
-    answer,
-    openChat,
-    newChat,
-    refresh,
-    loadChats,
-  };
+  // Everything but the turns themselves, which change with every streamed word: the app's shared
+  // state holds this, and only the conversation's own view reads the turns.
+  const chat = useMemo(
+    () => ({
+      busy,
+      chatId,
+      chats,
+      more,
+      asked,
+      loadMore,
+      renameChat,
+      archiveChat,
+      title,
+      asking,
+      openAsks,
+      talking,
+      kept,
+      ask,
+      askNew,
+      note,
+      resend,
+      takeBack,
+      answer,
+      openChat,
+      newChat,
+      refresh,
+      loadChats,
+    }),
+    [
+      busy,
+      chatId,
+      chats,
+      more,
+      asked,
+      loadMore,
+      renameChat,
+      archiveChat,
+      title,
+      asking,
+      openAsks,
+      talking,
+      kept,
+      ask,
+      askNew,
+      note,
+      resend,
+      takeBack,
+      answer,
+      openChat,
+      newChat,
+      refresh,
+      loadChats,
+    ],
+  );
+  return { chat, turns };
 }
 
-export type Chat = ReturnType<typeof useChat>;
+export type Chat = ReturnType<typeof useChat>["chat"];

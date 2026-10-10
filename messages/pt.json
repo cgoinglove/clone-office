@@ -605,14 +605,15 @@
         "morning": "Bom dia, {name}",
         "afternoon": "Boa tarde, {name}",
         "evening": "Boa noite, {name}",
-        "in": "{in} de {count, plural, one {# colega} other {# colegas}} no escritório",
+        "in": "{in} de {count} já chegaram",
         "alone": "Nenhum colega aqui ainda",
         "waiting": "{count, plural, one {# coisa espera por você} other {# coisas esperam por você}}",
         "clockIn": "Bater ponto",
         "enter": "Enter",
         "foot": "Seu clone roda neste computador.",
         "floors": "ANDARES 1–{count}",
-        "yourFloor": "seu andar"
+        "yourFloor": "seu andar",
+        "label": "O prédio da sua empresa, com o seu andar marcado"
       },
       "meeting": {
         "on": "Na reunião"
@@ -1233,7 +1234,8 @@
       "linkStarter": "Crie um link de resposta e pergunte: ",
       "askSomeone": "Perguntar a alguém",
       "everyTime": "De tempos em tempos",
-      "flowStarter": "De segunda a sexta às 9, "
+      "flowStarter": "De segunda a sexta às 9, ",
+      "asksNext": "Seu clone vai cuidar disso numa conversa nova assim que terminar esta resposta."
     },
     "requests": {
       "title": "Pedidos",
@@ -1277,7 +1279,9 @@
       "fromColleague": "O clone de {name} pergunta",
       "fromClone": "Seu clone pergunta",
       "open": "Abrir",
-      "inNow": "{count} de {all} presentes"
+      "inNow": "{count} de {all} presentes",
+      "answered": "Você respondeu “{choice}”",
+      "fold": "Recolher"
     },
     "clone": {
       "title": "Seu clone",
@@ -1557,7 +1561,10 @@
       "fold": "Ocultar ou mostrar a barra lateral",
       "section": "Uma seção das Configurações",
       "box": "Escrever para seu clone",
-      "list": "Esta lista"
+      "list": "Esta lista",
+      "rename": "Renomear a conversa selecionada",
+      "askFromSearch": "Perguntar ao seu clone o que você digitou na busca",
+      "toast": "Ir ao último aviso (e seu Desfazer)"
     },
     "palette": {
       "title": "Buscar e ir",
@@ -1583,12 +1590,14 @@
       "rename": "Renomear",
       "name": "Nome da conversa",
       "archive": "Arquivar",
-      "archived": "“{title}” foi arquivada"
+      "archived": "“{title}” foi arquivada",
+      "options": "Mais"
     },
     "notice": {
       "answer": "Responder",
       "answered": "{name} respondeu ao seu pedido"
-    }
+    },
+    "skip": "Pular para o conteúdo"
   },
   "page": {
     "notFound": {
@@ -1618,7 +1627,6 @@
     "finding": "Procurando onde está seu trabalho",
     "noneRead": "nenhuma marcada",
     "leftOut": "{count} de fora",
-    "check": "Revisar",
     "sessions": "{count, plural, one {# conversa} other {# conversas}}",
     "files": "{count, plural, one {# arquivo} other {# arquivos}}",
     "repo": "repositório",

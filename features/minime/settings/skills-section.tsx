@@ -143,12 +143,9 @@ export function SkillsSection() {
   );
 }
 
-function Done({ children, title }: { children: string; title?: string }) {
+function Done({ children }: { children: string }) {
   return (
-    <span
-      className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground"
-      title={title}
-    >
+    <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
       <Check className="size-3" />
       {children}
     </span>
@@ -183,9 +180,7 @@ function OwnRow({
     <li className="flex flex-col gap-2 px-3.5 py-3">
       <div className="flex items-start gap-3">
         <span className="min-w-0 flex-1">
-          <span className="font-medium" title={skill.name}>
-            {named.title}
-          </span>
+          <span className="font-medium">{named.title}</span>
           {skill.from !== "own" && (
             <span className="ml-2 text-xs text-muted-foreground">
               {skill.from === "app"
@@ -196,6 +191,11 @@ function OwnRow({
           <span className="block text-xs leading-relaxed text-muted-foreground">
             {named.body}
           </span>
+          {shareable && !skill.files && skill.problem && (
+            <span className="block text-xs text-muted-foreground">
+              {t("cantShare")} · {problemText(skill.problem)}
+            </span>
+          )}
         </span>
         {shareable &&
           !sure &&
@@ -210,13 +210,6 @@ function OwnRow({
             >
               {skill.shared === "changed" ? t("shareChanges") : t("share")}
             </Button>
-          ) : skill.problem ? (
-            <span
-              className="shrink-0 text-xs text-muted-foreground"
-              title={problemText(skill.problem)}
-            >
-              {t("cantShare")}
-            </span>
           ) : null)}
       </div>
       {sure && skill.files && (
@@ -277,6 +270,11 @@ function OfficeRow({
             {skill.scripts > 0 &&
               ` · ${t("scripts", { count: skill.scripts })}`}
           </span>
+          {skill.here === "changed" && (
+            <span className="block text-xs text-muted-foreground">
+              {t("changedHint")}
+            </span>
+          )}
         </span>
         <span className="flex shrink-0 items-center gap-1">
           {skill.here === "new" || skill.here === "update" ? (
@@ -292,7 +290,7 @@ function OfficeRow({
           ) : skill.here === "added" ? (
             <Done>{t("added")}</Done>
           ) : skill.here === "changed" ? (
-            <Done title={t("changedHint")}>{t("changed")}</Done>
+            <Done>{t("changed")}</Done>
           ) : skill.here === "taken" ? (
             <span className="text-xs text-muted-foreground">{t("taken")}</span>
           ) : null}

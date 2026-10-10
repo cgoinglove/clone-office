@@ -135,7 +135,7 @@ export function FolderField({
         disabled={list === null}
         data-folder-field
         onClick={() => (onOpen ? onOpen() : setOpen(true))}
-        className="group flex h-12 w-full min-w-0 items-center gap-3 rounded-[10px] bg-background pr-2.5 pl-3.5 text-left ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+        className="group flex h-12 w-full min-w-0 items-center gap-3 rounded-[10px] bg-background pr-2.5 pl-3.5 text-left ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
       >
         <FolderIcon className="size-4 shrink-0 text-muted-foreground" />
         {list === null ? (
@@ -160,8 +160,8 @@ export function FolderField({
             )}
           </>
         )}
-        <span className="flex shrink-0 items-center gap-0.5 text-[13px] text-muted-foreground transition-colors group-hover:text-foreground">
-          {t("check")}
+        {/* a row that opens more ends with its chevron alone */}
+        <span className="flex shrink-0 items-center text-muted-foreground transition-colors group-hover:text-foreground">
           <ChevronRight className="size-4" />
         </span>
       </button>
@@ -300,14 +300,14 @@ function FolderBody({
                 type="button"
                 role="checkbox"
                 aria-checked={false}
-                title={other.pattern}
                 onClick={() =>
                   void save(excludes.filter((p) => p !== other.pattern))
                 }
                 className="flex w-full items-center gap-3.5 rounded-[10px] px-3 py-2.5 text-left outline-none transition-colors hover:bg-muted focus-visible:bg-muted"
               >
                 <Tick on={false} />
-                <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-muted-foreground">
+                {/* the whole pattern, wrapped: a name left out is read in full, not guessed at */}
+                <span className="min-w-0 flex-1 font-mono text-[13px] break-all text-muted-foreground">
                   {other.pattern}
                 </span>
               </button>
@@ -339,7 +339,7 @@ function FolderBody({
             <button
               type="submit"
               disabled={!path.trim()}
-              className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-[8px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-40"
+              className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-[8px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
             >
               <Plus className="size-4" />
             </button>

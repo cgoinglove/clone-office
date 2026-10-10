@@ -167,6 +167,7 @@ export function OfficeSection({
       <Leave
         here={Boolean(data.here)}
         busy={office.busy}
+        error={office.error}
         onLeave={() => void office.post({ action: "leave" })}
       />
     </Groups>
@@ -489,13 +490,17 @@ function Invite({ busy }: { busy: boolean }) {
 function Leave({
   here,
   busy,
+  error,
   onLeave,
 }: {
   here: boolean;
   busy: boolean;
+  /** Why the last step failed, said in the confirm while it is open. */
+  error: string | null;
   onLeave: () => void;
 }) {
   const t = useTranslations("office");
+  const problemText = useProblem();
   const tS = useTranslations("settings.office");
   const tCommon = useTranslations("common");
   const [sure, setSure] = useState(false);
@@ -525,6 +530,7 @@ function Leave({
         confirm={here ? t("close") : t("leave")}
         destructive
         busy={busy}
+        error={error ? problemText(error) : undefined}
         onConfirm={onLeave}
       />
     </Group>

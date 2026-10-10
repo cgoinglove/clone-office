@@ -605,14 +605,15 @@
         "morning": "おはようございます、{name}さん",
         "afternoon": "こんにちは、{name}さん",
         "evening": "こんばんは、{name}さん",
-        "in": "同僚{count, plural, other {#人}}のうち{in}人が出勤中",
+        "in": "{count}人中{in}人が出勤",
         "alone": "まだ同僚はいません",
         "waiting": "{count, plural, other {あなたを待っていることが#件}}",
         "clockIn": "出勤する",
         "enter": "Enter",
         "foot": "クローンはこのコンピューターで動いています。",
         "floors": "1–{count}階",
-        "yourFloor": "あなたのフロア"
+        "yourFloor": "あなたのフロア",
+        "label": "会社のビル。自分の階に印があります"
       },
       "meeting": {
         "on": "会議中"
@@ -1233,7 +1234,8 @@
       "linkStarter": "返信リンクを作って聞いて：",
       "askSomeone": "誰かに聞く",
       "everyTime": "定期的に",
-      "flowStarter": "平日の朝9時に、"
+      "flowStarter": "平日の朝9時に、",
+      "asksNext": "いまの答えが終わったら、新しいチャットですぐに取りかかります。"
     },
     "requests": {
       "title": "依頼",
@@ -1277,7 +1279,9 @@
       "fromColleague": "{name}さんのクローンからの質問",
       "fromClone": "あなたのクローンからの質問",
       "open": "開く",
-      "inNow": "出勤 {count}/{all}"
+      "inNow": "出勤 {count}/{all}",
+      "answered": "「{choice}」と答えました",
+      "fold": "たたむ"
     },
     "clone": {
       "title": "あなたのクローン",
@@ -1557,7 +1561,10 @@
       "fold": "サイドバーの表示・非表示",
       "section": "設定の各セクションへ",
       "box": "クローンへの入力欄へ",
-      "list": "この一覧"
+      "list": "この一覧",
+      "rename": "選んだチャットの名前を変える",
+      "askFromSearch": "検索に書いたことをクローンに聞く",
+      "toast": "出たばかりの通知へ（元に戻す）"
     },
     "palette": {
       "title": "検索と移動",
@@ -1583,12 +1590,14 @@
       "rename": "名前を変更",
       "name": "会話の名前",
       "archive": "アーカイブ",
-      "archived": "「{title}」をアーカイブしました"
+      "archived": "「{title}」をアーカイブしました",
+      "options": "その他"
     },
     "notice": {
       "answer": "答える",
       "answered": "{name} さんが依頼に答えました"
-    }
+    },
+    "skip": "本文へスキップ"
   },
   "page": {
     "notFound": {
@@ -1618,7 +1627,6 @@
     "finding": "仕事のフォルダーを探しています",
     "noneRead": "選ばれていません",
     "leftOut": "{count}か所除外",
-    "check": "確認",
     "sessions": "{count, plural, other {会話 #件}}",
     "files": "{count, plural, other {ファイル #件}}",
     "repo": "リポジトリ",

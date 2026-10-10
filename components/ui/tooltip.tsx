@@ -46,12 +46,13 @@ function TooltipContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
-        className="isolate z-50"
+        // over everything that floats (a confirm, a toast's card), as a tip is read where it points
+        className="isolate z-[200]"
       >
         <TooltipPrimitive.Popup
           data-slot="tooltip-content"
           className={cn(
-            "inverse z-50 inline-flex h-7 w-fit max-w-xs origin-(--transform-origin) items-center gap-2 rounded-[7px] bg-background px-2.5 text-xs whitespace-nowrap text-foreground shadow-[0_6px_16px_-6px_rgb(0_0_0/0.4)] data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+            "inverse z-50 inline-flex h-7 w-fit max-w-xs origin-(--transform-origin) items-center gap-2 rounded-[7px] bg-background px-2.5 text-xs whitespace-nowrap text-foreground shadow-[0_6px_16px_-6px_var(--shade)] data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
             className,
           )}
           {...props}

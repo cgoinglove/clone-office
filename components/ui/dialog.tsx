@@ -5,6 +5,7 @@ import { XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { Tip } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -31,7 +32,7 @@ function DialogOverlay({
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/15 duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50 bg-(--scrim) duration-100 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className,
       )}
       {...props}
@@ -59,6 +60,7 @@ function DialogContent({
   children,
   showCloseButton = true,
   above = false,
+  initialFocus,
   ...props
 }: DialogPrimitive.Popup.Props & {
   showCloseButton?: boolean;
@@ -66,11 +68,16 @@ function DialogContent({
   above?: boolean;
 }) {
   const closeLabel = useCloseLabel();
+  // Where nothing else is first, opening lands on the dialog itself rather than its close button,
+  // whose tip would otherwise cover what the dialog says before anything is done.
+  const popup = React.useRef<HTMLDivElement>(null);
   return (
     <DialogPortal>
       {/* over another dialog too (a confirm over Settings), so the one beneath steps back */}
       <DialogOverlay forceRender className={above ? "z-[60]" : undefined} />
       <DialogPrimitive.Popup
+        ref={popup}
+        initialFocus={initialFocus ?? (showCloseButton ? popup : undefined)}
         data-slot="dialog-content"
         className={cn(
           "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-[14px] bg-popover p-6 text-sm text-popover-foreground shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)] duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
@@ -81,19 +88,20 @@ function DialogContent({
       >
         {children}
         {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            render={
-              <Button
-                variant="ghost"
-                className="absolute top-3.5 right-3.5 text-muted-foreground"
-                size="icon"
-              />
-            }
-          >
-            <XIcon />
-            <span className="sr-only">{closeLabel}</span>
-          </DialogPrimitive.Close>
+          <Tip label={closeLabel}>
+            <DialogPrimitive.Close
+              data-slot="dialog-close"
+              render={
+                <Button
+                  variant="ghost"
+                  className="absolute top-3.5 right-3.5 text-muted-foreground"
+                  size="icon"
+                />
+              }
+            >
+              <XIcon />
+            </DialogPrimitive.Close>
+          </Tip>
         )}
       </DialogPrimitive.Popup>
     </DialogPortal>

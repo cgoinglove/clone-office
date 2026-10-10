@@ -1094,7 +1094,7 @@ function Answered({
           <button
             type="button"
             onClick={onCheckAgain}
-            className="shrink-0 rounded-lg px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="shrink-0 rounded-lg px-2 py-1 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("brain.checkAgain")}
           </button>
@@ -1292,7 +1292,7 @@ function LearnStep({
         <button
           type="button"
           onClick={() => setBringing(true)}
-          className="group -mx-2 mt-1 flex h-8 items-center gap-1 self-start rounded-lg px-2 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          className="group -mx-2 mt-1 flex h-8 items-center gap-1 self-start rounded-lg px-2 text-[13px] text-muted-foreground outline-none transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           {t("learn.bring")}
           <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -1502,7 +1502,7 @@ function KnownDialog({
                       await onForget(item.known);
                       setTaking(null);
                     }}
-                    className="grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-50"
+                    className="grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
                   >
                     {taking === key ? (
                       <Loader2 className="size-3.5 animate-spin" />
@@ -1622,7 +1622,7 @@ function KnownSummary({ learn }: { learn: ReturnType<typeof useLearn> }) {
               key={found.id}
               type="button"
               onClick={() => setOpenId(found.id)}
-              className="group flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] ring-1 ring-foreground/10 outline-none ring-inset transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="group flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[13.5px] ring-1 ring-foreground/10 outline-none ring-inset transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
             >
               {found.label}
               <span className="text-muted-foreground tabular-nums">
@@ -1653,7 +1653,7 @@ const OPENS =
 
 /** A summary row's look: a whole row to press, filled while pointed at. */
 const SUMMARY_ROW =
-  "group -m-3 flex min-w-0 rounded-[14px] p-3 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50";
+  "group -m-3 flex min-w-0 rounded-[14px] p-3 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring";
 
 /** One kind in the summary: its name and how many, and the first few names, each with its mark. */
 function SummaryKind({
@@ -1882,7 +1882,7 @@ function Field({
   return (
     <label
       className={cn(
-        "flex min-h-10 min-w-0 items-center gap-3 rounded-[10px] pr-2.5 pl-3 ring-1 ring-input ring-inset transition-shadow focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
+        "flex min-h-10 min-w-0 items-center gap-3 rounded-[10px] pr-2.5 pl-3 ring-1 ring-input ring-inset transition-shadow focus-within:ring-3 focus-within:ring-ring dark:bg-input/30",
         invalid && "ring-destructive/60 focus-within:ring-destructive/30",
         className,
       )}
@@ -1957,7 +1957,7 @@ function ReadyStep({
                   type="button"
                   onClick={row.change}
                   aria-label={`${row.label} · ${t("ready.change")}`}
-                  className="group -mx-2 flex h-10 w-[calc(100%+1rem)] items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring/50"
+                  className="group -mx-2 flex h-10 w-[calc(100%+1rem)] items-center gap-3 rounded-[10px] px-2 text-left outline-none transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {line}
                   <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />

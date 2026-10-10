@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/ui/markdown";
 import { ShinyText } from "@/components/ui/shiny-text";
+import { liftNotices } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
 import { Bot, type Mood } from "@/features/office";
 import { composing } from "@/hooks/use-hotkey";
@@ -34,6 +35,7 @@ import type { Chat, Turn } from "./use-chat";
 
 export function ChatView({
   chat,
+  turns,
   tasks,
   routines,
   mood,
@@ -44,6 +46,8 @@ export function ChatView({
   placeholder,
 }: {
   chat: Chat;
+  /** The conversation as it streams in. */
+  turns: Turn[];
   /** What the clone offered to do after its last reading. */
   tasks: { label: string; why: string }[];
   routines: Routine[];
@@ -62,17 +66,17 @@ export function ChatView({
   const bottom = useRef<HTMLDivElement>(null);
 
   // The newest line stays in view as words stream in.
-  const last = chat.turns.at(-1);
+  const last = turns.at(-1);
   const lastText = last && "text" in last ? last.text.length : 0;
   useEffect(() => {
     bottom.current?.scrollIntoView({ block: "end" });
-  }, [chat.turns.length, lastText]);
+  }, [turns.length, lastText]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pt-6 pb-3">
         <div className="mx-auto flex min-h-full w-full max-w-180 flex-col">
-          {chat.turns.length === 0 ? (
+          {turns.length === 0 ? (
             (empty ?? (
               <Empty
                 chat={chat}
@@ -84,7 +88,7 @@ export function ChatView({
             ))
           ) : (
             <ol className="flex flex-col gap-5">
-              {chat.turns.map((turn) => (
+              {turns.map((turn) => (
                 <TurnRow key={turn.id} turn={turn} chat={chat} />
               ))}
             </ol>
@@ -222,15 +226,15 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
               <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none" />
                 {tStep("waits")}
-                <button
-                  type="button"
-                  aria-label={tStep("takeBack")}
-                  title={tStep("takeBack")}
-                  onClick={() => void chat.takeBack(turn.note ?? "")}
-                  className="rounded-md p-0.5 hover:bg-muted hover:text-foreground"
-                >
-                  <X className="size-3.5" />
-                </button>
+                <Tip label={tStep("takeBack")}>
+                  <button
+                    type="button"
+                    onClick={() => void chat.takeBack(turn.note ?? "")}
+                    className="rounded-md p-0.5 hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </Tip>
               </span>
             ))}
         </li>
@@ -345,6 +349,9 @@ export function Composer({
   const [draft, setDraft] = useState("");
   const own = useRef<HTMLTextAreaElement>(null);
   const box = draftRef ?? own;
+  // toasts and news stand above the box, however tall it grows
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => liftNotices(form.current), []);
   const send = () => {
     const text = draft.trim();
     if (!text) return;
@@ -364,6 +371,7 @@ export function Composer({
   };
   return (
     <form
+      ref={form}
       className={cn("shrink-0 px-3 pt-1 pb-3", className)}
       onSubmit={(event) => {
         event.preventDefault();

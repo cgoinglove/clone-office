@@ -7,7 +7,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { sayUndoable } from "@/components/ui/toast";
+import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
 import type { When } from "./flows/schedule";
 import { whenText } from "./flows/when-text";
 
@@ -44,7 +44,7 @@ export function FlowsPanel({
   const format = useFormatter();
   const [flows, setFlows] = useState<FlowView[] | null>(null);
   // Removed flows are hidden at once and removed when their toast goes without Undo.
-  const [gone, setGone] = useState<Set<string>>(new Set());
+  const removal = useUndoableRemoval(undo);
   const [running, setRunning] = useState<Set<string>>(new Set());
   const watching = useRef<ReturnType<typeof setInterval>>(undefined);
 
@@ -62,40 +62,21 @@ export function FlowsPanel({
   }, []);
 
   // A removed flow is paused at once, so it does not run while its Undo waits; it is removed when
-  // the Undo runs out or this panel goes, and shows again (as it was) if that fails or is undone.
-  const removals = useRef(new Map<string, { commit: () => void }>());
-  useEffect(() => {
-    const all = removals.current;
-    return () => {
-      for (const removal of all.values()) removal.commit();
-    };
-  }, []);
-  const show = (id: string) =>
-    setGone((all) => {
-      const next = new Set(all);
-      next.delete(id);
-      return next;
-    });
+  // the Undo runs out or this panel goes, and shows again as it was (running again, if it was)
+  // when that fails or is undone.
   const removeLater = (flow: FlowView) => {
-    setGone((all) => new Set(all).add(flow.id));
     if (!flow.paused) void post("pause", flow.id);
-    removals.current.set(
-      flow.id,
-      sayUndoable(t("removed", { name: flow.name }), undo, {
-        commit: () => {
-          removals.current.delete(flow.id);
-          void post("remove", flow.id).then((done) => {
-            if (!done) show(flow.id);
-            void load();
-          });
-        },
-        undo: () => {
-          removals.current.delete(flow.id);
-          if (!flow.paused) void post("resume", flow.id);
-          show(flow.id);
-        },
-      }),
-    );
+    removal.remove(flow.id, t("removed", { name: flow.name }), {
+      commit: async () => {
+        const done = await post("remove", flow.id);
+        if (!done && !flow.paused) await post("resume", flow.id);
+        void load();
+        return done;
+      },
+      undo: () => {
+        if (!flow.paused) void post("resume", flow.id);
+      },
+    });
   };
 
   /** One change to a flow, kept alive so a removal done as the page goes still arrives. */
@@ -193,14 +174,11 @@ export function FlowsPanel({
               ))}
             </div>
           )}
-          <ul className="flex flex-col">
+          <ul className="flex flex-col gap-3">
             {flows
-              .filter((flow) => !gone.has(flow.id))
+              .filter((flow) => !removal.hidden.has(flow.id))
               .map((flow) => (
-                <li
-                  key={flow.id}
-                  className="flex flex-col gap-1 border-b border-border py-2 last:border-b-0"
-                >
+                <li key={flow.id} className="flex flex-col gap-1">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                     <span className="font-medium">{flow.name}</span>
                     <span className="text-xs text-muted-foreground">

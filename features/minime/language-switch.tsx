@@ -90,7 +90,7 @@ export function LanguageSwitch() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         aria-label={t("label")}
-        className="flex h-8 items-center gap-1.5 rounded-lg pr-2 pl-2.5 text-[13px] text-muted-foreground ring-1 ring-border outline-none ring-inset transition-colors hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:bg-muted aria-expanded:text-foreground"
+        className="flex h-8 items-center gap-1.5 rounded-lg pr-2 pl-2.5 text-[13px] text-muted-foreground ring-1 ring-border outline-none ring-inset transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring aria-expanded:bg-muted aria-expanded:text-foreground"
       >
         <Flag locale={locale} />
         {LOCALE_NAMES[locale]}

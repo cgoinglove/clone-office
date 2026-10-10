@@ -108,8 +108,15 @@ function ArchivedChats() {
   // a page at a time, as the column lists them
   const [limit, setLimit] = useState(50);
   const [more, setMore] = useState(false);
+  const [loading, setLoading] = useState(false);
+  // Read again after each one brought back, so the page fills from what is left and the rest
+  // stays reachable however many come back.
+  const [version, setVersion] = useState(0);
+  const [restoring, setRestoring] = useState<ReadonlySet<string>>(new Set());
   useEffect(() => {
+    void version;
     let live = true;
+    setLoading(true);
     void fetch(`/api/me/chats?archived=1&limit=${limit}`, { headers: HEADERS })
       .then((r) => r.json())
       .then((data) => {
@@ -117,11 +124,28 @@ function ArchivedChats() {
         setChats(data.chats ?? []);
         setMore(Boolean(data.more));
       })
-      .catch(() => live && setChats([]));
+      .catch(() => live && setChats([]))
+      .finally(() => live && setLoading(false));
     return () => {
       live = false;
     };
-  }, [limit]);
+  }, [limit, version]);
+  const restore = (chat: { id: string; title: string }) => {
+    setRestoring((all) => new Set(all).add(chat.id));
+    void archiveChat(chat.id, false)
+      .then((done) => {
+        if (!done) return;
+        say(t("restored", { title: chat.title }));
+        setVersion((was) => was + 1);
+      })
+      .finally(() =>
+        setRestoring((all) => {
+          const next = new Set(all);
+          next.delete(chat.id);
+          return next;
+        }),
+      );
+  };
   if (!chats?.length) return null;
   return (
     <Group title={t("archived")} hint={t("archivedHint")}>
@@ -141,13 +165,8 @@ function ArchivedChats() {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() =>
-                void archiveChat(chat.id, false).then((done) => {
-                  if (!done) return;
-                  setChats((all) => all?.filter((c) => c.id !== chat.id) ?? []);
-                  say(t("restored", { title: chat.title }));
-                })
-              }
+              loading={restoring.has(chat.id)}
+              onClick={() => restore(chat)}
             >
               {t("restore")}
             </Button>
@@ -159,6 +178,7 @@ function ArchivedChats() {
           size="sm"
           variant="ghost"
           className="self-start text-muted-foreground"
+          loading={loading}
           onClick={() => setLimit((was) => was + 50)}
         >
           {t("archivedMore")}

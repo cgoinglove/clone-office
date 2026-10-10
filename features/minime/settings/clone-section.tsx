@@ -16,14 +16,14 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
-import { sayUndoable } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
+import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
 import { useProblem } from "@/i18n/client";
 import type { Learn } from "../home/use-learn";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
@@ -110,6 +110,12 @@ export function CloneSection({
     await loadMemory();
   };
 
+  // A removed line is hidden at once, the count and the numbers following, and removed when its
+  // Undo runs out or this screen goes; it is back if that fails or is undone.
+  const words = useTranslations();
+  const removal = useUndoableRemoval(words("common.undo"));
+  const keyOf = (entry: Entry) => `${entry.target}-${entry.text}`;
+  const shown = entries.filter((entry) => !removal.hidden.has(keyOf(entry)));
   const remove = async (entry: Entry): Promise<boolean> => {
     const response = await fetch("/api/me/memory", {
       method: "POST",
@@ -141,28 +147,32 @@ export function CloneSection({
         action={
           memory && (
             <span className="text-xs text-muted-foreground tabular-nums">
-              {t("lines", { count: entries.length })}
+              {t("lines", { count: shown.length })}
             </span>
           )
         }
       >
         {!memory ? (
           <ShinyText className="text-sm" text={t("loading")} />
-        ) : entries.length === 0 ? (
+        ) : shown.length === 0 ? (
           <Empty icon={<BookOpen className="size-5" />}>
             {t("nothingYet")}
           </Empty>
         ) : (
           <Rows>
-            {entries.map((entry, index) => (
+            {shown.map((entry, index) => (
               <MemoryRow
-                key={`${entry.target}-${entry.text}`}
+                key={keyOf(entry)}
                 index={index}
                 entry={entry}
                 source={memory.sources?.[entry.target]?.[entry.text]}
                 fresh={learn.kept.includes(entry.text)}
                 onFix={(fixed) => fix(entry, fixed)}
-                onRemove={() => remove(entry)}
+                onRemove={() =>
+                  removal.remove(keyOf(entry), words("memory.removed"), {
+                    commit: () => remove(entry),
+                  })
+                }
               />
             ))}
           </Rows>
@@ -608,17 +618,12 @@ function MemoryRow({
   source?: Source;
   fresh: boolean;
   onFix: (fix: string) => Promise<void>;
-  onRemove: () => Promise<boolean>;
+  /** Removes it, with Undo (the list hides it at once). */
+  onRemove: () => void;
 }) {
-  const [state, setState] = useState<"open" | "fixing" | "saving" | "gone">(
-    "open",
-  );
+  const [state, setState] = useState<"open" | "fixing" | "saving">("open");
   const [text, setText] = useState(entry.text);
   const t = useTranslations();
-  // Hidden at once, removed when its Undo runs out or this screen goes, and back if that fails.
-  const removal = useRef<{ commit: () => void } | null>(null);
-  useEffect(() => () => removal.current?.commit(), []);
-  if (state === "gone") return null;
   return (
     <li className="group flex flex-col gap-2 px-3.5 py-3">
       <div className="flex items-start gap-3">
@@ -646,24 +651,7 @@ function MemoryRow({
               </Button>
             </Tip>
             <Tip label={t("memory.remove")}>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                onClick={() => {
-                  setState("gone");
-                  removal.current = sayUndoable(
-                    t("memory.removed"),
-                    t("common.undo"),
-                    {
-                      commit: () =>
-                        void onRemove().then((done) => {
-                          if (!done) setState("open");
-                        }),
-                      undo: () => setState("open"),
-                    },
-                  );
-                }}
-              >
+              <Button size="icon-sm" variant="ghost" onClick={onRemove}>
                 <Trash2 />
               </Button>
             </Tip>
@@ -712,6 +700,8 @@ function StartOver() {
   const problemText = useProblem();
   const router = useRouter();
   const [sure, setSure] = useState<false | "backup" | "clear">(false);
+  // what is kept is looked at first, to say whether starting over keeps a copy
+  const [checking, setChecking] = useState(false);
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const go = async () => {
@@ -733,12 +723,16 @@ function StartOver() {
         <Button
           variant="secondary"
           className="text-destructive hover:text-destructive"
-          onClick={() =>
+          loading={checking}
+          onClick={() => {
+            setChecking(true);
+            setProblem(null);
             void fetch("/api/me/reset", { headers: HEADERS })
               .then((r) => r.json())
               .then((data) => setSure(data?.onlyRead ? "clear" : "backup"))
               .catch(() => setSure("backup"))
-          }
+              .finally(() => setChecking(false));
+          }}
         >
           <RotateCcw />
           {tRun("startOver")}
@@ -755,9 +749,9 @@ function StartOver() {
         confirm={tRun("startOverYes")}
         destructive
         busy={busy}
+        error={problem ? problemText(problem) : undefined}
         onConfirm={() => void go()}
       />
-      {problem && <p className="text-destructive">{problemText(problem)}</p>}
     </Group>
   );
 }

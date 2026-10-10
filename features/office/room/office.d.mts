@@ -129,8 +129,11 @@ export interface RoomWords {
   lobby: {
     /** "Good afternoon, Ada", by the hour. */
     greeting: (hour: number, name: string) => string;
+    /** Who is in out of everyone on the floor, the viewer too, as the wall clock counts. */
     in: (count: number, of: number) => string;
     alone: string;
+    /** What the drawing is while it shows the building. */
+    label: string;
     waiting: Count;
     clockIn: string;
     enter: string;

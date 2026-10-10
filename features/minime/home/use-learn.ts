@@ -5,7 +5,7 @@
 // right away. A reading started anywhere (the first steps, settings) is followed here, so a page
 // opened mid-way shows it too.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type Known, withoutKnown } from "../learn/known";
 import type { Routine } from "../routine";
 import { savedText } from "../saved-text";
@@ -191,7 +191,7 @@ export function useLearn(lang: string, onDone?: () => void) {
     return true;
   }, []);
 
-  return { ...state, start, forget };
+  return useMemo(() => ({ ...state, start, forget }), [state, start, forget]);
 }
 
 export type Learn = ReturnType<typeof useLearn>;

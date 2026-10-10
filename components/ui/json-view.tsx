@@ -74,7 +74,7 @@ const toggleProps = (expanded: boolean, toggle: () => void) => ({
 
 /** Only on keyboard focus, as the app's buttons draw it. */
 const TOGGLE_FOCUS =
-  "outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+  "outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 interface JsonNodeProps {
   data: JsonValue;

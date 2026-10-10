@@ -605,14 +605,15 @@
         "morning": "좋은 아침이에요, {name} 님",
         "afternoon": "안녕하세요, {name} 님",
         "evening": "좋은 저녁이에요, {name} 님",
-        "in": "동료 {count, plural, one {#명} other {#명}} 중 {in}명 출근",
+        "in": "{count}명 중 {in}명 출근",
         "alone": "아직 동료가 없어요",
         "waiting": "{count, plural, other {정할 것 #건}}",
         "clockIn": "출근하기",
         "enter": "Enter",
         "foot": "내 클론은 이 컴퓨터에서 일해요.",
         "floors": "1–{count}층",
-        "yourFloor": "우리 층"
+        "yourFloor": "우리 층",
+        "label": "우리 회사 건물, 우리 층이 표시돼 있어요"
       },
       "meeting": {
         "on": "회의 중"
@@ -1233,7 +1234,8 @@
       "linkStarter": "답장 링크를 만들어서 물어봐 줘: ",
       "askSomeone": "다른 사람에게 묻기",
       "everyTime": "정해진 때마다",
-      "flowStarter": "평일 아침 9시마다 "
+      "flowStarter": "평일 아침 9시마다 ",
+      "asksNext": "지금 답을 마치면 새 대화에서 바로 할게요."
     },
     "requests": {
       "title": "부탁",
@@ -1277,7 +1279,9 @@
       "fromColleague": "{name} 님의 클론이 물어요",
       "fromClone": "내 클론이 물어요",
       "open": "열기",
-      "inNow": "출근 {count}/{all}"
+      "inNow": "출근 {count}/{all}",
+      "answered": "“{choice}”라고 답했어요",
+      "fold": "접기"
     },
     "clone": {
       "title": "내 클론",
@@ -1557,7 +1561,10 @@
       "fold": "사이드바 접기·펼치기",
       "section": "설정의 칸으로",
       "box": "클론에게 쓰는 칸으로",
-      "list": "이 목록"
+      "list": "이 목록",
+      "rename": "고른 대화 이름 바꾸기",
+      "askFromSearch": "검색에 쓴 말을 클론에게 묻기",
+      "toast": "방금 뜬 알림으로(되돌리기)"
     },
     "palette": {
       "title": "찾기와 이동",
@@ -1583,12 +1590,14 @@
       "rename": "이름 바꾸기",
       "name": "대화 이름",
       "archive": "보관하기",
-      "archived": "‘{title}’ 대화를 보관했어요"
+      "archived": "‘{title}’ 대화를 보관했어요",
+      "options": "메뉴"
     },
     "notice": {
       "answer": "답하기",
       "answered": "{name} 님이 부탁에 답했어요"
-    }
+    },
+    "skip": "본문으로 건너뛰기"
   },
   "page": {
     "notFound": {
@@ -1618,7 +1627,6 @@
     "finding": "일하는 폴더를 찾는 중",
     "noneRead": "고른 폴더가 없어요",
     "leftOut": "{count}곳 뺌",
-    "check": "확인",
     "sessions": "{count, plural, other {대화 #개}}",
     "files": "{count, plural, other {파일 #개}}",
     "repo": "저장소",

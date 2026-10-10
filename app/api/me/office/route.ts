@@ -115,6 +115,8 @@ export async function GET(request: Request) {
       later: (await laterQuestions(requests, (id) => findTask(office, id))).map(
         (entry) => ({
           id: entry.id,
+          // the question as it was first asked live, so the screen knows it is the same one
+          ...(entry.ask ? { asked: entry.ask } : {}),
           task: entry.task,
           from: entry.from,
           at: entry.at,

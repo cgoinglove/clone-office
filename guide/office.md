@@ -317,8 +317,9 @@ to theirs; they open on the whole floor, and their clone steps out of the lift t
 rest of the day it opens straight at the office.
 
 The office is a floor seen from above: a desk for each member with their clone at it, its name
-over its head with what it is on (**working** 일하는 중, **away** 자리 비움, **→ Mina** on its way
-to a colleague; nothing when it is at ease). Their own clone is the black (in dark mode, white)
+over its head with what it is on (**on Mina's request** Mina 님 부탁 처리 중, **on your request**
+내 부탁 처리 중, **in a meeting** 회의 중, **away** 자리 비움, **→ Mina** on its way to a colleague;
+nothing when it is at ease). Their own clone is the black (in dark mode, white)
 one, its desk on a rug; each colleague's has a colour of its own. A colleague whose computer is
 off is not in: their desk is empty with its laptop shut and their name marked **off** (퇴근), and
 their clone comes in through the lift when the computer is back on. On the left wall a big clock
@@ -329,11 +330,12 @@ What happens to their requests plays out on it. A request walks from the asker's
 asked one's (or flies there as a paper plane when the desk is far) and lands on their pile; the
 clone takes it up and works at its laptop; the answer is carried back, and **DONE** (완료) is
 stamped on the floor. Only requests they are part of are shown: what colleagues ask each other
-stays between them. When something waits for them, their clone asks over its head with
-**Answer** (답하기), which brings them to the question, and its name tag says **needs you**
-(정할 것). **To decide** (정할 것) also lies over the office's top right, **Answer right here**
-(여기서 바로 답할 수 있어요): a permission or a question with a few choices is answered with its buttons
-there, and the arrow at the end of each takes them to the request.
+stays between them. When something waits for them, their clone wears a dot and its name tag says
+**needs you** (정할 것); **To decide** (정할 것) lies over the office's top right, **Answer right
+here** (여기서 바로 답할 수 있어요): a permission or a question with a few choices is answered with
+its buttons there (with **Undo** for a few seconds, as on Home), and the chevron at the end of each
+takes them to the request. On a phone it folds into a **To decide** pill at the top right that opens
+it.
 
 **My desk** (내 자리) and **Office** (오피스) at the bottom move the view; dragging moves it too,
 and Ctrl (or ⌘) with the wheel zooms. Clicking a clone opens a panel about that person: what is on their desk, what they do

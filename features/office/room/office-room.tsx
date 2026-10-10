@@ -12,6 +12,7 @@ import {
   useMemo,
   useRef,
 } from "react";
+import { liftNotices } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { Room, RoomData, RoomWords } from "./office.mjs";
 import "./room.css";
@@ -135,6 +136,7 @@ export function OfficeRoom({
           ),
         in: (count, of) => t("room.lobby.in", { in: count, count: of }),
         alone: t("room.lobby.alone"),
+        label: t("room.lobby.label"),
         waiting: (count) => t("room.lobby.waiting", { count }),
         clockIn: t("room.lobby.clockIn"),
         enter: t("room.lobby.enter"),
@@ -190,6 +192,7 @@ export function OfficeRoom({
   useEffect(() => {
     let alive = true;
     let made: Room | null = null;
+    let unlift = () => {};
     void import("./office.mjs").then(({ createOffice }) => {
       if (!alive || !box.current) return;
       made = createOffice(box.current, {
@@ -207,9 +210,13 @@ export function OfficeRoom({
       made.update(latest.current);
       made.setInset(...insetNow.current);
       room.current = made;
+      // toasts and news stand above the office's ask box
+      if (asks)
+        unlift = liftNotices(box.current.querySelector('[data-of="composer"]'));
     });
     return () => {
       alive = false;
+      unlift();
       made?.destroy();
       room.current = null;
     };

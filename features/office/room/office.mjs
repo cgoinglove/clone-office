@@ -121,8 +121,8 @@ function template(W, composer, lobby) {
 <div class="over" data-of="bubbles"></div>
 <div class="hud tl" data-of="hud-tl"></div>
 <div class="hud tr" data-of="hud-tr"></div>
-<div class="hud bl"><div class="seg" data-of="views" role="group" aria-label="${esc(W.views.label)}"><button type="button" data-view="desk" aria-pressed="false">${esc(W.views.desk)}</button><button type="button" data-view="office" aria-pressed="true">${esc(W.views.office)}</button></div><div class="zoom"><button type="button" data-of="z-out" aria-label="${esc(W.views.zoomOut)}">${ICON.minus}</button><button type="button" data-of="z-in" aria-label="${esc(W.views.zoomIn)}">${ICON.plus}</button></div></div>
-${composer ? `<div class="composer" data-of="composer"><div class="sugs" data-of="sugs"></div><form class="box" data-of="ask-form" autocomplete="off"><span class="me" data-of="me-mark"></span><input data-of="ask-input" type="text" placeholder="${esc(W.composer.placeholder)}" aria-label="${esc(W.composer.placeholder)}"><button type="submit" class="send" aria-label="${esc(W.composer.send)}">${ICON.send}</button></form></div>` : ""}
+<div class="hud bl"><div class="seg" data-of="views" role="group" aria-label="${esc(W.views.label)}"><button type="button" data-view="desk" aria-pressed="false">${esc(W.views.desk)}</button><button type="button" data-view="office" aria-pressed="true">${esc(W.views.office)}</button></div><div class="zoom"><button type="button" data-of="z-out" aria-label="${esc(W.views.zoomOut)}" data-tip="${esc(W.views.zoomOut)}">${ICON.minus}</button><button type="button" data-of="z-in" aria-label="${esc(W.views.zoomIn)}" data-tip="${esc(W.views.zoomIn)}">${ICON.plus}</button></div></div>
+${composer ? `<div class="composer" data-of="composer"><div class="sugs" data-of="sugs"></div><form class="box" data-of="ask-form" autocomplete="off"><span class="me" data-of="me-mark"></span><input data-of="ask-input" type="text" placeholder="${esc(W.composer.placeholder)}" aria-label="${esc(W.composer.placeholder)}"><button type="submit" class="send" aria-label="${esc(W.composer.send)}" data-tip="${esc(W.composer.send)}">${ICON.send}</button></form></div>` : ""}
 <aside class="panel" data-of="panel" hidden></aside>${lobby ? lobbyMarkup(W) : ""}`;
 }
 
@@ -133,7 +133,7 @@ let LOBBY_N = 0;
 /** The way in: a card over the building to clock in, and the lift ride that follows. */
 function lobbyMarkup(W) {
   const id = `of-lb-${++LOBBY_N}`;
-  return `<div class="lobby" data-of="lobby" hidden><div class="lb-card" role="group" aria-labelledby="${id}"><div class="lb-brand"><span class="mk" data-of="lb-mark"></span>Clone Office<small data-of="lb-time"></small></div><h2 id="${id}" data-of="lb-h"></h2><p data-of="lb-sub"></p><div class="lb-acct"><span class="me" data-of="lb-me"></span><div><b data-of="lb-name"></b><span data-of="lb-role"></span></div><span class="tick" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><ul class="lb-facts"><li data-of="lb-in-row"><span class="lb-faces" data-of="lb-faces"></span><span data-of="lb-in"></span></li><li class="hot" data-of="lb-wait-row"><i></i><span data-of="lb-wait"></span></li></ul><button type="button" class="lb-go" data-of="lb-go">${esc(W.lobby.clockIn)}${CHEVRON}<kbd>${esc(W.lobby.enter)}</kbd></button><p class="lb-foot">${esc(W.lobby.foot)}</p></div></div>
+  return `<div class="lobby" data-of="lobby" hidden><div class="lb-card" role="group" aria-labelledby="${id}"><div class="lb-brand"><span class="mk" data-of="lb-mark"></span>Clone Office<small data-of="lb-time"></small></div><h2 id="${id}" data-of="lb-h"></h2><p data-of="lb-sub"></p><div class="lb-acct"><span class="me" data-of="lb-me"></span><div><b data-of="lb-name"></b><span data-of="lb-role"></span></div><span class="tick" aria-hidden="true"><svg viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div><ul class="lb-facts"><li data-of="lb-in-row"><span class="lb-faces" data-of="lb-faces"></span><span data-of="lb-in"></span></li><li class="hot" data-of="lb-wait-row"><i></i><span data-of="lb-wait"></span></li></ul><button type="button" class="lb-go" data-of="lb-go" aria-keyshortcuts="Enter">${esc(W.lobby.clockIn)}${CHEVRON}<kbd aria-hidden="true">${esc(W.lobby.enter)}</kbd></button><p class="lb-foot">${esc(W.lobby.foot)}</p></div></div>
 <div class="liftx" data-of="liftx" hidden aria-hidden="true"><div class="door l"></div><div class="door r"></div><div class="lx-head"><svg class="lx-arr" viewBox="0 0 12 12"><path d="M6 1.5 11 9.5H1z"/></svg><svg class="lx-num" data-of="lx-num"></svg></div></div>`;
 }
 
@@ -1492,7 +1492,8 @@ export function createOffice(
     buildScene(v);
     anim = { from: { ...cam }, to: v, t0: performance.now(), ms };
   }
-  const narrow = () => cw < 760;
+  // the same edge as the stylesheet's container query (max-width: 760px), so card and camera agree
+  const narrow = () => cw <= 760;
   /**
    * An example's frame (the first steps): the desks of those in it, near enough to read what goes
    * on between them, or nothing before anyone sits.
@@ -1603,7 +1604,7 @@ export function createOffice(
     }
     panelKey = "";
     unmountBot(panelRec);
-    panel.innerHTML = `<header><span class="pb"></span><div><b></b><span></span></div><button type="button" class="x" aria-label="${esc(W.panel.close)}">${ICON.close}</button></header><div class="pbody"></div>`;
+    panel.innerHTML = `<header><span class="pb"></span><div><b></b><span></span></div><button type="button" class="x" aria-label="${esc(W.panel.close)}" data-tip="${esc(W.panel.close)}" data-tip-below>${ICON.close}</button></header><div class="pbody"></div>`;
     const look = p.look;
     panelRec = mountBot(
       panel.querySelector(".pb"),
@@ -2395,8 +2396,13 @@ export function createOffice(
           `<svg viewBox="0 0 22 22" aria-hidden="true">${SM_DEFS}${stillMark(p.look, 0, 0, 22)}</svg>`,
       )
       .join("");
+    // counted as the wall clock counts: everyone on the floor, the viewer too
+    const crew = [...people.values()].filter((p) => p.home === plan.index);
     $("lb-in").textContent = others.length
-      ? W.lobby.in(inNow.length, others.length)
+      ? W.lobby.in(
+          crew.filter((p) => p.status !== "offline").length,
+          crew.length,
+        )
       : W.lobby.alone;
     $("lb-wait-row").hidden = !waiting;
     $("lb-wait").textContent = W.lobby.waiting(waiting);
@@ -2405,6 +2411,8 @@ export function createOffice(
     if (!lobbyEl || !plan) return;
     lobbyOn = true;
     entering = false;
+    // the drawing is the building now, and says so
+    svg.setAttribute("aria-label", W.lobby.label);
     for (const g of [gFloor, gWalls, gScene, gUnder, gFly]) g.innerHTML = "";
     for (const a of people.values()) liveOff(a);
     setScale(cw / lobbyView().w);
@@ -2430,16 +2438,15 @@ export function createOffice(
     lobbyEl.classList.remove("go", "in");
     liftx.hidden = true;
     liftx.className = "liftx";
+    // the card comes with the building, not after it: the way in is there from the start
     const g = GEN;
-    setTimeout(
-      () => {
-        if (g === GEN && lobbyOn) lobbyEl.classList.add("in");
-      },
-      REDUCED ? 0 : 450,
-    );
+    requestAnimationFrame(() => {
+      if (g === GEN && lobbyOn) lobbyEl.classList.add("in");
+    });
   }
   function leaveLobby() {
     lobbyOn = false;
+    svg.setAttribute("aria-label", W.label);
     gIntro.innerHTML = "";
     if (lobbyEl) lobbyEl.hidden = true;
     wrap.classList.remove("at-lobby");
@@ -2496,7 +2503,7 @@ export function createOffice(
     if (g !== GEN || destroyed) return;
     liftx.classList.add("shut");
     await wait(480);
-    // behind the closed doors the floor is laid out, already drawn, the camera at the lift
+    // behind the closed doors the floor is laid out, already drawn, the whole floor in view
     leaveLobby();
     openOffice("lift");
     const top = BASE_FLOOR + plan.index;

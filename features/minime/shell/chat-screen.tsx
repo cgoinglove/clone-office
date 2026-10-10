@@ -17,11 +17,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { say as toast } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
 import { useSlashKey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { ChatView } from "../home/chat-view";
-import { useApp } from "./app-state";
+import { useApp, useConversation } from "./app-state";
 import { OfficeRail } from "./office-rail";
 import { Mark } from "./parts";
 import { Welcome } from "./welcome";
@@ -32,6 +33,7 @@ export function ChatScreen() {
   const t = useTranslations("shell.chat");
   const app = useApp();
   const { chat } = app;
+  const turns = useConversation();
   const router = useRouter();
   const params = useSearchParams();
   const draft = useRef<HTMLTextAreaElement>(null);
@@ -59,11 +61,10 @@ export function ChatScreen() {
     router.replace("/chat");
   }, [say, router]);
   const send = params.get("send");
-  const ask = chat.ask;
-  const newChat = chat.newChat;
-  const busy = chat.busy;
+  const askNew = chat.askNew;
   // Each ask is taken once (an effect may run twice for the same address); once the address is the
-  // screen's own again, the same words can be asked again.
+  // screen's own again, the same words can be asked again. While the clone is answering, they wait
+  // and are asked in a new conversation the moment it is done, which the person is told.
   const sent = useRef<string | null>(null);
   useEffect(() => {
     if (!send) {
@@ -73,15 +74,8 @@ export function ChatScreen() {
     if (sent.current === send) return;
     sent.current = send;
     router.replace("/chat");
-    // While the clone is answering, the words wait in the box rather than clearing what it is
-    // writing or being lost: the person sends them when it is done.
-    if (busy) {
-      requestAnimationFrame(() => insertRef.current(send));
-      return;
-    }
-    newChat();
-    void ask(send);
-  }, [send, ask, newChat, router, busy]);
+    if (!askNew(send)) toast(t("asksNext"));
+  }, [send, askNew, router, t]);
 
   const [rail, setRail] = useState(true);
   useEffect(() => {
@@ -99,7 +93,7 @@ export function ChatScreen() {
 
   useSlashKey(() => draft.current?.focus());
 
-  const empty = chat.turns.length === 0;
+  const empty = turns.length === 0;
   return (
     <div className="flex h-full min-h-0">
       <section className="flex min-w-0 flex-1 flex-col">
@@ -123,6 +117,7 @@ export function ChatScreen() {
         </header>
         <ChatView
           chat={chat}
+          turns={turns}
           tasks={app.learn.tasks}
           routines={app.learn.routines}
           mood={app.mood}

@@ -24,6 +24,11 @@ chooses within its scope, and ask before a major visual change. Keep this list s
   nothing to the user. The user chose this. (10-10)
 - **Tooltips**: every button drawn as an icon alone says what it does, and its key, when pointed at
   or focused (`Tip`); a button with words needs none, and nothing uses the browser's `title`. (10-10)
+- **Answers in the person's name**: choices weigh the same (no brand button among them); the answer
+  stays on its row as chosen with Undo for a few seconds, and a tap as the rows move is not taken.
+  (10-10, after the outside review found a double tap answering the next colleague)
+- **Focus**: a 2px ring in the brand colour, the one the lobby's button had; grey text at 4.5:1 on
+  the column's off-white, a switch's off state at 3:1. (10-10)
 - **Moving pictures**: the lobby's building stands as it is and the lift is a plain pair of doors;
   nothing grows, rises or streaks for show anywhere. The user chose this. (10-10)
 - **No shadows on buttons**: a button, a segmented pick or a field is flat: a fill or a hairline ring, never a drop shadow; only what floats (a popover, a menu, a toast, a dialog) casts one. The user chose this. (10-08)

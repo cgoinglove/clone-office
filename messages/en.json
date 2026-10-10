@@ -605,14 +605,15 @@
         "morning": "Good morning, {name}",
         "afternoon": "Good afternoon, {name}",
         "evening": "Good evening, {name}",
-        "in": "{in} of {count, plural, one {# colleague is} other {# colleagues are}} in",
+        "in": "{in} of {count} are in",
         "alone": "No colleagues here yet",
         "waiting": "{count, plural, one {# thing is waiting for you} other {# things are waiting for you}}",
         "clockIn": "Clock in",
         "enter": "Enter",
         "foot": "Your clone runs on this computer.",
         "floors": "FLOORS 1–{count}",
-        "yourFloor": "your floor"
+        "yourFloor": "your floor",
+        "label": "Your company's building, with your floor marked"
       },
       "meeting": {
         "on": "In the meeting"
@@ -1233,7 +1234,8 @@
       "linkStarter": "Make a reply link and ask: ",
       "askSomeone": "Ask someone",
       "everyTime": "Every so often",
-      "flowStarter": "Every weekday at 9am, "
+      "flowStarter": "Every weekday at 9am, ",
+      "asksNext": "Your clone will take this up in a new chat as soon as it finishes this answer."
     },
     "requests": {
       "title": "Requests",
@@ -1277,7 +1279,9 @@
       "fromColleague": "{name}'s clone asks",
       "fromClone": "Your clone asks",
       "open": "Open",
-      "inNow": "{count} of {all} in"
+      "inNow": "{count} of {all} in",
+      "answered": "Answered “{choice}”",
+      "fold": "Fold"
     },
     "clone": {
       "title": "Your clone",
@@ -1557,7 +1561,10 @@
       "fold": "Hide or show the sidebar",
       "section": "A section of Settings",
       "box": "Write to your clone",
-      "list": "This list"
+      "list": "This list",
+      "rename": "Rename the chat in focus",
+      "askFromSearch": "Ask your clone what you typed in Search",
+      "toast": "Go to the latest notice (and its Undo)"
     },
     "palette": {
       "title": "Search and go",
@@ -1583,12 +1590,14 @@
       "rename": "Rename",
       "name": "Chat name",
       "archive": "Archive",
-      "archived": "Archived “{title}”"
+      "archived": "Archived “{title}”",
+      "options": "More"
     },
     "notice": {
       "answer": "Answer",
       "answered": "{name} answered your request"
-    }
+    },
+    "skip": "Skip to content"
   },
   "page": {
     "notFound": {
@@ -1618,7 +1627,6 @@
     "finding": "Finding where your work is",
     "noneRead": "none ticked",
     "leftOut": "{count} left out",
-    "check": "Review",
     "sessions": "{count, plural, one {# chat} other {# chats}}",
     "files": "{count, plural, one {# file} other {# files}}",
     "repo": "repository",

@@ -17,10 +17,14 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
   `features/office/room/room.css`, mapped onto these tokens.
 - `components/ui/button.tsx` — the button variants and `loading`.
 - `components/ui/confirm-dialog.tsx` — `ConfirmDialog`: a big step asked once (both buttons one
-  shape, only a removing one red).
+  shape, only a removing one red; `error` says in it why the step failed; `confirmOpen()` for a
+  key that must wait while one is open).
 - `components/ui/toast.tsx` — `say` (what the person just did, one line at the bottom centre),
   `sayUndoable` (done when the toast goes without Undo), `notify` (news they did not cause, a
-  card at the bottom right); `Toaster` is mounted once in `app/layout.tsx`.
+  card at the bottom right); `Toaster` is mounted once in `app/layout.tsx`; a screen with a box at
+  its bottom keeps them above it with `liftNotices(box)`.
+- `hooks/use-undoable-removal.ts` — removing an item from a list with Undo: hidden at once (the
+  list's count and order following), removed when the toast goes or the list does, back on failure.
 - `components/ui/tooltip.tsx` — `Tip`: what an icon-only button does, and its keys; its words are
   the button's name for a screen reader too, so the button takes no `aria-label` of its own.
 - `components/ui/markdown.tsx` — model text as markdown (Streamdown, with code, math, mermaid, CJK).

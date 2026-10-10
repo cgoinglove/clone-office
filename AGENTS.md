@@ -145,7 +145,9 @@ These words help discussion. They do not mandate separate services, tables or UI
 - The app's screens share one frame (`app/(app)/layout.tsx`, `features/minime/shell/`), after
   work apps with a short column on the left: `app-shell.tsx` holds what every screen shares
   (`app-state.tsx`, `useApp`: the conversation, the office, the reading, preferences, the
-  profile, the questions waiting in the person's own conversations), the column (`sidebar.tsx`,
+  profile, the questions waiting in the person's own conversations, each hook's value kept the
+  same while nothing changed; the open conversation's turns, which change with every streamed
+  word, travel apart, `useConversation`, so only its own view is drawn again), the column (`sidebar.tsx`,
   after the columns ChatGPT, Claude and Linear keep: New chat and Search (⌘K,
   `command-palette.tsx`: conversations, requests, colleagues, places and Settings' sections, or
   asking the clone what was typed), then the four places, Home, Requests, Office and Your clone,
@@ -157,22 +159,27 @@ These words help discussion. They do not mandate separate services, tables or UI
   the asking clone's mark with the red dot and how long it waited; the recent chats once there are
   any (`recent-chats.tsx`: under headings by day, a page at a time as the list is scrolled, a menu
   each to rename (F2) or archive with Undo, a line added to the conversation's file,
-  `chat/store.ts` `renameChat`, `archiveChat`; Settings › General brings archived ones back), the
+  `chat/store.ts` `renameChat`, `archiveChat`; Settings › General brings archived ones back; one
+  stop for the keyboard, ↑↓ within, Shift+F10 a row's menu, after a skip link to the screen), the
   one the clone is answering in turning; at the foot the person, name and office status, opening
   their menu (status, the office and where it is, inviting, shortcuts, `shortcuts.tsx`), with
   Settings beside it); it folds away (⌘\, kept in the browser) and below 900px is a drawer behind a
   thin bar (`app-shell.tsx`). News the person did not cause comes as a card at the bottom right
   while the page is in view and does not show it already, else as the browser's notice
-  (`turn-notices.ts`); the outcome of what they did is a toast with Undo where it can be taken back
-  (`components/ui/toast.tsx` `say`, `sayUndoable`, `notify`), and a big step is asked once in a
-  small dialog (`components/ui/confirm-dialog.tsx`). Settings over them. `/home` comes first
+  (`turn-notices.ts`: each question known by the id it was first asked live, so one kept for later
+  is never news twice); the outcome of what they did is a toast with Undo where it can be taken back
+  (`components/ui/toast.tsx` `say`, `sayUndoable`, `notify`; both stand above a box a screen keeps
+  at its bottom, `liftNotices`; a list removes with Undo through `hooks/use-undoable-removal.ts`),
+  and a big step is asked once in a small dialog that says there why it failed and holds the keys
+  while open (`components/ui/confirm-dialog.tsx`, `confirmOpen`). Settings over them. `/home` comes first
   (`home-screen.tsx`: what is happening, what waits on the person and what to do about it, after
   Paperclip's rule and the agent apps that left a chat as home: one box that asks the clone and
   starts that conversation (`/chat?send=`), the first steps while the app is new (`welcome.tsx`
   `FirstSteps`; they tick off from what is there), one line asking for a star on GitHub once the
   clone has answered a colleague (`star-note.tsx`, once per browser, after Orca's timing), what to
-  decide now answered in place
-  (`turn-rows.tsx`, shared with the office's board), the requests on their way, and beside them the
+  decide now answered in place, the choices of equal weight, an answer kept on its row with Undo
+  before it goes and a tap just after the rows moved not taken
+  (`turn-rows.tsx`, shared with the office's board, a pill on a phone), the requests on their way, and beside them the
   day in one panel: what the clone did, today's standup and flows, and colleagues; an empty part is
   one line, never an empty box); `/chat` (`chat-screen.tsx`: one
   conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's hello and things to try
@@ -205,7 +212,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   `preferences-section.tsx` draws the preferences' parts wherever they belong (`parts`; how much
   it does alone is `AutonomyChoice`, the same on the first steps' last step, on
   `components/ui/choice-list.tsx`, the explained choice the first steps' team uses too). Keys:
-  ⌘K search, ⌘, Settings, ⌘1–9 a section there, ⌘⇧N a new chat, ⌘\ the column, / the box, ?
+  ⌘K search, ⌘, Settings, ⌘1–9 a section there, ⇧⌘O a new chat, ⌘\ the column, / the box, ?
   the list of keys; the tab's title carries what
   waits. `features/brand/`: the app's mark (`logo.tsx`, the person's own clone at rest, also
   `app/icon.svg`, outlined as the clone's place in the column), the places' marks (`nav-icons.tsx`,
@@ -457,7 +464,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   kind; code then sends it, sends it and tells the person in their latest conversation (chat role
   `told`), or has the check show it to them first), `state.ts` (inbox cursor, sessions, where sent requests came from, a lease per request and one office worker per folder, so no request is answered twice; open requests are picked up again after a restart), `inbox-tool.ts` (`office_inbox`, free: questions kept for the person, requests they sent and colleagues sent them, read from the relay with the clone's own key, so it works in flows too), `shared-skills.ts` (the office's skills and how each stands here: new, added, update, changed here, taken by a skill of the person's, theirs; sharing one of theirs, never one the app ships or a colleague's; adding one checked first; scripts kept as files, never run by the clone) with `skills-tool.ts` (`office_skills`, free, a shared SKILL.md coming back inside `<untrusted>` marks; `office_skill_manage`, share/add/unshare, asked every time on a card listing the files that go or come, worked out by the tool itself, which the session lets through its own check for that reason, `session.ts` `SELF_ASKING_TOOLS`, and never "from now on", `rules.ts` `ALWAYS_ASKED`; both left out while answering a colleague), `me.ts` (ME.md, written from the card whenever it changes: who, how to work with them (lines the person added one by one; `card.ts` `draftWays` drafts them), what to ask them for; the card's `howToWork` carries the lines to the relay), `likeme.ts` (the like-me score: of the answers shown to the person first, the share sent as they were, last 30 days, overall and per menu kind), `files.ts` (files between clones: what goes is checked first, a full path, not in a folder kept out, 25 MB at most, then put at the relay and named on the message; what comes is taken once into `office/files/<request>/` with an index, owner-only, and the request's session may read that folder alone; `ask_colleague` takes `files`, shown on its card (`ask-text.ts` `changeOf`) and asked every time, even when asking colleagues was allowed from now on (the tool server asks again, `seen`); an answer's `files` go only after the person saw them, through the check with `approve`; the page saves one through `app/api/me/office/file`, always as an attachment). In a
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screens'
-  office is `/office`, `/requests` and the column's Your turn (`features/minime/shell/`), with
+  office is `/office`, `/requests` and the column's To decide (`features/minime/shell/`), with
   Settings › Office and the clone's Requests it takes, and the route `app/api/me/office`.
   `invited.ts` keeps an invite the launcher was given (`settings.json` `invite`) until joining or
   opening an office uses it. `meeting.ts` is this clone in a meeting: in each round it says one thing

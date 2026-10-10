@@ -32,7 +32,7 @@ Two things hold everywhere:
 
 ## Where things are
 
-- **The column on the left** is always there. At its top, **New chat** (새 대화, ⇧⌘N) and **Search**
+- **The column on the left** is always there. At its top, **New chat** (새 대화, ⇧⌘O) and **Search**
   (검색, ⌘K: one box that finds a conversation, a request or a colleague, opens a place or a part of
   Settings, or asks the clone what was typed with ⌘↵); then the four places: **Home** (홈),
   **Requests** (부탁, with how many are open), **Office** (오피스, which says when the clones are
@@ -42,26 +42,32 @@ Two things hold everywhere:
   waited; a click goes where it is answered. Then their conversations, under **Today**, **Yesterday**,
   **Previous 7 days**, **Previous 30 days** and then by month (오늘, 어제, 지난 7일, 지난 30일), a page
   at a time as they scroll, with a dot where a question waits and a turning mark where the clone is
-  answering. Pointing at one (or pressing F2) gives its menu: **Rename** (이름 바꾸기) and **Archive**
-  (보관하기), which takes it off the list without deleting anything; **Undo** (되돌리기) brings it
-  straight back, and Settings › General › **Archived chats** (보관한 대화) any time later. At the
+  answering. Pointing at one gives its menu: **Rename** (이름 바꾸기, also F2 on the row) and
+  **Archive** (보관하기), which takes it off the list without deleting anything; **Undo** (되돌리기) brings it
+  straight back, and Settings › General › **Archived chats** (보관한 대화) any time later. With the
+  keyboard the list is one stop: ↑↓ move through it, Shift+F10 opens a row's menu and F2 renames
+  it; **Skip to content** (본문으로 건너뛰기), the first stop on any screen, goes past the column. At the
   bottom: their name and office status, which opens their menu (their status, the office and where
   it is, **Invite a colleague** 동료 초대, **Keyboard shortcuts** 단축키), and **Settings** (설정, ⌘,)
   beside it. The column folds away (⌘\, or the button at its top) and stays folded; on a narrow
   window it is a drawer behind ☰ in a thin bar at the top.
-- **Keys** (단축키, also `?`): ⌘K search, ⇧⌘N new chat, `/` the box to the clone, ⌘\ the column,
-  ⌘, Settings and ⌘1–6 its sections. Buttons drawn as an icon alone say what they do, and their
-  key, when pointed at.
+- **Keys** (단축키, also `?`): ⌘K search (⌘↵ there asks the clone what was typed), ⇧⌘O new chat,
+  `/` the box to the clone, ⌘\ the column, ⌘, Settings and ⌘1–6 its sections, F2 renames a
+  conversation, F6 reaches the latest note's **Undo**. On Windows and Linux it is Ctrl for ⌘.
+  Buttons drawn as an icon alone say what they do, and their key, when pointed at.
 - **What happened, and news** (알림): what they just did says so for a moment at the bottom (copied,
   archived, with **Undo** where it can be taken back); news they did not cause (a colleague's clone
   asks them something, a colleague answered their request) comes as a card at the bottom right,
   with who it is from and **Answer** (답하기) or **Open** (열기), unless the screen they are on
-  already shows it. With the app's tab in the back, it comes from the browser instead, once they
+  already shows it. Several cards stand one above the other, and both kinds stay above the box a
+  screen keeps at its bottom. With the app's tab in the back, it comes from the browser instead, once they
   turn that on in Settings › Notifications & phone.
 - **Home** (홈) is where the app opens: what is happening, what waits on them, and what to do
   about it. One box at the top asks their clone anything (name a colleague, and it asks theirs),
   with a few things to try under it; **Getting started** (시작하기) while the app is new; **Decide
-  now** (정할 것), answered right there; **Requests on their way** (오가는 부탁), those waiting on
+  now** (정할 것), answered right there: the answer stays on its row as chosen and goes after a few
+  seconds, with **Undo** at the bottom until then, so a stray tap is never a decision made in their
+  name; **Requests on their way** (오가는 부탁), those waiting on
   them first; and beside them, **Today** (오늘), the day in one panel: **What your clone did**
   (클론이 한 일: whom it answered for them, meetings it brought back, flows it ran), **Still to
   come** (남은 일정: the clones' standup, today's flows) and their **Colleagues** (동료). A part with
@@ -98,7 +104,7 @@ Two things hold everywhere:
   language, theme, starting with this computer, the files it keeps, this app; when a newer version
   is on npm, it says so there with the line that starts it, `npx -y clone-office@latest`, once this
   one is closed).
-- Keys: ⌘, (Ctrl+, on Windows and Linux) opens Settings, ⌘⇧N starts a new chat, and / goes to the
+- Keys: ⌘, (Ctrl+, on Windows and Linux) opens Settings, ⇧⌘O starts a new chat, and / goes to the
   box.
 
 ## Getting started

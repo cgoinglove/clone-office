@@ -16,7 +16,7 @@ import {
 import type { Mood } from "@/features/office";
 import { personTag } from "@/i18n/client";
 import type { GateAsk } from "../ask-card";
-import { useChat } from "../home/use-chat";
+import { type Turn, useChat } from "../home/use-chat";
 import { useLearn } from "../home/use-learn";
 import { HEADERS, type Profile, useOffice } from "../home/use-office";
 import { usePreferences } from "../home/use-preferences";
@@ -48,7 +48,9 @@ export function useAppState() {
       .catch(() => {});
   }, []);
 
-  const chat = useChat(lang);
+  // The conversation's turns change with every streamed word, so they travel apart from the rest
+  // (`useConversation`): only the conversation's own view is drawn again for each word.
+  const { chat, turns: conversation } = useChat(lang);
   const learn = useLearn(lang);
   const { preferences, change: changePreferences } = usePreferences();
   const office = useOffice(lang, {
@@ -106,13 +108,11 @@ export function useAppState() {
     };
   }, [loadAsks]);
   // A question answered or asked in the open conversation changes the list at once.
-  const openTurns = chat.turns.filter(
-    (turn) => turn.kind === "ask" && turn.state === "open",
-  ).length;
+  const openAsks = chat.openAsks;
   useEffect(() => {
-    void openTurns;
+    void openAsks;
     void loadAsks();
-  }, [openTurns, loadAsks]);
+  }, [openAsks, loadAsks]);
 
   /** Answers a question in one of the person's conversations from outside it (the sidebar). */
   const answerChatAsk = useCallback(
@@ -121,6 +121,8 @@ export function useAppState() {
       await fetch("/api/me/gate/answer", {
         method: "POST",
         headers: HEADERS,
+        // an answer given as the page goes still arrives
+        keepalive: true,
         body: JSON.stringify({ id, answer, always }),
       }).catch(() => undefined);
       chat.refresh();
@@ -149,7 +151,7 @@ export function useAppState() {
     (joined ? office.office?.me?.card.name : undefined) ??
     (profile.name?.trim() || undefined);
 
-  return useMemo(
+  const app = useMemo(
     () => ({
       lang,
       profile,
@@ -187,13 +189,21 @@ export function useAppState() {
       name,
     ],
   );
+  return { app, conversation };
 }
 
-export type AppState = ReturnType<typeof useAppState>;
+export type AppState = ReturnType<typeof useAppState>["app"];
 
 const AppContext = createContext<AppState | null>(null);
+const ConversationContext = createContext<Turn[]>([]);
 
 export const AppProvider = AppContext.Provider;
+export const ConversationProvider = ConversationContext.Provider;
+
+/** The open conversation's turns as they stream in, for its own view alone. */
+export function useConversation(): Turn[] {
+  return useContext(ConversationContext);
+}
 
 /** The app's shared state, for any screen inside the frame. */
 export function useApp(): AppState {

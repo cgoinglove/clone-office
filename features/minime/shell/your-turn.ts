@@ -34,18 +34,26 @@ export function taskOf(waiting: Waiting): string | undefined {
 
 export function yourTurn(office: OfficeState, chatAsks: ChatAsk[]): TurnItem[] {
   const tasks = office.office?.tasks ?? [];
-  const fromRequests = office.waiting.map((waiting): TurnItem => {
+  // A question kept for later keeps the key it had while it was asked live, so it stays the same
+  // item (and is never news twice); for the moment both are listed, the first one stands.
+  const keys = new Set<string>();
+  const fromRequests = office.waiting.flatMap((waiting): TurnItem[] => {
+    const key = `w:${waiting.asked ?? waiting.id}`;
+    if (keys.has(key)) return [];
+    keys.add(key);
     const task = taskOf(waiting);
     const request = tasks.find((entry) => entry.id === task);
-    return {
-      key: `w:${waiting.id}`,
-      ask: waiting.ask,
-      where: { kind: "request", task },
-      // The asker's member id from the request; a kept question names them only by name.
-      from: request?.metadata.from,
-      waiting,
-      since: waiting.at ?? request?.status.timestamp,
-    };
+    return [
+      {
+        key,
+        ask: waiting.ask,
+        where: { kind: "request", task },
+        // The asker's member id from the request; a kept question names them only by name.
+        from: request?.metadata.from,
+        waiting,
+        since: waiting.at ?? request?.status.timestamp,
+      },
+    ];
   });
   const fromChats = chatAsks.map(
     (chatAsk): TurnItem => ({

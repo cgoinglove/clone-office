@@ -259,7 +259,7 @@ function HourSelect({
       aria-label={label}
       value={value}
       onChange={(event) => onChange(Number(event.target.value))}
-      className="h-8 rounded-lg border border-border bg-background px-2 text-sm tabular-nums outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      className="h-8 rounded-lg border border-border bg-background px-2 text-sm tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {Array.from({ length: 24 }, (_, hour) => (
         <option key={hour} value={hour}>

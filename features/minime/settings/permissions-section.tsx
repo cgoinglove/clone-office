@@ -6,7 +6,7 @@
 // dialog over Settings: a folder left out is never read or searched.
 
 import { useTranslations } from "next-intl";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FolderField, FolderPage, useFolders } from "../folder-list";
 import type { Preferences } from "../home/use-preferences";
 import { TrustPanel } from "../trust-panel";
@@ -28,13 +28,24 @@ export function PermissionsSection({
   // The folders open as a page of this section, never a dialog over Settings.
   const [paged, setPaged] = useState(false);
   const setBack = useContext(SettingsBack);
-  // Back, by its button or Esc, returns to the field the list was opened from.
+  // Back, by its button or Esc, returns to the field the list was opened from, once it is drawn
+  // again; the dialog's own focus keeper may still reach for itself a moment later, so once more.
+  const returning = useRef(false);
   const back = useCallback(() => {
+    returning.current = true;
     setPaged(false);
-    requestAnimationFrame(() =>
-      document.querySelector<HTMLElement>("[data-folder-field]")?.focus(),
-    );
   }, []);
+  useEffect(() => {
+    if (paged || !returning.current) return;
+    returning.current = false;
+    const field = () =>
+      document.querySelector<HTMLElement>("[data-folder-field]");
+    field()?.focus();
+    const again = setTimeout(() => {
+      if (document.activeElement !== field()) field()?.focus();
+    }, 60);
+    return () => clearTimeout(again);
+  }, [paged]);
   useEffect(() => {
     setBack(paged ? back : null);
     return () => setBack(null);

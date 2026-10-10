@@ -131,6 +131,12 @@
   --alpha-12: color-mix(in oklab, var(--ink) 12%, transparent);
   --alpha-15: color-mix(in oklab, var(--ink) 15%, transparent);
   --alpha-20: color-mix(in oklab, var(--ink) 20%, transparent);
+  /* a control's off state, at the 3:1 a part of a control needs against either paper */
+  --alpha-45: color-mix(in oklab, var(--ink) 45%, transparent);
+  /* what dims the page behind a dialog or a drawer, and the shadow under a dark floating line
+     (a toast, a tip): the same in either theme */
+  --scrim: rgb(0 0 0 / 0.2);
+  --shade: rgb(0 0 0 / 0.4);
 
   /* Written once: the same distance from the paper means the same in either theme. */
   --background: var(--gray-0);
@@ -158,9 +164,11 @@
   --secondary: var(--gray-75);
   --muted: var(--gray-75);
   --accent: var(--gray-75);
-  --muted-foreground: var(--gray-450);
+  /* a step past gray-450, so small grey text clears 4.5:1 on the column's off-white too */
+  --muted-foreground: #6b6b6b;
   --input: var(--alpha-10);
-  --ring: var(--gray-300);
+  /* the focus ring at 3:1 or more on any paper, in the colour the lobby's button already uses */
+  --ring: var(--brand);
 
   --brand: #0169cc; /* blue-500 */
   --brand-foreground: #ffffff;
@@ -177,7 +185,7 @@
   --accent: var(--gray-250);
   --muted-foreground: var(--gray-650);
   --input: var(--alpha-15);
-  --ring: var(--gray-500);
+  --ring: var(--brand);
 
   --brand: #0a84ff; /* the iOS dark system blue: the vivid end that still clears 4.5:1 on this paper */
   --brand-foreground: #ffffff;
@@ -194,7 +202,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;

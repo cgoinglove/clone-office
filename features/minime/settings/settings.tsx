@@ -9,6 +9,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { confirmOpen } from "@/components/ui/confirm-dialog";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
 import { isCommand } from "@/hooks/use-hotkey";
@@ -102,6 +103,8 @@ export function SettingsDialog({
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
+      // a confirm open in a section waits for its answer: the section stays
+      if (confirmOpen()) return;
       const at = SECTIONS.findIndex((_, index) =>
         isCommand(event, `Digit${index + 1}`),
       );
@@ -112,9 +115,13 @@ export function SettingsDialog({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onSection]);
-  // A section opens at its top.
+  // A section opens at its top, and its tab is in view (on a phone the tabs scroll).
+  const nav = useRef<HTMLElement>(null);
   useEffect(() => {
     body.current?.scrollTo({ top: 0 });
+    nav.current
+      ?.querySelector('[aria-current="page"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [section]);
 
   const step = (by: number) => {
@@ -134,10 +141,22 @@ export function SettingsDialog({
       }}
     >
       <SettingsBack.Provider value={setBack}>
-        <DialogContent className="block h-[min(50rem,calc(100vh-3rem))] overflow-hidden p-0 sm:max-w-[min(68rem,calc(100vw-3rem))]">
+        {/* opens on the section in view, so the arrow keys move between sections at once */}
+        <DialogContent
+          initialFocus
+          className="block h-[min(50rem,calc(100vh-3rem))] overflow-hidden p-0 sm:max-w-[min(68rem,calc(100vw-3rem))]"
+        >
           <DialogTitle className="sr-only">{t("title")}</DialogTitle>
           <div className="flex h-full min-h-0 max-sm:flex-col">
+            {/* on a phone the title has a row of its own, beside the close button, over the tabs */}
+            <div
+              aria-hidden
+              className="flex h-14 shrink-0 items-center px-5 text-[15px] font-semibold sm:hidden"
+            >
+              {t("title")}
+            </div>
             <nav
+              ref={nav}
               aria-label={t("nav")}
               onKeyDown={(event) => {
                 const by =
@@ -154,7 +173,8 @@ export function SettingsDialog({
                   .querySelector<HTMLButtonElement>(`[data-section="${next}"]`)
                   ?.focus();
               }}
-              className="flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/60 bg-muted/30 p-3 max-sm:w-full max-sm:flex-row max-sm:border-r-0 max-sm:border-b"
+              // on a phone the sections run in one row that scrolls, its end fading to say so
+              className="flex w-56 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border/60 bg-muted/30 p-3 max-sm:w-full max-sm:flex-row max-sm:overflow-x-auto max-sm:border-r-0 max-sm:border-b max-sm:pt-0 max-sm:pr-10 max-sm:[mask-image:linear-gradient(to_right,#000_calc(100%-2.5rem),transparent)]"
             >
               <span className="px-2.5 pt-1 pb-3 text-sm font-semibold max-sm:hidden">
                 {t("title")}

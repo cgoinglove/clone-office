@@ -63,7 +63,7 @@ export function FoldedText({
           aria-label={
             open ? `Fold the ${subject}` : `Read the whole ${subject}`
           }
-          className="shrink-0 rounded-md p-0.5 opacity-60 outline-none transition-opacity hover:opacity-100 focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="shrink-0 rounded-md p-0.5 opacity-60 outline-none transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronDown className={cn("size-3.5", open && "rotate-180")} />
         </button>

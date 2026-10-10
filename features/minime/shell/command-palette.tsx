@@ -169,7 +169,12 @@ function PaletteBody({ close }: { close: () => void }) {
           placeholder={t("palette.placeholder")}
           className="h-full min-w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground/80"
         />
-        <kbd className="font-mono text-[11px] text-muted-foreground">esc</kbd>
+        <kbd
+          aria-hidden
+          className="font-mono text-[11px] text-muted-foreground"
+        >
+          {keys.key("Escape")}
+        </kbd>
       </div>
       <Command.List className="max-h-[min(440px,60vh)] scroll-py-2 overflow-y-auto pb-1.5">
         <Command.Empty className="flex flex-col items-center gap-3 px-4 py-7 text-center text-sm text-muted-foreground">
@@ -178,7 +183,7 @@ function PaletteBody({ close }: { close: () => void }) {
             <button
               type="button"
               onClick={ask}
-              className="flex h-8 max-w-full items-center gap-2 rounded-lg bg-secondary px-3 text-[13.5px] text-foreground outline-none hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="flex h-8 max-w-full items-center gap-2 rounded-lg bg-secondary px-3 text-[13.5px] text-foreground outline-none hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] focus-visible:ring-2 focus-visible:ring-ring"
             >
               <MessageSquare className="size-4 shrink-0 text-muted-foreground" />
               <span className="truncate">

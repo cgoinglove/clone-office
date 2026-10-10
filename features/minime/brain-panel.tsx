@@ -557,7 +557,7 @@ function ModelButton({
       aria-pressed={on}
       onClick={onPick}
       className={cn(
-        "flex shrink-0 items-center gap-2 rounded-lg px-2.5 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60",
+        "flex shrink-0 items-center gap-2 rounded-lg px-2.5 text-left outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60",
         sub ? "min-h-11 py-1.5" : "h-10",
         on ? "bg-muted" : "hover:bg-muted/60",
       )}
@@ -772,7 +772,7 @@ export function BrainPicker({
       : null;
 
   const column =
-    "flex h-9.5 shrink-0 items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50";
+    "flex h-9.5 shrink-0 items-center gap-2.5 rounded-lg px-2 text-left text-[13.5px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring";
 
   return (
     <div className="flex flex-col gap-3">
@@ -804,7 +804,7 @@ export function BrainPicker({
               ? `${t("title")}: ${brainLabel(state, "Claude Code")}`
               : t("title")
           }
-          className="flex h-12 w-full min-w-0 items-center gap-2.5 rounded-[10px] bg-background pr-3 pl-3.5 text-left text-[14.5px] ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:ring-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50 aria-expanded:ring-foreground/40"
+          className="flex h-12 w-full min-w-0 items-center gap-2.5 rounded-[10px] bg-background pr-3 pl-3.5 text-left text-[14.5px] ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:ring-foreground/25 focus-visible:ring-2 focus-visible:ring-ring aria-expanded:ring-foreground/40"
         >
           {state.chosen ? (
             <PickedLabel state={state} />

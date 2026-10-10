@@ -8,6 +8,8 @@ import { Check, ChevronRight, Clock, MessageSquare, X } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { buttonVariants } from "@/components/ui/button";
+import { Tip } from "@/components/ui/tooltip";
 import { Bot } from "@/features/office";
 import { cn } from "@/lib/utils";
 import { HEADERS } from "../home/use-office";
@@ -198,20 +200,23 @@ export function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
         <span className="text-xs text-muted-foreground tabular-nums">
           {count}/{steps.length}
         </span>
-        <button
-          type="button"
-          aria-label={t("hide")}
-          title={t("hide")}
-          onClick={() => {
-            setHidden(true);
-            try {
-              localStorage.setItem(HIDDEN, "1");
-            } catch {}
-          }}
-          className="ml-auto grid size-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-        >
-          <X className="size-4" />
-        </button>
+        <Tip label={t("hide")}>
+          <button
+            type="button"
+            onClick={() => {
+              setHidden(true);
+              try {
+                localStorage.setItem(HIDDEN, "1");
+              } catch {}
+            }}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-sm" }),
+              "ml-auto text-muted-foreground",
+            )}
+          >
+            <X className="size-4" />
+          </button>
+        </Tip>
       </div>
       <ol className="flex flex-col gap-1">
         {steps.map((step, at) => {
@@ -285,7 +290,8 @@ function StepButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-8.5 items-center gap-1.5 rounded-[10px] bg-background px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
+      // a soft fill, as a button standing alone is: never an outline
+      className={cn(buttonVariants({ variant: "secondary" }), "gap-1.5")}
     >
       {children}
       <ChevronRight className="size-3.5" />
@@ -303,7 +309,8 @@ function StepLink({
   return (
     <Link
       href={href}
-      className="flex h-8.5 items-center gap-1.5 rounded-[10px] bg-background px-3 text-[13px] font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted"
+      // a soft fill, as a button standing alone is: never an outline
+      className={cn(buttonVariants({ variant: "secondary" }), "gap-1.5")}
     >
       {children}
       <ChevronRight className="size-3.5" />

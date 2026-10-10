@@ -153,6 +153,7 @@ const KEY_SIGNS: Record<string, string> = {
   Period: ".",
   Slash: "/",
   Enter: "↵",
+  Escape: "Esc",
 };
 
 const keyLabel = (code: string) =>
@@ -176,8 +177,8 @@ const onMac = () =>
   typeof navigator !== "undefined" && /mac/i.test(navigator.userAgent);
 
 /**
- * The app's command keys as this system writes them (`⌘K`, `⇧⌘N` on a Mac; `Ctrl + K`,
- * `Ctrl + Shift + N` elsewhere), for tips, menus and the list of keys.
+ * The app's command keys as this system writes them (`⌘K`, `⇧⌘O` on a Mac; `Ctrl + K`,
+ * `Ctrl + Shift + O` elsewhere), for tips, menus and the list of keys.
  */
 export function useCommandKeys() {
   const [mac, setMac] = useState(true);
@@ -195,7 +196,22 @@ export function useCommandKeys() {
       ),
     [mac],
   );
-  return { mac, label };
+  /** A key on its own (Esc, F2), as this system's keyboards print it. */
+  const key = useCallback(
+    (code: string) => (mac && code === "Escape" ? "esc" : keyLabel(code)),
+    [mac],
+  );
+  /** The same command key as `aria-keyshortcuts` writes it, for a screen reader to say. */
+  const aria = useCallback(
+    (code: string, shift = false) =>
+      [
+        mac ? "Meta" : "Control",
+        ...(shift ? ["Shift"] : []),
+        keyLabel(code),
+      ].join("+"),
+    [mac],
+  );
+  return { mac, label, key, aria };
 }
 
 /**

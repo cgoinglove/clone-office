@@ -6,9 +6,9 @@
 // answered (server/activity.ts).
 
 import {
-  ArrowUpRight,
   BookOpen,
   Check,
+  ChevronRight,
   Hand,
   Repeat,
   Send,
@@ -130,7 +130,7 @@ export function ActivityList() {
                   href={href}
                   className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
-                  <ArrowUpRight className="size-4" />
+                  <ChevronRight className="size-4" />
                 </Link>
               </Tip>
             )}

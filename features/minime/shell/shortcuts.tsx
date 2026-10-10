@@ -23,12 +23,15 @@ export function ShortcutsDialog({
   const { label } = useCommandKeys();
   const keys: [string, string][] = [
     [label("KeyK"), t("search")],
-    [label("KeyN", true), t("newChat")],
+    [label("KeyO", true), t("newChat")],
     ["/", t("keys.box")],
     [label("Backslash"), t("keys.fold")],
     [label("Comma"), t("settings")],
     [`${label("Digit1")}–${Math.min(9, SECTIONS.length)}`, t("keys.section")],
     ["?", t("keys.list")],
+    ["F2", t("keys.rename")],
+    [label("Enter"), t("keys.askFromSearch")],
+    ["F6", t("keys.toast")],
   ];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

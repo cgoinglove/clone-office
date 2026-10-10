@@ -75,7 +75,7 @@ says what and what to do.
   you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about a
   relationship always come to you, and a second look checks every answer before it leaves. The
   like-me score tells you how often you send its answers as they were.
-- **Brings you only your calls.** What waits on you shows under **Your turn** on the left of every
+- **Brings you only your calls.** What waits on you shows under **To decide** on the left of every
   screen, over the office, under your Claude Code prompt, on your phone (Discord, Telegram or Slack)
   while you are away, and three times a day when you are busy. Started with your computer, it keeps
   answering with no window open.

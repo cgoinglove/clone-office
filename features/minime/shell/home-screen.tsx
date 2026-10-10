@@ -630,7 +630,7 @@ function RequestRow({
   const sent = task.metadata.from === me;
   const other = sent ? task.metadata.to : task.metadata.from;
   return (
-    <li className="border-t border-border/60 first:border-t-0">
+    <li>
       <Link
         href={`/requests/${encodeURIComponent(task.id)}`}
         className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"

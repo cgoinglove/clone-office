@@ -605,14 +605,15 @@
         "morning": "Buenos días, {name}",
         "afternoon": "Buenas tardes, {name}",
         "evening": "Buenas noches, {name}",
-        "in": "{in} de {count, plural, one {# colega} other {# colegas}} en la oficina",
+        "in": "{in} de {count} ya están",
         "alone": "Todavía no hay colegas aquí",
         "waiting": "{count, plural, one {# cosa te espera} other {# cosas te esperan}}",
         "clockIn": "Marcar entrada",
         "enter": "Enter",
         "foot": "Tu clon funciona en esta computadora.",
         "floors": "PISOS 1–{count}",
-        "yourFloor": "tu piso"
+        "yourFloor": "tu piso",
+        "label": "El edificio de tu empresa, con tu planta marcada"
       },
       "meeting": {
         "on": "En la reunión"
@@ -1233,7 +1234,8 @@
       "linkStarter": "Crea un enlace de respuesta y pregunta: ",
       "askSomeone": "Preguntar a alguien",
       "everyTime": "Cada cierto tiempo",
-      "flowStarter": "De lunes a viernes a las 9, "
+      "flowStarter": "De lunes a viernes a las 9, ",
+      "asksNext": "Tu clon se pondrá con esto en un chat nuevo en cuanto termine esta respuesta."
     },
     "requests": {
       "title": "Solicitudes",
@@ -1277,7 +1279,9 @@
       "fromColleague": "El clon de {name} pregunta",
       "fromClone": "Tu clon pregunta",
       "open": "Abrir",
-      "inNow": "{count} de {all} dentro"
+      "inNow": "{count} de {all} dentro",
+      "answered": "Respondiste «{choice}»",
+      "fold": "Plegar"
     },
     "clone": {
       "title": "Tu clon",
@@ -1557,7 +1561,10 @@
       "fold": "Ocultar o mostrar la barra lateral",
       "section": "Una sección de Ajustes",
       "box": "Escribir a tu clon",
-      "list": "Esta lista"
+      "list": "Esta lista",
+      "rename": "Renombrar el chat seleccionado",
+      "askFromSearch": "Preguntar a tu clon lo que escribiste en Buscar",
+      "toast": "Ir al último aviso (y su Deshacer)"
     },
     "palette": {
       "title": "Buscar e ir",
@@ -1583,12 +1590,14 @@
       "rename": "Cambiar nombre",
       "name": "Nombre del chat",
       "archive": "Archivar",
-      "archived": "Se archivó «{title}»"
+      "archived": "Se archivó «{title}»",
+      "options": "Más"
     },
     "notice": {
       "answer": "Responder",
       "answered": "{name} respondió a tu petición"
-    }
+    },
+    "skip": "Saltar al contenido"
   },
   "page": {
     "notFound": {
@@ -1618,7 +1627,6 @@
     "finding": "Buscando dónde está tu trabajo",
     "noneRead": "ninguna marcada",
     "leftOut": "{count} fuera",
-    "check": "Revisar",
     "sessions": "{count, plural, one {# chat} other {# chats}}",
     "files": "{count, plural, one {# archivo} other {# archivos}}",
     "repo": "repositorio",

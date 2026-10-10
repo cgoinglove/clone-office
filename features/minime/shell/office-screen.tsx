@@ -6,12 +6,14 @@
 // clones' meetings start from its header; while one goes on, the clones gather on the floor and
 // what they say is read beside it.
 
-import { MessagesSquare, UserPlus } from "lucide-react";
+import { ChevronDown, ChevronUp, MessagesSquare, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Tip } from "@/components/ui/tooltip";
 import { OfficeRoom } from "@/features/office/room/office-room";
+import { cn } from "@/lib/utils";
 import { useApp } from "./app-state";
 import { MeetingPanel, MeetingStart, useMeetings } from "./meeting";
 import { OfficeTrouble } from "./office-trouble";
@@ -35,6 +37,19 @@ function rememberClockIn(): void {
   try {
     localStorage.setItem(CLOCKED_IN, today());
   } catch {}
+}
+
+/** Whether the screen is phone-sized, followed as it is resized. */
+function useSmall() {
+  const [small, setSmall] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 640px)");
+    const follow = () => setSmall(query.matches);
+    follow();
+    query.addEventListener("change", follow);
+    return () => query.removeEventListener("change", follow);
+  }, []);
+  return small;
 }
 
 /** The board's width, which the office keeps clear at its right; the meeting's, at its left. */
@@ -74,13 +89,21 @@ export function OfficeScreen() {
   const [boardHeight, setBoardHeight] = useState(0);
   // the office's own panel about one person and the board take turns at the right
   const [panelOpen, setPanelOpen] = useState(false);
-  const boardShown = turns.length > 0 && !atLobby && !panelOpen;
+  // On a phone the board would cover the floor: it folds into a pill, opened when wanted.
+  const small = useSmall();
+  const [boardOpen, setBoardOpen] = useState(false);
+  const boardShown =
+    turns.length > 0 && !atLobby && !panelOpen && (!small || boardOpen);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border/60 px-6 py-3">
         <div className="flex min-w-0 flex-col">
-          <h1 className="text-[17px] leading-tight font-semibold">
+          <h1
+            id="office-title"
+            tabIndex={-1}
+            className="text-[17px] leading-tight font-semibold outline-none"
+          >
             {t("title")}
           </h1>
           <p className="text-[13px] text-muted-foreground">
@@ -144,6 +167,8 @@ export function OfficeScreen() {
             onClockIn={() => {
               rememberClockIn();
               setClocked(true);
+              // the lobby's button goes with the lobby: the keyboard lands on the office
+              document.getElementById("office-title")?.focus();
             }}
             onAnswer={() => {
               const first = turns[0];
@@ -154,7 +179,25 @@ export function OfficeScreen() {
             }
           />
         )}
-        {boardShown && <Board turns={turns} onHeight={setBoardHeight} />}
+        {boardShown && (
+          <Board
+            turns={turns}
+            onHeight={setBoardHeight}
+            onFold={small ? () => setBoardOpen(false) : undefined}
+          />
+        )}
+        {small && turns.length > 0 && !atLobby && !panelOpen && !boardOpen && (
+          <button
+            type="button"
+            aria-expanded={false}
+            onClick={() => setBoardOpen(true)}
+            className="absolute top-4 right-4 z-10 flex h-8 items-center gap-1.5 rounded-full bg-background px-3 text-[13px] font-semibold text-waiting shadow-[0_0_0_1px_var(--alpha-08),0_8px_24px_-12px_var(--alpha-20)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {t("yourTurn")}
+            <span className="tabular-nums">{turns.length}</span>
+            <ChevronDown className="size-3.5" />
+          </button>
+        )}
         {shown && meets && (
           <MeetingPanel
             meeting={shown}
@@ -174,8 +217,11 @@ export function OfficeScreen() {
 function Board({
   turns,
   onHeight,
+  onFold,
 }: {
   turns: TurnItem[];
+  /** On a phone, folds the board back into its pill. */
+  onFold?: () => void;
   /** How far down from the office's top it reaches, as it grows and shrinks. */
   onHeight: (px: number) => void;
 }) {
@@ -210,6 +256,21 @@ function Board({
         <span className="ml-auto text-xs text-muted-foreground">
           {t("answerHere")}
         </span>
+        {onFold && (
+          <Tip label={t("fold")}>
+            <button
+              type="button"
+              aria-expanded
+              onClick={onFold}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                "-mr-1.5 text-muted-foreground",
+              )}
+            >
+              <ChevronUp className="size-4" />
+            </button>
+          </Tip>
+        )}
       </div>
       <TurnRows turns={turns} className="overflow-y-auto" />
     </section>
