@@ -48,11 +48,7 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
     )
     .sort((a, b) => b.status.timestamp.localeCompare(a.status.timestamp))
     .slice(0, 4);
-  const indexOf = (id: string) =>
-    Math.max(
-      0,
-      members.findIndex((member) => member.id === id),
-    );
+  const { indexOf } = office;
   const nameOf = (task: Task) => {
     const other =
       task.metadata.from === me ? task.metadata.to : task.metadata.from;

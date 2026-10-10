@@ -6,7 +6,7 @@
 // dialog over Settings: a folder left out is never read or searched.
 
 import { useTranslations } from "next-intl";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { FolderField, FolderPage, useFolders } from "../folder-list";
 import type { Preferences } from "../home/use-preferences";
 import { TrustPanel } from "../trust-panel";
@@ -28,16 +28,23 @@ export function PermissionsSection({
   // The folders open as a page of this section, never a dialog over Settings.
   const [paged, setPaged] = useState(false);
   const setBack = useContext(SettingsBack);
+  // Back, by its button or Esc, returns to the field the list was opened from.
+  const back = useCallback(() => {
+    setPaged(false);
+    requestAnimationFrame(() =>
+      document.querySelector<HTMLElement>("[data-folder-field]")?.focus(),
+    );
+  }, []);
   useEffect(() => {
-    setBack(paged ? () => setPaged(false) : null);
+    setBack(paged ? back : null);
     return () => setBack(null);
-  }, [paged, setBack]);
+  }, [paged, back, setBack]);
   if (paged)
     return (
       <FolderPage
         folders={folders}
         back={tSections("permissions.label")}
-        onBack={() => setPaged(false)}
+        onBack={back}
       />
     );
   return (

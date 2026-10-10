@@ -22,7 +22,8 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { memo, type ReactNode, useRef, useState } from "react";
+import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,19 +47,16 @@ import { STATUSES, statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
 import { Mark, StatusDot } from "./parts";
 import { RecentChats } from "./recent-chats";
-import { askLine, type TurnItem, turnHref, yourTurn } from "./your-turn";
+import { askLine, turnHref } from "./your-turn";
 
 /** The places, in the order a day goes through them. */
-const PLACES: {
-  href: string;
-  key: "home" | "requests" | "office" | "clone";
-  icon: NavIconName;
-}[] = [
-  { href: "/home", key: "home", icon: "home" },
-  { href: "/requests", key: "requests", icon: "requests" },
-  { href: "/office", key: "office", icon: "office" },
-  { href: "/clone", key: "clone", icon: "clone" },
-];
+/** The four places, each drawn with the mark of its own name (also listed by Search). */
+export const PLACES = [
+  { href: "/home", key: "home" },
+  { href: "/requests", key: "requests" },
+  { href: "/office", key: "office" },
+  { href: "/clone", key: "clone" },
+] as const satisfies readonly { href: string; key: NavIconName }[];
 
 /** How many things to decide the column lists; Home has the rest. */
 const TURNS = 6;
@@ -76,9 +74,11 @@ const row = (on: boolean) =>
 const hoverKey =
   "font-mono text-[10.5px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
 
-/** A square button with only an icon; its words are in its tip. */
-export const iconButton =
-  "grid size-8 shrink-0 place-items-center rounded-lg text-foreground/60 outline-none transition-colors hover:bg-foreground/[0.045] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 aria-expanded:bg-foreground/[0.045]";
+/** A square button with only an icon, the app's ghost button; its words are in its tip. */
+export const iconButton = cn(
+  buttonVariants({ variant: "ghost", size: "icon" }),
+  "text-foreground/60",
+);
 
 export function Sidebar({
   onFold,
@@ -98,19 +98,16 @@ export function Sidebar({
   const app = useApp();
   const pathname = usePathname();
   const router = useRouter();
+  const format = useFormatter();
+  const now = useNow({ updateInterval: 60_000 });
   const { office, chat } = app;
   const data = office.office;
-  const members = data?.members ?? [];
-  const turns = yourTurn(office, app.chatAsks);
+  const turns = app.turns;
   const open = (data?.tasks ?? []).filter((task) =>
     ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
   ).length;
   const meeting = (data?.meetings ?? []).some((item) => item.state === "open");
-  const indexOf = (id?: string) =>
-    Math.max(
-      0,
-      members.findIndex((member) => member.id === id),
-    );
+  const { indexOf } = office;
   const active = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
   const reading = app.learn.stage === "learning";
@@ -151,12 +148,7 @@ export function Sidebar({
           {APP_NAME}
         </Link>
         <Tip label={t("fold")} keys={keys.label("Backslash")}>
-          <button
-            type="button"
-            aria-label={t("fold")}
-            onClick={onFold}
-            className={iconButton}
-          >
+          <button type="button" onClick={onFold} className={iconButton}>
             <PanelLeft className="size-[18px]" />
           </button>
         </Tip>
@@ -199,7 +191,7 @@ export function Sidebar({
               className={row(on)}
             >
               <NavIcon
-                name={item.icon}
+                name={item.key}
                 className={on ? undefined : "text-foreground/60"}
               />
               <span className="flex-1 truncate">
@@ -230,9 +222,18 @@ export function Sidebar({
             {turns.slice(0, TURNS).map((item) => (
               <TurnLink
                 key={item.key}
-                item={item}
+                href={turnHref(item)}
+                from={item.from}
                 line={askLine(tAsk, item.ask)}
                 index={indexOf(item.from)}
+                ago={
+                  item.since
+                    ? format.relativeTime(new Date(item.since), {
+                        now,
+                        style: "narrow",
+                      })
+                    : undefined
+                }
                 active={
                   item.where.kind === "request" && pathname === turnHref(item)
                 }
@@ -249,7 +250,6 @@ export function Sidebar({
         <Tip label={t("settings")} keys={keys.label("Comma")} side="top">
           <button
             type="button"
-            aria-label={t("settings")}
             onClick={() => app.setSettings("brain")}
             className={cn(iconButton, "size-9")}
           >
@@ -295,8 +295,11 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
   // The invite link is asked for each time the menu opens, so a click copies it at once and it is
   // always the link of the office the person is in now.
   const [invite, setInvite] = useState<string>();
+  // only the latest ask is kept, so an answer late from an earlier office never wins
+  const asking = useRef(0);
 
   const loadInvite = () => {
+    const ask = ++asking.current;
     setInvite(undefined);
     if (!joined) return;
     void fetch("/api/me/office", {
@@ -306,7 +309,8 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
     })
       .then((response) => response.json())
       .then((answer) => {
-        if (typeof answer?.url === "string") setInvite(answer.url);
+        if (ask === asking.current && typeof answer?.url === "string")
+          setInvite(answer.url);
       })
       .catch(() => {});
   };
@@ -444,46 +448,41 @@ function Asking({ children }: { children: ReactNode }) {
   );
 }
 
-function TurnLink({
-  item,
+/** One thing to decide: the asking clone with its dot, the question, how long it has waited. */
+const TurnLink = memo(function TurnLink({
+  href,
+  from,
   line,
   index,
+  ago,
   active,
 }: {
-  item: TurnItem;
+  href: string;
+  from?: string;
   line: string;
   index: number;
+  ago?: string;
   active: boolean;
 }) {
-  const app = useApp();
-  const format = useFormatter();
-  const now = useNow({ updateInterval: 60_000 });
-  const task = item.waiting
-    ? app.office.office?.tasks?.find(
-        (entry) =>
-          item.where.kind === "request" && entry.id === item.where.task,
-      )
-    : undefined;
-  const since = item.waiting?.at ?? task?.status.timestamp;
   return (
     <Link
-      href={turnHref(item)}
+      href={href}
       aria-current={active ? "page" : undefined}
       className={cn(row(active), "text-[13.5px]")}
     >
       <Asking>
-        {item.from ? (
-          <Mark id={item.from} index={index} size={16} />
+        {from ? (
+          <Mark id={from} index={index} size={16} />
         ) : (
           <Bot size={16} mood="idle" still mine className="shrink-0" />
         )}
       </Asking>
       <span className="min-w-0 flex-1 truncate">{line}</span>
-      {since && (
+      {ago && (
         <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-          {format.relativeTime(new Date(since), { now, style: "narrow" })}
+          {ago}
         </span>
       )}
     </Link>
   );
-}
+});

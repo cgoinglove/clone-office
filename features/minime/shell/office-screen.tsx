@@ -16,7 +16,7 @@ import { useApp } from "./app-state";
 import { MeetingPanel, MeetingStart, useMeetings } from "./meeting";
 import { OfficeTrouble } from "./office-trouble";
 import { TurnRows } from "./turn-rows";
-import { type TurnItem, turnHref, yourTurn } from "./your-turn";
+import { type TurnItem, turnHref } from "./your-turn";
 
 // The office opens at its lobby once a day: the day it was last done is kept in this browser.
 const CLOCKED_IN = "sub-office.clocked-in";
@@ -49,7 +49,7 @@ export function OfficeScreen() {
   const { office, preferences } = app;
   const data = office.office;
   const members = data?.members ?? [];
-  const turns = yourTurn(office, app.chatAsks);
+  const turns = app.turns;
   // Read once: the office does not go back to the lobby while the screen is open.
   const [lobby] = useState(
     () => typeof window !== "undefined" && !clockedInToday(),
@@ -154,13 +154,7 @@ export function OfficeScreen() {
             }
           />
         )}
-        {boardShown && (
-          <Board
-            turns={turns}
-            members={members.map((m) => m.id)}
-            onHeight={setBoardHeight}
-          />
-        )}
+        {boardShown && <Board turns={turns} onHeight={setBoardHeight} />}
         {shown && meets && (
           <MeetingPanel
             meeting={shown}
@@ -179,11 +173,9 @@ export function OfficeScreen() {
 /** What waits on the person, hung over the office: answered in place when it is a tap. */
 function Board({
   turns,
-  members,
   onHeight,
 }: {
   turns: TurnItem[];
-  members: string[];
   /** How far down from the office's top it reaches, as it grows and shrinks. */
   onHeight: (px: number) => void;
 }) {
@@ -219,7 +211,7 @@ function Board({
           {t("answerHere")}
         </span>
       </div>
-      <TurnRows turns={turns} members={members} className="overflow-y-auto" />
+      <TurnRows turns={turns} className="overflow-y-auto" />
     </section>
   );
 }

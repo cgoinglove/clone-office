@@ -2,15 +2,15 @@
 
 // Two kinds of word that something happened, mounted once (`Toaster`, in `app/layout.tsx`):
 // - `say`: the outcome of what the person just did (copied, sent, put away with Undo), one line at
-//   the bottom centre, drawn in the other theme (`.inverse`), gone after a few seconds; something
-//   still under way turns until `settle` gives it its outcome.
+//   the bottom centre, drawn in the other theme (`.inverse`), gone after a few seconds.
 // - `notify`: news for the person that they did not cause (a colleague's clone asks them, a
 //   colleague answered), a card at the bottom right with who it is from, a line or two of what,
 //   and where to go; it stays a little longer and can be closed or swiped away.
 
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
-import { Check, Loader2, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import type * as React from "react";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const toast = ToastPrimitive.createToastManager();
@@ -41,22 +41,16 @@ function notify(
   });
 }
 
-type Kind = "done" | "busy" | "plain";
-
 /** Says one thing happened. An action ("Undo", "Open") runs once and closes it. */
 function say(
   title: string,
-  options: {
-    kind?: Kind;
-    action?: { label: string; run: () => void };
-    timeout?: number;
-  } = {},
+  options: { action?: { label: string; run: () => void } } = {},
 ) {
-  const { kind = "done", action, timeout } = options;
+  const { action } = options;
   return toast.add({
     title,
-    type: kind,
-    timeout: timeout ?? (kind === "busy" ? 0 : action ? 7000 : 4000),
+    type: "done",
+    timeout: action ? 7000 : 4000,
     ...(action
       ? { actionProps: { children: action.label, onClick: action.run } }
       : {}),
@@ -70,11 +64,15 @@ if (typeof window !== "undefined")
     for (const done of [...pending]) done();
   });
 
+/** The clocks of toasts with an Undo, held while the person points at or focuses them. */
+const holds = new Map<string, { hold: () => void; release: () => void }>();
+
 /**
  * Something small the person can take back (a memory line, a flow): it is hidden at once and done
- * after `ms` by a clock of its own (a toast waits while the window is away, a removal does not),
- * or as soon as the screen holding it goes (`commit` from the handle) or the page does. Undo,
- * pressed in time, shows it again and nothing is done.
+ * after `ms` by a clock of its own (a toast waits while the window is away, a removal does not;
+ * it waits only while the person points at it or focuses it, reaching for Undo), or as soon as the
+ * screen holding it goes (`commit` from the handle) or the page does. Undo, pressed in time, shows
+ * it again and nothing is done.
  */
 function sayUndoable(
   title: string,
@@ -84,16 +82,18 @@ function sayUndoable(
 ) {
   let settled = false;
   let id = "";
+  let timer: ReturnType<typeof setTimeout> | undefined;
   const settle = (run: () => void) => {
     if (settled) return;
     settled = true;
     clearTimeout(timer);
     pending.delete(done);
+    holds.delete(id);
     if (id) toast.close(id);
     run();
   };
   const done = () => settle(commit);
-  const timer = setTimeout(done, ms);
+  timer = setTimeout(done, ms);
   pending.add(done);
   id = toast.add({
     title,
@@ -102,13 +102,26 @@ function sayUndoable(
     actionProps: { children: undoLabel, onClick: () => settle(undo) },
     onClose: done,
   });
+  holds.set(id, {
+    hold: () => clearTimeout(timer),
+    // a little time back once the pointer or focus leaves, to read it again or press Undo
+    release: () => {
+      clearTimeout(timer);
+      if (!settled) timer = setTimeout(done, 2500);
+    },
+  });
   return { id, commit: done };
 }
 
-/** Gives a toast that was under way its outcome. */
-function settle(id: string, title: string, kind: Kind = "done") {
-  toast.update(id, { title, type: kind, timeout: 4000 });
-}
+/** How toasts and notices stack, move in and leave; each list sets its own gap and entry. */
+const STACK = [
+  "pointer-events-auto absolute right-0 bottom-0 z-[calc(1000-var(--toast-index))] outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50",
+  "[--offset-y:calc(var(--toast-offset-y)*-1+calc(var(--toast-index)*var(--gap)*-1)+var(--toast-swipe-movement-y))]",
+  "[transform:translateX(var(--toast-swipe-movement-x))_translateY(calc(var(--toast-swipe-movement-y)-(var(--toast-index)*var(--peek))))_scale(var(--scale))] [transition:transform_400ms_cubic-bezier(0.22,1,0.36,1),opacity_300ms]",
+  "data-expanded:[transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--offset-y))]",
+  "data-ending-style:opacity-0 data-limited:opacity-0",
+  "after:absolute after:top-full after:left-0 after:h-[calc(var(--gap)+1px)] after:w-full after:content-['']",
+];
 
 function ToastList() {
   const { toasts, close } = ToastPrimitive.useToastManager();
@@ -118,25 +131,22 @@ function ToastList() {
       toast={item}
       swipeDirection={["down", "right"]}
       data-slot="toast"
+      onPointerEnter={() => holds.get(item.id)?.hold()}
+      onPointerLeave={() => holds.get(item.id)?.release()}
+      onFocus={() => holds.get(item.id)?.hold()}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+          holds.get(item.id)?.release();
+      }}
       className={cn(
-        "inverse group/toast pointer-events-auto absolute right-0 bottom-0 left-0 z-[calc(1000-var(--toast-index))] mx-auto w-fit max-w-[min(92vw,32rem)] rounded-xl bg-background text-foreground shadow-[0_12px_32px_-10px_rgb(0_0_0/0.45)] outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        STACK,
+        "inverse left-0 mx-auto w-fit max-w-[min(92vw,32rem)] rounded-xl bg-background text-foreground shadow-[0_12px_32px_-10px_rgb(0_0_0/0.45)]",
         "[--gap:0.5rem] [--peek:0.5rem] [--scale:calc(max(0,1-(var(--toast-index)*0.06)))]",
-        "[--offset-y:calc(var(--toast-offset-y)*-1+calc(var(--toast-index)*var(--gap)*-1)+var(--toast-swipe-movement-y))]",
-        "[transform:translateX(var(--toast-swipe-movement-x))_translateY(calc(var(--toast-swipe-movement-y)-(var(--toast-index)*var(--peek))))_scale(var(--scale))] [transition:transform_400ms_cubic-bezier(0.22,1,0.36,1),opacity_300ms]",
-        "data-expanded:[transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--offset-y))]",
-        "data-starting-style:[transform:translateY(150%)] data-ending-style:opacity-0 data-limited:opacity-0",
-        "after:absolute after:top-full after:left-0 after:h-[calc(var(--gap)+1px)] after:w-full after:content-['']",
+        "data-starting-style:[transform:translateY(150%)]",
       )}
     >
       <ToastPrimitive.Content className="flex h-11 items-center gap-2.5 overflow-hidden pr-4 pl-3.5 text-[13.5px] transition-opacity data-behind:opacity-0 data-expanded:opacity-100">
-        {item.type === "busy" ? (
-          <Loader2
-            aria-hidden
-            className="size-4 shrink-0 animate-spin text-foreground/70"
-          />
-        ) : item.type === "done" ? (
-          <Check aria-hidden className="size-4 shrink-0 text-foreground/70" />
-        ) : null}
+        <Check aria-hidden className="size-4 shrink-0 text-foreground/70" />
         <ToastPrimitive.Title className="min-w-0 truncate" />
         <ToastPrimitive.Action
           onClick={() => close(item.id)}
@@ -158,13 +168,10 @@ function NoticeList() {
         swipeDirection={["right", "down"]}
         data-slot="notice"
         className={cn(
-          "group/notice pointer-events-auto absolute right-0 bottom-0 z-[calc(1000-var(--toast-index))] w-full rounded-[14px] bg-popover text-popover-foreground shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)] outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50",
+          STACK,
+          "w-full rounded-[14px] bg-popover text-popover-foreground shadow-[0_0_0_1px_var(--alpha-08),0_16px_40px_-12px_var(--alpha-20)]",
           "[--gap:0.625rem] [--peek:0.5rem] [--scale:calc(max(0,1-(var(--toast-index)*0.05)))]",
-          "[--offset-y:calc(var(--toast-offset-y)*-1+calc(var(--toast-index)*var(--gap)*-1)+var(--toast-swipe-movement-y))]",
-          "[transform:translateX(var(--toast-swipe-movement-x))_translateY(calc(var(--toast-swipe-movement-y)-(var(--toast-index)*var(--peek))))_scale(var(--scale))] [transition:transform_400ms_cubic-bezier(0.22,1,0.36,1),opacity_300ms]",
-          "data-expanded:[transform:translateX(var(--toast-swipe-movement-x))_translateY(var(--offset-y))]",
-          "data-starting-style:[transform:translateX(110%)] data-ending-style:opacity-0 data-limited:opacity-0",
-          "after:absolute after:top-full after:left-0 after:h-[calc(var(--gap)+1px)] after:w-full after:content-['']",
+          "data-starting-style:[transform:translateX(110%)]",
         )}
       >
         <ToastPrimitive.Content className="flex items-start gap-3 py-3.5 pr-3 pl-4 transition-opacity data-behind:opacity-0 data-expanded:opacity-100">
@@ -181,7 +188,10 @@ function NoticeList() {
                   notice.open?.run();
                   close(item.id);
                 }}
-                className="mt-2 inline-flex h-7 w-fit items-center rounded-lg bg-secondary px-2.5 text-[13px] font-medium outline-none hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] focus-visible:ring-2 focus-visible:ring-ring/50"
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "sm" }),
+                  "mt-2 w-fit",
+                )}
               >
                 {notice.open.label}
               </button>
@@ -189,7 +199,10 @@ function NoticeList() {
           </div>
           <ToastPrimitive.Close
             aria-label={notice?.closeLabel}
-            className="-mt-1 grid size-7 shrink-0 place-items-center rounded-md text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon-sm" }),
+              "-mt-1 text-muted-foreground",
+            )}
           >
             <X className="size-3.5" />
           </ToastPrimitive.Close>
@@ -199,11 +212,10 @@ function NoticeList() {
   });
 }
 
-function Toaster({ children }: { children?: React.ReactNode }) {
+function Toaster() {
   return (
     <ToastPrimitive.Provider toastManager={toast} limit={3}>
       <ToastPrimitive.Provider toastManager={notices} limit={3}>
-        {children}
         <ToastPrimitive.Portal>
           <ToastPrimitive.Viewport
             data-slot="notice-viewport"
@@ -225,4 +237,4 @@ function Toaster({ children }: { children?: React.ReactNode }) {
   );
 }
 
-export { notify, say, sayUndoable, settle, Toaster, toast };
+export { notify, say, sayUndoable, Toaster };

@@ -58,10 +58,7 @@ export function RequestScreen({ id }: { id: string }) {
 
   const sent = task.metadata.from === me;
   const other = sent ? task.metadata.to : task.metadata.from;
-  const index = Math.max(
-    0,
-    members.findIndex((member) => member.id === other),
-  );
+  const index = office.indexOf(other);
   const member = members.find((entry) => entry.id === other);
   const name =
     office.names.get(other) ??
@@ -128,10 +125,7 @@ export function RequestScreen({ id }: { id: string }) {
                   ) : (
                     <Mark
                       id={author}
-                      index={Math.max(
-                        0,
-                        members.findIndex((entry) => entry.id === author),
-                      )}
+                      index={office.indexOf(author)}
                       size={28}
                     />
                   )}

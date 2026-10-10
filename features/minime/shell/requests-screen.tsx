@@ -72,11 +72,7 @@ export function RequestsScreen() {
   const handled = received.filter(
     (task) => task.status.state === "COMPLETED" && !yours.has(task.id),
   ).length;
-  const indexOf = (id: string) =>
-    Math.max(
-      0,
-      members.findIndex((member) => member.id === id),
-    );
+  const { indexOf } = office;
   const colleagues = members
     .map((member, index) => ({ member, index }))
     .filter(({ member }) => member.id !== me);

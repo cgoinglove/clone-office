@@ -68,7 +68,6 @@ export function StepIn({
                   <Tip label={t("takeBack")}>
                     <button
                       type="button"
-                      aria-label={t("takeBack")}
                       onClick={() =>
                         void post({ action: "take-back", note: note.id })
                       }

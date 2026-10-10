@@ -51,8 +51,6 @@ export interface ChatSummary {
 /** How many conversations the list asks for at a time, and at most (the route's own limit). */
 const PAGE = 30;
 const MOST_SHOWN = 500;
-/** Said when a conversation was put away or brought back somewhere else (Settings). */
-export const CHATS_CHANGED = "clone-office:chats";
 
 type TurnInput = Turn extends infer T
   ? T extends { id: number }
@@ -158,9 +156,6 @@ export function useChat(lang: string) {
 
   useEffect(() => {
     void loadChats(true);
-    const changed = () => void loadChats(false);
-    window.addEventListener(CHATS_CHANGED, changed);
-    return () => window.removeEventListener(CHATS_CHANGED, changed);
   }, [loadChats]);
 
   const loadMore = useCallback(async () => {
@@ -188,14 +183,15 @@ export function useChat(lang: string) {
 
   /** Puts a conversation away (out of the list, kept whole) or brings it back. */
   const archiveChat = useCallback(
-    async (id: string, archived: boolean) => {
+    async (id: string, archived: boolean): Promise<boolean> => {
       if (archived) setChats((all) => all.filter((chat) => chat.id !== id));
-      await fetch("/api/me/chats", {
+      const response = await fetch("/api/me/chats", {
         method: "POST",
         headers: HEADERS,
         body: JSON.stringify({ action: "archive", id, archived }),
       }).catch(() => undefined);
       await loadChats(false);
+      return Boolean(response?.ok);
     },
     [loadChats],
   );

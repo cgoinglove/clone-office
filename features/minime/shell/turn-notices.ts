@@ -13,9 +13,8 @@ import { useTranslations } from "next-intl";
 import { createElement, useEffect, useRef } from "react";
 import { notify } from "@/components/ui/toast";
 import type { OfficeState } from "../home/use-office";
-import type { ChatAsk } from "./app-state";
 import { Mark } from "./parts";
-import { askLine, type TurnItem, turnHref, yourTurn } from "./your-turn";
+import { askLine, type TurnItem, turnHref } from "./your-turn";
 
 export const NOTIFY_KEY = "clone-office:notify";
 
@@ -37,10 +36,10 @@ const LISTS_TURNS = ["/home", "/office"];
 
 export function useTurnNotices(
   office: OfficeState,
-  chatAsks: ChatAsk[],
-  openChat?: string,
+  items: TurnItem[],
+  openChat: string | undefined,
   /** The office and the conversations' questions were each read once: what waits then is not news. */
-  ready = true,
+  ready: boolean,
 ) {
   const t = useTranslations("ask");
   const tShell = useTranslations("shell");
@@ -50,9 +49,7 @@ export function useTurnNotices(
   const where = useRef({ pathname, openChat });
   where.current = { pathname, openChat };
   const seen = useRef<Set<string> | null>(null);
-  const items = yourTurn(office, chatAsks);
   const keys = items.map((item) => item.key).join("|");
-  const members = office.office?.members ?? [];
   const me = office.office?.me?.id;
 
   /** Whether the screen in view already shows this one. */
@@ -63,17 +60,46 @@ export function useTurnNotices(
       return pathname === "/chat" && openChat === item.where.chat;
     return pathname === turnHref(item);
   };
-  const mark = (id?: string) =>
-    id
-      ? createElement(Mark, {
-          id,
-          index: Math.max(
-            0,
-            members.findIndex((member) => member.id === id),
-          ),
-          size: 22,
-        })
-      : undefined;
+
+  /** One piece of news: a card while the page is in view and its screen does not show it already, else the browser's notice. */
+  const tell = (news: {
+    title: string;
+    body: string;
+    /** Whose clone it is about, for the card's mark. */
+    from?: string;
+    href: string;
+    /** The card's button. */
+    action: string;
+    tag: string;
+    shown: () => boolean;
+  }) => {
+    const go = () => router.push(news.href);
+    if (document.visibilityState === "visible") {
+      if (news.shown()) return;
+      notify(news.title, news.body, {
+        lead: news.from
+          ? createElement(Mark, {
+              id: news.from,
+              index: office.indexOf(news.from),
+              size: 22,
+            })
+          : undefined,
+        open: { label: news.action, run: go },
+        closeLabel: close,
+      });
+      return;
+    }
+    if (!noticesOn()) return;
+    const notice = new Notification(news.title, {
+      body: news.body,
+      tag: news.tag,
+    });
+    notice.onclick = () => {
+      window.focus();
+      go();
+      notice.close();
+    };
+  };
 
   // Run when the list's keys change (`keys`), not on every new array of the same items.
   useEffect(() => {
@@ -88,39 +114,19 @@ export function useTurnNotices(
     const known = seen.current;
     const fresh = items.filter((item) => !known.has(item.key));
     for (const item of items) known.add(item.key);
-    if (!fresh.length) return;
-    const visible = document.visibilityState === "visible";
     for (const item of fresh) {
-      const from = members.find((member) => member.id === item.from)?.card.name;
-      const line = askLine(t, item.ask);
-      if (visible) {
-        if (shownHere(item)) continue;
-        notify(
-          from
-            ? tShell("office.fromColleague", { name: from })
-            : tShell("office.fromClone"),
-          line,
-          {
-            lead: mark(item.from),
-            open: {
-              label: tShell("notice.answer"),
-              run: () => router.push(turnHref(item)),
-            },
-            closeLabel: close,
-          },
-        );
-        continue;
-      }
-      if (!noticesOn()) continue;
-      const notice = new Notification(from ?? "Clone Office", {
-        body: line,
+      const from = item.from && office.names.get(item.from);
+      tell({
+        title: from
+          ? tShell("office.fromColleague", { name: from })
+          : tShell("office.fromClone"),
+        body: askLine(t, item.ask),
+        from: item.from,
+        href: turnHref(item),
+        action: tShell("notice.answer"),
         tag: item.key,
+        shown: () => shownHere(item),
       });
-      notice.onclick = () => {
-        window.focus();
-        router.push(turnHref(item));
-        notice.close();
-      };
     }
   }, [keys, ready]);
 
@@ -143,31 +149,21 @@ export function useTurnNotices(
       if (task.status.state !== "COMPLETED") continue;
       const href = `/requests/${encodeURIComponent(task.id)}`;
       const to = task.metadata.to;
-      const name = members.find((member) => member.id === to)?.card.name ?? "";
-      const answer =
-        [...task.history]
-          .reverse()
-          .find((message) => message.role === "agent")
-          ?.parts.map((part) => part.text ?? "")
-          .join(" ")
-          .trim() ?? "";
-      const title = tShell("notice.answered", { name });
-      if (document.visibilityState === "visible") {
-        if (where.current.pathname === href) continue;
-        notify(title, answer, {
-          lead: mark(to),
-          open: { label: tShell("office.open"), run: () => router.push(href) },
-          closeLabel: close,
-        });
-        continue;
-      }
-      if (!noticesOn()) continue;
-      const notice = new Notification(title, { body: answer, tag: task.id });
-      notice.onclick = () => {
-        window.focus();
-        router.push(href);
-        notice.close();
-      };
+      tell({
+        title: tShell("notice.answered", { name: office.names.get(to) ?? "" }),
+        body:
+          [...task.history]
+            .reverse()
+            .find((message) => message.role === "agent")
+            ?.parts.map((part) => part.text ?? "")
+            .join(" ")
+            .trim() ?? "",
+        from: to,
+        href,
+        action: tShell("office.open"),
+        tag: task.id,
+        shown: () => where.current.pathname === href,
+      });
     }
   }, [stateKey]);
 }

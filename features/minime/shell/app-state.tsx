@@ -22,6 +22,7 @@ import { HEADERS, type Profile, useOffice } from "../home/use-office";
 import { usePreferences } from "../home/use-preferences";
 import type { SectionId } from "../settings/settings";
 import { usePresence } from "../use-presence";
+import { yourTurn } from "./your-turn";
 
 /** A question the gate holds in one of the person's own conversations. */
 export interface ChatAsk {
@@ -29,6 +30,9 @@ export interface ChatAsk {
   chat: string;
   ask: GateAsk;
 }
+
+/** No questions yet, one array so that nothing reading it is drawn again for a new empty one. */
+const NO_ASKS: ChatAsk[] = [];
 
 export function useAppState() {
   // While the person looks at a page, what waits on them is shown here, not sent to their phone.
@@ -56,10 +60,11 @@ export function useAppState() {
   const [settings, setSettings] = useState<SectionId | null>(null);
 
   // Questions waiting in the person's own conversations, whichever is open: the sidebar lists them
-  // with the office's, so one asked in a conversation left behind is not lost.
-  const [chatAsks, setChatAsks] = useState<ChatAsk[]>([]);
-  // Whether they were read once, so what already waited is never taken for news.
-  const [asksLoaded, setAsksLoaded] = useState(false);
+  // with the office's, so one asked in a conversation left behind is not lost. Null until read
+  // once, so what already waited is never taken for news.
+  const [asks, setAsks] = useState<ChatAsk[] | null>(null);
+  const chatAsks = asks ?? NO_ASKS;
+  const asksLoaded = asks !== null;
   const loadAsks = useCallback(async () => {
     const data = (await fetch("/api/me/gate", { headers: HEADERS })
       .then((r) => r.json())
@@ -67,13 +72,18 @@ export function useAppState() {
       asks?: { id: string; chat?: string; ask: GateAsk }[];
     } | null;
     if (!data) return;
-    setAsksLoaded(true);
-    setChatAsks(
-      (data.asks ?? []).flatMap((entry) =>
-        entry.chat && !entry.chat.startsWith("office-")
-          ? [{ id: entry.id, chat: entry.chat, ask: entry.ask }]
-          : [],
-      ),
+    const next = (data.asks ?? []).flatMap((entry) =>
+      entry.chat && !entry.chat.startsWith("office-")
+        ? [{ id: entry.id, chat: entry.chat, ask: entry.ask }]
+        : [],
+    );
+    // The same questions keep the same list, so a look every few seconds draws nothing again.
+    setAsks((was) =>
+      was &&
+      was.length === next.length &&
+      was.every((entry, index) => entry.id === next[index]?.id)
+        ? was
+        : next,
     );
   }, []);
   useEffect(() => {
@@ -107,7 +117,7 @@ export function useAppState() {
   /** Answers a question in one of the person's conversations from outside it (the sidebar). */
   const answerChatAsk = useCallback(
     async (id: string, answer: string, always = false) => {
-      setChatAsks((all) => all.filter((entry) => entry.id !== id));
+      setAsks((all) => all?.filter((entry) => entry.id !== id) ?? null);
       await fetch("/api/me/gate/answer", {
         method: "POST",
         headers: HEADERS,
@@ -128,6 +138,12 @@ export function useAppState() {
           ? "working"
           : "idle";
 
+  // What waits on the person, worked out once when it changes and read by every screen.
+  const turns = useMemo(
+    () => yourTurn(office, chatAsks),
+    [office.waiting, office.office?.tasks, chatAsks],
+  );
+
   const joined = Boolean(office.office?.joined);
   const name =
     (joined ? office.office?.me?.card.name : undefined) ??
@@ -147,6 +163,7 @@ export function useAppState() {
       setSettings,
       chatAsks,
       asksLoaded,
+      turns,
       answerChatAsk,
       mood,
       joined,
@@ -163,6 +180,7 @@ export function useAppState() {
       settings,
       chatAsks,
       asksLoaded,
+      turns,
       answerChatAsk,
       mood,
       joined,

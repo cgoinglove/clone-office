@@ -128,7 +128,6 @@ export function ActivityList() {
               <Tip label={t("open")}>
                 <Link
                   href={href}
-                  aria-label={t("open")}
                   className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                   <ArrowUpRight className="size-4" />

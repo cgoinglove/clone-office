@@ -3,9 +3,17 @@
 // conversation is carried into a fresh session, or the person changes brains, the record here stays
 // whole. Lines are only ever appended, so a crash loses at most the line being written.
 
-import { appendFile, mkdir, readdir, readFile, stat } from "node:fs/promises";
+import {
+  access,
+  appendFile,
+  mkdir,
+  readdir,
+  readFile,
+  stat,
+} from "node:fs/promises";
 import { join } from "node:path";
 import { minimeHome } from "../server/paths.ts";
+import { TITLE_MAX } from "./limits.ts";
 
 /**
  * "office": an answer from a colleague's mini-me to a request sent from this conversation.
@@ -99,14 +107,22 @@ async function append(id: string, line: Line): Promise<void> {
   await appendFile(chatPath(id), `${JSON.stringify(line)}\n`, "utf8");
 }
 
-/** The longest name a person gives a conversation, as a new one's title is cut. */
-export const TITLE_MAX = 60;
+export { TITLE_MAX } from "./limits.ts";
+
+/** Whether a conversation is kept here, without reading it. */
+export async function chatExists(id: string): Promise<boolean> {
+  if (!ID.test(id)) return false;
+  return access(chatPath(id)).then(
+    () => true,
+    () => false,
+  );
+}
 
 /** The person's own name for a conversation; it does not bring the conversation up the list. */
 export async function renameChat(id: string, title: string): Promise<void> {
   const clean = title.replace(/\s+/g, " ").trim().slice(0, TITLE_MAX);
   if (!clean) throw new Error("A conversation needs a name.");
-  if (!(await readChat(id))) throw new Error("No such conversation.");
+  if (!(await chatExists(id))) throw new Error("No such conversation.");
   await append(id, {
     type: "title",
     title: clean,
@@ -119,7 +135,7 @@ export async function archiveChat(
   id: string,
   archived: boolean,
 ): Promise<void> {
-  if (!(await readChat(id))) throw new Error("No such conversation.");
+  if (!(await chatExists(id))) throw new Error("No such conversation.");
   await append(id, {
     type: "archived",
     archived,
@@ -323,15 +339,19 @@ export async function chatFiles(): Promise<
   { path: string; id: string; mtimeMs: number; size: number }[]
 > {
   const names = await readdir(chatsDir()).catch(() => [] as string[]);
-  const out: { path: string; id: string; mtimeMs: number; size: number }[] = [];
-  for (const name of names) {
-    const id = name.endsWith(".jsonl") ? name.slice(0, -".jsonl".length) : "";
-    if (!ID.test(id)) continue;
-    const path = join(/*turbopackIgnore: true*/ chatsDir(), name);
-    const info = await stat(path).catch(() => undefined);
-    if (info) out.push({ path, id, mtimeMs: info.mtimeMs, size: info.size });
-  }
-  return out;
+  // looked at all at once rather than one after another
+  const found = await Promise.all(
+    names.map(async (name) => {
+      const id = name.endsWith(".jsonl") ? name.slice(0, -".jsonl".length) : "";
+      if (!ID.test(id)) return undefined;
+      const path = join(/*turbopackIgnore: true*/ chatsDir(), name);
+      const info = await stat(path).catch(() => undefined);
+      return info
+        ? { path, id, mtimeMs: info.mtimeMs, size: info.size }
+        : undefined;
+    }),
+  );
+  return found.filter((file) => file !== undefined);
 }
 
 /** One side of a conversation with the mini-me from one line of its file, for the index. */

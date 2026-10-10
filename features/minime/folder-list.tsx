@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -133,6 +133,7 @@ export function FolderField({
       <button
         type="button"
         disabled={list === null}
+        data-folder-field
         onClick={() => (onOpen ? onOpen() : setOpen(true))}
         className="group flex h-12 w-full min-w-0 items-center gap-3 rounded-[10px] bg-background pr-2.5 pl-3.5 text-left ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
       >
@@ -338,7 +339,6 @@ function FolderBody({
             <button
               type="submit"
               disabled={!path.trim()}
-              aria-label={t("leaveOut")}
               className="absolute top-1/2 right-1 grid size-7 -translate-y-1/2 place-items-center rounded-[8px] text-muted-foreground outline-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-40"
             >
               <Plus className="size-4" />
@@ -408,8 +408,13 @@ export function FolderPage({
       <div className="flex flex-col gap-1 px-6 pb-3.5">
         <button
           type="button"
+          // the page opened from a field that is gone now: the focus starts at the way back
+          autoFocus
           onClick={onBack}
-          className="-ml-1.5 flex h-7 w-fit items-center gap-1 rounded-md px-1.5 text-[13px] text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+          className={cn(
+            buttonVariants({ variant: "ghost", size: "sm" }),
+            "-ml-2 w-fit text-muted-foreground",
+          )}
         >
           <ChevronLeft className="size-4" />
           {back}

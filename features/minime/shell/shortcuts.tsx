@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useCommandKeys } from "@/hooks/use-hotkey";
+import { SECTIONS } from "../settings/settings";
 
 export function ShortcutsDialog({
   open,
@@ -26,7 +27,7 @@ export function ShortcutsDialog({
     ["/", t("keys.box")],
     [label("Backslash"), t("keys.fold")],
     [label("Comma"), t("settings")],
-    [`${label("Digit1")}–6`, t("keys.section")],
+    [`${label("Digit1")}–${Math.min(9, SECTIONS.length)}`, t("keys.section")],
     ["?", t("keys.list")],
   ];
   return (

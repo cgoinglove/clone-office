@@ -128,14 +128,13 @@ export const HOP_S = track([
 ]);
 /** A clone's small settle as it sits down or hands something over: how long, how high (share of its height), how much it squashes. */
 const TAP = { dur: 0.42, rise: 0.07, squash: 0.45 };
-export function leapAt(_kind, t) {
+export function leapAt(t) {
   const u = clamp(t / TAP.dur, 0, 1),
     s = HOP_S(u);
   return {
     lift: -HOP_Y(u) * TAP.rise,
     sx: 1 + (s[0] - 1) * TAP.squash,
     sy: 1 + (s[1] - 1) * TAP.squash,
-    spin: 0,
     done: u >= 1,
   };
 }
@@ -546,19 +545,6 @@ export class Bot {
     }
   }
 }
-export const live = new Set();
-export let io = null;
-try {
-  io = new IntersectionObserver(
-    (es) => {
-      for (const e of es) {
-        const rec = e.target.__rec;
-        if (rec) rec.visible = e.isIntersecting;
-      }
-    },
-    { rootMargin: "120px" },
-  );
-} catch {}
 export function mountBot(host, opts, px) {
   const svg = document.createElementNS(SVGNS, "svg");
   svg.setAttribute("viewBox", "0 0 240 240");
@@ -570,20 +556,13 @@ export function mountBot(host, opts, px) {
   const bot = new Bot(opts);
   svg.appendChild(bot.el);
   host.appendChild(svg);
-  const rec = { bot, svg, visible: true };
-  svg.__rec = rec;
-  live.add(rec);
-  if (io) io.observe(svg);
-  bot.update(performance.now() / 1000, 1);
-  return rec;
+  // a little mark beside the office holds still, drawn again only when its mood changes (`still`
+  // after `setMood`): a few pixels of breath there is cost for nothing
+  bot.still(performance.now() / 1000);
+  return { bot, svg };
 }
 export function unmountBot(rec) {
-  if (!rec) return;
-  live.delete(rec);
-  if (rec.own !== false) {
-    if (io) io.unobserve(rec.svg);
-    rec.svg.remove();
-  }
+  rec?.svg.remove();
 }
 
 // ====================================================================================
@@ -633,14 +612,7 @@ export const withOv = (k, f) => {
  * pays per element whenever anything near it changes, so thousands of lines cost it on every frame.
  * Faces filled with a gradient are left alone: a gradient spans its own shape's box.
  */
-export const MERGE_SKIP = new Set([
-  "f-soft",
-  "f-floorlight",
-  "f-light",
-  "f-duskl",
-  "f-leaf",
-  "f-moon",
-]);
+export const MERGE_SKIP = new Set(["f-soft", "f-floorlight", "f-leaf"]);
 export function polyD(points) {
   const n = points
       .trim()
@@ -662,21 +634,17 @@ export function polyD(points) {
   return "M" + idx.map((i) => xs[i] + " " + ys[i]).join("L") + "Z";
 }
 export function merged(svg) {
-  const re =
-    /<(path|polygon) class="([^"]+)"( pathLength="1")? (?:d|points)="([^"]*)"\/>/g;
+  const re = /<(path|polygon) class="([^"]+)" (?:d|points)="([^"]*)"\/>/g;
   let out = "",
     last = 0,
     run = null;
   const flush = () => {
     if (run)
-      out +=
-        run.n > 1
-          ? `<path class="${run.cls}"${run.pl} d="${run.d}"/>`
-          : run.raw;
+      out += run.n > 1 ? `<path class="${run.cls}" d="${run.d}"/>` : run.raw;
     run = null;
   };
   for (let m; (m = re.exec(svg)); ) {
-    const [raw, tag, cls, pl = "", data] = m,
+    const [raw, tag, cls, data] = m,
       gap = svg.slice(last, m.index);
     last = re.lastIndex;
     const line =
@@ -688,12 +656,7 @@ export function merged(svg) {
         !cls.includes(" ") &&
         !MERGE_SKIP.has(cls);
     const same =
-      run &&
-      !gap &&
-      (line || face) &&
-      run.cls === cls &&
-      run.pl === pl &&
-      run.line === line;
+      run && !gap && (line || face) && run.cls === cls && run.line === line;
     if (!same) {
       flush();
       out += gap;
@@ -706,7 +669,7 @@ export function merged(svg) {
     if (same) {
       run.d += d;
       run.n++;
-    } else run = { cls, pl, d, n: 1, raw, line };
+    } else run = { cls, d, n: 1, raw, line };
   }
   flush();
   return out + svg.slice(last);
@@ -730,10 +693,10 @@ export function stroke(a, b, cls, seed, loose) {
     y2 = b[1] + uy * o2;
   const bow = (h - 0.5) * 2 * Math.min(WOB * loose, L * 0.018 * loose);
   if (Math.abs(bow) < 0.06)
-    return `<path class="${cls}" pathLength="1" d="M${r1(x1)} ${r1(y1)}L${r1(x2)} ${r1(y2)}"/>`;
+    return `<path class="${cls}" d="M${r1(x1)} ${r1(y1)}L${r1(x2)} ${r1(y2)}"/>`;
   const mx = (x1 + x2) / 2 - uy * bow,
     my = (y1 + y2) / 2 + ux * bow;
-  return `<path class="${cls}" pathLength="1" d="M${r1(x1)} ${r1(y1)}Q${r1(mx)} ${r1(my)} ${r1(x2)} ${r1(y2)}"/>`;
+  return `<path class="${cls}" d="M${r1(x1)} ${r1(y1)}Q${r1(mx)} ${r1(my)} ${r1(x2)} ${r1(y2)}"/>`;
 }
 /** A line drawn twice, the second pass fainter and a hair off, for the building's shell. */
 export const ln2 = (a, b, cls = "ol s") =>
@@ -818,8 +781,8 @@ export function cyl(x, y, z0, z1, rb, rt = rb, o = {}) {
   let s = `<path class="${o.side || "f-front"}" d="${side}"/>`;
   if (o.shade !== false)
     s += `<path class="ol f" d="M${r1(t[0] + tx * 0.58)} ${r1(t[1] + ty * 0.8)}L${r1(b[0] + bx * 0.58)} ${r1(b[1] + by * 0.8)}"/>`;
-  s += `<path class="${line}" pathLength="1" d="M${r1(t[0] - tx)} ${r1(t[1])}L${r1(b[0] - bx)} ${r1(b[1])}A${r1(bx)} ${r1(by)} 0 0 0 ${r1(b[0] + bx)} ${r1(b[1])}L${r1(t[0] + tx)} ${r1(t[1])}"/>`;
-  s += `<ellipse class="${o.top || "f-top"}" cx="${r1(t[0])}" cy="${r1(t[1])}" rx="${r1(tx)}" ry="${r1(ty)}"/><ellipse class="${line}" pathLength="1" cx="${r1(t[0])}" cy="${r1(t[1])}" rx="${r1(tx)}" ry="${r1(ty)}"/>`;
+  s += `<path class="${line}" d="M${r1(t[0] - tx)} ${r1(t[1])}L${r1(b[0] - bx)} ${r1(b[1])}A${r1(bx)} ${r1(by)} 0 0 0 ${r1(b[0] + bx)} ${r1(b[1])}L${r1(t[0] + tx)} ${r1(t[1])}"/>`;
+  s += `<ellipse class="${o.top || "f-top"}" cx="${r1(t[0])}" cy="${r1(t[1])}" rx="${r1(tx)}" ry="${r1(ty)}"/><ellipse class="${line}" cx="${r1(t[0])}" cy="${r1(t[1])}" rx="${r1(tx)}" ry="${r1(ty)}"/>`;
   return s;
 }
 /** A hand-drawn loop on the floor round a plan box, not quite closing, in two passes. */
@@ -909,12 +872,6 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
   EVEN = !EVEN;
-  // the little marks beside the office (the box's, the panel's, the lobby's) hold still, drawn again
-  // only when their mood changes: a few pixels of breath there is cost for nothing
-  if (EVEN) {
-    const t = now / 1000;
-    for (const r of live) if (r.visible) r.bot.still(t);
-  }
   for (const fn of runners) fn(dt, now);
   raf = runners.size ? requestAnimationFrame(frame) : 0;
 }

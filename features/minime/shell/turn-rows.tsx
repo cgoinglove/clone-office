@@ -7,7 +7,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
 import { Bot } from "@/features/office";
 import { cn } from "@/lib/utils";
@@ -17,12 +17,9 @@ import { askLine, type TurnItem, turnHref } from "./your-turn";
 
 export function TurnRows({
   turns,
-  members,
   className,
 }: {
   turns: TurnItem[];
-  /** The office's members in order, which sets each colleague's colour. */
-  members: string[];
   className?: string;
 }) {
   const t = useTranslations("shell.office");
@@ -36,8 +33,19 @@ export function TurnRows({
           if (item.waiting) void app.office.answer(item.waiting, reply, false);
           else if (item.chatAsk) void app.answerChatAsk(item.chatAsk.id, reply);
         };
-        const choices =
-          ask.kind === "question" ? (ask.choices ?? []).slice(0, 3) : [];
+        // A permission is allowed or not; a question offers its first few choices. The first is
+        // the one asked for.
+        const options =
+          ask.kind === "permission"
+            ? [
+                { reply: "allow", label: tAsk("allow") },
+                { reply: "deny", label: tAsk("deny") },
+              ]
+            : ask.kind === "question"
+              ? (ask.choices ?? [])
+                  .slice(0, 3)
+                  .map((choice) => ({ reply: choice, label: choice }))
+              : [];
         const from = item.from;
         return (
           <li
@@ -47,7 +55,7 @@ export function TurnRows({
             {from ? (
               <Mark
                 id={from}
-                index={Math.max(0, members.indexOf(from))}
+                index={app.office.indexOf(from)}
                 size={22}
                 className="self-start"
               />
@@ -70,45 +78,28 @@ export function TurnRows({
               <span className="text-[13.5px] leading-snug font-semibold">
                 {askLine(tAsk, ask)}
               </span>
-              {(ask.kind === "permission" || choices.length > 0) && (
+              {options.length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1.5">
-                  {ask.kind === "permission" ? (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="brand"
-                        onClick={() => answer("allow")}
-                      >
-                        {tAsk("allow")}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => answer("deny")}
-                      >
-                        {tAsk("deny")}
-                      </Button>
-                    </>
-                  ) : (
-                    choices.map((choice, at) => (
-                      <Button
-                        key={choice}
-                        size="sm"
-                        variant={at === 0 ? "brand" : "ghost"}
-                        onClick={() => answer(choice)}
-                      >
-                        {choice}
-                      </Button>
-                    ))
-                  )}
+                  {options.map((option, at) => (
+                    <Button
+                      key={option.reply}
+                      size="sm"
+                      variant={at === 0 ? "brand" : "ghost"}
+                      onClick={() => answer(option.reply)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
                 </div>
               )}
             </div>
             <Tip label={t("open")}>
               <Link
                 href={turnHref(item)}
-                aria-label={t("open")}
-                className="grid size-8 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none"
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "icon" }),
+                  "text-muted-foreground",
+                )}
               >
                 <ChevronRight className="size-4" />
               </Link>

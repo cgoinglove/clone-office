@@ -11,6 +11,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
+import { isCommand } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { BrainPanel, brainReady } from "../brain-panel";
 import { ConnectorsPanel } from "../connectors-panel";
@@ -101,12 +102,12 @@ export function SettingsDialog({
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (!(event.metaKey || event.ctrlKey)) return;
-      const at = Number(event.key);
-      if (!Number.isInteger(at) || at < 1 || at > Math.min(9, SECTIONS.length))
-        return;
+      const at = SECTIONS.findIndex((_, index) =>
+        isCommand(event, `Digit${index + 1}`),
+      );
+      if (at < 0 || at > 8) return;
       event.preventDefault();
-      onSection(SECTIONS[at - 1].id);
+      onSection(SECTIONS[at].id);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

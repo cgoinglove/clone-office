@@ -39,14 +39,23 @@ export function ConfirmDialog({
   busy?: boolean;
 }) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[26rem]" showCloseButton={false} above>
+    // While the step runs it stays: no Cancel, Esc or click outside leaves it half done unseen.
+    <Dialog open={open} onOpenChange={(next) => !busy && onOpenChange(next)}>
+      <DialogContent
+        data-confirm
+        className="sm:max-w-[26rem]"
+        showCloseButton={false}
+        above
+      >
         <DialogHeader className="pr-0">
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         <DialogFooter className="pt-2">
-          <DialogClose render={<Button variant="ghost" size="lg" />}>
+          <DialogClose
+            disabled={busy}
+            render={<Button variant="ghost" size="lg" />}
+          >
             {cancel}
           </DialogClose>
           <Button

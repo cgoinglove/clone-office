@@ -75,7 +75,6 @@ import {
   SM_DEFS,
   segments,
   shelfSvg,
-  sofaSvg,
   stackSvg,
   stampSvg,
   stillMark,
@@ -374,10 +373,6 @@ export function createOffice(
         add(th.x - 3.6, th.y - 3, th.x + 3.6, th.y + 3, 6.6, () =>
           armchairSvg(th.x, th.y),
         );
-      else if (th.kind === "sofa")
-        add(th.x0 - 0.6, th.y, th.x1 + 0.6, th.y + 6.2, 6.2, () =>
-          sofaSvg(th.x0, th.y, th.x1),
-        );
       else if (th.kind === "lowtable") {
         add(th.x0, th.y0, th.x1, th.y1, 4, () =>
           lowTableSvg(th.x0, th.y0, th.x1, th.y1),
@@ -489,7 +484,7 @@ export function createOffice(
         line: "ol s",
         double: true,
       }) +
-      liftSvg(LIFT_X, liftOpen, BASE_FLOOR + fl.index, WALL_H, false)
+      liftSvg(LIFT_X, BASE_FLOOR + fl.index, WALL_H)
     );
   }
   /** Draws the still office around the camera: the floor, the walls, and what stands on the floor in depth order. */
@@ -891,7 +886,7 @@ export function createOffice(
       const r = rounded(findPath(fl, p.pos, target)),
         L = lenOf(r),
         dur = Math.max(0.8, L / PACE + 0.35);
-      if (p.seated) leap(p, "tap");
+      if (p.seated) leap(p);
       p.walk = {
         r,
         L,
@@ -927,7 +922,7 @@ export function createOffice(
   /** Folded and thrown: the plane arcs over the floor and lands on the other's tray. */
   async function throwPlane(a, b, pile = true) {
     lookAt(a, b);
-    leap(a, "tap");
+    leap(a);
     await wait(260);
     const from = carryAt(a),
       to = trayOf(b),
@@ -975,8 +970,8 @@ export function createOffice(
     const g = lapGeo(p.desk);
     return at((g.x0 + g.x1) / 2, g.y1 - 0.6, g.z + 0.4);
   };
-  const leap = (p, kind) => {
-    p.leap = { kind, t0: simT };
+  const leap = (p) => {
+    p.leap = { t0: simT };
   };
   /** Hands what it carries over: the sheet goes from in front of it onto the other's tray, lands, and the pile grows. */
   async function place(p, to, kind, pile = true) {
@@ -1089,7 +1084,7 @@ export function createOffice(
       await walkTo(p, p.desk.seat);
       p.seated = true;
       p.pos = [...p.desk.seat];
-      leap(p, "tap");
+      leap(p);
       redraw(p, "lap");
       redraw(p, "lamp");
     } finally {
@@ -1138,7 +1133,7 @@ export function createOffice(
     p.seated = true;
     p.pos = [...p.desk.seat];
     p.carry = null;
-    leap(p, "tap");
+    leap(p);
   }
   /** Whether someone can be moved now: in, on the floor shown, not on another errand. */
   const here = (p) => p.present && !p.inLift && p.floor === plan.index;
@@ -1174,7 +1169,7 @@ export function createOffice(
         lookAt(a, b);
         say(a, W.say.bring(b.name, a.name, what), 3000);
         await wait(1500);
-        leap(a, "tap");
+        leap(a);
         await wait(140);
         await place(a, b, "sheet");
         a.doing = null;
@@ -1245,7 +1240,7 @@ export function createOffice(
       done = r.state === "COMPLETED",
       text = clip(r.answer, 90);
     try {
-      leap(b, "tap");
+      leap(b);
       await wait(200);
       if (far) {
         lookAt(b, a);
@@ -1259,7 +1254,7 @@ export function createOffice(
         lookAt(a, b);
         if (text) say(b, text, 2800);
         await wait(1500);
-        leap(b, "tap");
+        leap(b);
         await wait(140);
         await place(b, a, "done", false);
         b.doing = null;
@@ -1337,7 +1332,7 @@ export function createOffice(
       await walkTo(p, p.desk.seat);
       p.seated = true;
       p.pos = [...p.desk.seat];
-      leap(p, "tap");
+      leap(p);
     } finally {
       p.busy = false;
       p.doing = null;
@@ -1362,7 +1357,7 @@ export function createOffice(
             const to = said.replyTo && m.posts.get(said.replyTo);
             const other = to && people.get(to.from);
             if (other && other !== who && here(other)) lookAt(who, other);
-            leap(who, "tap");
+            leap(who);
             const ms = 5500 + Math.min(4500, said.text.length * 28);
             say(who, clip(said.text, 96), ms, "say meet");
             await wait(ms - 400);
@@ -1750,7 +1745,6 @@ export function createOffice(
   function drawBot(p) {
     const [fx0, fy0] = at(p.pos[0], p.pos[1], p.z);
     let lift = 0,
-      spin = 0,
       sx = 1,
       sy = 1,
       tilt = 0,
@@ -1763,11 +1757,10 @@ export function createOffice(
       tilt = 5 * p.dir + 1.6 * Math.sin(p.step * Math.PI);
     }
     if (p.leap) {
-      const l = leapAt(p.leap.kind, simT - p.leap.t0);
+      const l = leapAt(simT - p.leap.t0);
       if (l.done) p.leap = null;
       else {
         lift += l.lift * BODY_PX * boost;
-        spin = l.spin;
         sx *= l.sx;
         sy *= l.sy;
       }
@@ -1778,14 +1771,13 @@ export function createOffice(
       if (u >= 1 && !p.fade.out) p.fade = null;
     }
     p.lift = lift;
-    const k = p.k * boost,
-      H = 2 * R * p.bot.hh;
+    const k = p.k * boost;
     const op = alpha < 1 ? String(r2(alpha)) : "";
     if (op !== p.op) {
       p.op = op;
       p.g.style.opacity = op;
     }
-    const bt = `translate(${r1(fx0)} ${r1(fy0 - lift)}) rotate(${r1(tilt)}) scale(${r3(k * sx)} ${r3(k * sy)}) translate(0 ${r1(-H / 2)}) rotate(${r1(spin)}) translate(${-CX} ${r1(-(CY + p.bot.anchor) + H / 2)})`;
+    const bt = `translate(${r1(fx0)} ${r1(fy0 - lift)}) rotate(${r1(tilt)}) scale(${r3(k * sx)} ${r3(k * sy)}) translate(${-CX} ${r1(-(CY + p.bot.anchor))})`;
     if (bt !== p.bt) {
       p.bt = bt;
       p.bscale.setAttribute("transform", bt);
@@ -2166,11 +2158,13 @@ export function createOffice(
         if (!p.plate.hidden) p.plate.hidden = true;
         continue;
       }
-      // Its name too: a name changed on the page (the first steps' card) shows at once.
-      const [label, cls] = plateOf(p),
-        key = `${p.name}|${label}|${cls}`;
+      // Its words are worked out only when what they are made of changes, not every frame; its
+      // name too, so a name changed on the page (the first steps' card) shows at once.
+      const d = p.doing,
+        key = `${p.name}|${p.present ? 1 : 0}|${asking(p) ? 1 : 0}|${d?.kind ?? ""}|${d?.who?.name ?? ""}|${p.mood}|${p.workFrom ?? ""}|${p.status}|${p.inMeeting ? 1 : 0}`;
       if (key !== p.plateKey) {
         p.plateKey = key;
+        const [label, cls] = plateOf(p);
         p.plate.className = `plate${cls ? ` ${cls}` : ""}${p.mine ? " you" : ""}`;
         // the words say what it is on; a dot only where something waits on the viewer
         p.plate.innerHTML = `${cls === "mine" ? "<i></i>" : ""}<b>${esc(p.mine ? W.plate.you(p.name) : p.name)}</b>${label ? `<span>${esc(label)}</span>` : ""}`;
@@ -2354,7 +2348,7 @@ export function createOffice(
       spawn(async () => {
         await wait(1800);
         if (me.mood === "listening") {
-          leap(me, "tap");
+          leap(me);
           settle(me);
         }
       });
@@ -2807,6 +2801,7 @@ export function createOffice(
     if (panelRec?.follow) {
       const m = panelRec.follow.bot.mood;
       panelRec.bot.setMood(m === "walk" ? "idle" : m);
+      panelRec.bot.still(simT);
     }
     orderLive();
     drawFliers();
@@ -2818,7 +2813,7 @@ export function createOffice(
     updateOverlays();
     renderPanel();
   }
-  // at thirty frames a second the office ticks on the same frames as the page's little marks, so the frames between stay empty; a drag or a glide stays at sixty
+  // at thirty frames a second the office ticks every other frame; a drag or a glide stays at sixty
   const stopFrames = onFrame((dt, now) => {
     oacc += dt;
     if (!HALF || EVEN || anim || drag?.moved) {

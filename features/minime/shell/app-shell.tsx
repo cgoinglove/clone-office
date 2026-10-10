@@ -29,7 +29,6 @@ import { CommandPalette } from "./command-palette";
 import { ShortcutsDialog } from "./shortcuts";
 import { iconButton, Sidebar } from "./sidebar";
 import { useTurnNotices } from "./turn-notices";
-import { yourTurn } from "./your-turn";
 
 /** The screen each address opens, by its first part, as the tab's title names it. */
 const SCREENS: Record<
@@ -77,10 +76,10 @@ function Frame({ children }: { children: ReactNode }) {
   const app = useApp();
   const router = useRouter();
   const pathname = usePathname();
-  const waiting = yourTurn(app.office, app.chatAsks).length;
+  const waiting = app.turns.length;
   useTurnNotices(
     app.office,
-    app.chatAsks,
+    app.turns,
     app.chat.chatId,
     Boolean(app.office.office) && app.asksLoaded,
   );
@@ -123,6 +122,8 @@ function Frame({ children }: { children: ReactNode }) {
   foldRef.current = () => (narrow ? setDrawer((was) => !was) : fold(!folded));
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      // a confirm open waits for its answer: nothing opens over or under it
+      if (document.querySelector("[data-confirm]")) return;
       if (typed(event, "?") && windowKey(event)) {
         event.preventDefault();
         setKeys(true);
@@ -180,7 +181,6 @@ function Frame({ children }: { children: ReactNode }) {
             >
               <button
                 type="button"
-                aria-label={narrow ? t("openMenu") : t("unfold")}
                 onClick={() => (narrow ? setDrawer(true) : fold(false))}
                 className={iconButton}
               >
@@ -210,7 +210,6 @@ function Frame({ children }: { children: ReactNode }) {
             <Tip label={t("search")} keys={keysOf.label("KeyK")}>
               <button
                 type="button"
-                aria-label={t("search")}
                 onClick={() => setPalette(true)}
                 className={iconButton}
               >
@@ -220,7 +219,6 @@ function Frame({ children }: { children: ReactNode }) {
             <Tip label={t("newChat")} keys={keysOf.label("KeyN", true)}>
               <button
                 type="button"
-                aria-label={t("newChat")}
                 onClick={() => {
                   chat.newChat();
                   router.push("/chat");

@@ -41,7 +41,7 @@ function DialogOverlay({
 
 /**
  * "Close" in the screen's language, given once under the app's words (`DialogWords`, in the root
- * layout); a dialog mounted outside them (`notify`, from plain code) says it in English.
+ * layout); English only where no words are given.
  */
 const CloseLabel = React.createContext("Close");
 

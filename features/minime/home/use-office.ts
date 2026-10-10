@@ -431,6 +431,16 @@ export function useOffice(
     () => new Map(members.map((m) => [m.id, m.card.name])),
     [members],
   );
+  // where each member stands in the office's list, which picks the colour of their mark
+  const order = useMemo(
+    () => new Map(members.map((m, index) => [m.id, index])),
+    [members],
+  );
+  /** The index a member's mark is drawn with (0 for anyone not in the list). */
+  const indexOf = useCallback(
+    (id?: string) => (id ? (order.get(id) ?? 0) : 0),
+    [order],
+  );
   const others = members.filter((m) => m.id !== office?.me?.id);
 
   return {
@@ -446,6 +456,7 @@ export function useOffice(
     answered,
     room,
     names,
+    indexOf,
     others,
   };
 }

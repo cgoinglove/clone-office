@@ -24,7 +24,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
-import { typed, windowKey } from "@/hooks/use-hotkey";
+import { useSlashKey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { HEADERS, statusText, type Task } from "../home/use-office";
 import { statusCode } from "../office/room-data";
@@ -35,7 +35,7 @@ import { askedText } from "./requests-screen";
 import { StarNote } from "./star-note";
 import { TurnRows } from "./turn-rows";
 import { FirstSteps } from "./welcome";
-import { taskOf, yourTurn } from "./your-turn";
+import { taskOf } from "./your-turn";
 
 interface FlowLine {
   id: string;
@@ -65,10 +65,9 @@ export function HomeScreen() {
   const data = office.office;
   const me = data?.me?.id;
   const members = data?.members ?? [];
-  const memberIds = members.map((member) => member.id);
-  const indexOf = (id: string) => Math.max(0, memberIds.indexOf(id));
+  const { indexOf } = office;
   const nameOf = (id: string) => office.names.get(id) ?? "";
-  const turns = yourTurn(office, app.chatAsks);
+  const turns = app.turns;
   const tasks = data?.tasks ?? [];
   const yours = new Set(
     office.waiting.map((waiting) => taskOf(waiting)).filter(Boolean),
@@ -265,7 +264,7 @@ export function HomeScreen() {
             >
               {turns.length ? (
                 <div className="overflow-hidden rounded-[14px] bg-background shadow-[0_0_0_1px_var(--alpha-10)]">
-                  <TurnRows turns={turns} members={memberIds} />
+                  <TurnRows turns={turns} />
                 </div>
               ) : (
                 <Quiet icon={<Check className="size-4" />}>
@@ -500,15 +499,7 @@ function AskBox({
   const t = useTranslations("shell.home");
   const [text, setText] = useState("");
   // "/" writes to the clone from anywhere on Home, as in a conversation.
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (!windowKey(event) || !typed(event, "/")) return;
-      event.preventDefault();
-      document.getElementById("home-ask")?.focus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  useSlashKey(() => document.getElementById("home-ask")?.focus());
   return (
     <div className="flex flex-col gap-3">
       <form
@@ -532,7 +523,6 @@ function AskBox({
             type="submit"
             variant="brand"
             size="icon"
-            aria-label={t("askSend")}
             disabled={!text.trim()}
             className="size-10 disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
           >

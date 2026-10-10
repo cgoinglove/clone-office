@@ -61,6 +61,21 @@ export const windowKey = (event: KeyboardEvent) =>
   !capturesKeys(event.target) &&
   !(event.target as HTMLElement | null)?.closest?.('[role="dialog"]');
 
+/** "/" puts the cursor in a screen's one box from anywhere on it, as GitHub and Slack do. */
+export function useSlashKey(focus: () => void) {
+  const run = useRef(focus);
+  run.current = focus;
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!windowKey(event) || !typed(event, "/")) return;
+      event.preventDefault();
+      run.current();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+}
+
 /**
  * Esc goes to the last layer that opened and no further. One listener owns the key
  * for the whole window, so layers never race over which effect registered first —
@@ -155,23 +170,6 @@ export function hotkeyLabel(combo: string, mac = false): string {
     .map((part) => SIGN[part]?.[mac ? 1 : 0] ?? part);
   const key = keyLabel(code);
   return mac ? [...held, key].join("") : [...held, key].join(" + ");
-}
-
-export function useHotkeyLabel(combo: string | null): string | null {
-  const [mac, setMac] = useState(false);
-  useEffect(() => setMac(/mac/i.test(navigator.userAgent)), []);
-  return combo ? hotkeyLabel(combo, mac) : null;
-}
-
-/** A command key as this system writes it: `⌘Z` / `⇧⌘Z` on a Mac, `Ctrl + Z` / `Ctrl + Shift + Z` elsewhere. */
-export function useCommandLabel(code: string, shift = false): string {
-  const [mac, setMac] = useState(false);
-  useEffect(() => setMac(/mac/i.test(navigator.userAgent)), []);
-  const held = mac ? ["shift", "meta"] : ["ctrl", "shift"];
-  return hotkeyLabel(
-    [...held.filter((part) => shift || part !== "shift"), code].join("+"),
-    mac,
-  );
 }
 
 const onMac = () =>

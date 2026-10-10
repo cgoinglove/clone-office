@@ -372,22 +372,6 @@ export function shelfSvg(x0, y0, x1, y1, h, face, seed) {
   });
   return s + books;
 }
-export const sofaSvg = (x0, y0, x1) =>
-  withOv(
-    0.25,
-    () =>
-      ellipseAt((x0 + x1) / 2 + 1, y0 + 4, 0, (x1 - x0) * 6.4, 40, "f-soft") +
-      box(x0, y0, x1, y0 + 2.5, 0, 6.2) +
-      box(x0, y0 + 2.5, x1, y0 + 6.2, 0, 3.2) +
-      box(x0 + 0.8, y0 + 2.6, (x0 + x1) / 2 - 0.2, y0 + 5.8, 3.2, 3.8, {
-        hatch: false,
-      }) +
-      box((x0 + x1) / 2 + 0.2, y0 + 2.6, x1 - 0.8, y0 + 5.8, 3.2, 3.8, {
-        hatch: false,
-      }) +
-      box(x0 - 0.6, y0, x0 + 1, y0 + 6.2, 0, 4.5) +
-      box(x1 - 1, y0, x1 + 0.6, y0 + 6.2, 0, 4.5),
-  );
 export const armchairSvg = (x, y) =>
   withOv(
     0.2,
@@ -569,8 +553,7 @@ export function segments(text, h) {
       x += colW;
       continue;
     }
-    // a blank place shows only its ghost, as an LED clock leaves an hour's first digit dark
-    const lit = ch === " " ? "" : DIGITS[+ch] || "";
+    const lit = DIGITS[ch] ?? "";
     for (const [name, pts] of Object.entries(SEGS)) {
       const pg = `<polygon points="${pts.map(([px, py]) => `${r2(x + px * k)},${r2(py * k)}`).join(" ")}"/>`;
       if (lit.includes(name)) on += pg;
@@ -699,8 +682,8 @@ export function clockFace(now, crew, words) {
 export const LIFT_X = 46,
   LIFT_W = 22;
 export const liftH = (wallH) => Math.min(wallH - 3.6, 21);
-/** The lift lobby: a frame standing out from the wall, two doors, the floor in seven segments above, a call panel beside. */
-export function liftSvg(lx, open, floorNo, wallH, doors = true) {
+/** The lift lobby: a frame standing out from the wall, the floor in seven segments above, a call panel beside (the doors are `liftDoors`, drawn apart as they open). */
+export function liftSvg(lx, floorNo, wallH) {
   const h = liftH(wallH),
     w = LIFT_W;
   let s = withOv(0.5, () =>
@@ -712,7 +695,6 @@ export function liftSvg(lx, open, floorNo, wallH, doors = true) {
       line: "ol s",
     }),
   );
-  if (doors) s += `<g data-liftdoors>${liftDoors(lx, open, h)}</g>`;
   const cx = lx + w / 2;
   if (h + 6.6 <= wallH) {
     s += withOv(0, () =>
@@ -1035,7 +1017,7 @@ export function scribble(text, p, dx, dy, size = 24, arrow = true) {
       my = (sy + ey) / 2 - 10 * k;
     const ang = Math.atan2(ey - my, ex - mx),
       hl = 8 * k;
-    s += `<path class="hand-l" pathLength="1" d="M${r1(sx)} ${r1(sy)}Q${r1(mx)} ${r1(my)} ${r1(ex)} ${r1(ey)}"/><path class="hand-l" d="M${r1(ex - Math.cos(ang - 0.45) * hl)} ${r1(ey - Math.sin(ang - 0.45) * hl)}L${r1(ex)} ${r1(ey)}L${r1(ex - Math.cos(ang + 0.5) * hl)} ${r1(ey - Math.sin(ang + 0.5) * hl)}"/>`;
+    s += `<path class="hand-l" d="M${r1(sx)} ${r1(sy)}Q${r1(mx)} ${r1(my)} ${r1(ex)} ${r1(ey)}"/><path class="hand-l" d="M${r1(ex - Math.cos(ang - 0.45) * hl)} ${r1(ey - Math.sin(ang - 0.45) * hl)}L${r1(ex)} ${r1(ey)}L${r1(ex - Math.cos(ang + 0.5) * hl)} ${r1(ey - Math.sin(ang + 0.5) * hl)}"/>`;
   }
   return s;
 }

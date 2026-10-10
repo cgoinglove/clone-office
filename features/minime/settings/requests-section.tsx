@@ -225,7 +225,6 @@ function Menu({
                   <Button
                     size="icon-sm"
                     variant="ghost"
-                    aria-label={t("menu.remove")}
                     className="text-muted-foreground"
                     disabled={busy}
                     onClick={() =>
@@ -378,7 +377,6 @@ function Ways({
                 <Button
                   size="icon-sm"
                   variant="ghost"
-                  aria-label={t("menu.remove")}
                   className="shrink-0 text-muted-foreground"
                   disabled={busy}
                   onClick={() => save(mine.filter((l) => l !== line))}

@@ -411,7 +411,6 @@ export function Composer({
           <Button
             type="submit"
             size="icon-sm"
-            aria-label={t("send")}
             disabled={!draft.trim() || (chat.busy && !chat.chatId)}
             loading={chat.busy && !draft.trim()}
             className="mb-0.5 shrink-0 rounded-full"

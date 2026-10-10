@@ -64,8 +64,9 @@ function TooltipContent({
 }
 
 /**
- * What an icon-only button does, and its keys, shown after a short rest on it (and on focus).
- * Only for buttons without words or with a shortcut; a button with its words needs none.
+ * What an icon-only button does, and its keys, shown after a short rest on it (and on focus). The
+ * words are also the button's name for a screen reader, which a tooltip alone never gives, so the
+ * button carries no `aria-label` of its own. A button with its words needs none.
  */
 function Tip({
   label,
@@ -80,7 +81,7 @@ function Tip({
 }) {
   return (
     <Tooltip>
-      <TooltipTrigger render={children} />
+      <TooltipTrigger render={children} aria-label={label} />
       <TooltipContent side={side} sideOffset={6}>
         {label}
         {keys && (

@@ -640,7 +640,6 @@ function MemoryRow({
               <Button
                 size="icon-sm"
                 variant="ghost"
-                aria-label={t("memory.fix")}
                 onClick={() => setState("fixing")}
               >
                 <Pencil />
@@ -650,13 +649,19 @@ function MemoryRow({
               <Button
                 size="icon-sm"
                 variant="ghost"
-                aria-label={t("memory.remove")}
                 onClick={() => {
                   setState("gone");
-                  sayUndoable(t("memory.removed"), t("common.undo"), {
-                    commit: () => void onRemove(),
-                    undo: () => setState("open"),
-                  });
+                  removal.current = sayUndoable(
+                    t("memory.removed"),
+                    t("common.undo"),
+                    {
+                      commit: () =>
+                        void onRemove().then((done) => {
+                          if (!done) setState("open");
+                        }),
+                      undo: () => setState("open"),
+                    },
+                  );
                 }}
               >
                 <Trash2 />

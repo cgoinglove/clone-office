@@ -18,6 +18,8 @@ export interface TurnItem {
   /** Answered through the office (a request's question) or at the gate (a conversation's). */
   waiting?: Waiting;
   chatAsk?: ChatAsk;
+  /** Since when it waits, where that is known (a kept one, or the request's last change). */
+  since?: string;
 }
 
 const REQUEST_CHAT = "office-request-";
@@ -34,13 +36,15 @@ export function yourTurn(office: OfficeState, chatAsks: ChatAsk[]): TurnItem[] {
   const tasks = office.office?.tasks ?? [];
   const fromRequests = office.waiting.map((waiting): TurnItem => {
     const task = taskOf(waiting);
+    const request = tasks.find((entry) => entry.id === task);
     return {
       key: `w:${waiting.id}`,
       ask: waiting.ask,
       where: { kind: "request", task },
       // The asker's member id from the request; a kept question names them only by name.
-      from: tasks.find((entry) => entry.id === task)?.metadata.from,
+      from: request?.metadata.from,
       waiting,
+      since: waiting.at ?? request?.status.timestamp,
     };
   });
   const fromChats = chatAsks.map(

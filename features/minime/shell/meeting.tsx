@@ -129,12 +129,7 @@ export function MeetingPanel({
   const app = useApp();
   const data = app.office.office;
   const me = data?.me?.id;
-  const members = data?.members ?? [];
-  const indexOf = (id: string) =>
-    Math.max(
-      0,
-      members.findIndex((member) => member.id === id),
-    );
+  const { indexOf } = app.office;
   const nameOf = (id: string) => app.office.names.get(id) ?? "?";
   const cloneOf = (id: string) =>
     id === me ? t("yours") : t("cloneOf", { name: nameOf(id) });

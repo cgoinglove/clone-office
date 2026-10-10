@@ -27,7 +27,7 @@ import { setTheme, useTheme } from "@/hooks/use-theme";
 import { pickLanguage, useProblem } from "@/i18n/client";
 import { LOCALE_NAMES, LOCALES, type Locale } from "@/i18n/locales";
 import type { Theme } from "@/lib/theme";
-import { CHATS_CHANGED } from "../home/use-chat";
+import { useApp } from "../shell/app-state";
 import { Group, Groups, Rows } from "./parts";
 import { Toggle } from "./preferences-section";
 import { APP_VERSION } from "./settings";
@@ -99,6 +99,8 @@ function useStartWithComputer() {
 /** Chats the person put away from the column: kept whole, each brought back with one click. */
 function ArchivedChats() {
   const t = useTranslations("settings.general");
+  // through the conversations' own state, so the column hears of it at once
+  const { archiveChat } = useApp().chat;
   const format = useFormatter();
   const [chats, setChats] = useState<
     { id: string; title: string; updated: string }[] | null
@@ -140,18 +142,9 @@ function ArchivedChats() {
               size="sm"
               variant="secondary"
               onClick={() =>
-                void fetch("/api/me/chats", {
-                  method: "POST",
-                  headers: HEADERS,
-                  body: JSON.stringify({
-                    action: "archive",
-                    id: chat.id,
-                    archived: false,
-                  }),
-                }).then((response) => {
-                  if (!response.ok) return;
+                void archiveChat(chat.id, false).then((done) => {
+                  if (!done) return;
                   setChats((all) => all?.filter((c) => c.id !== chat.id) ?? []);
-                  window.dispatchEvent(new Event(CHATS_CHANGED));
                   say(t("restored", { title: chat.title }));
                 })
               }
@@ -273,7 +266,6 @@ export function GeneralSection() {
                 <Tip label={copied ? common("copied") : common("copy")}>
                   <button
                     type="button"
-                    aria-label={copied ? common("copied") : common("copy")}
                     onClick={() => {
                       void navigator.clipboard
                         ?.writeText(update.command ?? "")

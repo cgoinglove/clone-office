@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tip } from "@/components/ui/tooltip";
-import { typed, windowKey } from "@/hooks/use-hotkey";
+import { useSlashKey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { ChatView } from "../home/chat-view";
 import { useApp } from "./app-state";
@@ -97,15 +97,7 @@ export function ChatScreen() {
       return !was;
     });
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (!windowKey(event) || !typed(event, "/")) return;
-      event.preventDefault();
-      draft.current?.focus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  useSlashKey(() => draft.current?.focus());
 
   const empty = chat.turns.length === 0;
   return (
@@ -118,7 +110,6 @@ export function ChatScreen() {
           <Tip label={rail ? t("hideRail") : t("showRail")}>
             <button
               type="button"
-              aria-label={rail ? t("hideRail") : t("showRail")}
               aria-pressed={rail}
               onClick={toggleRail}
               className={cn(

@@ -16,13 +16,13 @@ Every screen reads the same way: the same parts, one meaning per colour, and a s
   bots' body language came over from Thursday with them). The office floor keeps its own in
   `features/office/room/room.css`, mapped onto these tokens.
 - `components/ui/button.tsx` — the button variants and `loading`.
-- `components/ui/notify.tsx` — `notify.alert` / `confirm` / `prompt`, a dialog from plain code.
 - `components/ui/confirm-dialog.tsx` — `ConfirmDialog`: a big step asked once (both buttons one
   shape, only a removing one red).
 - `components/ui/toast.tsx` — `say` (what the person just did, one line at the bottom centre),
   `sayUndoable` (done when the toast goes without Undo), `notify` (news they did not cause, a
   card at the bottom right); `Toaster` is mounted once in `app/layout.tsx`.
-- `components/ui/tooltip.tsx` — `Tip`: what an icon-only button does, and its keys.
+- `components/ui/tooltip.tsx` — `Tip`: what an icon-only button does, and its keys; its words are
+  the button's name for a screen reader too, so the button takes no `aria-label` of its own.
 - `components/ui/markdown.tsx` — model text as markdown (Streamdown, with code, math, mermaid, CJK).
 - `components/ui/shiny-text.tsx` — words for something still running.
 - `hooks/use-hotkey.ts` — the keys the window owns: Esc layers, `windowKey`.

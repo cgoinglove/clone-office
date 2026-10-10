@@ -1,6 +1,7 @@
 import * as z from "zod";
 import {
   archiveChat,
+  chatExists,
   listChats,
   readChat,
   renameChat,
@@ -27,10 +28,8 @@ export async function GET(request: Request) {
       Math.max(1, Number(params.get("limit")) || 30),
     );
     const archived = params.get("archived") === "1";
-    const chats = await listChats(limit + 1, {
-      archived,
-      match: params.get("q") ?? undefined,
-    });
+    const match = params.get("q") ?? undefined;
+    const chats = await listChats(limit + 1, { archived, match });
     return Response.json({
       chats: chats.slice(0, limit).map(({ id, title, updated, turns }) => ({
         id,
@@ -40,9 +39,10 @@ export async function GET(request: Request) {
       })),
       // Past `MOST` the list stops growing, so it says there is no more rather than asking forever.
       more: chats.length > limit && limit < MOST,
+      // a search answers what it found; only an empty list looks further
       asked:
         chats.length > 0 ||
-        (await listChats(1, { archived: !archived })).length > 0,
+        (!match && (await listChats(1, { archived: !archived })).length > 0),
     });
   }
   const chat = await readChat(id).catch(() => undefined);
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
   const { id } = body.data;
-  if (!(await readChat(id).catch(() => undefined)))
+  if (!(await chatExists(id)))
     return Response.json({ error: "not-found" }, { status: 404 });
   if (body.data.action === "rename") await renameChat(id, body.data.title);
   else await archiveChat(id, body.data.archived);

@@ -408,14 +408,6 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-@keyframes room-k-line {
-  from {
-    stroke-dashoffset: 1;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
 @keyframes room-k-fade {
   from {
     opacity: 0;
