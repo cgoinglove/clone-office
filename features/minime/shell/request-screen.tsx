@@ -25,6 +25,7 @@ import { taskOf } from "./your-turn";
 export function RequestScreen({ id }: { id: string }) {
   const t = useTranslations("shell.request");
   const tOffice = useTranslations("office");
+  const tPhase = useTranslations("shell.phase");
   const format = useFormatter();
   const app = useApp();
   const { office } = app;
@@ -308,7 +309,12 @@ export function RequestScreen({ id }: { id: string }) {
           <h2 className="text-xs font-semibold text-muted-foreground">
             {t("state")}
           </h2>
-          <p className="text-sm">{tOffice(`state.${task.status.state}`)}</p>
+          {/* while it goes on, said as the chips say it, from the person's side; once over, how */}
+          <p className="text-sm">
+            {phase === "done"
+              ? tOffice(`state.${task.status.state}`)
+              : tPhase(phase)}
+          </p>
           <p className="text-xs text-muted-foreground">
             {t("updated", { at: time(task.status.timestamp) })}
           </p>

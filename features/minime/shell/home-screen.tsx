@@ -562,7 +562,7 @@ function Section({
         <h2
           id={id}
           tabIndex={-1}
-          className="flex items-center gap-2 rounded-sm text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="-mx-1 flex items-center gap-2 rounded-sm px-1 text-[15px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {title}
           {count !== undefined && count > 0 && (

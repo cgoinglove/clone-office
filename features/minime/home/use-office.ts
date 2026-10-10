@@ -354,6 +354,8 @@ export function useOffice(
         const response = await fetch("/api/me/office", {
           method: "POST",
           headers: HEADERS,
+          // a step taken as the page goes (an answer whose Undo ran out) still arrives
+          keepalive: true,
           body: JSON.stringify(body),
         }).catch(() => undefined);
         const data = await response?.json().catch(() => ({}));

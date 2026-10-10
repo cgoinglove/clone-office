@@ -477,7 +477,7 @@
     "state": {
       "SUBMITTED": "已发送",
       "WORKING": "处理中",
-      "INPUT_REQUIRED": "等待回答",
+      "INPUT_REQUIRED": "等待回复",
       "COMPLETED": "完成",
       "FAILED": "失败",
       "CANCELED": "已取消",
@@ -1285,12 +1285,12 @@
       "inNow": "在岗 {count}/{all}",
       "fold": "收起",
       "answering": "即将发送“{choice}”",
-      "answerTo": "回复{who}：“{choice}”",
-      "cloneOf": "{name}的分身",
-      "yourClone": "你的分身",
       "undone": "已撤回，什么也没有发出",
-      "sentTo": "已向{who}发送“{choice}”。",
-      "noneLeft": "没有待你决定的事了。"
+      "noneLeft": "没有待你决定的事了。",
+      "answerFor": "{name}的请求：“{choice}”",
+      "answerToClone": "告诉你的分身：“{choice}”",
+      "sentFor": "已把“{choice}”告诉你的分身，它会接着回复{name}的请求。",
+      "sentToClone": "已告诉你的分身：“{choice}”。"
     },
     "clone": {
       "title": "你的分身",
@@ -1540,7 +1540,7 @@
       "sendOpen": "发送，保持进行",
       "handBack": "交还给我的分身",
       "takeOver": "我来接手",
-      "answerClose": "以我的名义回复{name}并结束"
+      "answerClose": "以我的回答回复{name}并结束"
     },
     "file": {
       "where": "分身的工作文件夹 · {path}",

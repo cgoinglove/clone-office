@@ -76,7 +76,15 @@ export function TurnRows({
         const sent = sending.hidden.has(item.key)
           ? chosen[item.key]
           : undefined;
-        const who = from ? t("cloneOf", { name: fromName }) : t("yourClone");
+        // the answer goes to the person's own clone, which answers the colleague as it goes on
+        const told = (choice: string) =>
+          from
+            ? t("answerFor", { name: fromName, choice })
+            : t("answerToClone", { choice });
+        const gone = (choice: string) =>
+          from
+            ? t("sentFor", { name: fromName, choice })
+            : t("sentToClone", { choice });
         const question = `q-${item.key}`;
         const choose = (option: { reply: string; label: string }) => {
           if (performance.now() - movedAt.current < SETTLE_MS) return;
@@ -84,58 +92,53 @@ export function TurnRows({
           movedAt.current = performance.now();
           setChosen((all) => ({ ...all, [item.key]: option.label }));
           app.markAnswering(item.key, true);
-          sending.remove(
-            item.key,
-            t("answerTo", { who, choice: option.label }),
-            {
-              commit: async () => {
-                // where the keyboard goes once this row is gone: the question after it, else the heading
-                const row = rowOf(item.key);
-                const here =
-                  !!row?.contains(document.activeElement) ||
-                  document.activeElement === document.body;
-                const after = row?.nextElementSibling?.getAttribute("data-row");
-                const last = (list.current?.children.length ?? 0) <= 1;
-                if (item.waiting)
-                  await app.office.answer(item.waiting, option.reply, false);
-                else if (item.chatAsk)
-                  await app.answerChatAsk(item.chatAsk.id, option.reply);
-                app.markAnswering(item.key, false);
-                app.announce(
-                  last
-                    ? `${t("sentTo", { who, choice: option.label })} ${t("noneLeft")}`
-                    : t("sentTo", { who, choice: option.label }),
-                );
-                if (here)
-                  requestAnimationFrame(() => {
-                    const next = after
-                      ? rowOf(after)?.querySelector<HTMLElement>(
-                          "[data-question]",
-                        )
-                      : undefined;
-                    (
-                      next ??
-                      (heading ? document.getElementById(heading) : null)
-                    )?.focus();
-                  });
-                return true;
-              },
-              undo: () => {
-                app.markAnswering(item.key, false);
-                app.announce(t("undone"));
-                // back on the choice it was, when the keyboard was on this row's Undo
-                const row = rowOf(item.key);
-                if (row?.contains(document.activeElement))
-                  requestAnimationFrame(() =>
-                    rowOf(item.key)
-                      ?.querySelector<HTMLElement>(
-                        `[data-choice="${CSS.escape(option.reply)}"]`,
+          sending.remove(item.key, told(option.label), {
+            commit: async () => {
+              // where the keyboard goes once this row is gone: the question after it, else the heading
+              const row = rowOf(item.key);
+              const here =
+                !!row?.contains(document.activeElement) ||
+                document.activeElement === document.body;
+              const after = row?.nextElementSibling?.getAttribute("data-row");
+              const last = (list.current?.children.length ?? 0) <= 1;
+              if (item.waiting)
+                await app.office.answer(item.waiting, option.reply, false);
+              else if (item.chatAsk)
+                await app.answerChatAsk(item.chatAsk.id, option.reply);
+              app.markAnswering(item.key, false);
+              app.announce(
+                last
+                  ? `${gone(option.label)} ${t("noneLeft")}`
+                  : gone(option.label),
+              );
+              if (here)
+                requestAnimationFrame(() => {
+                  const next = after
+                    ? rowOf(after)?.querySelector<HTMLElement>(
+                        "[data-question]",
                       )
-                      ?.focus(),
-                  );
-              },
+                    : undefined;
+                  (
+                    next ?? (heading ? document.getElementById(heading) : null)
+                  )?.focus();
+                });
+              return true;
             },
-          );
+            undo: () => {
+              app.markAnswering(item.key, false);
+              app.announce(t("undone"));
+              // back on the choice it was, when the keyboard was on this row's Undo
+              const row = rowOf(item.key);
+              if (row?.contains(document.activeElement))
+                requestAnimationFrame(() =>
+                  rowOf(item.key)
+                    ?.querySelector<HTMLElement>(
+                      `[data-choice="${CSS.escape(option.reply)}"]`,
+                    )
+                    ?.focus(),
+                );
+            },
+          });
           // The keyboard stays on this row, on its Undo: never on the next question's choice.
           requestAnimationFrame(() =>
             rowOf(item.key)?.querySelector<HTMLElement>("[data-undo]")?.focus(),
@@ -170,7 +173,7 @@ export function TurnRows({
                 id={question}
                 data-question
                 tabIndex={-1}
-                className="rounded-sm text-[13.5px] leading-snug font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="-mx-1 rounded-sm px-1 text-[13.5px] leading-snug font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
               >
                 {askLine(tAsk, ask)}
               </span>
@@ -184,13 +187,12 @@ export function TurnRows({
                     size="xs"
                     variant="ghost"
                     className="text-foreground"
-                    // its clock waits while it is pointed at or focused, as the toast's does
+                    // its clock waits while it is pointed at; the keyboard is put here by the app,
+                    // so its focus alone holds nothing, or the answer would never go
                     onPointerEnter={() => sending.hold(item.key, "row-pointer")}
                     onPointerLeave={() =>
                       sending.release(item.key, "row-pointer")
                     }
-                    onFocus={() => sending.hold(item.key, "row-focus")}
-                    onBlur={() => sending.release(item.key, "row-focus")}
                     onClick={() => {
                       // a second press just after the answer is a bounce, not a change of mind
                       if (performance.now() - movedAt.current < SETTLE_MS)

@@ -477,7 +477,7 @@
     "state": {
       "SUBMITTED": "Enviado",
       "WORKING": "Em andamento",
-      "INPUT_REQUIRED": "Precisa de resposta",
+      "INPUT_REQUIRED": "Aguardando resposta",
       "COMPLETED": "Concluído",
       "FAILED": "Falhou",
       "CANCELED": "Cancelado",
@@ -1285,12 +1285,12 @@
       "inNow": "{count} de {all} presentes",
       "fold": "Recolher",
       "answering": "“{choice}” vai em um instante",
-      "answerTo": "“{choice}” para {who}",
-      "cloneOf": "o clone de {name}",
-      "yourClone": "seu clone",
       "undone": "Desfeito: nada foi enviado",
-      "sentTo": "“{choice}” enviado para {who}.",
-      "noneLeft": "Não sobrou nada para decidir."
+      "noneLeft": "Não sobrou nada para decidir.",
+      "answerFor": "“{choice}” para o pedido de {name}",
+      "answerToClone": "“{choice}” ao seu clone",
+      "sentFor": "Você disse “{choice}” ao seu clone para o pedido de {name}; ele responde.",
+      "sentToClone": "Você disse “{choice}” ao seu clone."
     },
     "clone": {
       "title": "Seu clone",
@@ -1540,7 +1540,7 @@
       "sendOpen": "Enviar e manter aberto",
       "handBack": "Devolver ao meu clone",
       "takeOver": "Assumir",
-      "answerClose": "Enviar a {name} como meu e encerrar"
+      "answerClose": "Enviar minha resposta a {name} e encerrar"
     },
     "file": {
       "where": "Na área de trabalho do seu clone · {path}",

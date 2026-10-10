@@ -810,6 +810,14 @@
   box-shadow:
     0 0 0 1px var(--ink-12),
     0 10px 30px var(--ink-08);
+  transition: box-shadow 0.15s;
+}
+/* typing in it shows, as the app's own boxes show it */
+.of-wrap .box:focus-within {
+  box-shadow:
+    0 0 0 1px var(--ink-20),
+    0 0 0 4px var(--ink-05),
+    0 10px 30px var(--ink-08);
 }
 .of-wrap .box .me {
   width: 24px;
@@ -1319,7 +1327,8 @@
   transition: background-color 0.15s;
 }
 .of-wrap .lb-go:hover {
-  background: color-mix(in oklab, var(--brand-fill) 85%, transparent);
+  /* darker, as the app's brand buttons, so its words keep their contrast */
+  background: color-mix(in oklab, var(--brand-fill), black 14%);
 }
 .of-wrap .lb-go:active {
   transform: translateY(1px);

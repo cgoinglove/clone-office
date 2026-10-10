@@ -146,8 +146,9 @@ function sayUndoable(
 }
 
 /**
- * Lifts the toasts over the news cards only where one actually meets them: a narrow window, a long
- * toast. Measured from what is on screen, whenever either list or the window changes.
+ * Keeps a toast off the news cards only where one actually meets them, measured from what is on
+ * screen whenever either list or the window changes: it moves over into the room left of the
+ * cards where it fits there, and above them only where it does not (a phone).
  */
 function liftToasts() {
   const boxes = (slot: string) =>
@@ -157,13 +158,21 @@ function liftToasts() {
   const cards = boxes("notice");
   const toasts = boxes("toast");
   let lift = 0;
+  let aside = 0;
   if (cards.length && toasts.length) {
     const left = Math.min(...cards.map((box) => box.left));
     const top = Math.min(...cards.map((box) => box.top));
-    if (Math.max(...toasts.map((box) => box.right)) > left - 8)
-      lift = Math.round(window.innerHeight - top);
+    const widest = Math.max(...toasts.map((box) => box.width));
+    // judged by where it would stand centred on the whole window, never where it was put last
+    if (window.innerWidth / 2 + widest / 2 > left - 8) {
+      if (left - 8 - 16 >= widest)
+        aside = Math.round(window.innerWidth - left + 8);
+      else lift = Math.round(window.innerHeight - top);
+    }
   }
-  document.documentElement.style.setProperty("--notice-stack", `${lift}px`);
+  const root = document.documentElement.style;
+  root.setProperty("--notice-stack", `${lift}px`);
+  root.setProperty("--toast-aside", `${aside}px`);
 }
 
 /** How toasts and notices stack, move in and leave; each list sets its own gap and entry. */
@@ -311,7 +320,7 @@ function Toaster() {
           data-slot="toast-viewport"
           aria-label={t("noticesLabel")}
           // above the box at the bottom, and above any news card standing there
-          className="pointer-events-none fixed inset-x-4 bottom-[max(1.5rem,calc(var(--notice-lift,0px)+0.75rem),calc(var(--notice-stack,0px)+0.5rem))] z-100 mx-auto h-11 outline-none"
+          className="pointer-events-none fixed right-[max(1rem,var(--toast-aside,0px))] bottom-[max(1.5rem,calc(var(--notice-lift,0px)+0.75rem),calc(var(--notice-stack,0px)+0.5rem))] left-4 z-100 mx-auto h-11 outline-none"
         >
           <ToastList />
         </ToastPrimitive.Viewport>

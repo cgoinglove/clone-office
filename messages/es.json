@@ -477,7 +477,7 @@
     "state": {
       "SUBMITTED": "Enviada",
       "WORKING": "En curso",
-      "INPUT_REQUIRED": "Necesita respuesta",
+      "INPUT_REQUIRED": "Esperando respuesta",
       "COMPLETED": "Terminada",
       "FAILED": "Fallida",
       "CANCELED": "Cancelada",
@@ -1285,12 +1285,12 @@
       "inNow": "{count} de {all} dentro",
       "fold": "Plegar",
       "answering": "«{choice}» se envía en un momento",
-      "answerTo": "«{choice}» para {who}",
-      "cloneOf": "el clon de {name}",
-      "yourClone": "tu clon",
       "undone": "Deshecho: no se envió nada",
-      "sentTo": "Enviado «{choice}» a {who}.",
-      "noneLeft": "No queda nada por decidir."
+      "noneLeft": "No queda nada por decidir.",
+      "answerFor": "«{choice}» para la petición de {name}",
+      "answerToClone": "«{choice}» a tu clon",
+      "sentFor": "Le dijiste «{choice}» a tu clon para la petición de {name}; él responde.",
+      "sentToClone": "Le dijiste «{choice}» a tu clon."
     },
     "clone": {
       "title": "Tu clon",
@@ -1540,7 +1540,7 @@
       "sendOpen": "Enviar y dejarla abierta",
       "handBack": "Devolvérsela a mi clon",
       "takeOver": "Hacerme cargo",
-      "answerClose": "Enviar a {name} como mío y cerrar"
+      "answerClose": "Enviar mi respuesta a {name} y cerrar"
     },
     "file": {
       "where": "En el espacio de trabajo de tu clon · {path}",

@@ -477,7 +477,7 @@
     "state": {
       "SUBMITTED": "Sent",
       "WORKING": "Working",
-      "INPUT_REQUIRED": "Needs an answer",
+      "INPUT_REQUIRED": "Waiting for an answer",
       "COMPLETED": "Done",
       "FAILED": "Failed",
       "CANCELED": "Canceled",
@@ -1285,12 +1285,12 @@
       "inNow": "{count} of {all} in",
       "fold": "Fold",
       "answering": "“{choice}” goes in a moment",
-      "answerTo": "“{choice}” to {who}",
-      "cloneOf": "{name}'s clone",
-      "yourClone": "your clone",
       "undone": "Taken back: nothing was sent",
-      "sentTo": "Sent “{choice}” to {who}.",
-      "noneLeft": "Nothing left to decide."
+      "noneLeft": "Nothing left to decide.",
+      "answerFor": "“{choice}” for {name}'s request",
+      "answerToClone": "“{choice}” to your clone",
+      "sentFor": "Told your clone “{choice}” for {name}'s request; it answers them.",
+      "sentToClone": "Told your clone “{choice}”."
     },
     "clone": {
       "title": "Your clone",
@@ -1540,7 +1540,7 @@
       "sendOpen": "Send, keep it open",
       "handBack": "Hand it back to my clone",
       "takeOver": "Take it over",
-      "answerClose": "Send to {name} as mine, and close"
+      "answerClose": "Send my answer to {name} and close"
     },
     "file": {
       "where": "In your clone's workspace · {path}",

@@ -477,7 +477,7 @@
     "state": {
       "SUBMITTED": "送信済み",
       "WORKING": "対応中",
-      "INPUT_REQUIRED": "回答待ち",
+      "INPUT_REQUIRED": "返事待ち",
       "COMPLETED": "完了",
       "FAILED": "失敗",
       "CANCELED": "キャンセル",
@@ -1285,12 +1285,12 @@
       "inNow": "出勤 {count}/{all}",
       "fold": "たたむ",
       "answering": "まもなく「{choice}」と答えます",
-      "answerTo": "{who}に「{choice}」",
-      "cloneOf": "{name}さんのクローン",
-      "yourClone": "あなたのクローン",
       "undone": "取り消しました。何も送っていません",
-      "sentTo": "{who}に「{choice}」と答えました。",
-      "noneLeft": "決めることはもうありません。"
+      "noneLeft": "決めることはもうありません。",
+      "answerFor": "{name}さんの依頼に「{choice}」",
+      "answerToClone": "自分のクローンに「{choice}」",
+      "sentFor": "{name}さんの依頼に「{choice}」と自分のクローンに伝えました。クローンが続けて答えます。",
+      "sentToClone": "自分のクローンに「{choice}」と伝えました。"
     },
     "clone": {
       "title": "あなたのクローン",
@@ -1540,7 +1540,7 @@
       "sendOpen": "送って続ける",
       "handBack": "クローンに戻す",
       "takeOver": "自分が引き取る",
-      "answerClose": "{name}さんに自分の答えとして送って終える"
+      "answerClose": "{name}さんに自分の答えを送って終える"
     },
     "file": {
       "where": "クローンの作業フォルダー · {path}",

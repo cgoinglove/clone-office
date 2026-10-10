@@ -166,7 +166,7 @@ function PaletteBody({ close }: { close: () => void }) {
         />
         <kbd
           aria-hidden
-          className="font-mono text-[11px] text-muted-foreground"
+          className="font-mono text-[11px] text-muted-foreground pointer-coarse:hidden"
         >
           {keys.key("Escape")}
         </kbd>
@@ -348,7 +348,8 @@ function PaletteBody({ close }: { close: () => void }) {
           ))}
         </Command.Group>
       </Command.List>
-      <div className="flex h-10 items-center gap-4 border-t border-border/60 px-[18px] text-xs text-muted-foreground">
+      {/* keys to press mean nothing on a screen of fingers */}
+      <div className="flex h-10 items-center gap-4 border-t border-border/60 px-[18px] text-xs text-muted-foreground pointer-coarse:hidden">
         <span className="flex items-center gap-1.5">
           <kbd className="font-mono text-[11px]">↑↓</kbd>
           {t("palette.move")}

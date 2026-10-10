@@ -477,7 +477,7 @@
     "state": {
       "SUBMITTED": "보냄",
       "WORKING": "처리 중",
-      "INPUT_REQUIRED": "추가 정보 필요",
+      "INPUT_REQUIRED": "답 기다리는 중",
       "COMPLETED": "완료",
       "FAILED": "실패",
       "CANCELED": "취소됨",
@@ -1285,12 +1285,12 @@
       "inNow": "출근 {count}/{all}",
       "fold": "접기",
       "answering": "“{choice}” 답을 곧 보내요",
-      "answerTo": "{who}에게 “{choice}”",
-      "cloneOf": "{name} 님의 클론",
-      "yourClone": "내 클론",
       "undone": "되돌렸어요. 아무것도 보내지 않았어요",
-      "sentTo": "{who}에게 “{choice}” 답을 보냈어요.",
-      "noneLeft": "이제 정할 것이 없어요."
+      "noneLeft": "이제 정할 것이 없어요.",
+      "answerFor": "{name} 님 부탁에 “{choice}”",
+      "answerToClone": "내 클론에게 “{choice}”",
+      "sentFor": "{name} 님 부탁에 “{choice}”라고 내 클론에게 전했어요. 클론이 이어서 답해요.",
+      "sentToClone": "내 클론에게 “{choice}”라고 전했어요."
     },
     "clone": {
       "title": "내 클론",

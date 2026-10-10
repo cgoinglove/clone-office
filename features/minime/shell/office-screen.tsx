@@ -106,8 +106,9 @@ export function OfficeScreen() {
   const [boardOpen, setBoardOpen] = useState(false);
   // On a phone a folded board stays mounted, hidden, so an answer waiting out its Undo there is
   // not sent by folding it.
-  const boardOn = turns.length > 0 && !atLobby && !panelOpen;
-  const boardShown = boardOn && (!small || boardOpen);
+  // It is there, unseen, through the lobby and the ride too, so the floor behind the lift's doors
+  // is framed beside it already and nothing moves as they open.
+  const boardOn = turns.length > 0 && !panelOpen;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -116,7 +117,7 @@ export function OfficeScreen() {
           <h1
             id="office-title"
             tabIndex={-1}
-            className="rounded-sm text-[17px] leading-tight font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="-mx-1 rounded-sm px-1 text-[17px] leading-tight font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           >
             {t("title")}
           </h1>
@@ -176,7 +177,7 @@ export function OfficeScreen() {
             data={room}
             lobby={lobby && preferences.lobby}
             // on a phone the board lies over the floor, which stays as it is beneath it
-            inset={boardShown && !small ? BOARD + 32 : 0}
+            inset={boardOn && !small ? BOARD + 32 : 0}
             insetHeight={small ? 0 : boardHeight}
             turnShown
             onPanel={setPanelOpen}
@@ -198,7 +199,8 @@ export function OfficeScreen() {
         )}
         {boardOn && (
           <Board
-            hidden={!boardShown}
+            hidden={small && !boardOpen}
+            unseen={atLobby}
             turns={turns}
             count={app.toDecide.length}
             onHeight={setBoardHeight}
@@ -256,12 +258,15 @@ export function OfficeScreen() {
 /** What waits on the person, hung over the office: answered in place when it is a tap. */
 function Board({
   hidden,
+  unseen,
   turns,
   count,
   onHeight,
   onFold,
 }: {
   hidden: boolean;
+  /** Laid out but not seen nor reached (the lobby and the ride), so its room is known. */
+  unseen: boolean;
   turns: TurnItem[];
   /** How many still wait (an answer on its way stays on the board, uncounted). */
   count: number;
@@ -290,13 +295,16 @@ function Board({
       hidden={hidden}
       aria-labelledby="o-turn"
       style={{ width: BOARD }}
-      className="absolute top-4 right-4 z-10 flex max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[14px] bg-background/97 shadow-[0_0_0_1px_var(--alpha-08),0_18px_40px_-20px_var(--alpha-20)]"
+      className={cn(
+        unseen && "invisible",
+        "absolute top-4 right-4 z-10 flex max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[14px] bg-background/97 shadow-[0_0_0_1px_var(--alpha-08),0_18px_40px_-20px_var(--alpha-20)]",
+      )}
     >
       <div className="flex items-center gap-2 px-4 pt-3.5 pb-2.5">
         <h2
           id="o-turn"
           tabIndex={-1}
-          className="rounded-sm text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="-mx-1 rounded-sm px-1 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {t("yourTurn")}
         </h2>
