@@ -459,7 +459,8 @@
 .of-wrap .plate.off {
   background: color-mix(in oklab, var(--paper) 70%, transparent);
   box-shadow: 0 0 0 1px var(--ink-08);
-  color: var(--ink-45);
+  /* quieter than those in, still read at 4.5:1 */
+  color: var(--muted);
 }
 .of-wrap .plate.off b {
   font-weight: 500;
@@ -1327,6 +1328,12 @@
   width: 16px;
   height: 16px;
 }
+/* a key to press means nothing on a screen of fingers */
+@media (pointer: coarse) {
+  .of-wrap .lb-go kbd {
+    display: none;
+  }
+}
 .of-wrap .lb-go kbd {
   font: 500 11px / 1 var(--font-mono);
   color: color-mix(in oklab, var(--brand-foreground) 92%, transparent);
@@ -1462,6 +1469,13 @@
 }
 .of-wrap.of-full .composer {
   bottom: 18px;
+}
+/* narrowest, the box rides above the views and zoom: said again here, after the full screen's own
+   placement, which would otherwise win and lay the box over them */
+@container (max-width: 640px) {
+  .of-wrap.of-full .composer {
+    bottom: 62px;
+  }
 }
 .of-wrap.of-full .panel {
   top: 66px;

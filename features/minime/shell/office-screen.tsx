@@ -94,7 +94,9 @@ export function OfficeScreen() {
       : showLatest
         ? latest
         : undefined;
-  const meets = app.joined && members.length > 1 && !atLobby;
+  // the meeting's buttons keep their room through the lobby and the ride (unseen, out of reach), so
+  // the header does not grow as the doors open and the floor is not framed again
+  const meets = app.joined && members.length > 1;
   // how far down the board over the office reaches: the floor may pass beneath it
   const [boardHeight, setBoardHeight] = useState(0);
   // the office's own panel about one person and the board take turns at the right
@@ -114,7 +116,7 @@ export function OfficeScreen() {
           <h1
             id="office-title"
             tabIndex={-1}
-            className="text-[17px] leading-tight font-semibold outline-none"
+            className="rounded-sm text-[17px] leading-tight font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {t("title")}
           </h1>
@@ -136,22 +138,24 @@ export function OfficeScreen() {
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
           {meets && (
-            <MeetingStart
-              onStarted={() => {
-                setClosedId(undefined);
-                setShowLatest(false);
-              }}
-            />
-          )}
-          {meets && latest && !shown && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowLatest(true)}
-            >
-              <MessagesSquare />
-              {tMeeting("latest")}
-            </Button>
+            <span className={cn("contents", atLobby && "invisible")}>
+              <MeetingStart
+                onStarted={() => {
+                  setClosedId(undefined);
+                  setShowLatest(false);
+                }}
+              />
+              {latest && !shown && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowLatest(true)}
+                >
+                  <MessagesSquare />
+                  {tMeeting("latest")}
+                </Button>
+              )}
+            </span>
           )}
           <Button
             variant="secondary"
@@ -171,11 +175,12 @@ export function OfficeScreen() {
             className="of-pane"
             data={room}
             lobby={lobby && preferences.lobby}
-            inset={boardShown ? BOARD + 32 : 0}
-            insetHeight={boardHeight}
+            // on a phone the board lies over the floor, which stays as it is beneath it
+            inset={boardShown && !small ? BOARD + 32 : 0}
+            insetHeight={small ? 0 : boardHeight}
             turnShown
             onPanel={setPanelOpen}
-            insetLeft={shown && meets ? MEETING + 32 : 0}
+            insetLeft={shown && meets && !atLobby ? MEETING + 32 : 0}
             onEnter={() => {
               rememberClockIn();
               // the lobby's button goes with the lobby: the keyboard lands on the office
@@ -233,7 +238,7 @@ export function OfficeScreen() {
             <ChevronDown className="size-3.5" />
           </button>
         )}
-        {shown && meets && (
+        {shown && meets && !atLobby && (
           <MeetingPanel
             meeting={shown}
             width={MEETING}
@@ -291,7 +296,7 @@ function Board({
         <h2
           id="o-turn"
           tabIndex={-1}
-          className="text-sm font-semibold outline-none"
+          className="rounded-sm text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           {t("yourTurn")}
         </h2>
@@ -324,7 +329,12 @@ function Board({
           </Tip>
         )}
       </div>
-      <TurnRows turns={turns} heading="o-turn" className="overflow-y-auto" />
+      {/* when the last is answered the board goes, and the keyboard lands on the office's title */}
+      <TurnRows
+        turns={turns}
+        heading="office-title"
+        className="overflow-y-auto"
+      />
     </section>
   );
 }

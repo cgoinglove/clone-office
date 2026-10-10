@@ -2924,7 +2924,12 @@ export function createOffice(
       insetL = nextL;
       insetH = nextH;
       if (!plan || lobbyOn || !opened || destroyed) return;
-      glide(focus ? deskView(focus) : floorView(), 650);
+      // the person's own framing stays where they moved or zoomed it; a desk in view stays in view
+      if (userMoved && !focus) return;
+      glide(
+        focus ? deskView(focus) : atDesk && me ? deskView(me) : floorView(),
+        650,
+      );
     },
     closePanel() {
       if (panel.hidden) return;

@@ -163,6 +163,13 @@ export function useAppState() {
     () => turns.filter((item) => !answering.has(item.key)),
     [turns, answering],
   );
+  // What a screen reader hears of a step taken (an answer sent or taken back), said from the frame
+  // so it is heard even when the part that took it is gone.
+  const [said, setSaid] = useState("");
+  const announce = useCallback((text: string) => {
+    setSaid("");
+    requestAnimationFrame(() => setSaid(text));
+  }, []);
   /** The requests with a question still waiting on the person, as every list marks them. */
   const tasksToDecide = useMemo(
     () =>
@@ -198,6 +205,8 @@ export function useAppState() {
       turns,
       toDecide,
       tasksToDecide,
+      said,
+      announce,
       answering,
       markAnswering,
       answerChatAsk,
@@ -219,6 +228,8 @@ export function useAppState() {
       turns,
       toDecide,
       tasksToDecide,
+      said,
+      announce,
       answering,
       markAnswering,
       answerChatAsk,

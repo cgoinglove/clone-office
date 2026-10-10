@@ -46,7 +46,6 @@ export function AskCard({
   const t = useTranslations("ask");
   const flows = useTranslations("flows");
   const format = useFormatter();
-  const send = useTranslations("common")("send");
   const [own, setOwn] = useState("");
   const [always, setAlways] = useState(false);
   const { ask } = turn;
@@ -156,8 +155,14 @@ export function AskCard({
               className="min-h-9 flex-1"
               onChange={(event) => setOwn(event.target.value)}
             />
-            <Button type="submit" size="sm" disabled={!own.trim()}>
-              {send}
+            {/* says whom the words go to: the clone that asked, never past it */}
+            <Button
+              type="submit"
+              size="sm"
+              variant="secondary"
+              disabled={!own.trim()}
+            >
+              {t("replyToClone")}
             </Button>
           </form>
         </div>

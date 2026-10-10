@@ -71,7 +71,10 @@ if (typeof window !== "undefined")
   });
 
 /** The clocks of toasts with an Undo, held while the person points at or focuses them. */
-const holds = new Map<string, { hold: () => void; release: () => void }>();
+const holds = new Map<
+  string,
+  { hold: (by: string) => void; release: (by: string) => void }
+>();
 
 /**
  * Something small the person can take back (a memory line, a flow): it is hidden at once and done
@@ -89,6 +92,12 @@ function sayUndoable(
   let settled = false;
   let id = "";
   let timer: ReturnType<typeof setTimeout> | undefined;
+  // One clock, its own: the toast itself never times out, so nothing else can make the step.
+  let left = ms;
+  let since = Date.now();
+  // who holds it now (the pointer on the toast, focus in it, the same on an Undo beside the item):
+  // each counted once, however often it says so
+  const holders = new Set<string>();
   const settle = (run: () => void) => {
     if (settled) return;
     settled = true;
@@ -99,21 +108,30 @@ function sayUndoable(
     run();
   };
   const done = () => settle(commit);
-  timer = setTimeout(done, ms);
+  timer = setTimeout(done, left);
   pending.add(done);
   id = toast.add({
     title,
     type: "done",
-    timeout: ms,
+    timeout: 0,
     actionProps: { children: undoLabel, onClick: () => settle(undo) },
     onClose: done,
   });
   holds.set(id, {
-    hold: () => clearTimeout(timer),
-    // a little time back once the pointer or focus leaves, to read it again or press Undo
-    release: () => {
+    // waits while it is pointed at or focused (the toast, or an Undo beside what it is about)
+    hold: (by: string) => {
+      if (settled || holders.has(by)) return;
+      holders.add(by);
+      if (holders.size > 1) return;
       clearTimeout(timer);
-      if (!settled) timer = setTimeout(done, 2500);
+      left = Math.max(0, left - (Date.now() - since));
+    },
+    // and runs on from where it was, with a little time back to read it again or press Undo
+    release: (by: string) => {
+      if (settled || !holders.delete(by) || holders.size > 0) return;
+      left = Math.max(left, 2500);
+      since = Date.now();
+      timer = setTimeout(done, left);
     },
   });
   // `undo` takes it back from elsewhere too (an Undo on the row the toast is about), and `hold` and
@@ -122,9 +140,30 @@ function sayUndoable(
     id,
     commit: done,
     undo: () => settle(undo),
-    hold: () => holds.get(id)?.hold(),
-    release: () => holds.get(id)?.release(),
+    hold: (by: string) => holds.get(id)?.hold(by),
+    release: (by: string) => holds.get(id)?.release(by),
   };
+}
+
+/**
+ * Lifts the toasts over the news cards only where one actually meets them: a narrow window, a long
+ * toast. Measured from what is on screen, whenever either list or the window changes.
+ */
+function liftToasts() {
+  const boxes = (slot: string) =>
+    [...document.querySelectorAll(`[data-slot="${slot}"]`)].map((el) =>
+      el.getBoundingClientRect(),
+    );
+  const cards = boxes("notice");
+  const toasts = boxes("toast");
+  let lift = 0;
+  if (cards.length && toasts.length) {
+    const left = Math.min(...cards.map((box) => box.left));
+    const top = Math.min(...cards.map((box) => box.top));
+    if (Math.max(...toasts.map((box) => box.right)) > left - 8)
+      lift = Math.round(window.innerHeight - top);
+  }
+  document.documentElement.style.setProperty("--notice-stack", `${lift}px`);
 }
 
 /** How toasts and notices stack, move in and leave; each list sets its own gap and entry. */
@@ -139,18 +178,22 @@ const STACK = [
 
 function ToastList() {
   const { toasts, close } = ToastPrimitive.useToastManager();
+  useLayoutEffect(() => {
+    void toasts;
+    liftToasts();
+  }, [toasts]);
   return toasts.map((item) => (
     <ToastPrimitive.Root
       key={item.id}
       toast={item}
       swipeDirection={["down", "right"]}
       data-slot="toast"
-      onPointerEnter={() => holds.get(item.id)?.hold()}
-      onPointerLeave={() => holds.get(item.id)?.release()}
-      onFocus={() => holds.get(item.id)?.hold()}
+      onPointerEnter={() => holds.get(item.id)?.hold("pointer")}
+      onPointerLeave={() => holds.get(item.id)?.release("pointer")}
+      onFocus={() => holds.get(item.id)?.hold("focus")}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null))
-          holds.get(item.id)?.release();
+          holds.get(item.id)?.release("focus");
       }}
       className={cn(
         STACK,
@@ -173,28 +216,11 @@ function ToastList() {
 
 function NoticeList() {
   const { toasts, close } = ToastPrimitive.useToastManager();
-  // How high the cards stand, so a toast at the bottom centre stands above them instead of on them
-  // where the window is too narrow to keep them apart.
+  // A toast at the bottom centre stands above the cards only where it would meet them.
   useLayoutEffect(() => {
     void toasts;
-    const measure = () => {
-      let top = window.innerHeight;
-      let left = window.innerWidth;
-      for (const card of document.querySelectorAll('[data-slot="notice"]')) {
-        const box = card.getBoundingClientRect();
-        top = Math.min(top, box.top);
-        left = Math.min(left, box.left);
-      }
-      // only where the widest toast, centred, would reach the cards: a wide window keeps both low
-      const reach =
-        window.innerWidth / 2 + Math.min(window.innerWidth * 0.46, 256);
-      document.documentElement.style.setProperty(
-        "--notice-stack",
-        `${reach > left - 8 ? Math.round(window.innerHeight - top) : 0}px`,
-      );
-    };
-    measure();
-    const settled = setTimeout(measure, 450);
+    liftToasts();
+    const settled = setTimeout(liftToasts, 450);
     return () => clearTimeout(settled);
   }, [toasts]);
   return toasts.map((item) => {
@@ -261,7 +287,11 @@ function Toaster() {
     const follow = () => setPhone(query.matches);
     follow();
     query.addEventListener("change", follow);
-    return () => query.removeEventListener("change", follow);
+    window.addEventListener("resize", liftToasts);
+    return () => {
+      query.removeEventListener("change", follow);
+      window.removeEventListener("resize", liftToasts);
+    };
   }, []);
   return (
     <ToastPrimitive.Provider toastManager={toast} limit={3}>

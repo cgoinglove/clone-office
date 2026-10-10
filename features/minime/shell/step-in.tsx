@@ -168,7 +168,7 @@ export function StepIn({
                     })
                   }
                 >
-                  {t("answerClose")}
+                  {t("answerClose", { name })}
                 </Button>
                 <Button
                   type="button"

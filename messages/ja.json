@@ -445,7 +445,8 @@
       "browser_close": "ブラウザーを閉じる",
       "browser_install": "ブラウザーをインストール",
       "browser_find": "ページ内を探す"
-    }
+    },
+    "replyToClone": "自分のクローンに答える"
   },
   "office": {
     "title": "オフィス",
@@ -1287,7 +1288,9 @@
       "answerTo": "{who}に「{choice}」",
       "cloneOf": "{name}さんのクローン",
       "yourClone": "あなたのクローン",
-      "undone": "取り消しました。何も送っていません"
+      "undone": "取り消しました。何も送っていません",
+      "sentTo": "{who}に「{choice}」と答えました。",
+      "noneLeft": "決めることはもうありません。"
     },
     "clone": {
       "title": "あなたのクローン",
@@ -1526,7 +1529,7 @@
     "stepIn": {
       "title": "介入する",
       "placeholder": "クローンに知っておいてほしいことは？次のステップの前に読みます。",
-      "tell": "クローンに伝える",
+      "tell": "自分のクローンに伝える",
       "answer": "自分で答える",
       "waits": "次のステップを待っています",
       "read": "既読",
@@ -1537,7 +1540,7 @@
       "sendOpen": "送って続ける",
       "handBack": "クローンに戻す",
       "takeOver": "自分が引き取る",
-      "answerClose": "自分で答えて終了"
+      "answerClose": "{name}さんに自分の答えとして送って終える"
     },
     "file": {
       "where": "クローンの作業フォルダー · {path}",
@@ -1606,7 +1609,8 @@
       "answer": "答える",
       "answered": "{name} さんが依頼に答えました"
     },
-    "skip": "本文へスキップ"
+    "skip": "本文へスキップ",
+    "closeMenu": "メニューを閉じる"
   },
   "page": {
     "notFound": {

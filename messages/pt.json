@@ -445,7 +445,8 @@
       "browser_close": "Fechar o navegador dele",
       "browser_install": "Instalar um navegador para ele",
       "browser_find": "Procurar na página"
-    }
+    },
+    "replyToClone": "Responder ao meu clone"
   },
   "office": {
     "title": "Escritório",
@@ -1287,7 +1288,9 @@
       "answerTo": "“{choice}” para {who}",
       "cloneOf": "o clone de {name}",
       "yourClone": "seu clone",
-      "undone": "Desfeito: nada foi enviado"
+      "undone": "Desfeito: nada foi enviado",
+      "sentTo": "“{choice}” enviado para {who}.",
+      "noneLeft": "Não sobrou nada para decidir."
     },
     "clone": {
       "title": "Seu clone",
@@ -1526,7 +1529,7 @@
     "stepIn": {
       "title": "Intervir",
       "placeholder": "O que seu clone precisa saber? Ele lê isto antes do próximo passo.",
-      "tell": "Avisar meu clone",
+      "tell": "Dizer ao meu clone",
       "answer": "Eu respondo",
       "waits": "Aguardando o próximo passo",
       "read": "Lida",
@@ -1537,7 +1540,7 @@
       "sendOpen": "Enviar e manter aberto",
       "handBack": "Devolver ao meu clone",
       "takeOver": "Assumir",
-      "answerClose": "Eu respondo e encerro"
+      "answerClose": "Enviar a {name} como meu e encerrar"
     },
     "file": {
       "where": "Na área de trabalho do seu clone · {path}",
@@ -1606,7 +1609,8 @@
       "answer": "Responder",
       "answered": "{name} respondeu ao seu pedido"
     },
-    "skip": "Pular para o conteúdo"
+    "skip": "Pular para o conteúdo",
+    "closeMenu": "Fechar menu"
   },
   "page": {
     "notFound": {

@@ -183,9 +183,10 @@ function Frame({ children }: { children: ReactNode }) {
     setSettings("office");
   }, [invite, setSettings]);
 
-  const sidebar = (onFold: () => void, className?: string) => (
+  const sidebar = (onFold: () => void, className?: string, drawer = false) => (
     <Sidebar
       onFold={onFold}
+      drawer={drawer}
       onSearch={() => setPalette(true)}
       onShortcuts={() => setKeys(true)}
       className={className}
@@ -194,6 +195,10 @@ function Frame({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1">
+      {/* what a screen reader is told of a step taken, from wherever it was taken */}
+      <p aria-live="polite" className="sr-only">
+        {app.said}
+      </p>
       {/* the first stop for the keyboard: past the column, straight to the screen */}
       <a
         href="#content"
@@ -290,7 +295,7 @@ function Frame({ children }: { children: ReactNode }) {
               }}
               className="fixed inset-y-0 left-0 z-40 bg-background shadow-[12px_0_32px_-12px_var(--shade)] outline-none duration-200 data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left"
             >
-              {sidebar(() => setDrawer(false), "w-[min(18rem,85vw)]")}
+              {sidebar(() => setDrawer(false), "w-[min(18rem,85vw)]", true)}
             </DialogPrimitive.Popup>
           </DialogPrimitive.Portal>
         </DialogPrimitive.Root>

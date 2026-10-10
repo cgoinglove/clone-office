@@ -67,13 +67,14 @@ const row = (on: boolean) =>
   cn(
     "group flex h-8 min-w-0 items-center gap-2.5 rounded-lg px-2.5 text-[14px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
     on
-      ? "bg-foreground/[0.07] font-medium text-foreground"
+      ? // on the open row's fill, its grey words are a step darker, to stay at 4.5:1
+        "bg-foreground/[0.07] font-medium text-foreground [&_.text-muted-foreground]:text-foreground/70"
       : "text-foreground/75 hover:bg-foreground/[0.045] hover:text-foreground",
   );
 
 /** A key shown only while the row is pointed at or focused, so the column stays quiet. */
 const hoverKey =
-  "font-mono text-[10.5px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100";
+  "font-mono text-[10.5px] text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100 pointer-coarse:hidden";
 
 /** A square button with only an icon, the app's ghost button; its words are in its tip. */
 export const iconButton = cn(
@@ -83,12 +84,15 @@ export const iconButton = cn(
 
 export function Sidebar({
   onFold,
+  drawer = false,
   onSearch,
   onShortcuts,
   className,
 }: {
   /** Folds the column away, or closes it when it is a drawer. */
   onFold: () => void;
+  /** Shown as a drawer on a narrow window: its top button closes it, with no key of its own. */
+  drawer?: boolean;
   onSearch: () => void;
   onShortcuts: () => void;
   className?: string;
@@ -150,7 +154,10 @@ export function Sidebar({
         >
           {APP_NAME}
         </Link>
-        <Tip label={t("fold")} keys={keys.label("Backslash")}>
+        <Tip
+          label={drawer ? t("closeMenu") : t("fold")}
+          keys={drawer ? undefined : keys.label("Backslash")}
+        >
           <button
             type="button"
             data-fold

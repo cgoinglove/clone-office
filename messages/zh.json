@@ -445,7 +445,8 @@
       "browser_close": "关闭它的浏览器",
       "browser_install": "为它安装浏览器",
       "browser_find": "在页面上查找"
-    }
+    },
+    "replyToClone": "回答我的分身"
   },
   "office": {
     "title": "办公室",
@@ -1287,7 +1288,9 @@
       "answerTo": "回复{who}：“{choice}”",
       "cloneOf": "{name}的分身",
       "yourClone": "你的分身",
-      "undone": "已撤回，什么也没有发出"
+      "undone": "已撤回，什么也没有发出",
+      "sentTo": "已向{who}发送“{choice}”。",
+      "noneLeft": "没有待你决定的事了。"
     },
     "clone": {
       "title": "你的分身",
@@ -1537,7 +1540,7 @@
       "sendOpen": "发送，保持进行",
       "handBack": "交还给我的分身",
       "takeOver": "我来接手",
-      "answerClose": "我自己回答并结束"
+      "answerClose": "以我的名义回复{name}并结束"
     },
     "file": {
       "where": "分身的工作文件夹 · {path}",
@@ -1606,7 +1609,8 @@
       "answer": "去回答",
       "answered": "{name} 回复了你的请求"
     },
-    "skip": "跳到正文"
+    "skip": "跳到正文",
+    "closeMenu": "关闭菜单"
   },
   "page": {
     "notFound": {

@@ -54,7 +54,8 @@ export function useUndoableRemoval(undoLabel: string) {
   /** Takes one back before its time, as its toast's Undo does (an Undo shown beside the item). */
   const undo = (key: string) => pending.current.get(key)?.undo();
   /** Pauses its clock while the Undo beside the item is pointed at or focused, and lets it run on. */
-  const hold = (key: string) => pending.current.get(key)?.hold();
-  const release = (key: string) => pending.current.get(key)?.release();
+  const hold = (key: string, by: string) => pending.current.get(key)?.hold(by);
+  const release = (key: string, by: string) =>
+    pending.current.get(key)?.release(by);
   return { hidden, remove, undo, hold, release };
 }
