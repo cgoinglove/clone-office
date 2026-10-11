@@ -137,6 +137,9 @@ class Tries {
 
   miss(from: string, now = Date.now()): void {
     this.seen.set(from, [...this.recent(from, now), now]);
+    // Addresses whose tries are past are let go, so the count never grows without end.
+    if (this.seen.size > 10_000)
+      for (const address of [...this.seen.keys()]) this.recent(address, now);
   }
 }
 
@@ -202,8 +205,6 @@ export function relayHandler(
 ) {
   const accounts = options.accounts;
   const tries = new Tries(20, 10 * 60 * 1000);
-  // Sign-ins started with Google from one address, which each make a way back to check.
-  const starts = new Tries(30, 10 * 60 * 1000);
   const address = (request: IncomingMessage): string =>
     (options.trustProxy
       ? String(request.headers["x-forwarded-for"] ?? "")
@@ -267,6 +268,17 @@ export function relayHandler(
     };
     const url = new URL(request.url ?? "/", "http://relay");
     const path = url.pathname;
+    /**
+     * An office's invite link as people copy it: the inviter's name readable (a space or a mark a
+     * link would read as its own is still written as a code).
+     */
+    const inviteLink = (key: string, from: string) =>
+      `${base()}/i/${key}?from=${from.replace(/[\s%&#?+=<>"']/g, (mark) => encodeURIComponent(mark))}`;
+    /** One of a person's offices: the one named, else the first they joined. */
+    const placeOf = <T extends { office: string }>(
+      places: T[],
+      chosen: string | null | undefined,
+    ) => places.find((place) => place.office === chosen) ?? places[0];
     /** How the invite's page guides someone to set up with its link, on the computer they opened it on. */
     const guide = (key: string, who?: string) => {
       const at = base();
@@ -320,6 +332,16 @@ export function relayHandler(
           html(403, missingPage(lang));
           return true;
         }
+        // Started where Google sends people back, so its way back finds the cookie that binds it.
+        const site = accounts.googleSite();
+        if (site && new URL(site).origin !== new URL(base()).origin) {
+          redirect(`${site}${path}${url.search}`);
+          return true;
+        }
+        if (path === "/home/google" && !(await accounts.person(cookie))) {
+          redirect("/login");
+          return true;
+        }
         const invited =
           googleInvite?.[1] ??
           (/^[\w-]{4,128}$/.test(url.searchParams.get("key") ?? "")
@@ -330,11 +352,6 @@ export function relayHandler(
           html(404, missingPage(lang));
           return true;
         }
-        if (starts.blocked(from)) {
-          html(429, missingPage(lang));
-          return true;
-        }
-        starts.miss(from);
         const who =
           url.searchParams.get("from")?.trim().slice(0, 80) || undefined;
         const invitePath = invited
@@ -358,7 +375,17 @@ export function relayHandler(
                   failed,
                   signUp: Boolean(invited),
                 });
-          redirect(started.url, started.cookies);
+          redirect(
+            started.url,
+            // From an invite's page, a mark that this browser came to join that office: an
+            // account Google makes lands in it without being asked, as it asked already.
+            googleInvite
+              ? [
+                  ...started.cookies,
+                  `sub-office.join=${googleInvite[1]}; Path=/i/; Max-Age=900; HttpOnly; SameSite=Lax`,
+                ]
+              : started.cookies,
+          );
         } catch (error) {
           const code =
             error instanceof AccountError ? error.code : "google-failed";
@@ -384,7 +411,11 @@ export function relayHandler(
           html(404, missingPage(lang));
           return true;
         }
-        redirect("/home");
+        // on to the office just joined
+        const office = await accounts.officeOf(joining[1]);
+        redirect(
+          office ? `/home?office=${encodeURIComponent(office.id)}` : "/home",
+        );
         return true;
       }
       if (key) {
@@ -404,10 +435,19 @@ export function relayHandler(
               redirect("/home");
               return true;
             }
-            // A new account (Google makes one from this very invite) lands in its office; one
-            // already in another office is asked first, as its name and email will show there.
-            if (!places.length && (await accounts.enter(key, person.id))) {
-              redirect("/home");
+            // An account Google just made from this very invite lands in its office; anyone
+            // else is asked first, as their name and email will show there.
+            const cameToJoin = /(?:^|;\s*)sub-office\.join=([\w-]+)/.exec(
+              cookie ?? "",
+            )?.[1];
+            if (
+              !places.length &&
+              cameToJoin === key &&
+              (await accounts.enter(key, person.id))
+            ) {
+              redirect("/home", [
+                "sub-office.join=; Path=/i/; Max-Age=0; HttpOnly; SameSite=Lax",
+              ]);
               return true;
             }
             html(
@@ -418,6 +458,7 @@ export function relayHandler(
                 name: person.name,
                 office: (await accounts.officeOf(key))?.name ?? "",
                 action: `/i/${key}/join`,
+                ...(who ? { invitedBy: who } : {}),
               }),
             );
             return true;
@@ -434,6 +475,7 @@ export function relayHandler(
               ...guide(key, who),
               // Google sent them back here: the page says why at its top.
               ...(failed ? { error: failed, errorAtTop: true } : {}),
+              ...(url.searchParams.has("account") ? { openAccount: true } : {}),
             }),
           );
           return true;
@@ -536,7 +578,11 @@ export function relayHandler(
           redirect("/login");
           return true;
         }
-        const [place] = await accounts.places(person.id);
+        const places = await accounts.places(person.id);
+        const chosen = post
+          ? new URLSearchParams(await raw(request)).get("office")
+          : url.searchParams.get("office");
+        const place = placeOf(places, chosen);
         const command =
           place && path === "/home/pair"
             ? connectCommand(
@@ -564,6 +610,14 @@ export function relayHandler(
             admin: await accounts.isAdmin(person.id),
             ways: await accounts.ways(person.id),
             methods,
+            events: (await accounts.events(person.id)).map((event) => ({
+              ...event,
+              at: new Date(event.at).toLocaleDateString(lang, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }),
+            })),
             people: people.map((one) => ({
               id: one.id,
               name: one.name,
@@ -579,9 +633,14 @@ export function relayHandler(
             ...(place
               ? {
                   office: {
+                    id: place.office,
                     name: place.name,
-                    invite: `${base()}/i/${place.key}?from=${encodeURIComponent(person.name)}`,
+                    invite: inviteLink(place.key, person.name),
                   },
+                  offices: places.map((one) => ({
+                    id: one.office,
+                    name: one.name,
+                  })),
                 }
               : {}),
             ...(mine
@@ -684,11 +743,22 @@ export function relayHandler(
           }
           const failed = failure();
           const done = url.searchParams.get("done");
+          // The Google form's failure, come back to with what was typed (a client ID is public).
+          const googleFailed = url.searchParams.get("google") ?? "";
           html(
             200,
             await page({
               ...(failed ? { error: failed } : {}),
               ...(done === "saved" ? { saved: true } : {}),
+              ...(/^[a-z-]{2,40}$/.test(googleFailed)
+                ? {
+                    googleError: googleFailed,
+                    clientId: (url.searchParams.get("client") ?? "").slice(
+                      0,
+                      260,
+                    ),
+                  }
+                : {}),
             }),
           );
           return true;
@@ -737,12 +807,8 @@ export function relayHandler(
           // The Google form comes back as it was typed (never the secret), its fold open, the
           // failure said under the field at fault.
           if (what === "google")
-            html(
-              400,
-              await page({
-                googleError: code,
-                clientId: (fields.get("clientId") ?? "").slice(0, 260),
-              }),
+            redirect(
+              `/home/admin?google=${encodeURIComponent(code)}&client=${encodeURIComponent((fields.get("clientId") ?? "").slice(0, 260))}#google`,
             );
           else redirect(`/home/admin?error=${encodeURIComponent(code)}`);
         }
@@ -756,7 +822,15 @@ export function relayHandler(
             redirect("/login?error=reset-expired");
             return true;
           }
-          html(200, newPasswordPage({ lang, token: token as string }));
+          const name = await accounts.resetFor(token as string);
+          html(
+            name ? 200 : 410,
+            newPasswordPage({
+              lang,
+              token: token as string,
+              ...(name ? { name } : {}),
+            }),
+          );
           return true;
         }
         const fields = new URLSearchParams(await raw(request));
@@ -775,7 +849,16 @@ export function relayHandler(
           const code =
             error instanceof AccountError ? error.code : "account-failed";
           if (code === "reset-expired") tries.miss(from);
-          html(400, newPasswordPage({ lang, token: given, error: code }));
+          const name = await accounts.resetFor(given);
+          html(
+            400,
+            newPasswordPage({
+              lang,
+              token: given,
+              error: code,
+              ...(name ? { name } : {}),
+            }),
+          );
         }
         return true;
       }
@@ -790,11 +873,19 @@ export function relayHandler(
           redirect("/login");
           return true;
         }
-        const [place] = await accounts.places(person.id);
+        // the office the change is about: named by the page it came from, else the first
+        const fields = post
+          ? new URLSearchParams(await raw(request))
+          : url.searchParams;
+        const place = placeOf(
+          await accounts.places(person.id),
+          fields.get("office"),
+        );
         if (!place) {
           redirect("/home");
           return true;
         }
+        const home = `/home?office=${encodeURIComponent(place.office)}`;
         const what = admin[1];
         if (!post) {
           const user = url.searchParams.get("user") ?? "";
@@ -808,7 +899,7 @@ export function relayHandler(
                   (one) => one.id === user,
                 )?.name;
           if (what === "office/name" || (what !== "invite/new" && !name)) {
-            redirect("/home");
+            redirect(home);
             return true;
           }
           html(
@@ -825,16 +916,19 @@ export function relayHandler(
                       : "newLink",
               name,
               action: path,
-              fields: what.startsWith("people/")
-                ? { user }
-                : what === "clones/remove"
-                  ? { member }
-                  : {},
+              back: home,
+              fields: {
+                office: place.office,
+                ...(what.startsWith("people/")
+                  ? { user }
+                  : what === "clones/remove"
+                    ? { member }
+                    : {}),
+              },
             }),
           );
           return true;
         }
-        const fields = new URLSearchParams(await raw(request));
         try {
           if (what === "people/remove")
             await accounts.removePerson(
@@ -862,11 +956,11 @@ export function relayHandler(
               place.office,
               fields.get("name") ?? "",
             );
-          redirect("/home");
+          redirect(home);
         } catch (error) {
           const code =
             error instanceof AccountError ? error.code : "account-failed";
-          redirect(`/home?error=${encodeURIComponent(code)}`);
+          redirect(`${home}&error=${encodeURIComponent(code)}`);
         }
         return true;
       }

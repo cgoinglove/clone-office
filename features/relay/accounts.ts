@@ -19,6 +19,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { type Auth, type BetterAuthOptions, betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { getMigrations } from "better-auth/db/migration";
 import { isSealed, openWith, sealWith } from "../../lib/seal.ts";
 import type { Database } from "./db.ts";
@@ -90,6 +91,11 @@ interface SignInKept {
 export interface SignInMethods {
   password: boolean;
   google: boolean;
+  /**
+   * Passwords let in only the server's admins: they were turned off, and are on again only because
+   * Google cannot be used just now, so the admin can mend it.
+   */
+  adminsOnly?: boolean;
 }
 
 /** The sign-in settings as the admin sees them: never the secret itself. */
@@ -104,6 +110,8 @@ export interface SignInSettings {
     /** Whether this server's key opens the secret kept. */
     readable: boolean;
   };
+  /** Whether passwords are kept off, whatever lets them in for now. */
+  passwordKeptOff: boolean;
   /** Whether a secret can be kept sealed here at all. */
   sealing: boolean;
   /** People who sign in only with a password, and only with Google. */
@@ -227,6 +235,10 @@ export class Accounts {
   private publicUrl: string | undefined;
   /** Reset tokens Better Auth just made, by account, for the admin to send on (no mail is sent). */
   private resets: Map<string, string>;
+  /** Reset links made one at a time, so each reads back its own token. */
+  private resetting: Promise<unknown> = Promise.resolve();
+  /** The Google client the settings open, worked out once per settings. */
+  private client: ReturnType<Accounts["opened"]>;
 
   private constructor(
     db: Database,
@@ -245,6 +257,7 @@ export class Accounts {
     this.kept = parseKept(keptText);
     this.sealKey = sealKey;
     this.publicUrl = publicUrl;
+    this.client = this.opened(this.kept);
     this.current = this.build();
   }
 
@@ -309,10 +322,13 @@ export class Accounts {
           create: {
             // An account made through Google only with an email Google has checked: none made
             // with an email someone merely claims.
-            before: async (user, context) =>
-              context?.path?.startsWith("/callback") && !user.emailVerified
-                ? false
-                : undefined,
+            before: async (user, context) => {
+              if (context?.path?.startsWith("/callback") && !user.emailVerified)
+                throw new APIError("FORBIDDEN", {
+                  code: "email_not_verified",
+                  message: "Google has not checked this email.",
+                });
+            },
           },
         },
         account: {
@@ -324,7 +340,11 @@ export class Accounts {
           },
         },
       },
-      verification: { modelName: "auth_verifications" },
+      // A reset link's token is kept only as its hash.
+      verification: {
+        modelName: "auth_verifications",
+        storeIdentifier: "hashed",
+      },
       // The tables are made at open (getMigrations), so Better Auth's own look at them, which it
       // starts in the background each time it is made, is left out: it would outlive a change.
       advanced: {
@@ -380,7 +400,15 @@ export class Accounts {
   }
 
   private google() {
-    return this.opened(this.kept);
+    return this.client;
+  }
+
+  /**
+   * The one address Google sends people back to: the public one, else the one it was set up at.
+   * A sign-in with Google starts there, so its way back finds the cookie that binds it.
+   */
+  googleSite(): string | undefined {
+    return this.publicUrl?.replace(/\/+$/, "") ?? this.google()?.site;
   }
 
   /** Better Auth with the ways in the settings allow. */
@@ -393,13 +421,11 @@ export class Accounts {
       ...(site ? { baseURL: site } : {}),
       advanced: {
         ...this.base.advanced,
-        // Named as the public address says, never as Google's way back does: turning Google on
-        // must not rename the cookies and sign everyone out. Marked secure all the same where
-        // the server is reached over https.
+        // Secure, and named so, as the public address says, never as Google's way back does:
+        // turning Google on must neither rename the cookies, signing everyone out, nor mark them
+        // secure where the server is also reached over plain http (its own network), where
+        // browsers would drop them. A server reached over https sets RELAY_PUBLIC_URL.
         useSecureCookies: Boolean(this.publicUrl?.startsWith("https:")),
-        ...(site?.startsWith("https:")
-          ? { defaultCookieAttributes: { secure: true } }
-          : {}),
       },
       ...(google
         ? {
@@ -433,6 +459,7 @@ export class Accounts {
     if (text === this.keptText) return;
     this.keptText = text;
     this.kept = parseKept(text);
+    this.client = this.opened(this.kept);
     this.current = this.build();
     await this.current.$context;
   }
@@ -443,14 +470,35 @@ export class Accounts {
    * operator says so (RELAY_PASSWORD_SIGNIN=1): a setting never leaves everyone locked out.
    */
   methods(): SignInMethods {
-    const google = Boolean(this.google());
+    return this.ways_(this.kept, this.google());
+  }
+
+  /** The ways settings let people in, given the Google client they open. */
+  private ways_(
+    kept: SignInKept,
+    client: ReturnType<Accounts["opened"]>,
+  ): SignInMethods {
+    const google = Boolean(client);
+    const forced = process.env.RELAY_PASSWORD_SIGNIN === "1";
+    // Off, but back on because Google cannot be used: for the admin alone, to mend it.
+    const adminsOnly = kept.password === false && !google && !forced;
     return {
-      password:
-        this.kept.password !== false ||
-        !google ||
-        process.env.RELAY_PASSWORD_SIGNIN === "1",
+      password: kept.password !== false || !google || forced,
       google,
+      ...(adminsOnly ? { adminsOnly } : {}),
     };
+  }
+
+  /** Whether passwords let this sign-in in: everyone's, or, while only admins may, an admin's. */
+  private async passwordFor(email: string): Promise<boolean> {
+    const ways = this.methods();
+    if (!ways.password) return false;
+    if (!ways.adminsOnly) return true;
+    const [user] = await this.db.query<{ id: string }>(
+      "SELECT id FROM auth_users WHERE lower(email) = lower($1)",
+      [email.trim()],
+    );
+    return Boolean(user && (await this.isAdmin(user.id)));
   }
 
   /**
@@ -479,9 +527,12 @@ export class Accounts {
           `DELETE FROM auth_sessions WHERE "userId" IN (SELECT "userId" FROM auth_accounts GROUP BY "userId" HAVING bool_or("providerId" = $1) AND NOT bool_or("providerId" <> $1))`,
           [way],
         );
-      if (before.password !== false && next.password === false)
-        await only("credential");
-      if (this.opened(before) && !this.opened(next)) await only("google");
+      // as the ways actually work before and after, the operator's word and Google's state
+      // included: nobody is signed out of a way that still lets them in
+      const was = this.ways_(before, this.opened(before));
+      const now = this.ways_(next, this.opened(next));
+      if (was.password && !now.password) await only("credential");
+      if (was.google && !now.google) await only("google");
       return written;
     });
     await this.take(text);
@@ -546,6 +597,7 @@ export class Accounts {
             },
           }
         : {}),
+      passwordKeptOff: this.kept.password === false,
       sealing: Boolean(this.sealKey),
       passwordOnly: Number(counts?.password_only ?? 0),
       googleOnly: Number(counts?.google_only ?? 0),
@@ -586,15 +638,23 @@ export class Accounts {
     if (secret && (secret.length > 200 || /\s/.test(secret)))
       throw new AccountError("google-secret-wrong");
     const site = siteOf(input.site);
+    // Over https, cookies are marked secure only by the public address: without it they would
+    // not be, so Google waits for it.
+    if (site.startsWith("https:") && !this.publicUrl?.startsWith("https:"))
+      throw new AccountError("public-url-needed");
     const sealed = secret ? sealWith(key, secret) : undefined;
     await this.update((kept) => {
-      if (kept.password === false) throw new AccountError("password-first");
+      // While Google works and passwords are off, its client is not changed: a wrong one would
+      // leave nobody a way in. While it does not work, the admin mends it, with passwords back on.
+      if (!this.ways_(kept, this.opened(kept)).password)
+        throw new AccountError("password-first");
       const before = kept.google;
       const sealedSecret =
         sealed ?? (before?.clientId === clientId ? before.secret : undefined);
       if (!sealedSecret) throw new AccountError("google-secret-missing");
       const next: SignInKept = {
         ...kept,
+        ...(kept.password === false ? { password: true } : {}),
         google: {
           on: true,
           clientId,
@@ -615,9 +675,13 @@ export class Accounts {
     await this.update((kept) => {
       const google = kept.google;
       if (!google) throw new AccountError("google-not-set");
-      if (!on && kept.password === false)
+      if (!on && !this.ways_(kept, this.opened(kept)).password)
         throw new AccountError("password-first");
-      const next: SignInKept = { ...kept, google: { ...google, on } };
+      const next: SignInKept = {
+        ...kept,
+        ...(!on && kept.password === false ? { password: true } : {}),
+        google: { ...google, on },
+      };
       if (on && !this.opened(next)) throw new AccountError("google-unreadable");
       return next;
     });
@@ -627,10 +691,45 @@ export class Accounts {
   async removeGoogle(user: string): Promise<void> {
     await this.mustAdmin(user);
     await this.update((kept) => {
-      if (kept.password === false) throw new AccountError("password-first");
+      if (!this.ways_(kept, this.opened(kept)).password)
+        throw new AccountError("password-first");
       const { google: _gone, ...rest } = kept;
-      return rest;
+      return { ...rest, password: true };
     });
+  }
+
+  /**
+   * The accounts an admin may act on: those in no office but ones the admin owns (or in none at
+   * all). Someone in another office is that office's owners' to look after, not the server's admin.
+   */
+  private readonly REACH =
+    `NOT EXISTS (SELECT 1 FROM office_people p WHERE p.user_id = u.id AND p.office_id NOT IN (SELECT office_id FROM office_people WHERE user_id = $1 AND role = 'owner'))`;
+
+  private async mustReach(admin: string, user: string): Promise<void> {
+    const [row] = await this.db.query(
+      `SELECT 1 FROM auth_users u WHERE u.id = $2 AND ${this.REACH}`,
+      [admin, user],
+    );
+    if (!row) throw new AccountError("not-yours");
+  }
+
+  /** What someone else did to a person's account lately (a reset link made), for their own page. */
+  async events(
+    user: string,
+  ): Promise<{ kind: string; by: string; at: string }[]> {
+    const rows = await this.db.query<{
+      kind: string;
+      by_name: string;
+      at: unknown;
+    }>(
+      "SELECT kind, by_name, at FROM account_events WHERE user_id = $1 AND at > now() - interval '30 days' ORDER BY at DESC LIMIT 5",
+      [user],
+    );
+    return rows.map((row) => ({
+      kind: row.kind,
+      by: row.by_name,
+      at: when(row.at),
+    }));
   }
 
   /**
@@ -642,7 +741,14 @@ export class Accounts {
   async removeAccount(admin: string, user: string): Promise<void> {
     await this.mustAdmin(admin);
     if (admin === user) throw new AccountError("not-yourself");
+    await this.mustReach(admin, user);
     await this.db.transaction(async (tx) => {
+      // never an office's only owner: someone must still decide who is in it
+      const [alone] = await tx.query(
+        "SELECT 1 FROM office_people p WHERE p.user_id = $1 AND p.role = 'owner' AND NOT EXISTS (SELECT 1 FROM office_people q WHERE q.office_id = p.office_id AND q.role = 'owner' AND q.user_id <> $1)",
+        [user],
+      );
+      if (alone) throw new AccountError("last-owner");
       await tx.query("DELETE FROM members WHERE user_id = $1", [user]);
       await tx.query("DELETE FROM setup_codes WHERE user_id = $1", [user]);
       await tx.query("DELETE FROM office_people WHERE user_id = $1", [user]);
@@ -674,7 +780,9 @@ export class Accounts {
         bool_or(a."providerId" = 'credential') AS p,
         bool_or(a."providerId" = 'google') AS g
       FROM auth_users u LEFT JOIN auth_accounts a ON a."userId" = u.id
+      WHERE ${this.REACH}
       GROUP BY u.id, u.name, u.email ORDER BY lower(u.name), u.email LIMIT 500`,
+      [user],
     );
     return rows.map((row) => ({
       id: row.id,
@@ -694,27 +802,68 @@ export class Accounts {
     user: string,
   ): Promise<{ token: string; name: string }> {
     await this.mustAdmin(admin);
-    if (!this.methods().password) throw new AccountError("password-off");
+    const ways = this.methods();
+    if (!ways.password || ways.adminsOnly)
+      throw new AccountError("password-off");
+    await this.mustReach(admin, user);
     const [person] = await this.db.query<{ name: string; email: string }>(
       "SELECT name, email FROM auth_users WHERE id = $1",
       [user],
     );
     if (!person) throw new AccountError("account-failed");
-    if (!(await this.ways(user)).password)
-      throw new AccountError("no-password");
-    this.resets.delete(user);
-    await this.current.api.requestPasswordReset({
-      body: { email: person.email },
+    const has = await this.ways(user);
+    if (!has.password) throw new AccountError("no-password");
+    // One who can sign in with Google signs in with it; an owner's account is not the admin's
+    // to take: neither gets a link someone else could use.
+    if (has.google) throw new AccountError("has-google");
+    const [owner] = await this.db.query(
+      "SELECT 1 FROM office_people WHERE user_id = $1 AND role = 'owner'",
+      [user],
+    );
+    if (owner) throw new AccountError("owner-reset");
+    const [by] = await this.db.query<{ name: string }>(
+      "SELECT name FROM auth_users WHERE id = $1",
+      [admin],
+    );
+    const made = this.resetting.then(async () => {
+      this.resets.delete(user);
+      await this.current.api.requestPasswordReset({
+        body: { email: person.email },
+      });
+      const token = this.resets.get(user);
+      this.resets.delete(user);
+      return token;
     });
-    const token = this.resets.get(user);
-    this.resets.delete(user);
+    this.resetting = made.catch(() => undefined);
+    const token = await made;
     if (!token) throw new AccountError("account-failed");
+    // told on the person's own page, so a link they did not ask for never goes unseen
+    await this.db.query(
+      "INSERT INTO account_events (user_id, kind, by_name, at) VALUES ($1, 'reset-link', $2, now())",
+      [user, by?.name ?? ""],
+    );
     return { token, name: person.name };
+  }
+
+  /** Whose password a reset link changes, while it still works; none once used or expired. */
+  async resetFor(token: string): Promise<string | undefined> {
+    const context = await this.current.$context;
+    const found = await context.internalAdapter.findVerificationValue(
+      `reset-password:${token}`,
+    );
+    if (!found || new Date(found.expiresAt) <= new Date()) return undefined;
+    const [row] = await this.db.query<{ name: string }>(
+      "SELECT name FROM auth_users WHERE id = $1",
+      [found.value],
+    );
+    return row?.name;
   }
 
   /** A new password from a reset link; the link ends with it, and so do the person's sessions. */
   async resetPassword(token: string, password: string): Promise<void> {
-    if (!this.methods().password) throw new AccountError("password-off");
+    const ways = this.methods();
+    if (!ways.password || ways.adminsOnly)
+      throw new AccountError("password-off");
     const response = (await this.current.api.resetPassword({
       body: { newPassword: password, token },
       asResponse: true,
@@ -858,7 +1007,9 @@ export class Accounts {
     key: string,
     input: { name: string; email: string; password: string },
   ): Promise<{ person: Person; cookies: string[] }> {
-    if (!this.methods().password) throw new AccountError("password-off");
+    const ways = this.methods();
+    if (!ways.password || ways.adminsOnly)
+      throw new AccountError("password-off");
     const office = await this.officeByKey(key);
     if (!office) throw new AccountError("invite-wrong");
     const name = input.name.trim().slice(0, 80);
@@ -881,7 +1032,8 @@ export class Accounts {
     input: { email: string; password: string },
     key?: string,
   ): Promise<{ person: Person; cookies: string[] }> {
-    if (!this.methods().password) throw new AccountError("password-off");
+    if (!(await this.passwordFor(input.email)))
+      throw new AccountError("password-off");
     const response = (await this.current.api.signInEmail({
       body: { email: input.email.trim(), password: input.password },
       asResponse: true,

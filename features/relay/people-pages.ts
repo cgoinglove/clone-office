@@ -100,7 +100,7 @@ const WORDS = {
     passwordOnly: "{count} people sign in only with a password.",
     googleOnly: "{count} people sign in only with Google.",
     linkFirst:
-      "Connect your own Google account on your page before turning this off, so you can still sign in.",
+      "Connect your own Google account before turning this off, so you can still sign in.",
     googleSetup: "Set up Google sign-in",
     googleChange: "Change the Google client",
     step1:
@@ -165,6 +165,14 @@ const WORDS = {
     removeAccountWhat:
       "Their account goes from the team server: they can't sign in, and their clone stops in every office here. What they asked and answered stays, and they can make a new account from an invite.",
     thatOffice: "this office",
+    yourOffices: "Your offices",
+    showing: "Open",
+    notYou: "Not {name}?",
+    joinFrom: "{from} invited you.",
+    resetMake: "Make the link",
+    newPasswordFor: "A new password for {name}",
+    resetNotice:
+      "{name} made a password reset link for your account on {when}. If you did not ask for one, tell your office's owner.",
     errors: {
       "invite-wrong": "There is no such invite.",
       "name-missing": "Say your name.",
@@ -210,6 +218,15 @@ const WORDS = {
       "reset-expired": "That link is used or expired. Ask for a new one.",
       "no-password":
         "That person has no password to reset: they sign in with Google.",
+      "last-owner":
+        "They are the only owner of an office here. Make someone else its owner first.",
+      "not-yours":
+        "That account is in an office you don't own: its owners look after it.",
+      "has-google":
+        "That person signs in with Google: they don't need a reset link.",
+      "owner-reset": "An office's owner gets no reset link from someone else.",
+      "public-url-needed":
+        "Google over https needs this server's public address: set RELAY_PUBLIC_URL to it and restart the server.",
     },
   },
   ko: {
@@ -363,6 +380,14 @@ const WORDS = {
     removeAccountWhat:
       "그 사람의 계정이 팀 서버에서 사라져요. 로그인할 수 없고, 여기 모든 오피스에서 클론이 멈춰요. 주고받은 부탁은 남고, 초대 링크로 새 계정을 만들 수 있어요.",
     thatOffice: "이 오피스",
+    yourOffices: "들어가 있는 오피스",
+    showing: "보는 중",
+    notYou: "{name}님이 아닌가요?",
+    joinFrom: "{from} 님이 초대했어요.",
+    resetMake: "링크 만들기",
+    newPasswordFor: "{name}님의 새 비밀번호",
+    resetNotice:
+      "{when}에 {name}님이 내 계정의 비밀번호 재설정 링크를 만들었어요. 요청한 적이 없다면 오피스 주인에게 알려 주세요.",
     errors: {
       "invite-wrong": "없는 초대예요.",
       "name-missing": "이름을 적어 주세요.",
@@ -409,6 +434,15 @@ const WORDS = {
         "이미 쓰였거나 시간이 지난 링크예요. 새 링크를 받아 주세요.",
       "no-password":
         "그 사람은 Google로 로그인해서 재설정할 비밀번호가 없어요.",
+      "last-owner":
+        "그 사람이 여기 한 오피스의 유일한 주인이에요. 먼저 다른 사람을 그 오피스의 주인으로 만들어 주세요.",
+      "not-yours":
+        "내가 주인이 아닌 오피스에 있는 계정이에요. 그 오피스의 주인이 맡아요.",
+      "has-google": "그 사람은 Google로 로그인해서 재설정 링크가 필요 없어요.",
+      "owner-reset":
+        "오피스 주인의 계정에는 다른 사람이 재설정 링크를 만들 수 없어요.",
+      "public-url-needed":
+        "https로 Google을 쓰려면 이 서버의 공개 주소가 필요해요. RELAY_PUBLIC_URL에 그 주소를 넣고 서버를 다시 시작해 주세요.",
     },
   },
   zh: {
@@ -550,6 +584,14 @@ const WORDS = {
     removeAccountWhat:
       "对方的账号会从团队服务器上删除：无法再登录，其分身也会在这里的每个办公室停止。提过和回答过的请求会保留，对方可以用邀请重新创建账号。",
     thatOffice: "这个办公室",
+    yourOffices: "你加入的办公室",
+    showing: "当前",
+    notYou: "不是{name}？",
+    joinFrom: "{from}邀请了你。",
+    resetMake: "生成链接",
+    newPasswordFor: "为{name}设置新密码",
+    resetNotice:
+      "{name}于 {when} 为你的账号生成了密码重置链接。如果你没有请求过，请告诉办公室的所有者。",
     errors: {
       "invite-wrong": "没有这个邀请。",
       "name-missing": "请填写你的名字。",
@@ -591,6 +633,14 @@ const WORDS = {
         "已保存的密钥无法用这台服务器的密钥打开。请重新粘贴。",
       "reset-expired": "这个链接已被使用或已过期。请要一个新的。",
       "no-password": "这个人用 Google 登录，没有可重置的密码。",
+      "last-owner":
+        "对方是这里某个办公室唯一的所有者。请先把别人设为那个办公室的所有者。",
+      "not-yours":
+        "这个账号在你不是所有者的办公室里：由那个办公室的所有者负责。",
+      "has-google": "这个人用 Google 登录，不需要重置链接。",
+      "owner-reset": "办公室所有者的账号不能由别人生成重置链接。",
+      "public-url-needed":
+        "通过 https 使用 Google 需要这台服务器的公开地址：把 RELAY_PUBLIC_URL 设为该地址并重启服务器。",
     },
   },
   ja: {
@@ -750,6 +800,14 @@ const WORDS = {
     removeAccountWhat:
       "その人のアカウントがチームのサーバーから削除されます。サインインできなくなり、ここにあるすべてのオフィスでクローンが止まります。やりとりした依頼は残り、招待から新しいアカウントを作れます。",
     thatOffice: "このオフィス",
+    yourOffices: "参加しているオフィス",
+    showing: "表示中",
+    notYou: "{name}さんではありませんか？",
+    joinFrom: "{from}さんが招待しました。",
+    resetMake: "リンクを作る",
+    newPasswordFor: "{name}さんの新しいパスワード",
+    resetNotice:
+      "{when}に{name}さんがあなたのアカウントのパスワードのリセット用リンクを作りました。頼んでいない場合は、オフィスのオーナーに知らせてください。",
     errors: {
       "invite-wrong": "その招待は存在しません。",
       "name-missing": "名前を入力してください。",
@@ -803,6 +861,16 @@ const WORDS = {
         "このリンクは使用済みか期限切れです。新しいリンクをもらってください。",
       "no-password":
         "その人は Google でサインインするため、リセットするパスワードがありません。",
+      "last-owner":
+        "その人はここにあるオフィスの唯一のオーナーです。先にほかの人をそのオフィスのオーナーにしてください。",
+      "not-yours":
+        "そのアカウントは、あなたがオーナーではないオフィスにいます。そのオフィスのオーナーが管理します。",
+      "has-google":
+        "その人は Google でサインインするので、リセット用リンクは必要ありません。",
+      "owner-reset":
+        "オフィスのオーナーのアカウントには、ほかの人がリセット用リンクを作れません。",
+      "public-url-needed":
+        "https で Google を使うには、このサーバーの公開アドレスが必要です。RELAY_PUBLIC_URL にそのアドレスを設定して、サーバーを再起動してください。",
     },
   },
   es: {
@@ -962,6 +1030,14 @@ const WORDS = {
     removeAccountWhat:
       "Su cuenta se borra del servidor del equipo: no puede iniciar sesión y su clon se detiene en todas las oficinas de aquí. Lo que pidió y respondió se queda, y puede crear una cuenta nueva con una invitación.",
     thatOffice: "esta oficina",
+    yourOffices: "Tus oficinas",
+    showing: "Abierta",
+    notYou: "¿No eres {name}?",
+    joinFrom: "{from} te invitó.",
+    resetMake: "Crear el enlace",
+    newPasswordFor: "Una contraseña nueva para {name}",
+    resetNotice:
+      "{name} creó un enlace para restablecer la contraseña de tu cuenta el {when}. Si no lo pediste, avisa a quien es dueño de tu oficina.",
     errors: {
       "invite-wrong": "Esa invitación no existe.",
       "name-missing": "Escribe tu nombre.",
@@ -1011,6 +1087,16 @@ const WORDS = {
       "reset-expired": "Ese enlace ya se usó o caducó. Pide uno nuevo.",
       "no-password":
         "Esa persona no tiene contraseña que restablecer: inicia sesión con Google.",
+      "last-owner":
+        "Es la única persona dueña de una oficina aquí. Haz dueña a otra persona primero.",
+      "not-yours":
+        "Esa cuenta está en una oficina de la que no eres dueño: la cuidan sus dueños.",
+      "has-google":
+        "Esa persona inicia sesión con Google: no necesita un enlace para restablecer.",
+      "owner-reset":
+        "Nadie más puede crear un enlace para restablecer la cuenta de quien es dueño de una oficina.",
+      "public-url-needed":
+        "Google por https necesita la dirección pública de este servidor: define RELAY_PUBLIC_URL con ella y reinicia el servidor.",
     },
   },
   pt: {
@@ -1170,6 +1256,14 @@ const WORDS = {
     removeAccountWhat:
       "A conta é apagada do servidor da equipe: a pessoa não consegue entrar, e o clone dela para em todos os escritórios daqui. O que ela pediu e respondeu continua, e ela pode criar uma conta nova com um convite.",
     thatOffice: "este escritório",
+    yourOffices: "Seus escritórios",
+    showing: "Aberto",
+    notYou: "Não é {name}?",
+    joinFrom: "{from} convidou você.",
+    resetMake: "Criar o link",
+    newPasswordFor: "Uma senha nova para {name}",
+    resetNotice:
+      "{name} criou um link para redefinir a senha da sua conta em {when}. Se você não pediu, avise quem é dono do seu escritório.",
     errors: {
       "invite-wrong": "Esse convite não existe.",
       "name-missing": "Informe seu nome.",
@@ -1217,6 +1311,16 @@ const WORDS = {
       "reset-expired": "Esse link já foi usado ou expirou. Peça um novo.",
       "no-password":
         "Essa pessoa não tem senha para redefinir: entra com o Google.",
+      "last-owner":
+        "Essa pessoa é a única dona de um escritório daqui. Torne outra pessoa dona primeiro.",
+      "not-yours":
+        "Essa conta está em um escritório do qual você não é dono: os donos dele cuidam dela.",
+      "has-google":
+        "Essa pessoa entra com o Google: não precisa de um link para redefinir.",
+      "owner-reset":
+        "Ninguém mais pode criar um link para redefinir a conta de quem é dono de um escritório.",
+      "public-url-needed":
+        "O Google por https precisa do endereço público deste servidor: defina RELAY_PUBLIC_URL com ele e reinicie o servidor.",
     },
   },
 };
@@ -1293,6 +1397,8 @@ export function signUpPage(input: {
    * top, after Google sent them back here.
    */
   errorAtTop?: boolean;
+  /** Come from the sign-in page to make an account: the account part shows open. */
+  openAccount?: boolean;
   name?: string;
   email?: string;
 }): string {
@@ -1309,7 +1415,7 @@ export function signUpPage(input: {
 ${input.errorAtTop ? problem(lang, input.error) : ""}
 <p>${say(lang, "what")}</p>
 ${installGuide(input)}
-<details class="account" id="account"${input.error ? " open" : ""}><summary>${say(lang, "accountInstead")}</summary>
+<details class="account" id="account"${input.error || input.openAccount ? " open" : ""}><summary>${say(lang, "accountInstead")}</summary>
 <section>
 <p class="note">${say(lang, "accountWhy")}</p>
 ${input.errorAtTop ? "" : problem(lang, input.error)}
@@ -1367,7 +1473,7 @@ ${input.key ? `<input type="hidden" name="key" value="${escape(input.key)}">` : 
 }
 <p class="note">${
       input.key
-        ? `${say(lang, "noAccountInvite")} <a href="/i/${encodeURIComponent(input.key)}#account">${say(lang, "makeFromInvite")}</a>`
+        ? `${say(lang, "noAccountInvite")} <a href="/i/${encodeURIComponent(input.key)}?account#account">${say(lang, "makeFromInvite")}</a>`
         : say(lang, "noAccount")
     }</p>`,
   );
@@ -1377,10 +1483,22 @@ ${input.key ? `<input type="hidden" name="key" value="${escape(input.key)}">` : 
 export function newPasswordPage(input: {
   lang: PageLanguage;
   token: string;
+  /** Whose password it is; none when the link is used or expired, which then says so alone. */
+  name?: string;
   error?: string;
 }): string {
   const { lang } = input;
-  const title = say(lang, "newPasswordTitle");
+  const title = input.name
+    ? say(lang, "newPasswordFor", { name: input.name })
+    : say(lang, "newPasswordTitle");
+  if (!input.name)
+    return shell(
+      lang,
+      title,
+      `<h1>${title}</h1>
+${problem(lang, "reset-expired")}
+<p><a href="/login">${say(lang, "signInLink")}</a></p>`,
+    );
   return shell(
     lang,
     title,
@@ -1435,7 +1553,9 @@ export function homePage(input: {
   name: string;
   /** The reader's account id, to mark them in the list. */
   me?: string;
-  office?: { name: string; invite: string };
+  /** The office shown, and the others the reader is in, to switch between. */
+  office?: { id: string; name: string; invite: string };
+  offices?: { id: string; name: string }[];
   computer?: { name: string; seen: string };
   command?: string;
   error?: string;
@@ -1449,21 +1569,49 @@ export function homePage(input: {
   /** How the reader signs in, and the ways the server offers. */
   ways?: SignInWays;
   methods?: SignInMethods;
+  /** What someone else did to the reader's account lately. */
+  events?: { kind: string; by: string; at: string }[];
 }): string {
   const { lang } = input;
   const title = say(lang, "hello", { name: input.name });
+  const notices = (input.events ?? [])
+    .filter((event) => event.kind === "reset-link")
+    .map(
+      (event) =>
+        `<p class="note" role="status">${say(lang, "resetNotice", { name: event.by, when: event.at })}</p>`,
+    )
+    .join("");
   const office = input.office;
   const people = input.people ?? [];
   const owner = Boolean(input.owner);
+  // Every change an owner makes names the office shown, as one may own several.
+  const at = office ? `office=${encodeURIComponent(office.id)}` : "";
+  const officeField = office
+    ? `<input type="hidden" name="office" value="${escape(office.id)}">`
+    : "";
+  const offices = input.offices ?? [];
+  const switcher =
+    office && offices.length > 1
+      ? `<section>
+<h2>${say(lang, "yourOffices")}</h2>
+<ul class="ways">${offices
+          .map((one) =>
+            one.id === office.id
+              ? `<li><span class="who"><b aria-current="page">${escape(one.name) || say(lang, "thatOffice")}</b></span><span class="tag">${say(lang, "showing")}</span></li>`
+              : `<li><span class="who"><a href="/home?office=${encodeURIComponent(one.id)}">${escape(one.name) || say(lang, "thatOffice")}</a></span></li>`,
+          )
+          .join("")}</ul>
+</section>`
+      : "";
   const personRow = (person: HomePerson) => {
     const self = person.id === input.me;
     const acts =
       owner && !self
         ? `<span class="acts">${
             person.role === "member"
-              ? `<a class="small" href="/home/people/owner?user=${encodeURIComponent(person.id)}">${say(lang, "makeOwner")}</a>`
+              ? `<a class="small" href="/home/people/owner?user=${encodeURIComponent(person.id)}&amp;${at}">${say(lang, "makeOwner")}</a>`
               : ""
-          }<a class="small" href="/home/people/remove?user=${encodeURIComponent(person.id)}">${say(lang, "remove")}</a></span>`
+          }<a class="small" href="/home/people/remove?user=${encodeURIComponent(person.id)}&amp;${at}">${say(lang, "remove")}</a></span>`
         : "";
     return `<li><span class="who"><b>${escape(person.name)}</b><span class="tag">${say(lang, person.role === "owner" ? "owner" : "member")}</span>${self ? `<span class="tag">${say(lang, "you")}</span>` : ""}<small>${escape(person.email)} · ${
       person.seen
@@ -1499,6 +1647,8 @@ export function homePage(input: {
     title,
     `<h1>${title}</h1>
 ${problem(lang, input.error)}
+${notices}
+${switcher}
 ${
   office
     ? `<p class="note">${say(lang, "yourOffice")}${office.name ? `: ${escape(office.name)}` : ""}</p>
@@ -1508,7 +1658,7 @@ ${
 ${
   input.command
     ? `<pre>${escape(input.command)}</pre>`
-    : `<form method="post" action="/home/pair"><button type="submit">${say(lang, "makeCommand")}</button></form>`
+    : `<form method="post" action="/home/pair">${officeField}<button type="submit">${say(lang, "makeCommand")}</button></form>`
 }
 <p class="note">${say(lang, "commandNote")}</p>
 <p class="note">${
@@ -1524,7 +1674,7 @@ ${
 <h2>${say(lang, "inviteTeam")}</h2>
 <p>${say(lang, "inviteWhat")}</p>
 <pre>${escape(office.invite)}</pre>
-${owner ? `<p><a href="/home/invite/new">${say(lang, "newLink")}</a></p>` : ""}
+${owner ? `<p><a href="/home/invite/new?${at}">${say(lang, "newLink")}</a></p>` : ""}
 </section>
 ${
   people.length
@@ -1543,7 +1693,7 @@ ${
 <ul class="rows">${clones
         .map(
           (clone) =>
-            `<li><span class="who"><b>${escape(clone.name)}</b><small>${escape(clone.role)}${clone.role ? " · " : ""}${say(lang, "cloneIn", { when: clone.seen })}</small></span><span class="acts"><a class="small" href="/home/clones/remove?member=${encodeURIComponent(clone.id)}">${say(lang, "remove")}</a></span></li>`,
+            `<li><span class="who"><b>${escape(clone.name)}</b><small>${escape(clone.role)}${clone.role ? " · " : ""}${say(lang, "cloneIn", { when: clone.seen })}</small></span><span class="acts"><a class="small" href="/home/clones/remove?member=${encodeURIComponent(clone.id)}&amp;${at}">${say(lang, "remove")}</a></span></li>`,
         )
         .join("")}</ul>
 </section>`
@@ -1553,7 +1703,7 @@ ${
   owner
     ? `<section>
 <h2>${say(lang, "officeName")}</h2>
-<form method="post" action="/home/office/name" class="inline"><input name="name" maxlength="80" value="${escape(office.name)}" aria-label="${say(lang, "officeName")}"><button type="submit">${say(lang, "save")}</button></form>
+<form method="post" action="/home/office/name" class="inline">${officeField}<input name="name" maxlength="80" value="${escape(office.name)}" aria-label="${say(lang, "officeName")}"><button type="submit">${say(lang, "save")}</button></form>
 </section>`
     : ""
 }`
@@ -1601,6 +1751,8 @@ export function confirmPage(input: {
   fields?: Record<string, string>;
   /** Where Cancel goes: one's own page unless said. */
   back?: string;
+  /** Who sent the invite, said on the question to join. */
+  invitedBy?: string;
 }): string {
   const { lang } = input;
   const words = {
@@ -1611,7 +1763,7 @@ export function confirmPage(input: {
     googleRemove: ["googleRemoveTitle", "googleRemoveWhat", "removeGoogle"],
     googleOff: ["googleOffTitle", "googleOffWhat", "turnOff"],
     passwordOff: ["passwordOffTitle", "passwordOffWhat", "turnOff"],
-    reset: ["resetTitle", "resetWhat", "resetLink"],
+    reset: ["resetTitle", "resetWhat", "resetMake"],
     join: ["joinTitle", "joinWhat", "join"],
     removeAccount: ["removeAccountTitle", "removeAccountWhat", "removeAccount"],
   } as const;
@@ -1640,9 +1792,16 @@ export function confirmPage(input: {
     lang,
     title,
     `<h1>${title}</h1>
+${input.what === "join" && input.invitedBy ? `<p>${say(lang, "joinFrom", { from: input.invitedBy })}</p>` : ""}
 <p>${say(lang, whatKey, named)}</p>
 ${locked ? `<p>${locked}</p>` : ""}
-<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit"${safe ? "" : ' class="danger"'}>${say(lang, yesKey)}</button><a class="button ghost" href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div></form>`,
+<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit"${safe ? "" : ' class="danger"'}>${say(lang, yesKey)}</button><a class="button ghost" href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div></form>
+${
+  // on a shared browser, the one invited signs the other person out to make their own account
+  input.what === "join"
+    ? `<form method="post" action="/logout"><p class="note">${say(lang, "notYou", named)} <button type="submit" class="ghost small">${say(lang, "signOut")}</button></p></form>`
+    : ""
+}`,
   );
 }
 
@@ -1687,7 +1846,7 @@ export function adminPage(input: {
     back.protocol !== "https:" &&
     !["localhost", "127.0.0.1", "[::1]"].includes(back.hostname);
   const password = `<section class="method">
-<div class="top"><h2>${say(lang, "waysPassword")}</h2>${state(settings.password)}</div>
+<div class="top"><h2>${say(lang, "waysPassword")}</h2>${state(!settings.passwordKeptOff)}</div>
 <p class="note">${say(lang, "methodPasswordWhat")}</p>
 ${
   google?.on
@@ -1695,7 +1854,7 @@ ${
     : ""
 }
 ${
-  settings.password
+  !settings.passwordKeptOff
     ? google?.on && !settings.mineLinked
       ? `<p class="note">${say(lang, "linkFirst")} <a href="/home/google">${say(lang, "connectGoogle")}</a></p>`
       : google?.on
@@ -1721,7 +1880,7 @@ ${
 </ol>
 ${settings.sealing ? "" : `<p class="error">${say(lang, "sealingOff")}</p>`}
 ${failed && !idWrong && !secretWrong ? fieldError(failed, "google-error") : ""}
-<form method="post" action="/home/admin/google">
+<form method="post" action="/home/admin/google#google">
 <label for="clientId">${say(lang, "clientId")}</label>
 <input id="clientId" name="clientId" required maxlength="260" autocomplete="off" spellcheck="false" value="${escape(input.clientId ?? google?.clientId ?? "")}"${idWrong ? ' aria-invalid="true" aria-describedby="client-error"' : ""}>
 ${idWrong ? fieldError(failed, "client-error") : ""}
@@ -1733,7 +1892,7 @@ ${secretWrong ? fieldError(failed, "secret-error") : ""}
 </form>
 </section>
 </details>`;
-  const googleSection = `<section class="method">
+  const googleSection = `<section class="method" id="google">
 <div class="top"><h2>${say(lang, "waysGoogle")}</h2>${state(google ? google.on : undefined)}</div>
 <p class="note">${say(lang, "methodGoogleWhat")}</p>
 ${

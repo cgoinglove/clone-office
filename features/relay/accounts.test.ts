@@ -412,7 +412,7 @@ test("the server's admin sets how people sign in: Google's secret sealed, one wa
     });
     assert.equal((await accounts.places(cy.person.id))[0].role, "owner");
     assert.equal(await accounts.isAdmin(cy.person.id), false);
-    const site = "https://office.example.com";
+    const site = "http://localhost:3200";
     await assert.rejects(
       accounts.saveGoogle(ben.person.id, { ...GOOGLE, site, by: "Ben" }),
       /not-admin/,
@@ -563,7 +563,7 @@ test("without a key to seal it with, no Google secret is kept", async () => {
     await assert.rejects(
       accounts.saveGoogle(ana.person.id, {
         ...GOOGLE,
-        site: "https://office.example.com",
+        site: "http://localhost:3200",
         by: "Ana",
       }),
       /sealing-off/,
@@ -597,7 +597,7 @@ test("a sign-in secret kept plain is sealed in place, and one another key sealed
     assert.ok(isSealed(sealed.value));
     await accounts.saveGoogle(ana.person.id, {
       ...GOOGLE,
-      site: "https://office.example.com",
+      site: "http://localhost:3200",
       by: "Ana",
     });
     // The same secret opens again: a session made before still signs in.
@@ -983,7 +983,7 @@ test("nobody is locked out: a way that cannot work leaves passwords on, and the 
     });
     await accounts.saveGoogle(ana.person.id, {
       ...GOOGLE,
-      site: "https://office.example.com",
+      site: "http://localhost:3200",
       by: "Ana",
     });
     await googleOn(db, ana.person.id);
@@ -999,7 +999,7 @@ test("nobody is locked out: a way that cannot work leaves passwords on, and the 
     await assert.rejects(
       accounts.saveGoogle(ana.person.id, {
         ...GOOGLE,
-        site: "https://office.example.com",
+        site: "http://localhost:3200",
         by: "Ana",
       }),
       /password-first/,
@@ -1019,12 +1019,33 @@ test("nobody is locked out: a way that cannot work leaves passwords on, and the 
     }).finally(() => {
       console.warn = warned;
     });
-    assert.deepEqual(after.methods(), { password: true, google: false });
+    assert.deepEqual(after.methods(), {
+      password: true,
+      google: false,
+      adminsOnly: true,
+    });
     const back = await after.signIn({
       email: "ana@example.com",
       password: "a long password",
     });
     assert.ok(back.cookies.length, "the admin signs in with the password");
+    // ...the admin alone, to mend Google: passwords stay off for everyone else.
+    assert.equal(after.methods().adminsOnly, true);
+    await assert.rejects(
+      after.signIn({
+        email: "ben@example.com",
+        password: "ben's long password",
+      }),
+      /password-off/,
+    );
+    await assert.rejects(
+      after.signUp(office.key, {
+        name: "Dee",
+        email: "dee@example.com",
+        password: "a long password",
+      }),
+      /password-off/,
+    );
     assert.equal(
       (await after.settings(ana.person.id)).password,
       true,
@@ -1092,7 +1113,19 @@ test("a forgotten password, a removed account, another office's invite and odd a
     ).text();
     const link = /(http:\/\/[^\s<]+\/reset\?token=[\w-]+)/.exec(made)?.[1];
     assert.ok(link, "the link to hand on");
-    assert.match(await (await fetch(link)).text(), /Choose a new password/);
+    assert.match(await (await fetch(link)).text(), /A new password for Ben/);
+    assert.match(
+      await (
+        await fetch(`${base}/home`, {
+          headers: { cookie: cookieOf(ben.cookies) },
+        })
+      ).text(),
+      /Ana made a password reset link for your account/,
+    );
+    await assert.rejects(
+      accounts.resetLink(ana.person.id, ana.person.id),
+      /owner-reset/,
+    );
     const token = new URL(link).searchParams.get("token") ?? "";
     const short = await fetch(
       `${base}/reset`,
@@ -1125,6 +1158,9 @@ test("a forgotten password, a removed account, another office's invite and odd a
       form({ token, password: "yet another password" }),
     );
     assert.match(await again.text(), /used or expired/);
+    const reopened = await fetch(link);
+    assert.equal(reopened.status, 410, "a used link says so as it opens");
+    assert.doesNotMatch(await reopened.text(), /name="password"/);
     // Only the admin makes links, and only for others.
     await assert.rejects(
       accounts.resetLink(ben.person.id, ana.person.id),
@@ -1150,7 +1186,19 @@ test("a forgotten password, a removed account, another office's invite and odd a
       `${base}/i/${office.key}/join`,
       form({}, cyCookie),
     );
-    assert.equal(joined.headers.get("location"), "/home");
+    assert.match(
+      joined.headers.get("location") ?? "",
+      /^\/home\?office=o-/,
+      "on to the office just joined",
+    );
+    assert.match(
+      await (
+        await fetch(`${base}${joined.headers.get("location")}`, {
+          headers: { cookie: cyCookie },
+        })
+      ).text(),
+      /Your offices[\s\S]*aria-current="page"/,
+    );
     assert.equal((await accounts.places(cy.person.id)).length, 2);
     // Signed in, the sign-in page goes on to one's page.
     const signedIn = await fetch(`${base}/login`, {
@@ -1159,29 +1207,60 @@ test("a forgotten password, a removed account, another office's invite and odd a
     });
     assert.equal(signedIn.headers.get("location"), "/home");
 
-    // The admin removes Cy's account: gone from both offices, no way back in.
+    // The admin removes Ben's account (a member, not anyone's only owner): no way back in.
+    const benNow = await accounts.signIn({
+      email: "ben@example.com",
+      password: "ben's new password",
+    });
     const removed = await fetch(
       `${base}/home/admin/account/remove`,
-      form({ user: cy.person.id }, admin),
+      form({ user: ben.person.id }, admin),
     );
     assert.equal(removed.headers.get("location"), "/home/admin?done=saved");
-    assert.equal((await accounts.places(cy.person.id)).length, 0);
-    assert.equal(await accounts.person(cyCookie), undefined);
+    assert.equal((await accounts.places(ben.person.id)).length, 0);
+    assert.equal(await accounts.person(cookieOf(benNow.cookies)), undefined);
     await assert.rejects(
       accounts.signIn({
-        email: "cy@example.com",
-        password: "cy's long password",
+        email: "ben@example.com",
+        password: "ben's new password",
       }),
       /sign-in-wrong/,
     );
+    // Cy, in an office the admin does not own, is that office's to look after.
+    const kept = await fetch(
+      `${base}/home/admin/account/remove`,
+      form({ user: cy.person.id }, admin),
+    );
+    assert.equal(kept.headers.get("location"), "/home/admin?error=not-yours");
+    await assert.rejects(
+      accounts.resetLink(ana.person.id, cy.person.id),
+      /not-yours/,
+    );
+    assert.ok(
+      !(await accounts.serverPeople(ana.person.id)).some(
+        (one) => one.id === cy.person.id,
+      ),
+      "nor listed for the admin",
+    );
 
-    // A wrong Google client comes back as typed, with what was wrong under it.
+    // A wrong Google client comes back as typed, with what was wrong under it, at its section
+    // (and a reload does not send the form again).
     const wrong = await fetch(
       `${base}/home/admin/google`,
       form({ clientId: "my-client", secret: "x" }, admin),
     );
-    assert.equal(wrong.status, 400);
-    const wrongPage = await wrong.text();
+    assert.equal(
+      wrong.headers.get("location"),
+      "/home/admin?google=google-id-wrong&client=my-client#google",
+    );
+    const wrongPage = await (
+      await fetch(
+        `${base}/home/admin?google=google-id-wrong&client=my-client`,
+        {
+          headers: { cookie: admin },
+        },
+      )
+    ).text();
     assert.match(wrongPage, /value="my-client"/);
     assert.match(wrongPage, /aria-invalid="true"/);
     assert.match(wrongPage, /not a Google client ID/);
@@ -1220,17 +1299,112 @@ test("a forgotten password, a removed account, another office's invite and odd a
     );
     assert.notEqual(tricked.status, 200);
     assert.doesNotMatch(tricked.body, /token/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});
 
-    // Starting Google again and again from one address stops at a limit.
-    let last = 0;
-    for (let i = 0; i < 31; i++)
-      last = (
-        await fetch(`${base}/login/google`, {
-          headers: { "sec-fetch-site": "same-origin" },
-          redirect: "manual",
-        })
-      ).status;
-    assert.equal(last, 429);
+test("sign-in's edges: Google starts at its own address, an invite asks unless this browser came to join, the last owner stays, the operator's word keeps sessions", async () => {
+  const { createServer } = await import("node:http");
+  const { keyFrom, newKeyText } = await import("../../lib/seal.ts");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay, {
+    sealKey: keyFrom(newKeyText()),
+  });
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const port = (server.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+  try {
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    await accounts.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: base,
+      by: "Ana",
+    });
+    // Reached at another address of the same server, Google starts at the one it was set up at.
+    const elsewhere = await fetch(
+      `http://localhost:${port}/i/${office.key}/google?from=Ana`,
+      { headers: { "sec-fetch-site": "same-origin" }, redirect: "manual" },
+    );
+    assert.equal(
+      elsewhere.headers.get("location"),
+      `${base}/i/${office.key}/google?from=Ana`,
+    );
+    // Connecting Google signed out goes to the sign-in page.
+    const out = await fetch(`${base}/home/google`, {
+      headers: { "sec-fetch-site": "same-origin" },
+      redirect: "manual",
+    });
+    assert.equal(out.headers.get("location"), "/login");
+    // A start from the invite marks the browser as come to join that office.
+    const start = await fetch(`${base}/i/${office.key}/google`, {
+      headers: { "sec-fetch-site": "same-origin" },
+      redirect: "manual",
+    });
+    assert.ok(
+      start.headers
+        .getSetCookie()
+        .some((c) => c.startsWith(`sub-office.join=${office.key};`)),
+    );
+
+    // Someone in no office (removed from theirs) who opens an invite is asked, not put in.
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    await accounts.removePerson(ana.person.id, office.id, ben.person.id);
+    const benCookie = cookieOf(ben.cookies);
+    const asked = await fetch(`${base}/i/${office.key}`, {
+      headers: { cookie: benCookie },
+      redirect: "manual",
+    });
+    assert.equal(asked.status, 200);
+    assert.match(await asked.text(), /Join this office too\?/);
+    assert.equal((await accounts.places(ben.person.id)).length, 0);
+    // With the mark, as after a sign-up through that invite, it lands in the office.
+    const landed = await fetch(`${base}/i/${office.key}`, {
+      headers: { cookie: `${benCookie}; sub-office.join=${office.key}` },
+      redirect: "manual",
+    });
+    assert.equal(landed.headers.get("location"), "/home");
+    assert.ok(
+      landed.headers.getSetCookie().some((c) => /sub-office\.join=;/.test(c)),
+      "the mark goes once used",
+    );
+    assert.equal((await accounts.places(ben.person.id)).length, 1);
+
+    // An office's only owner is not removed with their account.
+    const other = await relay.office("other-office-key");
+    const cy = await accounts.signUp(other.key, {
+      name: "Cy",
+      email: "cy@example.com",
+      password: "cy's long password",
+    });
+    await assert.rejects(
+      accounts.removeAccount(ana.person.id, cy.person.id),
+      /not-yours/,
+    );
+
+    // The operator keeps passwords on: turning them off on the page signs nobody out.
+    await googleOn(db, ana.person.id);
+    process.env.RELAY_PASSWORD_SIGNIN = "1";
+    try {
+      await accounts.setPassword(ana.person.id, false);
+      assert.ok(await accounts.person(benCookie), "Ben stays signed in");
+    } finally {
+      delete process.env.RELAY_PASSWORD_SIGNIN;
+    }
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();

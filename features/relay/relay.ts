@@ -271,6 +271,12 @@ const MIGRATIONS: string[][] = [
   [
     "CREATE TABLE shared_skills (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, name TEXT NOT NULL, category TEXT, description TEXT NOT NULL, paths JSONB NOT NULL, files JSONB NOT NULL, size INT NOT NULL, hash TEXT NOT NULL, by_member TEXT NOT NULL, by_name TEXT NOT NULL, created TIMESTAMPTZ NOT NULL, updated TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, name))",
   ],
+  // What was done to an account by someone else (accounts.ts): a reset link made for it, told on
+  // the person's own page.
+  [
+    "CREATE TABLE account_events (user_id TEXT NOT NULL, kind TEXT NOT NULL, by_name TEXT NOT NULL, at TIMESTAMPTZ NOT NULL)",
+    "CREATE INDEX account_events_user ON account_events (user_id, at DESC)",
+  ],
 ];
 
 /**

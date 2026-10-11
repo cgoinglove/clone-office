@@ -432,9 +432,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   `googleLink`; it makes an account only from an invite, `disableImplicitSignUp`, and only with
   an email Google checked; the way back is bound by an encrypted cookie, `storeStateStrategy`,
   and Google's tokens are dropped; a change is one locked step on the settings as stored,
-  `update`, signing out those left without a way; passwords come back on whenever Google cannot
-  work, or `RELAY_PASSWORD_SIGNIN=1`; the admin makes a one-time reset link for a forgotten
-  password, `resetLink`, as no mail is sent, and removes an account, `removeAccount`), puts a person in the office whose invite they signed up with
+  `update`, signing out those left without a way; passwords come back for the admin alone when
+  Google cannot work, `adminsOnly`, or for everyone with `RELAY_PASSWORD_SIGNIN=1`; Google over
+  https waits for `RELAY_PUBLIC_URL`, which alone marks cookies secure; the admin acts only on
+  accounts in offices they own (`REACH`): a one-time reset link for a forgotten password,
+  `resetLink`, as no mail is sent (never an owner's, nor one with Google; its token kept hashed;
+  told on the person's page, `account_events`), and removing an account, `removeAccount`; a
+  signed-in person joins another office only once asked, unless Google just made their account
+  from that invite, `sub-office.join`), puts a person in the office whose invite they signed up with
   (the first owns it; `office_people`), and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:

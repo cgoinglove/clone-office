@@ -151,7 +151,20 @@ function sayUndoable(
  * cards where it fits there, and above them only where it does not (a phone). Nor does it stand
  * over the column at the left: it keeps to the screen's own area where it would.
  */
+/** The screen's own area, watched so a toast moves with it as the column folds or unfolds. */
+let watched: Element | null = null;
+const resized =
+  typeof ResizeObserver === "undefined"
+    ? undefined
+    : new ResizeObserver(() => liftToasts());
+
 function liftToasts() {
+  const area = document.querySelector("main");
+  if (area !== watched) {
+    resized?.disconnect();
+    if (area) resized?.observe(area);
+    watched = area;
+  }
   const boxes = (slot: string) =>
     [...document.querySelectorAll(`[data-slot="${slot}"]`)].map((el) =>
       el.getBoundingClientRect(),
@@ -162,7 +175,7 @@ function liftToasts() {
   const widest = Math.max(0, ...toasts.map((box) => box.width));
   // Never over the column: where a toast centred on the window would reach into it, it centres
   // on the screen's own area beside it instead, and the room beside the cards starts there too.
-  const main = document.querySelector("main")?.getBoundingClientRect();
+  const main = area?.getBoundingClientRect();
   const column = main && main.left > 0 ? Math.round(main.left + 16) : 0;
   let from = wide / 2 - widest / 2 < column - 8 ? column : 0;
   let lift = 0;

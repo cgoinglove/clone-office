@@ -148,6 +148,9 @@ footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem
 details > summary { cursor: pointer; color: var(--muted); font-size: .85rem; list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 details[open] > summary { margin-bottom: .4rem; }
+/* every fold says it opens: a small chevron after its words, turning down once open */
+details:not(.account) > summary::after { content: ""; display: inline-block; width: .38rem; height: .38rem; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); margin-left: .5rem; vertical-align: .12em; transition: transform .15s; }
+details:not(.account)[open] > summary::after { transform: rotate(45deg); }
 
 .inline { display: flex; gap: .5rem; align-items: flex-start; }
 .inline input { margin: 0; flex: 1; }
