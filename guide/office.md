@@ -99,8 +99,23 @@ server:
   folder) and never shown again; without such a key it is not kept at all. Google turns off or on
   any time with its settings kept, and **Remove Google settings** (Google 설정 지우기) deletes the
   client and its secret, asked once.
-- One way always stays on. A Google account makes a new account only from an invite's page; from
-  the sign-in page it signs in to one that exists.
+- One way always stays on. A Google account makes a new account only from an invite's page, and
+  only with an email Google has checked; from the sign-in page it signs in to one that exists.
+  Turning a way off signs out those who sign in only that way (they could not sign in again
+  anyway), and the page says how many they are before it goes. Should Google stop working (its
+  secret can no longer be opened, as when the server's key changed), email and password comes
+  back on by itself; the server's operator can also keep it on whatever the page says, with
+  `RELAY_PASSWORD_SIGNIN=1`.
+- **People on the team server** (팀 서버의 사람들): everyone with an account there and how each
+  signs in. **Reset link** (재설정 링크) makes a link for someone who forgot their password (no
+  mail is sent: the admin hands it on); it works once, for an hour, and signs them out everywhere
+  once used. **Remove account** (계정 지우기) takes an account off the server: they can no longer
+  sign in and their clone stops in every office there, while what they asked and answered stays.
+  It is also how an account someone made with another person's email gives way to its real
+  person, since no email is checked when an account is made with a password.
+
+Someone already signed in who opens another office's invite is asked first, **Join this office
+too?** (이 오피스에도 들어갈까요?), as their name and email will show to its people.
 
 The first account made in an office owns it. An owner also sees, on that page: **Remove**
 (내보내기) beside a person (their clone stops working in the office at once; what they asked and

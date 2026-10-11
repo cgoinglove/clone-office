@@ -787,11 +787,20 @@ test("with Google, as people do it: an invite makes an account, a password's acc
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   // Google's side: the code exchanged for who signed in there, as its token endpoint answers.
-  const people: Record<string, { sub: string; email: string; name: string }> = {
+  const people: Record<
+    string,
+    { sub: string; email: string; name: string; unchecked?: boolean }
+  > = {
     dee: { sub: "g-dee", email: "dee@example.com", name: "Dee" },
     ben: { sub: "g-ben", email: "ben@example.com", name: "Ben" },
     eve: { sub: "g-eve", email: "eve@example.com", name: "Eve" },
     other: { sub: "g-other", email: "someone@example.com", name: "Other" },
+    fay: {
+      sub: "g-fay",
+      email: "fay@example.com",
+      name: "Fay",
+      unchecked: true,
+    },
   };
   const part = (value: unknown) =>
     Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -819,7 +828,7 @@ test("with Google, as people do it: an invite makes an account, a password's acc
         aud: GOOGLE.clientId,
         sub: who.sub,
         email: who.email,
-        email_verified: true,
+        email_verified: !who.unchecked,
         name: who.name,
         iat: now,
         exp: now + 3600,
@@ -904,6 +913,17 @@ test("with Google, as people do it: an invite makes an account, a password's acc
       await (await fetch(`${base}${taken.to}`)).text(),
       /signs in with its password/,
     );
+    // An email Google has not checked makes no account, even from an invite.
+    const unchecked = await through(`/i/${office.key}/google`, "fay");
+    assert.match(unchecked.to, /error=/);
+    assert.equal(
+      (
+        await db.query(
+          "SELECT 1 FROM auth_users WHERE email = 'fay@example.com'",
+        )
+      ).length,
+      0,
+    );
     // From the sign-in page, a Google account with no account here makes none.
     const nobody = await through("/login/google", "eve");
     assert.equal(nobody.to, "/login?error=signup_disabled");
@@ -937,6 +957,281 @@ test("with Google, as people do it: an invite makes an account, a password's acc
     );
   } finally {
     globalThis.fetch = realFetch;
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("nobody is locked out: a way that cannot work leaves passwords on, and the operator can force them", async () => {
+  const { keyFrom, newKeyText } = await import("../../lib/seal.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const sealKey = keyFrom(newKeyText());
+  try {
+    const accounts = await Accounts.open(db, relay, { sealKey });
+    const office = await relay.office();
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    await accounts.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: "https://office.example.com",
+      by: "Ana",
+    });
+    await googleOn(db, ana.person.id);
+    await accounts.setPassword(ana.person.id, false);
+    assert.deepEqual(accounts.methods(), { password: false, google: true });
+    // Ben signed in only with a password: his session ends with it.
+    assert.equal(await accounts.person(cookieOf(ben.cookies)), undefined);
+    assert.ok(
+      await accounts.person(cookieOf(ana.cookies)),
+      "the admin stays in",
+    );
+    // The Google client cannot change while passwords are off.
+    await assert.rejects(
+      accounts.saveGoogle(ana.person.id, {
+        ...GOOGLE,
+        site: "https://office.example.com",
+        by: "Ana",
+      }),
+      /password-first/,
+    );
+    // The operator says passwords stay on, whatever the settings.
+    process.env.RELAY_PASSWORD_SIGNIN = "1";
+    try {
+      assert.equal(accounts.methods().password, true);
+    } finally {
+      delete process.env.RELAY_PASSWORD_SIGNIN;
+    }
+    // The key changes: Google can no longer be opened, so passwords come back on.
+    const warned = console.warn;
+    console.warn = () => {};
+    const after = await Accounts.open(db, relay, {
+      sealKey: keyFrom(newKeyText()),
+    }).finally(() => {
+      console.warn = warned;
+    });
+    assert.deepEqual(after.methods(), { password: true, google: false });
+    const back = await after.signIn({
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    assert.ok(back.cookies.length, "the admin signs in with the password");
+    assert.equal(
+      (await after.settings(ana.person.id)).password,
+      true,
+      "said on the admin's page as it is",
+    );
+  } finally {
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("a forgotten password, a removed account, another office's invite and odd addresses, as the pages handle them", async () => {
+  const { createServer, request: send } = await import("node:http");
+  const { keyFrom, newKeyText } = await import("../../lib/seal.ts");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay, {
+    sealKey: keyFrom(newKeyText()),
+  });
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const port = (server.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+  const form = (fields: Record<string, string>, cookie = "") => ({
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "sec-fetch-site": "same-origin",
+      ...(cookie ? { cookie } : {}),
+    },
+    body: new URLSearchParams(fields),
+    redirect: "manual" as const,
+  });
+  try {
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    const admin = cookieOf(ana.cookies);
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+
+    // A code the pages do not know reads as a general failure, never a broken page.
+    for (const odd of ["constructor", "__proto__", "toString"]) {
+      const page = await fetch(`${base}/login?error=${odd}`);
+      assert.equal(page.status, 200, odd);
+    }
+
+    // The admin makes Ben a reset link; it works once, and ends his sessions.
+    const ask = await fetch(`${base}/home/admin/reset?user=${ben.person.id}`, {
+      headers: { cookie: admin },
+    });
+    assert.match(await ask.text(), /Make a password reset link for Ben\?/);
+    const made = await (
+      await fetch(
+        `${base}/home/admin/reset`,
+        form({ user: ben.person.id }, admin),
+      )
+    ).text();
+    const link = /(http:\/\/[^\s<]+\/reset\?token=[\w-]+)/.exec(made)?.[1];
+    assert.ok(link, "the link to hand on");
+    assert.match(await (await fetch(link)).text(), /Choose a new password/);
+    const token = new URL(link).searchParams.get("token") ?? "";
+    const short = await fetch(
+      `${base}/reset`,
+      form({ token, password: "short" }),
+    );
+    assert.equal(short.status, 400);
+    const changed = await fetch(
+      `${base}/reset`,
+      form({ token, password: "ben's new password" }),
+    );
+    assert.equal(changed.headers.get("location"), "/login?done=reset");
+    assert.match(
+      await (await fetch(`${base}/login?done=reset`)).text(),
+      /Your password is changed/,
+    );
+    assert.equal(await accounts.person(cookieOf(ben.cookies)), undefined);
+    await assert.rejects(
+      accounts.signIn({
+        email: "ben@example.com",
+        password: "ben's long password",
+      }),
+      /sign-in-wrong/,
+    );
+    await accounts.signIn({
+      email: "ben@example.com",
+      password: "ben's new password",
+    });
+    const again = await fetch(
+      `${base}/reset`,
+      form({ token, password: "yet another password" }),
+    );
+    assert.match(await again.text(), /used or expired/);
+    // Only the admin makes links, and only for others.
+    await assert.rejects(
+      accounts.resetLink(ben.person.id, ana.person.id),
+      /not-admin/,
+    );
+
+    // Someone in another office opening this one's invite is asked before joining.
+    const other = await relay.office("other-office-key");
+    const cy = await accounts.signUp(other.key, {
+      name: "Cy",
+      email: "cy@example.com",
+      password: "cy's long password",
+    });
+    const cyCookie = cookieOf(cy.cookies);
+    const asked = await fetch(`${base}/i/${office.key}`, {
+      headers: { cookie: cyCookie },
+      redirect: "manual",
+    });
+    assert.equal(asked.status, 200);
+    assert.match(await asked.text(), /Join this office too\?/);
+    assert.equal((await accounts.places(cy.person.id)).length, 1);
+    const joined = await fetch(
+      `${base}/i/${office.key}/join`,
+      form({}, cyCookie),
+    );
+    assert.equal(joined.headers.get("location"), "/home");
+    assert.equal((await accounts.places(cy.person.id)).length, 2);
+    // Signed in, the sign-in page goes on to one's page.
+    const signedIn = await fetch(`${base}/login`, {
+      headers: { cookie: cyCookie },
+      redirect: "manual",
+    });
+    assert.equal(signedIn.headers.get("location"), "/home");
+
+    // The admin removes Cy's account: gone from both offices, no way back in.
+    const removed = await fetch(
+      `${base}/home/admin/account/remove`,
+      form({ user: cy.person.id }, admin),
+    );
+    assert.equal(removed.headers.get("location"), "/home/admin?done=saved");
+    assert.equal((await accounts.places(cy.person.id)).length, 0);
+    assert.equal(await accounts.person(cyCookie), undefined);
+    await assert.rejects(
+      accounts.signIn({
+        email: "cy@example.com",
+        password: "cy's long password",
+      }),
+      /sign-in-wrong/,
+    );
+
+    // A wrong Google client comes back as typed, with what was wrong under it.
+    const wrong = await fetch(
+      `${base}/home/admin/google`,
+      form({ clientId: "my-client", secret: "x" }, admin),
+    );
+    assert.equal(wrong.status, 400);
+    const wrongPage = await wrong.text();
+    assert.match(wrongPage, /value="my-client"/);
+    assert.match(wrongPage, /aria-invalid="true"/);
+    assert.match(wrongPage, /not a Google client ID/);
+
+    // Google's way back answers only as itself, whatever the request's host claims.
+    await accounts.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: base,
+      by: "Ana",
+    });
+    const tricked = await new Promise<{ status: number; body: string }>(
+      (resolve, reject) => {
+        const call = send(
+          {
+            host: "127.0.0.1",
+            port,
+            path: "/api/auth/callback/google",
+            headers: {
+              host: "h/api/auth/list-sessions?",
+              cookie: admin,
+            },
+          },
+          (answer) => {
+            let body = "";
+            answer.on("data", (chunk) => {
+              body += chunk;
+            });
+            answer.on("end", () =>
+              resolve({ status: answer.statusCode ?? 0, body }),
+            );
+          },
+        );
+        call.on("error", reject);
+        call.end();
+      },
+    );
+    assert.notEqual(tricked.status, 200);
+    assert.doesNotMatch(tricked.body, /token/);
+
+    // Starting Google again and again from one address stops at a limit.
+    let last = 0;
+    for (let i = 0; i < 31; i++)
+      last = (
+        await fetch(`${base}/login/google`, {
+          headers: { "sec-fetch-site": "same-origin" },
+          redirect: "manual",
+        })
+      ).status;
+    assert.equal(last, 429);
+  } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();
     await db.close();

@@ -90,17 +90,7 @@ export function OfficeSection({
         // The team server's own pages: one's account, the people, and, for whoever looks after
         // the server, how people sign in to it.
         <Group title={tS("server")} hint={tS("serverHint")}>
-          <div>
-            <a
-              href={`${data.relay.replace(/\/+$/, "")}/home`}
-              target="_blank"
-              rel="noreferrer"
-              className={cn(buttonVariants({ variant: "secondary" }))}
-            >
-              {tS("serverOpen")}
-              <ExternalLink />
-            </a>
-          </div>
+          <ServerLink relay={data.relay} />
         </Group>
       )}
 
@@ -419,6 +409,30 @@ function useInviteLink(skip = false) {
     };
   }, [skip]);
   return { url, problem };
+}
+
+/**
+ * The team server's own pages, opened at its sign-in with the office's invite: someone signed in
+ * there goes on to their page, someone with no account there is shown how to make one with it.
+ */
+function ServerLink({ relay }: { relay: string }) {
+  const tS = useTranslations("settings.office");
+  const { url } = useInviteLink();
+  const key = url ? /\/i\/([\w-]{4,128})/.exec(url)?.[1] : undefined;
+  const at = relay.replace(/\/+$/, "");
+  return (
+    <div>
+      <a
+        href={key ? `${at}/login?key=${encodeURIComponent(key)}` : `${at}/home`}
+        target="_blank"
+        rel="noreferrer"
+        className={cn(buttonVariants({ variant: "secondary" }))}
+      >
+        {tS("serverOpen")}
+        <ExternalLink />
+      </a>
+    </div>
+  );
 }
 
 function CopyLink({ url, label }: { url?: string; label: string }) {

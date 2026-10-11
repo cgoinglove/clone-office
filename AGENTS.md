@@ -429,7 +429,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   is an owner of the server's first office, `isAdmin`; Google's way back is Better Auth's own
   route, `GOOGLE_CALLBACK`, the only one of its routes the relay serves; a Google identity never
   joins an account by its email, `disableImplicitLinking`, but is connected from one's page,
-  `googleLink`; it makes an account only from an invite, `disableImplicitSignUp`), puts a person in the office whose invite they signed up with
+  `googleLink`; it makes an account only from an invite, `disableImplicitSignUp`, and only with
+  an email Google checked; the way back is bound by an encrypted cookie, `storeStateStrategy`,
+  and Google's tokens are dropped; a change is one locked step on the settings as stored,
+  `update`, signing out those left without a way; passwords come back on whenever Google cannot
+  work, or `RELAY_PASSWORD_SIGNIN=1`; the admin makes a one-time reset link for a forgotten
+  password, `resetLink`, as no mail is sent, and removes an account, `removeAccount`), puts a person in the office whose invite they signed up with
   (the first owns it; `office_people`), and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:

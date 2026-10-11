@@ -20,7 +20,6 @@ import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { type Auth, type BetterAuthOptions, betterAuth } from "better-auth";
 import { getMigrations } from "better-auth/db/migration";
-import { toNodeHandler } from "better-auth/node";
 import { isSealed, openWith, sealWith } from "../../lib/seal.ts";
 import type { Database } from "./db.ts";
 import { PGliteDialect } from "./pglite-dialect.ts";
@@ -226,6 +225,8 @@ export class Accounts {
   private keptText: string;
   private sealKey: Buffer | undefined;
   private publicUrl: string | undefined;
+  /** Reset tokens Better Auth just made, by account, for the admin to send on (no mail is sent). */
+  private resets: Map<string, string>;
 
   private constructor(
     db: Database,
@@ -234,7 +235,9 @@ export class Accounts {
     keptText: string,
     sealKey: Buffer | undefined,
     publicUrl: string | undefined,
+    resets: Map<string, string>,
   ) {
+    this.resets = resets;
     this.db = db;
     this.relay = relay;
     this.base = base;
@@ -260,6 +263,7 @@ export class Accounts {
     relay: Relay,
     options: { secret?: string; publicUrl?: string; sealKey?: Buffer } = {},
   ): Promise<Accounts> {
+    const resets = new Map<string, string>();
     const base: BetterAuthOptions = {
       appName: "Clone Office",
       secret:
@@ -279,15 +283,46 @@ export class Accounts {
         enabled: true,
         requireEmailVerification: false,
         autoSignIn: true,
+        // A forgotten password: the admin makes a link that works once, for an hour, and hands
+        // it on themselves; using it ends the person's sessions everywhere.
+        resetPasswordTokenExpiresIn: 60 * 60,
+        revokeSessionsOnPasswordReset: true,
+        sendResetPassword: async ({ user, token }) => {
+          resets.set(user.id, token);
+        },
       },
       user: { modelName: "auth_users" },
       session: { modelName: "auth_sessions" },
       account: {
         modelName: "auth_accounts",
-        // What Google gives is never needed after signing in; kept encrypted all the same.
+        // What Google gives is never needed after signing in: it is not kept at all (below), and
+        // encrypted should it ever be.
         encryptOAuthTokens: true,
         // A Google identity joins an account only when its person, signed in, connects it.
         accountLinking: { enabled: true, disableImplicitLinking: true },
+        // The way back from Google is bound by an encrypted cookie, so starting a sign-in writes
+        // nothing to the database, however often it is started.
+        storeStateStrategy: "cookie",
+      },
+      databaseHooks: {
+        user: {
+          create: {
+            // An account made through Google only with an email Google has checked: none made
+            // with an email someone merely claims.
+            before: async (user, context) =>
+              context?.path?.startsWith("/callback") && !user.emailVerified
+                ? false
+                : undefined,
+          },
+        },
+        account: {
+          create: {
+            before: async (account) => ({ data: withoutTokens(account) }),
+          },
+          update: {
+            before: async (account) => ({ data: withoutTokens(account) }),
+          },
+        },
       },
       verification: { modelName: "auth_verifications" },
       // The tables are made at open (getMigrations), so Better Auth's own look at them, which it
@@ -300,6 +335,9 @@ export class Accounts {
       rateLimit: { enabled: false },
       telemetry: { enabled: false },
       logger: { level: "error" },
+      // A sign-in Better Auth cannot finish goes back to the sign-in page, which says why (its
+      // own error page is not served).
+      onAPIError: { errorURL: "/login" },
     };
     const { runMigrations } = await getMigrations(base);
     await runMigrations();
@@ -313,16 +351,21 @@ export class Accounts {
       row?.value ?? "",
       options.sealKey,
       options.publicUrl,
+      resets,
     );
     await accounts.current.$context;
+    if (accounts.kept.google?.on && !accounts.google())
+      console.warn(
+        "Google sign-in is on, but its secret cannot be opened with this relay's key: email and password stays on until the admin saves it again.",
+      );
     return accounts;
   }
 
-  /** The Google client as kept, opened, while it is on; none when off or unreadable. */
-  private google():
-    | { clientId: string; clientSecret: string; site: string }
-    | undefined {
-    const google = this.kept.google;
+  /** A Google client as kept, opened, while it is on; none when off or unreadable. */
+  private opened(
+    kept: SignInKept,
+  ): { clientId: string; clientSecret: string; site: string } | undefined {
+    const google = kept.google;
     if (!google?.on || !this.sealKey || !isSealed(google.secret))
       return undefined;
     try {
@@ -336,6 +379,10 @@ export class Accounts {
     }
   }
 
+  private google() {
+    return this.opened(this.kept);
+  }
+
   /** Better Auth with the ways in the settings allow. */
   private build(): Auth<BetterAuthOptions> {
     const google = this.google();
@@ -346,9 +393,13 @@ export class Accounts {
       ...(site ? { baseURL: site } : {}),
       advanced: {
         ...this.base.advanced,
-        // As the public address says, never as Google's way back does: turning Google on must
-        // not rename the cookies and sign everyone out.
+        // Named as the public address says, never as Google's way back does: turning Google on
+        // must not rename the cookies and sign everyone out. Marked secure all the same where
+        // the server is reached over https.
         useSecureCookies: Boolean(this.publicUrl?.startsWith("https:")),
+        ...(site?.startsWith("https:")
+          ? { defaultCookieAttributes: { secure: true } }
+          : {}),
       },
       ...(google
         ? {
@@ -361,8 +412,6 @@ export class Accounts {
                 prompt: "select_account" as const,
               },
             },
-            // A sign-in Better Auth cannot finish goes back to the sign-in page, which says why.
-            onAPIError: { errorURL: "/login" },
           }
         : {}),
     };
@@ -377,7 +426,10 @@ export class Accounts {
     const [row] = await this.db.query<{ value: string }>(
       "SELECT value FROM server_settings WHERE name = 'sign-in'",
     );
-    const text = row?.value ?? "";
+    await this.take(row?.value ?? "");
+  }
+
+  private async take(text: string): Promise<void> {
     if (text === this.keptText) return;
     this.keptText = text;
     this.kept = parseKept(text);
@@ -385,25 +437,54 @@ export class Accounts {
     await this.current.$context;
   }
 
-  /** The ways a sign-in page offers now. */
+  /**
+   * The ways a sign-in page offers now. Email and password stays on whenever Google cannot
+   * actually be used (its secret unreadable once the key changed), and whenever the server's
+   * operator says so (RELAY_PASSWORD_SIGNIN=1): a setting never leaves everyone locked out.
+   */
   methods(): SignInMethods {
+    const google = Boolean(this.google());
     return {
-      password: this.kept.password !== false,
-      google: Boolean(this.google()),
+      password:
+        this.kept.password !== false ||
+        !google ||
+        process.env.RELAY_PASSWORD_SIGNIN === "1",
+      google,
     };
   }
 
-  /** Keeps new sign-in settings and signs people in by them from now on. */
-  private async keep(next: SignInKept): Promise<void> {
-    const text = JSON.stringify(next);
-    await this.db.query(
-      "INSERT INTO server_settings (name, value) VALUES ('sign-in', $1) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value",
-      [text],
-    );
-    this.keptText = text;
-    this.kept = next;
-    this.current = this.build();
-    await this.current.$context;
+  /**
+   * Changes the sign-in settings as one step: under a lock, on the settings as they are in the
+   * database (another admin, or another process, may have just changed them), `change` checks its
+   * rules and says what they become. A way turned off ends the sessions of those who signed in
+   * only that way, as they could not sign in again.
+   */
+  private async update(
+    change: (kept: SignInKept) => SignInKept,
+  ): Promise<void> {
+    const text = await this.db.transaction(async (tx) => {
+      await tx.query("SELECT pg_advisory_xact_lock(4174005)");
+      const [row] = await tx.query<{ value: string }>(
+        "SELECT value FROM server_settings WHERE name = 'sign-in'",
+      );
+      const before = parseKept(row?.value ?? "");
+      const next = change(before);
+      const written = JSON.stringify(next);
+      await tx.query(
+        "INSERT INTO server_settings (name, value) VALUES ('sign-in', $1) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value",
+        [written],
+      );
+      const only = (way: "credential" | "google") =>
+        tx.query(
+          `DELETE FROM auth_sessions WHERE "userId" IN (SELECT "userId" FROM auth_accounts GROUP BY "userId" HAVING bool_or("providerId" = $1) AND NOT bool_or("providerId" <> $1))`,
+          [way],
+        );
+      if (before.password !== false && next.password === false)
+        await only("credential");
+      if (this.opened(before) && !this.opened(next)) await only("google");
+      return written;
+    });
+    await this.take(text);
   }
 
   /** Whether a person is the server's admin: an owner of the office it was started with. */
@@ -436,12 +517,9 @@ export class Accounts {
   async settings(user: string): Promise<SignInSettings> {
     await this.mustAdmin(user);
     const google = this.kept.google;
-    let readable = false;
-    if (google && this.sealKey && isSealed(google.secret))
-      try {
-        openWith(this.sealKey, google.secret);
-        readable = true;
-      } catch {}
+    const readable = Boolean(
+      google && this.opened({ google: { ...google, on: true } }),
+    );
     const [counts] = await this.db.query<{
       password_only: string | number;
       google_only: string | number;
@@ -455,7 +533,7 @@ export class Accounts {
         FROM auth_accounts GROUP BY "userId") AS ways`,
     );
     return {
-      password: this.kept.password !== false,
+      password: this.methods().password,
       ...(google
         ? {
             google: {
@@ -476,74 +554,179 @@ export class Accounts {
   }
 
   /**
-   * Email and password on or off. Off only while Google is on and the admin signs in with it
+   * Email and password on or off. Off only while Google works and the admin signs in with it
    * themselves, so nobody is left without a way in, the admin least of all.
    */
   async setPassword(user: string, on: boolean): Promise<void> {
     await this.mustAdmin(user);
-    if (!on) {
-      if (!this.methods().google) throw new AccountError("google-first");
-      if (!(await this.ways(user)).google)
-        throw new AccountError("link-google-first");
-    }
-    await this.keep({ ...this.kept, password: on });
+    if (!on && !(await this.ways(user)).google)
+      throw new AccountError("link-google-first");
+    await this.update((kept) => {
+      if (!on && !this.opened(kept)) throw new AccountError("google-first");
+      return { ...kept, password: on };
+    });
   }
 
   /**
    * Keeps the Google client the admin registered, its secret sealed, and turns Google on. An empty
    * secret keeps the one kept for the same client. `site` is where the server is reached, which
-   * Google sends people back to.
+   * Google sends people back to. Not while passwords are off: a client that turns out wrong would
+   * leave nobody a way in.
    */
   async saveGoogle(
     user: string,
     input: { clientId: string; secret: string; site: string; by: string },
   ): Promise<void> {
     await this.mustAdmin(user);
-    if (!this.sealKey) throw new AccountError("sealing-off");
+    const key = this.sealKey;
+    if (!key) throw new AccountError("sealing-off");
     const clientId = input.clientId.trim();
     if (!GOOGLE_ID.test(clientId)) throw new AccountError("google-id-wrong");
     const secret = input.secret.trim();
-    const before = this.kept.google;
     if (secret && (secret.length > 200 || /\s/.test(secret)))
       throw new AccountError("google-secret-wrong");
-    if (!secret && (!before || before.clientId !== clientId))
-      throw new AccountError("google-secret-missing");
-    const sealed = secret ? sealWith(this.sealKey, secret) : before?.secret;
-    if (!sealed) throw new AccountError("google-secret-missing");
-    await this.keep({
-      ...this.kept,
-      google: {
-        on: true,
-        clientId,
-        secret: sealed,
-        site: siteOf(input.site),
-        by: input.by.slice(0, 80),
-        at: new Date().toISOString(),
-      },
+    const site = siteOf(input.site);
+    const sealed = secret ? sealWith(key, secret) : undefined;
+    await this.update((kept) => {
+      if (kept.password === false) throw new AccountError("password-first");
+      const before = kept.google;
+      const sealedSecret =
+        sealed ?? (before?.clientId === clientId ? before.secret : undefined);
+      if (!sealedSecret) throw new AccountError("google-secret-missing");
+      const next: SignInKept = {
+        ...kept,
+        google: {
+          on: true,
+          clientId,
+          secret: sealedSecret,
+          site,
+          by: input.by.slice(0, 80),
+          at: new Date().toISOString(),
+        },
+      };
+      if (!this.opened(next)) throw new AccountError("google-unreadable");
+      return next;
     });
-    if (!this.methods().google) throw new AccountError("google-unreadable");
   }
 
   /** Google on or off, its settings kept. Off only while email and password is on. */
   async setGoogle(user: string, on: boolean): Promise<void> {
     await this.mustAdmin(user);
-    const google = this.kept.google;
-    if (!google) throw new AccountError("google-not-set");
-    if (!on && this.kept.password === false)
-      throw new AccountError("password-first");
-    await this.keep({ ...this.kept, google: { ...google, on } });
-    if (on && !this.methods().google) {
-      await this.keep({ ...this.kept, google: { ...google, on: false } });
-      throw new AccountError("google-unreadable");
-    }
+    await this.update((kept) => {
+      const google = kept.google;
+      if (!google) throw new AccountError("google-not-set");
+      if (!on && kept.password === false)
+        throw new AccountError("password-first");
+      const next: SignInKept = { ...kept, google: { ...google, on } };
+      if (on && !this.opened(next)) throw new AccountError("google-unreadable");
+      return next;
+    });
   }
 
   /** Takes the Google client and its sealed secret off the server. Only while email and password is on. */
   async removeGoogle(user: string): Promise<void> {
     await this.mustAdmin(user);
-    if (this.kept.password === false) throw new AccountError("password-first");
-    const { google: _gone, ...rest } = this.kept;
-    await this.keep(rest);
+    await this.update((kept) => {
+      if (kept.password === false) throw new AccountError("password-first");
+      const { google: _gone, ...rest } = kept;
+      return rest;
+    });
+  }
+
+  /**
+   * Removes someone's account from the server, for its admin: they can no longer sign in, their
+   * clone's place goes from every office here, and what they asked and answered stays. They may
+   * make a new account from an invite. This is how an account made with someone else's email (no
+   * email is checked) gives way to its real person.
+   */
+  async removeAccount(admin: string, user: string): Promise<void> {
+    await this.mustAdmin(admin);
+    if (admin === user) throw new AccountError("not-yourself");
+    await this.db.transaction(async (tx) => {
+      await tx.query("DELETE FROM members WHERE user_id = $1", [user]);
+      await tx.query("DELETE FROM setup_codes WHERE user_id = $1", [user]);
+      await tx.query("DELETE FROM office_people WHERE user_id = $1", [user]);
+      await tx.query('DELETE FROM auth_sessions WHERE "userId" = $1', [user]);
+      await tx.query('DELETE FROM auth_accounts WHERE "userId" = $1', [user]);
+      await tx.query("DELETE FROM auth_users WHERE id = $1", [user]);
+    });
+  }
+
+  /** Everyone with an account on the server and how each signs in, for the admin's page. */
+  async serverPeople(user: string): Promise<
+    {
+      id: string;
+      name: string;
+      email: string;
+      password: boolean;
+      google: boolean;
+    }[]
+  > {
+    await this.mustAdmin(user);
+    const rows = await this.db.query<{
+      id: string;
+      name: string;
+      email: string;
+      p: boolean | null;
+      g: boolean | null;
+    }>(
+      `SELECT u.id, u.name, u.email,
+        bool_or(a."providerId" = 'credential') AS p,
+        bool_or(a."providerId" = 'google') AS g
+      FROM auth_users u LEFT JOIN auth_accounts a ON a."userId" = u.id
+      GROUP BY u.id, u.name, u.email ORDER BY lower(u.name), u.email LIMIT 500`,
+    );
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      password: Boolean(row.p),
+      google: Boolean(row.g),
+    }));
+  }
+
+  /**
+   * A link for someone who forgot their password, which the admin hands on themselves: it works
+   * once, for an hour. Only for an account that has a password, while passwords are on.
+   */
+  async resetLink(
+    admin: string,
+    user: string,
+  ): Promise<{ token: string; name: string }> {
+    await this.mustAdmin(admin);
+    if (!this.methods().password) throw new AccountError("password-off");
+    const [person] = await this.db.query<{ name: string; email: string }>(
+      "SELECT name, email FROM auth_users WHERE id = $1",
+      [user],
+    );
+    if (!person) throw new AccountError("account-failed");
+    if (!(await this.ways(user)).password)
+      throw new AccountError("no-password");
+    this.resets.delete(user);
+    await this.current.api.requestPasswordReset({
+      body: { email: person.email },
+    });
+    const token = this.resets.get(user);
+    this.resets.delete(user);
+    if (!token) throw new AccountError("account-failed");
+    return { token, name: person.name };
+  }
+
+  /** A new password from a reset link; the link ends with it, and so do the person's sessions. */
+  async resetPassword(token: string, password: string): Promise<void> {
+    if (!this.methods().password) throw new AccountError("password-off");
+    const response = (await this.current.api.resetPassword({
+      body: { newPassword: password, token },
+      asResponse: true,
+    })) as Response;
+    if (response.ok) return;
+    const body = (await response
+      .clone()
+      .json()
+      .catch(() => ({}))) as { code?: string };
+    if (/INVALID_TOKEN/i.test(String(body.code ?? "")))
+      throw new AccountError("reset-expired");
+    throw new AccountError(await refusal(response));
   }
 
   /**
@@ -588,12 +771,54 @@ export class Accounts {
     return started(response);
   }
 
-  /** Google's way back (`GOOGLE_CALLBACK`), which Better Auth itself answers. */
+  /**
+   * Google's way back (`GOOGLE_CALLBACK`), which Better Auth itself answers. It is handed exactly
+   * that route at the server's own address, whatever the request's host says, so no other of
+   * Better Auth's routes is ever reached through it.
+   */
   async callback(
     request: IncomingMessage,
     response: ServerResponse,
   ): Promise<void> {
-    await toNodeHandler(this.current)(request, response);
+    const site = this.publicUrl?.replace(/\/+$/, "") ?? this.google()?.site;
+    if (!site) {
+      response.writeHead(303, {
+        location: "/login?error=google-off",
+        "cache-control": "no-store",
+      });
+      response.end();
+      return;
+    }
+    const search = new URL(request.url ?? "/", "http://relay").search;
+    const headers = new Headers();
+    for (const name of ["cookie", "user-agent", "accept-language"]) {
+      const value = request.headers[name];
+      if (typeof value === "string") headers.set(name, value);
+    }
+    const answer = await this.current.handler(
+      new Request(`${site}${GOOGLE_CALLBACK}${search}`, {
+        method: "GET",
+        headers,
+      }),
+    );
+    const out: Record<string, string | string[]> = {
+      "cache-control": "no-store",
+    };
+    const location = answer.headers.get("location");
+    if (location) out.location = location;
+    const cookies = answer.headers.getSetCookie();
+    if (cookies.length) out["set-cookie"] = cookies;
+    const type = answer.headers.get("content-type");
+    if (type) out["content-type"] = type;
+    response.writeHead(answer.status, out);
+    response.end(Buffer.from(await answer.arrayBuffer()));
+  }
+
+  /** The office an invite's key opens, by its name. */
+  async officeOf(
+    key: string,
+  ): Promise<{ id: string; name: string } | undefined> {
+    return this.officeByKey(key);
   }
 
   /** The office an invite's key opens. */
@@ -914,6 +1139,16 @@ export class Accounts {
       moved: joined.moved,
     };
   }
+}
+
+/** An account's row without what Google gave to call it with, which is never needed here. */
+function withoutTokens<T extends Record<string, unknown>>(account: T): T {
+  return {
+    ...account,
+    accessToken: null,
+    refreshToken: null,
+    idToken: null,
+  };
 }
 
 /** Sign-in settings as kept; anything unreadable reads as none. */

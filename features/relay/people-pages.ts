@@ -15,7 +15,7 @@ const WORDS = {
     inviteTitle: "{from} invites you to their office",
     inviteTitleNobody: "You are invited to an office",
     what: "In this office, everyone's clone (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
-    accountInstead: "Or make an account on this office's server",
+    accountInstead: "Or make an account on the team server",
     accountWhy:
       "With an account you sign in here, see who is in the office, and connect your computer under your name.",
     name: "Your name",
@@ -82,10 +82,10 @@ const WORDS = {
     connectGoogleWhat: "Sign in with your Google account too.",
     inUse: "In use",
     linked: "Connected",
-    adminLink: "Sign-in settings for this server",
+    adminLink: "Sign-in settings for the team server",
     adminTitle: "Sign-in settings",
     adminWhat:
-      "How people sign in to this server. It applies to every office here, and one way always stays on.",
+      "How people sign in to the team server. It applies to every office on it, and one way always stays on.",
     backHome: "Back to my page",
     saved: "Saved.",
     stateOn: "On",
@@ -112,19 +112,59 @@ const WORDS = {
       "Google sends people back only to an https address, or to localhost. Put this server behind https and set RELAY_PUBLIC_URL to that address.",
     clientId: "Client ID",
     clientSecret: "Client secret",
-    secretNew: "It is sealed on this server and never shown again.",
+    secretNew: "It is kept encrypted on the team server and never shown again.",
     secretKeep: "Leave it empty to keep the secret already saved.",
-    savedBy: "Set up by {name}, {when}.",
+    savedBy: "Set up by {name} on {when}.",
     saveGoogle: "Save and turn on",
     removeGoogle: "Remove Google settings",
     sealingOff:
       "To keep a Google secret, this server needs a sealing key: set RELAY_ENCRYPTION_KEY (openssl rand -base64 32) and restart it.",
     googleRemoveTitle: "Remove the Google settings?",
     googleRemoveWhat:
-      "The client ID and the sealed secret are deleted from this server. {count} people who sign in only with Google can't sign in until it is set up again.",
+      "The client ID and its encrypted secret are deleted from the team server. Setting Google up again takes both again.",
     passwordOffTitle: "Turn off email and password?",
     passwordOffWhat:
-      "{count} people who sign in only with a password can't sign in while it is off. You can turn it back on any time.",
+      "While it is off, people sign in only with Google. You can turn it back on any time.",
+    passwordPlain: "Password",
+    forgot:
+      "Forgot your password? Ask the team server's admin for a reset link.",
+    noAccountInvite: "No account yet?",
+    makeFromInvite: "Make one with your office's invite",
+    passwordOnlyOne: "1 person signs in only with a password.",
+    googleOnlyOne: "1 person signs in only with Google.",
+    lockedGoogle:
+      "{count} people sign in only with Google: they can't sign in while it is off.",
+    lockedGoogleOne:
+      "1 person signs in only with Google: they can't sign in while it is off.",
+    lockedPassword:
+      "{count} people sign in only with a password: they can't sign in while it is off.",
+    lockedPasswordOne:
+      "1 person signs in only with a password: they can't sign in while it is off.",
+    googleOffTitle: "Turn off Google sign-in?",
+    googleOffWhat: "Its settings stay, and you can turn it back on any time.",
+    serverPeople: "People on the team server",
+    serverPeopleWhat:
+      "Everyone with an account here. Someone who forgot their password gets a reset link from you.",
+    resetLink: "Reset link",
+    resetTitle: "Make a password reset link for {name}?",
+    resetWhat:
+      "You get a link to send them yourself. It works once, for an hour, and signs them out everywhere once used.",
+    resetMadeTitle: "Reset link for {name}",
+    resetMadeWhat:
+      "Send this link to {name} yourself. It works once, for an hour:",
+    newPasswordTitle: "Choose a new password",
+    newPassword: "New password (8 characters or more)",
+    setPassword: "Save the new password",
+    resetDone: "Your password is changed. Sign in with it.",
+    joinTitle: "Join {office} too?",
+    joinWhat:
+      "You're signed in as {name}. The people of {office} will see your name and email.",
+    join: "Join",
+    removeAccount: "Remove account",
+    removeAccountTitle: "Remove {name}'s account?",
+    removeAccountWhat:
+      "Their account goes from the team server: they can't sign in, and their clone stops in every office here. What they asked and answered stays, and they can make a new account from an invite.",
+    thatOffice: "this office",
     errors: {
       "invite-wrong": "There is no such invite.",
       "name-missing": "Say your name.",
@@ -167,13 +207,16 @@ const WORDS = {
       "google-not-set": "Set up Google first.",
       "google-unreadable":
         "The saved secret can't be opened with this server's key. Paste it again.",
+      "reset-expired": "That link is used or expired. Ask for a new one.",
+      "no-password":
+        "That person has no password to reset: they sign in with Google.",
     },
   },
   ko: {
     inviteTitle: "{from} 님이 오피스에 초대했어요",
     inviteTitleNobody: "오피스에 초대받았어요",
     what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)이 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
-    accountInstead: "또는 이 오피스 서버에 계정 만들기",
+    accountInstead: "또는 팀 서버에 계정 만들기",
     accountWhy:
       "계정이 있으면 여기 로그인해서 오피스에 누가 있는지 보고, 내 이름으로 컴퓨터를 연결할 수 있어요.",
     name: "이름",
@@ -185,7 +228,7 @@ const WORDS = {
     keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
     signInTitle: "내 오피스에 로그인",
     signIn: "로그인",
-    noAccount: "아직 계정이 없나요? 오피스 초대 링크를 열어 만들어요.",
+    noAccount: "아직 계정이 없나요? 오피스 초대 링크를 열면 만들 수 있어요.",
     hello: "{name}님, 안녕하세요",
     yourOffice: "내 오피스",
     connectTitle: "내 컴퓨터 연결",
@@ -234,14 +277,14 @@ const WORDS = {
     waysTitle: "내 로그인 방법",
     waysPassword: "이메일과 비밀번호",
     waysGoogle: "Google",
-    connectGoogle: "Google 연결",
+    connectGoogle: "Google 계정 연결",
     connectGoogleWhat: "Google 계정으로도 로그인할 수 있어요.",
     inUse: "사용 중",
     linked: "연결됨",
-    adminLink: "이 서버의 로그인 설정",
+    adminLink: "팀 서버의 로그인 설정",
     adminTitle: "로그인 설정",
     adminWhat:
-      "사람들이 이 서버에 로그인하는 방법이에요. 이 서버의 모든 오피스에 똑같이 적용되고, 한 가지는 항상 켜져 있어요.",
+      "사람들이 팀 서버에 로그인하는 방법이에요. 팀 서버의 모든 오피스에 똑같이 적용되고, 한 가지는 항상 켜져 있어요.",
     backHome: "내 페이지로",
     saved: "저장했어요.",
     stateOn: "켜짐",
@@ -255,7 +298,7 @@ const WORDS = {
     passwordOnly: "비밀번호로만 로그인하는 사람 {count}명",
     googleOnly: "Google로만 로그인하는 사람 {count}명",
     linkFirst:
-      "끄기 전에 내 페이지에서 내 Google 계정을 연결해 두세요. 그래야 나도 계속 로그인할 수 있어요.",
+      "끄기 전에 내 Google 계정을 연결해 두세요. 그래야 나도 계속 로그인할 수 있어요.",
     googleSetup: "Google 로그인 설정하기",
     googleChange: "Google 클라이언트 바꾸기",
     step1:
@@ -268,19 +311,58 @@ const WORDS = {
       "Google은 https 주소(또는 localhost)로만 돌려보내요. 이 서버를 https 뒤에 두고 RELAY_PUBLIC_URL에 그 주소를 넣어 주세요.",
     clientId: "클라이언트 ID",
     clientSecret: "클라이언트 보안 비밀번호",
-    secretNew: "이 서버에 봉인해서 저장하고, 다시 보여 주지 않아요.",
+    secretNew: "팀 서버에 암호화해서 저장하고, 다시 보여 주지 않아요.",
     secretKeep: "비워 두면 저장된 보안 비밀번호를 그대로 써요.",
-    savedBy: "{name}님이 설정했어요. {when}",
+    savedBy: "{when}에 {name}님이 설정했어요.",
     saveGoogle: "저장하고 켜기",
     removeGoogle: "Google 설정 지우기",
     sealingOff:
-      "Google 보안 비밀번호를 저장하려면 이 서버에 봉인 키가 있어야 해요. RELAY_ENCRYPTION_KEY(openssl rand -base64 32)를 넣고 다시 시작해 주세요.",
+      "Google 보안 비밀번호를 저장하려면 팀 서버에 암호화 키가 있어야 해요. RELAY_ENCRYPTION_KEY(openssl rand -base64 32)를 넣고 다시 시작해 주세요.",
     googleRemoveTitle: "Google 설정을 지울까요?",
     googleRemoveWhat:
-      "클라이언트 ID와 봉인한 보안 비밀번호가 이 서버에서 지워져요. Google로만 로그인하는 {count}명은 다시 설정할 때까지 로그인할 수 없어요.",
+      "클라이언트 ID와 암호화해 둔 보안 비밀번호가 팀 서버에서 지워져요. Google을 다시 설정하려면 둘 다 다시 넣어야 해요.",
     passwordOffTitle: "이메일과 비밀번호 로그인을 끌까요?",
     passwordOffWhat:
-      "비밀번호로만 로그인하는 {count}명은 끄는 동안 로그인할 수 없어요. 언제든 다시 켤 수 있어요.",
+      "끄는 동안에는 Google로만 로그인할 수 있어요. 언제든 다시 켤 수 있어요.",
+    passwordPlain: "비밀번호",
+    forgot: "비밀번호를 잊었나요? 팀 서버 관리자에게 재설정 링크를 받으세요.",
+    noAccountInvite: "아직 계정이 없나요?",
+    makeFromInvite: "오피스 초대로 만들기",
+    passwordOnlyOne: "비밀번호로만 로그인하는 사람 1명",
+    googleOnlyOne: "Google로만 로그인하는 사람 1명",
+    lockedGoogle:
+      "Google로만 로그인하는 {count}명은 끄는 동안 로그인할 수 없어요.",
+    lockedGoogleOne:
+      "Google로만 로그인하는 1명은 끄는 동안 로그인할 수 없어요.",
+    lockedPassword:
+      "비밀번호로만 로그인하는 {count}명은 끄는 동안 로그인할 수 없어요.",
+    lockedPasswordOne:
+      "비밀번호로만 로그인하는 1명은 끄는 동안 로그인할 수 없어요.",
+    googleOffTitle: "Google 로그인을 끌까요?",
+    googleOffWhat: "설정은 그대로 남고, 언제든 다시 켤 수 있어요.",
+    serverPeople: "팀 서버의 사람들",
+    serverPeopleWhat:
+      "여기에 계정이 있는 모든 사람이에요. 비밀번호를 잊은 사람에게는 재설정 링크를 만들어 보내 주세요.",
+    resetLink: "재설정 링크",
+    resetTitle: "{name}님의 비밀번호 재설정 링크를 만들까요?",
+    resetWhat:
+      "링크를 받아 직접 보내 주면 돼요. 한 번, 1시간 동안만 쓸 수 있고, 쓰면 그 사람은 모든 곳에서 로그아웃돼요.",
+    resetMadeTitle: "{name}님의 재설정 링크",
+    resetMadeWhat:
+      "이 링크를 {name}님에게 직접 보내 주세요. 한 번, 1시간 동안만 돼요:",
+    newPasswordTitle: "새 비밀번호 정하기",
+    newPassword: "새 비밀번호 (8자 이상)",
+    setPassword: "새 비밀번호 저장",
+    resetDone: "비밀번호를 바꿨어요. 새 비밀번호로 로그인하세요.",
+    joinTitle: "{office}에도 들어갈까요?",
+    joinWhat:
+      "{name}님으로 로그인해 있어요. {office}의 사람들에게 내 이름과 이메일이 보여요.",
+    join: "들어가기",
+    removeAccount: "계정 지우기",
+    removeAccountTitle: "{name}님의 계정을 지울까요?",
+    removeAccountWhat:
+      "그 사람의 계정이 팀 서버에서 사라져요. 로그인할 수 없고, 여기 모든 오피스에서 클론이 멈춰요. 주고받은 부탁은 남고, 초대 링크로 새 계정을 만들 수 있어요.",
+    thatOffice: "이 오피스",
     errors: {
       "invite-wrong": "없는 초대예요.",
       "name-missing": "이름을 적어 주세요.",
@@ -323,13 +405,17 @@ const WORDS = {
       "google-not-set": "먼저 Google 로그인을 설정해 주세요.",
       "google-unreadable":
         "저장된 보안 비밀번호를 이 서버의 키로 열 수 없어요. 다시 붙여 넣어 주세요.",
+      "reset-expired":
+        "이미 쓰였거나 시간이 지난 링크예요. 새 링크를 받아 주세요.",
+      "no-password":
+        "그 사람은 Google로 로그인해서 재설정할 비밀번호가 없어요.",
     },
   },
   zh: {
     inviteTitle: "{from}邀请你加入他们的办公室",
     inviteTitleNobody: "你收到了一个办公室的邀请",
     what: "在这个办公室里，每个人的分身（一个像本人一样工作的 AI）会接收并回答团队的请求，只把该本人决定的事交给本人。",
-    accountInstead: "或者在这个办公室的服务器上创建账号",
+    accountInstead: "或者在团队服务器上创建账号",
     accountWhy:
       "有了账号，你可以在这里登录，看看办公室里有谁，并用你的名字连接你的电脑。",
     name: "你的名字",
@@ -391,10 +477,10 @@ const WORDS = {
     connectGoogleWhat: "也可以用你的 Google 账号登录。",
     inUse: "使用中",
     linked: "已关联",
-    adminLink: "这台服务器的登录设置",
+    adminLink: "团队服务器的登录设置",
     adminTitle: "登录设置",
     adminWhat:
-      "大家登录这台服务器的方式。它适用于这里的每个办公室，并且始终至少保留一种方式。",
+      "大家登录团队服务器的方式。它适用于上面的每个办公室，并且始终至少保留一种方式。",
     backHome: "回到我的页面",
     saved: "已保存。",
     stateOn: "已开启",
@@ -421,17 +507,49 @@ const WORDS = {
     clientSecret: "客户端密钥",
     secretNew: "它会在这台服务器上加密保存，之后不再显示。",
     secretKeep: "留空则继续使用已保存的密钥。",
-    savedBy: "由 {name} 设置，{when}。",
+    savedBy: "由 {name} 于 {when} 设置。",
     saveGoogle: "保存并开启",
     removeGoogle: "删除 Google 设置",
     sealingOff:
       "要保存 Google 密钥，这台服务器需要一个加密密钥：设置 RELAY_ENCRYPTION_KEY（openssl rand -base64 32）后重启。",
     googleRemoveTitle: "删除 Google 设置？",
     googleRemoveWhat:
-      "客户端 ID 和加密保存的密钥会从这台服务器上删除。只用 Google 登录的 {count} 人在重新设置之前将无法登录。",
+      "客户端 ID 和加密保存的密钥会从团队服务器上删除。重新设置 Google 时需要再次填写两者。",
     passwordOffTitle: "关闭邮箱和密码登录？",
-    passwordOffWhat:
-      "只用密码登录的 {count} 人在关闭期间无法登录。你随时可以重新开启。",
+    passwordOffWhat: "关闭期间，大家只能用 Google 登录。你随时可以重新开启。",
+    passwordPlain: "密码",
+    forgot: "忘记密码了？请向团队服务器的管理员要一个重置链接。",
+    noAccountInvite: "还没有账号？",
+    makeFromInvite: "用办公室的邀请创建",
+    passwordOnlyOne: "1 人只用密码登录。",
+    googleOnlyOne: "1 人只用 Google 登录。",
+    lockedGoogle: "只用 Google 登录的 {count} 人在关闭期间无法登录。",
+    lockedGoogleOne: "只用 Google 登录的 1 人在关闭期间无法登录。",
+    lockedPassword: "只用密码登录的 {count} 人在关闭期间无法登录。",
+    lockedPasswordOne: "只用密码登录的 1 人在关闭期间无法登录。",
+    googleOffTitle: "关闭 Google 登录？",
+    googleOffWhat: "设置会保留，你随时可以重新开启。",
+    serverPeople: "团队服务器上的成员",
+    serverPeopleWhat:
+      "这里有账号的所有人。有人忘记密码时，由你为他生成重置链接。",
+    resetLink: "重置链接",
+    resetTitle: "为{name}生成密码重置链接？",
+    resetWhat:
+      "你会得到一个链接，由你自己发给对方。它只能用一次，1 小时内有效，使用后对方会在所有地方退出登录。",
+    resetMadeTitle: "{name}的重置链接",
+    resetMadeWhat: "请把这个链接亲自发给{name}。只能用一次，1 小时内有效：",
+    newPasswordTitle: "设置新密码",
+    newPassword: "新密码（至少 8 位）",
+    setPassword: "保存新密码",
+    resetDone: "密码已更改。请用新密码登录。",
+    joinTitle: "也加入{office}吗？",
+    joinWhat: "你正以{name}的身份登录。{office}的成员会看到你的名字和邮箱。",
+    join: "加入",
+    removeAccount: "删除账号",
+    removeAccountTitle: "删除{name}的账号？",
+    removeAccountWhat:
+      "对方的账号会从团队服务器上删除：无法再登录，其分身也会在这里的每个办公室停止。提过和回答过的请求会保留，对方可以用邀请重新创建账号。",
+    thatOffice: "这个办公室",
     errors: {
       "invite-wrong": "没有这个邀请。",
       "name-missing": "请填写你的名字。",
@@ -471,13 +589,15 @@ const WORDS = {
       "google-not-set": "请先设置 Google 登录。",
       "google-unreadable":
         "已保存的密钥无法用这台服务器的密钥打开。请重新粘贴。",
+      "reset-expired": "这个链接已被使用或已过期。请要一个新的。",
+      "no-password": "这个人用 Google 登录，没有可重置的密码。",
     },
   },
   ja: {
     inviteTitle: "{from}さんからオフィスへの招待が届いています",
     inviteTitleNobody: "オフィスに招待されています",
     what: "このオフィスでは、一人ひとりのクローン（本人のように働くAI）がチームの依頼を受けて答え、本人が決めるべきことだけを本人に届けます。",
-    accountInstead: "または、このオフィスのサーバーでアカウントを作る",
+    accountInstead: "または、チームのサーバーでアカウントを作る",
     accountWhy:
       "アカウントがあれば、ここにサインインしてオフィスに誰がいるかを確認し、あなたの名前でコンピューターをつなげます。",
     name: "名前",
@@ -544,10 +664,10 @@ const WORDS = {
     connectGoogleWhat: "Google アカウントでもサインインできるようになります。",
     inUse: "使用中",
     linked: "接続済み",
-    adminLink: "このサーバーのサインイン設定",
+    adminLink: "チームのサーバーのサインイン設定",
     adminTitle: "サインイン設定",
     adminWhat:
-      "このサーバーへのサインイン方法です。ここにあるすべてのオフィスに適用され、少なくとも一つは常にオンのままです。",
+      "チームのサーバーへのサインイン方法です。そこにあるすべてのオフィスに適用され、少なくとも一つは常にオンのままです。",
     backHome: "自分のページに戻る",
     saved: "保存しました。",
     stateOn: "オン",
@@ -577,18 +697,59 @@ const WORDS = {
     clientSecret: "クライアント シークレット",
     secretNew: "このサーバーに暗号化して保存され、二度と表示されません。",
     secretKeep: "空のままにすると、保存済みのシークレットをそのまま使います。",
-    savedBy: "{name}さんが設定しました（{when}）。",
+    savedBy: "{when}に{name}さんが設定しました。",
     saveGoogle: "保存してオンにする",
     removeGoogle: "Google の設定を削除",
     sealingOff:
       "Google のシークレットを保存するには、このサーバーに暗号化キーが必要です。RELAY_ENCRYPTION_KEY（openssl rand -base64 32）を設定して再起動してください。",
     googleRemoveTitle: "Google の設定を削除しますか？",
     googleRemoveWhat:
-      "クライアント ID と暗号化したシークレットがこのサーバーから削除されます。Google だけでサインインする{count}人は、設定し直すまでサインインできません。",
+      "クライアント ID と暗号化したシークレットがチームのサーバーから削除されます。Google を設定し直すには、両方をもう一度入力します。",
     passwordOffTitle:
       "メールアドレスとパスワードのサインインをオフにしますか？",
     passwordOffWhat:
-      "パスワードだけでサインインする{count}人は、オフの間サインインできません。いつでもオンに戻せます。",
+      "オフの間は、Google でしかサインインできません。いつでもオンに戻せます。",
+    passwordPlain: "パスワード",
+    forgot:
+      "パスワードを忘れた場合は、チームのサーバーの管理者にリセット用リンクをもらってください。",
+    noAccountInvite: "まだアカウントがない場合は",
+    makeFromInvite: "オフィスの招待で作成",
+    passwordOnlyOne: "パスワードだけでサインインする人：1人",
+    googleOnlyOne: "Google だけでサインインする人：1人",
+    lockedGoogle:
+      "Google だけでサインインする{count}人は、オフの間サインインできません。",
+    lockedGoogleOne:
+      "Google だけでサインインする1人は、オフの間サインインできません。",
+    lockedPassword:
+      "パスワードだけでサインインする{count}人は、オフの間サインインできません。",
+    lockedPasswordOne:
+      "パスワードだけでサインインする1人は、オフの間サインインできません。",
+    googleOffTitle: "Google のサインインをオフにしますか？",
+    googleOffWhat: "設定はそのまま残り、いつでもオンに戻せます。",
+    serverPeople: "チームのサーバーのメンバー",
+    serverPeopleWhat:
+      "ここにアカウントがある全員です。パスワードを忘れた人には、あなたがリセット用リンクを作って渡します。",
+    resetLink: "リセット用リンク",
+    resetTitle: "{name}さんのパスワードのリセット用リンクを作りますか？",
+    resetWhat:
+      "リンクができたら、あなたから本人に送ってください。1回だけ、1時間有効で、使うと本人はすべての場所でサインアウトします。",
+    resetMadeTitle: "{name}さんのリセット用リンク",
+    resetMadeWhat:
+      "このリンクを{name}さんに直接送ってください。1回だけ、1時間有効です：",
+    newPasswordTitle: "新しいパスワードを決める",
+    newPassword: "新しいパスワード（8文字以上）",
+    setPassword: "新しいパスワードを保存",
+    resetDone:
+      "パスワードを変更しました。新しいパスワードでサインインしてください。",
+    joinTitle: "{office}にも参加しますか？",
+    joinWhat:
+      "{name}としてサインインしています。{office}のメンバーにあなたの名前とメールアドレスが表示されます。",
+    join: "参加する",
+    removeAccount: "アカウントを削除",
+    removeAccountTitle: "{name}さんのアカウントを削除しますか？",
+    removeAccountWhat:
+      "その人のアカウントがチームのサーバーから削除されます。サインインできなくなり、ここにあるすべてのオフィスでクローンが止まります。やりとりした依頼は残り、招待から新しいアカウントを作れます。",
+    thatOffice: "このオフィス",
     errors: {
       "invite-wrong": "その招待は存在しません。",
       "name-missing": "名前を入力してください。",
@@ -638,13 +799,17 @@ const WORDS = {
       "google-not-set": "先に Google のサインインを設定してください。",
       "google-unreadable":
         "保存済みのシークレットを、このサーバーのキーで開けません。もう一度貼り付けてください。",
+      "reset-expired":
+        "このリンクは使用済みか期限切れです。新しいリンクをもらってください。",
+      "no-password":
+        "その人は Google でサインインするため、リセットするパスワードがありません。",
     },
   },
   es: {
     inviteTitle: "{from} te invita a su oficina",
     inviteTitleNobody: "Te invitaron a una oficina",
     what: "En esta oficina, el clon de cada persona (una IA que trabaja como ella) recibe y responde las solicitudes del equipo, y a cada persona solo le trae las decisiones que le tocan.",
-    accountInstead: "O crea una cuenta en el servidor de esta oficina",
+    accountInstead: "O crea una cuenta en el servidor del equipo",
     accountWhy:
       "Con una cuenta inicias sesión aquí, ves quién está en la oficina y conectas tu computadora con tu nombre.",
     name: "Tu nombre",
@@ -712,10 +877,10 @@ const WORDS = {
     connectGoogleWhat: "Inicia sesión también con tu cuenta de Google.",
     inUse: "En uso",
     linked: "Conectado",
-    adminLink: "Ajustes de inicio de sesión de este servidor",
+    adminLink: "Ajustes de inicio de sesión del servidor del equipo",
     adminTitle: "Ajustes de inicio de sesión",
     adminWhat:
-      "Cómo inician sesión las personas en este servidor. Se aplica a todas las oficinas de aquí, y siempre queda al menos una forma activa.",
+      "Cómo inician sesión las personas en el servidor del equipo. Se aplica a todas sus oficinas, y siempre queda al menos una forma activa.",
     backHome: "Volver a mi página",
     saved: "Guardado.",
     stateOn: "Activado",
@@ -745,17 +910,58 @@ const WORDS = {
     clientSecret: "Secreto del cliente",
     secretNew: "Se guarda cifrado en este servidor y no se vuelve a mostrar.",
     secretKeep: "Déjalo vacío para conservar el secreto ya guardado.",
-    savedBy: "Configurado por {name}, {when}.",
+    savedBy: "Configurado por {name} el {when}.",
     saveGoogle: "Guardar y activar",
     removeGoogle: "Eliminar los ajustes de Google",
     sealingOff:
       "Para guardar un secreto de Google, este servidor necesita una clave de cifrado: define RELAY_ENCRYPTION_KEY (openssl rand -base64 32) y reinícialo.",
     googleRemoveTitle: "¿Eliminar los ajustes de Google?",
     googleRemoveWhat:
-      "El ID de cliente y el secreto cifrado se borran de este servidor. {count} personas que inician sesión solo con Google no podrán hacerlo hasta que se configure de nuevo.",
+      "El ID de cliente y su secreto cifrado se borran del servidor del equipo. Para configurar Google de nuevo hay que volver a poner ambos.",
     passwordOffTitle: "¿Desactivar el correo y la contraseña?",
     passwordOffWhat:
-      "{count} personas que inician sesión solo con contraseña no podrán hacerlo mientras esté desactivado. Puedes volver a activarlo cuando quieras.",
+      "Mientras esté desactivado, solo se inicia sesión con Google. Puedes volver a activarlo cuando quieras.",
+    passwordPlain: "Contraseña",
+    forgot:
+      "¿Olvidaste tu contraseña? Pide al administrador del servidor del equipo un enlace para restablecerla.",
+    noAccountInvite: "¿Todavía no tienes cuenta?",
+    makeFromInvite: "Créala con la invitación de tu oficina",
+    passwordOnlyOne: "1 persona inicia sesión solo con contraseña.",
+    googleOnlyOne: "1 persona inicia sesión solo con Google.",
+    lockedGoogle:
+      "{count} personas inician sesión solo con Google: no podrán hacerlo mientras esté desactivado.",
+    lockedGoogleOne:
+      "1 persona inicia sesión solo con Google: no podrá hacerlo mientras esté desactivado.",
+    lockedPassword:
+      "{count} personas inician sesión solo con contraseña: no podrán hacerlo mientras esté desactivado.",
+    lockedPasswordOne:
+      "1 persona inicia sesión solo con contraseña: no podrá hacerlo mientras esté desactivado.",
+    googleOffTitle: "¿Desactivar el inicio de sesión con Google?",
+    googleOffWhat:
+      "Sus ajustes se conservan y puedes volver a activarlo cuando quieras.",
+    serverPeople: "Personas en el servidor del equipo",
+    serverPeopleWhat:
+      "Todas las personas con cuenta aquí. A quien olvide su contraseña le das tú un enlace para restablecerla.",
+    resetLink: "Enlace para restablecer",
+    resetTitle: "¿Crear un enlace para restablecer la contraseña de {name}?",
+    resetWhat:
+      "Recibes un enlace para enviárselo tú. Funciona una vez, durante una hora, y al usarlo cierra su sesión en todas partes.",
+    resetMadeTitle: "Enlace para restablecer de {name}",
+    resetMadeWhat:
+      "Envía tú mismo este enlace a {name}. Funciona una vez, durante una hora:",
+    newPasswordTitle: "Elige una contraseña nueva",
+    newPassword: "Contraseña nueva (8 caracteres o más)",
+    setPassword: "Guardar la contraseña nueva",
+    resetDone: "Tu contraseña cambió. Inicia sesión con ella.",
+    joinTitle: "¿Unirte también a {office}?",
+    joinWhat:
+      "Iniciaste sesión como {name}. Las personas de {office} verán tu nombre y tu correo.",
+    join: "Unirme",
+    removeAccount: "Eliminar cuenta",
+    removeAccountTitle: "¿Eliminar la cuenta de {name}?",
+    removeAccountWhat:
+      "Su cuenta se borra del servidor del equipo: no puede iniciar sesión y su clon se detiene en todas las oficinas de aquí. Lo que pidió y respondió se queda, y puede crear una cuenta nueva con una invitación.",
+    thatOffice: "esta oficina",
     errors: {
       "invite-wrong": "Esa invitación no existe.",
       "name-missing": "Escribe tu nombre.",
@@ -802,13 +1008,16 @@ const WORDS = {
       "google-not-set": "Configura Google primero.",
       "google-unreadable":
         "El secreto guardado no se puede abrir con la clave de este servidor. Pégalo de nuevo.",
+      "reset-expired": "Ese enlace ya se usó o caducó. Pide uno nuevo.",
+      "no-password":
+        "Esa persona no tiene contraseña que restablecer: inicia sesión con Google.",
     },
   },
   pt: {
     inviteTitle: "{from} convida você para o escritório",
     inviteTitleNobody: "Você recebeu um convite para um escritório",
     what: "Neste escritório, o clone de cada pessoa (uma IA que trabalha como ela) recebe e responde os pedidos da equipe, e traz a cada pessoa só as decisões que são dela.",
-    accountInstead: "Ou crie uma conta no servidor deste escritório",
+    accountInstead: "Ou crie uma conta no servidor da equipe",
     accountWhy:
       "Com uma conta, você entra aqui, vê quem está no escritório e conecta seu computador com o seu nome.",
     name: "Seu nome",
@@ -876,10 +1085,10 @@ const WORDS = {
     connectGoogleWhat: "Entre também com a sua conta do Google.",
     inUse: "Em uso",
     linked: "Conectado",
-    adminLink: "Configurações de login deste servidor",
+    adminLink: "Configurações de login do servidor da equipe",
     adminTitle: "Configurações de login",
     adminWhat:
-      "Como as pessoas entram neste servidor. Vale para todos os escritórios daqui, e sempre fica pelo menos uma forma ativa.",
+      "Como as pessoas entram no servidor da equipe. Vale para todos os escritórios dele, e sempre fica pelo menos uma forma ativa.",
     backHome: "Voltar para a minha página",
     saved: "Salvo.",
     stateOn: "Ativado",
@@ -909,17 +1118,58 @@ const WORDS = {
     secretNew:
       "Ela fica guardada criptografada neste servidor e não é mostrada de novo.",
     secretKeep: "Deixe vazio para manter a chave já salva.",
-    savedBy: "Configurado por {name}, {when}.",
+    savedBy: "Configurado por {name} em {when}.",
     saveGoogle: "Salvar e ativar",
     removeGoogle: "Remover as configurações do Google",
     sealingOff:
       "Para guardar uma chave secreta do Google, este servidor precisa de uma chave de criptografia: defina RELAY_ENCRYPTION_KEY (openssl rand -base64 32) e reinicie.",
     googleRemoveTitle: "Remover as configurações do Google?",
     googleRemoveWhat:
-      "O ID do cliente e a chave secreta criptografada são apagados deste servidor. {count} pessoas que entram só com o Google não conseguem entrar até que seja configurado de novo.",
+      "O ID do cliente e a chave secreta criptografada são apagados do servidor da equipe. Para configurar o Google de novo, é preciso colocar os dois outra vez.",
     passwordOffTitle: "Desativar e-mail e senha?",
     passwordOffWhat:
-      "{count} pessoas que entram só com senha não conseguem entrar enquanto estiver desativado. Você pode ativar de novo quando quiser.",
+      "Enquanto estiver desativado, só dá para entrar com o Google. Você pode ativar de novo quando quiser.",
+    passwordPlain: "Senha",
+    forgot:
+      "Esqueceu a senha? Peça ao administrador do servidor da equipe um link para redefini-la.",
+    noAccountInvite: "Ainda não tem conta?",
+    makeFromInvite: "Crie com o convite do seu escritório",
+    passwordOnlyOne: "1 pessoa entra só com senha.",
+    googleOnlyOne: "1 pessoa entra só com o Google.",
+    lockedGoogle:
+      "{count} pessoas entram só com o Google: não conseguem entrar enquanto estiver desativado.",
+    lockedGoogleOne:
+      "1 pessoa entra só com o Google: não consegue entrar enquanto estiver desativado.",
+    lockedPassword:
+      "{count} pessoas entram só com senha: não conseguem entrar enquanto estiver desativado.",
+    lockedPasswordOne:
+      "1 pessoa entra só com senha: não consegue entrar enquanto estiver desativado.",
+    googleOffTitle: "Desativar o login com o Google?",
+    googleOffWhat:
+      "As configurações continuam salvas, e você pode ativar de novo quando quiser.",
+    serverPeople: "Pessoas no servidor da equipe",
+    serverPeopleWhat:
+      "Todas as pessoas com conta aqui. Quem esquecer a senha recebe de você um link para redefini-la.",
+    resetLink: "Link para redefinir",
+    resetTitle: "Criar um link para redefinir a senha de {name}?",
+    resetWhat:
+      "Você recebe um link para enviar à pessoa. Ele funciona uma vez, por uma hora, e ao ser usado encerra a sessão dela em todos os lugares.",
+    resetMadeTitle: "Link para redefinir de {name}",
+    resetMadeWhat:
+      "Envie você mesmo este link para {name}. Funciona uma vez, por uma hora:",
+    newPasswordTitle: "Escolha uma senha nova",
+    newPassword: "Senha nova (8 caracteres ou mais)",
+    setPassword: "Salvar a senha nova",
+    resetDone: "Sua senha foi alterada. Entre com ela.",
+    joinTitle: "Entrar também em {office}?",
+    joinWhat:
+      "Você entrou como {name}. As pessoas de {office} vão ver o seu nome e o seu e-mail.",
+    join: "Entrar",
+    removeAccount: "Remover conta",
+    removeAccountTitle: "Remover a conta de {name}?",
+    removeAccountWhat:
+      "A conta é apagada do servidor da equipe: a pessoa não consegue entrar, e o clone dela para em todos os escritórios daqui. O que ela pediu e respondeu continua, e ela pode criar uma conta nova com um convite.",
+    thatOffice: "este escritório",
     errors: {
       "invite-wrong": "Esse convite não existe.",
       "name-missing": "Informe seu nome.",
@@ -964,6 +1214,9 @@ const WORDS = {
       "google-not-set": "Configure o Google primeiro.",
       "google-unreadable":
         "A chave secreta salva não pode ser aberta com a chave deste servidor. Cole de novo.",
+      "reset-expired": "Esse link já foi usado ou expirou. Peça um novo.",
+      "no-password":
+        "Essa pessoa não tem senha para redefinir: entra com o Google.",
     },
   },
 };
@@ -989,7 +1242,10 @@ function say(
 /** A failure's words; one the page does not know reads as a general one. */
 export function errorWords(lang: PageLanguage, code: string): string {
   const errors = WORDS[lang].errors as Record<string, string>;
-  return escape(errors[code] ?? errors["account-failed"]);
+  // only the page's own codes: a name like "constructor" is no failure's words
+  return escape(
+    Object.hasOwn(errors, code) ? errors[code] : errors["account-failed"],
+  );
 }
 
 const problem = (lang: PageLanguage, code?: string) =>
@@ -1032,6 +1288,11 @@ export function signUpPage(input: {
   /** The ways the server lets people in. */
   methods: SignInMethods;
   error?: string;
+  /**
+   * Where the error shows: the account's own fold after its form (the browser lands there), or the
+   * top, after Google sent them back here.
+   */
+  errorAtTop?: boolean;
   name?: string;
   email?: string;
 }): string {
@@ -1039,20 +1300,23 @@ export function signUpPage(input: {
   const title = input.from
     ? say(lang, "inviteTitle", { from: input.from })
     : say(lang, "inviteTitleNobody");
+  const here = `/i/${encodeURIComponent(input.key)}${input.from ? `?from=${encodeURIComponent(input.from)}` : ""}`;
+  const google = `/i/${encodeURIComponent(input.key)}/google${input.from ? `?from=${encodeURIComponent(input.from)}` : ""}`;
   return shell(
     lang,
     title,
     `<h1>${title}</h1>
+${input.errorAtTop ? problem(lang, input.error) : ""}
 <p>${say(lang, "what")}</p>
 ${installGuide(input)}
-<details${input.error ? " open" : ""}><summary>${say(lang, "accountInstead")}</summary>
+<details class="account" id="account"${input.error ? " open" : ""}><summary>${say(lang, "accountInstead")}</summary>
 <section>
 <p class="note">${say(lang, "accountWhy")}</p>
-${problem(lang, input.error)}
-${googleWay(lang, input.methods, `/i/${encodeURIComponent(input.key)}/google${input.from ? `?from=${encodeURIComponent(input.from)}` : ""}`)}
+${input.errorAtTop ? "" : problem(lang, input.error)}
+${googleWay(lang, input.methods, google)}
 ${
   input.methods.password
-    ? `<form method="post">
+    ? `<form method="post" action="${escape(here)}#account" class="auth">
 <label for="name">${say(lang, "name")}</label>
 <input id="name" name="name" required maxlength="80" autocomplete="name" value="${escape(input.name ?? "")}">
 <label for="email">${say(lang, "email")}</label>
@@ -1075,6 +1339,8 @@ export function signInPage(input: {
   key?: string;
   methods: SignInMethods;
   error?: string;
+  /** A word for what just happened: the password was changed. */
+  done?: "reset";
   email?: string;
 }): string {
   const { lang } = input;
@@ -1084,20 +1350,66 @@ export function signInPage(input: {
     title,
     `<h1>${title}</h1>
 ${problem(lang, input.error)}
+${input.done === "reset" ? `<p class="done" role="status">${say(lang, "resetDone")}</p>` : ""}
 ${googleWay(lang, input.methods, `/login/google${input.key ? `?key=${encodeURIComponent(input.key)}` : ""}`)}
 ${
   input.methods.password
-    ? `<form method="post">
+    ? `<form method="post" class="auth">
 ${input.key ? `<input type="hidden" name="key" value="${escape(input.key)}">` : ""}
 <label for="email">${say(lang, "email")}</label>
 <input id="email" name="email" type="email" required maxlength="200" autocomplete="email" value="${escape(input.email ?? "")}">
-<label for="password">${say(lang, "password")}</label>
+<label for="password">${say(lang, "passwordPlain")}</label>
 <input id="password" name="password" type="password" required maxlength="128" autocomplete="current-password">
 <button type="submit">${say(lang, "signIn")}</button>
-</form>`
+</form>
+<p class="note">${say(lang, "forgot")}</p>`
     : ""
 }
-<p class="note">${say(lang, "noAccount")}</p>`,
+<p class="note">${
+      input.key
+        ? `${say(lang, "noAccountInvite")} <a href="/i/${encodeURIComponent(input.key)}#account">${say(lang, "makeFromInvite")}</a>`
+        : say(lang, "noAccount")
+    }</p>`,
+  );
+}
+
+/** Where a person changes a forgotten password, with the link the admin made for them. */
+export function newPasswordPage(input: {
+  lang: PageLanguage;
+  token: string;
+  error?: string;
+}): string {
+  const { lang } = input;
+  const title = say(lang, "newPasswordTitle");
+  return shell(
+    lang,
+    title,
+    `<h1>${title}</h1>
+${problem(lang, input.error)}
+<form method="post" action="/reset" class="auth">
+<input type="hidden" name="token" value="${escape(input.token)}">
+<label for="password">${say(lang, "newPassword")}</label>
+<input id="password" name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password">
+<button type="submit">${say(lang, "setPassword")}</button>
+</form>`,
+  );
+}
+
+/** The reset link the admin made, to send on themselves. */
+export function resetMadePage(input: {
+  lang: PageLanguage;
+  name: string;
+  link: string;
+}): string {
+  const { lang } = input;
+  const title = say(lang, "resetMadeTitle", { name: input.name });
+  return shell(
+    lang,
+    title,
+    `<h1>${title}</h1>
+<p>${say(lang, "resetMadeWhat", { name: input.name })}</p>
+<pre>${escape(input.link)}</pre>
+<p><a href="/home/admin">${say(lang, "adminTitle")}</a></p>`,
   );
 }
 
@@ -1166,7 +1478,7 @@ export function homePage(input: {
     ways && (input.methods?.google || ways.google)
       ? `<section>
 <h2>${say(lang, "waysTitle")}</h2>
-<ul class="rows">${
+<ul class="ways">${
           ways.password
             ? `<li><span class="who"><b>${say(lang, "waysPassword")}</b></span><span class="tag">${say(lang, "inUse")}</span></li>`
             : ""
@@ -1253,6 +1565,19 @@ ${adminLink}
   );
 }
 
+/** A count of people said with its own sentence, in the singular for one; nothing for none. */
+function countLine(
+  lang: PageLanguage,
+  count: number,
+  many: Key,
+  one: Key,
+): string {
+  if (count <= 0) return "";
+  return count === 1
+    ? say(lang, one)
+    : say(lang, many, { count: String(count) });
+}
+
 /** One more look before something an owner can't take back: who it is about, and yes or cancel. */
 export function confirmPage(input: {
   lang: PageLanguage;
@@ -1262,10 +1587,16 @@ export function confirmPage(input: {
     | "clone"
     | "newLink"
     | "googleRemove"
-    | "passwordOff";
+    | "googleOff"
+    | "passwordOff"
+    | "reset"
+    | "join"
+    | "removeAccount";
   name?: string;
+  /** The office it is about, where it is one. */
+  office?: string;
   /** How many people it leaves without a way in, where it does. */
-  count?: string;
+  count?: number;
   action: string;
   fields?: Record<string, string>;
   /** Where Cancel goes: one's own page unless said. */
@@ -1278,35 +1609,69 @@ export function confirmPage(input: {
     clone: ["cloneTitle", "cloneWhat", "remove"],
     newLink: ["newLinkTitle", "newLinkWhat", "newLink"],
     googleRemove: ["googleRemoveTitle", "googleRemoveWhat", "removeGoogle"],
+    googleOff: ["googleOffTitle", "googleOffWhat", "turnOff"],
     passwordOff: ["passwordOffTitle", "passwordOffWhat", "turnOff"],
+    reset: ["resetTitle", "resetWhat", "resetLink"],
+    join: ["joinTitle", "joinWhat", "join"],
+    removeAccount: ["removeAccountTitle", "removeAccountWhat", "removeAccount"],
   } as const;
   const [titleKey, whatKey, yesKey] = words[input.what];
-  const title = say(lang, titleKey, { name: input.name ?? "" });
+  const named = {
+    name: input.name ?? "",
+    office: input.office || WORDS[lang].thatOffice,
+  };
+  const title = say(lang, titleKey, named);
   const hidden = Object.entries(input.fields ?? {})
     .map(
       ([name, value]) =>
         `<input type="hidden" name="${escape(name)}" value="${escape(value)}">`,
     )
     .join("");
+  // Who is left without a way in, said only when someone is.
+  const locked =
+    input.what === "passwordOff"
+      ? countLine(lang, input.count ?? 0, "lockedPassword", "lockedPasswordOne")
+      : input.what === "googleOff" || input.what === "googleRemove"
+        ? countLine(lang, input.count ?? 0, "lockedGoogle", "lockedGoogleOne")
+        : "";
+  const safe =
+    input.what === "owner" || input.what === "reset" || input.what === "join";
   return shell(
     lang,
     title,
     `<h1>${title}</h1>
-<p>${say(lang, whatKey, { count: input.count ?? "0" })}</p>
-<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit" class="${input.what === "owner" ? "" : "danger"}">${say(lang, yesKey)}</button><a href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div></form>`,
+<p>${say(lang, whatKey, named)}</p>
+${locked ? `<p>${locked}</p>` : ""}
+<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit"${safe ? "" : ' class="danger"'}>${say(lang, yesKey)}</button><a class="button ghost" href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div></form>`,
   );
+}
+
+/** A person with an account on the server, as its admin sees them. */
+export interface ServerPerson {
+  id: string;
+  name: string;
+  email: string;
+  password: boolean;
+  google: boolean;
 }
 
 /**
  * How people sign in to the server, for its admin: email and password, and Google with the client
- * they registered (its secret sealed, never shown), each on or off, one always on.
+ * they registered (its secret kept encrypted, never shown), each on or off, one always on; and the
+ * people with accounts, a reset link for one who forgot their password.
  */
 export function adminPage(input: {
   lang: PageLanguage;
   settings: SignInSettings;
   /** Where Google sends people back to on this server. */
   redirect: string;
+  people?: ServerPerson[];
+  /** The reader's account id, to leave them out of the reset links. */
+  me?: string;
   error?: string;
+  /** A failure of the Google form, said under it with what was typed kept. */
+  googleError?: string;
+  clientId?: string;
   saved?: boolean;
 }): string {
   const { lang, settings } = input;
@@ -1326,20 +1691,28 @@ export function adminPage(input: {
 <p class="note">${say(lang, "methodPasswordWhat")}</p>
 ${
   google?.on
-    ? `<p class="note">${say(lang, "passwordOnly", { count: String(settings.passwordOnly) })}</p>`
+    ? `<p class="note">${countLine(lang, settings.passwordOnly, "passwordOnly", "passwordOnlyOne")}</p>`
     : ""
 }
 ${
   settings.password
     ? google?.on && !settings.mineLinked
-      ? `<p class="note">${say(lang, "linkFirst")}</p>`
+      ? `<p class="note">${say(lang, "linkFirst")} <a href="/home/google">${say(lang, "connectGoogle")}</a></p>`
       : google?.on
         ? `<p><a class="button quiet" href="/home/admin/password/off">${say(lang, "turnOff")}</a></p>`
         : ""
     : `<form method="post" action="/home/admin/password"><input type="hidden" name="on" value="1"><button type="submit">${say(lang, "turnOn")}</button></form>`
 }
 </section>`;
-  const setUp = `<details${google ? "" : " open"}><summary>${say(lang, google ? "googleChange" : "googleSetup")}</summary>
+  const failed = input.googleError;
+  const idWrong = failed === "google-id-wrong";
+  const secretWrong =
+    failed === "google-secret-missing" || failed === "google-secret-wrong";
+  const fieldError = (code: string | undefined, id: string) =>
+    code
+      ? `<p class="field-error" id="${id}" role="alert">${errorWords(lang, code)}</p>`
+      : "";
+  const setUp = `<details${!google || failed ? " open" : ""}><summary>${say(lang, google ? "googleChange" : "googleSetup")}</summary>
 <section class="guide">
 <ol class="steps">
 <li><span>${say(lang, "step1")}</span><a href="https://console.cloud.google.com/apis/credentials" rel="noreferrer" target="_blank">${say(lang, "consoleLink")}</a></li>
@@ -1347,15 +1720,17 @@ ${
 <li><span>${say(lang, "step3")}</span></li>
 </ol>
 ${settings.sealing ? "" : `<p class="error">${say(lang, "sealingOff")}</p>`}
+${failed && !idWrong && !secretWrong ? fieldError(failed, "google-error") : ""}
 <form method="post" action="/home/admin/google">
 <label for="clientId">${say(lang, "clientId")}</label>
-<input id="clientId" name="clientId" required maxlength="260" autocomplete="off" spellcheck="false" value="${escape(google?.clientId ?? "")}">
+<input id="clientId" name="clientId" required maxlength="260" autocomplete="off" spellcheck="false" value="${escape(input.clientId ?? google?.clientId ?? "")}"${idWrong ? ' aria-invalid="true" aria-describedby="client-error"' : ""}>
+${idWrong ? fieldError(failed, "client-error") : ""}
 <label for="secret">${say(lang, "clientSecret")}</label>
-<input id="secret" name="secret" type="password" maxlength="200" autocomplete="off"${google ? "" : " required"}>
+<input id="secret" name="secret" type="password" maxlength="200" autocomplete="off"${google ? "" : " required"}${secretWrong ? ' aria-invalid="true" aria-describedby="secret-error"' : ""}>
+${secretWrong ? fieldError(failed, "secret-error") : ""}
 <p class="note small">${say(lang, "secretNew")}${google ? ` ${say(lang, "secretKeep")}` : ""}</p>
-<button type="submit"${settings.sealing ? "" : " disabled"}>${say(lang, "saveGoogle")}</button>
+<button type="submit"${settings.sealing ? "" : " disabled"}>${say(lang, google?.on ? "save" : "saveGoogle")}</button>
 </form>
-${google ? `<p><a class="small" href="/home/admin/google/remove">${say(lang, "removeGoogle")}</a></p>` : ""}
 </section>
 </details>`;
   const googleSection = `<section class="method">
@@ -1365,23 +1740,55 @@ ${
   google
     ? `<p class="note">${say(lang, "savedBy", {
         name: google.by,
-        when: new Date(google.at).toLocaleString(lang),
+        when: new Date(google.at).toLocaleDateString(lang, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
       })}</p>
 ${google.readable ? "" : `<p class="error">${errorWords(lang, "google-unreadable")}</p>`}
-${google.on ? `<p class="note">${say(lang, "googleOnly", { count: String(settings.googleOnly) })}</p>` : ""}
-${
-  google.on
-    ? settings.password
-      ? `<form method="post" action="/home/admin/google/off"><button type="submit" class="quiet">${say(lang, "turnOff")}</button></form>`
-      : ""
-    : google.readable
-      ? `<form method="post" action="/home/admin/google/on"><button type="submit">${say(lang, "turnOn")}</button></form>`
-      : ""
-}`
+${google.on ? `<p class="note">${countLine(lang, settings.googleOnly, "googleOnly", "googleOnlyOne")}</p>` : ""}
+<div class="acts">${
+        google.on
+          ? settings.password
+            ? settings.googleOnly > 0
+              ? `<a class="button quiet" href="/home/admin/google/off">${say(lang, "turnOff")}</a>`
+              : `<form method="post" action="/home/admin/google/off"><button type="submit" class="quiet">${say(lang, "turnOff")}</button></form>`
+            : ""
+          : google.readable
+            ? `<form method="post" action="/home/admin/google/on"><button type="submit">${say(lang, "turnOn")}</button></form>`
+            : ""
+      }${settings.password ? `<a class="button ghost" href="/home/admin/google/remove">${say(lang, "removeGoogle")}</a>` : ""}</div>`
     : ""
 }
 ${setUp}
 </section>`;
+  const people = input.people ?? [];
+  const peopleSection = people.length
+    ? `<section>
+<h2>${say(lang, "serverPeople")}</h2>
+<p class="note">${say(lang, "serverPeopleWhat")}</p>
+<ul class="rows">${people
+        .map(
+          (person) =>
+            `<li><span class="who"><b>${escape(person.name)}</b>${person.id === input.me ? `<span class="tag">${say(lang, "you")}</span>` : ""}<small>${escape(person.email)} · ${[
+              person.password ? say(lang, "waysPassword") : "",
+              person.google ? say(lang, "waysGoogle") : "",
+            ]
+              .filter(Boolean)
+              .join(", ")}</small></span>${
+              person.id === input.me
+                ? ""
+                : `<span class="acts">${
+                    person.password && settings.password
+                      ? `<a class="small" href="/home/admin/reset?user=${encodeURIComponent(person.id)}">${say(lang, "resetLink")}</a>`
+                      : ""
+                  }<a class="small" href="/home/admin/account/remove?user=${encodeURIComponent(person.id)}">${say(lang, "removeAccount")}</a></span>`
+            }</li>`,
+        )
+        .join("")}</ul>
+</section>`
+    : "";
   return shell(
     lang,
     title,
@@ -1391,6 +1798,7 @@ ${problem(lang, input.error)}
 ${input.saved ? `<p class="done" role="status">${say(lang, "saved")}</p>` : ""}
 ${password}
 ${googleSection}
+${peopleSection}
 <p><a href="/home">${say(lang, "backHome")}</a></p>`,
   );
 }

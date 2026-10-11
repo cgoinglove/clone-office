@@ -103,8 +103,8 @@ function say(
 }
 
 const STYLE = `
-:root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --soft: rgba(13,13,13,.06); --brand: #0169cc; --brand-soft: rgba(1,105,204,.1); --danger: #dc2626; --error: #c43d18; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --soft: rgba(255,255,255,.08); --brand: #0a84ff; --brand-soft: rgba(10,132,255,.16); --danger: #ef4444; --error: #ff7a55; color-scheme: dark; } }
+:root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --field: #8a8d93; --soft: rgba(13,13,13,.06); --brand: #0169cc; --brand-fill: #0169cc; --brand-soft: rgba(1,105,204,.1); --on: #0169cc; --danger: #dc2626; --error: #c43d18; --g-bg: #ffffff; --g-line: #747775; --g-fg: #1f1f1f; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --field: #6b6f76; --soft: rgba(255,255,255,.08); --brand: #0a84ff; --brand-fill: #0060df; --brand-soft: rgba(10,132,255,.16); --on: #6cb4ff; --danger: #b91c1c; --error: #ff7a55; --g-bg: #131314; --g-line: #8e918f; --g-fg: #e3e3e3; color-scheme: dark; } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
 :lang(ko) body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; }
@@ -114,16 +114,20 @@ main { max-width: 34rem; margin: 0 auto; padding: 2.5rem 1rem; display: flex; fl
 h1 { font-size: 1.25rem; margin: 0; text-wrap: balance; }
 .request { white-space: pre-wrap; border: 1px solid var(--line); border-radius: 14px; padding: 1rem; margin: 0; }
 label { display: block; font-weight: 600; margin-bottom: .5rem; }
-textarea { width: 100%; min-height: 8rem; font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: .75rem; }
-button { font: inherit; font-weight: 600; color: #fff; background: var(--brand); border: 0; border-radius: 10px; padding: .6rem 1.2rem; margin-top: .75rem; cursor: pointer; }
-input { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px solid var(--line); border-radius: 10px; padding: .6rem .75rem; margin-bottom: .75rem; }
+textarea { width: 100%; min-height: 8rem; font: inherit; color: inherit; background: transparent; border: 1px solid var(--field); border-radius: 10px; padding: .75rem; }
+button { font: inherit; font-weight: 600; color: #fff; background: var(--brand-fill); border: 0; border-radius: 10px; padding: .6rem 1.2rem; margin-top: .75rem; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+input { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px solid var(--field); border-radius: 10px; padding: .6rem .75rem; margin-bottom: .75rem; }
+input[aria-invalid="true"] { border-color: var(--error); }
 form label { margin-bottom: .25rem; }
 pre { white-space: pre-wrap; word-break: break-all; user-select: all; -webkit-user-select: all; font: .9rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; border: 1px solid var(--line); border-radius: 10px; padding: .75rem; margin: 0; }
 section { display: flex; flex-direction: column; gap: .5rem; }
 h2 { font-size: 1.05rem; margin: 0; }
 a { color: var(--brand); }
 .error { color: var(--error); }
-.quiet { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.quiet { background: var(--soft); color: var(--fg); }
+.ghost { background: transparent; color: var(--fg); }
+.quiet:hover, .ghost:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 .note, footer { color: var(--muted); }
 footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem; }
 .brand { display: flex; align-items: center; gap: .5rem; max-width: 34rem; margin: 0 auto; padding: 1.25rem 1rem 0; font-weight: 600; font-size: .95rem; letter-spacing: -.01em; }
@@ -139,10 +143,11 @@ footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem
 .acts { display: flex; gap: .4rem; align-items: center; }
 .acts form { margin: 0; }
 .acts button, button.small { margin: 0; padding: .3rem .7rem; font-size: .85rem; border-radius: 8px; }
+.acts a.small { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 .4rem; }
 details > summary { cursor: pointer; color: var(--muted); font-size: .85rem; list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 details[open] > summary { margin-bottom: .4rem; }
-.danger { background: var(--danger); }
+
 .inline { display: flex; gap: .5rem; align-items: flex-start; }
 .inline input { margin: 0; flex: 1; }
 :lang(ko) { word-break: keep-all; overflow-wrap: anywhere; }
@@ -154,11 +159,11 @@ ol.steps > li::before { content: counter(step); position: absolute; left: 0; top
 ol.steps > li > pre { align-self: stretch; }
 ol.steps small, .others { color: var(--muted); font-size: .85rem; }
 .others { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .4rem; }
-a.button { display: inline-block; color: #fff; background: var(--brand); text-decoration: none; font-weight: 600; border-radius: 10px; padding: .45rem 1rem; }
+a.button { display: inline-block; color: #fff; background: var(--brand-fill); text-decoration: none; font-weight: 600; border-radius: 10px; padding: .45rem 1rem; }
 .inline button { margin: 0; }
 .small { font-size: .85rem; }
-a.google { display: flex; align-items: center; justify-content: center; gap: .6rem; font-weight: 600; color: var(--fg); text-decoration: none; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: .6rem 1rem; }
-a.google:hover { background: var(--soft); }
+a.google { display: flex; align-items: center; justify-content: center; gap: .6rem; font-weight: 600; color: var(--g-fg); text-decoration: none; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 10px; padding: .6rem 1rem; }
+a.google:hover { background: color-mix(in srgb, var(--g-fg) 8%, var(--g-bg)); }
 a.google svg { width: 1.15rem; height: 1.15rem; flex: none; }
 .or { display: flex; align-items: center; gap: .75rem; color: var(--muted); font-size: .85rem; margin: 0; }
 .or::before, .or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
@@ -166,9 +171,23 @@ a.google svg { width: 1.15rem; height: 1.15rem; flex: none; }
 .method p, .method form { margin: 0; }
 .method .top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .state { font-size: .8rem; font-weight: 600; color: var(--muted); background: var(--soft); border-radius: 999px; padding: .1rem .6rem; white-space: nowrap; }
-.state.on { color: var(--brand); background: var(--brand-soft); }
+.state.on { color: var(--on); background: var(--brand-soft); }
 .done { margin: 0; font-weight: 600; }
-a.button.quiet { color: var(--fg); background: transparent; border: 1px solid var(--line); }
+a.button.quiet { color: var(--fg); background: var(--soft); }
+a.button.ghost { color: var(--fg); background: transparent; }
+.danger { background: var(--danger); }
+/* the two ways in stand alike: Google's button and the form's, the whole width */
+form.auth button { width: 100%; }
+/* the account under an invite's guide: a row that opens, not a footnote */
+details.account > summary { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--fg); font-size: 1rem; font-weight: 600; border: 1px solid var(--line); border-radius: 12px; padding: .75rem 1rem; }
+details.account > summary::after { content: ""; width: .5rem; height: .5rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); flex: none; transition: transform .15s; }
+details.account[open] > summary::after { transform: rotate(45deg); }
+details.account[open] > summary { margin-bottom: .75rem; }
+.ways { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.ways > li { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; }
+.ways .who { flex: 1 1 12rem; min-width: 0; }
+.ways .who small { display: block; color: var(--muted); font-size: .85rem; }
+.field-error { color: var(--error); font-size: .9rem; margin: -.4rem 0 .75rem; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 `;
 

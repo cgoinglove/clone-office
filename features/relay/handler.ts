@@ -42,7 +42,11 @@
 //   GET  /home/google   connecting Google to one's account
 //   GET  /home/admin    the server's sign-in settings, for its admin: POST /home/admin/password
 //                       {on}, /home/admin/google {clientId, secret}, /home/admin/google/on|off,
-//                       GET|POST /home/admin/google/remove
+//                       GET|POST /home/admin/google/off|google/remove|password/off (asked
+//                       once first), /home/admin/reset {user} (a link for a forgotten
+//                       password), /home/admin/account/remove {user}
+//   GET|POST /reset     a new password, with the link the admin made
+//   POST /i/:key/join   joining another office, asked once on its invite's page
 //   GET  /home          one's own page: one's office, connecting one's computer, the invite link
 //   POST /home/pair     a one-time setup code, shown as the line to run on one's computer
 //   GET  /p/:code       what a setup link shows in a browser: the line to run
@@ -73,6 +77,8 @@ import {
   confirmPage,
   connectCommand,
   homePage,
+  newPasswordPage,
+  resetMadePage,
   runPage,
   signInPage,
   signUpPage,
@@ -196,6 +202,8 @@ export function relayHandler(
 ) {
   const accounts = options.accounts;
   const tries = new Tries(20, 10 * 60 * 1000);
+  // Sign-ins started with Google from one address, which each make a way back to check.
+  const starts = new Tries(30, 10 * 60 * 1000);
   const address = (request: IncomingMessage): string =>
     (options.trustProxy
       ? String(request.headers["x-forwarded-for"] ?? "")
@@ -275,6 +283,12 @@ export function relayHandler(
      */
     const peoplePages = async (key: string | undefined): Promise<boolean> => {
       if (!accounts) return false;
+      // Only the people's own pages and Google's way back: the clones' calls pass straight on.
+      if (
+        !key &&
+        !/^\/(?:login|logout|home|reset|p\/|pair\/|i\/|api\/auth\/)/.test(path)
+      )
+        return false;
       const lang = pageLanguage(request.headers["accept-language"]);
       const from = address(request);
       const cookie = request.headers.cookie;
@@ -316,6 +330,11 @@ export function relayHandler(
           html(404, missingPage(lang));
           return true;
         }
+        if (starts.blocked(from)) {
+          html(429, missingPage(lang));
+          return true;
+        }
+        starts.miss(from);
         const who =
           url.searchParams.get("from")?.trim().slice(0, 80) || undefined;
         const invitePath = invited
@@ -349,6 +368,25 @@ export function relayHandler(
         }
         return true;
       }
+      // Joining another office, once asked on its invite's page.
+      const joining = /^\/i\/([\w-]{4,128})\/join$/.exec(path);
+      if (joining && post) {
+        const person = await accounts.person(cookie);
+        if (!person) {
+          redirect(`/login?key=${joining[1]}`);
+          return true;
+        }
+        if (
+          tries.blocked(from) ||
+          !(await accounts.enter(joining[1], person.id))
+        ) {
+          tries.miss(from);
+          html(404, missingPage(lang));
+          return true;
+        }
+        redirect("/home");
+        return true;
+      }
       if (key) {
         if (tries.blocked(from) || !(await relay.knows(key))) {
           tries.miss(from);
@@ -359,10 +397,29 @@ export function relayHandler(
           url.searchParams.get("from")?.trim().slice(0, 80) || undefined;
         const link = `${base()}${path}${url.search}`;
         if (!post) {
-          // Someone signed in already joins this office too.
           const person = await accounts.person(cookie);
-          if (person && (await accounts.enter(key, person.id))) {
-            redirect("/home");
+          if (person) {
+            const places = await accounts.places(person.id);
+            if (places.some((place) => place.key === key)) {
+              redirect("/home");
+              return true;
+            }
+            // A new account (Google makes one from this very invite) lands in its office; one
+            // already in another office is asked first, as its name and email will show there.
+            if (!places.length && (await accounts.enter(key, person.id))) {
+              redirect("/home");
+              return true;
+            }
+            html(
+              200,
+              confirmPage({
+                lang,
+                what: "join",
+                name: person.name,
+                office: (await accounts.officeOf(key))?.name ?? "",
+                action: `/i/${key}/join`,
+              }),
+            );
             return true;
           }
           const failed = failure();
@@ -375,7 +432,8 @@ export function relayHandler(
               link,
               methods,
               ...guide(key, who),
-              ...(failed ? { error: failed } : {}),
+              // Google sent them back here: the page says why at its top.
+              ...(failed ? { error: failed, errorAtTop: true } : {}),
             }),
           );
           return true;
@@ -413,6 +471,11 @@ export function relayHandler(
         const asked = url.searchParams.get("key") ?? "";
         const invited = /^[\w-]{4,128}$/.test(asked) ? asked : undefined;
         if (!post) {
+          // Signed in already: on to one's page, or to the invite it was opened with.
+          if (await accounts.person(cookie)) {
+            redirect(invited ? `/i/${invited}` : "/home");
+            return true;
+          }
           const failed = failure();
           html(
             200,
@@ -421,6 +484,9 @@ export function relayHandler(
               key: invited,
               methods,
               ...(failed ? { error: failed } : {}),
+              ...(url.searchParams.get("done") === "reset"
+                ? { done: "reset" as const }
+                : {}),
             }),
           );
           return true;
@@ -531,9 +597,9 @@ export function relayHandler(
         );
         return true;
       }
-      // The server's sign-in settings, for its admin alone.
+      // The server's sign-in settings and its people's accounts, for its admin alone.
       const signIn =
-        /^\/home\/admin(?:\/(password|password\/off|google|google\/on|google\/off|google\/remove))?$/.exec(
+        /^\/home\/admin(?:\/(password|password\/off|google|google\/on|google\/off|google\/remove|reset|account\/remove))?$/.exec(
           path,
         );
       if (signIn && (request.method === "GET" || post)) {
@@ -548,20 +614,65 @@ export function relayHandler(
         }
         const what = signIn[1];
         const site = base();
+        const page = async (extra: {
+          error?: string;
+          googleError?: string;
+          clientId?: string;
+          saved?: boolean;
+        }) =>
+          adminPage({
+            lang,
+            settings: await accounts.settings(person.id),
+            redirect: `${options.publicUrl?.replace(/\/+$/, "") ?? site}${GOOGLE_CALLBACK}`,
+            people: await accounts.serverPeople(person.id),
+            me: person.id,
+            ...extra,
+          });
+        /** Someone on the server the admin acts on, by the account id in the address or form. */
+        const someone = async (id: string) =>
+          (await accounts.serverPeople(person.id)).find((one) => one.id === id);
         if (!post) {
-          if (what === "google/remove" || what === "password/off") {
+          if (
+            what === "google/remove" ||
+            what === "google/off" ||
+            what === "password/off"
+          ) {
             const settings = await accounts.settings(person.id);
             html(
               200,
               confirmPage({
                 lang,
-                what: what === "google/remove" ? "googleRemove" : "passwordOff",
-                count: String(
+                what:
                   what === "google/remove"
-                    ? settings.googleOnly
-                    : settings.passwordOnly,
-                ),
+                    ? "googleRemove"
+                    : what === "google/off"
+                      ? "googleOff"
+                      : "passwordOff",
+                count:
+                  what === "password/off"
+                    ? settings.passwordOnly
+                    : settings.googleOnly,
                 action: path,
+                back: "/home/admin",
+              }),
+            );
+            return true;
+          }
+          if (what === "reset" || what === "account/remove") {
+            const user = url.searchParams.get("user") ?? "";
+            const one = await someone(user);
+            if (!one || one.id === person.id) {
+              redirect("/home/admin");
+              return true;
+            }
+            html(
+              200,
+              confirmPage({
+                lang,
+                what: what === "reset" ? "reset" : "removeAccount",
+                name: one.name,
+                action: path,
+                fields: { user },
                 back: "/home/admin",
               }),
             );
@@ -575,10 +686,7 @@ export function relayHandler(
           const done = url.searchParams.get("done");
           html(
             200,
-            adminPage({
-              lang,
-              settings: await accounts.settings(person.id),
-              redirect: `${options.publicUrl?.replace(/\/+$/, "") ?? site}${GOOGLE_CALLBACK}`,
+            await page({
               ...(failed ? { error: failed } : {}),
               ...(done === "saved" ? { saved: true } : {}),
             }),
@@ -602,6 +710,22 @@ export function relayHandler(
             await accounts.setGoogle(person.id, what === "google/on");
           else if (what === "google/remove")
             await accounts.removeGoogle(person.id);
+          else if (what === "reset") {
+            const made = await accounts.resetLink(
+              person.id,
+              fields.get("user") ?? "",
+            );
+            html(
+              200,
+              resetMadePage({
+                lang,
+                name: made.name,
+                link: `${options.publicUrl?.replace(/\/+$/, "") ?? site}/reset?token=${encodeURIComponent(made.token)}`,
+              }),
+            );
+            return true;
+          } else if (what === "account/remove")
+            await accounts.removeAccount(person.id, fields.get("user") ?? "");
           else {
             redirect("/home/admin");
             return true;
@@ -610,7 +734,48 @@ export function relayHandler(
         } catch (error) {
           const code =
             error instanceof AccountError ? error.code : "account-failed";
-          redirect(`/home/admin?error=${encodeURIComponent(code)}`);
+          // The Google form comes back as it was typed (never the secret), its fold open, the
+          // failure said under the field at fault.
+          if (what === "google")
+            html(
+              400,
+              await page({
+                googleError: code,
+                clientId: (fields.get("clientId") ?? "").slice(0, 260),
+              }),
+            );
+          else redirect(`/home/admin?error=${encodeURIComponent(code)}`);
+        }
+        return true;
+      }
+      // A forgotten password, changed with the link the admin made.
+      if (path === "/reset" && (request.method === "GET" || post)) {
+        const token = post ? undefined : (url.searchParams.get("token") ?? "");
+        if (!post) {
+          if (!/^[\w-]{10,128}$/.test(token ?? "")) {
+            redirect("/login?error=reset-expired");
+            return true;
+          }
+          html(200, newPasswordPage({ lang, token: token as string }));
+          return true;
+        }
+        const fields = new URLSearchParams(await raw(request));
+        const given = fields.get("token") ?? "";
+        if (tries.blocked(from)) {
+          html(
+            429,
+            newPasswordPage({ lang, token: given, error: "too-many-tries" }),
+          );
+          return true;
+        }
+        try {
+          await accounts.resetPassword(given, fields.get("password") ?? "");
+          redirect("/login?done=reset");
+        } catch (error) {
+          const code =
+            error instanceof AccountError ? error.code : "account-failed";
+          if (code === "reset-expired") tries.miss(from);
+          html(400, newPasswordPage({ lang, token: given, error: code }));
         }
         return true;
       }
