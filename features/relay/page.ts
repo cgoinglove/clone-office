@@ -144,6 +144,7 @@ footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem
 .acts form { margin: 0; }
 .acts button, button.small { margin: 0; padding: .3rem .7rem; font-size: .85rem; border-radius: 8px; }
 .acts a.small { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 .4rem; }
+.acts a.button { padding: .3rem .7rem; font-size: .85rem; border-radius: 8px; }
 details > summary { cursor: pointer; color: var(--muted); font-size: .85rem; list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 details[open] > summary { margin-bottom: .4rem; }
