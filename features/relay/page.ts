@@ -103,8 +103,8 @@ function say(
 }
 
 const STYLE = `
-:root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --brand: #0169cc; --danger: #dc2626; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --brand: #0a84ff; --danger: #ef4444; color-scheme: dark; } }
+:root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --soft: rgba(13,13,13,.06); --brand: #0169cc; --brand-soft: rgba(1,105,204,.1); --danger: #dc2626; --error: #c43d18; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --soft: rgba(255,255,255,.08); --brand: #0a84ff; --brand-soft: rgba(10,132,255,.16); --danger: #ef4444; --error: #ff7a55; color-scheme: dark; } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
 :lang(ko) body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; }
@@ -122,7 +122,7 @@ pre { white-space: pre-wrap; word-break: break-all; user-select: all; -webkit-us
 section { display: flex; flex-direction: column; gap: .5rem; }
 h2 { font-size: 1.05rem; margin: 0; }
 a { color: var(--brand); }
-.error { color: #c43d18; }
+.error { color: var(--error); }
 .quiet { background: transparent; color: var(--fg); border: 1px solid var(--line); }
 .note, footer { color: var(--muted); }
 footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem; }
@@ -157,6 +157,19 @@ ol.steps small, .others { color: var(--muted); font-size: .85rem; }
 a.button { display: inline-block; color: #fff; background: var(--brand); text-decoration: none; font-weight: 600; border-radius: 10px; padding: .45rem 1rem; }
 .inline button { margin: 0; }
 .small { font-size: .85rem; }
+a.google { display: flex; align-items: center; justify-content: center; gap: .6rem; font-weight: 600; color: var(--fg); text-decoration: none; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: .6rem 1rem; }
+a.google:hover { background: var(--soft); }
+a.google svg { width: 1.15rem; height: 1.15rem; flex: none; }
+.or { display: flex; align-items: center; gap: .75rem; color: var(--muted); font-size: .85rem; margin: 0; }
+.or::before, .or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.method { border: 1px solid var(--line); border-radius: 14px; padding: 1rem; }
+.method p, .method form { margin: 0; }
+.method .top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.state { font-size: .8rem; font-weight: 600; color: var(--muted); background: var(--soft); border-radius: 999px; padding: .1rem .6rem; white-space: nowrap; }
+.state.on { color: var(--brand); background: var(--brand-soft); }
+.done { margin: 0; font-weight: 600; }
+a.button.quiet { color: var(--fg); background: transparent; border: 1px solid var(--line); }
+button:disabled { opacity: .5; cursor: not-allowed; }
 `;
 
 /** The app's mark (app/icon.svg): your own clone at rest, in the page's ink. */

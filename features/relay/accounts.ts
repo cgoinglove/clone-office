@@ -1,22 +1,39 @@
 // The people of an office's server and how they get in, after Paperclip (which signs its people in
 // with Better Auth) and OpenClaw (which pairs a device by a setup link): someone opens their
-// office's invite link and makes an account there (name, email, password; Better Auth keeps the
-// password hashed and the session in a cookie). Their own page then gives them one line to run on
-// their computer. The line carries a setup code that works once, for ten minutes; claiming it gives
-// that computer's mini-me its own lasting token in the office, under their account. One person, one
-// mini-me: connecting another computer moves it there.
+// office's invite link and makes an account there, with their email and a password, or with their
+// Google account where the server's admin set Google up (Better Auth keeps a password hashed, the
+// session in a cookie, and the tokens Google gives encrypted). Their own page then gives them one
+// line to run on their computer. The line carries a setup code that works once, for ten minutes;
+// claiming it gives that computer's mini-me its own lasting token in the office, under their
+// account. One person, one mini-me: connecting another computer moves it there.
+//
+// How people sign in is the server's admin's to set (the owners of the office the server was
+// started with): email and password on or off, Google on or off with the OAuth client they
+// registered, its secret sealed (lib/seal.ts) under the relay's key as team keys are. One way stays
+// on always, and the admin keeps a way in themselves. A Google identity is never linked to an
+// account by its email alone: an account made with a password connects Google from its own page,
+// signed in, so nobody takes over an account by making it first with someone else's email.
 //
 // Node runs this file without a build, so no TypeScript-only syntax such as parameter properties.
 
 import { createHash, randomBytes } from "node:crypto";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { type Auth, type BetterAuthOptions, betterAuth } from "better-auth";
 import { getMigrations } from "better-auth/db/migration";
+import { toNodeHandler } from "better-auth/node";
+import { isSealed, openWith, sealWith } from "../../lib/seal.ts";
 import type { Database } from "./db.ts";
 import { PGliteDialect } from "./pglite-dialect.ts";
 import { type Relay, RelayError } from "./relay.ts";
 
 /** How long a computer's setup code works. */
 export const SETUP_MS = 10 * 60 * 1000;
+
+/** Where Google sends people back to on this server (Better Auth's own route). */
+export const GOOGLE_CALLBACK = "/api/auth/callback/google";
+
+/** A Google OAuth client's id, as Google Cloud Console gives it. */
+const GOOGLE_ID = /^[\w.-]{4,200}\.apps\.googleusercontent\.com$/;
 
 export interface Person {
   id: string;
@@ -53,24 +70,125 @@ export interface Place {
   role: "owner" | "member";
 }
 
+/** How people may sign in to this server, as kept (`server_settings` `sign-in`). */
+interface SignInKept {
+  /** Email and password; on unless the admin turned it off. */
+  password?: boolean;
+  google?: {
+    on: boolean;
+    clientId: string;
+    /** The client secret, sealed. */
+    secret: string;
+    /** The address Google sends people back to, as the server was reached when it was set. */
+    site: string;
+    /** Who set it, and when. */
+    by: string;
+    at: string;
+  };
+}
+
+/** The ways a sign-in page offers. */
+export interface SignInMethods {
+  password: boolean;
+  google: boolean;
+}
+
+/** The sign-in settings as the admin sees them: never the secret itself. */
+export interface SignInSettings {
+  password: boolean;
+  google?: {
+    on: boolean;
+    clientId: string;
+    by: string;
+    at: string;
+    site: string;
+    /** Whether this server's key opens the secret kept. */
+    readable: boolean;
+  };
+  /** Whether a secret can be kept sealed here at all. */
+  sealing: boolean;
+  /** People who sign in only with a password, and only with Google. */
+  passwordOnly: number;
+  googleOnly: number;
+  /** Whether the admin themself signs in with Google too. */
+  mineLinked: boolean;
+}
+
+/** How one person signs in. */
+export interface SignInWays {
+  password: boolean;
+  google: boolean;
+}
+
+/**
+ * What Better Auth says when Google sends someone back unsigned, as the codes the pages read: an
+ * account by that email that signs in with its password, no account for a sign-in that may not
+ * make one, cancelled at Google, an identity another account holds, or a sign-in to start again.
+ */
+export function googleProblem(code: string): string {
+  if (code === "account_not_linked") return "google-not-linked";
+  if (code === "signup_disabled") return "google-no-account";
+  if (code === "access_denied") return "google-cancelled";
+  if (
+    code === "email_does_not_match" ||
+    code === "account_already_linked_to_different_user"
+  )
+    return "google-other";
+  if (code === "email_not_verified") return "google-unverified";
+  if (/state|expired|restart/.test(code)) return "google-again";
+  return "google-failed";
+}
+
 const hash = (text: string): string =>
   createHash("sha256").update(text).digest("hex");
 
-/** The secret Better Auth signs sessions with: the one given, else one made once and kept. */
-async function keptSecret(db: Database): Promise<string> {
-  const [row] = await db.query<{ value: string }>(
-    "SELECT value FROM server_settings WHERE name = 'auth-secret'",
-  );
-  if (row) return row.value;
-  const made = randomBytes(32).toString("base64url");
-  await db.query(
-    "INSERT INTO server_settings (name, value) VALUES ('auth-secret', $1) ON CONFLICT (name) DO NOTHING",
-    [made],
-  );
-  const [kept] = await db.query<{ value: string }>(
-    "SELECT value FROM server_settings WHERE name = 'auth-secret'",
-  );
-  return kept?.value ?? made;
+/**
+ * The secret Better Auth signs sessions with: the one given, else one made once and kept, sealed
+ * under the relay's key where there is one. One kept plain before is sealed in place; one that
+ * key cannot open (the key was changed) gives way to a new one, which only signs everyone out;
+ * one sealed, with no key given at all, stops the relay saying which key it needs.
+ */
+async function keptSecret(db: Database, key?: Buffer): Promise<string> {
+  const read = async () =>
+    (
+      await db.query<{ value: string }>(
+        "SELECT value FROM server_settings WHERE name = 'auth-secret'",
+      )
+    )[0]?.value;
+  const store = (made: string) => (key ? sealWith(key, made) : made);
+  let value = await read();
+  if (value === undefined) {
+    const made = randomBytes(32).toString("base64url");
+    await db.query(
+      "INSERT INTO server_settings (name, value) VALUES ('auth-secret', $1) ON CONFLICT (name) DO NOTHING",
+      [store(made)],
+    );
+    value = (await read()) ?? store(made);
+  }
+  if (isSealed(value)) {
+    if (!key)
+      throw new Error(
+        "The relay's sign-in secret is sealed: start it with the key it was sealed with (RELAY_ENCRYPTION_KEY, or the secret.key beside its data).",
+      );
+    try {
+      return openWith(key, value);
+    } catch {}
+    const made = randomBytes(32).toString("base64url");
+    console.warn(
+      "The sign-in secret could not be opened with this relay's key: a new one is made, and everyone signs in again.",
+    );
+    await db.query(
+      "UPDATE server_settings SET value = $1 WHERE name = 'auth-secret'",
+      [store(made)],
+    );
+    return made;
+  }
+  if (key)
+    await db.query(
+      "UPDATE server_settings SET value = $1 WHERE name = 'auth-secret' AND value = $2",
+      [sealWith(key, value), value],
+    );
+  return value;
 }
 
 /** What Better Auth answered, as a code the relay's pages say in the reader's language. */
@@ -99,36 +217,55 @@ export class AccountError extends Error {
 }
 
 export class Accounts {
-  readonly auth: Auth<BetterAuthOptions>;
+  private current: Auth<BetterAuthOptions>;
   private db: Database;
   private relay: Relay;
+  /** Better Auth's settings apart from the ways in, which the admin's settings add. */
+  private base: BetterAuthOptions;
+  private kept: SignInKept;
+  private keptText: string;
+  private sealKey: Buffer | undefined;
+  private publicUrl: string | undefined;
 
   private constructor(
-    auth: Auth<BetterAuthOptions>,
     db: Database,
     relay: Relay,
+    base: BetterAuthOptions,
+    keptText: string,
+    sealKey: Buffer | undefined,
+    publicUrl: string | undefined,
   ) {
-    this.auth = auth;
     this.db = db;
     this.relay = relay;
+    this.base = base;
+    this.keptText = keptText;
+    this.kept = parseKept(keptText);
+    this.sealKey = sealKey;
+    this.publicUrl = publicUrl;
+    this.current = this.build();
+  }
+
+  /** Better Auth as the server's sign-in settings are now. */
+  get auth(): Auth<BetterAuthOptions> {
+    return this.current;
   }
 
   /**
    * Sign-in over the relay's own database. `publicUrl` is the address people reach the server at
-   * (https makes its cookies secure); without one it is taken from each request.
+   * (https makes its cookies secure); without one it is taken from each request. `sealKey` is the
+   * relay's key (team-ai.ts `relaySealKey`): without one, no Google secret can be kept.
    */
   static async open(
     db: Database,
     relay: Relay,
-    options: { secret?: string; publicUrl?: string } = {},
+    options: { secret?: string; publicUrl?: string; sealKey?: Buffer } = {},
   ): Promise<Accounts> {
-    const config: BetterAuthOptions = {
+    const base: BetterAuthOptions = {
       appName: "Clone Office",
       secret:
         options.secret ||
         process.env.BETTER_AUTH_SECRET ||
-        (await keptSecret(db)),
-      ...(options.publicUrl ? { baseURL: options.publicUrl } : {}),
+        (await keptSecret(db, options.sealKey)),
       // Postgres through pg's pool; PGlite through its dialect, without Kysely's own transactions,
       // which would interleave with the relay's queries on the one connection.
       database: (db.kind === "postgres"
@@ -145,21 +282,318 @@ export class Accounts {
       },
       user: { modelName: "auth_users" },
       session: { modelName: "auth_sessions" },
-      account: { modelName: "auth_accounts" },
+      account: {
+        modelName: "auth_accounts",
+        // What Google gives is never needed after signing in; kept encrypted all the same.
+        encryptOAuthTokens: true,
+        // A Google identity joins an account only when its person, signed in, connects it.
+        accountLinking: { enabled: true, disableImplicitLinking: true },
+      },
       verification: { modelName: "auth_verifications" },
+      // The tables are made at open (getMigrations), so Better Auth's own look at them, which it
+      // starts in the background each time it is made, is left out: it would outlive a change.
       advanced: {
         cookiePrefix: "sub-office",
-        useSecureCookies: Boolean(options.publicUrl?.startsWith("https:")),
+        database: { validateSchema: false },
       },
       // The relay's pages check where a form came from, and limit tries from one address.
       rateLimit: { enabled: false },
       telemetry: { enabled: false },
-      // Without a public address the origin comes from each request, as the relay's pages need.
       logger: { level: "error" },
     };
-    const { runMigrations } = await getMigrations(config);
+    const { runMigrations } = await getMigrations(base);
     await runMigrations();
-    return new Accounts(betterAuth(config), db, relay);
+    const [row] = await db.query<{ value: string }>(
+      "SELECT value FROM server_settings WHERE name = 'sign-in'",
+    );
+    const accounts = new Accounts(
+      db,
+      relay,
+      base,
+      row?.value ?? "",
+      options.sealKey,
+      options.publicUrl,
+    );
+    await accounts.current.$context;
+    return accounts;
+  }
+
+  /** The Google client as kept, opened, while it is on; none when off or unreadable. */
+  private google():
+    | { clientId: string; clientSecret: string; site: string }
+    | undefined {
+    const google = this.kept.google;
+    if (!google?.on || !this.sealKey || !isSealed(google.secret))
+      return undefined;
+    try {
+      return {
+        clientId: google.clientId,
+        clientSecret: openWith(this.sealKey, google.secret),
+        site: google.site,
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** Better Auth with the ways in the settings allow. */
+  private build(): Auth<BetterAuthOptions> {
+    const google = this.google();
+    // Google sends people back to one fixed address: the public one, else the one it was set up at.
+    const site = this.publicUrl ?? google?.site;
+    const options: BetterAuthOptions = {
+      ...this.base,
+      ...(site ? { baseURL: site } : {}),
+      advanced: {
+        ...this.base.advanced,
+        // As the public address says, never as Google's way back does: turning Google on must
+        // not rename the cookies and sign everyone out.
+        useSecureCookies: Boolean(this.publicUrl?.startsWith("https:")),
+      },
+      ...(google
+        ? {
+            socialProviders: {
+              google: {
+                clientId: google.clientId,
+                clientSecret: google.clientSecret,
+                // A new account needs an invite: a sign-in from the sign-in page makes none.
+                disableImplicitSignUp: true,
+                prompt: "select_account" as const,
+              },
+            },
+            // A sign-in Better Auth cannot finish goes back to the sign-in page, which says why.
+            onAPIError: { errorURL: "/login" },
+          }
+        : {}),
+    };
+    return betterAuth(options);
+  }
+
+  /**
+   * Reads the sign-in settings again, as another of the server's processes may have changed them;
+   * Better Auth is made again only when they did.
+   */
+  async refresh(): Promise<void> {
+    const [row] = await this.db.query<{ value: string }>(
+      "SELECT value FROM server_settings WHERE name = 'sign-in'",
+    );
+    const text = row?.value ?? "";
+    if (text === this.keptText) return;
+    this.keptText = text;
+    this.kept = parseKept(text);
+    this.current = this.build();
+    await this.current.$context;
+  }
+
+  /** The ways a sign-in page offers now. */
+  methods(): SignInMethods {
+    return {
+      password: this.kept.password !== false,
+      google: Boolean(this.google()),
+    };
+  }
+
+  /** Keeps new sign-in settings and signs people in by them from now on. */
+  private async keep(next: SignInKept): Promise<void> {
+    const text = JSON.stringify(next);
+    await this.db.query(
+      "INSERT INTO server_settings (name, value) VALUES ('sign-in', $1) ON CONFLICT (name) DO UPDATE SET value = EXCLUDED.value",
+      [text],
+    );
+    this.keptText = text;
+    this.kept = next;
+    this.current = this.build();
+    await this.current.$context;
+  }
+
+  /** Whether a person is the server's admin: an owner of the office it was started with. */
+  async isAdmin(user: string): Promise<boolean> {
+    const [row] = await this.db.query(
+      "SELECT 1 FROM office_people WHERE user_id = $1 AND role = 'owner' AND office_id = (SELECT id FROM offices ORDER BY created, id LIMIT 1)",
+      [user],
+    );
+    return Boolean(row);
+  }
+
+  private async mustAdmin(user: string): Promise<void> {
+    if (!(await this.isAdmin(user))) throw new AccountError("not-admin");
+  }
+
+  /** How a person signs in: with a password, with Google, or both. */
+  async ways(user: string): Promise<SignInWays> {
+    const rows = await this.db.query<{ provider: string }>(
+      'SELECT DISTINCT "providerId" AS provider FROM auth_accounts WHERE "userId" = $1',
+      [user],
+    );
+    const providers = new Set(rows.map((row) => row.provider));
+    return {
+      password: providers.has("credential"),
+      google: providers.has("google"),
+    };
+  }
+
+  /** The sign-in settings, for the admin's page. */
+  async settings(user: string): Promise<SignInSettings> {
+    await this.mustAdmin(user);
+    const google = this.kept.google;
+    let readable = false;
+    if (google && this.sealKey && isSealed(google.secret))
+      try {
+        openWith(this.sealKey, google.secret);
+        readable = true;
+      } catch {}
+    const [counts] = await this.db.query<{
+      password_only: string | number;
+      google_only: string | number;
+    }>(
+      `SELECT
+        count(*) FILTER (WHERE p AND NOT g) AS password_only,
+        count(*) FILTER (WHERE g AND NOT p) AS google_only
+      FROM (SELECT "userId",
+        bool_or("providerId" = 'credential') AS p,
+        bool_or("providerId" = 'google') AS g
+        FROM auth_accounts GROUP BY "userId") AS ways`,
+    );
+    return {
+      password: this.kept.password !== false,
+      ...(google
+        ? {
+            google: {
+              on: google.on,
+              clientId: google.clientId,
+              by: google.by,
+              at: google.at,
+              site: google.site,
+              readable,
+            },
+          }
+        : {}),
+      sealing: Boolean(this.sealKey),
+      passwordOnly: Number(counts?.password_only ?? 0),
+      googleOnly: Number(counts?.google_only ?? 0),
+      mineLinked: (await this.ways(user)).google,
+    };
+  }
+
+  /**
+   * Email and password on or off. Off only while Google is on and the admin signs in with it
+   * themselves, so nobody is left without a way in, the admin least of all.
+   */
+  async setPassword(user: string, on: boolean): Promise<void> {
+    await this.mustAdmin(user);
+    if (!on) {
+      if (!this.methods().google) throw new AccountError("google-first");
+      if (!(await this.ways(user)).google)
+        throw new AccountError("link-google-first");
+    }
+    await this.keep({ ...this.kept, password: on });
+  }
+
+  /**
+   * Keeps the Google client the admin registered, its secret sealed, and turns Google on. An empty
+   * secret keeps the one kept for the same client. `site` is where the server is reached, which
+   * Google sends people back to.
+   */
+  async saveGoogle(
+    user: string,
+    input: { clientId: string; secret: string; site: string; by: string },
+  ): Promise<void> {
+    await this.mustAdmin(user);
+    if (!this.sealKey) throw new AccountError("sealing-off");
+    const clientId = input.clientId.trim();
+    if (!GOOGLE_ID.test(clientId)) throw new AccountError("google-id-wrong");
+    const secret = input.secret.trim();
+    const before = this.kept.google;
+    if (secret && (secret.length > 200 || /\s/.test(secret)))
+      throw new AccountError("google-secret-wrong");
+    if (!secret && (!before || before.clientId !== clientId))
+      throw new AccountError("google-secret-missing");
+    const sealed = secret ? sealWith(this.sealKey, secret) : before?.secret;
+    if (!sealed) throw new AccountError("google-secret-missing");
+    await this.keep({
+      ...this.kept,
+      google: {
+        on: true,
+        clientId,
+        secret: sealed,
+        site: siteOf(input.site),
+        by: input.by.slice(0, 80),
+        at: new Date().toISOString(),
+      },
+    });
+    if (!this.methods().google) throw new AccountError("google-unreadable");
+  }
+
+  /** Google on or off, its settings kept. Off only while email and password is on. */
+  async setGoogle(user: string, on: boolean): Promise<void> {
+    await this.mustAdmin(user);
+    const google = this.kept.google;
+    if (!google) throw new AccountError("google-not-set");
+    if (!on && this.kept.password === false)
+      throw new AccountError("password-first");
+    await this.keep({ ...this.kept, google: { ...google, on } });
+    if (on && !this.methods().google) {
+      await this.keep({ ...this.kept, google: { ...google, on: false } });
+      throw new AccountError("google-unreadable");
+    }
+  }
+
+  /** Takes the Google client and its sealed secret off the server. Only while email and password is on. */
+  async removeGoogle(user: string): Promise<void> {
+    await this.mustAdmin(user);
+    if (this.kept.password === false) throw new AccountError("password-first");
+    const { google: _gone, ...rest } = this.kept;
+    await this.keep(rest);
+  }
+
+  /**
+   * Starts signing in with Google: where to send the browser, with the cookie that binds its way
+   * back to this one. `signUp` lets it make an account (an invite's page); `back` is where it lands
+   * signed in, `failed` where it lands with `error` when it did not.
+   */
+  async googleStart(input: {
+    back: string;
+    failed: string;
+    signUp: boolean;
+  }): Promise<{ url: string; cookies: string[] }> {
+    if (!this.methods().google) throw new AccountError("google-off");
+    const response = (await this.current.api.signInSocial({
+      body: {
+        provider: "google",
+        callbackURL: input.back,
+        errorCallbackURL: input.failed,
+        requestSignUp: input.signUp,
+        disableRedirect: true,
+      },
+      asResponse: true,
+    })) as Response;
+    return started(response);
+  }
+
+  /** Starts connecting Google to the signed-in person's account, from their own page. */
+  async googleLink(
+    cookie: string | undefined,
+  ): Promise<{ url: string; cookies: string[] }> {
+    if (!this.methods().google) throw new AccountError("google-off");
+    const response = (await this.current.api.linkSocialAccount({
+      body: {
+        provider: "google",
+        callbackURL: "/home",
+        errorCallbackURL: "/home",
+        disableRedirect: true,
+      },
+      headers: new Headers({ cookie: cookie ?? "" }),
+      asResponse: true,
+    })) as Response;
+    return started(response);
+  }
+
+  /** Google's way back (`GOOGLE_CALLBACK`), which Better Auth itself answers. */
+  async callback(
+    request: IncomingMessage,
+    response: ServerResponse,
+  ): Promise<void> {
+    await toNodeHandler(this.current)(request, response);
   }
 
   /** The office an invite's key opens. */
@@ -199,11 +633,12 @@ export class Accounts {
     key: string,
     input: { name: string; email: string; password: string },
   ): Promise<{ person: Person; cookies: string[] }> {
+    if (!this.methods().password) throw new AccountError("password-off");
     const office = await this.officeByKey(key);
     if (!office) throw new AccountError("invite-wrong");
     const name = input.name.trim().slice(0, 80);
     if (!name) throw new AccountError("name-missing");
-    const response = (await this.auth.api.signUpEmail({
+    const response = (await this.current.api.signUpEmail({
       body: { name, email: input.email.trim(), password: input.password },
       asResponse: true,
     })) as Response;
@@ -221,7 +656,8 @@ export class Accounts {
     input: { email: string; password: string },
     key?: string,
   ): Promise<{ person: Person; cookies: string[] }> {
-    const response = (await this.auth.api.signInEmail({
+    if (!this.methods().password) throw new AccountError("password-off");
+    const response = (await this.current.api.signInEmail({
       body: { email: input.email.trim(), password: input.password },
       asResponse: true,
     })) as Response;
@@ -240,7 +676,7 @@ export class Accounts {
   /** The person a browser's cookie signs in, if any. */
   async person(cookie: string | undefined): Promise<Person | undefined> {
     if (!cookie) return undefined;
-    const found = (await this.auth.api
+    const found = (await this.current.api
       .getSession({ headers: new Headers({ cookie }) })
       .catch(() => null)) as { user?: Person } | null;
     return found?.user
@@ -255,7 +691,7 @@ export class Accounts {
   /** Ends the browser's session; the answer's cookies clear it. */
   async signOut(cookie: string | undefined): Promise<string[]> {
     if (!cookie) return [];
-    const response = (await this.auth.api
+    const response = (await this.current.api
       .signOut({ headers: new Headers({ cookie }), asResponse: true })
       .catch(() => undefined)) as Response | undefined;
     return response?.headers.getSetCookie() ?? [];
@@ -478,4 +914,36 @@ export class Accounts {
       moved: joined.moved,
     };
   }
+}
+
+/** Sign-in settings as kept; anything unreadable reads as none. */
+function parseKept(text: string): SignInKept {
+  if (!text) return {};
+  try {
+    const kept = JSON.parse(text) as SignInKept;
+    return kept && typeof kept === "object" ? kept : {};
+  } catch {
+    return {};
+  }
+}
+
+/** A server's address as Google is told it: scheme and host, nothing after. */
+function siteOf(address: string): string {
+  const url = new URL(address);
+  if (url.protocol !== "https:" && url.protocol !== "http:")
+    throw new AccountError("account-failed");
+  return url.origin;
+}
+
+/** Better Auth's answer to a start: the address at Google and the cookies binding the way back. */
+async function started(
+  response: Response,
+): Promise<{ url: string; cookies: string[] }> {
+  const { url } = (await response
+    .clone()
+    .json()
+    .catch(() => ({}))) as { url?: string };
+  if (!response.ok || !url?.startsWith("https://accounts.google.com/"))
+    throw new AccountError("google-failed");
+  return { url, cookies: response.headers.getSetCookie() };
 }

@@ -62,8 +62,10 @@ a phone, the page asks them to open the link on their computer, since the clone 
 Someone who cannot install now can still answer a colleague's clone by the reply link it sends.
 
 Below the steps, **Or make an account on this office's server** (또는 이 오피스 서버에 계정 만들기)
-makes an account there instead (name, email, a password of 8 characters or more), or signs in with
-one they have. Their own page on the server then has:
+makes an account there instead: with **Continue with Google** (Google 계정으로 계속하기) where the
+server's admin turned Google on, or with a name, an email and a password of 8 characters or more,
+or signs in with one they have (**Sign in**, 로그인, at `/login`). Their own page on the server
+then has:
 
 - **Connect your computer** (내 컴퓨터 연결): **Make my connect command** (연결 명령 만들기) gives
   one line, `npx clone-office connect <link>`, to run once in a terminal on the computer their
@@ -74,15 +76,40 @@ one they have. Their own page on the server then has:
 - **Invite a teammate** (동료 초대): the office's invite link, to send on.
 - **People in this office** (이 오피스의 사람들): everyone with an account there, owner or member,
   and whether their computer is connected.
+- **How you sign in** (내 로그인 방법), once Google is a way in on the server: their password,
+  and **Connect Google** (Google 연결) to sign in with their Google account too. A Google account
+  never joins an account made with a password by its email alone (whoever made that account
+  first could otherwise keep a way into it); it is connected here, signed in.
 - **Sign out** (로그아웃).
+
+**Sign-in settings** (로그인 설정, `/home/admin`) are the server's admin's: the owners of the office
+the server was started with (the first account made there). They apply to every office on the
+server:
+
+- **Email and password** (이메일과 비밀번호): on or off. It turns off only while Google is on and
+  the admin connected their own Google account, so they keep a way in; the page says how many
+  people sign in only with a password, and asks once before it goes off.
+- **Google**: set up once with the server's own OAuth client. In Google Cloud Console, under
+  APIs & Services › Credentials, they make an OAuth client ID for a web application, add the
+  address the page shows (`<server>/api/auth/callback/google`) as an authorized redirect URI, and
+  paste the client ID and secret into the page; **Save and turn on** (저장하고 켜기). Google sends
+  people back only to an https address or to localhost, so a server others reach sits behind
+  https with `RELAY_PUBLIC_URL` set to that address. The secret is sealed on the server
+  (AES-256-GCM under `RELAY_ENCRYPTION_KEY`, or the `secret.key` beside a server's own data
+  folder) and never shown again; without such a key it is not kept at all. Google turns off or on
+  any time with its settings kept, and **Remove Google settings** (Google 설정 지우기) deletes the
+  client and its secret, asked once.
+- One way always stays on. A Google account makes a new account only from an invite's page; from
+  the sign-in page it signs in to one that exists.
 
 The first account made in an office owns it. An owner also sees, on that page: **Remove**
 (내보내기) beside a person (their clone stops working in the office at once; what they asked and
 answered stays), **Make owner** (주인으로), clones that joined with the link without an account,
 **Make a new invite link** (새 초대 링크 만들기; the old link stops working, everyone in stays in),
 and **Office name** (오피스 이름). Each change is shown once more on its own page before it is
-made. The server keeps their password only hashed and their session in a cookie; the line's code
-is kept only hashed and ends once used.
+made. The server keeps their password only hashed and their session in a cookie, signed with a
+secret sealed like Google's; what Google gives it when someone signs in is kept encrypted, and the
+line's code is kept only hashed and ends once used.
 
 ## What goes to the relay, and what never does
 

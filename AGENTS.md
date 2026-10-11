@@ -202,8 +202,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   each laid out with `parts.tsx`: AI model (the brain, learning after each conversation, the lighter
   model), Permissions (`permissions-section.tsx`: how much it does alone, rules taken back,
   the folders it reads), Connectors, Notifications & phone (the messenger, kept questions' hours,
-  quiet hours), Office (`office-section.tsx`: open here, join, invite, people, the team's keys
-  (`brain-panel.tsx` `TeamKeys`), leave, the lobby) and General (language, theme, version, Files
+  quiet hours), Office (`office-section.tsx`: open here, join, invite, the team server's own page
+  for an office on a server (one's account there and, for its admin, how people sign in), people,
+  the team's keys (`brain-panel.tsx` `TeamKeys`), leave, the lobby) and General (language, theme, version, Files
   from `server/stored.ts`). The clone's screen
   reuses `clone-section.tsx` (about them, the memory as saved with each line correctable or
   removable, its skills and, in an office, the office's skills (`skills-section.tsx`, route
@@ -418,14 +419,26 @@ These words help discussion. They do not mandate separate services, tables or UI
   People sign in on the server, after Paperclip (Better Auth) and OpenClaw (a one-time setup
   link): `accounts.ts` runs Better Auth over the relay's own database (pg's pool, or PGlite through
   a small Kysely dialect of its own, `pglite-dialect.ts`, without Kysely's transactions, which
-  would interleave with the relay's queries; its tables `auth_*`, made at start; its secret `BETTER_AUTH_SECRET` or one made once
-  and kept in `server_settings`), puts a person in the office whose invite they signed up with
+  would interleave with the relay's queries; its tables `auth_*`, made at start, so its own
+  background look at them is off; its secret `BETTER_AUTH_SECRET` or one made once and kept in
+  `server_settings`, sealed under the relay's key, `relaySealKey`, as team keys are; Google's
+  tokens encrypted, `encryptOAuthTokens`), lets people in with email and password and, once the
+  server's admin set it up, Google (`server_settings` `sign-in`: each way on or off, one always
+  on, and the admin keeps one of their own; the OAuth client's secret sealed and never shown;
+  Better Auth made again when they change, `refresh` reading another process's change; the admin
+  is an owner of the server's first office, `isAdmin`; Google's way back is Better Auth's own
+  route, `GOOGLE_CALLBACK`, the only one of its routes the relay serves; a Google identity never
+  joins an account by its email, `disableImplicitLinking`, but is connected from one's page,
+  `googleLink`; it makes an account only from an invite, `disableImplicitSignUp`), puts a person in the office whose invite they signed up with
   (the first owns it; `office_people`), and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:
-  `Relay.joinAs` moves it). `people-pages.ts` is the invite's sign-up page, sign-in and one's own
-  page with the line to run and the people in the office, plain HTML with no scripts and the app's
-  mark; a form from another site is refused (Fetch Metadata first, else the Origin; the pages keep
+  `Relay.joinAs` moves it). `people-pages.ts` is the invite's sign-up page, sign-in (Google first
+  where it is on, as a link, since the pages' forms post only to the server), one's own page with
+  the line to run, the people in the office and how one signs in, and the admin's sign-in settings
+  (`adminPage`), plain HTML with no scripts and the app's mark; going to Google starts only from
+  the server's own pages (Fetch Metadata), and Google's refusals read in the person's words
+  (`googleProblem`); a form from another site is refused (Fetch Metadata first, else the Origin; the pages keep
   their referrer within the server, so a browser's own form never comes as "null"), and wrong
   sign-ins count against the caller's address. An office's owners also remove people (their
   clone's place goes at once, what they asked stays) or clones that joined with the bare key,

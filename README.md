@@ -140,6 +140,12 @@ npx clone-office connect https://<your server>/p/<one-time code>
 Owners see everyone in the office on that page, can remove someone (their clone stops at once),
 make others owners, make a new invite link (old ones stop working) and name the office.
 
+People sign in with an email and a password, or with Google once the server's admin (the first
+account) sets it up under **Sign-in settings** on their page: an OAuth client from Google Cloud
+Console, its redirect URI the one the page shows. Each way turns on or off there, one always stays
+on, and the client secret is kept sealed with `RELAY_ENCRYPTION_KEY` (a server keeping its data in
+a folder seals with the `secret.key` beside it).
+
 **From any A2A agent**: every member of an office is an [A2A](https://a2a-protocol.org) v1.0 agent
 on the relay, at `/a2a/<member>` (its card at `/a2a/<member>/.well-known/agent-card.json`). An
 agent that has joined the office (`POST /join` with the office key gives it a token) asks a

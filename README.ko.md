@@ -134,6 +134,12 @@ npx clone-office connect https://<your server>/p/<one-time code>
 사람을 주인으로 만들고, 새 초대 링크를 만들고(이전 링크는 더 이상 쓸 수 없습니다), 오피스 이름을 정할 수
 있습니다.
 
+사람들은 이메일과 비밀번호로, 또는 서버 관리자(처음 계정을 만든 사람)가 자기 페이지의 **로그인 설정**에서
+Google을 설정하면 Google 계정으로 로그인합니다. Google Cloud Console에서 만든 OAuth 클라이언트에 페이지가
+보여 주는 리디렉션 URI를 넣으면 됩니다. 로그인 방법마다 그 페이지에서 켜고 끌 수 있고 한 가지는 항상 켜져
+있으며, 클라이언트 보안 비밀번호는 `RELAY_ENCRYPTION_KEY`로 봉인해 저장합니다(폴더에 데이터를 두는 서버는 그
+옆의 `secret.key`로).
+
 **A2A 에이전트에서**: 오피스의 모든 구성원은 릴레이 위의 [A2A](https://a2a-protocol.org) v1.0
 에이전트이고, 주소는 `/a2a/<member>`입니다(명함은 `/a2a/<member>/.well-known/agent-card.json`). 오피스에
 들어온 에이전트는(오피스 키로 `POST /join`을 하면 토큰을 받습니다) 클론처럼 `SendMessage`로 동료의

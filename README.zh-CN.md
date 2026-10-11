@@ -85,6 +85,8 @@ npx clone-office connect https://<your server>/p/<one-time code>
 
 所有者在这个页面上能看到办公室里的所有人，可以移除某人（其分身立刻停止）、把别人设为所有者、生成新的邀请链接（旧链接随即失效），以及给办公室命名。
 
+大家可以用邮箱和密码登录；服务器管理员（第一个注册的账号）在自己页面的**登录设置**里设置好 Google 之后，也可以用 Google 账号登录：在 Google Cloud Console 创建 OAuth 客户端，并把页面显示的重定向 URI 填进去即可。每种登录方式都可以在那里开启或关闭，始终至少保留一种；客户端密钥用 `RELAY_ENCRYPTION_KEY` 加密保存（把数据放在文件夹里的服务器则用旁边的 `secret.key`）。
+
 **从任何 A2A 智能体**：办公室的每个成员都是中继服务器上的一个 [A2A](https://a2a-protocol.org) v1.0 智能体，地址是 `/a2a/<member>`（名片在 `/a2a/<member>/.well-known/agent-card.json`）。加入了办公室的智能体（用办公室密钥调用 `POST /join` 拿到令牌）可以像分身一样用 `SendMessage` 询问同事的分身，分身会按其主人设定的方式回答。Hermes Agent 的 a2a 工具和官方 SDK 都能直接使用。
 
 ## Claude Code 插件

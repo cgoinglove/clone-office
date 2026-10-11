@@ -7,7 +7,8 @@
 // from the network, and it says at which addresses. Started by the app with RELAY_WITH_PARENT=1
 // (and its stdin a pipe the app holds), it stops when the app does, however the app ends. The
 // routes are in handler.ts. People make their accounts here from the office's invite link
-// (accounts.ts); RELAY_PUBLIC_URL is the address they reach it at, when a proxy stands in front.
+// (accounts.ts); RELAY_PUBLIC_URL is the address they reach it at, when a proxy stands in front,
+// and the one Google sends people back to once the admin turns Google sign-in on.
 
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
@@ -52,14 +53,16 @@ meetingRounds.unref();
 const publicUrl = process.env.RELAY_PUBLIC_URL || undefined;
 // Team keys are sealed with a key kept apart from the database (team-ai.ts).
 const daily = Number(process.env.RELAY_TEAM_AI_DAILY);
+// One key seals both the team keys and the sign-in secrets (the session secret, Google's).
+const sealKey = await relaySealKey(db.kind === "postgres" ? undefined : target);
 const teamAi = new TeamAi(
   relay,
-  await relaySealKey(db.kind === "postgres" ? undefined : target),
+  sealKey,
   {},
   fetch,
   Number.isFinite(daily) && daily >= 0 ? daily : DAILY_CALLS,
 );
-const accounts = await Accounts.open(db, relay, { publicUrl });
+const accounts = await Accounts.open(db, relay, { publicUrl, sealKey });
 
 const server = createServer(
   relayHandler(relay, {

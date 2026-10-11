@@ -10,6 +10,7 @@ import {
   Building2,
   Check,
   Copy,
+  ExternalLink,
   Link2,
   LogOut,
   Pencil,
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Bot } from "@/features/office";
@@ -84,6 +85,24 @@ export function OfficeSection({
       >
         {data.here ? <Here here={data.here} /> : <Invite busy={office.busy} />}
       </Group>
+
+      {!data.here && data.relay && /^https?:\/\//.test(data.relay) && (
+        // The team server's own pages: one's account, the people, and, for whoever looks after
+        // the server, how people sign in to it.
+        <Group title={tS("server")} hint={tS("serverHint")}>
+          <div>
+            <a
+              href={`${data.relay.replace(/\/+$/, "")}/home`}
+              target="_blank"
+              rel="noreferrer"
+              className={cn(buttonVariants({ variant: "secondary" }))}
+            >
+              {tS("serverOpen")}
+              <ExternalLink />
+            </a>
+          </div>
+        </Group>
+      )}
 
       <Group
         title={tS("people")}

@@ -362,3 +362,583 @@ test("an office's owner decides who is in: removes people and keyed clones, adds
     await db.close();
   }
 });
+
+const GOOGLE = {
+  clientId: "1234-abcd.apps.googleusercontent.com",
+  secret: "GOCSPX-a-test-client-secret",
+};
+
+/** A Google identity on an account, as connecting Google from one's page leaves it. */
+async function googleOn(
+  db: Awaited<ReturnType<typeof openDatabase>>,
+  user: string,
+) {
+  await db.query(
+    'INSERT INTO auth_accounts (id, "accountId", "providerId", "userId", "createdAt", "updatedAt") VALUES ($1, $2, \'google\', $3, now(), now())',
+    [`g-${user}`, `google-${user}`, user],
+  );
+}
+
+test("the server's admin sets how people sign in: Google's secret sealed, one way always on, nobody else", async () => {
+  const { keyFrom, newKeyText, isSealed } = await import("../../lib/seal.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const sealKey = keyFrom(newKeyText());
+  try {
+    const accounts = await Accounts.open(db, relay, { sealKey });
+    const office = await relay.office();
+    const [secretRow] = await db.query<{ value: string }>(
+      "SELECT value FROM server_settings WHERE name = 'auth-secret'",
+    );
+    assert.ok(isSealed(secretRow.value), "the session secret is sealed");
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    assert.equal(await accounts.isAdmin(ana.person.id), true);
+    assert.equal(await accounts.isAdmin(ben.person.id), false);
+    // An owner of another office on the server is not its admin.
+    const other = await relay.office("another-office-key");
+    const cy = await accounts.signUp(other.key, {
+      name: "Cy",
+      email: "cy@example.com",
+      password: "cy's long password",
+    });
+    assert.equal((await accounts.places(cy.person.id))[0].role, "owner");
+    assert.equal(await accounts.isAdmin(cy.person.id), false);
+    const site = "https://office.example.com";
+    await assert.rejects(
+      accounts.saveGoogle(ben.person.id, { ...GOOGLE, site, by: "Ben" }),
+      /not-admin/,
+    );
+    await assert.rejects(
+      accounts.saveGoogle(cy.person.id, { ...GOOGLE, site, by: "Cy" }),
+      /not-admin/,
+    );
+    assert.deepEqual(accounts.methods(), { password: true, google: false });
+    // Nobody is left without a way in.
+    await assert.rejects(
+      accounts.setPassword(ana.person.id, false),
+      /google-first/,
+    );
+    await assert.rejects(
+      accounts.saveGoogle(ana.person.id, {
+        clientId: "not-a-client",
+        secret: GOOGLE.secret,
+        site,
+        by: "Ana",
+      }),
+      /google-id-wrong/,
+    );
+    await assert.rejects(
+      accounts.saveGoogle(ana.person.id, {
+        clientId: GOOGLE.clientId,
+        secret: "",
+        site,
+        by: "Ana",
+      }),
+      /google-secret-missing/,
+    );
+    await accounts.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: `${site}/home/admin`,
+      by: "Ana",
+    });
+    assert.deepEqual(accounts.methods(), { password: true, google: true });
+    const [kept] = await db.query<{ value: string }>(
+      "SELECT value FROM server_settings WHERE name = 'sign-in'",
+    );
+    assert.ok(!kept.value.includes(GOOGLE.secret), "never kept in the clear");
+    assert.ok(isSealed(JSON.parse(kept.value).google.secret));
+    const settings = await accounts.settings(ana.person.id);
+    assert.equal(settings.google?.site, site, "the server's address alone");
+    assert.equal(settings.google?.readable, true);
+    assert.equal(settings.passwordOnly, 3);
+    assert.equal(JSON.stringify(settings).includes(GOOGLE.secret), false);
+    await assert.rejects(accounts.settings(ben.person.id), /not-admin/);
+    // Saving the same client again with no secret keeps the one kept.
+    await accounts.saveGoogle(ana.person.id, {
+      clientId: GOOGLE.clientId,
+      secret: "",
+      site,
+      by: "Ana",
+    });
+    assert.equal(accounts.methods().google, true);
+
+    // Off to Google, the way back bound by a cookie.
+    const started = await accounts.googleStart({
+      back: "/home",
+      failed: "/login",
+      signUp: false,
+    });
+    const at = new URL(started.url);
+    assert.equal(at.origin, "https://accounts.google.com");
+    assert.equal(at.searchParams.get("client_id"), GOOGLE.clientId);
+    assert.equal(
+      at.searchParams.get("redirect_uri"),
+      `${site}/api/auth/callback/google`,
+    );
+    assert.ok(at.searchParams.get("state"));
+    assert.ok(started.cookies.some((c) => c.includes("state=")));
+
+    // The admin turns passwords off only once they sign in with Google themselves.
+    await assert.rejects(
+      accounts.setPassword(ana.person.id, false),
+      /link-google-first/,
+    );
+    await googleOn(db, ana.person.id);
+    assert.deepEqual(await accounts.ways(ana.person.id), {
+      password: true,
+      google: true,
+    });
+    await accounts.setPassword(ana.person.id, false);
+    assert.deepEqual(accounts.methods(), { password: false, google: true });
+    await assert.rejects(
+      accounts.signIn({
+        email: "ben@example.com",
+        password: "ben's long password",
+      }),
+      /password-off/,
+    );
+    await assert.rejects(
+      accounts.signUp(office.key, {
+        name: "Dee",
+        email: "dee@example.com",
+        password: "a long password",
+      }),
+      /password-off/,
+    );
+    await assert.rejects(
+      accounts.setGoogle(ana.person.id, false),
+      /password-first/,
+    );
+    await assert.rejects(
+      accounts.removeGoogle(ana.person.id),
+      /password-first/,
+    );
+
+    // Another of the server's processes reads the change.
+    const elsewhere = await Accounts.open(db, relay, { sealKey });
+    assert.deepEqual(elsewhere.methods(), { password: false, google: true });
+    await accounts.setPassword(ana.person.id, true);
+    await elsewhere.refresh();
+    assert.deepEqual(elsewhere.methods(), { password: true, google: true });
+
+    await accounts.setGoogle(ana.person.id, false);
+    assert.equal(accounts.methods().google, false);
+    await assert.rejects(
+      accounts.googleStart({ back: "/home", failed: "/login", signUp: false }),
+      /google-off/,
+    );
+    await accounts.setGoogle(ana.person.id, true);
+    await accounts.removeGoogle(ana.person.id);
+    assert.deepEqual(accounts.methods(), { password: true, google: false });
+    assert.equal((await accounts.settings(ana.person.id)).google, undefined);
+
+    // Sealed, the relay needs its key to start.
+    await assert.rejects(Accounts.open(db, relay), /sign-in secret is sealed/);
+  } finally {
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("without a key to seal it with, no Google secret is kept", async () => {
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  try {
+    const accounts = await Accounts.open(db, relay);
+    const office = await relay.office();
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    await assert.rejects(
+      accounts.saveGoogle(ana.person.id, {
+        ...GOOGLE,
+        site: "https://office.example.com",
+        by: "Ana",
+      }),
+      /sealing-off/,
+    );
+    assert.equal((await accounts.settings(ana.person.id)).sealing, false);
+  } finally {
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("a sign-in secret kept plain is sealed in place, and one another key sealed gives way to a new one", async () => {
+  const { keyFrom, newKeyText, isSealed } = await import("../../lib/seal.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  try {
+    await db.query(
+      "INSERT INTO server_settings (name, value) VALUES ('auth-secret', 'a-plain-secret-from-before-sealing')",
+    );
+    const first = keyFrom(newKeyText());
+    const accounts = await Accounts.open(db, relay, { sealKey: first });
+    const office = await relay.office();
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    const [sealed] = await db.query<{ value: string }>(
+      "SELECT value FROM server_settings WHERE name = 'auth-secret'",
+    );
+    assert.ok(isSealed(sealed.value));
+    await accounts.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: "https://office.example.com",
+      by: "Ana",
+    });
+    // The same secret opens again: a session made before still signs in.
+    const again = await Accounts.open(db, relay, { sealKey: first });
+    assert.equal(
+      (await again.person(cookieOf(ana.cookies)))?.email,
+      "ana@example.com",
+    );
+    // Another key opens neither: Google stays off, sessions start again.
+    const warned = console.warn;
+    console.warn = () => {};
+    const other = await Accounts.open(db, relay, {
+      sealKey: keyFrom(newKeyText()),
+    }).finally(() => {
+      console.warn = warned;
+    });
+    assert.equal(other.methods().google, false);
+    assert.equal((await other.settings(ana.person.id)).google?.readable, false);
+    assert.equal(await other.person(cookieOf(ana.cookies)), undefined);
+  } finally {
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("the pages offer Google where it is on, start it only from their own pages, and say why it failed", async () => {
+  const { createServer } = await import("node:http");
+  const { keyFrom, newKeyText } = await import("../../lib/seal.ts");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay, {
+    sealKey: keyFrom(newKeyText()),
+  });
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const form = (fields: Record<string, string>, cookie = "") => ({
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "sec-fetch-site": "same-origin",
+      ...(cookie ? { cookie } : {}),
+    },
+    body: new URLSearchParams(fields),
+    redirect: "manual" as const,
+  });
+  try {
+    assert.doesNotMatch(
+      await (await fetch(`${base}/login`)).text(),
+      /class="google"/,
+    );
+    const made = await fetch(
+      `${base}/i/${office.key}`,
+      form({
+        name: "Ana",
+        email: "ana@example.com",
+        password: "a long password",
+      }),
+    );
+    const ana = cookieOf(made.headers.getSetCookie());
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+
+    // Only the admin sees and changes the settings.
+    assert.match(
+      await (await fetch(`${base}/home`, { headers: { cookie: ana } })).text(),
+      /href="\/home\/admin"/,
+    );
+    const notAdmin = await fetch(`${base}/home/admin`, {
+      headers: { cookie: cookieOf(ben.cookies) },
+      redirect: "manual",
+    });
+    assert.equal(notAdmin.headers.get("location"), "/home");
+    const page = await (
+      await fetch(`${base}/home/admin`, { headers: { cookie: ana } })
+    ).text();
+    assert.match(page, /Sign-in settings/);
+    assert.match(page, new RegExp(`${base}/api/auth/callback/google`));
+    const saved = await fetch(`${base}/home/admin/google`, form(GOOGLE, ana));
+    assert.equal(saved.headers.get("location"), "/home/admin?done=saved");
+    const after = await (
+      await fetch(`${base}/home/admin?done=saved`, { headers: { cookie: ana } })
+    ).text();
+    assert.match(after, /Saved\./);
+    assert.ok(!after.includes(GOOGLE.secret), "the secret is never shown");
+    assert.match(after, new RegExp(GOOGLE.clientId));
+    const forged = await fetch(`${base}/home/admin/google/off`, {
+      method: "POST",
+      headers: { cookie: ana, "sec-fetch-site": "cross-site" },
+      redirect: "manual",
+    });
+    assert.equal(forged.status, 403);
+
+    // Google offered on the sign-in and invite pages.
+    const login = await (await fetch(`${base}/login`)).text();
+    assert.match(login, /href="\/login\/google"[\s\S]*Continue with Google/);
+    assert.match(
+      await (await fetch(`${base}/i/${office.key}?from=Ana`)).text(),
+      new RegExp(`href="/i/${office.key}/google\\?from=Ana"`),
+    );
+    // Started only from the server's own pages, and bound to the browser that started it.
+    const crossSite = await fetch(`${base}/login/google`, {
+      headers: { "sec-fetch-site": "cross-site" },
+      redirect: "manual",
+    });
+    assert.equal(crossSite.status, 403);
+    const off = await fetch(`${base}/i/${office.key}/google`, {
+      headers: { "sec-fetch-site": "same-origin" },
+      redirect: "manual",
+    });
+    assert.equal(off.status, 303);
+    const google = new URL(off.headers.get("location") ?? "");
+    assert.equal(google.origin, "https://accounts.google.com");
+    assert.equal(google.searchParams.get("client_id"), GOOGLE.clientId);
+    assert.ok(off.headers.getSetCookie().some((c) => /state=/.test(c)));
+    const noSuch = await fetch(`${base}/i/no-such-office/google`, {
+      headers: { "sec-fetch-site": "same-origin" },
+      redirect: "manual",
+    });
+    assert.equal(noSuch.status, 404);
+    // A way back that was not started here is turned away, and said so.
+    const stray = await fetch(
+      `${base}/api/auth/callback/google?code=x&state=not-ours`,
+      { redirect: "manual" },
+    );
+    assert.equal(stray.status, 302);
+    assert.match(stray.headers.get("location") ?? "", /^\/login\?error=/);
+    // Google's refusals read in the person's words.
+    assert.match(
+      await (await fetch(`${base}/login?error=account_not_linked`)).text(),
+      /signs in with its password/,
+    );
+    assert.match(
+      await (
+        await fetch(`${base}/login?error=signup_disabled`, {
+          headers: { "accept-language": "ko" },
+        })
+      ).text(),
+      /그 Google 계정으로 만든 계정이 아직 없어요/,
+    );
+    assert.match(
+      await (await fetch(`${base}/login?error=%3Cscript%3E`)).text(),
+      /^(?![\s\S]*<script>)/,
+    );
+
+    // With Google on and connected, the admin turns passwords off: the pages offer Google alone.
+    await googleOn(db, (await accounts.person(ana))?.id ?? "");
+    const turned = await fetch(
+      `${base}/home/admin/password/off`,
+      form({}, ana),
+    );
+    assert.equal(turned.headers.get("location"), "/home/admin?done=saved");
+    const googleOnly = await (await fetch(`${base}/login`)).text();
+    assert.match(googleOnly, /Continue with Google/);
+    assert.doesNotMatch(googleOnly, /name="password"/);
+    const refused = await fetch(
+      `${base}/login`,
+      form({ email: "ben@example.com", password: "ben's long password" }),
+    );
+    assert.match(
+      await refused.text(),
+      /Signing in with a password is turned off/,
+    );
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("with Google, as people do it: an invite makes an account, a password's account connects it from its page, and nobody takes one by its email", async () => {
+  const { createServer } = await import("node:http");
+  const { keyFrom, newKeyText } = await import("../../lib/seal.ts");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay, {
+    sealKey: keyFrom(newKeyText()),
+  });
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  // Google's side: the code exchanged for who signed in there, as its token endpoint answers.
+  const people: Record<string, { sub: string; email: string; name: string }> = {
+    dee: { sub: "g-dee", email: "dee@example.com", name: "Dee" },
+    ben: { sub: "g-ben", email: "ben@example.com", name: "Ben" },
+    eve: { sub: "g-eve", email: "eve@example.com", name: "Eve" },
+    other: { sub: "g-other", email: "someone@example.com", name: "Other" },
+  };
+  const part = (value: unknown) =>
+    Buffer.from(JSON.stringify(value)).toString("base64url");
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url =
+      typeof input === "string"
+        ? input
+        : input instanceof URL
+          ? input.href
+          : input.url;
+    if (!url.startsWith("https://oauth2.googleapis.com/token"))
+      return realFetch(input, init);
+    const code = new URLSearchParams(String(init?.body ?? "")).get("code");
+    const who = people[code ?? ""];
+    if (!who) return Response.json({ error: "invalid_grant" }, { status: 400 });
+    const now = Math.floor(Date.now() / 1000);
+    return Response.json({
+      access_token: `access-${who.sub}`,
+      token_type: "Bearer",
+      expires_in: 3600,
+      scope: "openid email profile",
+      id_token: `${part({ alg: "RS256", typ: "JWT" })}.${part({
+        iss: "https://accounts.google.com",
+        aud: GOOGLE.clientId,
+        sub: who.sub,
+        email: who.email,
+        email_verified: true,
+        name: who.name,
+        iat: now,
+        exp: now + 3600,
+      })}.signature`,
+    });
+  }) as typeof fetch;
+  const same = { "sec-fetch-site": "same-origin" };
+  /** Through Google and back: where the browser lands, and its cookie after. */
+  const through = async (start: string, code: string, cookie = "") => {
+    const off = await fetch(`${base}${start}`, {
+      headers: { ...same, ...(cookie ? { cookie } : {}) },
+      redirect: "manual",
+    });
+    assert.equal(off.status, 303, `${start} goes to Google`);
+    const state = new URL(off.headers.get("location") ?? "").searchParams.get(
+      "state",
+    );
+    const bound = [cookie, cookieOf(off.headers.getSetCookie())]
+      .filter(Boolean)
+      .join("; ");
+    const back = await fetch(
+      `${base}/api/auth/callback/google?code=${code}&state=${state}`,
+      { headers: { cookie: bound }, redirect: "manual" },
+    );
+    const set = cookieOf(back.headers.getSetCookie());
+    return {
+      to: back.headers.get("location") ?? "",
+      cookie: [bound, set].filter(Boolean).join("; "),
+    };
+  };
+  try {
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    await accounts.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: base,
+      by: "Ana",
+    });
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+
+    // Dee makes her account from the invite with Google, and lands in the office.
+    const dee = await through(`/i/${office.key}/google?from=Ana`, "dee");
+    assert.equal(dee.to, `/i/${office.key}?from=Ana`);
+    const landed = await fetch(`${base}${dee.to}`, {
+      headers: { cookie: dee.cookie },
+      redirect: "manual",
+    });
+    assert.equal(landed.headers.get("location"), "/home");
+    const deePerson = await accounts.person(dee.cookie);
+    assert.equal(deePerson?.email, "dee@example.com");
+    assert.deepEqual(
+      (await accounts.places(deePerson?.id ?? "")).map((p) => p.role),
+      ["member"],
+    );
+    assert.deepEqual(await accounts.ways(deePerson?.id ?? ""), {
+      password: false,
+      google: true,
+    });
+    const tokens = await db.query<{ accessToken: string | null }>(
+      'SELECT "accessToken" FROM auth_accounts WHERE "providerId" = \'google\'',
+    );
+    assert.ok(
+      tokens.every((row) => !row.accessToken?.includes("access-g-")),
+      "Google's tokens are kept encrypted",
+    );
+    // She signs in again with Google from the sign-in page.
+    const again = await through("/login/google", "dee");
+    assert.equal(again.to, "/home");
+
+    // Ben's Google account carries his email, but his account signs in with a password: it is not
+    // taken by Google's word for the email alone.
+    const taken = await through(`/i/${office.key}/google`, "ben");
+    assert.match(taken.to, /^\/i\/[\w-]+\?error=account_not_linked/);
+    assert.match(
+      await (await fetch(`${base}${taken.to}`)).text(),
+      /signs in with its password/,
+    );
+    // From the sign-in page, a Google account with no account here makes none.
+    const nobody = await through("/login/google", "eve");
+    assert.equal(nobody.to, "/login?error=signup_disabled");
+    assert.equal(
+      (
+        await db.query(
+          "SELECT 1 FROM auth_users WHERE email = 'eve@example.com'",
+        )
+      ).length,
+      0,
+    );
+    // Signed in with his password, Ben connects his own Google account from his page...
+    const benCookie = cookieOf(ben.cookies);
+    const other = await through("/home/google", "other", benCookie);
+    assert.match(other.to, /^\/home\?error=/, "not another email's");
+    const linked = await through("/home/google", "ben", benCookie);
+    assert.equal(linked.to, "/home");
+    assert.deepEqual(await accounts.ways(ben.person.id), {
+      password: true,
+      google: true,
+    });
+    // ...and then signs in with it.
+    const viaGoogle = await through("/login/google", "ben");
+    assert.equal(viaGoogle.to, "/home");
+    assert.equal((await accounts.person(viaGoogle.cookie))?.id, ben.person.id);
+    assert.match(
+      await (
+        await fetch(`${base}/home`, { headers: { cookie: viaGoogle.cookie } })
+      ).text(),
+      /How you sign in[\s\S]*Email and password[\s\S]*Google[\s\S]*Connected/,
+    );
+  } finally {
+    globalThis.fetch = realFetch;
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});

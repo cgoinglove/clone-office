@@ -36,6 +36,13 @@
 // With people's accounts (accounts.ts), the invite page makes an account instead, and:
 //   POST /i/:key        the account's form -> one's own page, signed in
 //   GET|POST /login     signing in;  POST /logout  signing out
+//   GET  /login/google  signing in with Google (?key= from an invite: an account may be made)
+//   GET  /i/:key/google making an account, or signing in, with Google from an invite's page
+//   GET  /api/auth/callback/google   Google's way back, answered by Better Auth
+//   GET  /home/google   connecting Google to one's account
+//   GET  /home/admin    the server's sign-in settings, for its admin: POST /home/admin/password
+//                       {on}, /home/admin/google {clientId, secret}, /home/admin/google/on|off,
+//                       GET|POST /home/admin/google/remove
 //   GET  /home          one's own page: one's office, connecting one's computer, the invite link
 //   POST /home/pair     a one-time setup code, shown as the line to run on one's computer
 //   GET  /p/:code       what a setup link shows in a browser: the line to run
@@ -47,7 +54,12 @@
 import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { A2A_ERRORS, a2aCall, agentCard } from "./a2a.ts";
-import { AccountError, type Accounts } from "./accounts.ts";
+import {
+  AccountError,
+  type Accounts,
+  GOOGLE_CALLBACK,
+  googleProblem,
+} from "./accounts.ts";
 import {
   isPrivateHost,
   joinCommand,
@@ -57,6 +69,7 @@ import {
 } from "./install.ts";
 import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
 import {
+  adminPage,
   confirmPage,
   connectCommand,
   homePage,
@@ -270,6 +283,72 @@ export function relayHandler(
         html(403, missingPage(lang));
         return true;
       }
+      // The admin may have changed how people sign in, in another of the server's processes.
+      await accounts.refresh();
+      const methods = accounts.methods();
+      /** A failure named in the address: one of the pages' own, or Google's way back. */
+      const failure = (): string | undefined => {
+        const code = url.searchParams.get("error") ?? "";
+        if (/^[a-z-]{2,40}$/.test(code)) return code;
+        return /^[a-z_]{2,60}$/.test(code) ? googleProblem(code) : undefined;
+      };
+      if (path === GOOGLE_CALLBACK && request.method === "GET") {
+        await accounts.callback(request, response);
+        return true;
+      }
+      // Off to Google: started only from this server's own pages, where it binds its way back.
+      const googleInvite = /^\/i\/([\w-]{4,128})\/google$/.exec(path);
+      if (
+        (googleInvite || path === "/login/google" || path === "/home/google") &&
+        request.method === "GET"
+      ) {
+        if (!fromHere()) {
+          html(403, missingPage(lang));
+          return true;
+        }
+        const invited =
+          googleInvite?.[1] ??
+          (/^[\w-]{4,128}$/.test(url.searchParams.get("key") ?? "")
+            ? (url.searchParams.get("key") ?? undefined)
+            : undefined);
+        if (invited && (tries.blocked(from) || !(await relay.knows(invited)))) {
+          tries.miss(from);
+          html(404, missingPage(lang));
+          return true;
+        }
+        const who =
+          url.searchParams.get("from")?.trim().slice(0, 80) || undefined;
+        const invitePath = invited
+          ? `/i/${invited}${who ? `?from=${encodeURIComponent(who)}` : ""}`
+          : undefined;
+        const failed =
+          path === "/home/google"
+            ? "/home"
+            : googleInvite
+              ? (invitePath as string)
+              : invited
+                ? `/login?key=${invited}`
+                : "/login";
+        try {
+          const started =
+            path === "/home/google"
+              ? await accounts.googleLink(cookie)
+              : await accounts.googleStart({
+                  // Signed in, an invite's page puts them in its office and goes on to their page.
+                  back: invitePath ?? "/home",
+                  failed,
+                  signUp: Boolean(invited),
+                });
+          redirect(started.url, started.cookies);
+        } catch (error) {
+          const code =
+            error instanceof AccountError ? error.code : "google-failed";
+          redirect(
+            `${failed}${failed.includes("?") ? "&" : "?"}error=${encodeURIComponent(code)}`,
+          );
+        }
+        return true;
+      }
       if (key) {
         if (tries.blocked(from) || !(await relay.knows(key))) {
           tries.miss(from);
@@ -286,9 +365,18 @@ export function relayHandler(
             redirect("/home");
             return true;
           }
+          const failed = failure();
           html(
             200,
-            signUpPage({ lang, from: who, key, link, ...guide(key, who) }),
+            signUpPage({
+              lang,
+              from: who,
+              key,
+              link,
+              methods,
+              ...guide(key, who),
+              ...(failed ? { error: failed } : {}),
+            }),
           );
           return true;
         }
@@ -311,6 +399,7 @@ export function relayHandler(
               from: who,
               key,
               link,
+              methods,
               ...guide(key, who),
               error: code,
               name: filled.name,
@@ -321,15 +410,28 @@ export function relayHandler(
         return true;
       }
       if (path === "/login" && (request.method === "GET" || post)) {
-        const invited = url.searchParams.get("key") ?? undefined;
+        const asked = url.searchParams.get("key") ?? "";
+        const invited = /^[\w-]{4,128}$/.test(asked) ? asked : undefined;
         if (!post) {
-          html(200, signInPage({ lang, key: invited }));
+          const failed = failure();
+          html(
+            200,
+            signInPage({
+              lang,
+              key: invited,
+              methods,
+              ...(failed ? { error: failed } : {}),
+            }),
+          );
           return true;
         }
         const fields = new URLSearchParams(await raw(request));
         const email = fields.get("email") ?? "";
         if (tries.blocked(from)) {
-          html(429, signInPage({ lang, error: "too-many-tries", email }));
+          html(
+            429,
+            signInPage({ lang, methods, error: "too-many-tries", email }),
+          );
           return true;
         }
         try {
@@ -347,6 +449,7 @@ export function relayHandler(
             signInPage({
               lang,
               key: fields.get("key") || undefined,
+              methods,
               error: code,
               email,
             }),
@@ -384,7 +487,7 @@ export function relayHandler(
         const clones =
           place && owner ? await accounts.keyedClones(place.office) : [];
         const seen = (iso: string) => new Date(iso).toLocaleString(lang);
-        const failed = url.searchParams.get("error");
+        const failed = failure();
         html(
           200,
           homePage({
@@ -392,6 +495,9 @@ export function relayHandler(
             name: person.name,
             me: person.id,
             owner,
+            admin: await accounts.isAdmin(person.id),
+            ways: await accounts.ways(person.id),
+            methods,
             people: people.map((one) => ({
               id: one.id,
               name: one.name,
@@ -403,9 +509,7 @@ export function relayHandler(
               ...clone,
               seen: seen(clone.seen),
             })),
-            ...(failed && /^[a-z-]{2,40}$/.test(failed)
-              ? { error: failed }
-              : {}),
+            ...(failed ? { error: failed } : {}),
             ...(place
               ? {
                   office: {
@@ -425,6 +529,89 @@ export function relayHandler(
             ...(command ? { command } : {}),
           }),
         );
+        return true;
+      }
+      // The server's sign-in settings, for its admin alone.
+      const signIn =
+        /^\/home\/admin(?:\/(password|password\/off|google|google\/on|google\/off|google\/remove))?$/.exec(
+          path,
+        );
+      if (signIn && (request.method === "GET" || post)) {
+        const person = await accounts.person(cookie);
+        if (!person) {
+          redirect("/login");
+          return true;
+        }
+        if (!(await accounts.isAdmin(person.id))) {
+          redirect("/home");
+          return true;
+        }
+        const what = signIn[1];
+        const site = base();
+        if (!post) {
+          if (what === "google/remove" || what === "password/off") {
+            const settings = await accounts.settings(person.id);
+            html(
+              200,
+              confirmPage({
+                lang,
+                what: what === "google/remove" ? "googleRemove" : "passwordOff",
+                count: String(
+                  what === "google/remove"
+                    ? settings.googleOnly
+                    : settings.passwordOnly,
+                ),
+                action: path,
+                back: "/home/admin",
+              }),
+            );
+            return true;
+          }
+          if (what) {
+            redirect("/home/admin");
+            return true;
+          }
+          const failed = failure();
+          const done = url.searchParams.get("done");
+          html(
+            200,
+            adminPage({
+              lang,
+              settings: await accounts.settings(person.id),
+              redirect: `${options.publicUrl?.replace(/\/+$/, "") ?? site}${GOOGLE_CALLBACK}`,
+              ...(failed ? { error: failed } : {}),
+              ...(done === "saved" ? { saved: true } : {}),
+            }),
+          );
+          return true;
+        }
+        const fields = new URLSearchParams(await raw(request));
+        try {
+          if (what === "password")
+            await accounts.setPassword(person.id, fields.get("on") !== "0");
+          else if (what === "password/off")
+            await accounts.setPassword(person.id, false);
+          else if (what === "google")
+            await accounts.saveGoogle(person.id, {
+              clientId: fields.get("clientId") ?? "",
+              secret: fields.get("secret") ?? "",
+              site,
+              by: person.name,
+            });
+          else if (what === "google/on" || what === "google/off")
+            await accounts.setGoogle(person.id, what === "google/on");
+          else if (what === "google/remove")
+            await accounts.removeGoogle(person.id);
+          else {
+            redirect("/home/admin");
+            return true;
+          }
+          redirect("/home/admin?done=saved");
+        } catch (error) {
+          const code =
+            error instanceof AccountError ? error.code : "account-failed";
+          redirect(`/home/admin?error=${encodeURIComponent(code)}`);
+        }
         return true;
       }
       // An owner's changes to their office: a look first (GET), then the change itself (POST).

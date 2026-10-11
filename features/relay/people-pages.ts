@@ -1,10 +1,12 @@
 // The pages of an office's server for the people who sign in there (accounts.ts): making an account
-// from an invite, signing in, and one's own page with the line that connects one's computer. Plain
-// HTML from the relay, with no scripts and nothing from elsewhere, in the reader's language when
-// written in it (English otherwise); everything a person typed is escaped before it is shown, and a
-// password is never put back into a page.
+// from an invite, signing in (with a password, or with Google where the admin turned it on), one's
+// own page with the line that connects one's computer, and, for the server's admin, how people sign
+// in. Plain HTML from the relay, with no scripts and nothing from elsewhere, in the reader's language
+// when written in it (English otherwise); everything a person typed is escaped before it is shown,
+// and a password or a secret is never put back into a page.
 
 import type { AllInSync } from "../../i18n/sync.ts";
+import type { SignInMethods, SignInSettings, SignInWays } from "./accounts.ts";
 import { installGuide, npxLine, type Os } from "./install.ts";
 import { escape, type PageLanguage, shell } from "./page.ts";
 
@@ -71,6 +73,58 @@ const WORDS = {
     officeName: "Office name",
     save: "Save",
     cancel: "Cancel",
+    continueGoogle: "Continue with Google",
+    orWord: "or",
+    waysTitle: "How you sign in",
+    waysPassword: "Email and password",
+    waysGoogle: "Google",
+    connectGoogle: "Connect Google",
+    connectGoogleWhat: "Sign in with your Google account too.",
+    inUse: "In use",
+    linked: "Connected",
+    adminLink: "Sign-in settings for this server",
+    adminTitle: "Sign-in settings",
+    adminWhat:
+      "How people sign in to this server. It applies to every office here, and one way always stays on.",
+    backHome: "Back to my page",
+    saved: "Saved.",
+    stateOn: "On",
+    stateOff: "Off",
+    stateUnset: "Not set up",
+    turnOn: "Turn on",
+    turnOff: "Turn off",
+    methodPasswordWhat:
+      "People make an account with their email and a password.",
+    methodGoogleWhat:
+      "People sign in with their Google account. A new account still needs an office's invite link.",
+    passwordOnly: "{count} people sign in only with a password.",
+    googleOnly: "{count} people sign in only with Google.",
+    linkFirst:
+      "Connect your own Google account on your page before turning this off, so you can still sign in.",
+    googleSetup: "Set up Google sign-in",
+    googleChange: "Change the Google client",
+    step1:
+      "In Google Cloud Console, open APIs & Services, then Credentials, and create an OAuth client ID for a web application.",
+    consoleLink: "Open Google Cloud Console",
+    step2: "Add this address as an authorized redirect URI:",
+    step3: "Paste the client ID and the client secret Google shows you here.",
+    httpsNote:
+      "Google sends people back only to an https address, or to localhost. Put this server behind https and set RELAY_PUBLIC_URL to that address.",
+    clientId: "Client ID",
+    clientSecret: "Client secret",
+    secretNew: "It is sealed on this server and never shown again.",
+    secretKeep: "Leave it empty to keep the secret already saved.",
+    savedBy: "Set up by {name}, {when}.",
+    saveGoogle: "Save and turn on",
+    removeGoogle: "Remove Google settings",
+    sealingOff:
+      "To keep a Google secret, this server needs a sealing key: set RELAY_ENCRYPTION_KEY (openssl rand -base64 32) and restart it.",
+    googleRemoveTitle: "Remove the Google settings?",
+    googleRemoveWhat:
+      "The client ID and the sealed secret are deleted from this server. {count} people who sign in only with Google can't sign in until it is set up again.",
+    passwordOffTitle: "Turn off email and password?",
+    passwordOffWhat:
+      "{count} people who sign in only with a password can't sign in while it is off. You can turn it back on any time.",
     errors: {
       "invite-wrong": "There is no such invite.",
       "name-missing": "Say your name.",
@@ -85,6 +139,34 @@ const WORDS = {
       "account-failed": "That did not work. Try again.",
       "not-owner": "Only an owner of this office can do that.",
       "not-yourself": "You can't remove yourself.",
+      "password-off":
+        "Signing in with a password is turned off on this server. Use Google instead.",
+      "google-off": "Signing in with Google is turned off on this server.",
+      "google-not-linked":
+        "An account with that email signs in with its password. Sign in with it, then connect Google on your page.",
+      "google-no-account":
+        "No account here uses that Google account yet. Open your office's invite link to make one.",
+      "google-cancelled": "Signing in with Google was cancelled.",
+      "google-other":
+        "That Google account is connected to another account here, or its email is not this account's.",
+      "google-unverified": "Google has not verified that account's email.",
+      "google-again": "That took too long. Try again.",
+      "google-failed": "Signing in with Google did not work. Try again.",
+      "not-admin": "Only this server's admin can change how people sign in.",
+      "google-first": "Turn on Google first, so people can still sign in.",
+      "link-google-first":
+        "Connect your own Google account first (on your page), so you can still sign in.",
+      "password-first":
+        "Turn on email and password first, so people can still sign in.",
+      "sealing-off":
+        "This server has no key to seal the secret with. Set RELAY_ENCRYPTION_KEY and restart it.",
+      "google-id-wrong":
+        "That is not a Google client ID: one ends in .apps.googleusercontent.com.",
+      "google-secret-missing": "Paste the client secret too.",
+      "google-secret-wrong": "That does not look like a client secret.",
+      "google-not-set": "Set up Google first.",
+      "google-unreadable":
+        "The saved secret can't be opened with this server's key. Paste it again.",
     },
   },
   ko: {
@@ -147,6 +229,58 @@ const WORDS = {
     officeName: "오피스 이름",
     save: "저장",
     cancel: "취소",
+    continueGoogle: "Google 계정으로 계속하기",
+    orWord: "또는",
+    waysTitle: "내 로그인 방법",
+    waysPassword: "이메일과 비밀번호",
+    waysGoogle: "Google",
+    connectGoogle: "Google 연결",
+    connectGoogleWhat: "Google 계정으로도 로그인할 수 있어요.",
+    inUse: "사용 중",
+    linked: "연결됨",
+    adminLink: "이 서버의 로그인 설정",
+    adminTitle: "로그인 설정",
+    adminWhat:
+      "사람들이 이 서버에 로그인하는 방법이에요. 이 서버의 모든 오피스에 똑같이 적용되고, 한 가지는 항상 켜져 있어요.",
+    backHome: "내 페이지로",
+    saved: "저장했어요.",
+    stateOn: "켜짐",
+    stateOff: "꺼짐",
+    stateUnset: "설정 안 됨",
+    turnOn: "켜기",
+    turnOff: "끄기",
+    methodPasswordWhat: "이메일과 비밀번호로 계정을 만들고 로그인해요.",
+    methodGoogleWhat:
+      "Google 계정으로 로그인해요. 새 계정은 여전히 오피스 초대 링크가 있어야 만들 수 있어요.",
+    passwordOnly: "비밀번호로만 로그인하는 사람 {count}명",
+    googleOnly: "Google로만 로그인하는 사람 {count}명",
+    linkFirst:
+      "끄기 전에 내 페이지에서 내 Google 계정을 연결해 두세요. 그래야 나도 계속 로그인할 수 있어요.",
+    googleSetup: "Google 로그인 설정하기",
+    googleChange: "Google 클라이언트 바꾸기",
+    step1:
+      "Google Cloud Console에서 API 및 서비스 › 사용자 인증 정보로 가서 OAuth 클라이언트 ID(웹 애플리케이션)를 만들어요.",
+    consoleLink: "Google Cloud Console 열기",
+    step2: "승인된 리디렉션 URI에 이 주소를 넣어요:",
+    step3:
+      "Google이 보여 주는 클라이언트 ID와 클라이언트 보안 비밀번호를 여기에 붙여 넣어요.",
+    httpsNote:
+      "Google은 https 주소(또는 localhost)로만 돌려보내요. 이 서버를 https 뒤에 두고 RELAY_PUBLIC_URL에 그 주소를 넣어 주세요.",
+    clientId: "클라이언트 ID",
+    clientSecret: "클라이언트 보안 비밀번호",
+    secretNew: "이 서버에 봉인해서 저장하고, 다시 보여 주지 않아요.",
+    secretKeep: "비워 두면 저장된 보안 비밀번호를 그대로 써요.",
+    savedBy: "{name}님이 설정했어요. {when}",
+    saveGoogle: "저장하고 켜기",
+    removeGoogle: "Google 설정 지우기",
+    sealingOff:
+      "Google 보안 비밀번호를 저장하려면 이 서버에 봉인 키가 있어야 해요. RELAY_ENCRYPTION_KEY(openssl rand -base64 32)를 넣고 다시 시작해 주세요.",
+    googleRemoveTitle: "Google 설정을 지울까요?",
+    googleRemoveWhat:
+      "클라이언트 ID와 봉인한 보안 비밀번호가 이 서버에서 지워져요. Google로만 로그인하는 {count}명은 다시 설정할 때까지 로그인할 수 없어요.",
+    passwordOffTitle: "이메일과 비밀번호 로그인을 끌까요?",
+    passwordOffWhat:
+      "비밀번호로만 로그인하는 {count}명은 끄는 동안 로그인할 수 없어요. 언제든 다시 켤 수 있어요.",
     errors: {
       "invite-wrong": "없는 초대예요.",
       "name-missing": "이름을 적어 주세요.",
@@ -160,6 +294,35 @@ const WORDS = {
       "account-failed": "되지 않았어요. 다시 해 주세요.",
       "not-owner": "이 오피스의 주인만 할 수 있어요.",
       "not-yourself": "나 자신은 내보낼 수 없어요.",
+      "password-off":
+        "이 서버에서는 비밀번호 로그인이 꺼져 있어요. Google로 로그인해 주세요.",
+      "google-off": "이 서버에서는 Google 로그인이 꺼져 있어요.",
+      "google-not-linked":
+        "그 이메일의 계정은 비밀번호로 로그인해요. 비밀번호로 로그인한 뒤 내 페이지에서 Google을 연결해 주세요.",
+      "google-no-account":
+        "그 Google 계정으로 만든 계정이 아직 없어요. 오피스 초대 링크를 열어 만들어 주세요.",
+      "google-cancelled": "Google 로그인을 취소했어요.",
+      "google-other":
+        "그 Google 계정은 여기의 다른 계정에 연결돼 있거나, 이메일이 이 계정과 달라요.",
+      "google-unverified": "Google이 그 계정의 이메일을 확인하지 않았어요.",
+      "google-again": "시간이 너무 지났어요. 다시 해 주세요.",
+      "google-failed": "Google 로그인이 되지 않았어요. 다시 해 주세요.",
+      "not-admin": "로그인 방법은 이 서버의 관리자만 바꿀 수 있어요.",
+      "google-first":
+        "먼저 Google 로그인을 켜 주세요. 그래야 사람들이 계속 로그인할 수 있어요.",
+      "link-google-first":
+        "먼저 내 페이지에서 내 Google 계정을 연결해 주세요. 그래야 나도 계속 로그인할 수 있어요.",
+      "password-first":
+        "먼저 이메일과 비밀번호 로그인을 켜 주세요. 그래야 사람들이 계속 로그인할 수 있어요.",
+      "sealing-off":
+        "이 서버에 보안 비밀번호를 봉인할 키가 없어요. RELAY_ENCRYPTION_KEY를 넣고 다시 시작해 주세요.",
+      "google-id-wrong":
+        "Google 클라이언트 ID가 아니에요. 클라이언트 ID는 .apps.googleusercontent.com으로 끝나요.",
+      "google-secret-missing": "클라이언트 보안 비밀번호도 붙여 넣어 주세요.",
+      "google-secret-wrong": "클라이언트 보안 비밀번호가 아닌 것 같아요.",
+      "google-not-set": "먼저 Google 로그인을 설정해 주세요.",
+      "google-unreadable":
+        "저장된 보안 비밀번호를 이 서버의 키로 열 수 없어요. 다시 붙여 넣어 주세요.",
     },
   },
   zh: {
@@ -219,6 +382,56 @@ const WORDS = {
     officeName: "办公室名称",
     save: "保存",
     cancel: "取消",
+    continueGoogle: "使用 Google 账号继续",
+    orWord: "或",
+    waysTitle: "你的登录方式",
+    waysPassword: "邮箱和密码",
+    waysGoogle: "Google",
+    connectGoogle: "关联 Google",
+    connectGoogleWhat: "也可以用你的 Google 账号登录。",
+    inUse: "使用中",
+    linked: "已关联",
+    adminLink: "这台服务器的登录设置",
+    adminTitle: "登录设置",
+    adminWhat:
+      "大家登录这台服务器的方式。它适用于这里的每个办公室，并且始终至少保留一种方式。",
+    backHome: "回到我的页面",
+    saved: "已保存。",
+    stateOn: "已开启",
+    stateOff: "已关闭",
+    stateUnset: "未设置",
+    turnOn: "开启",
+    turnOff: "关闭",
+    methodPasswordWhat: "用邮箱和密码创建账号并登录。",
+    methodGoogleWhat: "用 Google 账号登录。新账号仍然需要办公室的邀请链接。",
+    passwordOnly: "{count} 人只用密码登录。",
+    googleOnly: "{count} 人只用 Google 登录。",
+    linkFirst:
+      "关闭前，请先在你的页面关联你自己的 Google 账号，这样你仍然可以登录。",
+    googleSetup: "设置 Google 登录",
+    googleChange: "更换 Google 客户端",
+    step1:
+      "在 Google Cloud Console 中打开“API 和服务”›“凭据”，为 Web 应用创建一个 OAuth 客户端 ID。",
+    consoleLink: "打开 Google Cloud Console",
+    step2: "把这个地址添加为“已获授权的重定向 URI”：",
+    step3: "把 Google 显示的客户端 ID 和客户端密钥粘贴到这里。",
+    httpsNote:
+      "Google 只会把人送回 https 地址或 localhost。请把这台服务器放在 https 之后，并把 RELAY_PUBLIC_URL 设为那个地址。",
+    clientId: "客户端 ID",
+    clientSecret: "客户端密钥",
+    secretNew: "它会在这台服务器上加密保存，之后不再显示。",
+    secretKeep: "留空则继续使用已保存的密钥。",
+    savedBy: "由 {name} 设置，{when}。",
+    saveGoogle: "保存并开启",
+    removeGoogle: "删除 Google 设置",
+    sealingOff:
+      "要保存 Google 密钥，这台服务器需要一个加密密钥：设置 RELAY_ENCRYPTION_KEY（openssl rand -base64 32）后重启。",
+    googleRemoveTitle: "删除 Google 设置？",
+    googleRemoveWhat:
+      "客户端 ID 和加密保存的密钥会从这台服务器上删除。只用 Google 登录的 {count} 人在重新设置之前将无法登录。",
+    passwordOffTitle: "关闭邮箱和密码登录？",
+    passwordOffWhat:
+      "只用密码登录的 {count} 人在关闭期间无法登录。你随时可以重新开启。",
     errors: {
       "invite-wrong": "没有这个邀请。",
       "name-missing": "请填写你的名字。",
@@ -232,6 +445,32 @@ const WORDS = {
       "account-failed": "没有成功。请重试。",
       "not-owner": "只有这个办公室的所有者才能这样做。",
       "not-yourself": "你不能移除自己。",
+      "password-off": "这台服务器已关闭密码登录。请改用 Google 登录。",
+      "google-off": "这台服务器已关闭 Google 登录。",
+      "google-not-linked":
+        "这个邮箱的账号用密码登录。请先用密码登录，再在你的页面关联 Google。",
+      "google-no-account":
+        "这里还没有使用这个 Google 账号的账号。请打开办公室的邀请链接来创建。",
+      "google-cancelled": "已取消 Google 登录。",
+      "google-other":
+        "这个 Google 账号已关联到这里的另一个账号，或者它的邮箱和这个账号不同。",
+      "google-unverified": "Google 尚未验证这个账号的邮箱。",
+      "google-again": "时间太久了。请重试。",
+      "google-failed": "Google 登录没有成功。请重试。",
+      "not-admin": "只有这台服务器的管理员才能更改登录方式。",
+      "google-first": "请先开启 Google 登录，这样大家仍然可以登录。",
+      "link-google-first":
+        "请先在你的页面关联你自己的 Google 账号，这样你仍然可以登录。",
+      "password-first": "请先开启邮箱和密码登录，这样大家仍然可以登录。",
+      "sealing-off":
+        "这台服务器没有用来加密密钥的密钥。请设置 RELAY_ENCRYPTION_KEY 后重启。",
+      "google-id-wrong":
+        "这不是 Google 客户端 ID：客户端 ID 以 .apps.googleusercontent.com 结尾。",
+      "google-secret-missing": "也请粘贴客户端密钥。",
+      "google-secret-wrong": "这看起来不像客户端密钥。",
+      "google-not-set": "请先设置 Google 登录。",
+      "google-unreadable":
+        "已保存的密钥无法用这台服务器的密钥打开。请重新粘贴。",
     },
   },
   ja: {
@@ -296,6 +535,60 @@ const WORDS = {
     officeName: "オフィス名",
     save: "保存",
     cancel: "キャンセル",
+    continueGoogle: "Google で続行",
+    orWord: "または",
+    waysTitle: "サインインの方法",
+    waysPassword: "メールアドレスとパスワード",
+    waysGoogle: "Google",
+    connectGoogle: "Google をつなぐ",
+    connectGoogleWhat: "Google アカウントでもサインインできるようになります。",
+    inUse: "使用中",
+    linked: "接続済み",
+    adminLink: "このサーバーのサインイン設定",
+    adminTitle: "サインイン設定",
+    adminWhat:
+      "このサーバーへのサインイン方法です。ここにあるすべてのオフィスに適用され、少なくとも一つは常にオンのままです。",
+    backHome: "自分のページに戻る",
+    saved: "保存しました。",
+    stateOn: "オン",
+    stateOff: "オフ",
+    stateUnset: "未設定",
+    turnOn: "オンにする",
+    turnOff: "オフにする",
+    methodPasswordWhat:
+      "メールアドレスとパスワードでアカウントを作り、サインインします。",
+    methodGoogleWhat:
+      "Google アカウントでサインインします。新しいアカウントには、引き続きオフィスの招待リンクが必要です。",
+    passwordOnly: "パスワードだけでサインインする人：{count}人",
+    googleOnly: "Google だけでサインインする人：{count}人",
+    linkFirst:
+      "オフにする前に、自分のページで自分の Google アカウントをつないでください。そうすればあなたも引き続きサインインできます。",
+    googleSetup: "Google サインインを設定",
+    googleChange: "Google クライアントを変更",
+    step1:
+      "Google Cloud Console で「API とサービス」›「認証情報」を開き、ウェブ アプリケーションの OAuth クライアント ID を作成します。",
+    consoleLink: "Google Cloud Console を開く",
+    step2: "このアドレスを「承認済みのリダイレクト URI」に追加します：",
+    step3:
+      "Google に表示されたクライアント ID とクライアント シークレットをここに貼り付けます。",
+    httpsNote:
+      "Google は https のアドレス（または localhost）にしか戻しません。このサーバーを https の後ろに置き、RELAY_PUBLIC_URL にそのアドレスを設定してください。",
+    clientId: "クライアント ID",
+    clientSecret: "クライアント シークレット",
+    secretNew: "このサーバーに暗号化して保存され、二度と表示されません。",
+    secretKeep: "空のままにすると、保存済みのシークレットをそのまま使います。",
+    savedBy: "{name}さんが設定しました（{when}）。",
+    saveGoogle: "保存してオンにする",
+    removeGoogle: "Google の設定を削除",
+    sealingOff:
+      "Google のシークレットを保存するには、このサーバーに暗号化キーが必要です。RELAY_ENCRYPTION_KEY（openssl rand -base64 32）を設定して再起動してください。",
+    googleRemoveTitle: "Google の設定を削除しますか？",
+    googleRemoveWhat:
+      "クライアント ID と暗号化したシークレットがこのサーバーから削除されます。Google だけでサインインする{count}人は、設定し直すまでサインインできません。",
+    passwordOffTitle:
+      "メールアドレスとパスワードのサインインをオフにしますか？",
+    passwordOffWhat:
+      "パスワードだけでサインインする{count}人は、オフの間サインインできません。いつでもオンに戻せます。",
     errors: {
       "invite-wrong": "その招待は存在しません。",
       "name-missing": "名前を入力してください。",
@@ -311,6 +604,40 @@ const WORDS = {
       "account-failed": "うまくいきませんでした。もう一度お試しください。",
       "not-owner": "このオフィスのオーナーだけができる操作です。",
       "not-yourself": "自分自身は外せません。",
+      "password-off":
+        "このサーバーではパスワードでのサインインがオフになっています。Google でサインインしてください。",
+      "google-off":
+        "このサーバーでは Google でのサインインがオフになっています。",
+      "google-not-linked":
+        "そのメールアドレスのアカウントはパスワードでサインインします。パスワードでサインインしてから、自分のページで Google をつないでください。",
+      "google-no-account":
+        "その Google アカウントを使うアカウントはまだありません。オフィスの招待リンクを開いて作成してください。",
+      "google-cancelled": "Google でのサインインがキャンセルされました。",
+      "google-other":
+        "その Google アカウントはここの別のアカウントにつながっているか、メールアドレスがこのアカウントと違います。",
+      "google-unverified":
+        "Google がそのアカウントのメールアドレスを確認していません。",
+      "google-again": "時間がかかりすぎました。もう一度お試しください。",
+      "google-failed":
+        "Google でサインインできませんでした。もう一度お試しください。",
+      "not-admin":
+        "サインイン方法を変更できるのは、このサーバーの管理者だけです。",
+      "google-first":
+        "先に Google のサインインをオンにしてください。そうすればみんな引き続きサインインできます。",
+      "link-google-first":
+        "先に自分のページで自分の Google アカウントをつないでください。そうすればあなたも引き続きサインインできます。",
+      "password-first":
+        "先にメールアドレスとパスワードのサインインをオンにしてください。そうすればみんな引き続きサインインできます。",
+      "sealing-off":
+        "このサーバーにはシークレットを暗号化するキーがありません。RELAY_ENCRYPTION_KEY を設定して再起動してください。",
+      "google-id-wrong":
+        "Google のクライアント ID ではありません。クライアント ID は .apps.googleusercontent.com で終わります。",
+      "google-secret-missing":
+        "クライアント シークレットも貼り付けてください。",
+      "google-secret-wrong": "クライアント シークレットではないようです。",
+      "google-not-set": "先に Google のサインインを設定してください。",
+      "google-unreadable":
+        "保存済みのシークレットを、このサーバーのキーで開けません。もう一度貼り付けてください。",
     },
   },
   es: {
@@ -376,6 +703,59 @@ const WORDS = {
     officeName: "Nombre de la oficina",
     save: "Guardar",
     cancel: "Cancelar",
+    continueGoogle: "Continuar con Google",
+    orWord: "o",
+    waysTitle: "Cómo inicias sesión",
+    waysPassword: "Correo y contraseña",
+    waysGoogle: "Google",
+    connectGoogle: "Conectar Google",
+    connectGoogleWhat: "Inicia sesión también con tu cuenta de Google.",
+    inUse: "En uso",
+    linked: "Conectado",
+    adminLink: "Ajustes de inicio de sesión de este servidor",
+    adminTitle: "Ajustes de inicio de sesión",
+    adminWhat:
+      "Cómo inician sesión las personas en este servidor. Se aplica a todas las oficinas de aquí, y siempre queda al menos una forma activa.",
+    backHome: "Volver a mi página",
+    saved: "Guardado.",
+    stateOn: "Activado",
+    stateOff: "Desactivado",
+    stateUnset: "Sin configurar",
+    turnOn: "Activar",
+    turnOff: "Desactivar",
+    methodPasswordWhat:
+      "Las personas crean una cuenta con su correo y una contraseña.",
+    methodGoogleWhat:
+      "Las personas inician sesión con su cuenta de Google. Una cuenta nueva sigue necesitando el enlace de invitación de una oficina.",
+    passwordOnly: "{count} personas inician sesión solo con contraseña.",
+    googleOnly: "{count} personas inician sesión solo con Google.",
+    linkFirst:
+      "Antes de desactivarlo, conecta tu propia cuenta de Google en tu página, para que puedas seguir iniciando sesión.",
+    googleSetup: "Configurar el inicio de sesión con Google",
+    googleChange: "Cambiar el cliente de Google",
+    step1:
+      "En Google Cloud Console, abre APIs y servicios › Credenciales y crea un ID de cliente de OAuth para una aplicación web.",
+    consoleLink: "Abrir Google Cloud Console",
+    step2: "Agrega esta dirección como URI de redireccionamiento autorizado:",
+    step3:
+      "Pega aquí el ID de cliente y el secreto del cliente que te muestra Google.",
+    httpsNote:
+      "Google solo devuelve a las personas a una dirección https, o a localhost. Pon este servidor detrás de https y define RELAY_PUBLIC_URL con esa dirección.",
+    clientId: "ID de cliente",
+    clientSecret: "Secreto del cliente",
+    secretNew: "Se guarda cifrado en este servidor y no se vuelve a mostrar.",
+    secretKeep: "Déjalo vacío para conservar el secreto ya guardado.",
+    savedBy: "Configurado por {name}, {when}.",
+    saveGoogle: "Guardar y activar",
+    removeGoogle: "Eliminar los ajustes de Google",
+    sealingOff:
+      "Para guardar un secreto de Google, este servidor necesita una clave de cifrado: define RELAY_ENCRYPTION_KEY (openssl rand -base64 32) y reinícialo.",
+    googleRemoveTitle: "¿Eliminar los ajustes de Google?",
+    googleRemoveWhat:
+      "El ID de cliente y el secreto cifrado se borran de este servidor. {count} personas que inician sesión solo con Google no podrán hacerlo hasta que se configure de nuevo.",
+    passwordOffTitle: "¿Desactivar el correo y la contraseña?",
+    passwordOffWhat:
+      "{count} personas que inician sesión solo con contraseña no podrán hacerlo mientras esté desactivado. Puedes volver a activarlo cuando quieras.",
     errors: {
       "invite-wrong": "Esa invitación no existe.",
       "name-missing": "Escribe tu nombre.",
@@ -390,6 +770,38 @@ const WORDS = {
       "account-failed": "No funcionó. Inténtalo de nuevo.",
       "not-owner": "Solo un dueño de esta oficina puede hacer eso.",
       "not-yourself": "No puedes quitar tu propia cuenta.",
+      "password-off":
+        "El inicio de sesión con contraseña está desactivado en este servidor. Usa Google.",
+      "google-off":
+        "El inicio de sesión con Google está desactivado en este servidor.",
+      "google-not-linked":
+        "La cuenta con ese correo inicia sesión con su contraseña. Inicia sesión con ella y luego conecta Google en tu página.",
+      "google-no-account":
+        "Todavía ninguna cuenta de aquí usa esa cuenta de Google. Abre el enlace de invitación de tu oficina para crear una.",
+      "google-cancelled": "Se canceló el inicio de sesión con Google.",
+      "google-other":
+        "Esa cuenta de Google está conectada a otra cuenta de aquí, o su correo no es el de esta cuenta.",
+      "google-unverified": "Google no ha verificado el correo de esa cuenta.",
+      "google-again": "Tardó demasiado. Inténtalo de nuevo.",
+      "google-failed":
+        "No se pudo iniciar sesión con Google. Inténtalo de nuevo.",
+      "not-admin":
+        "Solo el administrador de este servidor puede cambiar cómo se inicia sesión.",
+      "google-first":
+        "Activa primero Google, para que las personas puedan seguir iniciando sesión.",
+      "link-google-first":
+        "Conecta primero tu propia cuenta de Google (en tu página), para que puedas seguir iniciando sesión.",
+      "password-first":
+        "Activa primero el correo y la contraseña, para que las personas puedan seguir iniciando sesión.",
+      "sealing-off":
+        "Este servidor no tiene una clave para cifrar el secreto. Define RELAY_ENCRYPTION_KEY y reinícialo.",
+      "google-id-wrong":
+        "Eso no es un ID de cliente de Google: termina en .apps.googleusercontent.com.",
+      "google-secret-missing": "Pega también el secreto del cliente.",
+      "google-secret-wrong": "Eso no parece un secreto del cliente.",
+      "google-not-set": "Configura Google primero.",
+      "google-unreadable":
+        "El secreto guardado no se puede abrir con la clave de este servidor. Pégalo de nuevo.",
     },
   },
   pt: {
@@ -455,6 +867,59 @@ const WORDS = {
     officeName: "Nome do escritório",
     save: "Salvar",
     cancel: "Cancelar",
+    continueGoogle: "Continuar com o Google",
+    orWord: "ou",
+    waysTitle: "Como você entra",
+    waysPassword: "E-mail e senha",
+    waysGoogle: "Google",
+    connectGoogle: "Conectar o Google",
+    connectGoogleWhat: "Entre também com a sua conta do Google.",
+    inUse: "Em uso",
+    linked: "Conectado",
+    adminLink: "Configurações de login deste servidor",
+    adminTitle: "Configurações de login",
+    adminWhat:
+      "Como as pessoas entram neste servidor. Vale para todos os escritórios daqui, e sempre fica pelo menos uma forma ativa.",
+    backHome: "Voltar para a minha página",
+    saved: "Salvo.",
+    stateOn: "Ativado",
+    stateOff: "Desativado",
+    stateUnset: "Não configurado",
+    turnOn: "Ativar",
+    turnOff: "Desativar",
+    methodPasswordWhat: "As pessoas criam uma conta com o e-mail e uma senha.",
+    methodGoogleWhat:
+      "As pessoas entram com a conta do Google. Uma conta nova ainda precisa do link de convite de um escritório.",
+    passwordOnly: "{count} pessoas entram só com senha.",
+    googleOnly: "{count} pessoas entram só com o Google.",
+    linkFirst:
+      "Antes de desativar, conecte a sua própria conta do Google na sua página, para continuar conseguindo entrar.",
+    googleSetup: "Configurar o login com o Google",
+    googleChange: "Trocar o cliente do Google",
+    step1:
+      "No Google Cloud Console, abra APIs e serviços › Credenciais e crie um ID do cliente OAuth para um aplicativo da Web.",
+    consoleLink: "Abrir o Google Cloud Console",
+    step2: "Adicione este endereço como URI de redirecionamento autorizado:",
+    step3:
+      "Cole aqui o ID do cliente e a chave secreta do cliente que o Google mostrar.",
+    httpsNote:
+      "O Google só devolve as pessoas para um endereço https, ou para localhost. Coloque este servidor atrás de https e defina RELAY_PUBLIC_URL com esse endereço.",
+    clientId: "ID do cliente",
+    clientSecret: "Chave secreta do cliente",
+    secretNew:
+      "Ela fica guardada criptografada neste servidor e não é mostrada de novo.",
+    secretKeep: "Deixe vazio para manter a chave já salva.",
+    savedBy: "Configurado por {name}, {when}.",
+    saveGoogle: "Salvar e ativar",
+    removeGoogle: "Remover as configurações do Google",
+    sealingOff:
+      "Para guardar uma chave secreta do Google, este servidor precisa de uma chave de criptografia: defina RELAY_ENCRYPTION_KEY (openssl rand -base64 32) e reinicie.",
+    googleRemoveTitle: "Remover as configurações do Google?",
+    googleRemoveWhat:
+      "O ID do cliente e a chave secreta criptografada são apagados deste servidor. {count} pessoas que entram só com o Google não conseguem entrar até que seja configurado de novo.",
+    passwordOffTitle: "Desativar e-mail e senha?",
+    passwordOffWhat:
+      "{count} pessoas que entram só com senha não conseguem entrar enquanto estiver desativado. Você pode ativar de novo quando quiser.",
     errors: {
       "invite-wrong": "Esse convite não existe.",
       "name-missing": "Informe seu nome.",
@@ -469,6 +934,36 @@ const WORDS = {
       "account-failed": "Não deu certo. Tente de novo.",
       "not-owner": "Só um dono deste escritório pode fazer isso.",
       "not-yourself": "Você não pode remover a própria conta.",
+      "password-off":
+        "O login com senha está desativado neste servidor. Use o Google.",
+      "google-off": "O login com o Google está desativado neste servidor.",
+      "google-not-linked":
+        "A conta com esse e-mail entra com a senha. Entre com ela e depois conecte o Google na sua página.",
+      "google-no-account":
+        "Nenhuma conta daqui usa essa conta do Google ainda. Abra o link de convite do seu escritório para criar uma.",
+      "google-cancelled": "O login com o Google foi cancelado.",
+      "google-other":
+        "Essa conta do Google está conectada a outra conta daqui, ou o e-mail dela não é o desta conta.",
+      "google-unverified": "O Google não verificou o e-mail dessa conta.",
+      "google-again": "Demorou demais. Tente de novo.",
+      "google-failed": "Não deu para entrar com o Google. Tente de novo.",
+      "not-admin":
+        "Só o administrador deste servidor pode mudar como as pessoas entram.",
+      "google-first":
+        "Ative o Google primeiro, para que as pessoas continuem conseguindo entrar.",
+      "link-google-first":
+        "Conecte primeiro a sua própria conta do Google (na sua página), para continuar conseguindo entrar.",
+      "password-first":
+        "Ative e-mail e senha primeiro, para que as pessoas continuem conseguindo entrar.",
+      "sealing-off":
+        "Este servidor não tem uma chave para criptografar a chave secreta. Defina RELAY_ENCRYPTION_KEY e reinicie.",
+      "google-id-wrong":
+        "Isso não é um ID do cliente do Google: ele termina em .apps.googleusercontent.com.",
+      "google-secret-missing": "Cole também a chave secreta do cliente.",
+      "google-secret-wrong": "Isso não parece uma chave secreta do cliente.",
+      "google-not-set": "Configure o Google primeiro.",
+      "google-unreadable":
+        "A chave secreta salva não pode ser aberta com a chave deste servidor. Cole de novo.",
     },
   },
 };
@@ -500,6 +995,24 @@ export function errorWords(lang: PageLanguage, code: string): string {
 const problem = (lang: PageLanguage, code?: string) =>
   code ? `<p class="error" role="alert">${errorWords(lang, code)}</p>` : "";
 
+/** Google's own mark, as its sign-in buttons carry it. */
+const GOOGLE_MARK = `<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>`;
+
+/**
+ * Signing in with Google, then a line between it and the password's form when both are on. A link
+ * rather than a form: the pages' forms may post only to this server, and the way goes on to Google.
+ */
+function googleWay(
+  lang: PageLanguage,
+  methods: SignInMethods,
+  href: string,
+): string {
+  if (!methods.google) return "";
+  return `<a class="google" href="${escape(href)}">${GOOGLE_MARK}<span>${say(lang, "continueGoogle")}</span></a>${
+    methods.password ? `<p class="or">${say(lang, "orWord")}</p>` : ""
+  }`;
+}
+
 /** The command that connects a computer, for a setup link on the relay at `base`. */
 export const connectCommand = (link: string, base: string) =>
   npxLine(base, `connect ${link}`);
@@ -516,6 +1029,8 @@ export function signUpPage(input: {
   os: Os;
   command: string;
   local?: boolean;
+  /** The ways the server lets people in. */
+  methods: SignInMethods;
   error?: string;
   name?: string;
   email?: string;
@@ -534,7 +1049,10 @@ ${installGuide(input)}
 <section>
 <p class="note">${say(lang, "accountWhy")}</p>
 ${problem(lang, input.error)}
-<form method="post">
+${googleWay(lang, input.methods, `/i/${encodeURIComponent(input.key)}/google${input.from ? `?from=${encodeURIComponent(input.from)}` : ""}`)}
+${
+  input.methods.password
+    ? `<form method="post">
 <label for="name">${say(lang, "name")}</label>
 <input id="name" name="name" required maxlength="80" autocomplete="name" value="${escape(input.name ?? "")}">
 <label for="email">${say(lang, "email")}</label>
@@ -542,7 +1060,9 @@ ${problem(lang, input.error)}
 <label for="password">${say(lang, "password")}</label>
 <input id="password" name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password">
 <button type="submit">${say(lang, "create")}</button>
-</form>
+</form>`
+    : ""
+}
 <p class="note">${say(lang, "haveAccount")} <a href="/login?key=${encodeURIComponent(input.key)}">${say(lang, "signInLink")}</a></p>
 </section>
 </details>
@@ -553,6 +1073,7 @@ ${problem(lang, input.error)}
 export function signInPage(input: {
   lang: PageLanguage;
   key?: string;
+  methods: SignInMethods;
   error?: string;
   email?: string;
 }): string {
@@ -563,14 +1084,19 @@ export function signInPage(input: {
     title,
     `<h1>${title}</h1>
 ${problem(lang, input.error)}
-<form method="post">
+${googleWay(lang, input.methods, `/login/google${input.key ? `?key=${encodeURIComponent(input.key)}` : ""}`)}
+${
+  input.methods.password
+    ? `<form method="post">
 ${input.key ? `<input type="hidden" name="key" value="${escape(input.key)}">` : ""}
 <label for="email">${say(lang, "email")}</label>
 <input id="email" name="email" type="email" required maxlength="200" autocomplete="email" value="${escape(input.email ?? "")}">
 <label for="password">${say(lang, "password")}</label>
 <input id="password" name="password" type="password" required maxlength="128" autocomplete="current-password">
 <button type="submit">${say(lang, "signIn")}</button>
-</form>
+</form>`
+    : ""
+}
 <p class="note">${say(lang, "noAccount")}</p>`,
   );
 }
@@ -606,6 +1132,11 @@ export function homePage(input: {
   owner?: boolean;
   /** Clones that joined with the key, shown to owners. */
   clones?: HomeClone[];
+  /** Whether the reader sets how people sign in to the server. */
+  admin?: boolean;
+  /** How the reader signs in, and the ways the server offers. */
+  ways?: SignInWays;
+  methods?: SignInMethods;
 }): string {
   const { lang } = input;
   const title = say(lang, "hello", { name: input.name });
@@ -629,6 +1160,28 @@ export function homePage(input: {
     }</small></span>${acts}</li>`;
   };
   const clones = owner ? (input.clones ?? []) : [];
+  const ways = input.ways;
+  // How one signs in shows once Google is a way here: where Google can be connected, or already is.
+  const signIn =
+    ways && (input.methods?.google || ways.google)
+      ? `<section>
+<h2>${say(lang, "waysTitle")}</h2>
+<ul class="rows">${
+          ways.password
+            ? `<li><span class="who"><b>${say(lang, "waysPassword")}</b></span><span class="tag">${say(lang, "inUse")}</span></li>`
+            : ""
+        }<li><span class="who"><b>${say(lang, "waysGoogle")}</b>${
+          ways.google ? "" : `<small>${say(lang, "connectGoogleWhat")}</small>`
+        }</span>${
+          ways.google
+            ? `<span class="tag">${say(lang, "linked")}</span>`
+            : `<span class="acts"><a class="small" href="/home/google">${say(lang, "connectGoogle")}</a></span>`
+        }</li></ul>
+</section>`
+      : "";
+  const adminLink = input.admin
+    ? `<p><a href="/home/admin">${say(lang, "adminLink")}</a></p>`
+    : "";
   return shell(
     lang,
     title,
@@ -694,6 +1247,8 @@ ${
 }`
     : `<p>${errorWords(lang, "not-in-office")}</p>`
 }
+${signIn}
+${adminLink}
 <form method="post" action="/logout"><button type="submit" class="quiet">${say(lang, "signOut")}</button></form>`,
   );
 }
@@ -701,10 +1256,20 @@ ${
 /** One more look before something an owner can't take back: who it is about, and yes or cancel. */
 export function confirmPage(input: {
   lang: PageLanguage;
-  what: "remove" | "owner" | "clone" | "newLink";
+  what:
+    | "remove"
+    | "owner"
+    | "clone"
+    | "newLink"
+    | "googleRemove"
+    | "passwordOff";
   name?: string;
+  /** How many people it leaves without a way in, where it does. */
+  count?: string;
   action: string;
   fields?: Record<string, string>;
+  /** Where Cancel goes: one's own page unless said. */
+  back?: string;
 }): string {
   const { lang } = input;
   const words = {
@@ -712,6 +1277,8 @@ export function confirmPage(input: {
     owner: ["ownerTitle", "ownerWhat", "makeOwner"],
     clone: ["cloneTitle", "cloneWhat", "remove"],
     newLink: ["newLinkTitle", "newLinkWhat", "newLink"],
+    googleRemove: ["googleRemoveTitle", "googleRemoveWhat", "removeGoogle"],
+    passwordOff: ["passwordOffTitle", "passwordOffWhat", "turnOff"],
   } as const;
   const [titleKey, whatKey, yesKey] = words[input.what];
   const title = say(lang, titleKey, { name: input.name ?? "" });
@@ -725,8 +1292,106 @@ export function confirmPage(input: {
     lang,
     title,
     `<h1>${title}</h1>
-<p>${say(lang, whatKey)}</p>
-<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit" class="${input.what === "owner" ? "" : "danger"}">${say(lang, yesKey)}</button><a href="/home">${say(lang, "cancel")}</a></div></form>`,
+<p>${say(lang, whatKey, { count: input.count ?? "0" })}</p>
+<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit" class="${input.what === "owner" ? "" : "danger"}">${say(lang, yesKey)}</button><a href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div></form>`,
+  );
+}
+
+/**
+ * How people sign in to the server, for its admin: email and password, and Google with the client
+ * they registered (its secret sealed, never shown), each on or off, one always on.
+ */
+export function adminPage(input: {
+  lang: PageLanguage;
+  settings: SignInSettings;
+  /** Where Google sends people back to on this server. */
+  redirect: string;
+  error?: string;
+  saved?: boolean;
+}): string {
+  const { lang, settings } = input;
+  const title = say(lang, "adminTitle");
+  const google = settings.google;
+  const state = (on: boolean | undefined) =>
+    on === undefined
+      ? `<span class="state">${say(lang, "stateUnset")}</span>`
+      : `<span class="state${on ? " on" : ""}">${say(lang, on ? "stateOn" : "stateOff")}</span>`;
+  const back = new URL(input.redirect);
+  // Google takes an http address back only on this computer.
+  const httpsWanted =
+    back.protocol !== "https:" &&
+    !["localhost", "127.0.0.1", "[::1]"].includes(back.hostname);
+  const password = `<section class="method">
+<div class="top"><h2>${say(lang, "waysPassword")}</h2>${state(settings.password)}</div>
+<p class="note">${say(lang, "methodPasswordWhat")}</p>
+${
+  google?.on
+    ? `<p class="note">${say(lang, "passwordOnly", { count: String(settings.passwordOnly) })}</p>`
+    : ""
+}
+${
+  settings.password
+    ? google?.on && !settings.mineLinked
+      ? `<p class="note">${say(lang, "linkFirst")}</p>`
+      : google?.on
+        ? `<p><a class="button quiet" href="/home/admin/password/off">${say(lang, "turnOff")}</a></p>`
+        : ""
+    : `<form method="post" action="/home/admin/password"><input type="hidden" name="on" value="1"><button type="submit">${say(lang, "turnOn")}</button></form>`
+}
+</section>`;
+  const setUp = `<details${google ? "" : " open"}><summary>${say(lang, google ? "googleChange" : "googleSetup")}</summary>
+<section class="guide">
+<ol class="steps">
+<li><span>${say(lang, "step1")}</span><a href="https://console.cloud.google.com/apis/credentials" rel="noreferrer" target="_blank">${say(lang, "consoleLink")}</a></li>
+<li><span>${say(lang, "step2")}</span><pre>${escape(input.redirect)}</pre>${httpsWanted ? `<small>${say(lang, "httpsNote")}</small>` : ""}</li>
+<li><span>${say(lang, "step3")}</span></li>
+</ol>
+${settings.sealing ? "" : `<p class="error">${say(lang, "sealingOff")}</p>`}
+<form method="post" action="/home/admin/google">
+<label for="clientId">${say(lang, "clientId")}</label>
+<input id="clientId" name="clientId" required maxlength="260" autocomplete="off" spellcheck="false" value="${escape(google?.clientId ?? "")}">
+<label for="secret">${say(lang, "clientSecret")}</label>
+<input id="secret" name="secret" type="password" maxlength="200" autocomplete="off"${google ? "" : " required"}>
+<p class="note small">${say(lang, "secretNew")}${google ? ` ${say(lang, "secretKeep")}` : ""}</p>
+<button type="submit"${settings.sealing ? "" : " disabled"}>${say(lang, "saveGoogle")}</button>
+</form>
+${google ? `<p><a class="small" href="/home/admin/google/remove">${say(lang, "removeGoogle")}</a></p>` : ""}
+</section>
+</details>`;
+  const googleSection = `<section class="method">
+<div class="top"><h2>${say(lang, "waysGoogle")}</h2>${state(google ? google.on : undefined)}</div>
+<p class="note">${say(lang, "methodGoogleWhat")}</p>
+${
+  google
+    ? `<p class="note">${say(lang, "savedBy", {
+        name: google.by,
+        when: new Date(google.at).toLocaleString(lang),
+      })}</p>
+${google.readable ? "" : `<p class="error">${errorWords(lang, "google-unreadable")}</p>`}
+${google.on ? `<p class="note">${say(lang, "googleOnly", { count: String(settings.googleOnly) })}</p>` : ""}
+${
+  google.on
+    ? settings.password
+      ? `<form method="post" action="/home/admin/google/off"><button type="submit" class="quiet">${say(lang, "turnOff")}</button></form>`
+      : ""
+    : google.readable
+      ? `<form method="post" action="/home/admin/google/on"><button type="submit">${say(lang, "turnOn")}</button></form>`
+      : ""
+}`
+    : ""
+}
+${setUp}
+</section>`;
+  return shell(
+    lang,
+    title,
+    `<h1>${title}</h1>
+<p class="note">${say(lang, "adminWhat")}</p>
+${problem(lang, input.error)}
+${input.saved ? `<p class="done" role="status">${say(lang, "saved")}</p>` : ""}
+${password}
+${googleSection}
+<p><a href="/home">${say(lang, "backHome")}</a></p>`,
   );
 }
 
