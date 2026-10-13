@@ -94,7 +94,9 @@
     "skill-changed-here": "You changed this skill after adding it, so the office's version wasn't put over your changes.",
     "skill-not-shareable": "That skill came with the app or from a colleague, so it isn't yours to share.",
     "skill-name-invalid": "That isn't a skill's name. A name uses lowercase letters, digits, dots, dashes or underscores, and starts with a letter or digit.",
-    "not-forgotten": "That couldn't be taken back just now. Try again in a moment."
+    "not-forgotten": "That couldn't be taken back just now. Try again in a moment.",
+    "brain-fallback-unfit": "That can't back up the model you use. With your Claude subscription, the backup is another Claude.",
+    "brain-fallback-same": "Pick a model other than the one you use."
   },
   "start": {
     "title": "Get started",
@@ -358,7 +360,20 @@
     "fromMeeting": "Said in the meeting",
     "fromColleagueThemselves": "Your colleague answered themselves",
     "noteMissed": "Not read: the answer stopped first.",
-    "noteResend": "Send again"
+    "noteResend": "Send again",
+    "todos": "To-do list",
+    "todosDone": "{done} of {total} done",
+    "todoState": {
+      "pending": "To do",
+      "in_progress": "Doing now",
+      "completed": "Done"
+    },
+    "subtask": {
+      "running": "A helper is on it: {description}",
+      "done": "A helper finished: {description}",
+      "failed": "A helper stopped: {description}"
+    },
+    "fallback": "Your model was busy, so {model} finished this answer."
   },
   "ask": {
     "needsYou": "Needs you",
@@ -774,7 +789,13 @@
       "teamNote": "With the team's key · {model}"
     },
     "ourTeam": "Our team",
-    "teamVia": "{vendor} · team key"
+    "teamVia": "{vendor} · team key",
+    "fallback": {
+      "title": "Backup model",
+      "hint": "When your model is busy or down, your clone finishes the answer with this one, then goes back to yours with your next message.",
+      "none": "No backup model",
+      "off": "None"
+    }
   },
   "messenger": {
     "title": "On your phone",

@@ -12,6 +12,7 @@ import {
   checkKey,
   keyedProviders,
   setBrainChoice,
+  setFallback,
   setProviderKey,
 } from "@/features/minime/brain/choice";
 import { probeBrain } from "@/features/minime/brain/probe";
@@ -137,6 +138,17 @@ const Body = z.discriminatedUnion("action", [
   z.object({ action: z.literal("chatgpt-sign-in") }),
   /** Ask the picked brain one word, to see that it answers (`probe.ts`). */
   z.object({ action: z.literal("probe"), fresh: z.boolean().optional() }),
+  /**
+   * The backup model (brain/fallback.ts): another Claude for Claude Code, another reached model
+   * for the app's own loop; without a model, none.
+   */
+  z.object({
+    action: z.literal("fallback"),
+    provider: ProviderId.optional(),
+    model: z.string().trim().min(1).max(200).optional(),
+    baseUrl: Address.optional(),
+    team: z.boolean().optional(),
+  }),
   z.object({ action: z.literal("chatgpt-sign-out") }),
 ]);
 
@@ -162,7 +174,46 @@ export async function POST(request: Request) {
       await chatGptSignOut();
       return Response.json({ ok: true });
     }
-    if (input.action === "claude-code")
+    if (input.action === "fallback") {
+      const choice = await brainChoice();
+      if (!input.model) await setFallback(undefined);
+      else if (choice.kind === "claude-code") await setFallback(input.model);
+      else {
+        const id = input.provider as Parameters<typeof provider>[0] | undefined;
+        if (!id)
+          return Response.json({ error: "bad-request" }, { status: 400 });
+        // The backup is reached as a pick is: a plan signed in to, a key kept, the office's key, or a
+        // model this computer answers with.
+        if (input.team) {
+          const team = await teamState();
+          if (!team?.keys.some((key) => key.provider === id))
+            return Response.json({ error: "no-team-key" }, { status: 400 });
+        } else if (id === "chatgpt" && !(await chatGptAccount()))
+          return Response.json(
+            { error: "brain-chatgpt-signed-out" },
+            { status: 400 },
+          );
+        else if (id === "local")
+          await checkKey(
+            "local",
+            "",
+            input.baseUrl ?? provider("local")?.baseUrl,
+          );
+        else if (
+          id !== "chatgpt" &&
+          !(await keyedProviders()).includes(id as never)
+        )
+          return Response.json({ error: "brain-key-missing" }, { status: 400 });
+        await setFallback({
+          provider: id as never,
+          model: input.model,
+          ...(input.baseUrl && id === "local"
+            ? { baseUrl: input.baseUrl }
+            : {}),
+          ...(input.team ? { team: true } : {}),
+        });
+      }
+    } else if (input.action === "claude-code")
       await setBrainChoice({
         kind: "claude-code",
         ...(input.model ? { model: input.model } : {}),

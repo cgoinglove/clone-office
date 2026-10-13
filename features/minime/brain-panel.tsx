@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Loader2,
   Users,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -43,15 +44,46 @@ import {
   type Way,
 } from "./brain/providers";
 
+/** A model reached by the app's own loop: a vendor's, by key, plan, team or this computer. */
+interface Reached {
+  provider: ProviderId;
+  model: string;
+  baseUrl?: string;
+  team?: boolean;
+}
+
 type Choice =
-  | { kind: "claude-code"; model?: string }
-  | {
-      kind: "api";
-      provider: ProviderId;
-      model: string;
-      baseUrl?: string;
-      team?: boolean;
-    };
+  | { kind: "claude-code"; model?: string; fallback?: string }
+  | ({ kind: "api"; fallback?: Reached } & Reached);
+
+/** Which model a picker sets: the one the clone thinks with, or its backup (brain/fallback.ts). */
+type Role = "main" | "fallback";
+
+/** The backup as a choice of its own, to be named and placed as a pick is. */
+function fallbackOf(choice: Choice): Choice | undefined {
+  if (choice.kind === "claude-code")
+    return choice.fallback
+      ? { kind: "claude-code", model: choice.fallback }
+      : undefined;
+  return choice.fallback ? { kind: "api", ...choice.fallback } : undefined;
+}
+
+/**
+ * The vendors a backup is picked from: another Claude through the same Claude Code when that is
+ * what the clone thinks with (Claude Code moves itself), else any model the loop reaches.
+ */
+function vendorsFor(role: Role, state: BrainState | null): Vendor[] {
+  if (role === "main" || !state) return VENDORS;
+  if (state.choice.kind === "claude-code")
+    return VENDORS.filter((v) => v.id === "claude").map((v) => ({
+      ...v,
+      ways: v.ways.filter((w) => w.kind === "claude-code"),
+    }));
+  return VENDORS.map((v) => ({
+    ...v,
+    ways: v.ways.filter((w) => w.kind !== "claude-code"),
+  })).filter((v) => v.ways.length);
+}
 
 export interface BrainState {
   choice: Choice;
@@ -87,9 +119,12 @@ export function brainReady(state: BrainState | null): boolean {
   return choice.provider === "local" || state.keyed.includes(choice.provider);
 }
 
-/** The brain in use, as the person reads it: the vendor and model, or their Claude Code. */
-export function brainLabel(state: BrainState, claudeCode: string): string {
-  const { choice } = state;
+/** The brain in use (or another choice), as the person reads it: the vendor and model, or their Claude Code. */
+export function brainLabel(
+  state: BrainState,
+  claudeCode: string,
+  choice: Choice = state.choice,
+): string {
   if (choice.kind !== "api")
     return `${claudeCode} · ${
       CLAUDE_CODE_MODELS.find((m) => m.id === (choice.model ?? "sonnet"))
@@ -104,7 +139,10 @@ export function brainLabel(state: BrainState, claudeCode: string): string {
 }
 
 /** The vendor and way a saved choice belongs to; a team key's model is the team's, not a way. */
-function placeOf(choice: Choice): {
+function placeOf(
+  choice: Choice,
+  vendors: Vendor[] = VENDORS,
+): {
   vendor: Vendor["id"];
   way: number;
   team: boolean;
@@ -112,7 +150,7 @@ function placeOf(choice: Choice): {
   if (choice.kind === "claude-code")
     return { vendor: "claude", way: 0, team: false };
   const vendor = vendorOf(choice.provider);
-  const ways = VENDORS.find((v) => v.id === vendor)?.ways ?? [];
+  const ways = vendors.find((v) => v.id === vendor)?.ways ?? [];
   const way = ways.findIndex(
     (w) =>
       (w.kind === "key" || w.kind === "sign-in") &&
@@ -175,16 +213,38 @@ function modelMark(model: string, provider: ProviderId): MarkId | undefined {
   return PROVIDER_MARKS[provider];
 }
 
-/** Settings › AI model: what the clone thinks with, the same one field as the first steps. */
+/**
+ * Settings › AI model: what the clone thinks with, the same one field as the first steps, and below
+ * it the backup model, picked with the same field.
+ */
 export function BrainPanel() {
-  return <BrainPicker />;
+  const t = useTranslations("brain");
+  // The backup's field hears the pick above, so it offers what fits it.
+  const [version, setVersion] = useState(0);
+  return (
+    <div className="flex flex-col gap-6">
+      <BrainPicker onChange={() => setVersion((at) => at + 1)} />
+      <div className="flex flex-col gap-2">
+        <div className="space-y-0.5">
+          <h3 className="text-sm font-medium">{t("fallback.title")}</h3>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {t("fallback.hint")}
+          </p>
+        </div>
+        <BrainPicker key={version} role="fallback" />
+      </div>
+    </div>
+  );
 }
 
 /** A model as the lists show it; one read from the ChatGPT plan has no size. */
 type ModelRow = Omit<ModelChoice, "tier"> & { tier?: ModelChoice["tier"] };
 
 /** Where a brain is picked: the state as it stands, the vendor and way being looked at, and saving. */
-function useBrainChoice(onChange?: (state: BrainState) => void) {
+function useBrainChoice(
+  onChange?: (state: BrainState) => void,
+  role: Role = "main",
+) {
   const [state, setState] = useState<BrainState | null>(null);
   const [vendorId, setVendorId] = useState<Vendor["id"] | null>(null);
   const [wayAt, setWayAt] = useState(0);
@@ -204,16 +264,16 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
     setState(data);
     onChange?.(data);
     // The vendor in use is opened once, when the person has picked one before.
-    if (!placed.current && data.chosen) {
+    const picked = role === "main" ? data.choice : fallbackOf(data.choice);
+    if (!placed.current && data.chosen && picked) {
       placed.current = true;
-      const place = placeOf(data.choice);
+      const place = placeOf(picked, vendorsFor(role, data));
       setVendorId(place.vendor);
       setWayAt(place.way);
-      if (data.choice.kind === "api" && data.choice.baseUrl)
-        setAddress(data.choice.baseUrl);
+      if (picked.kind === "api" && picked.baseUrl) setAddress(picked.baseUrl);
     }
     return data;
-  }, [onChange]);
+  }, [onChange, role]);
 
   useEffect(() => {
     void load();
@@ -264,7 +324,8 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
     }, 2000);
   };
 
-  const vendor = VENDORS.find((v) => v.id === vendorId);
+  const vendors = vendorsFor(role, state);
+  const vendor = vendors.find((v) => v.id === vendorId);
   const way = vendor?.ways[Math.min(wayAt, vendor.ways.length - 1)];
   const id = way ? providerOfWay(way) : undefined;
   const entry = id ? providerOf(id) : undefined;
@@ -288,24 +349,34 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
         : way?.kind === "key"
           ? state.keyed.includes(way.provider)
           : way?.kind === "local";
+  // What this picker sets as it stands: the pick, or the backup.
+  const current = !state
+    ? undefined
+    : role === "main"
+      ? state.chosen
+        ? state.choice
+        : undefined
+      : fallbackOf(state.choice);
   const isCurrentModel = (modelId: string) =>
-    Boolean(state?.chosen) &&
-    (way?.kind === "claude-code"
-      ? state?.choice.kind === "claude-code" &&
-        (state.choice.model ?? "sonnet") === modelId
-      : state?.choice.kind === "api" &&
-        !state.choice.team &&
-        state.choice.provider === id &&
-        state.choice.model === modelId);
+    way?.kind === "claude-code"
+      ? current?.kind === "claude-code" &&
+        (current.model ?? "sonnet") === modelId
+      : current?.kind === "api" &&
+        !current.team &&
+        current.provider === id &&
+        current.model === modelId;
 
-  /** Keeps the way being looked at, with this model, as what the clone thinks with. */
+  /** Keeps the way being looked at, with this model, as what the clone thinks with (or its backup). */
   const use = (modelId: string) =>
     way
       ? post(
           way.kind === "claude-code"
-            ? { action: "claude-code", model: modelId }
+            ? {
+                action: role === "main" ? "claude-code" : "fallback",
+                model: modelId,
+              }
             : {
-                action: "use",
+                action: role === "main" ? "use" : "fallback",
                 provider: id,
                 model: modelId,
                 ...(way.kind === "local" ? { baseUrl: address } : {}),
@@ -327,6 +398,8 @@ function useBrainChoice(onChange?: (state: BrainState) => void) {
 
   return {
     state,
+    vendors,
+    current,
     vendor,
     way,
     id,
@@ -591,18 +664,22 @@ function ModelButton({
 }
 
 /** The brain in use as one field's words: the vendor's mark, its name, the model and the way in. */
-function PickedLabel({ state }: { state: BrainState }) {
+function PickedLabel({
+  state,
+  choice = state.choice,
+}: {
+  state: BrainState;
+  choice?: Choice;
+}) {
   const t = useTranslations("brain");
-  const place = placeOf(state.choice);
+  const place = placeOf(choice);
   const vendor = VENDORS.find((v) => v.id === place.vendor);
   const way = vendor?.ways[place.way];
-  const label = brainLabel(state, "Claude Code");
+  const label = brainLabel(state, "Claude Code", choice);
   const modelName =
-    state.choice.kind === "claude-code"
-      ? (CLAUDE_CODE_MODELS.find(
-          (m) =>
-            m.id === ((state.choice as { model?: string }).model ?? "sonnet"),
-        )?.label ?? label)
+    choice.kind === "claude-code"
+      ? (CLAUDE_CODE_MODELS.find((m) => m.id === (choice.model ?? "sonnet"))
+          ?.label ?? label)
       : label.split(" · ").slice(1).join(" · ");
   const vendorName = vendor?.name ?? t("local");
   return (
@@ -683,45 +760,58 @@ function roveColumns(event: React.KeyboardEvent<HTMLElement>) {
 export function BrainPicker({
   onChange,
   suggest = false,
+  role = "main",
 }: {
   /** Hears the brain as it stands, after it is read and after each change. */
   onChange?: (state: BrainState) => void;
   /** Offers what this computer already has while nothing is picked. */
   suggest?: boolean;
+  /** "fallback": the field sets the backup model rather than the model itself. */
+  role?: Role;
 }) {
   const t = useTranslations("brain");
   const problemText = useProblem();
-  const choice = useBrainChoice(onChange);
+  const choice = useBrainChoice(onChange, role);
   const [open, setOpen] = useState(false);
   // "Our team" in the left column: the models the office's own keys reach, first when there are any.
   const [teamView, setTeamView] = useState(false);
-  const { state, vendor, way, id, models, suggested, busy, problem } = choice;
+  const { state, vendors, current, vendor, way, id, models, suggested } =
+    choice;
+  const { busy, problem } = choice;
   if (!state) return <div className="h-12 rounded-[10px] bg-muted/60" />;
+  const backup = role === "fallback";
 
-  const teamModels = (state.team?.keys ?? []).flatMap((key) => {
-    const entry = providerOf(key.provider as ProviderId);
-    if (!entry || entry.signIn) return [];
-    return entry.models.map((model) => ({
-      provider: entry.id,
-      vendor: entry.name,
-      ...model,
-    }));
-  });
+  // The office's models; a backup for Claude Code is another Claude through it, never one of these.
+  const teamModels =
+    backup && state.choice.kind === "claude-code"
+      ? []
+      : (state.team?.keys ?? []).flatMap((key) => {
+          const entry = providerOf(key.provider as ProviderId);
+          if (!entry || entry.signIn) return [];
+          return entry.models.map((model) => ({
+            provider: entry.id,
+            vendor: entry.name,
+            ...model,
+          }));
+        });
   const teamFirst =
     teamModels.find((model) => model.tier === "mid") ?? teamModels[0];
   const onTeam = (provider: ProviderId, model: string) =>
-    state.chosen &&
-    state.choice.kind === "api" &&
-    Boolean(state.choice.team) &&
-    state.choice.provider === provider &&
-    state.choice.model === model;
+    current?.kind === "api" &&
+    Boolean(current.team) &&
+    current.provider === provider &&
+    current.model === model;
   const pickTeam = async (provider: ProviderId, model: string) => {
     const ok = await choice.post({
-      action: "use",
+      action: backup ? "fallback" : "use",
       provider,
       model,
       team: true,
     });
+    if (ok) setOpen(false);
+  };
+  const noBackup = async () => {
+    const ok = await choice.post({ action: "fallback" });
     if (ok) setOpen(false);
   };
   const pick = async (modelId: string) => {
@@ -735,7 +825,7 @@ export function BrainPicker({
   // The team's own model, Claude Code on this computer, or a ChatGPT plan already signed in: one
   // press away.
   const offer =
-    suggest && !state.chosen
+    suggest && !state.chosen && !backup
       ? teamFirst
         ? {
             mark: (modelMark(teamFirst.id, teamFirst.provider) ??
@@ -785,31 +875,36 @@ export function BrainPicker({
           if (next)
             setTeamView(
               teamModels.length > 0 &&
-                (!state.chosen ||
-                  (state.choice.kind === "api" && Boolean(state.choice.team))),
+                (backup
+                  ? current?.kind === "api" && Boolean(current.team)
+                  : !state.chosen ||
+                    (state.choice.kind === "api" &&
+                      Boolean(state.choice.team))),
             );
           if (next && !vendor)
             choice.lookAt(
-              state.chosen
-                ? placeOf(state.choice).vendor
-                : (VENDORS.find((v) => foundHere(state, v))?.id ??
-                    VENDORS[0].id),
+              current
+                ? placeOf(current, vendors).vendor
+                : (vendors.find((v) => foundHere(state, v))?.id ??
+                    vendors[0].id),
             );
         }}
       >
         <PopoverTrigger
           // Its name and what is picked, so a screen reader hears both.
           aria-label={
-            state.chosen
-              ? `${t("title")}: ${brainLabel(state, "Claude Code")}`
-              : t("title")
+            current
+              ? `${t(backup ? "fallback.title" : "title")}: ${brainLabel(state, "Claude Code", current)}`
+              : t(backup ? "fallback.title" : "title")
           }
           className="flex h-12 w-full min-w-0 items-center gap-2.5 rounded-[10px] bg-background pr-3 pl-3.5 text-left text-[14.5px] ring-1 ring-foreground/15 outline-none ring-inset transition-colors hover:ring-foreground/25 focus-visible:ring-2 focus-visible:ring-ring aria-expanded:ring-foreground/40"
         >
-          {state.chosen ? (
-            <PickedLabel state={state} />
+          {current ? (
+            <PickedLabel state={state} choice={current} />
           ) : (
-            <span className="flex-1 text-muted-foreground">{t("pick")}</span>
+            <span className="flex-1 text-muted-foreground">
+              {t(backup ? "fallback.none" : "pick")}
+            </span>
           )}
           <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
         </PopoverTrigger>
@@ -823,6 +918,27 @@ export function BrainPicker({
             data-column
             className="flex w-40 shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-border bg-muted/40 p-1.5"
           >
+            {backup && (
+              <button
+                type="button"
+                aria-pressed={!current}
+                disabled={busy}
+                onClick={() => void noBackup()}
+                className={cn(
+                  column,
+                  "mb-1.5",
+                  !current ? "bg-muted font-medium" : "hover:bg-muted/60",
+                )}
+              >
+                <span className="grid size-5 place-items-center">
+                  <X className="size-4 text-foreground/80" />
+                </span>
+                <span className="min-w-0 flex-1 truncate">
+                  {t("fallback.off")}
+                </span>
+                {!current && <Check className="size-3.5 shrink-0" />}
+              </button>
+            )}
             {teamModels.length > 0 && (
               <button
                 type="button"
@@ -839,11 +955,11 @@ export function BrainPicker({
                 <span className="min-w-0 flex-1 truncate">{t("ourTeam")}</span>
               </button>
             )}
-            {VENDORS.map((v) => {
+            {vendors.map((v) => {
               const inUse =
-                state.chosen &&
-                !placeOf(state.choice).team &&
-                placeOf(state.choice).vendor === v.id;
+                current &&
+                !placeOf(current).team &&
+                placeOf(current).vendor === v.id;
               return (
                 <button
                   key={v.id}

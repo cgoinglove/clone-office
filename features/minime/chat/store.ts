@@ -12,6 +12,7 @@ import {
   stat,
 } from "node:fs/promises";
 import { join } from "node:path";
+import type { Todo } from "../brain/todos.ts";
 import { minimeHome } from "../server/paths.ts";
 import { TITLE_MAX } from "./limits.ts";
 
@@ -20,6 +21,8 @@ import { TITLE_MAX } from "./limits.ts";
  * "told": what the mini-me answered a colleague for the person, told to them ("do it and tell me").
  * "flow": one of the person's flows ran (its name); the mini-me's answer follows.
  * "meeting": what a clone said in a meeting of the office's clones, its person's name first.
+ * "fallback": the model the person picked was busy, and the answer came from the fallback model,
+ * named here (brain/fallback.ts).
  */
 export type ChatRole =
   | "me"
@@ -29,7 +32,8 @@ export type ChatRole =
   | "office"
   | "told"
   | "flow"
-  | "meeting";
+  | "meeting"
+  | "fallback";
 
 export interface ChatMessage {
   role: ChatRole;
@@ -65,6 +69,9 @@ export interface ChatInfo {
   reviewed?: string;
   /** Put away by the person: out of the list, kept whole, brought back at any time. */
   archived?: boolean;
+  /** The clone's to-do list as it last stood (brain/todos.ts), and how many lines came before it. */
+  todos?: Todo[];
+  todosAt?: number;
 }
 
 type Line =
@@ -83,7 +90,9 @@ type Line =
   | { type: "reviewed"; session: string; at: string }
   // The person named it themselves, or put it away and brought it back.
   | { type: "title"; title: string; at: string }
-  | { type: "archived"; archived: boolean; at: string };
+  | { type: "archived"; archived: boolean; at: string }
+  // The clone's to-do list, each time it changed.
+  | { type: "todos"; todos: Todo[]; at: string };
 
 const ID = /^[a-z0-9][a-z0-9-]{5,63}$/;
 
@@ -227,6 +236,11 @@ export async function carryOver(id: string, summary: string): Promise<void> {
   await append(id, { type: "carried", summary, at: new Date().toISOString() });
 }
 
+/** The clone's to-do list as it now stands, so the conversation opens on it again. */
+export async function setTodos(id: string, todos: Todo[]): Promise<void> {
+  await append(id, { type: "todos", todos, at: new Date().toISOString() });
+}
+
 function parse(raw: string): {
   info?: ChatInfo;
   messages: ChatMessage[];
@@ -272,6 +286,10 @@ function parse(raw: string): {
     if (line.type === "reviewed") info.reviewed = line.session;
     if (line.type === "title") info.title = line.title;
     if (line.type === "archived") info.archived = line.archived || undefined;
+    if (line.type === "todos" && Array.isArray(line.todos)) {
+      info.todos = line.todos;
+      info.todosAt = messages.length;
+    }
     if (line.type === "carried") {
       info.session = undefined;
       info.context = undefined;

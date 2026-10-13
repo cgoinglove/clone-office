@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, test } from "node:test";
@@ -14,6 +20,7 @@ import {
   browserTool,
 } from "./names.ts";
 import {
+  callShellTool,
   fold,
   insideWorkspace,
   keptOut,
@@ -161,4 +168,48 @@ test("write_file stays inside the workspace, and a link cannot lead it out", asy
   assert.ok("error" in (await insideWorkspace("/etc/passwd", workspace)));
   assert.ok("error" in (await insideWorkspace("door/x.md", workspace)));
   assert.ok("error" in (await insideWorkspace("", workspace)));
+});
+
+test("write_file also puts a temporary file in the session's scratch folder, and nowhere else outside the workspace", async () => {
+  const home = join(root, "clone");
+  const scratch = join(home, "scratch", "session-0001");
+  const was = {
+    home: process.env.CLONE_OFFICE_HOME,
+    scratch: process.env.MINIME_SCRATCH_DIR,
+  };
+  process.env.CLONE_OFFICE_HOME = home;
+  process.env.MINIME_SCRATCH_DIR = scratch;
+  try {
+    const kept = await callShellTool("write_file", {
+      path: join(scratch, "notes", "draft.md"),
+      content: "draft",
+    });
+    assert.equal(kept.isError, false, kept.result);
+    assert.match(kept.result, /in the scratch folder/);
+    assert.equal(
+      readFileSync(join(scratch, "notes", "draft.md"), "utf8"),
+      "draft",
+    );
+    const made = await callShellTool("write_file", {
+      path: "plan/index.html",
+      content: "<p>plan</p>",
+    });
+    assert.equal(made.isError, false, made.result);
+    assert.equal(
+      readFileSync(join(home, "workspace", "plan", "index.html"), "utf8"),
+      "<p>plan</p>",
+    );
+    const away = await callShellTool("write_file", {
+      path: join(root, "elsewhere.md"),
+      content: "no",
+    });
+    assert.equal(away.isError, true);
+  } finally {
+    for (const [name, value] of [
+      ["CLONE_OFFICE_HOME", was.home],
+      ["MINIME_SCRATCH_DIR", was.scratch],
+    ] as const)
+      if (value === undefined) delete process.env[name];
+      else process.env[name] = value;
+  }
 });

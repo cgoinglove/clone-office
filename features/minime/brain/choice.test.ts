@@ -62,3 +62,55 @@ test("Claude Code stays the brain until the person picks another; keys are their
   });
   assert.equal(await choice.brainProblem(), undefined);
 });
+
+test("a backup model fits what the clone thinks with, is never the model itself, and stays while it fits", async () => {
+  const choice = await import("./choice");
+  await choice.setBrainChoice({ kind: "claude-code", model: "opus" });
+  await choice.setFallback("sonnet");
+  assert.deepEqual(await choice.brainChoice(), {
+    kind: "claude-code",
+    model: "opus",
+    fallback: "sonnet",
+  });
+  await assert.rejects(choice.setFallback("opus"), /brain-fallback-same/);
+  await assert.rejects(
+    choice.setFallback({ provider: "openai", model: "gpt-6-luna" }),
+    /brain-fallback-unfit/,
+    "Claude Code moves only to another Claude",
+  );
+  // Another Claude picked: the backup stays; the backup itself picked: it goes.
+  await choice.setBrainChoice({ kind: "claude-code", model: "haiku" });
+  assert.equal((await choice.brainChoice()).fallback, "sonnet");
+  await choice.setBrainChoice({ kind: "claude-code", model: "sonnet" });
+  assert.equal((await choice.brainChoice()).fallback, undefined);
+
+  // The app's own loop: any model it reaches, kept across a change of pick while it fits.
+  await choice.setBrainChoice({
+    kind: "api",
+    provider: "anthropic",
+    model: "claude-sonnet-5-5",
+  });
+  await assert.rejects(choice.setFallback("haiku"), /brain-fallback-unfit/);
+  await choice.setFallback({ provider: "openai", model: "gpt-6.1-sol" });
+  await choice.setBrainChoice({
+    kind: "api",
+    provider: "anthropic",
+    model: "claude-opus-5-5",
+  });
+  assert.deepEqual(await choice.brainChoice(), {
+    kind: "api",
+    provider: "anthropic",
+    model: "claude-opus-5-5",
+    fallback: { provider: "openai", model: "gpt-6.1-sol" },
+  });
+  await assert.rejects(
+    choice.setFallback({ provider: "anthropic", model: "claude-opus-5-5" }),
+    /brain-fallback-same/,
+  );
+  await choice.setFallback(undefined);
+  assert.equal((await choice.brainChoice()).fallback, undefined);
+  // Back to Claude Code: a loop's model is no backup for it.
+  await choice.setFallback({ provider: "openai", model: "gpt-6.1-sol" });
+  await choice.setBrainChoice({ kind: "claude-code" });
+  assert.deepEqual(await choice.brainChoice(), { kind: "claude-code" });
+});

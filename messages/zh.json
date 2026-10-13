@@ -94,7 +94,9 @@
     "skill-changed-here": "你在添加后修改过这个技能，所以没有用办公室的版本覆盖你的修改。",
     "skill-not-shareable": "这个技能是应用自带的，或来自同事，所以不能由你共享。",
     "skill-name-invalid": "这不能作为技能的名称。名称只能用小写字母、数字、点、连字符或下划线，并以字母或数字开头。",
-    "not-forgotten": "暂时无法移除，请稍后再试。"
+    "not-forgotten": "暂时无法移除，请稍后再试。",
+    "brain-fallback-unfit": "它不能作为你当前模型的备用。使用 Claude 订阅时，备用模型也要是另一个 Claude。",
+    "brain-fallback-same": "请选一个和当前模型不同的模型。"
   },
   "start": {
     "title": "开始使用",
@@ -358,7 +360,20 @@
     "fromMeeting": "会上说的",
     "fromColleagueThemselves": "同事亲自回复了",
     "noteMissed": "未读：回答先结束了。",
-    "noteResend": "重新发送"
+    "noteResend": "重新发送",
+    "todos": "待办事项",
+    "todosDone": "已完成 {done}/{total}",
+    "todoState": {
+      "pending": "待办",
+      "in_progress": "正在做",
+      "completed": "已完成"
+    },
+    "subtask": {
+      "running": "助手正在处理：{description}",
+      "done": "助手已完成：{description}",
+      "failed": "助手停下了：{description}"
+    },
+    "fallback": "常用模型繁忙，这次由 {model} 完成了回答。"
   },
   "ask": {
     "needsYou": "需要你",
@@ -774,7 +789,13 @@
       "teamNote": "使用团队密钥 · {model}"
     },
     "ourTeam": "我们团队",
-    "teamVia": "{vendor} · 团队密钥"
+    "teamVia": "{vendor} · 团队密钥",
+    "fallback": {
+      "title": "备用模型",
+      "hint": "常用模型繁忙或出故障时，你的分身会用这个模型完成回答，下一条消息再换回常用模型。",
+      "none": "没有备用模型",
+      "off": "不用"
+    }
   },
   "messenger": {
     "title": "在手机上",

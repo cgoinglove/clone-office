@@ -94,7 +94,9 @@
     "skill-changed-here": "Cambiaste esta habilidad después de añadirla, así que la versión de la oficina no se puso encima de tus cambios.",
     "skill-not-shareable": "Esa habilidad vino con la app o de un colega, así que no te toca compartirla.",
     "skill-name-invalid": "Ese no es un nombre de habilidad. Un nombre usa letras minúsculas, números, puntos, guiones o guiones bajos, y empieza por una letra o un número.",
-    "not-forgotten": "No se pudo quitar ahora. Vuelve a intentarlo en un momento."
+    "not-forgotten": "No se pudo quitar ahora. Vuelve a intentarlo en un momento.",
+    "brain-fallback-unfit": "Ese no puede respaldar el modelo que usas. Con tu suscripción de Claude, el respaldo es otro Claude.",
+    "brain-fallback-same": "Elige un modelo distinto del que usas."
   },
   "start": {
     "title": "Empezar",
@@ -358,7 +360,20 @@
     "fromMeeting": "Dicho en la reunión",
     "fromColleagueThemselves": "Tu colega respondió en persona",
     "noteMissed": "Sin leer: la respuesta terminó antes.",
-    "noteResend": "Enviar de nuevo"
+    "noteResend": "Enviar de nuevo",
+    "todos": "Lista de tareas",
+    "todosDone": "{done} de {total} hechas",
+    "todoState": {
+      "pending": "Pendiente",
+      "in_progress": "Haciendo ahora",
+      "completed": "Hecha"
+    },
+    "subtask": {
+      "running": "Un ayudante está en ello: {description}",
+      "done": "Un ayudante terminó: {description}",
+      "failed": "Un ayudante se detuvo: {description}"
+    },
+    "fallback": "Tu modelo estaba ocupado, así que {model} terminó esta respuesta."
   },
   "ask": {
     "needsYou": "Te necesita",
@@ -774,7 +789,13 @@
       "teamNote": "Con la clave del equipo · {model}"
     },
     "ourTeam": "Nuestro equipo",
-    "teamVia": "{vendor} · clave del equipo"
+    "teamVia": "{vendor} · clave del equipo",
+    "fallback": {
+      "title": "Modelo de respaldo",
+      "hint": "Si tu modelo está ocupado o caído, tu clon termina la respuesta con este y vuelve al tuyo con tu siguiente mensaje.",
+      "none": "Sin modelo de respaldo",
+      "off": "Ninguno"
+    }
   },
   "messenger": {
     "title": "En tu teléfono",

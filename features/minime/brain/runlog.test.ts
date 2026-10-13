@@ -36,6 +36,12 @@ test("the last 30 days of runs, by what they were for, with tokens and the repor
       }),
       line("2026-10-07T10:00:00Z", "check", { cost_usd: 0.5 }),
       line("2026-10-07T11:00:00Z", "review"),
+      // A helper sent from a flow counts with the flows.
+      line("2026-10-07T12:00:00Z", "subtask", {
+        within: "flow",
+        parent: "s-1",
+        usage: { input: 7 },
+      }),
       "not json",
       "",
     ].join("\n"),
@@ -60,6 +66,7 @@ test("the last 30 days of runs, by what they were for, with tokens and the repor
       sent: 3,
       cost: 0.5,
     },
+    { group: "flows", runs: 1, failed: 0, tokens: 7, cached: 0, sent: 7 },
     { group: "learning", runs: 1, failed: 0, tokens: 0, cached: 0, sent: 0 },
   ]);
 });

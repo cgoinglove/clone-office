@@ -9,12 +9,16 @@ import {
   ArrowUp,
   BookmarkCheck,
   Check,
+  Circle,
   CircleAlert,
+  CircleDot,
   Clock,
   CornerDownRight,
+  ListChecks,
   Loader2,
   MessageSquare,
   MessagesSquare,
+  Replace,
   Users,
   X,
 } from "lucide-react";
@@ -30,6 +34,7 @@ import { composing } from "@/hooks/use-hotkey";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { AskCard } from "../ask-card";
+import type { Todo } from "../brain/todos";
 import { type Routine, routineNow } from "../routine";
 import type { Chat, Turn } from "./use-chat";
 
@@ -307,6 +312,34 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
           {turn.text}
         </li>
       );
+    case "todos":
+      return (
+        <li className="flex">
+          <TodoCard todos={turn.todos} live={turn.live} />
+        </li>
+      );
+    case "subtask":
+      return (
+        <li className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          {turn.state === "running" ? (
+            <Loader2 className="size-3.5 shrink-0 animate-spin motion-reduce:animate-none" />
+          ) : turn.state === "done" ? (
+            <Check className="size-3.5 shrink-0" />
+          ) : (
+            <CircleAlert className="size-3.5 shrink-0" />
+          )}
+          <span className="min-w-0 truncate">
+            {tChat(`subtask.${turn.state}`, { description: turn.text })}
+          </span>
+        </li>
+      );
+    case "fallback":
+      return (
+        <li className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Replace className="size-3.5 shrink-0" />
+          {tChat("fallback", { model: turn.text })}
+        </li>
+      );
     case "saved":
       return (
         <li className="flex">
@@ -328,6 +361,67 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
         </li>
       );
   }
+}
+
+/**
+ * The clone's to-do list for the work in hand (brain/todos.ts), as Claude Code shows its own: each
+ * step ticked when done, the one under way turning while the clone works and named as it is being
+ * done, the rest waiting. The words of each status are there for a screen reader.
+ */
+function TodoCard({ todos, live }: { todos: Todo[]; live: boolean }) {
+  const t = useTranslations("chat");
+  const done = todos.filter((todo) => todo.status === "completed").length;
+  return (
+    <section
+      aria-label={t("todos")}
+      className="flex w-full max-w-md flex-col gap-2 rounded-xl border border-border bg-background px-3.5 py-3"
+    >
+      <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+        <ListChecks className="size-3.5" />
+        {t("todos")}
+        <span className="font-normal">
+          · {t("todosDone", { done, total: todos.length })}
+        </span>
+      </span>
+      <ol className="flex flex-col gap-1.5 text-[13.5px] leading-snug">
+        {todos.map((todo, at) => {
+          const doing = todo.status === "in_progress";
+          return (
+            <li
+              // A list is written whole each time, so its place is its key.
+              key={at}
+              className="flex items-start gap-2"
+            >
+              <span className="mt-0.5 grid size-3.5 shrink-0 place-items-center">
+                {todo.status === "completed" ? (
+                  <Check className="size-3.5 text-foreground" />
+                ) : doing && live ? (
+                  <Loader2 className="size-3.5 animate-spin text-foreground motion-reduce:animate-none" />
+                ) : doing ? (
+                  <CircleDot className="size-3.5 text-foreground" />
+                ) : (
+                  <Circle className="size-3.5 text-muted-foreground" />
+                )}
+              </span>
+              <span className="sr-only">{t(`todoState.${todo.status}`)}: </span>
+              <span
+                className={cn(
+                  "min-w-0",
+                  todo.status === "completed" &&
+                    "text-muted-foreground line-through decoration-muted-foreground/50",
+                  doing && "font-medium",
+                )}
+              >
+                {doing && live && todo.activeForm
+                  ? todo.activeForm
+                  : todo.content}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
 }
 
 /** Puts the keyboard in the chat box once the conversation's screen is there (after a new chat). */
