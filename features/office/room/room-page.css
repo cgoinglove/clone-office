@@ -1,0 +1,174 @@
+/*
+ * The office drawing on the team server's page (room-page.ts `officeRoomHtml`). room.css reads the
+ * app's theme: its ladder of greys, its ink, brand and ember, its fonts, and the plain elements the
+ * app's own base sheet leaves (Tailwind's preflight). Here they are given from the page's own
+ * tokens (page.ts: --bg, --fg, --muted, --line, --brand, --brand-fill, --waiting, --danger), the
+ * ladder's steps in between as the app writes them, light and dark. This sheet comes before
+ * room.css, so the room's own rules always win over it, and it over the page's element rules.
+ */
+
+.co-room {
+  --gray-0: var(--bg, #ffffff);
+  --gray-25: #fcfcfc;
+  --gray-50: #f9f9f9;
+  --gray-75: #f3f3f3;
+  --gray-100: #ededed;
+  --gray-200: #cdcdcd;
+  --ink: var(--fg, #0d0d0d);
+  --muted-foreground: var(--muted, #6b6b6b);
+  --destructive: var(--danger, #dc2626);
+  --brand-foreground: #ffffff;
+  --ring: var(--brand, #0169cc);
+  --shade: rgb(0 0 0 / 0.4);
+  --border: color-mix(in oklab, var(--ink) 10%, transparent);
+  --font-geist-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui;
+  --font-geist-mono: ui-monospace, SFMono-Regular, Menlo;
+  --font-caveat: "Segoe Print", "Bradley Hand";
+
+  position: relative;
+  height: clamp(420px, 72vh, 760px);
+  border: 1px solid var(--line, rgba(13, 13, 13, 0.12));
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--gray-0);
+  color: var(--ink);
+  isolation: isolate;
+}
+.co-room.dark {
+  --gray-25: #101010;
+  --gray-50: #131313;
+  --gray-75: #161616;
+  --gray-100: #181818;
+  --gray-200: #212121;
+}
+.co-room:lang(ko) {
+  --font-geist-sans:
+    -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR",
+    "Malgun Gothic", system-ui;
+}
+.co-room:lang(ja) {
+  --font-geist-sans:
+    -apple-system, BlinkMacSystemFont, "Hiragino Sans",
+    "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, system-ui;
+}
+.co-room:lang(zh) {
+  --font-geist-sans:
+    -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC",
+    "Microsoft YaHei", system-ui;
+}
+
+/* The plain elements as the app's base sheet leaves them, inside the room alone: the page's own
+   rules for buttons, lists and the rest (page.ts) are for its forms, not for the drawing. One class
+   of weight, so the page's element and single-class rules give way and every rule of room.css,
+   which comes after, still wins. */
+.co-room :where(*, ::before, ::after) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  border-color: var(--border);
+}
+.co-room :where(button, input) {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border-radius: 0;
+  width: auto;
+  cursor: pointer;
+}
+.co-room :where(input) {
+  cursor: text;
+}
+.co-room :where(ul, ol) {
+  list-style: none;
+}
+.co-room :where(h1, h2, h3, h4, h5, h6) {
+  font-size: inherit;
+  font-weight: inherit;
+}
+.co-room :where(small) {
+  font-size: 80%;
+}
+.co-room :where(svg) {
+  display: block;
+  vertical-align: middle;
+}
+/* the names the room and the page both use for their own parts */
+.co-room :where(.acts, .small, .rows) {
+  display: block;
+  gap: normal;
+  align-items: normal;
+  font-size: inherit;
+  border-radius: 0;
+}
+/* the page's rules one step heavier (a list's rows, a row of actions' buttons, a turned-off
+   button), met at their own weight: room.css's rules for the same parts are heavier still */
+.co-room :where(.rows) > li {
+  display: list-item;
+  flex-wrap: nowrap;
+  border-bottom: 0;
+}
+.co-room :where(.acts) button {
+  padding: 0;
+  font-size: inherit;
+  border-radius: 0;
+}
+.co-room button:where(:disabled) {
+  opacity: 1;
+  cursor: default;
+}
+
+/* The box the drawing fills, and the line over it while it cannot be drawn. */
+.co-room-stage {
+  position: absolute;
+  inset: 0;
+}
+.co-room .co-room-note {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  text-align: center;
+  text-wrap: pretty;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.co-room .co-room-note[hidden] {
+  display: none;
+}
+/* over a drawing already there: a line at its foot, the drawing left as it was last seen */
+.co-room .co-room-note.over {
+  inset: auto 12px 12px;
+  place-items: start;
+  padding: 8px 12px;
+  text-align: start;
+  font-size: 14px;
+  color: var(--ink);
+  background: var(--gray-0);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.12);
+}
+/* the first look under way */
+.co-room .co-room-note.wait::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  border-top-color: var(--ink);
+  animation: co-room-turn 0.8s linear infinite;
+}
+@keyframes co-room-turn {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .co-room .co-room-note.wait::before {
+    animation-duration: 2.4s;
+  }
+}

@@ -49,6 +49,7 @@
 //   POST /i/:key/join   joining another office, asked once on its invite's page
 //   GET  /home          one's own page: one's office, connecting one's computer, the invite link
 //   POST /home/pair     a one-time setup code, shown as the line to run on one's computer
+//   GET  /home/office/look?office=  what the office drawing draws; GET /assets/room/<file> its files (room-page.ts)
 //   GET  /p/:code       what a setup link shows in a browser: the line to run
 //   POST /pair/claim    {code} -> {office, member, token, name}   the computer's own token
 // An office's owners also, each a page to look at first (GET) and the change (POST):
@@ -104,6 +105,7 @@ import {
   RelayError,
   type TaskState,
 } from "./relay.ts";
+import { roomRoutes } from "./room-page.ts";
 import { isTeamProvider, type TeamAi } from "./team-ai.ts";
 
 /** How long an inbox call waits for news before answering with none. */
@@ -1536,6 +1538,9 @@ export function relayHandler(
         );
         return;
       }
+      // The office drawing on the people's pages: its files, and the look it draws (room-page.ts).
+      if (await roomRoutes({ request, response, path, url, relay, accounts }))
+        return;
       const invite = /^\/i\/([\w-]{4,128})$/.exec(path);
       if (accounts && (await peoplePages(invite?.[1]))) return;
       if (invite && request.method === "GET") {

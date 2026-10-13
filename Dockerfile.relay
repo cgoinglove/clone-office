@@ -9,9 +9,14 @@ RUN node -e "const d = require('/tmp/app-package.json').dependencies; require('f
   && rm /tmp/app-package.json \
   && chown -R node:node /relay
 # The relay's own folder as it is in the repository (its tests left out by .dockerignore), and the
-# one shared file it imports, at the same places, so its relative imports hold.
+# shared files it imports, at the same places, so its relative imports hold: the sealing, and for
+# the office drawing on its pages (room-page.ts) the room's own files, how the app reads the office
+# for it, and the app's words.
 COPY --chown=node:node features/relay/ ./features/relay/
 COPY --chown=node:node lib/seal.ts ./lib/seal.ts
+COPY --chown=node:node features/office/room/*.mjs features/office/room/*.css ./features/office/room/
+COPY --chown=node:node features/minime/office/room-data.ts ./features/minime/office/room-data.ts
+COPY --chown=node:node messages/ ./messages/
 # The sealing key's folder, a volume of its own in the compose file: kept apart from the database.
 RUN mkdir -p /relay/keys && chown node:node /relay/keys
 ENV RELAY_KEY_DIR=/relay/keys

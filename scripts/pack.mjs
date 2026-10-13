@@ -21,6 +21,7 @@ import {
   cpSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -212,6 +213,15 @@ try {
       },
       logLevel: "warning",
     });
+
+  // The office drawing the relay's pages serve (features/relay/room-page.ts): the room's modules
+  // and sheet as the app loads them, and the page's own start and sheet, beside the bundled relay,
+  // in dist/room/, where it looks for them first. The relay serves only the files it lists.
+  const room = join(source, "features", "office", "room");
+  mkdirSync(join(out, "dist", "room"), { recursive: true });
+  for (const name of readdirSync(room))
+    if (/\.(?:mjs|css)$/.test(name))
+      cpSync(join(room, name), join(out, "dist", "room", name));
 
   const own = JSON.parse(readFileSync(join(source, "package.json"), "utf8"));
   // Where the code lives, for npm's page and for provenance, which npm accepts only when
