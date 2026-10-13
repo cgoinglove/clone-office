@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
@@ -11,6 +14,7 @@ import { untrusted } from "./untrusted.ts";
 async function service(name: string) {
   const server = new McpServer({ name, version: "1" });
   const seen: Record<string, unknown>[] = [];
+  let answer: string | undefined;
   server.registerTool(
     "search",
     {
@@ -19,7 +23,9 @@ async function service(name: string) {
     },
     async (args) => {
       seen.push(args);
-      return { content: [{ type: "text", text: `Found: ${args.query}` }] };
+      return {
+        content: [{ type: "text", text: answer ?? `Found: ${args.query}` }],
+      };
     },
   );
   server.registerTool(
@@ -34,7 +40,15 @@ async function service(name: string) {
   await server.connect(one);
   const client = new Client({ name: "test", version: "1" });
   await client.connect(two);
-  return { client, seen, close: () => client.close() };
+  return {
+    client,
+    seen,
+    /** What search answers from now on. */
+    answer: (text: string) => {
+      answer = text;
+    },
+    close: () => client.close(),
+  };
 }
 
 const run = async (
@@ -158,5 +172,78 @@ test("for a colleague's request a service offers its listed reading tools alone"
     );
   } finally {
     await notion.close();
+  }
+});
+
+test("a file of any size is read in parts and searched; a service's long answer is kept whole aside", async () => {
+  const { Spill } = await import("./scratch.ts");
+  const folder = mkdtempSync(join(tmpdir(), "minime-loop-tools-"));
+  const notion = await service("notion");
+  try {
+    // Past 5 MB a file is never read whole, only line by line where asked.
+    const big = join(folder, "big.log");
+    writeFileSync(
+      big,
+      Array.from(
+        { length: 70_000 },
+        (_, at) => `row ${at} ${"z".repeat(80)}`,
+      ).join("\n"),
+    );
+    const spill = new Spill({ dir: join(folder, "scratch"), window: 32_000 });
+    const tools = await loopTools({
+      servers: {
+        clients: [{ name: "notion", client: notion.client }],
+        close: async () => {},
+      },
+      guard: {
+        allow: [`Read(//${folder.slice(1)}/**)`, "mcp__notion__search"],
+        deny: [],
+      },
+      reads: true,
+      spill,
+    });
+    assert.match(
+      await run(tools, "Read", { file_path: big }),
+      /too large to read whole: read it in parts with offset/,
+    );
+    const part = await run(tools, "Read", {
+      file_path: big,
+      offset: 65_001,
+      limit: 2,
+    });
+    assert.match(part, /^ 65001\trow 65000 /);
+    assert.match(part, /\n 65002\trow 65001 /);
+    assert.match(part, /read on with offset 65003/);
+    // A smaller model reads in smaller parts.
+    const page = await run(tools, "Read", {
+      file_path: big,
+      offset: 1,
+      limit: 2000,
+    });
+    assert.ok(page.length <= 14_400 + 200, String(page.length));
+    assert.match(
+      await run(tools, "Grep", { pattern: "row 69999 ", path: big }),
+      /big\.log:70000:row 69999 /,
+      "one file named alone is searched however large",
+    );
+
+    // A service that answers more than the window takes: a preview and where the whole is.
+    const long = "result ".repeat(4_000);
+    notion.answer(long);
+    const said = await run(tools, "tool_call", {
+      server: "notion",
+      tool: "search",
+      args: { query: "all" },
+    });
+    assert.match(said, /^<persisted-output>/);
+    const path = /Full output saved to: (\S+)/.exec(said)?.[1] ?? "";
+    assert.match(readFileSync(path, "utf8"), /^<untrusted source="notion">/);
+    // Its long line is broken so Read reaches all of it; nothing else changes.
+    assert.ok(
+      readFileSync(path, "utf8").replaceAll("\n", "").includes(long.trim()),
+    );
+  } finally {
+    await notion.close();
+    rmSync(folder, { recursive: true, force: true });
   }
 });

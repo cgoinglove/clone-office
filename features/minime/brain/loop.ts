@@ -24,7 +24,7 @@ import {
 } from "ai";
 import { colleagueRules, colleagueServices } from "../connectors/colleagues.ts";
 import { connectedConnectors } from "../connectors/oauth.ts";
-import { sessionRules } from "../connectors/tools.ts";
+import { serviceTools, sessionRules } from "../connectors/tools.ts";
 import { ownModeRules } from "../gate/autonomy.ts";
 import { TRUSTED_FROM_START } from "../gate/rules.ts";
 import { browserServer } from "../hands/browser.ts";
@@ -35,14 +35,33 @@ import { loadOffice } from "../office/client.ts";
 import { keepAwake } from "../server/awake.ts";
 import { cleanEnv } from "../server/brain.ts";
 import { minimeHome, toolServerPath } from "../server/paths.ts";
+import { profileBlock, readProfile } from "../server/profile.ts";
 import { chatGptAccessToken, OPENAI } from "./chatgpt.ts";
-import { type BrainChoice, providerKey } from "./choice.ts";
+import {
+  type BrainChoice,
+  fallbackChoice,
+  providerKey,
+  sameModel,
+} from "./choice.ts";
 import { contextWindow } from "./context.ts";
 import { reportKept, WATCHED } from "./events.ts";
-import { connectServers, type Guard, loopTools } from "./loop-tools.ts";
-import { provider } from "./providers.ts";
+import { RETRIES, rootError, withFallback } from "./fallback.ts";
+import {
+  connectServers,
+  type Guard,
+  loopTools,
+  type Servers,
+} from "./loop-tools.ts";
+import { modelLabel, provider } from "./providers.ts";
 import { pruneToolResults, underPressure } from "./prune.ts";
 import { logRun } from "./runlog.ts";
+import {
+  prepareScratch,
+  Spill,
+  scratchGuidance,
+  scratchRule,
+  withoutScratch,
+} from "./scratch.ts";
 import {
   ALLOWED_TOOLS,
   SELF_ASKING_TOOLS,
@@ -53,6 +72,16 @@ import {
   systemPrompt,
   toolServerEnv,
 } from "./session.ts";
+import {
+  readingTools,
+  SUBTASK_GUIDE,
+  SUBTASK_READ_TOOLS,
+  SUBTASK_STEPS,
+  SUBTASK_WORK_TOOLS,
+  type Subtask,
+  subtaskTool,
+} from "./subtask.ts";
+import { todoTool } from "./todos.ts";
 
 type ApiChoice = Extract<BrainChoice, { kind: "api" }>;
 
@@ -79,6 +108,14 @@ export function nowLine(now = new Date()): string {
 }
 
 const LOOP_GUIDE = `You run on your person's computer inside Clone Office, through tools. Call a tool whenever it helps rather than guessing; several at once when they do not depend on each other. Some tools ask your person first: if they say no, or nobody is there to ask, do not try another way to do the same thing; say plainly what you could not do. Paths on their computer are full paths ("~/" is their home). Keep answers short and in their language.`;
+
+/**
+ * When to keep a to-do list, as Claude Code's own prompt tells it ("use these tools very frequently
+ * … mark todos as completed as soon as you are done"), and when to send a helper: for a session
+ * with tools, after what every session shares.
+ */
+const STEPS_GUIDE = `## Work of several steps
+For work of three or more steps, or several things asked at once, keep a to-do list with todo_write as you go: write the steps before you start, mark one in progress as you begin it, and mark each completed the moment it is done, never several at the end, so your person sees where you are. A long search or reading that the rest does not depend on can go to a helper with delegate_task, when you have it, keeping this conversation for the answer.`;
 
 /** One kept session: the system prompt it started with and the conversation so far. */
 interface Kept {
@@ -272,8 +309,10 @@ const TEAM_CODES = new Set([
   "office-member-unknown",
 ]);
 
-function failure(error: unknown): string {
-  if (error instanceof LoopError) return error.code;
+function failure(thrown: unknown): string {
+  if (thrown instanceof LoopError) return thrown.code;
+  // What the AI SDK gave up on after its retries is told by the last failure it saw.
+  const error = rootError(thrown);
   if (APICallError.isInstance(error)) {
     // The office's server refused (a team key): its own reason, in the person's language.
     try {
@@ -293,24 +332,88 @@ function failure(error: unknown): string {
   return message.slice(0, 500);
 }
 
+/** What a session is reached through: the model (with its fallback), the vendor's search, options. */
+interface Reached {
+  model: LanguageModel;
+  search?: Record<string, unknown>;
+  options: Record<string, Record<string, JSONValue>>;
+  /** The fallback model, by its id, when there is one (fallback.ts). */
+  fallback?: string;
+}
+
+/**
+ * The model the person chose and, when they picked one, the fallback it moves to when that one is
+ * busy or failing: a fallback that cannot be reached now (signed out, its key gone) is left out
+ * rather than failing the session. `onMove` hears the move.
+ */
+async function reach(
+  choice: ApiChoice,
+  cache: CacheHint,
+  onMove: (label: string, model: string) => void,
+  deps: {
+    model?: LanguageModel;
+    fallbackModel?: LanguageModel;
+    retries?: number;
+  },
+): Promise<Reached> {
+  const main: Reached = deps.model
+    ? { model: deps.model, options: {} }
+    : await languageModel(choice, cache);
+  const picked =
+    choice.fallback && !sameModel(choice.fallback, choice)
+      ? choice.fallback
+      : undefined;
+  if (!picked) return main;
+  const other = deps.fallbackModel
+    ? { model: deps.fallbackModel, options: {} }
+    : await languageModel(fallbackChoice(picked), cache).catch(() => undefined);
+  if (!other) return main;
+  return {
+    ...main,
+    fallback: picked.model,
+    model: withFallback(
+      main.model,
+      { model: other.model, options: other.options },
+      () => onMove(modelLabel(picked.model, picked.provider), picked.model),
+      deps.retries ?? RETRIES,
+    ),
+  };
+}
+
+/** What a helper's session takes from the session that sent it (subtask.ts). */
+interface Helping {
+  servers: Servers;
+  guard: Guard;
+  search?: Record<string, unknown>;
+  scratch?: string;
+  signal: AbortSignal;
+  tools: Subtask["tools"];
+}
+
 /**
  * Runs one session on the chosen model: the same options and result as on Claude Code. `model`
- * stands in for the vendor in tests.
+ * (and `fallbackModel`, `subtaskModel`) stand in for the vendor in tests, `retries` for the AI SDK's
+ * own; `helping` is set for a helper's session, which uses the connections of the one that sent it.
  */
 export async function runLoop(
   options: SessionOptions,
   choice: ApiChoice,
   deps: {
     model?: LanguageModel;
+    fallbackModel?: LanguageModel;
+    subtaskModel?: LanguageModel;
+    retries?: number;
     toolServer?: {
       command: string;
       args: string[];
       env: Record<string, string>;
     };
+    helping?: Helping;
   } = {},
 ): Promise<SessionResult> {
   const actor = options.actor ?? "minime";
-  if (actor === "minime" && !options.resume)
+  const helping = deps.helping;
+  if (actor === "minime" && !options.resume && !helping)
     await maybeRunCurator(new SkillStore(skillsDir()));
   const started = Date.now();
   const release = keepAwake();
@@ -328,21 +431,44 @@ export async function runLoop(
     };
   }
   const id = options.resume && !options.fork ? options.resume : randomUUID();
+  const gate = options.gate;
+  const standing = gate ? undefined : options.standing;
+  const reads = Boolean(gate || standing || helping);
+  // A session that may read has a scratch folder (scratch.ts): its own, the one it was copied
+  // from, or for a helper the one of the session that sent it.
+  const scratch = reads
+    ? (helping?.scratch ??
+      (await prepareScratch(options.resume ?? id).catch(() => undefined)))
+    : undefined;
+  // What every session shares comes first, so a vendor's cache holds across them; what differs by
+  // the session's tools and folder comes last.
   const system =
     options.systemPrompt ??
     previous?.system ??
-    `${LOOP_GUIDE}\n\n${await systemPrompt(undefined, options.language)}`;
-  const gate = options.gate;
-  const standing = gate ? undefined : options.standing;
+    [
+      LOOP_GUIDE,
+      helping
+        ? [SUBTASK_GUIDE, profileBlock(await readProfile())]
+            .filter(Boolean)
+            .join("\n\n")
+        : await systemPrompt(undefined, options.language),
+      ...(helping && options.language
+        ? [`Write your report in ${options.language}.`]
+        : []),
+      ...(reads && !helping ? [STEPS_GUIDE] : []),
+      ...(scratch ? [scratchGuidance(scratch)] : []),
+    ].join("\n\n");
   let text = "";
   let context: number | undefined;
-  let servers: Awaited<ReturnType<typeof connectServers>> | undefined;
+  let moved: string | undefined;
+  let servers: Servers | undefined;
   const finish = async (
     result: Omit<SessionResult, "text" | "sessionId" | "systemPrompt">,
     turns?: number,
   ): Promise<SessionResult> => {
     release();
-    await servers?.close();
+    // A helper's connections are the session's that sent it, which closes them.
+    if (!helping) await servers?.close();
     if (actor === "minime") noteActivity(skillsDir()).catch(() => {});
     logRun({
       at: new Date(started).toISOString(),
@@ -356,20 +482,28 @@ export async function runLoop(
       turns,
       context,
       usage: result.usage,
+      ...(moved ? { fallback: moved } : {}),
+      ...(options.within
+        ? { parent: options.within.session, within: options.within.purpose }
+        : {}),
     }).catch(() => {});
     return { text, sessionId: id, systemPrompt: system, context, ...result };
   };
   try {
-    const {
-      model,
-      search,
-      options: providerOptions,
-    } = deps.model
-      ? { model: deps.model, search: undefined, options: {} }
-      : await languageModel(choice, cacheHint(options.purpose, system));
+    const reached = await reach(
+      choice,
+      cacheHint(options.purpose, withoutScratch(system)),
+      (label, model) => {
+        moved = model;
+        options.onEvent?.({ type: "fallback", model: label });
+      },
+      deps,
+    );
+    const { model, search, options: providerOptions } = reached;
     // The same lines as a Claude Code session: its own tools always; with the gate, asking and
-    // reading too; with standing rules, what the person already allowed and nothing more.
-    const guard: Guard = {
+    // reading too; with standing rules, what the person already allowed and nothing more. A helper
+    // goes by the rules of the session that sent it.
+    const guard: Guard = helping?.guard ?? {
       allow: [
         ...ALLOWED_TOOLS,
         ...(gate
@@ -393,73 +527,154 @@ export async function runLoop(
                 ])),
               ]
             : []),
+        // Its own scratch folder it reads without asking.
+        ...(scratch ? [scratchRule(scratch)] : []),
       ],
       deny: (gate ?? standing)?.deny ?? [],
       ...(gate
         ? { gate: { url: gate.url, secret: gate.secret, chat: gate.chat } }
         : {}),
     };
-    const reads = Boolean(gate || standing);
     // A colleague's request reads in the services let for it, and changes nothing there.
     const colleague =
-      options.colleagueReads && actor === "minime"
+      options.colleagueReads && actor === "minime" && !helping
         ? await colleagueServices()
         : [];
     const colleagueRule = await colleagueRules(colleague);
-    guard.allow.push(...colleagueRule.allow);
+    if (!helping) guard.allow.push(...colleagueRule.allow);
     // The person's own work: their conversation (watched) or one of their flows.
     const own =
       options.connectors &&
       actor === "minime" &&
-      options.audience !== "colleagues";
-    servers = await connectServers({
-      toolServer: deps.toolServer ?? {
-        command: process.execPath,
-        args: ["--no-warnings", toolServerPath()],
-        env: {
-          ...(cleanEnv() as Record<string, string>),
-          CLONE_OFFICE_HOME: minimeHome(),
-          ...toolServerEnv(
-            actor,
-            gate,
-            options.audience,
-            [],
-            sessionOrigin(options),
-            own,
-          ),
+      options.audience !== "colleagues" &&
+      !helping;
+    servers =
+      helping?.servers ??
+      (await connectServers({
+        toolServer: deps.toolServer ?? {
+          command: process.execPath,
+          args: ["--no-warnings", toolServerPath()],
+          env: {
+            ...(cleanEnv() as Record<string, string>),
+            CLONE_OFFICE_HOME: minimeHome(),
+            ...toolServerEnv(
+              actor,
+              gate,
+              options.audience,
+              [],
+              sessionOrigin(options),
+              own,
+              scratch,
+            ),
+          },
         },
-      },
-      connectors:
-        options.connectors && actor === "minime"
-          ? await connectedConnectors().catch(() => [])
-          : colleague,
-      ...(own && !deps.toolServer
-        ? { browser: browserServer({ watched: Boolean(gate) }) }
-        : {}),
-    });
-    const tools = {
+        connectors:
+          options.connectors && actor === "minime"
+            ? await connectedConnectors().catch(() => [])
+            : colleague,
+        ...(own && !deps.toolServer
+          ? { browser: browserServer({ watched: Boolean(gate) }) }
+          : {}),
+      }));
+    const timeout = AbortSignal.any([
+      AbortSignal.timeout(options.timeoutMs ?? (gate ? 15 * 60_000 : 180_000)),
+      ...(helping ? [helping.signal] : []),
+    ]);
+    // When the window fills, earlier tool results are cut before the next step (prune.ts), and a
+    // result too long for it goes to the scratch folder whole (scratch.ts).
+    const window = contextWindow(choice);
+    const spill = new Spill({ dir: scratch, window });
+    const tools: ToolSet = {
       ...(await loopTools({
         servers,
         guard,
         reads,
-        ...(reads ? {} : { only: new Set(ALLOWED_TOOLS) }),
-        readsOnly: colleagueRule.reads,
+        ...(helping
+          ? {
+              // A helper reads what the clone keeps, and for work uses its shell; the services it
+              // reaches only read unless it was sent to work (subtask.ts).
+              only: new Set([
+                ...SUBTASK_READ_TOOLS,
+                ...(helping.tools === "work" ? SUBTASK_WORK_TOOLS : []),
+              ]),
+              services: true,
+              readsOnly: await readingTools(
+                helping.servers.clients.map(({ name }) => name),
+                (service) => serviceTools(service),
+              ).then((map) =>
+                helping.tools === "work"
+                  ? new Map([...map].filter(([name]) => name === "browser"))
+                  : map,
+              ),
+            }
+          : reads
+            ? { readsOnly: colleagueRule.reads }
+            : { only: new Set(ALLOWED_TOOLS), readsOnly: colleagueRule.reads }),
+        spill,
         onResult: (tool, input, raw) => {
           if (WATCHED.has(tool)) reportKept(tool, input, raw, options.onEvent);
         },
       })),
       // Searching the web keeps nothing and is the person's from the start, where the vendor has it.
-      ...(reads && search ? (search as ToolSet) : {}),
+      ...(reads && (helping?.search ?? search)
+        ? ((helping?.search ?? search) as ToolSet)
+        : {}),
+      // The to-do list, which the person sees as it goes (todos.ts); not a helper's own.
+      ...(reads && !helping
+        ? {
+            todo_write: todoTool((todos) =>
+              options.onEvent?.({ type: "todos", todos }),
+            ),
+          }
+        : {}),
     };
+    // Helpers, in the person's own work only, never from a helper (subtask.ts).
+    const connected = servers;
+    if (own)
+      tools.delegate_task = subtaskTool({
+        // Its shell and workspace are the clone's in the person's own work (hands/shell.ts).
+        work: true,
+        onState: (call, description, state) =>
+          options.onEvent?.({
+            type: "subtask",
+            id: call,
+            description,
+            state,
+          }),
+        run: (task) =>
+          runLoop(
+            {
+              prompt: task.prompt,
+              purpose: "subtask",
+              language: options.language,
+              maxTurns: SUBTASK_STEPS,
+              persist: false,
+              timeoutMs: Math.max(
+                30_000,
+                (options.timeoutMs ?? (gate ? 15 * 60_000 : 180_000)) -
+                  (Date.now() - started),
+              ),
+              within: { session: id, purpose: options.purpose ?? "task" },
+            },
+            choice,
+            {
+              ...(deps.subtaskModel ? { model: deps.subtaskModel } : {}),
+              retries: deps.retries,
+              helping: {
+                servers: connected,
+                guard,
+                search,
+                scratch,
+                signal: timeout,
+                tools: task.tools,
+              },
+            },
+          ),
+      });
     const messages: ModelMessage[] = [
       ...(previous?.messages ?? []),
       { role: "user", content: `${nowLine()}\n\n${options.prompt}` },
     ];
-    const timeout = AbortSignal.timeout(
-      options.timeoutMs ?? (gate ? 15 * 60_000 : 180_000),
-    );
-    // When the window fills, earlier tool results are cut before the next step (prune.ts).
-    const window = contextWindow(choice);
     // Words read between steps, and where among the answer's messages each came, to keep them.
     const heard: { at: number; note: ModelMessage }[] = [];
     const withSteps = (answer: ModelMessage[]) => {
@@ -469,6 +684,7 @@ export async function runLoop(
       });
       return out;
     };
+    const maxRetries = deps.retries ?? RETRIES;
     const run = streamText({
       model,
       instructions: system,
@@ -476,8 +692,10 @@ export async function runLoop(
       tools,
       stopWhen: stepCountIs(options.maxTurns ?? 6),
       abortSignal: timeout,
+      maxRetries,
       providerOptions,
       prepareStep: async ({ messages: going, steps }) => {
+        spill.nextStep();
         const pressed = underPressure(
           going,
           window,
@@ -521,14 +739,16 @@ export async function runLoop(
     if (!options.jsonSchema && !text.trim()) {
       const nudge: ModelMessage = {
         role: "user",
-        content:
-          "Without calling any more tools, give your person your answer now: what you found and did, and what is left.",
+        content: helping
+          ? "Without calling any more tools, give your report now: what you found and did, and what is left."
+          : "Without calling any more tools, give your person your answer now: what you found and did, and what is left.",
       };
       const closing = streamText({
         model,
         instructions: system,
         messages: [...messages, ...withSteps(answered), nudge],
         abortSignal: timeout,
+        maxRetries,
         providerOptions,
       });
       for await (const part of closing.fullStream) {
@@ -569,6 +789,7 @@ export async function runLoop(
           schema: jsonSchema(options.jsonSchema as never),
         }),
         abortSignal: timeout,
+        maxRetries,
         providerOptions,
       });
       for await (const part of shaped.fullStream)

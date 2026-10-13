@@ -94,7 +94,9 @@
     "skill-changed-here": "追加したあとにこのスキルを変更したため、オフィスの版で上書きしませんでした。",
     "skill-not-shareable": "このスキルはアプリに入っていたものか同僚から来たものなので、あなたからは共有できません。",
     "skill-name-invalid": "スキルの名前として使えません。名前に使えるのは小文字の英字、数字、ドット、ハイフン、アンダースコアで、英字か数字で始めます。",
-    "not-forgotten": "今は外せませんでした。少し待ってからもう一度お試しください。"
+    "not-forgotten": "今は外せませんでした。少し待ってからもう一度お試しください。",
+    "brain-fallback-unfit": "いま使っているモデルの予備にはできません。Claudeのサブスクリプションを使う場合、予備も別のClaudeにしてください。",
+    "brain-fallback-same": "いま使っているモデルとは別のモデルを選んでください。"
   },
   "start": {
     "title": "はじめる",
@@ -358,7 +360,20 @@
     "fromMeeting": "会議での発言",
     "fromColleagueThemselves": "同僚本人が答えました",
     "noteMissed": "未読：先に返答が終わりました。",
-    "noteResend": "もう一度送る"
+    "noteResend": "もう一度送る",
+    "todos": "やること",
+    "todosDone": "{total}件中{done}件完了",
+    "todoState": {
+      "pending": "未着手",
+      "in_progress": "対応中",
+      "completed": "完了"
+    },
+    "subtask": {
+      "running": "ヘルパーが対応中：{description}",
+      "done": "ヘルパーが終えました：{description}",
+      "failed": "ヘルパーが止まりました：{description}"
+    },
+    "fallback": "いつものモデルが混み合っていたため、{model}でこの返答を仕上げました。"
   },
   "ask": {
     "needsYou": "要対応",
@@ -776,7 +791,13 @@
       "teamNote": "チームのキーで · {model}"
     },
     "ourTeam": "チーム",
-    "teamVia": "{vendor} · チームのキー"
+    "teamVia": "{vendor} · チームのキー",
+    "fallback": {
+      "title": "予備のモデル",
+      "hint": "いつものモデルが混み合っていたり止まっていたりすると、クローンはこのモデルで返答を仕上げ、次のメッセージからはいつものモデルに戻ります。",
+      "none": "予備のモデルなし",
+      "off": "なし"
+    }
   },
   "messenger": {
     "title": "スマホから",

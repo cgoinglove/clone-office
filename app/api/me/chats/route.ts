@@ -53,6 +53,10 @@ export async function GET(request: Request) {
     carried: Boolean(chat.info.summary),
     archived: Boolean(chat.info.archived),
     messages: chat.messages,
+    // The clone's to-do list as it last stood, and after how many messages it came.
+    ...(chat.info.todos?.length
+      ? { todos: chat.info.todos, todosAt: chat.info.todosAt ?? 0 }
+      : {}),
   });
 }
 

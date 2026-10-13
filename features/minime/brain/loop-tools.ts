@@ -5,9 +5,11 @@
 // WebFetch). What the person has not let it do alone is asked on their screen through the gate;
 // with nobody to ask, it is refused. Folders they kept out stay out whatever is asked.
 
-import { glob, readdir, readFile, stat } from "node:fs/promises";
+import { createReadStream } from "node:fs";
+import { glob, open, readdir, readFile, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
+import { createInterface } from "node:readline";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -18,6 +20,7 @@ import { accessToken } from "../connectors/oauth.ts";
 import { BROWSER, BROWSER_NEVER } from "../hands/browser.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
 import { workspaceDir } from "../server/paths.ts";
+import { cut, type Spill } from "./scratch.ts";
 import { untrusted } from "./untrusted.ts";
 import { TOOL_WAIT_MS } from "./waits.ts";
 
@@ -99,42 +102,116 @@ export function keptOut(
 
 const READ_LINES = 2000;
 const LINE_CHARS = 2000;
+/** Past this a file is read in parts only (offset and limit), a line at a time, never whole. */
 const FILE_BYTES = 5 * 1024 * 1024;
 const FOUND_MAX = 200;
 const GREP_FILES = 20_000;
 const GREP_MATCHES = 100;
 const GREP_MS = 15_000;
+/** The largest file searched while walking a folder, and the largest searched when named alone. */
+const GREP_FILE_BYTES = 1024 * 1024;
+const GREP_ONE_FILE_BYTES = 50 * 1024 * 1024;
 const SKIPPED = new Set([".git", "node_modules", ".next", "dist", "build"]);
-const PAGE_CHARS = 40_000;
+/** The most of a page taken from the network. */
+const PAGE_BYTES = 3_000_000;
 /** The most one Read gives at once (2,000 lines of 2,000 characters would be four million). */
 const READ_CHARS = 60_000;
 
-async function readTool(input: Record<string, unknown>): Promise<string> {
+/** What a local tool is told of its session: how long one answer of it may be. */
+interface LocalContext {
+  chars: number;
+}
+
+/** Whether a file is text, from its first bytes. */
+async function isText(path: string): Promise<boolean> {
+  const handle = await open(path, "r");
+  try {
+    const head = Buffer.alloc(8000);
+    const { bytesRead } = await handle.read(head, 0, head.length, 0);
+    return !head.subarray(0, bytesRead).includes(0);
+  } finally {
+    await handle.close();
+  }
+}
+
+/** A line as Claude Code's Read numbers it, a long one cut at LINE_CHARS. */
+const numbered = (at: number, line: string) =>
+  `${String(at).padStart(6)}\t${line.length > LINE_CHARS ? `${line.slice(0, LINE_CHARS)}…` : line}`;
+
+async function readTool(
+  input: Record<string, unknown>,
+  context: LocalContext = { chars: READ_CHARS },
+): Promise<string> {
   const path = fullPath(input.file_path);
   const info = await stat(path).catch(() => undefined);
   if (!info) return `No file at ${path}.`;
   if (info.isDirectory()) return `${path} is a folder: list it with Glob.`;
-  if (info.size > FILE_BYTES)
-    return `${path} is too large to read (${Math.round(info.size / 1048576)} MB).`;
-  const buffer = await readFile(path);
-  if (buffer.subarray(0, 8000).includes(0))
-    return `${path} is not text (${info.size} bytes).`;
-  const lines = buffer.toString("utf8").split("\n");
+  if (!(await isText(path))) return `${path} is not text (${info.size} bytes).`;
   const start = Math.max(0, Number(input.offset ?? 1) - 1 || 0);
   const count = Math.max(1, Number(input.limit ?? READ_LINES) || READ_LINES);
+  // A smaller model reads in smaller parts, so one read never fills its window.
+  const chars = Math.min(READ_CHARS, context.chars);
+  if (info.size > FILE_BYTES) {
+    if (input.offset === undefined && input.limit === undefined)
+      return `${path} is ${Math.round(info.size / 1048576)} MB, too large to read whole: read it in parts with offset (the first line to read) and limit (how many lines), or search it with Grep.`;
+    return readLines(path, start, count, chars);
+  }
+  const lines = (await readFile(path, "utf8")).split("\n");
   const shown: string[] = [];
   let used = 0;
   for (const [i, line] of lines.slice(start, start + count).entries()) {
-    const numbered = `${String(start + i + 1).padStart(6)}\t${line.length > LINE_CHARS ? `${line.slice(0, LINE_CHARS)}…` : line}`;
-    // A long file is read in parts, so one read never fills a smaller model's window.
-    if (used + numbered.length > READ_CHARS && shown.length) break;
-    shown.push(numbered);
-    used += numbered.length + 1;
+    const row = numbered(start + i + 1, line);
+    if (used + row.length > chars && shown.length) break;
+    shown.push(row);
+    used += row.length + 1;
   }
   const rest = lines.length - start - shown.length;
   return `${shown.join("\n")}${
     rest > 0
       ? `\n… ${rest} more lines (read on with offset ${start + shown.length + 1})`
+      : ""
+  }`;
+}
+
+/** Some lines of a large file, read a line at a time from its start rather than whole. */
+async function readLines(
+  path: string,
+  start: number,
+  count: number,
+  chars: number,
+): Promise<string> {
+  const stream = createReadStream(path, { encoding: "utf8" });
+  const lines = createInterface({
+    input: stream,
+    crlfDelay: Number.POSITIVE_INFINITY,
+  });
+  const shown: string[] = [];
+  let at = 0;
+  let used = 0;
+  let more = false;
+  try {
+    for await (const line of lines) {
+      if (at++ < start) continue;
+      const row = numbered(at, line);
+      if (
+        shown.length >= count ||
+        (used + row.length > chars && shown.length)
+      ) {
+        more = true;
+        break;
+      }
+      shown.push(row);
+      used += row.length + 1;
+    }
+  } finally {
+    lines.close();
+    stream.destroy();
+  }
+  if (!shown.length)
+    return `${path} has ${at} lines: nothing from line ${start + 1}.`;
+  return `${shown.join("\n")}${
+    more
+      ? `\n… more lines (read on with offset ${start + shown.length + 1})`
       : ""
   }`;
 }
@@ -189,7 +266,7 @@ async function grepTool(input: Record<string, unknown>): Promise<string> {
   const look = async (path: string) => {
     if (matches.length >= GREP_MATCHES) return;
     const info = await stat(path).catch(() => undefined);
-    if (!info || info.size > 1024 * 1024) return;
+    if (!info || info.size > GREP_FILE_BYTES) return;
     const text = await readFile(path, "utf8").catch(() => "");
     if (text.includes("\u0000")) return;
     text.split("\n").forEach((line, index) => {
@@ -197,7 +274,30 @@ async function grepTool(input: Record<string, unknown>): Promise<string> {
         matches.push(`${path}:${index + 1}:${line.slice(0, 300)}`);
     });
   };
-  if (one?.isFile()) await look(base);
+  // One file named alone (a long answer saved in the scratch folder, a log) is searched a line at
+  // a time, however large it is.
+  const lookThrough = async (path: string, size: number) => {
+    if (size > GREP_ONE_FILE_BYTES || !(await isText(path).catch(() => false)))
+      return;
+    const stream = createReadStream(path, { encoding: "utf8" });
+    const lines = createInterface({
+      input: stream,
+      crlfDelay: Number.POSITIVE_INFINITY,
+    });
+    let index = 0;
+    try {
+      for await (const line of lines) {
+        index++;
+        if (pattern.test(line))
+          matches.push(`${path}:${index}:${line.slice(0, 300)}`);
+        if (matches.length >= GREP_MATCHES || Date.now() > until) break;
+      }
+    } finally {
+      lines.close();
+      stream.destroy();
+    }
+  };
+  if (one?.isFile()) await lookThrough(base, one.size);
   while (
     folders.length &&
     matches.length < GREP_MATCHES &&
@@ -219,7 +319,11 @@ async function grepTool(input: Record<string, unknown>): Promise<string> {
     }
   }
   return matches.length
-    ? matches.join("\n")
+    ? `${matches.join("\n")}${
+        matches.length >= GREP_MATCHES
+          ? `\n… stopped at ${GREP_MATCHES} matches: narrow the pattern, the folder or glob`
+          : ""
+      }`
     : `No match for ${pattern} under ${base}.`;
 }
 
@@ -260,11 +364,12 @@ async function webFetchTool(input: Record<string, unknown>): Promise<string> {
   if (response instanceof Error)
     return `The page could not be opened: ${response.message}`;
   const type = response.headers.get("content-type") ?? "";
-  const body = (await response.text().catch(() => "")).slice(0, 3_000_000);
+  const body = (await response.text().catch(() => "")).slice(0, PAGE_BYTES);
   const text = /html/i.test(type) ? pageText(body) : body;
+  // The whole page: a long one goes to the session's scratch folder, with a preview (scratch.ts).
   return untrusted(
     `web ${response.url}`,
-    `${response.status} ${response.url}\n\n${text.slice(0, PAGE_CHARS)}${text.length > PAGE_CHARS ? "\n…" : ""}`,
+    `${response.status} ${response.url}\n\n${text}`,
   );
 }
 
@@ -273,12 +378,18 @@ const LOCAL_TOOLS: Record<
   {
     description: string;
     schema: Record<string, unknown>;
-    run: (input: Record<string, unknown>) => Promise<string>;
+    run: (
+      input: Record<string, unknown>,
+      context: LocalContext,
+    ) => Promise<string>;
+    /** Its answer is already in parts (Read): never saved aside, or reading it back would loop. */
+    paged?: true;
   }
 > = {
   Read: {
+    paged: true,
     description:
-      "Read a text file on your person's computer, by its full path. Lines come numbered; read a long file in parts with offset (the first line to read) and limit.",
+      "Read a text file on your person's computer, by its full path. Lines come numbered; read a long file in parts with offset (the first line to read) and limit (how many lines).",
     schema: {
       type: "object",
       properties: {
@@ -340,12 +451,12 @@ export const mcpToolName = (server: string, tool: string) =>
   `mcp__${server}__${tool.replace(/[^a-zA-Z0-9_-]/g, "_")}`.slice(0, 64);
 
 /**
- * The most of one tool's answer a turn takes: a connected service can answer a whole database, and
- * a smaller model's window would fill at once. The cut says so, so the model can ask for less.
+ * The most of one tool's answer a session without a scratch folder takes: a connected service can
+ * answer a whole database. With a folder, a long answer is saved there whole instead (scratch.ts).
  */
 export const RESULT_CHARS = 60_000;
 
-/** What a tool call answered, as text for the model. */
+/** What a tool call answered, as text for the model, whole: the session keeps it in bounds. */
 function resultText(result: { content?: unknown; isError?: unknown }): string {
   const parts = Array.isArray(result.content) ? result.content : [];
   const text = parts
@@ -360,12 +471,12 @@ function resultText(result: { content?: unknown; isError?: unknown }): string {
               : "",
     )
     .join("");
-  const kept =
-    text.length > RESULT_CHARS
-      ? `${text.slice(0, RESULT_CHARS)}\n\n[Cut: the answer was ${text.length} characters and only the first ${RESULT_CHARS} are shown. Ask for less, or for the next part.]`
-      : text;
-  return result.isError ? `Error: ${kept}` : kept;
+  return result.isError ? `Error: ${text}` : text;
 }
+
+/** A result as the model gets it: through the session's scratch folder, or cut without one. */
+const bounded = (spill: Spill | undefined, tool: string, text: string) =>
+  spill ? spill.take(tool, text) : Promise.resolve(cut(text, RESULT_CHARS));
 
 export interface Servers {
   clients: { name: string; client: Client }[];
@@ -525,6 +636,7 @@ function servicePair(
   services: Service[],
   options: {
     guard: Guard;
+    spill?: Spill;
     onResult?: (
       tool: string,
       input: Record<string, unknown>,
@@ -657,7 +769,7 @@ function servicePair(
           ),
         );
         options.onResult?.(name, input, text);
-        return text;
+        return bounded(options.spill, name, text);
       },
     }),
   };
@@ -675,12 +787,19 @@ export async function loopTools(options: {
   reads: boolean;
   /** Only these of the mini-me's own tools are offered (a session with nobody to ask or answer). */
   only?: Set<string>;
+  /** Connected services are offered: by default only when the clone's own tools are not narrowed. */
+  services?: boolean;
   /**
    * A colleague's request: for each service here, only these of its tools (its reading ones, by
    * their own names) are offered; anything else it lists is not (connectors/colleagues.ts).
    */
   readsOnly?: Map<string, Set<string>>;
-  /** A call that finished: its name, input and the text it answered. */
+  /**
+   * The session's scratch folder (scratch.ts): an answer too long for its window is saved there
+   * whole and the model reads a preview and the path. Without it, a long answer is cut.
+   */
+  spill?: Spill;
+  /** A call that finished: its name, input and the whole text it answered. */
   onResult?: (
     tool: string,
     input: Record<string, unknown>,
@@ -689,13 +808,14 @@ export async function loopTools(options: {
 }): Promise<ToolSet> {
   const tools: ToolSet = {};
   const services: Service[] = [];
+  const withServices = options.services ?? !options.only;
   for (const { name: server, client } of options.servers.clients) {
     let cursor: string | undefined;
     do {
       const page = await client.listTools(cursor ? { cursor } : {});
       // A connected service's tools are named, not loaded: see servicePair.
       if (server !== "minime") {
-        if (!options.only) {
+        if (withServices) {
           const only = options.readsOnly?.get(server);
           const offered = (
             only ? page.tools.filter((tool) => only.has(tool.name)) : page.tools
@@ -734,7 +854,7 @@ export async function loopTools(options: {
               ),
             );
             options.onResult?.(name, input, text);
-            return text;
+            return bounded(options.spill, name, text);
           },
         });
       }
@@ -743,6 +863,9 @@ export async function loopTools(options: {
   }
   if (services.some((entry) => entry.tools.length))
     Object.assign(tools, servicePair(services, options));
+  const context: LocalContext = {
+    chars: options.spill?.resultLimit ?? READ_CHARS,
+  };
   if (options.reads)
     for (const [name, local] of Object.entries(LOCAL_TOOLS))
       tools[name] = dynamicTool({
@@ -751,10 +874,12 @@ export async function loopTools(options: {
         execute: async (raw) => {
           const input = (raw ?? {}) as Record<string, unknown>;
           const text = await guarded(options.guard, name, input, () =>
-            local.run(input).catch((error: Error) => `Error: ${error.message}`),
+            local
+              .run(input, context)
+              .catch((error: Error) => `Error: ${error.message}`),
           );
           options.onResult?.(name, input, text);
-          return text;
+          return local.paged ? text : bounded(options.spill, name, text);
         },
       });
   return tools;

@@ -139,6 +139,25 @@ export const CLAUDE_CODE_MODELS: ModelChoice[] = [
   { id: "fable", label: "Claude Fable", tier: "top" },
 ];
 
+/**
+ * A model as the person reads its name: the vendor's label for it ("Claude Haiku", "GPT 6.1 Sol"),
+ * else its id; a model reached by key or plan is named with its vendor.
+ */
+export function modelLabel(model: string, id?: ProviderId): string {
+  // Claude Code names a model by its alias or its full id ("claude-sonnet-5-5"): its family.
+  if (!id)
+    return (
+      CLAUDE_CODE_MODELS.find(
+        (one) => one.id === model || model.split("-").includes(one.id),
+      )?.label ?? model
+    );
+  const entry = provider(id);
+  const label = entry?.models.find((one) => one.id === model)?.label ?? model;
+  return entry && !label.startsWith(entry.name)
+    ? `${entry.name} ${label}`
+    : label;
+}
+
 /** A vendor's lighter model, for background work when the person wants it light. */
 export function lighterModel(id: ProviderId, model: string): string {
   const small = provider(id)?.models.find((one) => one.tier === "small");

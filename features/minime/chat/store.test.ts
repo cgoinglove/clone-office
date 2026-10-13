@@ -13,6 +13,7 @@ import {
   readChat,
   renameChat,
   setSession,
+  setTodos,
 } from "./store";
 import { recap } from "./turn";
 
@@ -65,6 +66,34 @@ test("a conversation keeps its messages, its brain session and what it was carri
     ["Sum up what I decided this week", "Three things."],
     "the record stays whole",
   );
+});
+
+test("a conversation opens on the clone's last to-do list, where it was written, and says when the backup model answered", async () => {
+  const chat = await createChat("Plan the launch");
+  await appendMessage(chat.id, "me", "Plan the launch");
+  await setTodos(chat.id, [
+    { content: "List the steps", status: "in_progress" },
+    { content: "Write it up", status: "pending" },
+  ]);
+  await appendMessage(chat.id, "fallback", "OpenAI GPT 6.1 Sol");
+  await setTodos(chat.id, [
+    { content: "List the steps", status: "completed" },
+    { content: "Write it up", status: "completed" },
+  ]);
+  await appendMessage(chat.id, "minime", "Here is the plan.");
+  const read = await readChat(chat.id);
+  assert.ok(read);
+  assert.deepEqual(
+    read.info.todos?.map((todo) => todo.status),
+    ["completed", "completed"],
+    "the last list",
+  );
+  assert.equal(read.info.todosAt, 2, "after the words before it");
+  assert.deepEqual(
+    read.messages.map((m) => m.role),
+    ["me", "fallback", "minime"],
+  );
+  assert.equal(read.info.turns, 1);
 });
 
 test("conversations are listed latest first, and ids cannot leave the folder", async () => {

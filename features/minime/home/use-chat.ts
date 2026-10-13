@@ -8,6 +8,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { GateAsk } from "../ask-card";
+import type { Todo } from "../brain/todos";
 import { savedText } from "../saved-text";
 import { stream } from "../stream";
 
@@ -31,6 +32,18 @@ export type Turn =
   | { id: number; kind: "told"; text: string }
   | { id: number; kind: "meeting"; text: string }
   | { id: number; kind: "flow"; text: string; at: string }
+  /** The clone's to-do list (brain/todos.ts): one card, the latest, kept current while it works. */
+  | { id: number; kind: "todos"; todos: Todo[]; live: boolean }
+  /** A helper it sent off (brain/subtask.ts), by its call's id. */
+  | {
+      id: number;
+      kind: "subtask";
+      call: string;
+      text: string;
+      state: "running" | "done" | "failed";
+    }
+  /** The answer came from the fallback model, named (brain/fallback.ts). */
+  | { id: number; kind: "fallback"; text: string }
   | {
       id: number;
       kind: "ask";
@@ -100,6 +113,9 @@ export function useChat(lang: string) {
       id: string;
       title?: string;
       messages: { role: string; text: string; at: string; person?: boolean }[];
+      /** The clone's to-do list as it last stood, after this many messages. */
+      todos?: Todo[];
+      todosAt?: number;
     };
     const waiting = (await fetch(
       `/api/me/gate?chat=${encodeURIComponent(id)}`,
@@ -111,21 +127,35 @@ export function useChat(lang: string) {
     };
     setChatId(data.id);
     setOpenTitle(data.title);
+    const said = data.messages.map((m): Turn => {
+      const id = nextId.current++;
+      if (m.role === "me") return { id, kind: "me", text: m.text };
+      if (m.role === "minime")
+        return { id, kind: "minime", text: m.text, live: false };
+      if (m.role === "saved") return { id, kind: "saved", text: m.text };
+      if (m.role === "office")
+        return { id, kind: "office", text: m.text, person: m.person };
+      if (m.role === "told") return { id, kind: "told", text: m.text };
+      if (m.role === "meeting") return { id, kind: "meeting", text: m.text };
+      if (m.role === "flow")
+        return { id, kind: "flow", text: m.text, at: m.at };
+      if (m.role === "fallback") return { id, kind: "fallback", text: m.text };
+      return { id, kind: "error", text: m.text };
+    });
+    // The last to-do list, where it was written: after the words that asked for the work.
+    if (data.todos?.length)
+      said.splice(
+        Math.min(said.length, Math.max(0, data.todosAt ?? said.length)),
+        0,
+        {
+          id: nextId.current++,
+          kind: "todos",
+          todos: data.todos,
+          live: false,
+        },
+      );
     setTurns([
-      ...data.messages.map((m): Turn => {
-        const id = nextId.current++;
-        if (m.role === "me") return { id, kind: "me", text: m.text };
-        if (m.role === "minime")
-          return { id, kind: "minime", text: m.text, live: false };
-        if (m.role === "saved") return { id, kind: "saved", text: m.text };
-        if (m.role === "office")
-          return { id, kind: "office", text: m.text, person: m.person };
-        if (m.role === "told") return { id, kind: "told", text: m.text };
-        if (m.role === "meeting") return { id, kind: "meeting", text: m.text };
-        if (m.role === "flow")
-          return { id, kind: "flow", text: m.text, at: m.at };
-        return { id, kind: "error", text: m.text };
-      }),
+      ...said,
       ...(waiting.asks ?? []).map(
         (pending): Turn => ({
           id: nextId.current++,
@@ -228,6 +258,8 @@ export function useChat(lang: string) {
       push({ kind: "me", text });
       let reply = push({ kind: "minime", text: "", live: true });
       let note: number | undefined;
+      // This answer's to-do list: one card, put where it was first written and kept current.
+      let list: number | undefined;
       const finishReply = () => {
         const done = reply;
         setTurns((all) =>
@@ -243,6 +275,17 @@ export function useChat(lang: string) {
                 : turn,
             ),
         );
+      };
+      /** Puts a line just above the answer still to come, as the clone works toward it. */
+      const beforeReply = (turn: TurnInput) => {
+        const id = nextId.current++;
+        setTurns((all) => {
+          const at = all.findIndex((one) => one.id === reply);
+          const next = [...all];
+          next.splice(at < 0 ? next.length : at, 0, { ...turn, id } as Turn);
+          return next;
+        });
+        return id;
       };
       try {
         await stream(
@@ -264,22 +307,47 @@ export function useChat(lang: string) {
               });
               reply = push({ kind: "minime", text: "", live: true });
             }
-            if (event.type === "carrying") {
+            if (event.type === "carrying")
               // Shown above the answer that is still to come.
-              note = nextId.current++;
-              const id = note;
-              const carrying = t("chat.carrying");
-              setTurns((all) => {
-                const at = all.findIndex((turn) => turn.id === reply);
-                const next = [...all];
-                next.splice(at < 0 ? next.length : at, 0, {
-                  id,
-                  kind: "note",
-                  text: carrying,
-                });
-                return next;
-              });
+              note = beforeReply({ kind: "note", text: t("chat.carrying") });
+            if (event.type === "todos") {
+              const todos = event.todos as Todo[];
+              const card = list;
+              if (card !== undefined)
+                setTurns((all) =>
+                  all.map((turn) =>
+                    turn.id === card && turn.kind === "todos"
+                      ? { ...turn, todos }
+                      : turn,
+                  ),
+                );
+              else {
+                // A new list takes the place of the last one: the conversation shows one.
+                setTurns((all) => all.filter((turn) => turn.kind !== "todos"));
+                list = beforeReply({ kind: "todos", todos, live: true });
+              }
             }
+            if (event.type === "subtask") {
+              const call = String(event.id);
+              const state = event.state as "running" | "done" | "failed";
+              if (state === "running")
+                beforeReply({
+                  kind: "subtask",
+                  call,
+                  text: String(event.description ?? ""),
+                  state,
+                });
+              else
+                setTurns((all) =>
+                  all.map((turn) =>
+                    turn.kind === "subtask" && turn.call === call
+                      ? { ...turn, state }
+                      : turn,
+                  ),
+                );
+            }
+            if (event.type === "fallback")
+              beforeReply({ kind: "fallback", text: String(event.model) });
             if (event.type === "carried") {
               const carried = t("chat.carried");
               setTurns((all) =>
@@ -338,6 +406,14 @@ export function useChat(lang: string) {
         push({ kind: "error", text: (error as Error).message });
       } finally {
         finishReply();
+        // Nothing on the list is under way once the answer is over.
+        setTurns((all) =>
+          all.map((turn) =>
+            turn.kind === "todos" && turn.live
+              ? { ...turn, live: false }
+              : turn,
+          ),
+        );
         setBusy(false);
         busyRef.current = false;
         // Words written meanwhile that could not wait at the server go now, as the next turn.

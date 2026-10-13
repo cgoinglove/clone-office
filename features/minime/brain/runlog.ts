@@ -21,6 +21,11 @@ export interface RunRecord {
   context?: number;
   usage?: Record<string, number>;
   cost_usd?: number;
+  /** The model the session moved to when the picked one was busy or failing (fallback.ts). */
+  fallback?: string;
+  /** A sub-task's session: the session that sent it, and what that one was for. */
+  parent?: string;
+  within?: string;
 }
 
 const ROTATE_AT = 2 * 1024 * 1024;
@@ -116,6 +121,7 @@ export async function usageSummary(
       let line: {
         at?: string;
         purpose?: string;
+        within?: string;
         ok?: boolean;
         cost_usd?: number;
         usage?: Record<string, number | undefined>;
@@ -126,7 +132,8 @@ export async function usageSummary(
         continue;
       }
       if (!line.at || Date.parse(line.at) < since) continue;
-      const group = GROUPS[line.purpose ?? ""] ?? "other";
+      // A sub-task counts with the work that sent it (a conversation, a flow).
+      const group = GROUPS[line.within ?? line.purpose ?? ""] ?? "other";
       const total = totals.get(group) ?? {
         group,
         runs: 0,

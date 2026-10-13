@@ -14,6 +14,7 @@ import {
   type SessionEvent,
   type SessionGate,
 } from "../brain/session.ts";
+import { type Todo, todoLines, todosOpen } from "../brain/todos.ts";
 import { type Ask, gateSecret, onAsk } from "../gate/gate.ts";
 import { denyRules, loadTrust } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
@@ -29,6 +30,7 @@ import {
   markReviewed,
   readChat,
   setSession,
+  setTodos,
 } from "./store.ts";
 
 /**
@@ -92,6 +94,17 @@ export type TurnEvent =
   | { type: "next" }
   /** A word the person wrote while it worked was not read: the turn stopped first. */
   | { type: "unread"; id: string }
+  /** The clone's to-do list as it now stands (brain/todos.ts). */
+  | { type: "todos"; todos: Todo[] }
+  /** A helper the clone sent off, and how it went (brain/subtask.ts). */
+  | {
+      type: "subtask";
+      id: string;
+      description: string;
+      state: "running" | "done" | "failed";
+    }
+  /** The answer goes on with the fallback model, named here (brain/fallback.ts). */
+  | { type: "fallback"; model: string }
   | { type: "error"; message: string; code?: string };
 
 /** The end of a conversation's own record, for a session that starts without the brain's copy. */
@@ -134,7 +147,12 @@ function withNews(news: string[], text: string): string {
  * since. The summary is background; what the person says last is what to do now (as Hermes Agent's
  * handoff says, so a fresh session does not pick up work that was already done).
  */
-function opening(summary: string | undefined, earlier: string, text: string) {
+function opening(
+  summary: string | undefined,
+  earlier: string,
+  text: string,
+  todos?: Todo[],
+) {
   const parts: string[] = [];
   if (summary)
     parts.push(
@@ -143,6 +161,12 @@ function opening(summary: string | undefined, earlier: string, text: string) {
   if (earlier)
     parts.push(
       `${summary ? "Since then" : "Earlier in this conversation"}:\n${earlier}`,
+    );
+  // A list with work still open goes on with the fresh session, as Hermes Agent writes its active
+  // items back after compressing (only those still to do, so finished work is not done again).
+  if (todos && todosOpen(todos))
+    parts.push(
+      `Your to-do list as it stood (keep it with todo_write as you go on):\n${todoLines(todos.filter((todo) => todo.status !== "completed"))}`,
     );
   return parts.length ? `${parts.join("\n\n")}\n\n---\n\n${text}` : text;
 }
@@ -181,11 +205,34 @@ export async function runTurn(options: {
   }
 
   async function answer(): Promise<void> {
+    // Lines kept while the answer is made go into the conversation one after another, before it.
+    let writing = Promise.resolve();
+    const keep = (work: () => Promise<void>) => {
+      writing = writing.then(work).catch(() => {});
+    };
+    let todos = info.todos;
     const record = (event: SessionEvent) => {
       if (event.type === "text") return;
+      // The list, a helper and a move to the fallback model are shown as they go; the list and the
+      // move are kept, so the conversation opens on them again.
+      if (event.type === "todos") {
+        todos = event.todos;
+        send(event);
+        keep(() => setTodos(info.id, event.todos));
+        return;
+      }
+      if (event.type === "subtask") {
+        send(event);
+        return;
+      }
+      if (event.type === "fallback") {
+        send(event);
+        keep(() => appendMessage(info.id, "fallback", event.model));
+        return;
+      }
       send({ type: "saved", event });
       const line = savedText(event as unknown as Record<string, unknown>);
-      if (line) appendMessage(info.id, "saved", line).catch(() => {});
+      if (line) keep(() => appendMessage(info.id, "saved", line));
     };
 
     let session = info.session;
@@ -251,7 +298,7 @@ export async function runTurn(options: {
     let result: Awaited<ReturnType<typeof runSession>>;
     try {
       result = await runSession({
-        prompt: session ? said : opening(summary, "", said),
+        prompt: session ? said : opening(summary, "", said, todos),
         resume: session,
         language,
         maxTurns: 16,
@@ -259,6 +306,7 @@ export async function runTurn(options: {
         gate,
         connectors: true,
         steer,
+        todos,
         onEvent,
       });
       if (!result.ok && session && !result.text && sessionLost(result.error)) {
@@ -269,6 +317,7 @@ export async function runTurn(options: {
             summary,
             recap(summary ? before.slice(info.carriedFrom ?? 0) : before),
             said,
+            todos,
           ),
           language,
           maxTurns: 16,
@@ -276,11 +325,13 @@ export async function runTurn(options: {
           gate,
           connectors: true,
           steer,
+          todos,
           onEvent,
         });
       }
     } finally {
       stop();
+      await writing;
     }
     if (result.ok && !result.text.trim()) {
       // Nothing to read is no answer: said as a failure, never kept as an empty line.

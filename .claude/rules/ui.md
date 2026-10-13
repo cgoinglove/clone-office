@@ -56,7 +56,9 @@ their menu, and Settings), folding away with ⌘\ and a drawer on a narrow windo
 types in, `data-ask-box`, rings only then), and the open screen: `/home` first (`home-screen.tsx`: what
 waits on the person answered in place, the requests on their way, what the clone did today, today;
 the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`, with the
-office's live column `office-rail.tsx`), `/requests` and
+office's live column `office-rail.tsx`; the turns are `home/chat-view.tsx` `TurnRow`, the clone's
+to-do list one card above its answer, `TodoCard`, and a helper or a move to the backup model a
+quiet line), `/requests` and
 `/requests/[id]`, `/office` (the floor with the person's turn over it at the right, and the
 clones' meeting at the left while one goes on, `meeting.tsx`, started from its header), `/clone` (what it knows,
 the requests it takes, flows), and `/files/<path>` (what the clone made in its workspace, opened by the

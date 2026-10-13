@@ -3,7 +3,8 @@
 // (~/.clone-office/workspace) inside the operating system's own sandbox, as Claude Code runs its
 // commands (Anthropic's sandbox runtime: Seatbelt on macOS, bubblewrap on Linux). A command may read
 // what the person may read, except their keys and secrets, the clone's own sealed files and the
-// folders they keep out; it may write only in the workspace and the system's temporary folder; and
+// folders they keep out; it may write only in the workspace, the session's scratch folder
+// (brain/scratch.ts) and the system's temporary folder; and
 // it reaches the network through the sandbox's own proxy, which never lets it reach this computer's
 // own services or a cloud's metadata. `write_file` puts a file into the workspace in one piece, as
 // Thursday's bots have it, because a long file written through the shell is where commands go wrong.
@@ -58,19 +59,26 @@ export const BASH_TOOL = {
 export const WRITE_FILE_TOOL = {
   name: "write_file",
   description:
-    "Write a whole file into your workspace folder in one piece (a document, a page, a script, data): far safer than writing a long file through the shell. The path is inside the workspace (relative to it); folders are made as needed; an existing file is replaced. To change your person's own files, ask a conversation of theirs with work_session.",
+    "Write a whole file into your workspace folder in one piece (a document, a page, a script, data): far safer than writing a long file through the shell. The path is inside the workspace (relative to it), or a full path inside this conversation's scratch folder for a temporary file; folders are made as needed; an existing file is replaced. To change your person's own files, ask a conversation of theirs with work_session.",
   inputSchema: {
     type: "object",
     properties: {
       path: {
         type: "string",
-        description: "Inside the workspace, e.g. artifacts/plan/index.html",
+        description:
+          "Inside the workspace, e.g. artifacts/plan/index.html, or a full path in the scratch folder",
       },
       content: { type: "string" },
     },
     required: ["path", "content"],
   },
 };
+
+/**
+ * This session's scratch folder (brain/scratch.ts), named by the session that started this tool
+ * server: commands may write there too, and long outputs are kept there.
+ */
+const scratchDir = () => process.env.MINIME_SCRATCH_DIR || undefined;
 
 // ---- The sandbox ----
 
@@ -165,6 +173,8 @@ function startSandbox(): Promise<Sandbox> {
         };
       const workspace = workspaceDir();
       await mkdir(workspace, { recursive: true });
+      const scratch = scratchDir();
+      if (scratch) await mkdir(scratch, { recursive: true, mode: 0o700 });
       await SandboxManager.initialize(
         {
           // Only what the person or their mode let run gets here, so the host it reaches is
@@ -173,7 +183,7 @@ function startSandbox(): Promise<Sandbox> {
           network: { allowedDomains: [], deniedDomains: [] },
           filesystem: {
             denyRead: [...secretPaths(), ...out.paths],
-            allowWrite: [workspace, tmpdir()],
+            allowWrite: [workspace, tmpdir(), ...(scratch ? [scratch] : [])],
             denyWrite: [],
           },
         },
@@ -306,7 +316,8 @@ async function run(
   }
   let file: string | undefined;
   if (text.length > SHOWN_CHARS) {
-    file = join(workspace, ".outputs", `${id}.txt`);
+    // Kept with the session's other temporary files when it has a scratch folder.
+    file = join(scratchDir() ?? join(workspace, ".outputs"), `bash-${id}.txt`);
     await mkdir(dirname(file), { recursive: true });
     await writeFile(file, text).catch(() => {
       file = undefined;
@@ -405,13 +416,30 @@ async function writeInWorkspace(
 ): Promise<{ result: string; isError: boolean }> {
   const workspace = workspaceDir();
   await mkdir(workspace, { recursive: true });
-  const where = await insideWorkspace(String(args.path ?? ""), workspace);
+  const given = String(args.path ?? "");
+  // A full path inside the session's scratch folder is a temporary file; anything else is the
+  // workspace's.
+  const scratch = scratchDir();
+  if (scratch) await mkdir(scratch, { recursive: true, mode: 0o700 });
+  const inScratch =
+    scratch && isAbsolute(given.trim())
+      ? await insideWorkspace(given, scratch)
+      : undefined;
+  const where =
+    inScratch && "path" in inScratch
+      ? inScratch
+      : await insideWorkspace(given, workspace);
   if ("error" in where) return { result: where.error, isError: true };
   const content = String(args.content ?? "");
   if (Buffer.byteLength(content, "utf8") > 10 * 1024 * 1024)
     return { result: "Too large for one file (10 MB).", isError: true };
   await mkdir(dirname(where.path), { recursive: true });
   await writeFile(where.path, content);
+  if (inScratch && "path" in inScratch)
+    return {
+      result: `Wrote ${where.path} (${content.length} characters) in the scratch folder.`,
+      isError: false,
+    };
   return {
     result: `Wrote ${relative(workspace, where.path).split(sep).join("/")} (${content.length} characters) in the workspace: ${where.path}`,
     isError: false,

@@ -34,9 +34,11 @@ import {
 import { BACKGROUND_PURPOSES, readPreferences } from "../server/preferences.ts";
 import { profileBlock, readProfile } from "../server/profile.ts";
 import { brainChoice } from "./choice.ts";
-import { reportKept, WATCHED } from "./events.ts";
+import { ClaudeStream } from "./claude-stream.ts";
 import { lighterModel } from "./providers.ts";
 import { logRun } from "./runlog.ts";
+import { prepareScratch, scratchGuidance, scratchRule } from "./scratch.ts";
+import type { Todo } from "./todos.ts";
 import { TOOL_WAIT_MS } from "./waits.ts";
 
 export function memoryDir(): string {
@@ -143,7 +145,18 @@ export type SessionEvent =
       oldText?: string;
       operations?: { action: string; content?: string; old_text?: string }[];
     }
-  | { type: "memory-refused"; error: string };
+  | { type: "memory-refused"; error: string }
+  /** The to-do list as it now stands (todos.ts), whichever brain keeps it. */
+  | { type: "todos"; todos: Todo[] }
+  /** A sub-task the clone sent off (subtask.ts, or Claude Code's own Agent tool), and how it went. */
+  | {
+      type: "subtask";
+      id: string;
+      description: string;
+      state: "running" | "done" | "failed";
+    }
+  /** The picked model was busy or failing, and the rest of the turn went to the fallback model. */
+  | { type: "fallback"; model: string };
 
 export interface SessionOptions {
   prompt: string;
@@ -204,6 +217,13 @@ export interface SessionOptions {
    * app's own loop takes it between steps; Claude Code, run whole, leaves it for the next turn.
    */
   steer?: () => Promise<string | undefined>;
+  /**
+   * The conversation's to-do list as it last stood, so a brain that changes it item by item
+   * (Claude Code's tasks) is followed across turns (todos.ts).
+   */
+  todos?: Todo[];
+  /** A sub-task's session: the session that sent it and what that one is for, for the run log. */
+  within?: { session: string; purpose: SessionPurpose };
   onEvent?: (event: SessionEvent) => void;
 }
 
@@ -233,7 +253,9 @@ export type SessionPurpose =
   | "flow"
   | "meeting"
   /** One word asked of the brain the person picked, to see that it answers (`probe.ts`). */
-  | "probe";
+  | "probe"
+  /** A piece of work a session sent off to a fresh session of its own (`subtask.ts`). */
+  | "subtask";
 
 export interface SessionResult {
   ok: boolean;
@@ -286,30 +308,43 @@ export const SELF_ASKING_TOOLS = [
   "mcp__minime__skill_install",
 ];
 
-/** The few fields of Claude Code's stream-json events this reads. */
-interface StreamEvent {
-  type?: string;
-  subtype?: string;
-  session_id?: string;
-  is_error?: boolean;
-  result?: unknown;
-  structured_output?: unknown;
-  usage?: Record<string, number>;
-  num_turns?: number;
-  duration_ms?: number;
-  total_cost_usd?: number;
-  message?: {
-    usage?: Record<string, number>;
-    content?: {
-      type?: string;
-      text?: string;
-      id?: string;
-      name?: string;
-      input?: Record<string, unknown>;
-      tool_use_id?: string;
-      content?: unknown;
-    }[];
-  };
+/**
+ * Claude Code's own to-do tools: TodoWrite, and the task tools that took its place (one item at a
+ * time). Whichever its version has is offered, and followed in its stream (todos.ts).
+ */
+export const CLAUDE_TODO_TOOLS = [
+  "TodoWrite",
+  "TaskCreate",
+  "TaskUpdate",
+  "TaskList",
+];
+
+/** Claude Code's own sub-agent tool, offered in the person's own work as the loop's sub-task is. */
+const CLAUDE_AGENT_TOOL = "Agent";
+
+/**
+ * Claude Code's own tools for a session (`--tools`): reading, asked as the person's rules say,
+ * where it may read at all; its to-do list there too; and its own sub-agents in the person's own
+ * work, never while answering a colleague (a sub-agent reaches what the session reaches, no more).
+ */
+export function claudeTools(reads: boolean, own: boolean): string[] {
+  if (!reads) return [];
+  return [
+    ...ASKABLE_TOOLS,
+    ...CLAUDE_TODO_TOOLS,
+    ...(own ? [CLAUDE_AGENT_TOOL] : []),
+  ];
+}
+
+/**
+ * The other Claude the person picked for when this one is overloaded or not available
+ * (`--fallback-model`), unless it is the one already in use (light background work on Haiku).
+ */
+export function claudeFallback(
+  fallback: string | undefined,
+  model: string,
+): string | undefined {
+  return fallback && fallback !== model ? fallback : undefined;
 }
 
 /** A command as a shell reads it, its paths quoted (POSIX shells and Windows' alike). */
@@ -326,9 +361,12 @@ export function toolServerEnv(
   origin?: { from: string; chat?: string },
   /** The person's own work (a conversation with them, a flow): the clone's shell and workspace. */
   own = false,
+  /** The session's scratch folder (scratch.ts), where its shell and write_file may also write. */
+  scratch?: string,
 ): Record<string, string> {
   return {
     ...(own ? { MINIME_OWN_WORK: "1" } : {}),
+    ...(scratch ? { MINIME_SCRATCH_DIR: scratch } : {}),
     ...(origin ? { MINIME_ORIGIN: origin.from } : {}),
     ...(origin?.chat ? { MINIME_ORIGIN_CHAT: origin.chat } : {}),
     ...(audience ? { MINIME_AUDIENCE: audience } : {}),
@@ -375,6 +413,7 @@ export function mcpConfig(
   readsOnly: string[] = [],
   origin?: { from: string; chat?: string },
   own?: { watched: boolean },
+  scratch?: string,
 ): string {
   const browser = own ? browserServer(own) : undefined;
   return JSON.stringify({
@@ -404,6 +443,7 @@ export function mcpConfig(
           readsOnly,
           origin,
           Boolean(own),
+          scratch,
         ),
       },
     },
@@ -441,13 +481,25 @@ export async function runSession(
   // The weekly tidy-up runs before a fresh session builds its prompt, never inside a review.
   if (actor === "minime" && !options.resume)
     await maybeRunCurator(new SkillStore(skillsDir()));
-  const prompt =
-    options.systemPrompt ?? (await systemPrompt(undefined, options.language));
   const sessionId =
     options.resume && !options.fork ? options.resume : undefined;
   const newId = options.resume ? undefined : randomUUID();
   const gate = options.gate;
   const standing = gate ? undefined : options.standing;
+  // A session that may read has a scratch folder (scratch.ts): its own, or for a copy the one it
+  // was copied from, which its prompt names.
+  const scratch =
+    gate || standing
+      ? await prepareScratch(options.resume ?? newId ?? randomUUID()).catch(
+          () => undefined,
+        )
+      : undefined;
+  const prompt =
+    options.systemPrompt ??
+    [
+      await systemPrompt(undefined, options.language),
+      ...(scratch ? [scratchGuidance(scratch)] : []),
+    ].join("\n\n");
   // Without the gate a session keeps its memory and nothing else; with it, it may also read, and
   // anything not let through by the person's rules is asked through the gate's prompt tool. Work
   // with nobody to ask has the person's rules and nothing more.
@@ -497,13 +549,21 @@ export async function runSession(
       ? [...BROWSER_NEVER].map((tool) => `mcp__${BROWSER}__${tool}`)
       : []),
   ];
+  const tools = claudeTools(Boolean(gate || standing), Boolean(own));
+  allowed.push(
+    ...tools.filter((tool) => !ASKABLE_TOOLS.includes(tool)),
+    ...(scratch ? [scratchRule(scratch)] : []),
+  );
+  const model = options.model ?? defaultModel();
+  const fallback = claudeFallback(choice.fallback, model);
   const args = [
     "-p",
     "--output-format",
     "stream-json",
     "--verbose",
     "--model",
-    options.model ?? defaultModel(),
+    model,
+    ...(fallback ? ["--fallback-model", fallback] : []),
     "--setting-sources",
     "project",
     "--mcp-config",
@@ -517,10 +577,11 @@ export async function runSession(
       colleagueRule.services,
       sessionOrigin(options),
       own,
+      scratch,
     ),
     "--strict-mcp-config",
     "--tools",
-    gate || standing ? ASKABLE_TOOLS.join(",") : "",
+    tools.join(","),
     "--allowedTools",
     allowed.join(","),
     ...(deny.length ? ["--disallowedTools", deny.join(",")] : []),
@@ -552,15 +613,14 @@ export async function runSession(
       env: env as NodeJS.ProcessEnv,
       stdio: ["pipe", "pipe", "pipe"],
     });
-    let text = "";
     let stderr = "";
-    let id = newId ?? sessionId;
     let settled = false;
-    let context: number | undefined;
-    let turns: number | undefined;
-    let cost: number | undefined;
     const started = Date.now();
-    const pending = new Map<string, Record<string, unknown>>();
+    const stream = new ClaudeStream({
+      id: newId ?? sessionId,
+      todos: options.todos,
+      onEvent: options.onEvent,
+    });
     // The computer does not sleep in the middle of the mini-me's work.
     const release = keepAwake();
     const finish = (result: Omit<SessionResult, "text">) => {
@@ -574,21 +634,21 @@ export async function runSession(
         at: new Date(started).toISOString(),
         purpose: options.purpose ?? "task",
         brain: "claude-code",
-        model: options.model ?? defaultModel(),
-        session: id,
+        model,
+        session: stream.id,
         ok: result.ok,
         error: result.error,
         ms: Date.now() - started,
-        turns,
-        context,
+        turns: stream.turns,
+        context: stream.context,
         usage: result.usage,
-        cost_usd: cost,
+        cost_usd: stream.cost,
       }).catch(() => {});
       resolve({
-        text,
-        sessionId: id,
+        text: stream.text,
+        sessionId: stream.id,
         systemPrompt: prompt,
-        context,
+        context: stream.context,
         ...result,
       });
     };
@@ -614,58 +674,14 @@ export async function runSession(
       crlfDelay: Number.POSITIVE_INFINITY,
     });
     lines.on("line", (line) => {
-      let event: StreamEvent;
+      let event: Parameters<ClaudeStream["read"]>[0];
       try {
         event = JSON.parse(line);
       } catch {
         return;
       }
-      if (typeof event.session_id === "string") id = event.session_id;
-      if (event.type === "assistant" && event.message?.usage) {
-        const usage = event.message.usage;
-        context =
-          (usage.input_tokens ?? 0) +
-          (usage.cache_read_input_tokens ?? 0) +
-          (usage.cache_creation_input_tokens ?? 0);
-      }
-      if (event.type === "assistant")
-        for (const part of event.message?.content ?? []) {
-          if (part.type === "text" && part.text) {
-            text += part.text;
-            options.onEvent?.({ type: "text", text: part.text });
-          }
-          if (
-            part.type === "tool_use" &&
-            part.id &&
-            WATCHED.has(part.name ?? "")
-          )
-            pending.set(part.id, { ...(part.input ?? {}), __tool: part.name });
-        }
-      if (event.type === "user")
-        for (const part of event.message?.content ?? []) {
-          if (part.type !== "tool_result" || !part.tool_use_id) continue;
-          const input = pending.get(part.tool_use_id);
-          if (!input) continue;
-          pending.delete(part.tool_use_id);
-          const raw = Array.isArray(part.content)
-            ? part.content.map((c: { text?: string }) => c.text ?? "").join("")
-            : String(part.content ?? "");
-          const { __tool, ...given } = input;
-          reportKept(String(__tool), given, raw, options.onEvent);
-        }
-      if (event.type === "result") {
-        turns = event.num_turns;
-        cost = event.total_cost_usd;
-      }
-      if (event.type === "result")
-        finish({
-          ok: !event.is_error,
-          error: event.is_error
-            ? String(event.result ?? event.subtype)
-            : undefined,
-          structured: event.structured_output,
-          usage: event.usage,
-        });
+      const end = stream.read(event);
+      if (end) finish(end);
     });
     child.on("close", (code) => {
       if (!settled)

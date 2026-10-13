@@ -94,7 +94,9 @@
     "skill-changed-here": "Você mudou essa habilidade depois de adicioná-la, então a versão do escritório não foi colocada por cima das suas mudanças.",
     "skill-not-shareable": "Essa habilidade veio com o app ou de um colega, então não cabe a você compartilhá-la.",
     "skill-name-invalid": "Esse não é um nome de habilidade. Um nome usa letras minúsculas, números, pontos, hífens ou sublinhados, e começa com uma letra ou um número.",
-    "not-forgotten": "Não deu para remover agora. Tente de novo em instantes."
+    "not-forgotten": "Não deu para remover agora. Tente de novo em instantes.",
+    "brain-fallback-unfit": "Esse não pode ser reserva do modelo que você usa. Com sua assinatura do Claude, a reserva é outro Claude.",
+    "brain-fallback-same": "Escolha um modelo diferente do que você usa."
   },
   "start": {
     "title": "Começar",
@@ -358,7 +360,20 @@
     "fromMeeting": "Dito na reunião",
     "fromColleagueThemselves": "Seu colega respondeu pessoalmente",
     "noteMissed": "Não lida: a resposta terminou antes.",
-    "noteResend": "Enviar de novo"
+    "noteResend": "Enviar de novo",
+    "todos": "Lista de tarefas",
+    "todosDone": "{done} de {total} feitas",
+    "todoState": {
+      "pending": "A fazer",
+      "in_progress": "Fazendo agora",
+      "completed": "Feita"
+    },
+    "subtask": {
+      "running": "Um ajudante está cuidando disso: {description}",
+      "done": "Um ajudante terminou: {description}",
+      "failed": "Um ajudante parou: {description}"
+    },
+    "fallback": "Seu modelo estava ocupado, então {model} terminou esta resposta."
   },
   "ask": {
     "needsYou": "Precisa de você",
@@ -776,7 +791,13 @@
       "teamNote": "Com a chave da equipe · {model}"
     },
     "ourTeam": "Nossa equipe",
-    "teamVia": "{vendor} · chave da equipe"
+    "teamVia": "{vendor} · chave da equipe",
+    "fallback": {
+      "title": "Modelo reserva",
+      "hint": "Quando seu modelo está ocupado ou fora do ar, seu clone termina a resposta com este e volta ao seu na próxima mensagem.",
+      "none": "Sem modelo reserva",
+      "off": "Nenhum"
+    }
   },
   "messenger": {
     "title": "No seu celular",
