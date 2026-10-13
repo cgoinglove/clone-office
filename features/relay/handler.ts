@@ -383,6 +383,7 @@ export function relayHandler(
       // Only the people's own pages and Google's way back: the clones' calls pass straight on.
       if (
         !key &&
+        path !== "/" &&
         !/^\/(?:login|logout|home|reset|setup\/|p\/|pair\/|i\/|api\/auth\/)/.test(
           path,
         )
@@ -677,6 +678,11 @@ export function relayHandler(
             }),
           );
         }
+        return true;
+      }
+      // The server's own address, as people type it: their page, or signing in to it.
+      if (path === "/" && request.method === "GET") {
+        redirect("/home");
         return true;
       }
       if (path === "/login" && (request.method === "GET" || post)) {

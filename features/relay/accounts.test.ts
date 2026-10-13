@@ -1767,6 +1767,10 @@ test("wrong tries are counted against the address the trusted proxy saw, an IPv6
     assert.equal(waiting.status, 429);
     assert.match(await waiting.text(), /Too many tries from here/);
     assert.notEqual((await link("2001:db8:1:3::1, 198.51.100.1")).status, 429);
+    // The server's own address leads to one's page (and from there to signing in).
+    const root = await fetch(`${base}/`, { redirect: "manual" });
+    assert.equal(root.status, 303);
+    assert.equal(root.headers.get("location"), "/home");
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();
