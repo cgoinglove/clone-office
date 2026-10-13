@@ -619,7 +619,7 @@ export async function runSession(
       : []),
   ];
   return new Promise((resolve) => {
-    const env = cleanEnv();
+    const env = cleanEnv(command.file === process.execPath);
     // The helpers it starts (a service's token) find the same mini-me.
     env.CLONE_OFFICE_HOME = home;
     // A question to the person, or a piece of work in their conversations, waits inside one call.

@@ -52,6 +52,8 @@ export interface OfficePerson {
   joined: string;
   /** Their computer's clone in the office, when one is connected. */
   clone?: { id: string; seen: string };
+  /** Taking part on the web, with no computer connected. */
+  web?: boolean;
 }
 
 /** A clone in the office that joined with the key, with no account behind it. */
@@ -222,9 +224,12 @@ async function refusal(response: Response): Promise<string> {
   const body = (await response
     .clone()
     .json()
-    .catch(() => ({}))) as { code?: string };
+    .catch(() => ({}))) as { code?: string; message?: string };
   const code = String(body.code ?? "");
   if (/ALREADY_EXISTS/i.test(code)) return "account-exists";
+  // its own check of the fields says which one: "[body.email] Invalid email address"
+  if (/VALIDATION/i.test(code) && /body\.email/i.test(String(body.message)))
+    return "email-wrong";
   if (/PASSWORD_TOO_SHORT/i.test(code)) return "password-short";
   if (/PASSWORD_TOO_LONG/i.test(code)) return "password-long";
   if (/INVALID_EMAIL\b/i.test(code)) return "email-wrong";
@@ -618,19 +623,39 @@ export class Accounts {
         throw new AccountError("admin-link-ended");
       const name = input.name.trim().slice(0, 80);
       if (!name) throw new AccountError("name-missing");
-      const response = (await this.current.api.signUpEmail({
-        body: { name, email: input.email.trim(), password: input.password },
-        asResponse: true,
-      })) as Response;
-      if (!response.ok) throw new AccountError(await refusal(response));
+      // The link is taken in the database before the account is made, so two processes (or a
+      // form sent twice) never both make an admin with it; given back should the account fail.
+      const [taken] = await this.db.query<{ value: string }>(
+        "DELETE FROM server_settings WHERE name = 'admin-link' AND (value::jsonb ->> 'hash') = $1 AND (value::jsonb ->> 'until')::timestamptz > now() RETURNING value",
+        [hash(token)],
+      );
+      if (!taken) throw new AccountError("admin-link-ended");
+      const giveBack = () =>
+        this.db
+          .query(
+            "INSERT INTO server_settings (name, value) VALUES ('admin-link', $1) ON CONFLICT (name) DO NOTHING",
+            [taken.value],
+          )
+          .catch(() => undefined);
+      let response: Response;
+      try {
+        response = (await this.current.api.signUpEmail({
+          body: { name, email: input.email.trim(), password: input.password },
+          asResponse: true,
+        })) as Response;
+      } catch (error) {
+        await giveBack();
+        throw error;
+      }
+      if (!response.ok) {
+        await giveBack();
+        throw new AccountError(await refusal(response));
+      }
       const { user } = (await response.json()) as { user: Person };
-      await this.db.transaction(async (tx) => {
-        await tx.query(
-          "INSERT INTO office_people (office_id, user_id, role, joined) SELECT id, $1, 'owner', now() FROM offices ORDER BY created, id LIMIT 1 ON CONFLICT (office_id, user_id) DO UPDATE SET role = 'owner'",
-          [user.id],
-        );
-        await tx.query("DELETE FROM server_settings WHERE name = 'admin-link'");
-      });
+      await this.db.query(
+        "INSERT INTO office_people (office_id, user_id, role, joined) SELECT id, $1, 'owner', now() FROM offices ORDER BY created, id LIMIT 1 ON CONFLICT (office_id, user_id) DO UPDATE SET role = 'owner'",
+        [user.id],
+      );
       return {
         person: { id: user.id, name: user.name, email: user.email },
         cookies: response.headers.getSetCookie(),
@@ -1343,8 +1368,9 @@ export class Accounts {
       member: string | null;
       card: { name?: string } | null;
       seen: unknown;
+      on_web: boolean | null;
     }>(
-      "SELECT u.id, u.name, u.email, p.role, p.joined, m.id AS member, m.card, m.seen FROM office_people p JOIN auth_users u ON u.id = p.user_id LEFT JOIN members m ON m.office_id = p.office_id AND m.user_id = p.user_id WHERE p.office_id = $1 ORDER BY p.joined, u.name",
+      "SELECT u.id, u.name, u.email, p.role, p.joined, m.id AS member, m.card, m.seen, m.on_web FROM office_people p JOIN auth_users u ON u.id = p.user_id LEFT JOIN members m ON m.office_id = p.office_id AND m.user_id = p.user_id WHERE p.office_id = $1 ORDER BY p.joined, u.name",
       [office],
     );
     return rows.map((row) => ({
@@ -1353,7 +1379,8 @@ export class Accounts {
       email: row.email,
       role: row.role === "owner" ? "owner" : "member",
       joined: when(row.joined),
-      ...(row.member
+      ...(row.member && row.on_web ? { web: true } : {}),
+      ...(row.member && !row.on_web
         ? { clone: { id: row.member, seen: when(row.seen) } }
         : {}),
     }));

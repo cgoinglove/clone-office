@@ -11,11 +11,13 @@
 // Only API keys come here. A Claude or ChatGPT subscription is its person's own and goes through
 // their own computer, as the vendors' terms ask.
 
+import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { keyFrom, newKeyText, openWith, sealWith } from "../../lib/seal.ts";
+import type { Sql } from "./db.ts";
 import { type Caller, type Relay, RelayError } from "./relay.ts";
 
 /** Where each vendor's API is, and the header its SDK carries the key in. */
@@ -94,6 +96,34 @@ export async function relaySealKey(
       `${path} is not a key the relay made. Put back the one it had: without it the team keys cannot be read.`,
     );
   return key;
+}
+
+/**
+ * Whether this key is the one the database's secrets were sealed with: its fingerprint is kept
+ * beside them the first time (a hash, never the key). A relay process given another key (a second
+ * one with a key of its own, a database restored without its key file) would otherwise make new
+ * secrets in their place, signing everyone out and losing the Google and team keys; it is told
+ * instead. `reseal` takes the new key on purpose, what the old one sealed then made again.
+ */
+export async function sealKeyMatches(
+  db: Sql,
+  key: Buffer,
+  reseal = false,
+): Promise<boolean> {
+  const fingerprint = createHash("sha256")
+    .update(key)
+    .digest("hex")
+    .slice(0, 32);
+  const [kept] = await db.query<{ value: string }>(
+    "SELECT value FROM server_settings WHERE name = 'seal-key'",
+  );
+  if (kept && kept.value !== fingerprint && !reseal) return false;
+  if (!kept || kept.value !== fingerprint)
+    await db.query(
+      "INSERT INTO server_settings (name, value) VALUES ('seal-key', $1) ON CONFLICT (name) DO UPDATE SET value = excluded.value",
+      [fingerprint],
+    );
+  return true;
 }
 
 interface Kept {

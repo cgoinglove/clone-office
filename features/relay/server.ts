@@ -19,7 +19,12 @@ import { Accounts } from "./accounts.ts";
 import { openDatabase } from "./db.ts";
 import { relayHandler } from "./handler.ts";
 import { Relay } from "./relay.ts";
-import { DAILY_CALLS, relaySealKey, TeamAi } from "./team-ai.ts";
+import {
+  DAILY_CALLS,
+  relaySealKey,
+  sealKeyMatches,
+  TeamAi,
+} from "./team-ai.ts";
 
 const { values } = parseArgs({
   options: {
@@ -65,6 +70,19 @@ const keyDir =
 if (db.kind === "postgres" && !process.env.RELAY_ENCRYPTION_KEY?.trim())
   await mkdir(keyDir, { recursive: true, mode: 0o700 });
 const sealKey = await relaySealKey(keyDir);
+if (
+  sealKey &&
+  !(await sealKeyMatches(db, sealKey, process.env.RELAY_RESEAL === "1"))
+) {
+  console.error(
+    `This database's secrets (sign-in, Google, team keys) were sealed with another key than this relay's (${
+      process.env.RELAY_ENCRYPTION_KEY?.trim()
+        ? "RELAY_ENCRYPTION_KEY"
+        : join(keyDir, "secret.key")
+    }). Give every relay process the same key: the one it had, through RELAY_ENCRYPTION_KEY or that file (relays sharing one database share it). To start over with this key instead, losing what the old one sealed, start once with RELAY_RESEAL=1.`,
+  );
+  process.exit(1);
+}
 const teamAi = new TeamAi(
   relay,
   sealKey,

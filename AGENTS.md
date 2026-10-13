@@ -428,8 +428,10 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`/settings/:name`: the OAuth client a vendor wants registered once for the team,
   `connector:<vendor>`, and the standup's days, time and zone, `meeting:standup`, which any member
   sets and all read), and team keys (`team-ai.ts`: one API key per vendor the office shares, team
-  billing; sealed with `lib/seal.ts` under RELAY_ENCRYPTION_KEY or the PGlite folder's
-  `secret.key`, never in the database alone; `GET /team-ai`, `POST /team-ai/:vendor` checks it with
+  billing; sealed with `lib/seal.ts` under RELAY_ENCRYPTION_KEY or a `secret.key` kept apart (the
+  PGlite folder's, or `RELAY_KEY_DIR`'s for Postgres), never in the database alone, its fingerprint
+  kept so a relay with another key stops instead of making new secrets (`sealKeyMatches`;
+  `RELAY_RESEAL=1` begins again); `GET /team-ai`, `POST /team-ai/:vendor` checks it with
   the vendor first; members' clones call `/ai/:vendor/...` with their own token where the SDK puts
   the key, and the relay passes the call on with the team key and streams the answer back, counting
   calls per member and day, `ai_calls`, and refusing a member's call past the day's limit,
@@ -474,16 +476,19 @@ These words help discussion. They do not mandate separate services, tables or UI
   again when it is used; its token kept hashed, here and by Better Auth; told on the person's page,
   `account_events`, where they stop one they did not ask for, `stopResets`), and removing an
   account, `removeAccount`; the admin itself is made with a setup link while the server has none
-  (`adminLink`, `makeAdmin`, `/setup/<token>`: printed at each start, a day, once, kept hashed;
-  the app that opened the office asks for it with the office's key, `POST /server-link`, which
-  otherwise gives a clone without an account a link to make one); a
+  (`adminLink`, `makeAdmin`, `/setup/<token>`: printed at each start, a day, once, kept hashed and
+  taken in the database before the account is made; the app that opened the office on this
+  computer asks for it with the office's key from 127.0.0.1, `POST /server-link`, which otherwise
+  gives a clone without an account a link to make one); a
   signed-in person joins another office only once asked, unless Google just made their account
   from that invite, `sub-office.join`), puts a person in the office whose invite they signed up with
   (`office_people`; the first made with the office's key owns it). Invites are one per person
   (`relay.ts` `makeInvite`, table `invites`): a link that joins one clone and makes one account,
-  for a week, kept hashed, taken as one step each (`join`, `takeInviteForAccount`), the clone and
-  the account then one person's; anyone in the office makes one (`GET /invite` for the app, Invite
-  a teammate on one's page), owners see and cancel the open ones; the office's key never goes in a
+  for a week, kept hashed, taken as one step each (`join`, `takeInviteForAccount`), its two halves
+  never joined (a clone becomes an account's by pairing; only a clone's own short link, `own`, made
+  from its token by `/server-link`, joins the account made with it); anyone in the office makes one
+  (`GET /invite` for the app, Invite a teammate on one's page, made then shown once by a short-lived
+  cookie), ten open each for those not owning it, owners see and cancel the open ones; the office's key never goes in a
   link and stays its operator's; someone with no computer connected takes part on the web
   (`relay.ts` `joinWeb`, `members.on_web`: their place in the office with no clone, seen by clones
   as `onWeb`; `requestsPage` at `/home/requests`, what was asked of them answered there as their

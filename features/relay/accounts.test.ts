@@ -7,6 +7,30 @@ import { Relay } from "./relay.ts";
 const cookieOf = (cookies: string[]) =>
   cookies.map((cookie) => cookie.split(";")[0]).join("; ");
 
+/** Makes an invite on one's page and reads the page it goes back to, where it is shown once. */
+async function inviteOnPage(base: string, cookie: string, note = "") {
+  const made = await fetch(`${base}/home/invite`, {
+    method: "POST",
+    headers: {
+      cookie,
+      "sec-fetch-site": "same-origin",
+      "content-type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ note }),
+    redirect: "manual",
+  });
+  const shown = cookieOf(made.headers.getSetCookie());
+  const page = await (
+    await fetch(`${base}${made.headers.get("location") ?? "/home"}`, {
+      headers: { cookie: `${cookie}; ${shown}` },
+    })
+  ).text();
+  const again = await (
+    await fetch(`${base}/home`, { headers: { cookie: `${cookie}; ${shown}` } })
+  ).text();
+  return { status: made.status, page, again };
+}
+
 test("an invite makes an account; its own page gives a one-time code that connects a computer's mini-me", async () => {
   const db = await openDatabase("memory");
   const relay = await Relay.open(db);
@@ -198,21 +222,19 @@ test("from the invite link to a connected computer, as a person does it: sign up
     assert.match(own, /Hi Ben[\s\S]*No computer is connected yet/);
     // The office's key is never on a page; an invite is made there, one link per person.
     assert.doesNotMatch(own, new RegExp(office.key));
-    const invited = await (
-      await fetch(`${base}/home/invite`, {
-        method: "POST",
-        headers: {
-          cookie,
-          "content-type": "application/x-www-form-urlencoded",
-        },
-        body: "",
-      })
-    ).text();
+    const madeHere = await inviteOnPage(base, cookie);
+    assert.equal(
+      madeHere.status,
+      303,
+      "made, then back to the page: a reload makes no other",
+    );
+    const invited = madeHere.page;
     assert.match(
       invited,
       /<pre>http:\/\/[^<]+\/i\/[\w-]{24}\?from=Ben<\/pre>/,
       "the invite just made",
     );
+    assert.match(invited, /Copy it now: it is shown only once/);
     assert.doesNotMatch(invited, new RegExp(office.key));
 
     const paired = await (
@@ -1681,15 +1703,7 @@ test("the admin's pages say what a change would do before it fails, and an invit
       email: "mo@example.com",
       password: "a long password",
     });
-    const page = await (
-      await fetch(`${base}/home/invite`, {
-        method: "POST",
-        headers: {
-          cookie: cookieOf(mo.cookies),
-          "sec-fetch-site": "same-origin",
-        },
-      })
-    ).text();
+    const { page } = await inviteOnPage(base, cookieOf(mo.cookies));
     const link = /<pre>(http:[^<]*\/i\/[^<]*)<\/pre>/.exec(page)?.[1] ?? "";
     assert.ok(
       link.endsWith("?from=Mo%24%28id%29%60whoami%60%21x%20민아"),
@@ -1799,11 +1813,18 @@ test("an invite is for one person: one clone and one account, a week, cancelled 
       email: "ben@example.com",
       password: "ben's long password",
     });
-    const [linked] = await db.query<{ user_id: string }>(
+    // Whoever used the other half may be someone else: the clone stays nobody's account's until
+    // its person pairs it while signed in.
+    const [linked] = await db.query<{ user_id: string | null }>(
       "SELECT user_id FROM members WHERE id = $1",
       [ben.id],
     );
-    assert.equal(linked.user_id, benAccount.person.id, "one person, one clone");
+    assert.equal(linked.user_id, null, "never joined by the link alone");
+    assert.equal(
+      await relay.callerFor(office.id, benAccount.person.id),
+      undefined,
+      "the account acts as no clone",
+    );
     // Used for both, it has ended, and says so.
     await assert.rejects(
       accounts.signUp(token, {
@@ -1891,9 +1912,16 @@ test("a new server's admin is made with the link whoever runs it has, once; the 
   const relay = await Relay.open(db);
   const accounts = await Accounts.open(db, relay);
   const office = await relay.office();
-  const server = createServer(relayHandler(relay, { accounts }));
+  // an office opened on someone's computer, its app asking from that computer
+  const server = createServer(
+    relayHandler(relay, { accounts, onComputer: true }),
+  );
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  // a server's own, run by an operator: the office's key gets no admin link there
+  const plain = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => plain.listen(0, "127.0.0.1", resolve));
+  const plainBase = `http://127.0.0.1:${(plain.address() as { port: number }).port}`;
   const form = (fields: Record<string, string>) => ({
     method: "POST",
     headers: {
@@ -1912,6 +1940,23 @@ test("a new server's admin is made with the link whoever runs it has, once; the 
     assert.equal(await accounts.hasAdmin(), false);
     const first = await accounts.adminLink();
     assert.ok(first);
+    // On a server's own, the office's key (in links people were sent before) makes no admin.
+    const refused = (await (
+      await fetch(`${plainBase}/server-link`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${host.token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ key: office.key }),
+      })
+    ).json()) as { path: string };
+    assert.doesNotMatch(refused.path, /^\/setup\//);
+    assert.equal(
+      (await fetch(`${base}/setup/${first}`)).status,
+      200,
+      "and the operator's link still works",
+    );
     // Asked again, a new link; the one before ends.
     const asked = await fetch(`${base}/server-link`, {
       method: "POST",
@@ -1959,7 +2004,7 @@ test("a new server's admin is made with the link whoever runs it has, once; the 
       (await fetch(`${base}${path}`, { redirect: "manual" })).headers.get(
         "location",
       ),
-      "/login",
+      "/login?error=admin-made",
     );
     assert.equal(await accounts.adminLink(), undefined);
     // The clone's own account link makes its person's account, joined to that clone.
@@ -1990,6 +2035,7 @@ test("a new server's admin is made with the link whoever runs it has, once; the 
     assert.equal(after.path, "/login");
   } finally {
     await new Promise((resolve) => server.close(resolve));
+    await new Promise((resolve) => plain.close(resolve));
     await relay.close();
     await db.close();
   }

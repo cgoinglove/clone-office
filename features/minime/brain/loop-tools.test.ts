@@ -247,3 +247,36 @@ test("a file of any size is read in parts and searched; a service's long answer 
     rmSync(folder, { recursive: true, force: true });
   }
 });
+
+test("what the scratch folder holds is read back as outside text; the person's own files are not", async () => {
+  const { fromScratch } = await import("./loop-tools.ts");
+  const dir = "/tmp/clone/scratch/0b9f4c1e-aaaa-bbbb-cccc-123456789abc";
+  assert.equal(fromScratch(dir, { file_path: `${dir}/web-x.txt` }), true);
+  assert.equal(
+    fromScratch(dir, { path: dir }),
+    true,
+    "a search of the whole folder",
+  );
+  assert.equal(
+    fromScratch(dir, { file_path: "/tmp/clone/scratch/other/x.txt" }),
+    false,
+  );
+  assert.equal(fromScratch(dir, { file_path: `${dir}/../../notes.md` }), false);
+  assert.equal(fromScratch(dir, { file_path: "relative.txt" }), false);
+  assert.equal(
+    fromScratch(undefined, { file_path: `${dir}/web-x.txt` }),
+    false,
+  );
+});
+
+test("Electron's run-as-Node flag reaches only a program started on the app's own executable", async () => {
+  const { cleanEnv } = await import("../server/brain.ts");
+  const was = process.env.ELECTRON_RUN_AS_NODE;
+  process.env.ELECTRON_RUN_AS_NODE = "1";
+  try {
+    assert.equal(cleanEnv().ELECTRON_RUN_AS_NODE, undefined);
+  } finally {
+    if (was === undefined) delete process.env.ELECTRON_RUN_AS_NODE;
+    else process.env.ELECTRON_RUN_AS_NODE = was;
+  }
+});

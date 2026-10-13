@@ -8,7 +8,8 @@
 # The admin then invites people from their page, one link per person. The key that seals team API
 # keys and sign-in secrets (Google's, the session's) is made once in the relay-keys volume; back it
 # up apart from the database's backups, or give one with RELAY_ENCRYPTION_KEY (`openssl rand
-# -base64 32`). RELAY_PASSWORD_SIGNIN=1 keeps email-and-password sign-in on whatever the admin's
+# -base64 32`). Relays sharing the database share the key; one with another key stops and says so
+# (RELAY_RESEAL=1 begins again with its own, losing what the old one sealed). RELAY_PASSWORD_SIGNIN=1 keeps email-and-password sign-in on whatever the admin's
 # settings say, for an admin who lost their own way in.
 services:
   postgres:

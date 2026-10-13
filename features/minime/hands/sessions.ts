@@ -194,7 +194,7 @@ export async function askSession(
   return new Promise((resolve) => {
     const child = spawn(command.file, [...command.prefix, ...args], {
       cwd: session.cwd,
-      env: cleanEnv() as NodeJS.ProcessEnv,
+      env: cleanEnv(command.file === process.execPath) as NodeJS.ProcessEnv,
       stdio: ["pipe", "pipe", "pipe"],
     });
     let stdout = "";
@@ -376,7 +376,7 @@ export async function workSession(
   ];
   const started = Date.now();
   return new Promise((resolve) => {
-    const env = cleanEnv();
+    const env = cleanEnv(command.file === process.execPath);
     // Each change waits for the person's answer on their screen.
     env.MCP_TOOL_TIMEOUT = String(11 * 60 * 1000);
     const child = spawn(command.file, [...command.prefix, ...args], {

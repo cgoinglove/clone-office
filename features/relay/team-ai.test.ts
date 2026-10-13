@@ -222,3 +222,48 @@ test("a relay on a database with no key of its own keeps no team key", async () 
   assert.equal(await relaySealKey("memory", ""), undefined);
   await assert.rejects(relaySealKey(undefined, "short"), /not a key/);
 });
+
+test("a relay given another sealing key than its database's is told, rather than making new secrets", async () => {
+  const { sealKeyMatches } = await import("./team-ai.ts");
+  const { keyFrom, newKeyText } = await import("../../lib/seal.ts");
+  const { openDatabase } = await import("./db.ts");
+  const { Relay } = await import("./relay.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  try {
+    const first = keyFrom(newKeyText()) as Buffer;
+    const other = keyFrom(newKeyText()) as Buffer;
+    assert.equal(
+      await sealKeyMatches(db, first),
+      true,
+      "the first key is kept by its fingerprint",
+    );
+    assert.equal(await sealKeyMatches(db, first), true);
+    assert.equal(
+      await sealKeyMatches(db, other),
+      false,
+      "another key is refused",
+    );
+    assert.equal(
+      await sealKeyMatches(db, other, true),
+      true,
+      "unless taken on purpose",
+    );
+    assert.equal(
+      await sealKeyMatches(db, first),
+      false,
+      "and then the old one is the other",
+    );
+    const [kept] = await db.query<{ value: string }>(
+      "SELECT value FROM server_settings WHERE name = 'seal-key'",
+    );
+    assert.doesNotMatch(
+      kept.value,
+      new RegExp(other.toString("base64")),
+      "never the key itself",
+    );
+  } finally {
+    await relay.close();
+    await db.close();
+  }
+});

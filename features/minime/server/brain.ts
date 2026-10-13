@@ -5,6 +5,7 @@
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { nodeEnv } from "./desktop.ts";
 import { findOnPath } from "./which.ts";
 
 /** The model a mini-me thinks with; `CLONE_OFFICE_MODEL` changes it. */
@@ -54,7 +55,12 @@ export function hasClaudeCode(): boolean {
 
 // The person's shell can carry an API key or a provider override. Left in place, Claude Code would
 // bill that key instead of the person's subscription, so a mini-me never passes them on.
-export function cleanEnv(): Record<string, string | undefined> {
+/**
+ * The environment for another program the app starts (Claude Code, Codex). `appNode`: the program
+ * runs on the app's own executable (an npm-installed one on Windows), which inside the desktop app
+ * needs ELECTRON_RUN_AS_NODE; otherwise it is never passed on.
+ */
+export function cleanEnv(appNode = false): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = {};
   for (const [key, value] of Object.entries(process.env)) {
     if (
@@ -62,10 +68,12 @@ export function cleanEnv(): Record<string, string | undefined> {
       key !== "CLAUDE_CONFIG_DIR"
     )
       continue;
-    if (key === "NODE_OPTIONS") continue;
+    // The desktop app's own: any Electron app a command started would run as Node.
+    if (key === "NODE_OPTIONS" || key === "ELECTRON_RUN_AS_NODE") continue;
     env[key] = value;
   }
   env.CLAUDE_CODE_DISABLE_AUTO_MEMORY = "1";
   env.CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS = "1";
+  if (appNode) Object.assign(env, nodeEnv());
   return env;
 }

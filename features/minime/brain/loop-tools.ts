@@ -475,6 +475,18 @@ function resultText(result: { content?: unknown; isError?: unknown }): string {
 }
 
 /** A result as the model gets it: through the session's scratch folder, or cut without one. */
+/** Whether a Read or Grep looks inside the session's scratch folder. */
+export function fromScratch(
+  dir: string | undefined,
+  input: Record<string, unknown>,
+): boolean {
+  if (!dir) return false;
+  const target = String(input.file_path ?? input.path ?? "");
+  if (!target || !isAbsolute(target)) return false;
+  const inside = relative(resolve(dir), resolve(target));
+  return inside === "" || (!inside.startsWith("..") && !isAbsolute(inside));
+}
+
 const bounded = (spill: Spill | undefined, tool: string, text: string) =>
   spill ? spill.take(tool, text) : Promise.resolve(cut(text, RESULT_CHARS));
 
@@ -873,11 +885,19 @@ export async function loopTools(options: {
         inputSchema: jsonSchema(local.schema as never),
         execute: async (raw) => {
           const input = (raw ?? {}) as Record<string, unknown>;
-          const text = await guarded(options.guard, name, input, () =>
+          const read = await guarded(options.guard, name, input, () =>
             local
               .run(input, context)
               .catch((error: Error) => `Error: ${error.message}`),
           );
+          // What the scratch folder holds came from tools (a page, a service's answer, a long
+          // output): read back, it stays marked as outside text, as it was when it first came.
+          const text = fromScratch(options.spill?.dir, input)
+            ? untrusted(
+                "a tool's earlier answer, from the scratch folder",
+                read,
+              )
+            : read;
           options.onResult?.(name, input, text);
           return local.paged ? text : bounded(options.spill, name, text);
         },

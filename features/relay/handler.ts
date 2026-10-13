@@ -96,6 +96,7 @@ import {
 import {
   FILE_BYTES,
   FILES_PER_MESSAGE,
+  FINAL,
   INVITE_DAYS,
   type Relay,
   RelayError,
@@ -618,7 +619,7 @@ export function relayHandler(
       const adminSetup = /^\/setup\/([\w-]{16,64})$/.exec(path);
       if (adminSetup && (request.method === "GET" || post)) {
         if (await accounts.hasAdmin()) {
-          redirect("/login");
+          redirect("/login?error=admin-made");
           return true;
         }
         if (
@@ -779,13 +780,39 @@ export function relayHandler(
           );
           return true;
         }
-        // An invite for one person, made here by anyone in the office.
+        // An invite for one person, made here by anyone in the office; the page it goes back to
+        // shows it once (a short-lived cookie for this browser alone), so a reload makes no other.
+        if (path === "/home/invite") {
+          if (!place) {
+            redirect("/home");
+            return true;
+          }
+          const back = `/home?office=${encodeURIComponent(place.office)}`;
+          try {
+            const made = await relay.makeInvite(place.office, {
+              user: person.id,
+              name: person.name,
+              note: fields?.get("note") ?? "",
+              owner: place.role === "owner",
+            });
+            redirect(`${back}#invite`, [
+              `sub-office.invited=${made.token}; Path=/home; Max-Age=120; HttpOnly; SameSite=Strict`,
+            ]);
+          } catch (error) {
+            const code =
+              error instanceof RelayError ? error.code : "account-failed";
+            redirect(`${back}&error=${encodeURIComponent(code)}#invite`);
+          }
+          return true;
+        }
+        const madeToken = /(?:^|;\s*)sub-office\.invited=([\w-]{16,64})/.exec(
+          cookie ?? "",
+        )?.[1];
         const invited =
-          place && path === "/home/invite"
-            ? await relay.makeInvite(place.office, {
-                user: person.id,
-                name: person.name,
-              })
+          place &&
+          madeToken &&
+          (await relay.invite(madeToken))?.office === place.office
+            ? { token: madeToken }
             : undefined;
         const command =
           place && path === "/home/pair"
@@ -836,6 +863,7 @@ export function relayHandler(
               email: one.email,
               role: one.role,
               ...(one.clone ? { seen: seen(one.clone.seen) } : {}),
+              ...(one.web ? { web: true } : {}),
             })),
             clones: clones.map((clone) => ({
               ...clone,
@@ -863,9 +891,15 @@ export function relayHandler(
                           .map((one) => ({
                             id: one.id,
                             by: one.by,
-                            created: new Date(one.created).toLocaleDateString(
+                            note: one.note,
+                            created: new Date(one.created).toLocaleString(
                               lang,
-                              { month: "long", day: "numeric" },
+                              {
+                                month: "long",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "2-digit",
+                              },
                             ),
                             clone: one.clone,
                             account: one.account,
@@ -881,6 +915,22 @@ export function relayHandler(
             ...(mine
               ? { place: mine.web ? ("web" as const) : ("clone" as const) }
               : {}),
+            // someone on the web has no other sign that something waits on them
+            ...(mine?.web && place
+              ? {
+                  waiting: (
+                    await relay.tasks(
+                      { id: mine.id, office: place.office, card: mine.card },
+                      50,
+                    )
+                  ).filter(
+                    (task) =>
+                      task.metadata.to === mine.id &&
+                      !FINAL.includes(task.status.state) &&
+                      !task.history.some((m) => m.role === "agent"),
+                  ).length,
+                }
+              : {}),
             ...(mine && !mine.web
               ? {
                   computer: {
@@ -891,6 +941,12 @@ export function relayHandler(
               : {}),
             ...(command ? { command } : {}),
           }),
+          // shown once: the next look at the page has no link to copy again
+          madeToken
+            ? [
+                "sub-office.invited=; Path=/home; Max-Age=0; HttpOnly; SameSite=Strict",
+              ]
+            : [],
         );
         return true;
       }
@@ -997,7 +1053,12 @@ export function relayHandler(
               | "waiting"
               | "answered"
               | "closed",
-            when: new Date(task.status.timestamp).toLocaleString(lang),
+            when: new Date(task.status.timestamp).toLocaleString(lang, {
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            }),
           };
         };
         const done = url.searchParams.get("done");
@@ -1490,6 +1551,7 @@ export function relayHandler(
         const made = await relay.makeInvite(me.office, {
           member: me.id,
           name: me.card.name,
+          owner: await relay.ownsOffice(me),
         });
         return send(200, {
           path: `/i/${made.token}`,
@@ -1505,7 +1567,12 @@ export function relayHandler(
         if (!accounts) return send(200, { path: "/" });
         const input = await body(request);
         const key = typeof input.key === "string" ? input.key : "";
-        if (key && !(await accounts.hasAdmin())) {
+        // Only an office run by someone's app, asked from that same computer: a server's operator
+        // has the link in its log, and the office's key was in links people were sent before.
+        const here = ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(
+          request.socket.remoteAddress ?? "",
+        );
+        if (key && options.onComputer && here && !(await accounts.hasAdmin())) {
           const [first] = await relay.officesByAge(1);
           if (first?.id === me.office && first.key === key) {
             const token = await accounts.adminLink();

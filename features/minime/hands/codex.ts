@@ -94,8 +94,8 @@ function codexCommand(): Command | undefined {
  * The environment a copy runs in. A CODEX_API_KEY in the person's shell would make Codex bill
  * that key instead of the sign-in their conversations used, so it is not passed on.
  */
-function codexEnv(): NodeJS.ProcessEnv {
-  const env = cleanEnv();
+function codexEnv(appNode = false): NodeJS.ProcessEnv {
+  const env = cleanEnv(appNode);
   delete env.CODEX_API_KEY;
   return env as NodeJS.ProcessEnv;
 }
@@ -271,7 +271,7 @@ function runCodex(
   return new Promise((resolve) => {
     const child = spawn(command.file, [...command.prefix, ...args], {
       cwd,
-      env: codexEnv(),
+      env: codexEnv(command.file === process.execPath),
       stdio: ["pipe", "pipe", "pipe"],
     });
     let buffer = "";

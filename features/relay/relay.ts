@@ -300,17 +300,29 @@ const MIGRATIONS: string[][] = [
   // Someone in the office on the web, with no computer of theirs connected (`joinWeb`): they ask
   // and answer from the team server's pages themselves, until a computer's clone takes their place.
   ["ALTER TABLE members ADD COLUMN on_web BOOLEAN NOT NULL DEFAULT false"],
+  // A clone's own link to make its person's account (`own`), and a few words from the one who
+  // made an invite about whom it is for (`note`).
+  [
+    "ALTER TABLE invites ADD COLUMN own BOOLEAN NOT NULL DEFAULT false",
+    "ALTER TABLE invites ADD COLUMN note TEXT NOT NULL DEFAULT ''",
+  ],
 ];
 
 /** How long an invite works. */
 export const INVITE_DAYS = 7;
 /** The most invites an office keeps open at once, so making them never grows without end. */
 const OPEN_INVITES = 200;
+/** The most one person who does not own the office keeps open, so one cannot use up the rest. */
+const OPEN_INVITES_EACH = 10;
+/** How long a clone's own link to make its person's account works: it is opened as it is made. */
+const OWN_LINK_MS = 15 * 60 * 1000;
 
 /** One invite as an office's people see it: who made it, until when, and what it was used for. */
 export interface Invite {
   id: string;
   by: string;
+  /** Whom it is for, in the words of the one who made it. */
+  note: string;
   created: string;
   expires: string;
   /** A clone joined with it, and an account was made with it. */
@@ -346,6 +358,7 @@ const hashToken = (token: string): string =>
 interface InviteRow {
   id: string;
   by_name: string;
+  note: string | null;
   created: unknown;
   expires: unknown;
   member_id: string | null;
@@ -362,6 +375,7 @@ function inviteOf(row: InviteRow): Invite {
   return {
     id: row.id,
     by: row.by_name,
+    note: row.note ?? "",
     created: stamp(row.created),
     expires: stamp(row.expires),
     clone,
@@ -515,7 +529,12 @@ export class Relay {
 
   /**
    * A new invite to a member's office (or, from the server's pages, a person's): a link for one
-   * person, which works once to join a clone and once to make an account, for a week.
+   * person, which works once to join a clone and once to make an account, for a week. Someone who
+   * does not own the office keeps at most a few open, and the office at most OPEN_INVITES.
+   *
+   * `forMember` makes a clone's own link instead, for its person to make their account with: the
+   * clone is joined already, so only the account is left, which becomes that clone's person's. It
+   * comes only from the clone's own token, works for minutes, and the one made before it ends.
    */
   async makeInvite(
     office: string,
@@ -523,13 +542,17 @@ export class Relay {
       member?: string;
       user?: string;
       name: string;
-      /** A clone's own: only an account is left to make with it, which becomes its person's. */
+      /** Whom it is for, in the maker's words. */
+      note?: string;
+      /** The maker owns the office: no limit of their own. */
+      owner?: boolean;
       forMember?: string;
     },
   ): Promise<{ token: string; expires: string }> {
     const token = randomBytes(18).toString("base64url");
+    const own = Boolean(by.forMember);
     const expires = new Date(
-      Date.now() + INVITE_DAYS * 24 * 60 * 60 * 1000,
+      Date.now() + (own ? OWN_LINK_MS : INVITE_DAYS * 24 * 60 * 60 * 1000),
     ).toISOString();
     await this.db.transaction(async (tx) => {
       // Past their time, invites are let go as new ones are made; too many open ones refuse more.
@@ -537,18 +560,25 @@ export class Relay {
         "DELETE FROM invites WHERE office_id = $1 AND expires < now() - interval '30 days'",
         [office],
       );
-      const [{ open }] = await tx.query<{ open: number }>(
-        "SELECT count(*)::int AS open FROM invites WHERE office_id = $1 AND cancelled IS NULL AND expires > now() AND (member_id IS NULL OR user_at IS NULL)",
-        [office],
-      );
-      if (open >= OPEN_INVITES)
-        throw new RelayError(
-          429,
-          "This office has too many open invites.",
-          "too-many-invites",
+      if (own)
+        await tx.query(
+          "UPDATE invites SET cancelled = now() WHERE office_id = $1 AND own AND member_id = $2 AND user_at IS NULL AND cancelled IS NULL",
+          [office, by.forMember],
         );
+      else {
+        const [{ open, mine }] = await tx.query<{ open: number; mine: number }>(
+          "SELECT count(*)::int AS open, count(*) FILTER (WHERE (by_member IS NOT NULL AND by_member = $2) OR (by_user IS NOT NULL AND by_user = $3))::int AS mine FROM invites WHERE office_id = $1 AND NOT own AND cancelled IS NULL AND expires > now() AND (member_id IS NULL OR user_at IS NULL)",
+          [office, by.member ?? null, by.user ?? null],
+        );
+        if (open >= OPEN_INVITES || (!by.owner && mine >= OPEN_INVITES_EACH))
+          throw new RelayError(
+            429,
+            "Too many invites are open.",
+            "too-many-invites",
+          );
+      }
       await tx.query(
-        "INSERT INTO invites (id, office_id, token_hash, by_member, by_user, by_name, created, expires, member_id, member_at) VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8, CASE WHEN $8::text IS NULL THEN NULL ELSE now() END)",
+        "INSERT INTO invites (id, office_id, token_hash, by_member, by_user, by_name, created, expires, member_id, member_at, own, note) VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8, CASE WHEN $8::text IS NULL THEN NULL ELSE now() END, $9, $10)",
         [
           `i-${randomBytes(6).toString("hex")}`,
           office,
@@ -558,6 +588,8 @@ export class Relay {
           by.name.slice(0, 80),
           expires,
           by.forMember ?? null,
+          own,
+          (by.note ?? "").trim().slice(0, 80),
         ],
       );
     });
@@ -606,7 +638,7 @@ export class Relay {
   /** An office's invites of the last weeks, the newest first, for its owners. */
   async invites(office: string): Promise<Invite[]> {
     const rows = await this.db.query<InviteRow>(
-      "SELECT * FROM invites WHERE office_id = $1 AND created > now() - interval '30 days' ORDER BY created DESC LIMIT 100",
+      "SELECT * FROM invites WHERE office_id = $1 AND NOT own AND created > now() - interval '30 days' ORDER BY created DESC LIMIT 100",
       [office],
     );
     return rows.map(inviteOf);
@@ -642,12 +674,17 @@ export class Relay {
     return {
       office: row.office_id,
       settle: async (user) => {
-        // The clone that joined with the same link is this person's: one person, one clone.
-        const [invite] = await this.db.query<{ member_id: string | null }>(
-          "UPDATE invites SET user_id = $2 WHERE id = $1 RETURNING member_id",
+        // A clone's own link makes its person's account: that clone is now this account's. An
+        // invite's two halves are never joined otherwise: whoever used the other half of a shared
+        // link may be someone else, and a clone becomes a person's by pairing it while signed in.
+        const [invite] = await this.db.query<{
+          member_id: string | null;
+          own: boolean;
+        }>(
+          "UPDATE invites SET user_id = $2 WHERE id = $1 RETURNING member_id, own",
           [row.id, user],
         );
-        if (invite?.member_id)
+        if (invite?.own && invite.member_id)
           await this.db.query(
             "UPDATE members SET user_id = $2 WHERE id = $1 AND user_id IS NULL AND NOT EXISTS (SELECT 1 FROM members WHERE office_id = $3 AND user_id = $2)",
             [invite.member_id, user, row.office_id],
@@ -691,27 +728,18 @@ export class Relay {
         : [];
       const [invite] =
         !office && input.key
-          ? await tx.query<{ office_id: string; user_id: string | null }>(
-              "UPDATE invites SET member_id = $2, member_at = now() WHERE token_hash = $1 AND member_id IS NULL AND cancelled IS NULL AND expires > now() RETURNING office_id, user_id",
+          ? await tx.query<{ office_id: string }>(
+              "UPDATE invites SET member_id = $2, member_at = now() WHERE token_hash = $1 AND member_id IS NULL AND cancelled IS NULL AND expires > now() RETURNING office_id",
               [hashToken(input.key), id],
             )
           : [];
       const at = office?.id ?? invite?.office_id;
       if (!at) return false;
-      // made with the same link as an account already: that person's clone
-      const user =
-        invite?.user_id &&
-        !(
-          await tx.query(
-            "SELECT 1 FROM members WHERE office_id = $1 AND user_id = $2",
-            [at, invite.user_id],
-          )
-        ).length
-          ? invite.user_id
-          : null;
+      // A clone joined with an invite is nobody's account's until its person pairs it while
+      // signed in: the link's other half may have been used by someone else.
       await tx.query(
-        "INSERT INTO members (id, office_id, token_hash, card, joined, seen, user_id) VALUES ($1, $2, $3, $4::jsonb, $5, $5, $6)",
-        [id, at, hashToken(token), JSON.stringify(card), now, user],
+        "INSERT INTO members (id, office_id, token_hash, card, joined, seen) VALUES ($1, $2, $3, $4::jsonb, $5, $5)",
+        [id, at, hashToken(token), JSON.stringify(card), now],
       );
       return true;
     });

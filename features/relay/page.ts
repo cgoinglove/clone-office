@@ -214,6 +214,7 @@ details.account[open] > summary { margin-bottom: .75rem; }
 select { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--field); border-radius: 10px; padding: .6rem .75rem; margin-bottom: .75rem; }
 /* a request and its answer, each the whole row */
 .rows.requests > li { flex-direction: column; align-items: stretch; gap: .5rem; }
+.rows.requests .who { flex: none; }
 .rows.requests form { display: flex; flex-direction: column; }
 .rows.requests form button { align-self: flex-start; }
 /* something about one's account that waits on them: a reset link they may not have asked for (ember, as the app marks what waits) */

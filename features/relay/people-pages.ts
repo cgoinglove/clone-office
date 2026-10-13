@@ -13,6 +13,11 @@ import { escape, type PageLanguage, shell } from "./page.ts";
 const WORDS = {
   en: {
     inviteTitle: "{from} invites you to their office",
+    onWebPerson: "On the web, no computer connected",
+    answerFrom: "Answer from {name}",
+    requestsWaiting: "Requests · {count} waiting",
+    inviteFor: "For whom (optional)",
+    inviteOnce: "Copy it now: it is shown only once.",
     webTitle: "No computer connected?",
     webWhat:
       "Take part from here: colleagues' clones can ask you, and you answer them and ask them on this page. A computer you connect later takes this over with your clone.",
@@ -235,6 +240,7 @@ const WORDS = {
       "For now, only this server's admin can sign in with a password.",
     resetMadeTold: "Their page says you made it, and they can stop it.",
     errors: {
+      "admin-made": "This server is set up already. Sign in.",
       "text-missing": "Write something first.",
       "not-on-web": "Your clone answers these on your computer.",
       "invite-used": "This invite made an account already. Ask for a new one.",
@@ -299,6 +305,11 @@ const WORDS = {
   },
   ko: {
     inviteTitle: "{from} 님이 오피스에 초대했어요",
+    onWebPerson: "웹에서 함께해요 (연결된 컴퓨터 없음)",
+    answerFrom: "{name} 님의 답",
+    requestsWaiting: "부탁 · {count}개 기다려요",
+    inviteFor: "누구에게 보내나요 (선택)",
+    inviteOnce: "지금 복사해 두세요. 한 번만 보여요.",
     webTitle: "연결된 컴퓨터가 없나요?",
     webWhat:
       "여기서 함께할 수 있어요. 동료의 클론이 나에게 물으면 이 페이지에서 답하고, 나도 여기서 동료에게 부탁해요. 나중에 컴퓨터를 연결하면 내 클론이 이어받아요.",
@@ -519,6 +530,7 @@ const WORDS = {
     resetMadeTold:
       "링크를 만든 것은 그 사람의 페이지에도 보이고, 그 사람이 링크를 막을 수 있어요.",
     errors: {
+      "admin-made": "이 서버는 이미 설정됐어요. 로그인하세요.",
       "text-missing": "먼저 내용을 적어 주세요.",
       "not-on-web": "이 부탁은 내 컴퓨터의 클론이 답해요.",
       "invite-used": "이 초대로 이미 계정을 만들었어요. 새 초대를 받아 주세요.",
@@ -583,6 +595,11 @@ const WORDS = {
   },
   zh: {
     inviteTitle: "{from}邀请你加入他们的办公室",
+    onWebPerson: "在网页上参与（没有连接电脑）",
+    answerFrom: "{name}的回答",
+    requestsWaiting: "请求 · {count} 个等待中",
+    inviteFor: "发给谁（可选）",
+    inviteOnce: "现在就复制：它只显示一次。",
     webTitle: "没有连接电脑？",
     webWhat:
       "可以在这里参与：同事的分身向你提问时，你在这个页面回答，也可以在这里向同事提出请求。之后连接电脑，你的分身会接手。",
@@ -788,6 +805,7 @@ const WORDS = {
     adminsOnlyNote: "目前只有这台服务器的管理员可以用密码登录。",
     resetMadeTold: "对方的页面会显示是你生成的，对方也可以停用它。",
     errors: {
+      "admin-made": "这台服务器已经设置好了。请登录。",
       "text-missing": "请先写点内容。",
       "not-on-web": "这些由你电脑上的分身回答。",
       "invite-used": "已经用这个邀请创建过账号了。请要一个新的邀请。",
@@ -845,6 +863,11 @@ const WORDS = {
   },
   ja: {
     inviteTitle: "{from}さんからオフィスへの招待が届いています",
+    onWebPerson: "Webで参加（コンピューター未接続）",
+    answerFrom: "{name}さんの回答",
+    requestsWaiting: "依頼 · {count}件待ち",
+    inviteFor: "誰に送るか（任意）",
+    inviteOnce: "今コピーしてください。表示は一度だけです。",
     webTitle: "コンピューターをつないでいませんか？",
     webWhat:
       "ここから参加できます。同僚のクローンから聞かれたらこのページで答え、ここから同僚に依頼もできます。あとでコンピューターをつなぐと、あなたのクローンが引き継ぎます。",
@@ -1072,6 +1095,8 @@ const WORDS = {
     resetMadeTold:
       "作ったことは相手のページにも表示され、相手はリンクを止められます。",
     errors: {
+      "admin-made":
+        "このサーバーはすでに設定済みです。サインインしてください。",
       "text-missing": "先に内容を書いてください。",
       "not-on-web": "これはあなたのコンピューターのクローンが答えます。",
       "invite-used":
@@ -1145,6 +1170,11 @@ const WORDS = {
   },
   es: {
     inviteTitle: "{from} te invita a su oficina",
+    onWebPerson: "En la web, sin computadora conectada",
+    answerFrom: "Respuesta de {name}",
+    requestsWaiting: "Solicitudes · {count} en espera",
+    inviteFor: "Para quién (opcional)",
+    inviteOnce: "Cópialo ahora: solo se muestra una vez.",
     webTitle: "¿No tienes una computadora conectada?",
     webWhat:
       "Participa desde aquí: los clones de tus colegas pueden preguntarte, y tú respondes y les pides cosas en esta página. Si luego conectas una computadora, tu clon toma el relevo.",
@@ -1372,6 +1402,7 @@ const WORDS = {
       "Por ahora, solo quien administra este servidor puede iniciar sesión con contraseña.",
     resetMadeTold: "Su página dice que lo creaste, y puede detenerlo.",
     errors: {
+      "admin-made": "Este servidor ya está configurado. Inicia sesión.",
       "text-missing": "Escribe algo primero.",
       "not-on-web": "Tu clon responde esto desde tu computadora.",
       "invite-used":
@@ -1442,6 +1473,11 @@ const WORDS = {
   },
   pt: {
     inviteTitle: "{from} convida você para o escritório",
+    onWebPerson: "Na web, sem computador conectado",
+    answerFrom: "Resposta de {name}",
+    requestsWaiting: "Pedidos · {count} esperando",
+    inviteFor: "Para quem (opcional)",
+    inviteOnce: "Copie agora: ele aparece só uma vez.",
     webTitle: "Nenhum computador conectado?",
     webWhat:
       "Participe por aqui: os clones dos colegas podem perguntar a você, e você responde e faz pedidos nesta página. Se depois conectar um computador, seu clone assume.",
@@ -1670,6 +1706,7 @@ const WORDS = {
     resetMadeTold:
       "A página da pessoa mostra que você o criou, e ela pode pará-lo.",
     errors: {
+      "admin-made": "Este servidor já está configurado. Entre.",
       "text-missing": "Escreva algo primeiro.",
       "not-on-web": "Seu clone responde isso no seu computador.",
       "invite-used": "Uma conta já foi criada com este convite. Peça um novo.",
@@ -1827,6 +1864,7 @@ export function signUpPage(input: {
     title,
     `<h1>${title}</h1>
 ${input.errorAtTop ? problem(lang, input.error) : ""}
+${input.accountMade ? `<p class="done" role="status">${say(lang, "accountMade")} <a href="/login">${say(lang, "signInLink")}</a></p>` : ""}
 <p>${say(lang, "what")}</p>
 ${installGuide(input)}
 <details class="account" id="account"${input.error || input.openAccount ? " open" : ""}><summary>${say(lang, "accountInstead")}</summary>
@@ -1989,7 +2027,9 @@ export function requestsPage(input: {
         one,
       ) => `<li><span class="who"><b>${say(lang, "fromWho", { name: one.other })}</b>${state(one)}<small>${escape(one.when)}</small></span>
 <p class="request">${escape(one.text)}</p>${
-        one.answer ? `<p class="note">${escape(one.answer)}</p>` : ""
+        one.answer
+          ? `<p class="note"><b>${say(lang, "answerLabel")}</b><br>${escape(one.answer)}</p>`
+          : ""
       }${
         input.web && one.state === "waiting"
           ? `<form method="post" action="/home/requests/answer">${officeField}<input type="hidden" name="task" value="${escape(one.id)}">
@@ -2006,7 +2046,7 @@ export function requestsPage(input: {
       (
         one,
       ) => `<li><span class="who"><b>${say(lang, "toWho", { name: one.other })}</b>${state(one)}<small>${escape(one.when)}</small></span>
-<p class="request">${escape(one.text)}</p>${one.answer ? `<p>${escape(one.answer)}</p>` : ""}</li>`,
+<p class="request">${escape(one.text)}</p>${one.answer ? `<p class="note"><b>${say(lang, "answerFrom", { name: one.other })}</b><br>${escape(one.answer)}</p>` : ""}</li>`,
     )
     .join("");
   return shell(
@@ -2094,6 +2134,8 @@ export interface HomePerson {
   role: "owner" | "member";
   /** When their computer's clone was last heard from, as the reader reads a time. */
   seen?: string;
+  /** Taking part on the web, with no computer connected. */
+  web?: boolean;
 }
 
 export interface HomeClone {
@@ -2117,10 +2159,13 @@ export function homePage(input: {
    * computer connected, offers taking part on the web.
    */
   place?: "web" | "clone";
+  /** For someone on the web: how many requests wait on their answer. */
+  waiting?: number;
   /** The office's invites still open, for its owners to see and cancel. */
   invites?: {
     id: string;
     by: string;
+    note: string;
     created: string;
     clone: boolean;
     account: boolean;
@@ -2207,9 +2252,11 @@ export function homePage(input: {
           }<a class="small" href="/home/people/remove?user=${encodeURIComponent(person.id)}&amp;${at}">${say(lang, "remove")}</a></span>`
         : "";
     return `<li><span class="who"><b>${escape(person.name)}</b><span class="tag">${say(lang, person.role === "owner" ? "owner" : "member")}</span>${self ? `<span class="tag">${say(lang, "you")}</span>` : ""}<small>${escape(person.email)} · ${
-      person.seen
-        ? say(lang, "cloneIn", { when: person.seen })
-        : say(lang, "cloneOut")
+      person.web
+        ? say(lang, "onWebPerson")
+        : person.seen
+          ? say(lang, "cloneIn", { when: person.seen })
+          : say(lang, "cloneOut")
     }</small></span>${acts}</li>`;
   };
   const clones = owner ? (input.clones ?? []) : [];
@@ -2266,7 +2313,11 @@ ${
 </section>
 ${
   input.place
-    ? `<p><a class="button quiet" href="/home/requests?${at}">${say(lang, "requestsLink")}</a></p>`
+    ? `<p><a class="button${input.waiting ? "" : " quiet"}" href="/home/requests?${at}">${
+        input.waiting
+          ? say(lang, "requestsWaiting", { count: String(input.waiting) })
+          : say(lang, "requestsLink")
+      }</a></p>`
     : `<section id="web">
 <h2>${say(lang, "webTitle")}</h2>
 <p>${say(lang, "webWhat")}</p>
@@ -2279,17 +2330,18 @@ ${
 ${
   input.invited
     ? `<p class="done" role="status">${say(lang, "inviteMade")}</p>
-<pre>${escape(input.invited.link)}</pre>`
+<pre>${escape(input.invited.link)}</pre>
+<p class="note">${say(lang, "inviteOnce")}</p>`
     : ""
 }
-<form method="post" action="/home/invite#invite">${officeField}<button type="submit" class="quiet">${say(lang, "inviteMake")}</button></form>
+<form method="post" action="/home/invite" class="inline">${officeField}<input name="note" maxlength="80" aria-label="${say(lang, "inviteFor")}" placeholder="${say(lang, "inviteFor")}"><button type="submit" class="quiet">${say(lang, "inviteMake")}</button></form>
 ${
   owner && input.invites?.length
     ? `<h3>${say(lang, "invitesTitle")}</h3>
 <ul class="rows">${input.invites
         .map(
           (one) =>
-            `<li><span class="who">${say(lang, "inviteFrom", { by: one.by, when: one.created })}${one.clone ? `<span class="tag">${say(lang, "inviteCloneIn")}</span>` : ""}${one.account ? `<span class="tag">${say(lang, "inviteAccountIn")}</span>` : ""}</span><form method="post" action="/home/invite/cancel" class="acts">${officeField}<input type="hidden" name="invite" value="${escape(one.id)}"><button type="submit" class="ghost small">${say(lang, "cancel")}</button></form></li>`,
+            `<li><span class="who">${one.note ? `<b>${escape(one.note)}</b> ` : ""}${say(lang, "inviteFrom", { by: one.by, when: one.created })}${one.clone ? `<span class="tag">${say(lang, "inviteCloneIn")}</span>` : ""}${one.account ? `<span class="tag">${say(lang, "inviteAccountIn")}</span>` : ""}</span><form method="post" action="/home/invite/cancel" class="acts">${officeField}<input type="hidden" name="invite" value="${escape(one.id)}"><button type="submit" class="ghost small">${say(lang, "cancel")}</button></form></li>`,
         )
         .join("")}</ul>`
     : ""
@@ -2504,7 +2556,8 @@ ${
     code
       ? `<p class="field-error" id="${id}" role="alert">${errorWords(lang, code)}</p>`
       : "";
-  const setUp = `<details${!google || failed ? " open" : ""}><summary>${say(lang, google ? "googleChange" : "googleSetup")}</summary>
+  // Just made the admin: Google, which is optional, waits folded below the next step.
+  const setUp = `<details${(!google && input.done !== "welcome") || failed ? " open" : ""}><summary>${say(lang, google ? "googleChange" : "googleSetup")}</summary>
 <section class="guide">
 <ol class="steps">
 <li><span>${say(lang, "step1")}</span><a href="https://console.cloud.google.com/apis/credentials" rel="noreferrer" target="_blank">${say(lang, "consoleLink")}</a></li>
@@ -2589,7 +2642,8 @@ ${setUp}
 ${problem(lang, input.error)}
 ${
   input.done === "welcome"
-    ? `<p class="done" role="status">${say(lang, "welcome")} <a href="/home#invite">${say(lang, "inviteTeam")}</a></p>`
+    ? `<section class="welcome"><p class="done" role="status">${say(lang, "welcome")}</p>
+<p><a class="button" href="/home#invite">${say(lang, "inviteTeam")}</a></p></section>`
     : input.done
       ? `<p class="done" role="status">${say(lang, input.done === "password-back" ? "passwordBack" : "saved")}</p>`
       : ""

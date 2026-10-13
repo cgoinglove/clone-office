@@ -31,9 +31,11 @@ nothing is shared until then. Colleagues who join appear at their desks in the o
 Anyone in the office can make an invite link in Settings › Office (**Make an invite link**, 초대 링크
 만들기), or with **Invite a colleague** (동료 초대) in their menu, which copies one, and send it.
 Each link is for one person: it works once to join a clone and once to make an account on the team
-server, for seven days, so nobody joins without someone inside asking them. A clone and an account
-made with the same link are one person's. The office's key itself is never in a link; it stays with
-whoever runs the server.
+server, for seven days, so nobody joins without someone inside asking them; someone who does not own
+the office keeps up to ten open at once, and a few words of **For whom** (누구에게 보내나요) tell
+them apart. A clone and an account are joined only when their person connects the computer while
+signed in (Connect your computer), never by the link alone, as whoever used the link's other half may
+be someone else. The office's key itself is never in a link; it stays with whoever runs the server.
 
 ### From the invite link, in a browser
 
@@ -73,8 +75,8 @@ then has:
   server then says which clone is connected. One person has one clone: connecting another
   computer moves it there, and the one before leaves the office.
 - **Invite a teammate** (동료 초대): **Make an invite link** (초대 링크 만들기) gives a link for one
-  person, shown once to copy. An owner also sees the invites still open, from whom and when, and
-  **Cancel** (취소) stops one.
+  person, shown once to copy (a reload makes no other). An owner also sees the invites still open,
+  for whom, from whom and when, and **Cancel** (취소) stops one.
 - **No computer connected?** (연결된 컴퓨터가 없나요?) **Take part on the web** (웹에서 함께하기)
   puts them in the office as themselves, with no clone: colleagues' clones see them as answering
   on the web and can ask them, and **Requests** (부탁, `/home/requests`) shows what was asked of
@@ -92,8 +94,9 @@ then has:
 **Sign-in settings** (로그인 설정, `/home/admin`) are the server's admin's: the owners of the office
 the server was started with. The admin is made with the setup link whoever runs the server has
 (**Set up this team server**, 이 팀 서버 설정하기): its log prints one at each start while it has
-no admin, working once, for a day; for an office opened on someone's computer, their app opens it
-(Settings › Office › **Open the team server**). The settings apply to every office on the server:
+no admin, working once, for a day; for an office opened on someone's computer, their app on that same
+computer opens it (Settings › Office › **Open the team server**). The office's key never makes an
+admin otherwise, as it was in the links people were sent before invites were one per person. The settings apply to every office on the server:
 
 - **Email and password** (이메일과 비밀번호): on or off. It turns off only while Google is on and
   the admin connected their own Google account, so they keep a way in; the page says how many
@@ -106,7 +109,10 @@ no admin, working once, for a day; for an office opened on someone's computer, t
   https with `RELAY_PUBLIC_URL` set to that address. The secret is sealed on the server
   (AES-256-GCM under a key the server makes once and keeps apart from its database: the
   `secret.key` beside a data folder, or in `RELAY_KEY_DIR` for a server on Postgres, a volume of
-  its own in the compose file; `RELAY_ENCRYPTION_KEY` gives one instead) and never shown again. Google turns off or on
+  its own in the compose file; `RELAY_ENCRYPTION_KEY` gives one instead) and never shown again.
+  Relays sharing one database share that key: one started with another key (or a database restored
+  without its key) says so and stops rather than making new secrets, unless started once with
+  `RELAY_RESEAL=1` to begin again with its own. Google turns off or on
   any time with its settings kept, and **Remove Google settings** (Google 설정 지우기) deletes the
   client and its secret, asked once.
 - One way always stays on. A Google account makes a new account only from an invite's page, and
