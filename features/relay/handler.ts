@@ -136,11 +136,24 @@ class Tries {
   }
 
   miss(from: string, now = Date.now()): void {
-    this.seen.set(from, [...this.recent(from, now), now]);
-    // Addresses whose tries are past are let go, so the count never grows without end.
-    if (this.seen.size > 10_000)
-      for (const address of [...this.seen.keys()]) this.recent(address, now);
+    const kept = this.recent(from, now);
+    // Kept last in the map, so the longest quiet go first should it fill: the count never grows
+    // without end, and a miss never walks every address.
+    this.seen.delete(from);
+    this.seen.set(from, [...kept, now]);
+    while (this.seen.size > Tries.MOST) {
+      const oldest = this.seen.keys().next().value;
+      if (oldest === undefined) break;
+      this.seen.delete(oldest);
+    }
   }
+
+  /** Lets go of the addresses whose tries are past, now and then rather than on every miss. */
+  sweep(now = Date.now()): void {
+    for (const address of [...this.seen.keys()]) this.recent(address, now);
+  }
+
+  static readonly MOST = 10_000;
 }
 
 async function raw(request: IncomingMessage): Promise<string> {
@@ -205,10 +218,14 @@ export function relayHandler(
 ) {
   const accounts = options.accounts;
   const tries = new Tries(20, 10 * 60 * 1000);
+  setInterval(() => tries.sweep(), 60 * 1000).unref();
+  // Behind a proxy, the address it saw: the last one on the line, which it added itself (the
+  // ones before are whatever the caller sent).
   const address = (request: IncomingMessage): string =>
     (options.trustProxy
       ? String(request.headers["x-forwarded-for"] ?? "")
-          .split(",")[0]
+          .split(",")
+          .at(-1)
           ?.trim()
       : "") ||
     request.socket.remoteAddress ||
@@ -272,8 +289,17 @@ export function relayHandler(
      * An office's invite link as people copy it: the inviter's name readable (a space or a mark a
      * link would read as its own is still written as a code).
      */
+    // The inviter's name stays readable in any script; everything else is encoded, so the link
+    // is safe inside the quotes of the line people run with it.
     const inviteLink = (key: string, from: string) =>
-      `${base()}/i/${key}?from=${from.replace(/[\s%&#?+=<>"']/g, (mark) => encodeURIComponent(mark))}`;
+      `${base()}/i/${key}?from=${from.replace(
+        /[^\p{L}\p{M}\p{N}._~-]/gu,
+        (mark) =>
+          encodeURIComponent(mark).replace(
+            /[!'()*]/g,
+            (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+          ),
+      )}`;
     /** One of a person's offices: the one named, else the first they joined. */
     const placeOf = <T extends { office: string }>(
       places: T[],
@@ -332,10 +358,21 @@ export function relayHandler(
           html(403, missingPage(lang));
           return true;
         }
-        // Started where Google sends people back, so its way back finds the cookie that binds it.
+        // Started where Google sends people back, so its way back finds the cookie that binds it:
+        // reached at another address, the same page there, to start again from it (a start from
+        // another site is refused, and a redirect would be one).
         const site = accounts.googleSite();
         if (site && new URL(site).origin !== new URL(base()).origin) {
-          redirect(`${site}${path}${url.search}`);
+          const who = url.searchParams.get("from")?.trim().slice(0, 80);
+          redirect(
+            `${site}${
+              googleInvite
+                ? `/i/${googleInvite[1]}?${who ? `from=${encodeURIComponent(who)}&` : ""}account#account`
+                : path === "/home/google"
+                  ? "/home"
+                  : `/login${url.search}`
+            }`,
+          );
           return true;
         }
         if (path === "/home/google" && !(await accounts.person(cookie))) {
@@ -458,6 +495,7 @@ export function relayHandler(
                 name: person.name,
                 office: (await accounts.officeOf(key))?.name ?? "",
                 action: `/i/${key}/join`,
+                signOutNext: `/i/${key}?account`,
                 ...(who ? { invitedBy: who } : {}),
               }),
             );
@@ -566,7 +604,26 @@ export function relayHandler(
         return true;
       }
       if (path === "/logout" && post) {
-        redirect("/login", await accounts.signOut(cookie));
+        // From the question to join, someone else on this browser goes on to make their own
+        // account with that invite.
+        const next = new URLSearchParams(await raw(request)).get("next") ?? "";
+        redirect(
+          /^\/i\/[\w-]{4,128}\?account$/.test(next)
+            ? `${next}#account`
+            : "/login",
+          await accounts.signOut(cookie),
+        );
+        return true;
+      }
+      // A person stops a reset link made for them that they did not ask for.
+      if (path === "/home/reset/stop" && post) {
+        const person = await accounts.person(cookie);
+        if (!person) {
+          redirect("/login");
+          return true;
+        }
+        await accounts.stopResets(person.id);
+        redirect("/home?done=stopped");
         return true;
       }
       if (
@@ -610,6 +667,9 @@ export function relayHandler(
             admin: await accounts.isAdmin(person.id),
             ways: await accounts.ways(person.id),
             methods,
+            ...(url.searchParams.get("done") === "stopped"
+              ? { done: "stopped" as const }
+              : {}),
             events: (await accounts.events(person.id)).map((event) => ({
               ...event,
               at: new Date(event.at).toLocaleDateString(lang, {
@@ -617,6 +677,11 @@ export function relayHandler(
                 month: "long",
                 day: "numeric",
               }),
+              // how long it still works, rather than a time of day in the server's own zone
+              minutes: Math.max(
+                1,
+                Math.ceil((Date.parse(event.until) - Date.now()) / 60_000),
+              ),
             })),
             people: people.map((one) => ({
               id: one.id,
@@ -697,6 +762,15 @@ export function relayHandler(
             what === "password/off"
           ) {
             const settings = await accounts.settings(person.id);
+            // What would refuse turning passwords off, said in place of a button that would fail.
+            const blocked =
+              what !== "password/off"
+                ? undefined
+                : !accounts.methods().google
+                  ? "google-first"
+                  : !settings.mineLinked
+                    ? "link-google-first"
+                    : undefined;
             html(
               200,
               confirmPage({
@@ -713,6 +787,7 @@ export function relayHandler(
                     : settings.googleOnly,
                 action: path,
                 back: "/home/admin",
+                ...(blocked ? { blocked } : {}),
               }),
             );
             return true;
@@ -749,7 +824,7 @@ export function relayHandler(
             200,
             await page({
               ...(failed ? { error: failed } : {}),
-              ...(done === "saved" ? { saved: true } : {}),
+              ...(done === "saved" || done === "password-back" ? { done } : {}),
               ...(/^[a-z-]{2,40}$/.test(googleFailed)
                 ? {
                     googleError: googleFailed,
@@ -765,21 +840,26 @@ export function relayHandler(
         }
         const fields = new URLSearchParams(await raw(request));
         try {
+          // turning Google off or mending it may turn passwords back on for everyone: said so
+          let passwordBack = false;
           if (what === "password")
             await accounts.setPassword(person.id, fields.get("on") !== "0");
           else if (what === "password/off")
             await accounts.setPassword(person.id, false);
           else if (what === "google")
-            await accounts.saveGoogle(person.id, {
+            ({ passwordBack } = await accounts.saveGoogle(person.id, {
               clientId: fields.get("clientId") ?? "",
               secret: fields.get("secret") ?? "",
               site,
               by: person.name,
-            });
+            }));
           else if (what === "google/on" || what === "google/off")
-            await accounts.setGoogle(person.id, what === "google/on");
+            ({ passwordBack } = await accounts.setGoogle(
+              person.id,
+              what === "google/on",
+            ));
           else if (what === "google/remove")
-            await accounts.removeGoogle(person.id);
+            ({ passwordBack } = await accounts.removeGoogle(person.id));
           else if (what === "reset") {
             const made = await accounts.resetLink(
               person.id,
@@ -800,7 +880,9 @@ export function relayHandler(
             redirect("/home/admin");
             return true;
           }
-          redirect("/home/admin?done=saved");
+          redirect(
+            `/home/admin?done=${passwordBack ? "password-back" : "saved"}`,
+          );
         } catch (error) {
           const code =
             error instanceof AccountError ? error.code : "account-failed";

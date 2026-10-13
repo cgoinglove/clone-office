@@ -146,6 +146,7 @@ footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem
 .acts a.small { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 .4rem; }
 .acts a.button { padding: .3rem .7rem; font-size: .85rem; border-radius: 8px; }
 details > summary { cursor: pointer; color: var(--muted); font-size: .85rem; list-style: none; }
+details:not(.account) > summary { display: inline-flex; align-items: center; min-height: 2rem; }
 details > summary::-webkit-details-marker { display: none; }
 details[open] > summary { margin-bottom: .4rem; }
 /* every fold says it opens: a small chevron after its words, turning down once open */
@@ -192,6 +193,9 @@ details.account[open] > summary { margin-bottom: .75rem; }
 .ways .who { flex: 1 1 12rem; min-width: 0; }
 .ways .who small { display: block; color: var(--muted); font-size: .85rem; }
 .field-error { color: var(--error); font-size: .9rem; margin: -.4rem 0 .75rem; }
+/* something about one's account that wants them now: a reset link they may not have asked for */
+.alert { display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; margin: 0; border: 1px solid var(--error); border-radius: 14px; padding: .9rem 1rem; }
+.alert p { margin: 0; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 `;
 

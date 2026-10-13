@@ -152,7 +152,6 @@ const WORDS = {
     resetMadeTitle: "Reset link for {name}",
     resetMadeWhat:
       "Send this link to {name} yourself. It works once, for an hour:",
-    newPasswordTitle: "Choose a new password",
     newPassword: "New password (8 characters or more)",
     setPassword: "Save the new password",
     resetDone: "Your password is changed. Sign in with it.",
@@ -166,13 +165,27 @@ const WORDS = {
       "Their account goes from the team server: they can't sign in, and their clone stops in every office here. What they asked and answered stays, and they can make a new account from an invite.",
     thatOffice: "this office",
     yourOffices: "Your offices",
-    showing: "Open",
+    showing: "Showing",
     notYou: "Not {name}?",
     joinFrom: "{from} invited you.",
     resetMake: "Make the link",
     newPasswordFor: "A new password for {name}",
-    resetNotice:
-      "{name} made a password reset link for your account on {when}. If you did not ask for one, tell your office's owner.",
+    resetOpen:
+      "On {when}, {name} made a link to reset your password. It works once, for {minutes} more minutes. If you didn't ask for it, stop it.",
+    resetStop: "Stop the link",
+    resetStopped:
+      "On {when}, {name} made a link to reset your password. You stopped it.",
+    resetEnded:
+      "On {when}, {name} made a link to reset your password. It ended unused.",
+    stoppedDone: "Stopped. That link can no longer change your password.",
+    connectTitleTo: "Connect your computer to {office}",
+    resetDeadTitle: "This link no longer works",
+    resetDeadWhat:
+      "It was used, stopped or has expired. Ask the team server's admin for a new one.",
+    passwordBack: "Saved. Email and password sign-in is back on for everyone.",
+    adminsOnlyNote:
+      "For now, only this server's admin can sign in with a password.",
+    resetMadeTold: "Their page says you made it, and they can stop it.",
     errors: {
       "invite-wrong": "There is no such invite.",
       "name-missing": "Say your name.",
@@ -203,7 +216,7 @@ const WORDS = {
       "not-admin": "Only this server's admin can change how people sign in.",
       "google-first": "Turn on Google first, so people can still sign in.",
       "link-google-first":
-        "Connect your own Google account first (on your page), so you can still sign in.",
+        "Connect your own Google account first, so you can still sign in.",
       "password-first":
         "Turn on email and password first, so people can still sign in.",
       "sealing-off":
@@ -215,7 +228,8 @@ const WORDS = {
       "google-not-set": "Set up Google first.",
       "google-unreadable":
         "The saved secret can't be opened with this server's key. Paste it again.",
-      "reset-expired": "That link is used or expired. Ask for a new one.",
+      "reset-expired":
+        "That link no longer works. Ask the team server's admin for a new one.",
       "no-password":
         "That person has no password to reset: they sign in with Google.",
       "last-owner":
@@ -246,7 +260,7 @@ const WORDS = {
     signInTitle: "내 오피스에 로그인",
     signIn: "로그인",
     noAccount: "아직 계정이 없나요? 오피스 초대 링크를 열면 만들 수 있어요.",
-    hello: "{name}님, 안녕하세요",
+    hello: "{name} 님, 안녕하세요",
     yourOffice: "내 오피스",
     connectTitle: "내 컴퓨터 연결",
     connectWhat:
@@ -254,7 +268,7 @@ const WORDS = {
     makeCommand: "연결 명령 만들기",
     commandNote:
       "한 번, 10분 동안만 돼요. 언제든 새로 만들 수 있어요. 다른 컴퓨터를 연결하면 클론이 그리로 옮겨 가요.",
-    connected: "연결됨: {name}님의 클론, 마지막으로 본 때 {when}.",
+    connected: "연결됨: {name} 님의 클론, 마지막으로 본 때 {when}.",
     notConnected: "아직 연결된 컴퓨터가 없어요.",
     inviteTeam: "동료 초대",
     inviteWhat: "이 링크를 보내면 동료가 그걸로 계정을 만들어요.",
@@ -271,16 +285,16 @@ const WORDS = {
     cloneIn: "클론 연결됨, 마지막으로 본 때 {when}",
     cloneOut: "아직 연결된 컴퓨터가 없어요",
     remove: "내보내기",
-    removeTitle: "{name}님을 이 오피스에서 내보낼까요?",
+    removeTitle: "{name} 님을 이 오피스에서 내보낼까요?",
     removeWhat:
       "클론이 여기서 바로 멈추고, 새 연결 명령도 만들 수 없어요. 주고받은 부탁은 남아요.",
     makeOwner: "주인으로",
-    ownerTitle: "{name}님을 주인으로 만들까요?",
+    ownerTitle: "{name} 님을 주인으로 만들까요?",
     ownerWhat:
       "주인은 누가 들어와 있을지 정하고, 오피스 이름을 바꾸고, 새 초대 링크를 만들어요. 나도 계속 주인이에요.",
     keyed: "링크로 바로 들어온 클론",
     keyedWhat: "여기 계정 없이, 앱에서 초대 링크로 바로 들어온 클론이에요.",
-    cloneTitle: "{name}님의 클론을 이 오피스에서 내보낼까요?",
+    cloneTitle: "{name} 님의 클론을 이 오피스에서 내보낼까요?",
     cloneWhat: "여기서 바로 멈춰요. 주고받은 부탁은 남아요.",
     newLink: "새 초대 링크 만들기",
     newLinkTitle: "새 초대 링크를 만들까요?",
@@ -330,7 +344,7 @@ const WORDS = {
     clientSecret: "클라이언트 보안 비밀번호",
     secretNew: "팀 서버에 암호화해서 저장하고, 다시 보여 주지 않아요.",
     secretKeep: "비워 두면 저장된 보안 비밀번호를 그대로 써요.",
-    savedBy: "{when}에 {name}님이 설정했어요.",
+    savedBy: "{when}에 {name} 님이 설정했어요.",
     saveGoogle: "저장하고 켜기",
     removeGoogle: "Google 설정 지우기",
     sealingOff:
@@ -361,33 +375,46 @@ const WORDS = {
     serverPeopleWhat:
       "여기에 계정이 있는 모든 사람이에요. 비밀번호를 잊은 사람에게는 재설정 링크를 만들어 보내 주세요.",
     resetLink: "재설정 링크",
-    resetTitle: "{name}님의 비밀번호 재설정 링크를 만들까요?",
+    resetTitle: "{name} 님의 비밀번호 재설정 링크를 만들까요?",
     resetWhat:
       "링크를 받아 직접 보내 주면 돼요. 한 번, 1시간 동안만 쓸 수 있고, 쓰면 그 사람은 모든 곳에서 로그아웃돼요.",
-    resetMadeTitle: "{name}님의 재설정 링크",
+    resetMadeTitle: "{name} 님의 재설정 링크",
     resetMadeWhat:
-      "이 링크를 {name}님에게 직접 보내 주세요. 한 번, 1시간 동안만 돼요:",
-    newPasswordTitle: "새 비밀번호 정하기",
+      "이 링크를 {name} 님에게 직접 보내 주세요. 한 번, 1시간 동안만 돼요:",
     newPassword: "새 비밀번호 (8자 이상)",
     setPassword: "새 비밀번호 저장",
     resetDone: "비밀번호를 바꿨어요. 새 비밀번호로 로그인하세요.",
     joinTitle: "{office}에도 들어갈까요?",
     joinWhat:
-      "{name}님으로 로그인해 있어요. {office}의 사람들에게 내 이름과 이메일이 보여요.",
+      "{name} 님으로 로그인해 있어요. {office}의 사람들에게 내 이름과 이메일이 보여요.",
     join: "들어가기",
     removeAccount: "계정 지우기",
-    removeAccountTitle: "{name}님의 계정을 지울까요?",
+    removeAccountTitle: "{name} 님의 계정을 지울까요?",
     removeAccountWhat:
       "그 사람의 계정이 팀 서버에서 사라져요. 로그인할 수 없고, 여기 모든 오피스에서 클론이 멈춰요. 주고받은 부탁은 남고, 초대 링크로 새 계정을 만들 수 있어요.",
     thatOffice: "이 오피스",
     yourOffices: "들어가 있는 오피스",
     showing: "보는 중",
-    notYou: "{name}님이 아닌가요?",
+    notYou: "{name} 님이 아닌가요?",
     joinFrom: "{from} 님이 초대했어요.",
     resetMake: "링크 만들기",
-    newPasswordFor: "{name}님의 새 비밀번호",
-    resetNotice:
-      "{when}에 {name}님이 내 계정의 비밀번호 재설정 링크를 만들었어요. 요청한 적이 없다면 오피스 주인에게 알려 주세요.",
+    newPasswordFor: "{name} 님의 새 비밀번호",
+    resetOpen:
+      "{when}에 {name} 님이 내 비밀번호 재설정 링크를 만들었어요. 앞으로 {minutes}분 동안 한 번 쓸 수 있어요. 내가 부탁한 게 아니라면 링크를 막아 주세요.",
+    resetStop: "링크 막기",
+    resetStopped: "{when}에 {name} 님이 만든 비밀번호 재설정 링크를 막았어요.",
+    resetEnded:
+      "{when}에 {name} 님이 만든 비밀번호 재설정 링크는 쓰이지 않고 끝났어요.",
+    stoppedDone: "링크를 막았어요. 이제 그 링크로는 비밀번호를 바꿀 수 없어요.",
+    connectTitleTo: "내 컴퓨터를 {office}에 연결",
+    resetDeadTitle: "이 링크는 더 쓸 수 없어요",
+    resetDeadWhat:
+      "이미 쓰였거나, 막혔거나, 시간이 지났어요. 팀 서버 관리자에게 새 링크를 받아 주세요.",
+    passwordBack:
+      "저장했어요. 이메일과 비밀번호 로그인도 모두에게 다시 켜졌어요.",
+    adminsOnlyNote: "지금은 이 서버의 관리자만 비밀번호로 로그인할 수 있어요.",
+    resetMadeTold:
+      "링크를 만든 것은 그 사람의 페이지에도 보이고, 그 사람이 링크를 막을 수 있어요.",
     errors: {
       "invite-wrong": "없는 초대예요.",
       "name-missing": "이름을 적어 주세요.",
@@ -418,7 +445,7 @@ const WORDS = {
       "google-first":
         "먼저 Google 로그인을 켜 주세요. 그래야 사람들이 계속 로그인할 수 있어요.",
       "link-google-first":
-        "먼저 내 페이지에서 내 Google 계정을 연결해 주세요. 그래야 나도 계속 로그인할 수 있어요.",
+        "먼저 내 Google 계정을 연결해 주세요. 그래야 나도 계속 로그인할 수 있어요.",
       "password-first":
         "먼저 이메일과 비밀번호 로그인을 켜 주세요. 그래야 사람들이 계속 로그인할 수 있어요.",
       "sealing-off":
@@ -431,7 +458,7 @@ const WORDS = {
       "google-unreadable":
         "저장된 보안 비밀번호를 이 서버의 키로 열 수 없어요. 다시 붙여 넣어 주세요.",
       "reset-expired":
-        "이미 쓰였거나 시간이 지난 링크예요. 새 링크를 받아 주세요.",
+        "더 쓸 수 없는 링크예요. 팀 서버 관리자에게 새 링크를 받아 주세요.",
       "no-password":
         "그 사람은 Google로 로그인해서 재설정할 비밀번호가 없어요.",
       "last-owner":
@@ -572,7 +599,6 @@ const WORDS = {
       "你会得到一个链接，由你自己发给对方。它只能用一次，1 小时内有效，使用后对方会在所有地方退出登录。",
     resetMadeTitle: "{name}的重置链接",
     resetMadeWhat: "请把这个链接亲自发给{name}。只能用一次，1 小时内有效：",
-    newPasswordTitle: "设置新密码",
     newPassword: "新密码（至少 8 位）",
     setPassword: "保存新密码",
     resetDone: "密码已更改。请用新密码登录。",
@@ -590,8 +616,19 @@ const WORDS = {
     joinFrom: "{from}邀请了你。",
     resetMake: "生成链接",
     newPasswordFor: "为{name}设置新密码",
-    resetNotice:
-      "{name}于 {when} 为你的账号生成了密码重置链接。如果你没有请求过，请告诉办公室的所有者。",
+    resetOpen:
+      "{name}于 {when} 为你的密码生成了重置链接。它还可以用一次，剩余 {minutes} 分钟。如果不是你请求的，请停用它。",
+    resetStop: "停用链接",
+    resetStopped: "{name}于 {when} 生成的密码重置链接已被你停用。",
+    resetEnded: "{name}于 {when} 生成的密码重置链接没有被使用，已经失效。",
+    stoppedDone: "已停用。那个链接不能再更改你的密码。",
+    connectTitleTo: "把你的电脑连接到 {office}",
+    resetDeadTitle: "这个链接已经不能用了",
+    resetDeadWhat:
+      "它已被使用、被停用或已过期。请向团队服务器的管理员要一个新的。",
+    passwordBack: "已保存。邮箱和密码登录已对所有人重新开启。",
+    adminsOnlyNote: "目前只有这台服务器的管理员可以用密码登录。",
+    resetMadeTold: "对方的页面会显示是你生成的，对方也可以停用它。",
     errors: {
       "invite-wrong": "没有这个邀请。",
       "name-missing": "请填写你的名字。",
@@ -619,8 +656,7 @@ const WORDS = {
       "google-failed": "Google 登录没有成功。请重试。",
       "not-admin": "只有这台服务器的管理员才能更改登录方式。",
       "google-first": "请先开启 Google 登录，这样大家仍然可以登录。",
-      "link-google-first":
-        "请先在你的页面关联你自己的 Google 账号，这样你仍然可以登录。",
+      "link-google-first": "请先关联你自己的 Google 账号，这样你仍然可以登录。",
       "password-first": "请先开启邮箱和密码登录，这样大家仍然可以登录。",
       "sealing-off":
         "这台服务器没有用来加密密钥的密钥。请设置 RELAY_ENCRYPTION_KEY 后重启。",
@@ -631,7 +667,8 @@ const WORDS = {
       "google-not-set": "请先设置 Google 登录。",
       "google-unreadable":
         "已保存的密钥无法用这台服务器的密钥打开。请重新粘贴。",
-      "reset-expired": "这个链接已被使用或已过期。请要一个新的。",
+      "reset-expired":
+        "这个链接已经不能用了。请向团队服务器的管理员要一个新的。",
       "no-password": "这个人用 Google 登录，没有可重置的密码。",
       "last-owner":
         "对方是这里某个办公室唯一的所有者。请先把别人设为那个办公室的所有者。",
@@ -786,7 +823,6 @@ const WORDS = {
     resetMadeTitle: "{name}さんのリセット用リンク",
     resetMadeWhat:
       "このリンクを{name}さんに直接送ってください。1回だけ、1時間有効です：",
-    newPasswordTitle: "新しいパスワードを決める",
     newPassword: "新しいパスワード（8文字以上）",
     setPassword: "新しいパスワードを保存",
     resetDone:
@@ -806,8 +842,24 @@ const WORDS = {
     joinFrom: "{from}さんが招待しました。",
     resetMake: "リンクを作る",
     newPasswordFor: "{name}さんの新しいパスワード",
-    resetNotice:
-      "{when}に{name}さんがあなたのアカウントのパスワードのリセット用リンクを作りました。頼んでいない場合は、オフィスのオーナーに知らせてください。",
+    resetOpen:
+      "{when}に{name}さんがあなたのパスワードのリセット用リンクを作りました。あと{minutes}分、一度だけ使えます。頼んでいない場合は止めてください。",
+    resetStop: "リンクを止める",
+    resetStopped:
+      "{when}に{name}さんが作ったパスワードのリセット用リンクを止めました。",
+    resetEnded:
+      "{when}に{name}さんが作ったパスワードのリセット用リンクは、使われずに終わりました。",
+    stoppedDone: "止めました。そのリンクではもうパスワードを変えられません。",
+    connectTitleTo: "コンピューターを{office}につなぐ",
+    resetDeadTitle: "このリンクはもう使えません",
+    resetDeadWhat:
+      "使用済みか、止められたか、期限切れです。チームサーバーの管理者に新しいリンクをもらってください。",
+    passwordBack:
+      "保存しました。メールとパスワードでのサインインも全員に再びオンになりました。",
+    adminsOnlyNote:
+      "今はこのサーバーの管理者だけがパスワードでサインインできます。",
+    resetMadeTold:
+      "作ったことは相手のページにも表示され、相手はリンクを止められます。",
     errors: {
       "invite-wrong": "その招待は存在しません。",
       "name-missing": "名前を入力してください。",
@@ -844,7 +896,7 @@ const WORDS = {
       "google-first":
         "先に Google のサインインをオンにしてください。そうすればみんな引き続きサインインできます。",
       "link-google-first":
-        "先に自分のページで自分の Google アカウントをつないでください。そうすればあなたも引き続きサインインできます。",
+        "先に自分の Google アカウントをつないでください。そうすればあなたも引き続きサインインできます。",
       "password-first":
         "先にメールアドレスとパスワードのサインインをオンにしてください。そうすればみんな引き続きサインインできます。",
       "sealing-off":
@@ -858,7 +910,7 @@ const WORDS = {
       "google-unreadable":
         "保存済みのシークレットを、このサーバーのキーで開けません。もう一度貼り付けてください。",
       "reset-expired":
-        "このリンクは使用済みか期限切れです。新しいリンクをもらってください。",
+        "このリンクはもう使えません。チームサーバーの管理者に新しいリンクをもらってください。",
       "no-password":
         "その人は Google でサインインするため、リセットするパスワードがありません。",
       "last-owner":
@@ -1017,7 +1069,6 @@ const WORDS = {
     resetMadeTitle: "Enlace para restablecer de {name}",
     resetMadeWhat:
       "Envía tú mismo este enlace a {name}. Funciona una vez, durante una hora:",
-    newPasswordTitle: "Elige una contraseña nueva",
     newPassword: "Contraseña nueva (8 caracteres o más)",
     setPassword: "Guardar la contraseña nueva",
     resetDone: "Tu contraseña cambió. Inicia sesión con ella.",
@@ -1031,13 +1082,28 @@ const WORDS = {
       "Su cuenta se borra del servidor del equipo: no puede iniciar sesión y su clon se detiene en todas las oficinas de aquí. Lo que pidió y respondió se queda, y puede crear una cuenta nueva con una invitación.",
     thatOffice: "esta oficina",
     yourOffices: "Tus oficinas",
-    showing: "Abierta",
+    showing: "Mostrando",
     notYou: "¿No eres {name}?",
     joinFrom: "{from} te invitó.",
     resetMake: "Crear el enlace",
     newPasswordFor: "Una contraseña nueva para {name}",
-    resetNotice:
-      "{name} creó un enlace para restablecer la contraseña de tu cuenta el {when}. Si no lo pediste, avisa a quien es dueño de tu oficina.",
+    resetOpen:
+      "El {when}, {name} creó un enlace para restablecer tu contraseña. Sirve una vez, durante {minutes} minutos más. Si no lo pediste, detenlo.",
+    resetStop: "Detener el enlace",
+    resetStopped:
+      "El {when}, {name} creó un enlace para restablecer tu contraseña. Lo detuviste.",
+    resetEnded:
+      "El {when}, {name} creó un enlace para restablecer tu contraseña. Terminó sin usarse.",
+    stoppedDone: "Detenido. Ese enlace ya no puede cambiar tu contraseña.",
+    connectTitleTo: "Conecta tu computadora a {office}",
+    resetDeadTitle: "Este enlace ya no funciona",
+    resetDeadWhat:
+      "Ya se usó, se detuvo o caducó. Pide uno nuevo a quien administra el servidor del equipo.",
+    passwordBack:
+      "Guardado. El inicio de sesión con correo y contraseña vuelve a estar activo para todos.",
+    adminsOnlyNote:
+      "Por ahora, solo quien administra este servidor puede iniciar sesión con contraseña.",
+    resetMadeTold: "Su página dice que lo creaste, y puede detenerlo.",
     errors: {
       "invite-wrong": "Esa invitación no existe.",
       "name-missing": "Escribe tu nombre.",
@@ -1072,7 +1138,7 @@ const WORDS = {
       "google-first":
         "Activa primero Google, para que las personas puedan seguir iniciando sesión.",
       "link-google-first":
-        "Conecta primero tu propia cuenta de Google (en tu página), para que puedas seguir iniciando sesión.",
+        "Conecta primero tu propia cuenta de Google, para que puedas seguir iniciando sesión.",
       "password-first":
         "Activa primero el correo y la contraseña, para que las personas puedan seguir iniciando sesión.",
       "sealing-off":
@@ -1084,7 +1150,8 @@ const WORDS = {
       "google-not-set": "Configura Google primero.",
       "google-unreadable":
         "El secreto guardado no se puede abrir con la clave de este servidor. Pégalo de nuevo.",
-      "reset-expired": "Ese enlace ya se usó o caducó. Pide uno nuevo.",
+      "reset-expired":
+        "Ese enlace ya no funciona. Pide uno nuevo a quien administra el servidor del equipo.",
       "no-password":
         "Esa persona no tiene contraseña que restablecer: inicia sesión con Google.",
       "last-owner":
@@ -1243,7 +1310,6 @@ const WORDS = {
     resetMadeTitle: "Link para redefinir de {name}",
     resetMadeWhat:
       "Envie você mesmo este link para {name}. Funciona uma vez, por uma hora:",
-    newPasswordTitle: "Escolha uma senha nova",
     newPassword: "Senha nova (8 caracteres ou mais)",
     setPassword: "Salvar a senha nova",
     resetDone: "Sua senha foi alterada. Entre com ela.",
@@ -1257,13 +1323,29 @@ const WORDS = {
       "A conta é apagada do servidor da equipe: a pessoa não consegue entrar, e o clone dela para em todos os escritórios daqui. O que ela pediu e respondeu continua, e ela pode criar uma conta nova com um convite.",
     thatOffice: "este escritório",
     yourOffices: "Seus escritórios",
-    showing: "Aberto",
+    showing: "Mostrando",
     notYou: "Não é {name}?",
     joinFrom: "{from} convidou você.",
     resetMake: "Criar o link",
     newPasswordFor: "Uma senha nova para {name}",
-    resetNotice:
-      "{name} criou um link para redefinir a senha da sua conta em {when}. Se você não pediu, avise quem é dono do seu escritório.",
+    resetOpen:
+      "Em {when}, {name} criou um link para redefinir a sua senha. Ele funciona uma vez, por mais {minutes} minutos. Se você não pediu, pare o link.",
+    resetStop: "Parar o link",
+    resetStopped:
+      "Em {when}, {name} criou um link para redefinir a sua senha. Você o parou.",
+    resetEnded:
+      "Em {when}, {name} criou um link para redefinir a sua senha. Ele terminou sem ser usado.",
+    stoppedDone: "Parado. Esse link não pode mais mudar a sua senha.",
+    connectTitleTo: "Conecte seu computador a {office}",
+    resetDeadTitle: "Este link não funciona mais",
+    resetDeadWhat:
+      "Ele já foi usado, foi parado ou expirou. Peça um novo a quem administra o servidor da equipe.",
+    passwordBack:
+      "Salvo. O login com e-mail e senha voltou a valer para todos.",
+    adminsOnlyNote:
+      "Por enquanto, só quem administra este servidor pode entrar com senha.",
+    resetMadeTold:
+      "A página da pessoa mostra que você o criou, e ela pode pará-lo.",
     errors: {
       "invite-wrong": "Esse convite não existe.",
       "name-missing": "Informe seu nome.",
@@ -1296,7 +1378,7 @@ const WORDS = {
       "google-first":
         "Ative o Google primeiro, para que as pessoas continuem conseguindo entrar.",
       "link-google-first":
-        "Conecte primeiro a sua própria conta do Google (na sua página), para continuar conseguindo entrar.",
+        "Conecte primeiro a sua própria conta do Google, para continuar conseguindo entrar.",
       "password-first":
         "Ative e-mail e senha primeiro, para que as pessoas continuem conseguindo entrar.",
       "sealing-off":
@@ -1308,7 +1390,8 @@ const WORDS = {
       "google-not-set": "Configure o Google primeiro.",
       "google-unreadable":
         "A chave secreta salva não pode ser aberta com a chave deste servidor. Cole de novo.",
-      "reset-expired": "Esse link já foi usado ou expirou. Peça um novo.",
+      "reset-expired":
+        "Esse link não funciona mais. Peça um novo a quem administra o servidor da equipe.",
       "no-password":
         "Essa pessoa não tem senha para redefinir: entra com o Google.",
       "last-owner":
@@ -1468,7 +1551,7 @@ ${input.key ? `<input type="hidden" name="key" value="${escape(input.key)}">` : 
 <input id="password" name="password" type="password" required maxlength="128" autocomplete="current-password">
 <button type="submit">${say(lang, "signIn")}</button>
 </form>
-<p class="note">${say(lang, "forgot")}</p>`
+<p class="note">${say(lang, input.methods.adminsOnly ? "adminsOnlyNote" : "forgot")}</p>`
     : ""
 }
 <p class="note">${
@@ -1488,17 +1571,17 @@ export function newPasswordPage(input: {
   error?: string;
 }): string {
   const { lang } = input;
-  const title = input.name
-    ? say(lang, "newPasswordFor", { name: input.name })
-    : say(lang, "newPasswordTitle");
-  if (!input.name)
+  if (!input.name) {
+    const dead = say(lang, "resetDeadTitle");
     return shell(
       lang,
-      title,
-      `<h1>${title}</h1>
-${problem(lang, "reset-expired")}
+      dead,
+      `<h1>${dead}</h1>
+<p>${say(lang, "resetDeadWhat")}</p>
 <p><a href="/login">${say(lang, "signInLink")}</a></p>`,
     );
+  }
+  const title = say(lang, "newPasswordFor", { name: input.name });
   return shell(
     lang,
     title,
@@ -1527,6 +1610,7 @@ export function resetMadePage(input: {
     `<h1>${title}</h1>
 <p>${say(lang, "resetMadeWhat", { name: input.name })}</p>
 <pre>${escape(input.link)}</pre>
+<p class="note">${say(lang, "resetMadeTold")}</p>
 <p><a href="/home/admin">${say(lang, "adminTitle")}</a></p>`,
   );
 }
@@ -1569,17 +1653,35 @@ export function homePage(input: {
   /** How the reader signs in, and the ways the server offers. */
   ways?: SignInWays;
   methods?: SignInMethods;
-  /** What someone else did to the reader's account lately. */
-  events?: { kind: string; by: string; at: string }[];
+  /**
+   * What someone else did to the reader's account lately: a reset link, while it still works
+   * (for `minutes` more, which they can stop), stopped, or ended unused.
+   */
+  events?: {
+    kind: string;
+    by: string;
+    at: string;
+    state: "open" | "stopped" | "ended";
+    minutes: number;
+  }[];
+  /** A word for what just happened: the reader stopped a reset link. */
+  done?: "stopped";
 }): string {
   const { lang } = input;
   const title = say(lang, "hello", { name: input.name });
   const notices = (input.events ?? [])
     .filter((event) => event.kind === "reset-link")
-    .map(
-      (event) =>
-        `<p class="note" role="status">${say(lang, "resetNotice", { name: event.by, when: event.at })}</p>`,
-    )
+    .map((event) => {
+      const named = {
+        name: event.by,
+        when: event.at,
+        minutes: String(event.minutes),
+      };
+      // one that still works stands out, with the way to stop it; the rest are a quiet line
+      return event.state === "open"
+        ? `<form method="post" action="/home/reset/stop" class="alert" role="alert"><p>${say(lang, "resetOpen", named)}</p><button type="submit" class="danger small">${say(lang, "resetStop")}</button></form>`
+        : `<p class="note">${say(lang, event.state === "stopped" ? "resetStopped" : "resetEnded", named)}</p>`;
+    })
     .join("");
   const office = input.office;
   const people = input.people ?? [];
@@ -1647,13 +1749,14 @@ export function homePage(input: {
     title,
     `<h1>${title}</h1>
 ${problem(lang, input.error)}
+${input.done === "stopped" ? `<p class="done" role="status">${say(lang, "stoppedDone")}</p>` : ""}
 ${notices}
 ${switcher}
 ${
   office
-    ? `<p class="note">${say(lang, "yourOffice")}${office.name ? `: ${escape(office.name)}` : ""}</p>
+    ? `${switcher ? "" : `<p class="note">${say(lang, "yourOffice")}${office.name ? `: ${escape(office.name)}` : ""}</p>`}
 <section>
-<h2>${say(lang, "connectTitle")}</h2>
+<h2>${switcher ? say(lang, "connectTitleTo", { office: escape(office.name) || say(lang, "thatOffice") }) : say(lang, "connectTitle")}</h2>
 <p>${say(lang, "connectWhat")}</p>
 ${
   input.command
@@ -1753,6 +1856,10 @@ export function confirmPage(input: {
   back?: string;
   /** Who sent the invite, said on the question to join. */
   invitedBy?: string;
+  /** Where signing out from the question to join goes on to: the invite, to make an account. */
+  signOutNext?: string;
+  /** Why it cannot be done now, said in place of the button (an error code). */
+  blocked?: string;
 }): string {
   const { lang } = input;
   const words = {
@@ -1795,11 +1902,16 @@ export function confirmPage(input: {
 ${input.what === "join" && input.invitedBy ? `<p>${say(lang, "joinFrom", { from: input.invitedBy })}</p>` : ""}
 <p>${say(lang, whatKey, named)}</p>
 ${locked ? `<p>${locked}</p>` : ""}
-<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit"${safe ? "" : ' class="danger"'}>${say(lang, yesKey)}</button><a class="button ghost" href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div></form>
+${
+  input.blocked
+    ? `${problem(lang, input.blocked)}
+<div class="acts">${input.blocked === "link-google-first" ? `<a class="button" href="/home/google">${say(lang, "connectGoogle")}</a>` : ""}<a class="button ghost" href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div>`
+    : `<form method="post" action="${escape(input.action)}">${hidden}<div class="acts"><button type="submit"${safe ? "" : ' class="danger"'}>${say(lang, yesKey)}</button><a class="button ghost" href="${escape(input.back ?? "/home")}">${say(lang, "cancel")}</a></div></form>`
+}
 ${
   // on a shared browser, the one invited signs the other person out to make their own account
   input.what === "join"
-    ? `<form method="post" action="/logout"><p class="note">${say(lang, "notYou", named)} <button type="submit" class="ghost small">${say(lang, "signOut")}</button></p></form>`
+    ? `<form method="post" action="/logout">${input.signOutNext ? `<input type="hidden" name="next" value="${escape(input.signOutNext)}">` : ""}<p class="note">${say(lang, "notYou", named)} <button type="submit" class="ghost small">${say(lang, "signOut")}</button></p></form>`
     : ""
 }`,
   );
@@ -1831,7 +1943,8 @@ export function adminPage(input: {
   /** A failure of the Google form, said under it with what was typed kept. */
   googleError?: string;
   clientId?: string;
-  saved?: boolean;
+  /** A word for what just happened: saved, and maybe passwords back on for everyone with it. */
+  done?: "saved" | "password-back";
 }): string {
   const { lang, settings } = input;
   const title = say(lang, "adminTitle");
@@ -1954,7 +2067,7 @@ ${setUp}
     `<h1>${title}</h1>
 <p class="note">${say(lang, "adminWhat")}</p>
 ${problem(lang, input.error)}
-${input.saved ? `<p class="done" role="status">${say(lang, "saved")}</p>` : ""}
+${input.done ? `<p class="done" role="status">${say(lang, input.done === "password-back" ? "passwordBack" : "saved")}</p>` : ""}
 ${password}
 ${googleSection}
 ${peopleSection}

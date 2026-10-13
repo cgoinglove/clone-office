@@ -1038,6 +1038,22 @@ test("nobody is locked out: a way that cannot work leaves passwords on, and the 
       }),
       /password-off/,
     );
+    const [{ n: sessions }] = await db.query<{ n: number }>(
+      'SELECT count(*)::int AS n FROM auth_sessions WHERE "userId" = $1',
+      [ben.person.id],
+    );
+    assert.equal(sessions, 0, "refused, Ben's password leaves no session");
+    // A wrong password answers alike for the admin and anyone else: it never tells who the admin is.
+    for (const email of [
+      "ana@example.com",
+      "ben@example.com",
+      "nobody@example.com",
+    ])
+      await assert.rejects(
+        after.signIn({ email, password: "not the password" }),
+        /sign-in-wrong/,
+        email,
+      );
     await assert.rejects(
       after.signUp(office.key, {
         name: "Dee",
@@ -1051,6 +1067,14 @@ test("nobody is locked out: a way that cannot work leaves passwords on, and the 
       true,
       "said on the admin's page as it is",
     );
+    // Mending Google turns passwords back on for everyone, and the admin is told.
+    const mended = await after.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: "http://localhost:3200",
+      by: "Ana",
+    });
+    assert.equal(mended.passwordBack, true);
+    assert.deepEqual(after.methods(), { password: true, google: true });
   } finally {
     await relay.close();
     await db.close();
@@ -1114,13 +1138,19 @@ test("a forgotten password, a removed account, another office's invite and odd a
     const link = /(http:\/\/[^\s<]+\/reset\?token=[\w-]+)/.exec(made)?.[1];
     assert.ok(link, "the link to hand on");
     assert.match(await (await fetch(link)).text(), /A new password for Ben/);
+    const told = await (
+      await fetch(`${base}/home`, {
+        headers: { cookie: cookieOf(ben.cookies) },
+      })
+    ).text();
     assert.match(
-      await (
-        await fetch(`${base}/home`, {
-          headers: { cookie: cookieOf(ben.cookies) },
-        })
-      ).text(),
-      /Ana made a password reset link for your account/,
+      told,
+      /Ana made a link to reset your password\. It works once, for 60 more minutes/,
+    );
+    assert.match(
+      told,
+      /action="\/home\/reset\/stop"/,
+      "with the way to stop it",
     );
     await assert.rejects(
       accounts.resetLink(ana.person.id, ana.person.id),
@@ -1149,18 +1179,108 @@ test("a forgotten password, a removed account, another office's invite and odd a
       }),
       /sign-in-wrong/,
     );
-    await accounts.signIn({
+    const benAfter = await accounts.signIn({
       email: "ben@example.com",
       password: "ben's new password",
     });
+    assert.doesNotMatch(
+      await (
+        await fetch(`${base}/home`, {
+          headers: { cookie: cookieOf(benAfter.cookies) },
+        })
+      ).text(),
+      /reset your password/,
+      "a link one used oneself is not told again",
+    );
     const again = await fetch(
       `${base}/reset`,
       form({ token, password: "yet another password" }),
     );
-    assert.match(await again.text(), /used or expired/);
+    assert.match(await again.text(), /no longer works/);
     const reopened = await fetch(link);
     assert.equal(reopened.status, 410, "a used link says so as it opens");
-    assert.doesNotMatch(await reopened.text(), /name="password"/);
+    const dead = await reopened.text();
+    assert.doesNotMatch(dead, /name="password"/);
+    assert.match(dead, /<h1>This link no longer works<\/h1>/);
+
+    // A link Ben did not ask for, he stops: it no longer works.
+    const linkOf = async () =>
+      /(http:\/\/[^\s<]+\/reset\?token=[\w-]+)/.exec(
+        await (
+          await fetch(
+            `${base}/home/admin/reset`,
+            form({ user: ben.person.id }, admin),
+          )
+        ).text(),
+      )?.[1] ?? "";
+    const unasked = await linkOf();
+    const benCookie = cookieOf(benAfter.cookies);
+    const stopped = await fetch(`${base}/home/reset/stop`, form({}, benCookie));
+    assert.equal(stopped.headers.get("location"), "/home?done=stopped");
+    assert.equal((await fetch(unasked)).status, 410);
+    const late = await fetch(
+      `${base}/reset`,
+      form({
+        token: new URL(unasked).searchParams.get("token") ?? "",
+        password: "someone else's password",
+      }),
+    );
+    assert.match(await late.text(), /no longer works/);
+    const benPage = await (
+      await fetch(`${base}/home?done=stopped`, {
+        headers: { cookie: benCookie },
+      })
+    ).text();
+    assert.match(
+      benPage,
+      /Stopped\. That link can no longer change your password/,
+    );
+    assert.match(
+      benPage,
+      /Ana made a link to reset your password\. You stopped it/,
+    );
+    // A stop from another site is refused.
+    const forged = await fetch(`${base}/home/reset/stop`, {
+      ...form({}, benCookie),
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "sec-fetch-site": "cross-site",
+        cookie: benCookie,
+      },
+    });
+    assert.equal(forged.status, 403);
+
+    // A link is checked again when used: Ben, since become another office's owner, is not the
+    // admin's to reset any more, and the link dies.
+    const later = await linkOf();
+    const third = await relay.office("third-office-key");
+    await accounts.signIn(
+      { email: "ben@example.com", password: "ben's new password" },
+      third.key,
+    );
+    assert.equal(
+      (await accounts.places(ben.person.id)).find(
+        (one) => one.key === third.key,
+      )?.role,
+      "owner",
+    );
+    assert.equal((await fetch(later)).status, 410, "said as it opens");
+    const taken = await fetch(
+      `${base}/reset`,
+      form({
+        token: new URL(later).searchParams.get("token") ?? "",
+        password: "the admin's choice",
+      }),
+    );
+    assert.match(await taken.text(), /no longer works/);
+    await accounts.signIn({
+      email: "ben@example.com",
+      password: "ben's new password",
+    });
+    // Out of that office again for what follows.
+    await db.query("DELETE FROM office_people WHERE office_id = $1", [
+      third.id,
+    ]);
     // Only the admin makes links, and only for others.
     await assert.rejects(
       accounts.resetLink(ben.person.id, ana.person.id),
@@ -1331,15 +1451,26 @@ test("sign-in's edges: Google starts at its own address, an invite asks unless t
       site: base,
       by: "Ana",
     });
-    // Reached at another address of the same server, Google starts at the one it was set up at.
+    // Reached at another address of the same server, Google starts at the one it was set up at:
+    // the same page there, as a start sent on from elsewhere would come from another site.
     const elsewhere = await fetch(
       `http://localhost:${port}/i/${office.key}/google?from=Ana`,
       { headers: { "sec-fetch-site": "same-origin" }, redirect: "manual" },
     );
     assert.equal(
       elsewhere.headers.get("location"),
-      `${base}/i/${office.key}/google?from=Ana`,
+      `${base}/i/${office.key}?from=Ana&account#account`,
     );
+    for (const [from, to] of [
+      ["/login/google?key=abcd", "/login?key=abcd"],
+      ["/home/google", "/home"],
+    ]) {
+      const moved = await fetch(`http://localhost:${port}${from}`, {
+        headers: { "sec-fetch-site": "same-origin" },
+        redirect: "manual",
+      });
+      assert.equal(moved.headers.get("location"), `${base}${to}`, from);
+    }
     // Connecting Google signed out goes to the sign-in page.
     const out = await fetch(`${base}/home/google`, {
       headers: { "sec-fetch-site": "same-origin" },
@@ -1370,8 +1501,52 @@ test("sign-in's edges: Google starts at its own address, an invite asks unless t
       redirect: "manual",
     });
     assert.equal(asked.status, 200);
-    assert.match(await asked.text(), /Join this office too\?/);
+    const question = await asked.text();
+    assert.match(question, /Join this office too\?/);
     assert.equal((await accounts.places(ben.person.id)).length, 0);
+    // Not Ben? Signing out goes on to the invite, to make one's own account there; never elsewhere.
+    assert.match(
+      question,
+      new RegExp(`name="next" value="/i/${office.key}\\?account"`),
+    );
+    const post = (fields: Record<string, string>, cookie: string) => ({
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "sec-fetch-site": "same-origin",
+        cookie,
+      },
+      body: new URLSearchParams(fields),
+      redirect: "manual" as const,
+    });
+    const other1 = await accounts.signIn({
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    const onward = await fetch(
+      `${base}/logout`,
+      post({ next: `/i/${office.key}?account` }, cookieOf(other1.cookies)),
+    );
+    assert.equal(
+      onward.headers.get("location"),
+      `/i/${office.key}?account#account`,
+    );
+    assert.equal(await accounts.person(cookieOf(other1.cookies)), undefined);
+    for (const next of [
+      "//elsewhere.example/i/abcd?account",
+      "https://elsewhere.example",
+      "/home/admin",
+    ]) {
+      const other2 = await accounts.signIn({
+        email: "ben@example.com",
+        password: "ben's long password",
+      });
+      const plain = await fetch(
+        `${base}/logout`,
+        post({ next }, cookieOf(other2.cookies)),
+      );
+      assert.equal(plain.headers.get("location"), "/login", next);
+    }
     // With the mark, as after a sign-up through that invite, it lands in the office.
     const landed = await fetch(`${base}/i/${office.key}`, {
       headers: { cookie: `${benCookie}; sub-office.join=${office.key}` },
@@ -1405,6 +1580,77 @@ test("sign-in's edges: Google starts at its own address, an invite asks unless t
     } finally {
       delete process.env.RELAY_PASSWORD_SIGNIN;
     }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("the admin's pages say what a change would do before it fails, and an invite link is safe to paste into a shell", async () => {
+  const { createServer } = await import("node:http");
+  const { keyFrom, newKeyText } = await import("../../lib/seal.ts");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay, {
+    sealKey: keyFrom(newKeyText()),
+  });
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const port = (server.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+  try {
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    const admin = cookieOf(ana.cookies);
+    await accounts.saveGoogle(ana.person.id, {
+      ...GOOGLE,
+      site: base,
+      by: "Ana",
+    });
+    // Passwords off while the admin has no Google of their own would lock them out: the page says
+    // so with the way to connect it, and offers no button that would fail.
+    const blocked = await (
+      await fetch(`${base}/home/admin/password/off`, {
+        headers: { cookie: admin },
+      })
+    ).text();
+    assert.match(blocked, /Connect your own Google account first/);
+    assert.match(blocked, /href="\/home\/google"/);
+    assert.doesNotMatch(
+      blocked,
+      /<form method="post" action="\/home\/admin\/password\/off"/,
+    );
+    await googleOn(db, ana.person.id);
+    const open = await (
+      await fetch(`${base}/home/admin/password/off`, {
+        headers: { cookie: admin },
+      })
+    ).text();
+    assert.match(
+      open,
+      /<form method="post" action="\/home\/admin\/password\/off"/,
+    );
+
+    // An inviter's name stays readable, and nothing in it runs inside the line's quotes.
+    const mo = await accounts.signUp(office.key, {
+      name: "Mo$(id)`whoami`!x 민아",
+      email: "mo@example.com",
+      password: "a long password",
+    });
+    const page = await (
+      await fetch(`${base}/home`, { headers: { cookie: cookieOf(mo.cookies) } })
+    ).text();
+    const link = /<pre>(http:[^<]*\/i\/[^<]*)<\/pre>/.exec(page)?.[1] ?? "";
+    assert.ok(
+      link.endsWith("?from=Mo%24%28id%29%60whoami%60%21x%20민아"),
+      link,
+    );
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();

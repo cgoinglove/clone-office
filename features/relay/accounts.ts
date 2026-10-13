@@ -63,6 +63,23 @@ export interface KeyedClone {
 const when = (value: unknown) =>
   value instanceof Date ? value.toISOString() : String(value ?? "");
 
+/** How long a reset link works. */
+const RESET_HOURS = 1;
+
+/** A reset link's token as kept here: its hash, never the token. */
+const tokenHash = (token: string) =>
+  createHash("sha256").update(token).digest("base64url");
+
+/** Something someone else did to a person's account, told on their own page. */
+export interface AccountEvent {
+  kind: string;
+  by: string;
+  at: string;
+  /** A reset link: still works (until `until`), stopped by its person, or ended unused. */
+  state: "open" | "stopped" | "ended";
+  until: string;
+}
+
 export interface Place {
   office: string;
   key: string;
@@ -298,7 +315,7 @@ export class Accounts {
         autoSignIn: true,
         // A forgotten password: the admin makes a link that works once, for an hour, and hands
         // it on themselves; using it ends the person's sessions everywhere.
-        resetPasswordTokenExpiresIn: 60 * 60,
+        resetPasswordTokenExpiresIn: RESET_HOURS * 60 * 60,
         revokeSessionsOnPasswordReset: true,
         sendResetPassword: async ({ user, token }) => {
           resets.set(user.id, token);
@@ -489,18 +506,6 @@ export class Accounts {
     };
   }
 
-  /** Whether passwords let this sign-in in: everyone's, or, while only admins may, an admin's. */
-  private async passwordFor(email: string): Promise<boolean> {
-    const ways = this.methods();
-    if (!ways.password) return false;
-    if (!ways.adminsOnly) return true;
-    const [user] = await this.db.query<{ id: string }>(
-      "SELECT id FROM auth_users WHERE lower(email) = lower($1)",
-      [email.trim()],
-    );
-    return Boolean(user && (await this.isAdmin(user.id)));
-  }
-
   /**
    * Changes the sign-in settings as one step: under a lock, on the settings as they are in the
    * database (another admin, or another process, may have just changed them), `change` checks its
@@ -628,7 +633,7 @@ export class Accounts {
   async saveGoogle(
     user: string,
     input: { clientId: string; secret: string; site: string; by: string },
-  ): Promise<void> {
+  ): Promise<{ passwordBack: boolean }> {
     await this.mustAdmin(user);
     const key = this.sealKey;
     if (!key) throw new AccountError("sealing-off");
@@ -643,6 +648,7 @@ export class Accounts {
     if (site.startsWith("https:") && !this.publicUrl?.startsWith("https:"))
       throw new AccountError("public-url-needed");
     const sealed = secret ? sealWith(key, secret) : undefined;
+    let passwordBack = false;
     await this.update((kept) => {
       // While Google works and passwords are off, its client is not changed: a wrong one would
       // leave nobody a way in. While it does not work, the admin mends it, with passwords back on.
@@ -652,6 +658,7 @@ export class Accounts {
       const sealedSecret =
         sealed ?? (before?.clientId === clientId ? before.secret : undefined);
       if (!sealedSecret) throw new AccountError("google-secret-missing");
+      passwordBack = kept.password === false;
       const next: SignInKept = {
         ...kept,
         ...(kept.password === false ? { password: true } : {}),
@@ -667,35 +674,49 @@ export class Accounts {
       if (!this.opened(next)) throw new AccountError("google-unreadable");
       return next;
     });
+    return { passwordBack };
   }
 
-  /** Google on or off, its settings kept. Off only while email and password is on. */
-  async setGoogle(user: string, on: boolean): Promise<void> {
+  /**
+   * Google on or off, its settings kept. Off only while email and password is on; turning it off
+   * while passwords were kept off for everyone but the admin turns them back on for all, which
+   * `passwordBack` says so the admin is told.
+   */
+  async setGoogle(
+    user: string,
+    on: boolean,
+  ): Promise<{ passwordBack: boolean }> {
     await this.mustAdmin(user);
+    let passwordBack = false;
     await this.update((kept) => {
       const google = kept.google;
       if (!google) throw new AccountError("google-not-set");
       if (!on && !this.ways_(kept, this.opened(kept)).password)
         throw new AccountError("password-first");
+      passwordBack = !on && kept.password === false;
       const next: SignInKept = {
         ...kept,
-        ...(!on && kept.password === false ? { password: true } : {}),
+        ...(passwordBack ? { password: true } : {}),
         google: { ...google, on },
       };
       if (on && !this.opened(next)) throw new AccountError("google-unreadable");
       return next;
     });
+    return { passwordBack };
   }
 
   /** Takes the Google client and its sealed secret off the server. Only while email and password is on. */
-  async removeGoogle(user: string): Promise<void> {
+  async removeGoogle(user: string): Promise<{ passwordBack: boolean }> {
     await this.mustAdmin(user);
+    let passwordBack = false;
     await this.update((kept) => {
       if (!this.ways_(kept, this.opened(kept)).password)
         throw new AccountError("password-first");
+      passwordBack = kept.password === false;
       const { google: _gone, ...rest } = kept;
       return { ...rest, password: true };
     });
+    return { passwordBack };
   }
 
   /**
@@ -713,23 +734,43 @@ export class Accounts {
     if (!row) throw new AccountError("not-yours");
   }
 
-  /** What someone else did to a person's account lately (a reset link made), for their own page. */
-  async events(
-    user: string,
-  ): Promise<{ kind: string; by: string; at: string }[]> {
+  /**
+   * What someone else did to a person's account lately, for their own page: a reset link made,
+   * and how it stands (`open` while it still works, until `until`; `stopped`; `ended` unused).
+   * One they used themselves is not told again.
+   */
+  async events(user: string): Promise<AccountEvent[]> {
     const rows = await this.db.query<{
       kind: string;
       by_name: string;
       at: unknown;
+      done: string | null;
+      open: boolean;
+      until: unknown;
     }>(
-      "SELECT kind, by_name, at FROM account_events WHERE user_id = $1 AND at > now() - interval '30 days' ORDER BY at DESC LIMIT 5",
+      `SELECT kind, by_name, at, done, until, done IS NULL AND token_hash IS NOT NULL AND until > now() AS open
+      FROM (SELECT *, at + interval '${RESET_HOURS} hour' AS until FROM account_events WHERE user_id = $1 AND at > now() - interval '30 days') e
+      ORDER BY at DESC LIMIT 5`,
       [user],
     );
-    return rows.map((row) => ({
-      kind: row.kind,
-      by: row.by_name,
-      at: when(row.at),
-    }));
+    return rows
+      .filter((row) => row.done !== "used")
+      .map((row) => ({
+        kind: row.kind,
+        by: row.by_name,
+        at: when(row.at),
+        state: row.open ? "open" : row.done === "stopped" ? "stopped" : "ended",
+        until: when(row.until),
+      }));
+  }
+
+  /** A person stops the reset links made for them that still work: none can be used after. */
+  async stopResets(user: string): Promise<number> {
+    const rows = await this.db.query(
+      `UPDATE account_events SET done = 'stopped', done_at = now() WHERE user_id = $1 AND kind = 'reset-link' AND done IS NULL AND at > now() - interval '${RESET_HOURS} hour' RETURNING 1`,
+      [user],
+    );
+    return rows.length;
   }
 
   /**
@@ -801,26 +842,12 @@ export class Accounts {
     admin: string,
     user: string,
   ): Promise<{ token: string; name: string }> {
-    await this.mustAdmin(admin);
-    const ways = this.methods();
-    if (!ways.password || ways.adminsOnly)
-      throw new AccountError("password-off");
-    await this.mustReach(admin, user);
+    await this.resetAllowed(admin, user);
     const [person] = await this.db.query<{ name: string; email: string }>(
       "SELECT name, email FROM auth_users WHERE id = $1",
       [user],
     );
     if (!person) throw new AccountError("account-failed");
-    const has = await this.ways(user);
-    if (!has.password) throw new AccountError("no-password");
-    // One who can sign in with Google signs in with it; an owner's account is not the admin's
-    // to take: neither gets a link someone else could use.
-    if (has.google) throw new AccountError("has-google");
-    const [owner] = await this.db.query(
-      "SELECT 1 FROM office_people WHERE user_id = $1 AND role = 'owner'",
-      [user],
-    );
-    if (owner) throw new AccountError("owner-reset");
     const [by] = await this.db.query<{ name: string }>(
       "SELECT name FROM auth_users WHERE id = $1",
       [admin],
@@ -837,44 +864,125 @@ export class Accounts {
     this.resetting = made.catch(() => undefined);
     const token = await made;
     if (!token) throw new AccountError("account-failed");
-    // told on the person's own page, so a link they did not ask for never goes unseen
+    // Told on the person's own page, so a link they did not ask for never goes unseen; kept with
+    // who made it and its token's hash, so it is checked again when used (`resetPassword`).
     await this.db.query(
-      "INSERT INTO account_events (user_id, kind, by_name, at) VALUES ($1, 'reset-link', $2, now())",
-      [user, by?.name ?? ""],
+      "INSERT INTO account_events (user_id, kind, by_name, at, by_user, token_hash) VALUES ($1, 'reset-link', $2, now(), $3, $4)",
+      [user, by?.name ?? "", admin, tokenHash(token)],
     );
     return { token, name: person.name };
   }
 
-  /** Whose password a reset link changes, while it still works; none once used or expired. */
+  /**
+   * Whether an admin may give someone a reset link: passwords on for everyone, the account theirs
+   * to look after, with a password; never one who can sign in with Google (they sign in with it)
+   * nor an office's owner (not the admin's to take). Asked when the link is made and again when
+   * it is used, as the account may have changed in between.
+   */
+  private async resetAllowed(admin: string, user: string): Promise<void> {
+    await this.mustAdmin(admin);
+    const ways = this.methods();
+    if (!ways.password || ways.adminsOnly)
+      throw new AccountError("password-off");
+    await this.mustReach(admin, user);
+    const has = await this.ways(user);
+    if (!has.password) throw new AccountError("no-password");
+    if (has.google) throw new AccountError("has-google");
+    const [owner] = await this.db.query(
+      "SELECT 1 FROM office_people WHERE user_id = $1 AND role = 'owner'",
+      [user],
+    );
+    if (owner) throw new AccountError("owner-reset");
+  }
+
+  /** A reset link that still works by its record here: whose it is and who made it. */
+  private async resetRecord(
+    token: string,
+  ): Promise<{ user: string; admin: string } | undefined> {
+    const [row] = await this.db.query<{ user_id: string; by_user: string }>(
+      `SELECT user_id, by_user FROM account_events WHERE token_hash = $1 AND kind = 'reset-link' AND done IS NULL AND at > now() - interval '${RESET_HOURS} hour'`,
+      [tokenHash(token)],
+    );
+    return row ? { user: row.user_id, admin: row.by_user } : undefined;
+  }
+
+  /** Whose password a reset link changes, while it still works; none once used, stopped or expired. */
   async resetFor(token: string): Promise<string | undefined> {
+    const record = await this.resetRecord(token);
+    if (!record) return undefined;
     const context = await this.current.$context;
     const found = await context.internalAdapter.findVerificationValue(
       `reset-password:${token}`,
     );
-    if (!found || new Date(found.expiresAt) <= new Date()) return undefined;
+    if (
+      !found ||
+      found.value !== record.user ||
+      new Date(found.expiresAt) <= new Date()
+    )
+      return undefined;
+    const fine = await this.resetAllowed(record.admin, record.user).then(
+      () => true,
+      () => false,
+    );
+    if (!fine) return undefined;
     const [row] = await this.db.query<{ name: string }>(
       "SELECT name FROM auth_users WHERE id = $1",
-      [found.value],
+      [record.user],
     );
     return row?.name;
   }
 
-  /** A new password from a reset link; the link ends with it, and so do the person's sessions. */
+  /**
+   * A new password from a reset link; the link ends with it, and so do the person's sessions. The
+   * link is taken first, so it is used once, and the admin's leave is checked again: one who has
+   * since become an owner, connected Google or joined another office is no longer theirs to reset.
+   */
   async resetPassword(token: string, password: string): Promise<void> {
     const ways = this.methods();
     if (!ways.password || ways.adminsOnly)
       throw new AccountError("password-off");
+    const hash = tokenHash(token);
+    const [taken] = await this.db.query<{ user_id: string; by_user: string }>(
+      `UPDATE account_events SET done = 'using' WHERE token_hash = $1 AND kind = 'reset-link' AND done IS NULL AND at > now() - interval '${RESET_HOURS} hour' RETURNING user_id, by_user`,
+      [hash],
+    );
+    if (!taken) throw new AccountError("reset-expired");
+    const settle = (done: string | null) =>
+      this.db.query(
+        "UPDATE account_events SET done = $2, done_at = CASE WHEN $2::text IS NULL THEN NULL ELSE now() END WHERE token_hash = $1",
+        [hash, done],
+      );
+    try {
+      await this.resetAllowed(taken.by_user, taken.user_id);
+    } catch (error) {
+      await settle("refused");
+      const context = await this.current.$context;
+      await context.internalAdapter
+        .deleteVerificationByIdentifier(`reset-password:${token}`)
+        .catch(() => undefined);
+      throw error instanceof AccountError &&
+        ["password-off", "no-password"].includes(error.code)
+        ? error
+        : new AccountError("reset-expired");
+    }
     const response = (await this.current.api.resetPassword({
       body: { newPassword: password, token },
       asResponse: true,
     })) as Response;
-    if (response.ok) return;
+    if (response.ok) {
+      await settle("used");
+      return;
+    }
+    // not used after all (a password refused): the link still works, once
+    await settle(null);
     const body = (await response
       .clone()
       .json()
       .catch(() => ({}))) as { code?: string };
-    if (/INVALID_TOKEN/i.test(String(body.code ?? "")))
+    if (/INVALID_TOKEN/i.test(String(body.code ?? ""))) {
+      await settle("ended");
       throw new AccountError("reset-expired");
+    }
     throw new AccountError(await refusal(response));
   }
 
@@ -1032,14 +1140,25 @@ export class Accounts {
     input: { email: string; password: string },
     key?: string,
   ): Promise<{ person: Person; cookies: string[] }> {
-    if (!(await this.passwordFor(input.email)))
-      throw new AccountError("password-off");
+    const ways = this.methods();
+    if (!ways.password) throw new AccountError("password-off");
     const response = (await this.current.api.signInEmail({
       body: { email: input.email.trim(), password: input.password },
       asResponse: true,
     })) as Response;
     if (!response.ok) throw new AccountError(await refusal(response));
     const { user } = (await response.json()) as { user: Person };
+    // While only the admin may (Google to mend), anyone else is told so only once their password
+    // is right: a wrong one answers alike for all, so it never tells who the admin is.
+    if (ways.adminsOnly && !(await this.isAdmin(user.id))) {
+      await this.signOut(
+        response.headers
+          .getSetCookie()
+          .map((one) => one.split(";")[0])
+          .join("; "),
+      );
+      throw new AccountError("password-off");
+    }
     if (key) {
       const office = await this.officeByKey(key);
       if (office) await this.place(office.id, user.id);

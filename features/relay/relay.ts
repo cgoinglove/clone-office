@@ -277,6 +277,15 @@ const MIGRATIONS: string[][] = [
     "CREATE TABLE account_events (user_id TEXT NOT NULL, kind TEXT NOT NULL, by_name TEXT NOT NULL, at TIMESTAMPTZ NOT NULL)",
     "CREATE INDEX account_events_user ON account_events (user_id, at DESC)",
   ],
+  // A reset link's own record: the admin who made it and its token's hash, so the link is
+  // checked again when used, and its person can stop it (accounts.ts `resetPassword`).
+  [
+    "ALTER TABLE account_events ADD COLUMN by_user TEXT",
+    "ALTER TABLE account_events ADD COLUMN token_hash TEXT",
+    "ALTER TABLE account_events ADD COLUMN done TEXT",
+    "ALTER TABLE account_events ADD COLUMN done_at TIMESTAMPTZ",
+    "CREATE UNIQUE INDEX account_events_token ON account_events (token_hash) WHERE token_hash IS NOT NULL",
+  ],
 ];
 
 /**

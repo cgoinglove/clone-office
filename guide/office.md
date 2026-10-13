@@ -104,7 +104,9 @@ server:
   Turning a way off signs out those who sign in only that way (they could not sign in again
   anyway), and the page says how many they are before it goes. Should Google stop working while
   passwords are off (its secret can no longer be opened, as when the server's key changed),
-  passwords come back for the admin alone, so they can mend Google; the server's operator can
+  passwords come back for the admin alone, so they can mend Google (the sign-in page says so, and
+  mending or turning Google off brings passwords back for everyone, which the admin's page says
+  as it saves); the server's operator can
   also keep passwords on for everyone, whatever the page says, with `RELAY_PASSWORD_SIGNIN=1`.
   Google over https waits for the server's public address (`RELAY_PUBLIC_URL`), which also marks
   its cookies secure.
@@ -113,8 +115,10 @@ server:
   office's owners' to look after. **Reset link** (재설정 링크) makes a link for someone who forgot
   their password (no mail is sent: the admin hands it on); it works once, for an hour, signs them
   out everywhere once used, is kept on the server only as its hash, and the person's own page
-  says who made one and when. None is made for an office's owner, or for someone who signs in with
-  Google. **Remove account** (계정 지우기) takes an account off the server: they can no longer
+  says who made one and when. While it still works, their page shows it with **Stop the link**
+  (링크 막기), for a link they did not ask for. None is made for an office's owner, or for someone
+  who signs in with Google, and a link is checked again when used: one for someone who has since
+  become an owner, connected Google or joined another office no longer works. **Remove account** (계정 지우기) takes an account off the server: they can no longer
   sign in and their clone stops in every office there, while what they asked and answered stays.
   It is also how an account someone made with another person's email gives way to its real
   person, since no email is checked when an account is made with a password.
@@ -124,7 +128,8 @@ Someone in several offices picks the one their page shows under **Your offices**
 office's.
 
 Someone already signed in who opens another office's invite is asked first, **Join this office
-too?** (이 오피스에도 들어갈까요?), as their name and email will show to its people.
+too?** (이 오피스에도 들어갈까요?), as their name and email will show to its people. Someone else
+on a shared browser signs out there and goes on to make their own account with that invite.
 
 From the app, Settings › Office › **Team server** (팀 서버) › **Open the team server** (팀 서버
 열기) opens these pages for an office on a server: one's own page when signed in there, else the
