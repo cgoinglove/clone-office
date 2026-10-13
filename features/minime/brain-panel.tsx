@@ -219,11 +219,20 @@ function modelMark(model: string, provider: ProviderId): MarkId | undefined {
  */
 export function BrainPanel() {
   const t = useTranslations("brain");
-  // The backup's field hears the pick above, so it offers what fits it.
-  const [version, setVersion] = useState(0);
+  // The backup's field is read again when the pick above changes, so it offers what fits it. The
+  // same pick read again changes nothing (one callback, a value that stays the same).
+  const [picked, setPicked] = useState("");
+  const onPick = useCallback((state: BrainState) => {
+    const { choice } = state;
+    setPicked(
+      choice.kind === "api"
+        ? `${choice.provider}:${choice.model}:${choice.team ? "team" : ""}`
+        : `claude-code:${choice.model ?? ""}`,
+    );
+  }, []);
   return (
     <div className="flex flex-col gap-6">
-      <BrainPicker onChange={() => setVersion((at) => at + 1)} />
+      <BrainPicker onChange={onPick} />
       <div className="flex flex-col gap-2">
         <div className="space-y-0.5">
           <h3 className="text-sm font-medium">{t("fallback.title")}</h3>
@@ -231,7 +240,7 @@ export function BrainPanel() {
             {t("fallback.hint")}
           </p>
         </div>
-        <BrainPicker key={version} role="fallback" />
+        <BrainPicker key={picked} role="fallback" />
       </div>
     </div>
   );
