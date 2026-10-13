@@ -116,7 +116,11 @@ const show = (data) => {
   thread.dataset.waiting = data.waiting ? "1" : "0";
   on = Boolean(data.on);
   trusted = Array.isArray(data.keys) ? data.keys : trusted;
-  if (paired()) pairingUntil = 0;
+  if (paired() && pairingUntil) {
+    pairingUntil = 0;
+    apply();
+    end();
+  }
   // the answer said once to a screen reader, not the whole conversation again
   if (was && !data.waiting && news && form) news.textContent = form.dataset.news || "";
   apply();
@@ -181,6 +185,8 @@ const start = async () => {
   keys = { privateKey: pair.privateKey, spki: b64url(spki) };
   if (pairCode) pairCode.textContent = code.slice(0, 4) + " " + code.slice(4, 8) + " " + code.slice(8);
   apply();
+  // the pairing, shown or gone, changed the box's height: the last words stay in sight
+  end();
 };
 
 if (thread && office) {
