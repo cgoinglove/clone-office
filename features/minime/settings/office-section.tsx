@@ -164,7 +164,11 @@ export function OfficeSection({
 
       <TeamKeys />
 
-      <WebChat />
+      <WebChat
+        browsers={data.webKeys ?? 0}
+        busy={office.busy}
+        onForget={() => void office.post({ action: "forget-browsers" })}
+      />
 
       <Meetings
         standup={data.standup ?? undefined}
@@ -639,18 +643,43 @@ function Leave({
  * Talking to this clone from the team server's page, away from this computer: off until the person
  * turns it on (preferences `webChat`; office/own-chat.ts).
  */
-function WebChat() {
+function WebChat({
+  browsers,
+  busy,
+  onForget,
+}: {
+  browsers: number;
+  busy: boolean;
+  onForget: () => void;
+}) {
   const t = useTranslations("settings.office.webChat");
   const app = useApp();
+  const on = Boolean(app.preferences?.webChat);
   return (
     <Group title={t("title")} hint={t("hint")}>
       <Toggle
         icon={<MessageSquare className="size-4" />}
         title={t("take")}
         body={t("takeHint")}
-        checked={Boolean(app.preferences?.webChat)}
+        checked={on}
         onChange={(webChat) => void app.changePreferences({ webChat })}
       />
+      {/* The browsers paired on the team server's page; each must be paired again once let go. */}
+      {(on || browsers > 0) && (
+        <div className="flex items-center justify-between gap-3 text-[13px] text-muted-foreground">
+          <span>{t("browsers", { count: browsers })}</span>
+          {browsers > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={busy}
+              onClick={onForget}
+            >
+              {t("forget")}
+            </Button>
+          )}
+        </div>
+      )}
     </Group>
   );
 }

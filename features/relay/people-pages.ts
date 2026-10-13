@@ -39,11 +39,13 @@ const WORDS = {
     answerSend: "Send answer",
     fromWho: "{name} asks",
     toWho: "To {name}",
-    stateWaiting: "Waiting",
+    stateWaiting: "Waiting for you",
+    stateCloneOn: "Your clone is on it",
+    stateAwaiting: "Waiting for an answer",
     stateAnswered: "Answered",
     stateClosed: "Closed",
     cloneHandles:
-      "Your clone answers what is asked of you on your computer; what it needs from you comes in the app or on your phone.",
+      "Your clone answers what is asked of you on your computer; what it needs from you comes under My clone here, in the app or on your phone.",
     refresh: "Refresh",
     askSent: "Sent. The answer shows here when it comes.",
     answerSent: "Answer sent.",
@@ -89,17 +91,36 @@ const WORDS = {
     setupTitle: "Set up this team server",
     inviteHalfAccount: "account made · clone not joined yet",
     inviteHalfClone: "clone joined · no account yet",
-    inviteFrom: "From {by}, {when}",
+    inviteFrom: "Made by {by} · {when}",
     invitesTitle: "Invites still open",
     inviteMade: "Send this to one person:",
     inviteMake: "Make an invite link",
     signOut: "Sign out",
+    tabHome: "Home",
+    pairTitle: "Pair this browser with your clone",
+    pairWhat:
+      "So that only you can talk to your clone, each browser is paired once. Your computer will ask you to confirm this code:",
+    pairStart: "Pair this browser",
+    pairWaiting:
+      "Confirm it on your computer, in Clone Office (or on your phone)…",
+    pairSecure:
+      "Talking to your clone needs this page over https. Ask whoever runs the team server for an https address.",
+    chatScript: "Talking to your clone here needs JavaScript.",
+    chatUnpaired:
+      "This browser isn't paired, so your clone didn't act on it. Pair it, then send it again.",
+    chatBusy:
+      "Your clone is still on what you sent before. Send this again once it answers.",
+    chatNews: "Your clone answered.",
+    chatAnswered: "Answered.",
+    suggest1: "What's waiting on me today?",
+    suggest2: "Where did I leave off yesterday?",
+    suggest3: "Sum up the requests still open",
     tabClone: "My clone",
     tabRequests: "Requests",
     tabOffice: "Office",
     menuLabel: "Your menu",
     accountTitle: "Your account",
-    computerOn: "Your clone is working on your computer",
+    computerOn: "Your clone is on, at your computer",
     computerOff:
       "Your computer is off or asleep. What you write here waits until it is back.",
     chatOff:
@@ -143,7 +164,7 @@ const WORDS = {
     owner: "Owner",
     member: "Member",
     you: "you",
-    cloneIn: "Clone connected, last seen {when}",
+    cloneIn: "Clone connected · last seen {when}",
     cloneOut: "No computer connected yet",
     remove: "Remove",
     removeTitle: "Remove {name} from this office?",
@@ -159,7 +180,7 @@ const WORDS = {
     cloneTitle: "Remove {name}'s clone from this office?",
     cloneWhat:
       "It stops working here at once. What it asked and answered stays.",
-    newLink: "Change the office key",
+    newLink: "Replace the shared invite link",
     newLinkTitle: "Change the office key?",
     newLinkWhat:
       "Links made with the office key stop working. Invites, and everyone already in, are not affected.",
@@ -284,6 +305,10 @@ const WORDS = {
       "For now, only this server's admin can sign in with a password.",
     resetMadeTold: "Their page says you made it, and they can stop it.",
     errors: {
+      "too-many":
+        "That's a lot at once. Wait for your clone's answer, then send more.",
+      "web-chat-unpaired":
+        "This browser isn't paired with your clone yet. Pair it first.",
       "web-chat-off":
         "Talking to your clone from here is off. Turn it on in Clone Office on your computer.",
       "no-clone": "There is no clone to talk to: connect your computer first.",
@@ -379,11 +404,13 @@ const WORDS = {
     answerSend: "답 보내기",
     fromWho: "{name} 님의 부탁",
     toWho: "{name} 님에게",
-    stateWaiting: "기다리는 중",
+    stateWaiting: "내 답을 기다려요",
+    stateCloneOn: "클론이 답하는 중",
+    stateAwaiting: "답을 기다리는 중",
     stateAnswered: "답 옴",
     stateClosed: "끝남",
     cloneHandles:
-      "나에게 온 부탁은 내 컴퓨터의 클론이 답해요. 클론이 나에게 물을 것은 앱이나 휴대폰으로 와요.",
+      "나에게 온 부탁은 내 컴퓨터의 클론이 답해요. 클론이 나에게 물을 것은 여기 '내 클론'과 앱, 휴대폰으로 와요.",
     refresh: "새로 고침",
     askSent: "보냈어요. 답이 오면 여기에 보여요.",
     answerSent: "답을 보냈어요.",
@@ -428,19 +455,37 @@ const WORDS = {
     setupWhat:
       "이 서버의 관리자가 돼요. 사람들이 어떻게 로그인할지 정하고, 팀을 초대해요. 여기서 계정을 만드세요. 이 링크는 한 번만 쓸 수 있어요.",
     setupTitle: "이 팀 서버 설정하기",
-    inviteHalfAccount: "계정 만듦 · 클론은 아직",
-    inviteHalfClone: "클론 들어옴 · 계정은 아직",
-    inviteFrom: "{by} 님, {when}",
+    inviteHalfAccount: "계정은 만들었고, 컴퓨터는 아직 연결 전",
+    inviteHalfClone: "컴퓨터는 연결했고, 계정은 아직",
+    inviteFrom: "{by} 님이 만듦 · {when}",
     invitesTitle: "아직 쓸 수 있는 초대",
     inviteMade: "한 사람에게 보내 주세요:",
     inviteMake: "초대 링크 만들기",
     signOut: "로그아웃",
+    tabHome: "홈",
+    pairTitle: "이 브라우저를 내 클론과 짝지어 주세요",
+    pairWhat:
+      "나만 내 클론과 이야기할 수 있도록 브라우저마다 한 번 짝지어요. 내 컴퓨터가 이 코드가 맞는지 물어볼 거예요:",
+    pairStart: "이 브라우저 짝짓기",
+    pairWaiting: "내 컴퓨터의 Clone Office(또는 휴대폰)에서 확인해 주세요…",
+    pairSecure:
+      "클론과 이야기하려면 이 페이지가 https로 열려야 해요. 팀 서버를 운영하는 분께 https 주소를 부탁해 주세요.",
+    chatScript: "여기서 클론과 이야기하려면 자바스크립트가 켜져 있어야 해요.",
+    chatUnpaired:
+      "이 브라우저가 짝지어지지 않아서 클론이 따르지 않았어요. 짝지은 뒤 다시 보내 주세요.",
+    chatBusy:
+      "클론이 아직 앞에 보낸 말을 하고 있어요. 답이 오면 다시 보내 주세요.",
+    chatNews: "클론이 답했어요.",
+    chatAnswered: "답했어요.",
+    suggest1: "오늘 나를 기다리는 게 뭐야?",
+    suggest2: "어제 어디까지 했지?",
+    suggest3: "아직 안 끝난 부탁 정리해 줘",
     tabClone: "내 클론",
     tabRequests: "부탁",
     tabOffice: "오피스",
     menuLabel: "내 메뉴",
     accountTitle: "내 계정",
-    computerOn: "내 클론이 내 컴퓨터에서 일하고 있어요",
+    computerOn: "내 컴퓨터에서 켜져 있어요",
     computerOff:
       "내 컴퓨터가 꺼져 있거나 잠들었어요. 여기에 쓴 말은 켜지면 전해져요.",
     chatOff:
@@ -483,13 +528,13 @@ const WORDS = {
     owner: "주인",
     member: "멤버",
     you: "나",
-    cloneIn: "클론 연결됨, 마지막으로 본 때 {when}",
+    cloneIn: "클론 연결됨 · 마지막 접속 {when}",
     cloneOut: "아직 연결된 컴퓨터가 없어요",
     remove: "내보내기",
     removeTitle: "{name} 님을 이 오피스에서 내보낼까요?",
     removeWhat:
       "클론이 여기서 바로 멈추고, 새 연결 명령도 만들 수 없어요. 주고받은 부탁은 남아요.",
-    makeOwner: "주인으로",
+    makeOwner: "주인으로 만들기",
     ownerTitle: "{name} 님을 주인으로 만들까요?",
     ownerWhat:
       "주인은 누가 들어와 있을지 정하고, 오피스 이름을 바꾸고, 새 초대 링크를 만들어요. 나도 계속 주인이에요.",
@@ -497,7 +542,7 @@ const WORDS = {
     keyedWhat: "여기 계정 없이, 앱에서 초대 링크로 바로 들어온 클론이에요.",
     cloneTitle: "{name} 님의 클론을 이 오피스에서 내보낼까요?",
     cloneWhat: "여기서 바로 멈춰요. 주고받은 부탁은 남아요.",
-    newLink: "오피스 키 바꾸기",
+    newLink: "같이 쓰는 초대 링크 바꾸기",
     newLinkTitle: "오피스 키를 바꿀까요?",
     newLinkWhat:
       "오피스 키로 만든 링크는 더 쓸 수 없어요. 초대 링크와 이미 들어온 사람은 그대로예요.",
@@ -621,6 +666,10 @@ const WORDS = {
     resetMadeTold:
       "링크를 만든 것은 그 사람의 페이지에도 보이고, 그 사람이 링크를 막을 수 있어요.",
     errors: {
+      "too-many":
+        "한꺼번에 너무 많이 보냈어요. 클론의 답을 기다린 뒤에 더 보내 주세요.",
+      "web-chat-unpaired":
+        "이 브라우저가 아직 내 클론과 짝지어지지 않았어요. 먼저 짝지어 주세요.",
       "web-chat-off":
         "여기서 클론과 이야기하기가 꺼져 있어요. 내 컴퓨터의 Clone Office에서 켜 주세요.",
       "no-clone": "이야기할 클론이 없어요. 먼저 내 컴퓨터를 연결해 주세요.",
@@ -716,7 +765,9 @@ const WORDS = {
     answerSend: "发送回答",
     fromWho: "{name}的请求",
     toWho: "发给{name}",
-    stateWaiting: "等待中",
+    stateWaiting: "等你回答",
+    stateCloneOn: "分身在回答",
+    stateAwaiting: "等待回答",
     stateAnswered: "已回答",
     stateClosed: "已结束",
     cloneHandles:
@@ -766,17 +817,34 @@ const WORDS = {
     setupTitle: "设置这台团队服务器",
     inviteHalfAccount: "账号已创建 · 分身尚未加入",
     inviteHalfClone: "分身已加入 · 尚未创建账号",
-    inviteFrom: "{by}，{when}",
+    inviteFrom: "{by} 创建 · {when}",
     invitesTitle: "仍可使用的邀请",
     inviteMade: "把它发给一个人：",
     inviteMake: "生成邀请链接",
     signOut: "退出登录",
+    tabHome: "首页",
+    pairTitle: "把这个浏览器和你的分身配对",
+    pairWhat:
+      "为了只有你能和分身对话，每个浏览器都要配对一次。你的电脑会请你确认这个代码：",
+    pairStart: "配对这个浏览器",
+    pairWaiting: "请在电脑上的 Clone Office（或手机上）确认…",
+    pairSecure:
+      "和分身对话需要通过 https 打开此页面。请让团队服务器的管理者提供 https 地址。",
+    chatScript: "在这里和分身对话需要开启 JavaScript。",
+    chatUnpaired:
+      "这个浏览器还没有配对，所以分身没有执行。请先配对，再发送一次。",
+    chatBusy: "分身还在处理你之前发的话。等它回答后再发送一次。",
+    chatNews: "分身回答了。",
+    chatAnswered: "已回答。",
+    suggest1: "今天有什么在等我？",
+    suggest2: "我昨天做到哪儿了？",
+    suggest3: "整理一下还没结束的请求",
     tabClone: "我的分身",
     tabRequests: "请求",
     tabOffice: "办公室",
     menuLabel: "我的菜单",
     accountTitle: "我的账户",
-    computerOn: "你的分身正在你的电脑上工作",
+    computerOn: "你的分身在你的电脑上开着",
     computerOff: "你的电脑已关机或休眠。在这里写的话会等它回来后再送达。",
     chatOff:
       "从这里和分身对话的功能已关闭。请在你电脑上的 Clone Office › 设置 › 办公室 › 在团队服务器上对话 中打开。",
@@ -813,7 +881,7 @@ const WORDS = {
     owner: "所有者",
     member: "成员",
     you: "你",
-    cloneIn: "分身已连接，最近在线 {when}",
+    cloneIn: "分身已连接 · 最近在线 {when}",
     cloneOut: "还没有连接电脑",
     remove: "移除",
     removeTitle: "把{name}移出这个办公室？",
@@ -827,7 +895,7 @@ const WORDS = {
     keyedWhat: "这些分身是有人在应用里用邀请链接加入的，没有在这里创建账号。",
     cloneTitle: "把{name}的分身移出这个办公室？",
     cloneWhat: "它会立刻停止在这里工作。它提过和回答过的请求会保留。",
-    newLink: "更换办公室密钥",
+    newLink: "更换共用的邀请链接",
     newLinkTitle: "要更换办公室密钥吗？",
     newLinkWhat:
       "用办公室密钥生成的链接将无法再使用。邀请链接和已经加入的人不受影响。",
@@ -939,6 +1007,8 @@ const WORDS = {
     adminsOnlyNote: "目前只有这台服务器的管理员可以用密码登录。",
     resetMadeTold: "对方的页面会显示是你生成的，对方也可以停用它。",
     errors: {
+      "too-many": "一次发得太多了。等分身回答后再发。",
+      "web-chat-unpaired": "这个浏览器还没有和分身配对。请先配对。",
       "web-chat-off":
         "从这里和分身对话的功能已关闭。请在电脑上的 Clone Office 里打开。",
       "no-clone": "没有可以对话的分身：请先连接你的电脑。",
@@ -1027,7 +1097,9 @@ const WORDS = {
     answerSend: "回答を送る",
     fromWho: "{name}さんからの依頼",
     toWho: "{name}さんへ",
-    stateWaiting: "待機中",
+    stateWaiting: "あなたの答え待ち",
+    stateCloneOn: "クローンが対応中",
+    stateAwaiting: "答え待ち",
     stateAnswered: "回答あり",
     stateClosed: "終了",
     cloneHandles:
@@ -1078,17 +1150,36 @@ const WORDS = {
     setupTitle: "このチームサーバーを設定する",
     inviteHalfAccount: "アカウント作成済み · クローンはまだ",
     inviteHalfClone: "クローン参加済み · アカウントはまだ",
-    inviteFrom: "{by}さん、{when}",
+    inviteFrom: "{by}さんが作成 · {when}",
     invitesTitle: "まだ使える招待",
     inviteMade: "一人に送ってください：",
     inviteMake: "招待リンクを作る",
     signOut: "サインアウト",
+    tabHome: "ホーム",
+    pairTitle: "このブラウザをクローンとペアにしてください",
+    pairWhat:
+      "あなただけがクローンと話せるように、ブラウザごとに一度ペアにします。コンピューターがこのコードの確認を求めます：",
+    pairStart: "このブラウザをペアにする",
+    pairWaiting:
+      "コンピューターの Clone Office（またはスマホ）で確認してください…",
+    pairSecure:
+      "クローンと話すには、このページを https で開く必要があります。チームサーバーの管理者に https のアドレスを頼んでください。",
+    chatScript: "ここでクローンと話すには JavaScript が必要です。",
+    chatUnpaired:
+      "このブラウザはペアになっていないため、クローンは実行しませんでした。ペアにしてから、もう一度送ってください。",
+    chatBusy:
+      "クローンはまだ前のメッセージに取り組んでいます。答えが来てから、もう一度送ってください。",
+    chatNews: "クローンが答えました。",
+    chatAnswered: "答えました。",
+    suggest1: "今日、私を待っているものは？",
+    suggest2: "昨日はどこまでやった？",
+    suggest3: "まだ終わっていない依頼をまとめて",
     tabClone: "自分のクローン",
     tabRequests: "依頼",
     tabOffice: "オフィス",
     menuLabel: "メニュー",
     accountTitle: "アカウント",
-    computerOn: "クローンがあなたのコンピューターで働いています",
+    computerOn: "クローンはあなたのコンピューターで起動中です",
     computerOff:
       "コンピューターがオフかスリープ中です。ここに書いたことは、戻ったときに届きます。",
     chatOff:
@@ -1131,7 +1222,7 @@ const WORDS = {
     owner: "オーナー",
     member: "メンバー",
     you: "あなた",
-    cloneIn: "クローン接続済み、最終オンライン {when}",
+    cloneIn: "クローン接続済み · 最終オンライン {when}",
     cloneOut: "まだコンピューターがつながっていません",
     remove: "外す",
     removeTitle: "{name}さんをこのオフィスから外しますか？",
@@ -1146,7 +1237,7 @@ const WORDS = {
       "ここでアカウントを作らず、誰かのアプリから招待リンクで参加したクローンです。",
     cloneTitle: "{name}さんのクローンをこのオフィスから外しますか？",
     cloneWhat: "すぐにここで動かなくなります。やりとりした依頼は残ります。",
-    newLink: "オフィスキーを変える",
+    newLink: "共用の招待リンクを作り直す",
     newLinkTitle: "オフィスキーを変えますか？",
     newLinkWhat:
       "オフィスキーで作ったリンクは使えなくなります。招待リンクと、すでに参加している人はそのままです。",
@@ -1276,6 +1367,10 @@ const WORDS = {
     resetMadeTold:
       "作ったことは相手のページにも表示され、相手はリンクを止められます。",
     errors: {
+      "too-many":
+        "一度に送りすぎです。クローンの答えを待ってから送ってください。",
+      "web-chat-unpaired":
+        "このブラウザはまだクローンとペアになっていません。先にペアにしてください。",
       "web-chat-off":
         "ここからクローンと話す機能はオフです。コンピューターの Clone Office でオンにしてください。",
       "no-clone":
@@ -1381,7 +1476,9 @@ const WORDS = {
     answerSend: "Enviar respuesta",
     fromWho: "{name} te pide",
     toWho: "Para {name}",
-    stateWaiting: "En espera",
+    stateWaiting: "Te espera",
+    stateCloneOn: "Tu clon lo atiende",
+    stateAwaiting: "Esperando respuesta",
     stateAnswered: "Respondida",
     stateClosed: "Cerrada",
     cloneHandles:
@@ -1433,17 +1530,36 @@ const WORDS = {
     setupTitle: "Configura este servidor del equipo",
     inviteHalfAccount: "cuenta creada · el clon aún no se ha unido",
     inviteHalfClone: "clon unido · aún sin cuenta",
-    inviteFrom: "De {by}, {when}",
+    inviteFrom: "Creado por {by} · {when}",
     invitesTitle: "Invitaciones aún abiertas",
     inviteMade: "Envíalo a una sola persona:",
     inviteMake: "Crear un enlace de invitación",
     signOut: "Cerrar sesión",
+    tabHome: "Inicio",
+    pairTitle: "Empareja este navegador con tu clon",
+    pairWhat:
+      "Para que solo tú puedas hablar con tu clon, cada navegador se empareja una vez. Tu computadora te pedirá confirmar este código:",
+    pairStart: "Emparejar este navegador",
+    pairWaiting:
+      "Confírmalo en Clone Office en tu computadora (o en tu teléfono)…",
+    pairSecure:
+      "Para hablar con tu clon, esta página debe abrirse por https. Pide a quien administra el servidor del equipo una dirección https.",
+    chatScript: "Para hablar con tu clon aquí se necesita JavaScript.",
+    chatUnpaired:
+      "Este navegador no está emparejado, así que tu clon no lo hizo. Emparéjalo y vuelve a enviarlo.",
+    chatBusy:
+      "Tu clon sigue con lo que enviaste antes. Vuelve a enviarlo cuando responda.",
+    chatNews: "Tu clon respondió.",
+    chatAnswered: "Respondido.",
+    suggest1: "¿Qué me espera hoy?",
+    suggest2: "¿Dónde lo dejé ayer?",
+    suggest3: "Resume las solicitudes aún abiertas",
     tabClone: "Mi clon",
     tabRequests: "Solicitudes",
     tabOffice: "Oficina",
     menuLabel: "Tu menú",
     accountTitle: "Tu cuenta",
-    computerOn: "Tu clon está trabajando en tu computadora",
+    computerOn: "Tu clon está encendido en tu computadora",
     computerOff:
       "Tu computadora está apagada o en reposo. Lo que escribas aquí espera hasta que vuelva.",
     chatOff:
@@ -1487,7 +1603,7 @@ const WORDS = {
     owner: "Dueño",
     member: "Miembro",
     you: "tú",
-    cloneIn: "Clon conectado, visto por última vez {when}",
+    cloneIn: "Clon conectado · visto por última vez {when}",
     cloneOut: "Todavía no hay ninguna computadora conectada",
     remove: "Quitar",
     removeTitle: "¿Quitar a {name} de esta oficina?",
@@ -1503,7 +1619,7 @@ const WORDS = {
     cloneTitle: "¿Quitar el clon de {name} de esta oficina?",
     cloneWhat:
       "Deja de funcionar aquí de inmediato. Lo que pidió y respondió se queda.",
-    newLink: "Cambiar la clave de la oficina",
+    newLink: "Cambiar el enlace de invitación compartido",
     newLinkTitle: "¿Cambiar la clave de la oficina?",
     newLinkWhat:
       "Los enlaces hechos con la clave de la oficina dejan de funcionar. Las invitaciones y quienes ya están dentro no se ven afectados.",
@@ -1631,6 +1747,10 @@ const WORDS = {
       "Por ahora, solo quien administra este servidor puede iniciar sesión con contraseña.",
     resetMadeTold: "Su página dice que lo creaste, y puede detenerlo.",
     errors: {
+      "too-many":
+        "Es demasiado a la vez. Espera la respuesta de tu clon y luego envía más.",
+      "web-chat-unpaired":
+        "Este navegador aún no está emparejado con tu clon. Emparéjalo primero.",
       "web-chat-off":
         "Hablar con tu clon desde aquí está desactivado. Actívalo en Clone Office en tu computadora.",
       "no-clone":
@@ -1733,7 +1853,9 @@ const WORDS = {
     answerSend: "Enviar resposta",
     fromWho: "{name} pede",
     toWho: "Para {name}",
-    stateWaiting: "Esperando",
+    stateWaiting: "Esperando por você",
+    stateCloneOn: "Seu clone está cuidando",
+    stateAwaiting: "Esperando resposta",
     stateAnswered: "Respondido",
     stateClosed: "Encerrado",
     cloneHandles:
@@ -1785,17 +1907,35 @@ const WORDS = {
     setupTitle: "Configure este servidor da equipe",
     inviteHalfAccount: "conta criada · o clone ainda não entrou",
     inviteHalfClone: "clone entrou · ainda sem conta",
-    inviteFrom: "De {by}, {when}",
+    inviteFrom: "Criado por {by} · {when}",
     invitesTitle: "Convites ainda abertos",
     inviteMade: "Envie para uma pessoa só:",
     inviteMake: "Criar um link de convite",
     signOut: "Sair",
+    tabHome: "Início",
+    pairTitle: "Pareie este navegador com seu clone",
+    pairWhat:
+      "Para que só você fale com seu clone, cada navegador é pareado uma vez. Seu computador vai pedir para confirmar este código:",
+    pairStart: "Parear este navegador",
+    pairWaiting: "Confirme no Clone Office do seu computador (ou no celular)…",
+    pairSecure:
+      "Para falar com seu clone, esta página precisa abrir por https. Peça a quem cuida do servidor da equipe um endereço https.",
+    chatScript: "Para falar com seu clone aqui é preciso JavaScript.",
+    chatUnpaired:
+      "Este navegador não está pareado, então seu clone não fez isso. Pareie e envie de novo.",
+    chatBusy:
+      "Seu clone ainda está no que você enviou antes. Envie de novo quando ele responder.",
+    chatNews: "Seu clone respondeu.",
+    chatAnswered: "Respondido.",
+    suggest1: "O que está esperando por mim hoje?",
+    suggest2: "Onde parei ontem?",
+    suggest3: "Resuma os pedidos ainda abertos",
     tabClone: "Meu clone",
     tabRequests: "Pedidos",
     tabOffice: "Escritório",
     menuLabel: "Seu menu",
     accountTitle: "Sua conta",
-    computerOn: "Seu clone está trabalhando no seu computador",
+    computerOn: "Seu clone está ligado no seu computador",
     computerOff:
       "Seu computador está desligado ou em repouso. O que você escrever aqui espera até ele voltar.",
     chatOff:
@@ -1839,7 +1979,7 @@ const WORDS = {
     owner: "Dono",
     member: "Membro",
     you: "você",
-    cloneIn: "Clone conectado, visto por último {when}",
+    cloneIn: "Clone conectado · visto por último {when}",
     cloneOut: "Nenhum computador conectado ainda",
     remove: "Remover",
     removeTitle: "Remover {name} deste escritório?",
@@ -1855,7 +1995,7 @@ const WORDS = {
     cloneTitle: "Remover o clone de {name} deste escritório?",
     cloneWhat:
       "Ele para de funcionar aqui na hora. O que pediu e respondeu continua aqui.",
-    newLink: "Trocar a chave do escritório",
+    newLink: "Trocar o link de convite compartilhado",
     newLinkTitle: "Trocar a chave do escritório?",
     newLinkWhat:
       "Os links feitos com a chave do escritório param de funcionar. Os convites e quem já está dentro não são afetados.",
@@ -1984,6 +2124,10 @@ const WORDS = {
     resetMadeTold:
       "A página da pessoa mostra que você o criou, e ela pode pará-lo.",
     errors: {
+      "too-many":
+        "É muita coisa de uma vez. Espere a resposta do seu clone e depois envie mais.",
+      "web-chat-unpaired":
+        "Este navegador ainda não está pareado com seu clone. Pareie primeiro.",
       "web-chat-off":
         "Falar com seu clone daqui está desligado. Ligue no Clone Office do seu computador.",
       "no-clone":
@@ -2314,13 +2458,25 @@ export function requestsPage(input: {
   const title = say(lang, "requestsTitle");
   const at = `office=${encodeURIComponent(input.office.id)}`;
   const officeField = `<input type="hidden" name="office" value="${escape(input.office.id)}">`;
-  const state = (one: WebRequest) =>
-    `<span class="tag">${say(lang, one.state === "waiting" ? "stateWaiting" : one.state === "answered" ? "stateAnswered" : "stateClosed")}</span>`;
+  // who it waits on: the person here on the web, their clone, or the one asked
+  const state = (one: WebRequest, mine: boolean) =>
+    `<span class="tag">${say(
+      lang,
+      one.state === "answered"
+        ? "stateAnswered"
+        : one.state === "closed"
+          ? "stateClosed"
+          : mine
+            ? "stateAwaiting"
+            : input.web
+              ? "stateWaiting"
+              : "stateCloneOn",
+    )}</span>`;
   const asked = input.asked
     .map(
       (
         one,
-      ) => `<li><span class="who"><b>${say(lang, "fromWho", { name: one.other })}</b>${state(one)}<small>${escape(one.when)}</small></span>
+      ) => `<li><span class="who"><b>${say(lang, "fromWho", { name: one.other })}</b>${state(one, false)}<small>${escape(one.when)}</small></span>
 <p class="request">${escape(one.text)}</p>${
         one.answer
           ? `<p class="note"><b>${say(lang, "answerLabel")}</b><br>${escape(one.answer)}</p>`
@@ -2340,7 +2496,7 @@ export function requestsPage(input: {
     .map(
       (
         one,
-      ) => `<li><span class="who"><b>${say(lang, "toWho", { name: one.other })}</b>${state(one)}<small>${escape(one.when)}</small></span>
+      ) => `<li><span class="who"><b>${say(lang, "toWho", { name: one.other })}</b>${state(one, true)}<small>${escape(one.when)}</small></span>
 <p class="request">${escape(one.text)}</p>${one.answer ? `<p class="note"><b>${say(lang, one.byPerson ? "answerFrom" : "answerFromClone", { name: one.other })}</b><br>${escape(one.answer)}</p>` : ""}</li>`,
     )
     .join("");
@@ -2350,7 +2506,7 @@ export function requestsPage(input: {
   return shell(
     lang,
     counted(title, waiting),
-    `<h1>${title}${input.office.name ? ` · ${escape(input.office.name)}` : ""}</h1>
+    `<h1${input.band ? ' class="visually-hidden"' : ""}>${title}${input.office.name ? ` · ${escape(input.office.name)}` : ""}</h1>
 ${input.done ? `<p class="done" role="status">${say(lang, input.done === "sent" ? "askSent" : "answerSent")}</p>` : ""}
 ${problem(lang, input.error)}
 <section>
@@ -2390,8 +2546,13 @@ ${sent ? `<ul class="rows requests">${sent}</ul>` : `<p class="note">${say(lang,
     undefined,
     input.band
       ? {
-          band: homeBand(lang, { ...input.band, tab: "requests" }),
+          band: homeBand(lang, {
+            ...input.band,
+            tab: "requests",
+            ...(input.web ? { web: true } : {}),
+          }),
           style: HOME_STYLE,
+          scripts: ["/assets/home.mjs"],
         }
       : {},
   );
@@ -2468,6 +2629,8 @@ export interface Band {
   admin?: boolean;
   /** Requests waiting on the person's own answer, counted on their tab. */
   waiting?: number;
+  /** Taking part on the web, with no clone: their first tab is their home, not a clone. */
+  web?: boolean;
 }
 
 /** The signed-in pages' top: the office on the brand's colour, its tabs, and the person's menu. */
@@ -2498,7 +2661,7 @@ ${band.admin ? `<a href="/home/admin">${say(lang, "adminLink")}</a>` : ""}
 </div></details></div>
 ${
   office
-    ? `<nav class="tabs" aria-label="${officeName}">${tab("clone", `/home${at}`, say(lang, "tabClone"))}${tab(
+    ? `<nav class="tabs" aria-label="${officeName}">${tab("clone", `/home${at}`, say(lang, band.web ? "tabHome" : "tabClone"))}${tab(
         "requests",
         `/home/requests${at}`,
         `${say(lang, "tabRequests")}${band.waiting ? ` <span class="count">${band.waiting}</span>` : ""}`,
@@ -2514,6 +2677,8 @@ export interface HomeChat {
   on: boolean;
   /** Its computer is there now. */
   present: boolean;
+  /** The codes of the browsers the clone trusts (lib/key-code.ts), for the page to know if it is one. */
+  keys: string[];
   messages: OwnMessage[];
 }
 
@@ -2580,19 +2745,22 @@ export function answerHtml(text: string): string {
 function ownWords(lang: PageLanguage, message: OwnMessage): string {
   if (!message.code) return answerHtml(message.text);
   if (message.code === "web-chat-off") return say(lang, "chatOff");
+  if (message.code === "web-chat-unpaired") return say(lang, "chatUnpaired");
+  if (message.code === "busy") return say(lang, "chatBusy");
   if (message.code.startsWith("brain-limit")) return say(lang, "chatLimit");
   return say(lang, "chatFailed");
 }
 
 /**
- * The conversation itself: what waits on the person first, then what was said, then whether the
- * clone is answering. The page's script asks for it again while an answer is on its way.
+ * The conversation itself: what was said and whether the clone is answering, and apart from it what
+ * waits on the person, pinned above the box so it never scrolls away. The page's script asks for
+ * both again while an answer is on its way.
  */
 export function chatThread(
   lang: PageLanguage,
   chat: HomeChat,
   office: string,
-): { html: string; waiting: boolean } {
+): { html: string; decide: string; waiting: boolean } {
   const officeField = `<input type="hidden" name="office" value="${escape(office)}">`;
   const answered = new Set(
     chat.messages
@@ -2608,7 +2776,8 @@ export function chatThread(
         )
           .map(
             (choice) =>
-              `<button type="submit" name="value" value="${escape(choice.value)}" class="quiet small">${escape(choice.label)}</button>`,
+              // nothing answers until the page's script knows this browser is paired and signs it
+              `<button type="submit" name="value" value="${escape(choice.value)}" class="choice" disabled>${escape(choice.label)}</button>`,
           )
           .join("")}</div></form>`,
     )
@@ -2632,16 +2801,27 @@ export function chatThread(
     })
     .join("");
   const last = [...chat.messages].reverse().find((m) => m.kind === "said");
-  const waiting = Boolean(last && !answered.has(last.id));
+  const waiting = Boolean(chat.on && last && !answered.has(last.id));
   const working = waiting
-    ? `<p class="working" role="status"><span class="spin" aria-hidden="true"></span>${say(lang, chat.present ? "chatWorking" : "chatWaiting")}</p><noscript><p class="note">${say(lang, "chatRefresh")}</p></noscript>`
+    ? `<p class="working"><span class="spin" aria-hidden="true"></span>${say(lang, chat.present ? "chatWorking" : "chatWaiting")}</p><noscript><p class="note">${say(lang, "chatRefresh")}</p></noscript>`
+    : "";
+  const suggest = chat.on
+    ? `<div class="suggest" hidden>${(
+        ["suggest1", "suggest2", "suggest3"] as const
+      )
+        .map(
+          (key) =>
+            `<button type="button" class="chip" data-fill="${say(lang, key)}">${say(lang, key)}</button>`,
+        )
+        .join("")}</div>`
     : "";
   return {
-    html: `${asks}${
+    html: `${
       chat.messages.length
         ? lines
-        : `<p class="chat-empty">${say(lang, "chatEmpty")}</p>`
+        : `<div class="chat-empty"><p>${say(lang, "chatEmpty")}</p>${suggest}</div>`
     }${working}`,
+    decide: asks,
     waiting,
   };
 }
@@ -2650,7 +2830,7 @@ export function chatThread(
 export const HOME_STYLE = `
 body { min-height: 100vh; display: flex; flex-direction: column; }
 .band { background: var(--brand-fill); color: #fff; }
-.band-row { max-width: 46rem; margin: 0 auto; padding: .7rem 1rem .4rem; display: flex; align-items: center; gap: .5rem; }
+.band-row { max-width: 72rem; margin: 0 auto; padding: .7rem 1rem .4rem; display: flex; align-items: center; gap: .5rem; }
 .band-office { display: flex; align-items: center; gap: .5rem; color: inherit; text-decoration: none; font-weight: 600; min-width: 0; flex: 0 1 auto; }
 .band-office span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .band .mark { width: 1.4rem; height: 1.4rem; color: #fff; flex: none; }
@@ -2668,20 +2848,20 @@ body { min-height: 100vh; display: flex; flex-direction: column; }
 .band .menu a[aria-current="page"] { font-weight: 700; }
 .band .menu form { margin: 0; }
 .menu-name { margin: .2rem .6rem .3rem; font-size: .85rem; color: var(--muted); }
-.tabs { max-width: 46rem; margin: 0 auto; padding: 0 .6rem .55rem; display: flex; gap: .25rem; overflow-x: auto; }
-.tabs a { color: rgba(255,255,255,.82); text-decoration: none; font-weight: 600; font-size: .95rem; padding: .45rem .85rem; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: .35rem; min-height: 2.5rem; }
+.tabs { max-width: 72rem; margin: 0 auto; padding: 0 .6rem .55rem; display: flex; gap: .25rem; overflow-x: auto; }
+.tabs a { color: rgba(255,255,255,.94); text-decoration: none; font-weight: 600; font-size: .95rem; padding: .45rem .85rem; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: .35rem; min-height: 2.5rem; }
 .tabs a:hover { color: #fff; background: rgba(255,255,255,.12); }
-.tabs a[aria-current="page"] { color: #fff; background: rgba(255,255,255,.22); }
-.tabs .count { background: var(--waiting); color: #fff; border-radius: 999px; font-size: .75rem; padding: 0 .45rem; line-height: 1.4; }
+.tabs a[aria-current="page"] { color: #fff; background: rgba(255,255,255,.22); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .35em; }
+/* what waits, on the band: the ember dark on white, readable in either theme */
+.tabs .count { background: #fff; color: #a8340f; border-radius: 999px; font-size: .75rem; font-weight: 700; padding: 0 .45rem; line-height: 1.5; }
 .band :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 main { width: 100%; max-width: 46rem; }
 main.wide { max-width: 72rem; }
-body:has(main.wide) .band-row, body:has(main.wide) .tabs { max-width: 72rem; }
 main.chat { flex: 1; display: flex; flex-direction: column; gap: 0; padding-top: 0; padding-bottom: 0; }
 .status { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; margin: 0; padding: .9rem 0 .2rem; }
 .status i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--muted); flex: none; }
 .status i.on { background: var(--brand); }
-.callout { margin: .6rem 0 0; padding: .75rem .9rem; border-radius: 12px; background: var(--soft); font-size: .92rem; }
+.callout { margin: 0 0 .5rem; padding: .75rem .9rem; border-radius: 12px; background: var(--soft); font-size: .92rem; }
 .thread { flex: 1; display: flex; flex-direction: column; gap: .6rem; padding: 1rem 0; }
 .msg { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .msg.mine { align-self: flex-end; max-width: 85%; background: var(--brand-fill); color: #fff; padding: .55rem .85rem; border-radius: 18px 18px 6px 18px; }
@@ -2696,19 +2876,27 @@ main.chat { flex: 1; display: flex; flex-direction: column; gap: 0; padding-top:
 .msg.clone pre code { background: none; padding: 0; }
 .msg.clone.failed p { color: var(--muted); }
 .msg.note { font-size: .85rem; color: var(--muted); align-self: center; text-align: center; }
-.chat-empty { color: var(--muted); margin: auto 0 0; }
+.chat-empty { margin: auto 0 0; display: flex; flex-direction: column; gap: .7rem; align-items: flex-start; }
+.chat-empty p { margin: 0; color: var(--muted); }
+.suggest { display: flex; flex-wrap: wrap; gap: .4rem; }
+button.chip { margin: 0; border-radius: 999px; background: var(--soft); color: var(--fg); font-weight: 500; font-size: .9rem; padding: .45rem .9rem; min-height: 2.5rem; }
+button.chip:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 .working { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; margin: 0; }
 .spin { width: .9rem; height: .9rem; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--brand); animation: spin .9s linear infinite; flex: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
-.decide { margin: 0; padding: .75rem .9rem; border-radius: 14px; background: color-mix(in srgb, var(--waiting) 9%, transparent); display: flex; flex-direction: column; gap: .4rem; }
+.decide-list { display: flex; flex-direction: column; gap: .5rem; max-height: 45vh; overflow-y: auto; margin-bottom: .5rem; }
+.decide-list:empty { display: none; }
+.decide { margin: 0; padding: .75rem .9rem; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--waiting) 45%, transparent); background: color-mix(in srgb, var(--waiting) 7%, var(--bg)); display: flex; flex-direction: column; gap: .4rem; }
 .decide-head { margin: 0; font-weight: 700; font-size: .85rem; color: var(--waiting); }
 .decide-text { margin: 0; white-space: pre-wrap; font-size: .95rem; }
 .decide-acts { display: flex; flex-wrap: wrap; gap: .4rem; }
-.decide-acts button { margin: 0; border-radius: 999px; }
-.compose { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0 1rem; margin: 0; }
+.decide-acts button { margin: 0; border-radius: 999px; min-height: 2.5rem; padding: .4rem 1rem; background: var(--bg); color: var(--fg); border: 1px solid var(--field); font-weight: 600; }
+.decide-acts button:hover:not(:disabled) { background: var(--soft); }
+.dock { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0 1rem; }
+.compose { margin: 0; }
 .compose-box { display: flex; align-items: flex-end; gap: .5rem; border: 1px solid var(--field); border-radius: 26px; padding: .35rem .35rem .35rem 1rem; background: var(--bg); }
-.compose-box:focus-within { border-color: var(--brand); }
+.compose-box:focus-within { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
 .compose textarea { border: 0; padding: .45rem 0; min-height: 1.6rem; max-height: 12rem; resize: none; background: transparent; outline: none; margin: 0; }
 .compose button.send { width: 2.5rem; height: 2.5rem; border-radius: 50%; padding: 0; margin: 0; display: grid; place-items: center; flex: none; }
 .compose button.send svg { width: 1.1rem; height: 1.1rem; }
@@ -2718,6 +2906,15 @@ main.chat { flex: 1; display: flex; flex-direction: column; gap: 0; padding-top:
 .empty-state h2 { font-size: 1.2rem; }
 .empty-state form { margin: 0; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.pair { margin: 0 0 .5rem; padding: 1rem; border-radius: 14px; background: var(--brand-soft); display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; }
+.pair h2 { font-size: 1rem; }
+.pair p { margin: 0; }
+.pair button { margin: 0; }
+.pair-code { font: 600 1.35rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+h3 { font-size: .95rem; margin: .5rem 0 0; color: var(--muted); }
+.office-cols { display: grid; gap: 2rem 3rem; align-items: start; }
+.office-cols > section { min-width: 0; }
+@media (min-width: 60rem) { .office-cols { grid-template-columns: 1fr 1fr; } }
 .room-slot { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-height: 18rem; display: grid; place-items: center; color: var(--muted); }
 `;
 
@@ -2818,6 +3015,7 @@ export function homePage(input: {
     ...(office ? { office } : {}),
     offices: input.offices ?? [],
     ...(input.waiting ? { waiting: input.waiting } : {}),
+    ...(input.place === "web" ? { web: true } : {}),
   });
   const top = `${INVITE_ERRORS.has(input.error ?? "") ? "" : problem(lang, input.error)}
 ${input.done === "stopped" ? `<p class="done" role="status">${say(lang, "stoppedDone")}</p>` : ""}
@@ -2828,12 +3026,13 @@ ${notices}`;
       band,
       style: HOME_STYLE,
       ...(main ? { main } : {}),
-      ...(scripts ? { scripts } : {}),
+      scripts: scripts ?? ["/assets/home.mjs"],
     });
   if (!office) return page(`${top}<p>${errorWords(lang, "not-in-office")}</p>`);
   const connect = input.command
     ? `<p>${say(lang, "connectHow")}</p><pre>${escape(input.command)}</pre><p class="note">${say(lang, "commandNote")}</p>`
-    : `<form method="post" action="/home/pair">${officeField}<button type="submit">${say(lang, "connectCta")}</button></form>`;
+    : // beside the requests waiting on someone on the web, connecting is the quieter of the two
+      `<form method="post" action="/home/pair">${officeField}<button type="submit"${input.place === "web" ? ' class="quiet"' : ""}>${say(lang, "connectCta")}</button></form>`;
 
   if (tab === "account") {
     const ways = input.ways;
@@ -2856,8 +3055,10 @@ ${notices}`;
           }</li></ul>
 </section>`
         : "";
+    const self = people.find((one) => one.id === input.me);
     return page(`${top}
 <h1>${say(lang, "accountTitle")}</h1>
+<p class="note">${escape(input.name)}${self?.email ? ` · ${escape(self.email)}` : ""}</p>
 <section>
 <h2>${say(lang, "connectTitle")}</h2>
 <p class="note">${
@@ -2874,9 +3075,7 @@ ${
     : `<form method="post" action="/home/pair">${officeField}<button type="submit" class="quiet">${say(lang, input.computer ? "moveComputer" : "connectCta")}</button></form>`
 }
 </section>
-${signIn}
-${input.admin ? `<p><a href="/home/admin">${say(lang, "adminLink")}</a></p>` : ""}
-<form method="post" action="/logout"><button type="submit" class="quiet">${say(lang, "signOut")}</button></form>`);
+${signIn}`);
   }
 
   if (tab === "office") {
@@ -2903,6 +3102,7 @@ ${input.admin ? `<p><a href="/home/admin">${say(lang, "adminLink")}</a></p>` : "
       `${top}
 <h1 class="visually-hidden">${say(lang, "officeTitle")}</h1>
 ${input.room ?? ""}
+<div class="office-cols">
 <section id="invite">
 <h2>${say(lang, "inviteTeam")}</h2>
 ${INVITE_ERRORS.has(input.error ?? "") ? problem(lang, input.error) : ""}
@@ -2921,7 +3121,7 @@ ${
 <ul class="rows">${input.invites
         .map(
           (one) =>
-            `<li><span class="who">${one.note ? `<b>${escape(one.note)}</b> ` : ""}${say(lang, "inviteFrom", { by: one.by, when: one.created })}${one.clone ? `<span class="tag">${say(lang, "inviteHalfClone")}</span>` : one.account ? `<span class="tag">${say(lang, "inviteHalfAccount")}</span>` : ""}</span><form method="post" action="/home/invite/cancel" class="acts">${officeField}<input type="hidden" name="invite" value="${escape(one.id)}"><button type="submit" class="ghost small">${say(lang, "cancel")}</button></form></li>`,
+            `<li><span class="who">${one.note ? `<b>${escape(one.note)}</b>` : ""}<small>${say(lang, "inviteFrom", { by: one.by, when: one.created })}${one.clone ? ` · ${say(lang, "inviteHalfClone")}` : one.account ? ` · ${say(lang, "inviteHalfAccount")}` : ""}</small></span><form method="post" action="/home/invite/cancel" class="acts">${officeField}<input type="hidden" name="invite" value="${escape(one.id)}"><button type="submit" class="ghost small">${say(lang, "cancel")}</button></form></li>`,
         )
         .join("")}</ul>`
     : ""
@@ -2958,7 +3158,8 @@ ${
 <p class="note"><a href="/home/invite/new?${at}">${say(lang, "newLink")}</a></p>
 </section>`
     : ""
-}`,
+}
+</div>`,
       "wide",
     );
   }
@@ -2970,9 +3171,16 @@ ${
     return page(
       `${top}
 <p class="status"><i class="${chat.present ? "on" : ""}"></i>${say(lang, chat.present ? "computerOn" : "computerOff")}</p>
+<div id="thread" class="thread" data-office="${escape(office.id)}" data-waiting="${thread.waiting ? "1" : "0"}" data-on="${chat.on ? "1" : "0"}" data-keys="${escape(chat.keys.join(","))}">${thread.html}</div>
+<p id="chat-news" class="visually-hidden" role="status"></p>
+<div class="dock">
+<div id="decide" class="decide-list" aria-label="${say(lang, "toDecide")}">${thread.decide}</div>
 ${chat.on ? "" : `<p class="callout">${say(lang, "chatOff")}</p>`}
-<div id="thread" class="thread" aria-live="polite" data-office="${escape(office.id)}" data-waiting="${thread.waiting ? "1" : "0"}">${thread.html}</div>
-<form id="say" class="compose" method="post" action="/home/clone/say">${officeField}<div class="compose-box"><textarea id="say-text" name="text" rows="1" maxlength="8000" required placeholder="${say(lang, "chatPlaceholder")}" aria-label="${say(lang, "chatPlaceholder")}"${chat.on ? "" : " disabled"}></textarea><button type="submit" class="send" aria-label="${say(lang, "chatSend")}"${chat.on ? "" : " disabled"}>${SEND_ICON}</button></div><p class="chat-foot">${say(lang, "chatKept")}</p><p id="say-error" class="error" role="alert" hidden></p></form>`,
+<noscript><p class="callout">${say(lang, "chatScript")}</p></noscript>
+<p id="pair-secure" class="callout" hidden>${say(lang, "pairSecure")}</p>
+<section id="pair" class="pair" hidden><h2>${say(lang, "pairTitle")}</h2><p>${say(lang, "pairWhat")}</p><p id="pair-code" class="pair-code"></p><button id="pair-start" type="button">${say(lang, "pairStart")}</button><p id="pair-wait" class="working" hidden><span class="spin" aria-hidden="true"></span>${say(lang, "pairWaiting")}</p></section>
+<form id="say" class="compose" method="post" action="/home/clone/say" data-answered="${say(lang, "chatAnswered")}" data-news="${say(lang, "chatNews")}">${officeField}<div class="compose-box"><textarea id="say-text" name="text" rows="1" maxlength="8000" required placeholder="${say(lang, "chatPlaceholder")}" aria-label="${say(lang, "chatPlaceholder")}" disabled></textarea><button type="submit" class="send" aria-label="${say(lang, "chatSend")}" disabled>${SEND_ICON}</button></div><p class="chat-foot">${say(lang, "chatKept")}</p><p id="say-error" class="error" role="alert" hidden></p></form>
+</div>`,
       "chat",
       ["/assets/home.mjs"],
     );

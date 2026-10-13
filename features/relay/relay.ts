@@ -29,6 +29,7 @@
 // the one who shared it or an owner of the office takes it out.
 
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { keyCode } from "../../lib/key-code.ts";
 import type { Database, Sql } from "./db.ts";
 import {
   checkSkill,
@@ -159,8 +160,19 @@ export type InboxEvent =
 
 /** What a clone hears of its person on the team server's page: words to it, or a question answered. */
 export type OwnNews =
-  | { id: string; kind: "said"; text: string }
-  | { id: string; kind: "chosen"; value: string };
+  | { id: string; kind: "said"; text: string; proof?: OwnProof }
+  | { id: string; kind: "chosen"; value: string; proof?: OwnProof }
+  | { id: string; kind: "pair"; key: string };
+
+/**
+ * What a paired browser signed (people-pages' script, home-client.ts): its public key, the words it
+ * signed, and the signature. The clone checks it against the browsers its person paired.
+ */
+export interface OwnProof {
+  key: string;
+  signed: string;
+  sig: string;
+}
 
 /** One line of a person's conversation with their own clone on the team server's page. */
 export interface OwnMessage {
@@ -177,12 +189,20 @@ export interface OwnMessage {
   /** A question: its choices as its buttons carry them, and the one given (or "settled" elsewhere). */
   choices?: { label: string; value: string }[];
   chosen?: string;
+  /** A browser asking to be paired: its public key. */
+  key?: string;
 }
 
 /** How long the page keeps a person's conversation with their clone. */
 export const OWN_HOURS = 24;
 /** How much one line of it may say. */
 export const OWN_CHARS = 8000;
+/** How many of its lines the page shows: the newest. */
+const OWN_SHOWN = 200;
+/** How many lines one person's conversation may hold in a day, both sides. */
+const OWN_DAILY = 600;
+/** How many of the person's words may wait for their clone at once. */
+const OWN_WAITING = 5;
 
 /** The office's standup, or one clone's question to everyone. */
 export type MeetingKind = "standup" | "question";
@@ -341,6 +361,11 @@ const MIGRATIONS: string[][] = [
     "ALTER TABLE members ADD COLUMN own_chat BOOLEAN NOT NULL DEFAULT false",
     "CREATE TABLE own_messages (id TEXT PRIMARY KEY, member_id TEXT NOT NULL REFERENCES members (id) ON DELETE CASCADE, kind TEXT NOT NULL, text TEXT NOT NULL, data JSONB NOT NULL DEFAULT '{}'::jsonb, at TIMESTAMPTZ NOT NULL, taken TIMESTAMPTZ)",
     "CREATE INDEX own_messages_member ON own_messages (member_id, at)",
+  ],
+  // The browsers the person paired with their clone (`ownPair`): only words signed by one of them
+  // run, which the clone checks itself; the relay keeps the list it says, for the page to know.
+  [
+    "ALTER TABLE members ADD COLUMN own_keys JSONB NOT NULL DEFAULT '[]'::jsonb",
   ],
 ];
 
@@ -826,8 +851,9 @@ export class Relay {
             "DELETE FROM members WHERE token_hash = $1 AND office_id = $2 AND user_id IS NULL AND id <> $3",
             [hashToken(adopt), office, had.id],
           );
+        // talking to it from the page is off until the computer now holding it turns it on
         await tx.query(
-          "UPDATE members SET token_hash = $1, seen = $2, on_web = false WHERE id = $3",
+          "UPDATE members SET token_hash = $1, seen = $2, on_web = false, own_chat = false WHERE id = $3",
           [hashToken(token), now, had.id],
         );
         // Moved from another computer, whose token stops working; a place on the web is taken over.
@@ -2040,11 +2066,19 @@ export class Relay {
   // ---- A person talking to their own clone from the team server's page ----
 
   /** The clone says whether its person may talk to it from the team server's page. */
-  async ownAllow(member: Caller, on: boolean): Promise<void> {
-    await this.db.query("UPDATE members SET own_chat = $2 WHERE id = $1", [
-      member.id,
-      on,
-    ]);
+  async ownAllow(
+    member: Caller,
+    on: boolean,
+    keys: string[] = [],
+  ): Promise<void> {
+    // the fingerprints of the browsers it trusts, for the page to know whether it is one
+    const known = keys
+      .filter((key) => typeof key === "string" && /^\d{12}$/.test(key))
+      .slice(0, 20);
+    await this.db.query(
+      "UPDATE members SET own_chat = $2, own_keys = $3::jsonb WHERE id = $1",
+      [member.id, on, JSON.stringify(known)],
+    );
   }
 
   /**
@@ -2054,20 +2088,30 @@ export class Relay {
   async ownThread(
     member: string,
     now = new Date(),
-  ): Promise<{ on: boolean; messages: OwnMessage[] }> {
-    const [row] = await this.db.query<{ own_chat: boolean }>(
-      "SELECT own_chat FROM members WHERE id = $1",
+  ): Promise<{ on: boolean; keys: string[]; messages: OwnMessage[] }> {
+    const [row] = await this.db.query<{ own_chat: boolean; own_keys: unknown }>(
+      "SELECT own_chat, own_keys FROM members WHERE id = $1",
       [member],
     );
+    const since = new Date(now.getTime() - OWN_HOURS * 3_600_000).toISOString();
+    // The newest lines, and every question still waiting however old within the day.
     const rows = await this.db.query<OwnRow>(
-      "SELECT * FROM own_messages WHERE member_id = $1 AND at > $2 ORDER BY at, id LIMIT 200",
-      [member, new Date(now.getTime() - OWN_HOURS * 3_600_000).toISOString()],
+      "SELECT * FROM (SELECT * FROM own_messages WHERE member_id = $1 AND at > $2 AND kind <> 'pair' ORDER BY at DESC, id DESC LIMIT $3) newest UNION SELECT * FROM own_messages WHERE member_id = $1 AND at > $2 AND kind = 'ask' AND NOT (data ? 'chosen') ORDER BY at, id",
+      [member, since, OWN_SHOWN],
     );
-    return { on: Boolean(row?.own_chat), messages: rows.map(ownMessage) };
+    return {
+      on: Boolean(row?.own_chat),
+      keys: Array.isArray(row?.own_keys) ? (row.own_keys as string[]) : [],
+      messages: rows.map(ownMessage),
+    };
   }
 
   /** The person's words to their clone, for it to take from its inbox. */
-  async ownSay(member: string, text: string): Promise<OwnMessage> {
+  async ownSay(
+    member: string,
+    text: string,
+    proof?: OwnProof,
+  ): Promise<OwnMessage> {
     const words = String(text ?? "").trim();
     if (!words)
       throw new RelayError(400, "Say something first.", "bad-request");
@@ -2076,10 +2120,13 @@ export class Relay {
     const at = new Date().toISOString();
     const id = `o-${randomBytes(9).toString("base64url")}`;
     await this.db.transaction(async (tx) => {
-      const [row] = await tx.query<{ own_chat: boolean; on_web: boolean }>(
-        "SELECT own_chat, on_web FROM members WHERE id = $1",
-        [member],
-      );
+      const [row] = await tx.query<{
+        own_chat: boolean;
+        on_web: boolean;
+        own_keys: unknown;
+      }>("SELECT own_chat, on_web, own_keys FROM members WHERE id = $1", [
+        member,
+      ]);
       if (!row || row.on_web)
         throw new RelayError(409, "No clone to talk to.", "no-clone");
       if (!row.own_chat)
@@ -2088,9 +2135,11 @@ export class Relay {
           "Talking to the clone from here is off.",
           "web-chat-off",
         );
+      pairedProof(row.own_keys, proof);
+      await ownRoom(tx, member, at, "said");
       await tx.query(
-        "INSERT INTO own_messages (id, member_id, kind, text, at) VALUES ($1, $2, 'said', $3, $4)",
-        [id, member, words, at],
+        "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'said', $3, $4::jsonb, $5)",
+        [id, member, words, JSON.stringify(proof ? { proof } : {}), at],
       );
       await notify(tx, member, "own", id, at);
     });
@@ -2125,10 +2174,13 @@ export class Relay {
     const at = new Date().toISOString();
     const id = `o-${randomBytes(9).toString("base64url")}`;
     const data = { ...(replyTo ? { replyTo } : {}), ...(code ? { code } : {}) };
-    await this.db.query(
-      "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'answer', $3, $4::jsonb, $5)",
-      [id, member.id, text, JSON.stringify(data), at],
-    );
+    await this.db.transaction(async (tx) => {
+      await ownRoom(tx, member.id, at, "answer");
+      await tx.query(
+        "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'answer', $3, $4::jsonb, $5)",
+        [id, member.id, text, JSON.stringify(data), at],
+      );
+    });
     if (replyTo) await this.ownTake(member, replyTo);
     return { id, kind: "answer", text, at, ...data };
   }
@@ -2156,10 +2208,13 @@ export class Relay {
       );
     const at = new Date().toISOString();
     const id = `o-${randomBytes(9).toString("base64url")}`;
-    await this.db.query(
-      "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'ask', $3, $4::jsonb, $5)",
-      [id, member.id, text, JSON.stringify({ choices }), at],
-    );
+    await this.db.transaction(async (tx) => {
+      await ownRoom(tx, member.id, at, "ask");
+      await tx.query(
+        "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'ask', $3, $4::jsonb, $5)",
+        [id, member.id, text, JSON.stringify({ choices }), at],
+      );
+    });
     return { id, kind: "ask", text, at, choices };
   }
 
@@ -2167,7 +2222,12 @@ export class Relay {
    * The person's answer to their clone's question, from their page: one of its choices, once; the
    * clone hears it in its inbox.
    */
-  async ownChoose(member: string, ask: string, value: string): Promise<void> {
+  async ownChoose(
+    member: string,
+    ask: string,
+    value: string,
+    proof?: OwnProof,
+  ): Promise<void> {
     const at = new Date().toISOString();
     await this.db.transaction(async (tx) => {
       const [row] = await tx.query<OwnRow>(
@@ -2182,11 +2242,57 @@ export class Relay {
         );
       if (!(row.data?.choices ?? []).some((one) => one.value === value))
         throw new RelayError(400, "Not one of its choices.", "bad-request");
+      const [keys] = await tx.query<{ own_keys: unknown }>(
+        "SELECT own_keys FROM members WHERE id = $1",
+        [member],
+      );
+      pairedProof(keys?.own_keys, proof);
       await tx.query(
         "UPDATE own_messages SET data = data || $2::jsonb WHERE id = $1",
-        [ask, JSON.stringify({ chosen: value })],
+        [
+          ask,
+          JSON.stringify({
+            chosen: value,
+            ...(proof ? { chosenProof: proof } : {}),
+          }),
+        ],
       );
       await notify(tx, member, "own", ask, at);
+    });
+  }
+
+  /**
+   * A browser asking to be paired with the person's clone, by its public key: the clone asks its
+   * person on their computer whether the code the page shows is the one it computes.
+   */
+  async ownPair(member: string, key: string): Promise<void> {
+    if (!/^[A-Za-z0-9_-]{80,200}$/.test(key))
+      throw new RelayError(400, "Not a key.", "bad-request");
+    const at = new Date().toISOString();
+    const id = `o-${randomBytes(9).toString("base64url")}`;
+    await this.db.transaction(async (tx) => {
+      const [row] = await tx.query<{ own_chat: boolean; on_web: boolean }>(
+        "SELECT own_chat, on_web FROM members WHERE id = $1 FOR UPDATE",
+        [member],
+      );
+      if (!row || row.on_web)
+        throw new RelayError(409, "No clone to talk to.", "no-clone");
+      if (!row.own_chat)
+        throw new RelayError(
+          409,
+          "Talking to the clone from here is off.",
+          "web-chat-off",
+        );
+      // one asking at a time: a page asking again replaces its own earlier ask
+      await tx.query(
+        "DELETE FROM own_messages WHERE member_id = $1 AND kind = 'pair'",
+        [member],
+      );
+      await tx.query(
+        "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'pair', '', $3::jsonb, $4)",
+        [id, member, JSON.stringify({ key }), at],
+      );
+      await notify(tx, member, "own", id, at);
     });
   }
 
@@ -2237,13 +2343,29 @@ export class Relay {
           out.push({
             seq,
             type: "own",
-            own: { id: own.id, kind: "said", text: own.text },
+            own: {
+              id: own.id,
+              kind: "said",
+              text: own.text,
+              ...(own.data?.proof ? { proof: own.data.proof } : {}),
+            },
           });
         else if (own?.kind === "ask" && typeof own.data?.chosen === "string")
           out.push({
             seq,
             type: "own",
-            own: { id: own.id, kind: "chosen", value: own.data.chosen },
+            own: {
+              id: own.id,
+              kind: "chosen",
+              value: own.data.chosen,
+              ...(own.data.chosenProof ? { proof: own.data.chosenProof } : {}),
+            },
+          });
+        else if (own?.kind === "pair" && typeof own.data?.key === "string")
+          out.push({
+            seq,
+            type: "own",
+            own: { id: own.id, kind: "pair", key: own.data.key },
           });
         continue;
       }
@@ -2375,16 +2497,62 @@ async function attach(
   return named;
 }
 
+/**
+ * Words from the page come signed by a browser its person paired (own-chat.ts on the clone's side,
+ * which alone decides): the relay turns away at once what no paired browser could have signed, so
+ * the page says to pair it rather than the clone answering later that it will not act on it.
+ */
+function pairedProof(keys: unknown, proof: OwnProof | undefined): void {
+  const known = Array.isArray(keys) ? (keys as string[]) : [];
+  if (!proof || !known.includes(keyCode(proof.key)))
+    throw new RelayError(
+      403,
+      "This browser is not paired with the clone.",
+      "web-chat-unpaired",
+    );
+}
+
+/**
+ * Room for one more line of a person's conversation with their clone: only while the clone lets
+ * them talk to it from the page, a few of their words waiting at once, and a day's worth at most.
+ */
+async function ownRoom(
+  tx: Sql,
+  member: string,
+  at: string,
+  kind: "said" | "answer" | "ask",
+): Promise<void> {
+  const [row] = await tx.query<{ own_chat: boolean }>(
+    "SELECT own_chat FROM members WHERE id = $1 FOR UPDATE",
+    [member],
+  );
+  if (!row?.own_chat)
+    throw new RelayError(
+      409,
+      "Talking to the clone from here is off.",
+      "web-chat-off",
+    );
+  const [{ day, waiting }] = await tx.query<{ day: number; waiting: number }>(
+    "SELECT count(*)::int AS day, count(*) FILTER (WHERE kind = 'said' AND taken IS NULL)::int AS waiting FROM own_messages WHERE member_id = $1 AND at > $2",
+    [member, new Date(Date.parse(at) - OWN_HOURS * 3_600_000).toISOString()],
+  );
+  if (day >= OWN_DAILY || (kind === "said" && waiting >= OWN_WAITING))
+    throw new RelayError(429, "Too much at once.", "too-many");
+}
+
 interface OwnRow {
   id: string;
   member_id: string;
-  kind: "said" | "answer" | "ask";
+  kind: "said" | "answer" | "ask" | "pair";
   text: string;
   data: {
     replyTo?: string;
     code?: string;
     choices?: { label: string; value: string }[];
     chosen?: string;
+    proof?: OwnProof;
+    chosenProof?: OwnProof;
+    key?: string;
   } | null;
   at: unknown;
   taken: unknown;
@@ -2394,7 +2562,8 @@ function ownMessage(row: OwnRow): OwnMessage {
   const data = row.data ?? {};
   return {
     id: row.id,
-    kind: row.kind,
+    // a browser asking to be paired is never in the conversation (`ownThread`)
+    kind: row.kind as OwnMessage["kind"],
     text: row.text,
     at: iso(row.at),
     ...(row.kind === "said" && row.taken ? { taken: true } : {}),

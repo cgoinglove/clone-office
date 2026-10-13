@@ -287,7 +287,8 @@ test("from the invite link to a connected computer, as a person does it: sign up
     );
     assert.match(
       await (await fetch(`${base}/home`, { headers: { cookie } })).text(),
-      /Talking to your clone from here is off[\s\S]*id="thread"/,
+      // why the box is off, right above it
+      /id="thread"[\s\S]*Talking to your clone from here is off[\s\S]*id="say-text"/,
     );
     await assert.rejects(
       run(process.execPath, [bin, "connect", link, "--no-start"], { env }),

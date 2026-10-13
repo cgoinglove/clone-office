@@ -1139,7 +1139,9 @@
         "title": "Hablar desde el servidor del equipo",
         "hint": "Lejos de esta computadora, inicia sesión en el servidor del equipo y habla allí con tu clon, desde el teléfono u otra computadora. Responde desde aquí.",
         "take": "Hablar con mi clon desde el servidor del equipo",
-        "takeHint": "Lo que digas allí pasa por el servidor del equipo y se guarda allí un día como máximo; la conversación completa queda en esta computadora."
+        "takeHint": "Solo los navegadores que emparejes aquí pueden hablar con él. Lo que digas allí pasa por el servidor del equipo y se guarda allí un día como máximo; la conversación completa queda en esta computadora.",
+        "browsers": "{count, plural, =0 {Aún no hay navegadores emparejados: la página del servidor del equipo muestra cómo.} one {# navegador emparejado} other {# navegadores emparejados}}",
+        "forget": "Desemparejar todos"
       },
       "meetings": {
         "title": "Reuniones de los clones",
@@ -1737,5 +1739,11 @@
     "documentsFolder": "Clone Office mira tu carpeta Documentos para saber dónde está tu trabajo, y abre los archivos de ahí que le pides a tu clon.",
     "downloadsFolder": "Clone Office mira tu carpeta Descargas para saber dónde está tu trabajo, y abre los archivos de ahí que le pides a tu clon.",
     "localNetwork": "Clone Office se conecta a la oficina de tu equipo en esta red, y deja que los clones de tus compañeros lleguen a una oficina que abras en esta computadora."
+  },
+  "webChat": {
+    "pairAsk": "Un navegador del servidor del equipo quiere hablar con tu clon. Emparéjalo solo si su página muestra este código: {code}",
+    "pairYes": "Sí, emparejar",
+    "pairNo": "No",
+    "chatTitle": "Desde el servidor del equipo"
   }
 }

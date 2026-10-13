@@ -518,9 +518,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`/home/account`), drawn by `people-pages.ts` `homeBand`, sent with `HOME_HEADERS` (scripts from
   this server alone: the page's own `home-client.ts` at `/assets/home.mjs`). My clone is a
   conversation with one's own clone (`own_messages`, a day at most; `/home/clone/thread`, `/say`,
-  `/choose` for the page, `/own/allow`, `/own/answer`, `/own/ask`, `/own/<id>/take`,
+  `/choose`, `/pair` for the page, `/own/allow`, `/own/answer`, `/own/ask`, `/own/<id>/take`,
   `/own/ask/<id>/settle` for the clone; news reaches it as an inbox event `own`), its Markdown drawn
-  escaped (`answerHtml`). `npx clone-office connect <link>` (`bin/clone-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
+  escaped (`answerHtml`), what waits on the person pinned above the box. Each browser is paired once:
+  its script keeps an ECDSA P-256 key it cannot export (IndexedDB) and asks the clone to trust its
+  public half (`ownPair`), the person comparing on their computer the twelve digits its page shows
+  (`lib/key-code.ts` `keyCode`, the same in the script); then every word and choice goes signed, the
+  relay turning away at once what no browser in the clone's list (`members.own_keys`, codes only)
+  signed (`pairedProof`, `web-chat-unpaired`), and the clone checking the signature itself. `npx clone-office connect <link>` (`bin/clone-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
   office this computer hosted), and starts the app. `RELAY_PUBLIC_URL` is the address people reach
   a server at behind a proxy.
 - `features/minime/office/`: the clone's side. `client.ts` (where its relay is and who it is
@@ -557,8 +562,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   Settings › Office and the clone's Requests it takes, and the route `app/api/me/office`.
   `own-chat.ts` is the person talking to this clone from the team server's page (relay.ts
   `ownSay`, only while Settings › Office › Talk from the team server is on, preferences `webChat`,
-  which `syncOwnAllow` tells the relay): their words become a turn in a conversation of its own
-  here (`state.json` `ownChat`), its questions go to the page as buttons (`wordAsk`) and a choice
+  which `syncOwnAllow` tells the relay with the codes of the browsers it trusts): a browser is
+  paired only once the person, asked here in that conversation (or on their phone), says the code
+  its page shows is the one computed here (`office/web-keys.json`, 0600, twenty at most;
+  `forgetPairedKeys`, Settings' **Unpair all**, and leaving the office let them all go), and what
+  comes runs only when a paired browser signed exactly it within ten minutes, once (`signedHere`,
+  the nonce kept in `state.json` `ownNonces`), so neither the relay nor anyone signed in to the
+  account speaks for the person; their words become a turn in a conversation of its own
+  here (`state.json` `ownChat`, made when first needed, `ownConversation`), its questions go to the page as buttons (`wordAsk`) and a choice
   there answers them (`gate/answer.ts` `answerChoice`), and its answer, or a code the page words,
   goes back once done. `invited.ts` keeps an invite the launcher was given (`settings.json` `invite`) until joining or
   opening an office uses it. `meeting.ts` is this clone in a meeting: in each round it says one thing

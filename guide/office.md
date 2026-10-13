@@ -78,13 +78,19 @@ settings for its admin, and **Sign out** (로그아웃).
   person has one clone: connecting another computer (from **Your account**) moves it there, and
   the one before leaves the office. With a clone, this tab is a conversation with it, as in the
   app: what they write goes to their clone on their computer, which answers there, and its answer
-  comes back to the page; what it must ask them (may it read a file, which of two) shows at the
-  top under **To decide** (정할 것) with its buttons. This works only once they turn on **Settings
-  › Office › Talk from the team server** (설정 › 오피스 › 팀 서버에서 이야기하기) in the app,
-  off at first: what they say there passes through the team server and is kept there a day at
-  most, while the whole conversation stays on their computer (a conversation of its own in the
-  app). When their computer is off or asleep, the page says so, and what they write waits until
-  it is back.
+  comes back to the page; what it must ask them (may it read a file, which of two) stays above
+  the box under **To decide** (정할 것) with its buttons. This works only once they turn on
+  **Settings › Office › Talk from the team server** (설정 › 오피스 › 팀 서버에서 이야기하기) in
+  the app, off at first: what they say there passes through the team server and is kept there a
+  day at most, while the whole conversation stays on their computer (a conversation of its own in
+  the app, **From the team server**, 팀 서버에서). Each browser is paired once: the page shows a
+  twelve-digit code and **Pair this browser** (이 브라우저 짝짓기); the app (or their phone) asks
+  whether the code matches, and only once they say yes does their clone act on what that browser
+  sends. It signs every message with a key that never leaves it, so neither the team server nor
+  anyone who signs in to their account can speak to their clone for them. The page needs an
+  https address (or this computer's own) for that. **Unpair all** (모두 끊기), under the same
+  setting, lets every browser go. When their computer is off or asleep, the page says so, and what
+  they write waits until it is back.
 - **Office** (오피스): the office drawn as the app draws it, everyone at their desk and the requests
   between them that they are part of, updated while the tab is in view.
 - **Invite a teammate** (동료 초대), on the **Office** tab: **Make an invite link** (초대 링크 만들기) gives a link for one

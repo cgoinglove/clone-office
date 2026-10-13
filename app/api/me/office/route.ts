@@ -11,6 +11,7 @@ import {
   meetings,
   members,
   openMeeting,
+  ownAllow,
   problemCode,
   sendRequest,
   serverLink,
@@ -48,6 +49,10 @@ import {
   menuSkills,
   saveMenu,
 } from "@/features/minime/office/menu";
+import {
+  forgetPairedKeys,
+  pairedKeys,
+} from "@/features/minime/office/own-chat";
 import { loadState } from "@/features/minime/office/state";
 import {
   officeProblem,
@@ -107,6 +112,8 @@ export async function GET(request: Request) {
       meetings: held,
       standup: standup?.value ?? null,
       meetingsOn: (await readPreferences()).meetings,
+      // the browsers the person paired to talk to their clone from the team server's page
+      webKeys: (await pairedKeys()).length,
       meetingChats: Object.fromEntries(
         Object.entries((await loadState()).meetings).flatMap(([id, back]) =>
           back.chat ? [[id, back.chat]] : [],
@@ -187,6 +194,7 @@ const Body = z.discriminatedUnion("action", [
     text: z.string().trim().min(1).max(8000),
   }),
   z.object({ action: z.literal("leave") }),
+  z.object({ action: z.literal("forget-browsers") }),
   z.object({ action: z.literal("invite") }),
   z.object({ action: z.literal("server-link") }),
   z.object({
@@ -427,6 +435,13 @@ export async function POST(request: Request) {
       await setTeamSetting(office, "meeting:standup", input.standup);
       return Response.json({ standup: input.standup });
     }
+    if (input.action === "forget-browsers") {
+      await forgetPairedKeys(office);
+      return Response.json({ webKeys: 0 });
+    }
+    // Talking to it from the team server's page stops with it, and the browsers paired there go.
+    await ownAllow(office, false).catch(() => {});
+    await forgetPairedKeys().catch(() => {});
     stopOffice();
     // Leaving the office open here closes it; what it keeps stays, for opening it again.
     if (await hostsOffice(office)) await closeHere();

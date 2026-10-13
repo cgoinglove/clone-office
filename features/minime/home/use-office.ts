@@ -131,6 +131,8 @@ export interface Office {
   standup?: StandupTime | null;
   /** The person lets their clone take part in meetings. */
   meetingsOn?: boolean;
+  /** How many browsers the person paired to talk to their clone from the team server's page. */
+  webKeys?: number;
   /** The conversation each meeting was brought back into, by meeting. */
   meetingChats?: Record<string, string>;
   /** Questions about requests kept for the person: answering one lets the request go on. */

@@ -135,16 +135,19 @@ const STYLE = `
 :root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --field: #8a8d93; --soft: rgba(13,13,13,.06); --brand: #0169cc; --brand-fill: #0169cc; --brand-soft: rgba(1,105,204,.1); --on: #0169cc; --danger: #dc2626; --error: #c43d18; --waiting: #c43d18; --g-bg: #ffffff; --g-line: #747775; --g-fg: #1f1f1f; color-scheme: light; }
 @media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --field: #6b6f76; --soft: rgba(255,255,255,.08); --brand: #0a84ff; --brand-fill: #0060df; --brand-soft: rgba(10,132,255,.16); --on: #6cb4ff; --danger: #b91c1c; --error: #ff7a55; --waiting: #ff7a55; --g-bg: #131314; --g-line: #8e918f; --g-fg: #e3e3e3; color-scheme: dark; } }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
 :lang(ko) body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; }
 :lang(ja) body { font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", Meiryo, system-ui, sans-serif; }
 :lang(zh) body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif; }
 main { max-width: 34rem; margin: 0 auto; padding: 2.5rem 1rem; display: flex; flex-direction: column; gap: 1.25rem; }
 h1 { font-size: 1.25rem; margin: 0; text-wrap: balance; }
-.request { white-space: pre-wrap; border: 1px solid var(--line); border-radius: 14px; padding: 1rem; margin: 0; }
+.request { white-space: pre-wrap; background: var(--soft); border-radius: 14px; padding: .8rem 1rem; margin: 0; }
 label { display: block; font-weight: 600; margin-bottom: .5rem; }
 textarea { width: 100%; min-height: 8rem; font: inherit; color: inherit; background: transparent; border: 1px solid var(--field); border-radius: 10px; padding: .75rem; }
-button { font: inherit; font-weight: 600; color: #fff; background: var(--brand-fill); border: 0; border-radius: 10px; padding: .6rem 1.2rem; margin-top: .75rem; cursor: pointer; }
+button { font: inherit; font-weight: 600; color: #fff; background: var(--brand-fill); border: 0; border-radius: 999px; padding: .6rem 1.2rem; margin-top: .75rem; cursor: pointer; }
+/* the one thing a page asks for is round; the quieter buttons are the controls' rounded rectangle, unless beside it */
+button.quiet, button.ghost, .inline button { border-radius: 10px; }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 input { width: 100%; font: inherit; color: inherit; background: transparent; border: 1px solid var(--field); border-radius: 10px; padding: .6rem .75rem; margin-bottom: .75rem; }
 input[aria-invalid="true"] { border-color: var(--error); }
@@ -162,9 +165,9 @@ footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem
 .brand { display: flex; align-items: center; gap: .5rem; max-width: 34rem; margin: 0 auto; padding: 1.25rem 1rem 0; font-weight: 600; font-size: .95rem; letter-spacing: -.01em; }
 .mark { width: 1.5rem; height: 1.5rem; color: var(--fg); }
 .mark .eye { fill: var(--bg); }
-.rows { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 14px; }
-.rows > li { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; padding: .7rem .9rem; border-bottom: 1px solid var(--line); }
-.rows > li:last-child { border-bottom: 0; }
+/* a short list's rows are split by space, never by lines between them */
+.rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1rem; }
+.rows > li { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .75rem; }
 .rows .who { flex: 1 1 12rem; min-width: 0; }
 .rows .who b { font-weight: 600; }
 .rows .who small { display: block; color: var(--muted); font-size: .85rem; overflow-wrap: anywhere; }
@@ -172,6 +175,7 @@ footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem
 .acts { display: flex; gap: .4rem; align-items: center; }
 .acts form { margin: 0; }
 .acts button, button.small { margin: 0; padding: .3rem .7rem; font-size: .85rem; border-radius: 8px; }
+.acts > button:not(.quiet):not(.ghost):not(.small) { border-radius: 999px; }
 .acts a.small { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 .4rem; }
 .links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 .25rem; }
 .links a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 .25rem; }
@@ -195,7 +199,7 @@ ol.steps > li::before { content: counter(step); position: absolute; left: 0; top
 ol.steps > li > pre { align-self: stretch; }
 ol.steps small, .others { color: var(--muted); font-size: .85rem; }
 .others { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .4rem; }
-a.button { display: inline-block; color: #fff; background: var(--brand-fill); text-decoration: none; font-weight: 600; border-radius: 10px; padding: .45rem 1rem; }
+a.button { display: inline-block; color: #fff; background: var(--brand-fill); text-decoration: none; font-weight: 600; border-radius: 999px; padding: .45rem 1rem; }
 .inline button { margin: 0; }
 .small { font-size: .85rem; }
 a.google { display: flex; align-items: center; justify-content: center; gap: .6rem; font-weight: 600; color: var(--g-fg); text-decoration: none; background: var(--g-bg); border: 1px solid var(--g-line); border-radius: 10px; padding: .6rem 1rem; }
@@ -209,7 +213,8 @@ a.google svg { width: 1.15rem; height: 1.15rem; flex: none; }
 .state { font-size: .8rem; font-weight: 600; color: var(--muted); background: var(--soft); border-radius: 999px; padding: .1rem .6rem; white-space: nowrap; }
 .state.on { color: var(--on); background: var(--brand-soft); }
 .done { margin: 0; font-weight: 600; }
-a.button.quiet { color: var(--fg); background: var(--soft); }
+a.button.quiet { color: var(--fg); background: var(--soft); border-radius: 10px; }
+.acts:has(> button:not(.quiet):not(.ghost), > a.button:not(.quiet):not(.ghost)) > a.button { border-radius: 999px; }
 a.button.ghost { color: var(--fg); background: transparent; }
 .danger { background: var(--danger); }
 /* the two ways in stand alike: Google's button and the form's, the whole width */

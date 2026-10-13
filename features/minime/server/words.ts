@@ -49,6 +49,8 @@ async function makeWords(locale: Locale) {
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }),
     errors,
+    /** The person talking to their clone from the team server's page (office/own-chat.ts). */
+    web: createTranslator({ locale, messages, namespace: "webChat" }),
     /** A failure's code in these words (a limit with when it lifts), or nothing for one it has none for. */
     problem: (error: string) =>
       problemWords(errors as unknown as ErrorWords, error, locale),

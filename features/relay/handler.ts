@@ -316,7 +316,12 @@ export function relayHandler(
     response: ServerResponse,
   ): Promise<void> => {
     const send = (status: number, data: unknown) => {
-      response.writeHead(status, { "content-type": "application/json" });
+      // what comes back may be someone's own (their conversation with their clone): never kept
+      response.writeHead(status, {
+        "content-type": "application/json",
+        "cache-control": "no-store",
+        "x-content-type-options": "nosniff",
+      });
       response.end(JSON.stringify(data));
     };
     const html = (
@@ -1035,7 +1040,8 @@ export function relayHandler(
       if (
         (path === "/home/clone/thread" && request.method === "GET") ||
         (path === "/home/clone/say" && post) ||
-        (path === "/home/clone/choose" && post)
+        (path === "/home/clone/choose" && post) ||
+        (path === "/home/clone/pair" && post)
       ) {
         const json =
           !post ||
@@ -1067,15 +1073,28 @@ export function relayHandler(
         }
         // Its computer answers while its clone waits at its inbox.
         const present = Date.now() - Date.parse(mine.seen) < PRESENT_MS;
+        // what the page's script signed with this browser's key, for the clone to check
+        const proof =
+          fields?.get("key") && fields.get("signed") && fields.get("sig")
+            ? {
+                key: (fields.get("key") ?? "").slice(0, 200),
+                // the words as signed, with JSON's escapes: room for the longest the relay takes
+                signed: (fields.get("signed") ?? "").slice(0, 60_000),
+                sig: (fields.get("sig") ?? "").slice(0, 200),
+              }
+            : undefined;
         try {
           if (path === "/home/clone/say")
-            await relay.ownSay(mine.id, fields?.get("text") ?? "");
+            await relay.ownSay(mine.id, fields?.get("text") ?? "", proof);
           else if (path === "/home/clone/choose")
             await relay.ownChoose(
               mine.id,
               fields?.get("ask") ?? "",
               fields?.get("value") ?? "",
+              proof,
             );
+          else if (path === "/home/clone/pair")
+            await relay.ownPair(mine.id, fields?.get("key") ?? "");
           if (json) {
             const chat = { present, ...(await relay.ownThread(mine.id)) };
             send(200, { ...chat, ...chatThread(lang, chat, place.office) });
@@ -1839,7 +1858,11 @@ export function relayHandler(
       if (request.method === "POST" && path === "/own/allow") {
         const me = await member(request);
         const input = await body(request);
-        await relay.ownAllow(me, input.on === true);
+        await relay.ownAllow(
+          me,
+          input.on === true,
+          Array.isArray(input.keys) ? input.keys.map(String) : [],
+        );
         return send(200, { on: input.on === true });
       }
       if (request.method === "POST" && path === "/own/answer") {

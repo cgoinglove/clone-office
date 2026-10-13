@@ -554,8 +554,12 @@ export async function postToMeeting(
 export async function ownAllow(
   office: OfficeConfig,
   on: boolean,
+  keys: string[] = [],
 ): Promise<void> {
-  await call(office.relay, "/own/allow", { token: office.token, body: { on } });
+  await call(office.relay, "/own/allow", {
+    token: office.token,
+    body: { on, keys },
+  });
 }
 
 /** The person's words are taken: their page shows the clone answering. */

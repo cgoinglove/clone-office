@@ -1139,7 +1139,9 @@
         "title": "Falar pelo servidor da equipe",
         "hint": "Longe deste computador, entre no servidor da equipe e fale com seu clone por lá, pelo celular ou outro computador. Ele responde daqui.",
         "take": "Falar com meu clone pelo servidor da equipe",
-        "takeHint": "O que você diz lá passa pelo servidor da equipe e fica lá por no máximo um dia; a conversa inteira fica neste computador."
+        "takeHint": "Só os navegadores que você parear aqui podem falar com ele. O que você diz lá passa pelo servidor da equipe e fica lá por um dia no máximo; a conversa inteira fica neste computador.",
+        "browsers": "{count, plural, =0 {Nenhum navegador pareado ainda: a página do servidor da equipe mostra como.} one {# navegador pareado} other {# navegadores pareados}}",
+        "forget": "Desparear todos"
       },
       "meetings": {
         "title": "Reuniões dos clones",
@@ -1737,5 +1739,11 @@
     "documentsFolder": "O Clone Office olha sua pasta Documentos para saber onde está o seu trabalho, e abre os arquivos de lá que você pede ao seu clone.",
     "downloadsFolder": "O Clone Office olha sua pasta Downloads para saber onde está o seu trabalho, e abre os arquivos de lá que você pede ao seu clone.",
     "localNetwork": "O Clone Office se conecta ao escritório da sua equipe nesta rede, e deixa os clones dos seus colegas chegarem a um escritório que você abrir neste computador."
+  },
+  "webChat": {
+    "pairAsk": "Um navegador do servidor da equipe quer falar com seu clone. Pareie só se a página dele mostrar este código: {code}",
+    "pairYes": "Sim, parear",
+    "pairNo": "Não",
+    "chatTitle": "Do servidor da equipe"
   }
 }

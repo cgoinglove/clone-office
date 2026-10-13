@@ -34,6 +34,14 @@
   color: var(--ink);
   isolation: isolate;
 }
+/* on a phone the floor is as wide as it is tall, so it is not drawn small in a tall empty frame */
+@media (max-width: 40rem) {
+  .co-room {
+    height: auto;
+    aspect-ratio: 1;
+    min-height: 320px;
+  }
+}
 .co-room.dark {
   --gray-25: #101010;
   --gray-50: #131313;

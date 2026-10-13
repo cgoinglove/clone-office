@@ -50,6 +50,8 @@ export interface OfficeState {
   standup?: string;
   /** The conversation here that what the person says on the team server's page goes into. */
   ownChat?: string;
+  /** Signed words from the page already acted on, by nonce, so none runs twice (own-chat.ts). */
+  ownNonces?: Record<string, number>;
 }
 
 /**

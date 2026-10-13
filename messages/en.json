@@ -1139,7 +1139,9 @@
         "title": "Talk from the team server",
         "hint": "Away from this computer, sign in to the team server and talk to your clone there, on a phone or another computer. It answers from here.",
         "take": "Let me talk to my clone from the team server",
-        "takeHint": "What you say there passes through the team server and is kept there for a day at most; the whole conversation stays on this computer."
+        "takeHint": "Only browsers you pair here can talk to it. What you say there passes through the team server and is kept there a day at most; the whole conversation stays on this computer.",
+        "browsers": "{count, plural, =0 {No browser paired yet: the team server's page shows how.} one {# browser paired} other {# browsers paired}}",
+        "forget": "Unpair all"
       },
       "meetings": {
         "title": "Meetings of the clones",
@@ -1737,5 +1739,11 @@
     "documentsFolder": "Clone Office looks in your Documents folder to learn where your work is, and opens the files there that you ask your clone to work with.",
     "downloadsFolder": "Clone Office looks in your Downloads folder to learn where your work is, and opens the files there that you ask your clone to work with.",
     "localNetwork": "Clone Office connects to your team's office on this network, and lets your colleagues' clones reach an office you open on this computer."
+  },
+  "webChat": {
+    "pairAsk": "A browser on the team server wants to talk to your clone. Pair it only if its page shows this code: {code}",
+    "pairYes": "Yes, pair it",
+    "pairNo": "No",
+    "chatTitle": "From the team server"
   }
 }
