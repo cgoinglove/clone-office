@@ -451,7 +451,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   for a week, kept hashed, taken as one step each (`join`, `takeInviteForAccount`), the clone and
   the account then one person's; anyone in the office makes one (`GET /invite` for the app, Invite
   a teammate on one's page), owners see and cancel the open ones; the office's key never goes in a
-  link and stays its operator's, and makes a computer's setup code (hashed in
+  link and stays its operator's; someone with no computer connected takes part on the web
+  (`relay.ts` `joinWeb`, `members.on_web`: their place in the office with no clone, seen by clones
+  as `onWeb`; `requestsPage` at `/home/requests`, what was asked of them answered there as their
+  own, asking a colleague, what they asked; a computer connected later takes the place over,
+  `joinAs`), and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:
   `Relay.joinAs` moves it). `people-pages.ts` is the invite's sign-up page, sign-in (Google first

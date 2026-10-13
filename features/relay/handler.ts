@@ -86,6 +86,7 @@ import {
   connectCommand,
   homePage,
   newPasswordPage,
+  requestsPage,
   resetMadePage,
   runPage,
   setupPage,
@@ -739,7 +740,8 @@ export function relayHandler(
         (path === "/home" && request.method === "GET") ||
         (path === "/home/pair" && post) ||
         (path === "/home/invite" && post) ||
-        (path === "/home/invite/cancel" && post)
+        (path === "/home/invite/cancel" && post) ||
+        (path === "/home/web" && post)
       ) {
         const person = await accounts.person(cookie);
         if (!person) {
@@ -760,6 +762,20 @@ export function relayHandler(
             await relay.cancelInvite(place.office, fields?.get("invite") ?? "");
           redirect(
             `/home${place ? `?office=${encodeURIComponent(place.office)}` : ""}#invite`,
+          );
+          return true;
+        }
+        // Taking part on the web, with no computer connected: on to the requests page.
+        if (path === "/home/web") {
+          if (place)
+            await relay.joinWeb(place.office, person.id, {
+              name: person.name,
+              description: "",
+            });
+          redirect(
+            place
+              ? `/home/requests?office=${encodeURIComponent(place.office)}`
+              : "/home",
           );
           return true;
         }
@@ -863,6 +879,9 @@ export function relayHandler(
                 }
               : {}),
             ...(mine
+              ? { place: mine.web ? ("web" as const) : ("clone" as const) }
+              : {}),
+            ...(mine && !mine.web
               ? {
                   computer: {
                     name: mine.card.name,
@@ -871,6 +890,143 @@ export function relayHandler(
                 }
               : {}),
             ...(command ? { command } : {}),
+          }),
+        );
+        return true;
+      }
+      // Requests on the web: what was asked of the person, asking a colleague, and what they asked.
+      if (
+        (path === "/home/requests" && request.method === "GET") ||
+        (path === "/home/requests/ask" && post) ||
+        (path === "/home/requests/answer" && post)
+      ) {
+        const person = await accounts.person(cookie);
+        if (!person) {
+          redirect("/login");
+          return true;
+        }
+        const places = await accounts.places(person.id);
+        const fields = post
+          ? new URLSearchParams(await raw(request))
+          : undefined;
+        const place = placeOf(
+          places,
+          fields ? fields.get("office") : url.searchParams.get("office"),
+        );
+        const me = place
+          ? await relay.callerFor(place.office, person.id)
+          : undefined;
+        if (!place || !me) {
+          redirect(
+            place
+              ? `/home?office=${encodeURIComponent(place.office)}#web`
+              : "/home",
+          );
+          return true;
+        }
+        const back = `/home/requests?office=${encodeURIComponent(place.office)}`;
+        const web = Boolean(
+          (await relay.memberOf(place.office, person.id))?.web,
+        );
+        if (fields) {
+          try {
+            const text = (fields.get("text") ?? "").trim().slice(0, 8000);
+            if (!text) throw new AccountError("text-missing");
+            if (path === "/home/requests/ask") {
+              await relay.send(
+                me,
+                fields.get("to") ?? "",
+                text,
+                [],
+                undefined,
+                "person",
+              );
+              redirect(`${back}&done=sent`);
+            } else {
+              // the person on the web answers what was asked of them themselves; a clone answers
+              // for one with a computer connected
+              if (!web) throw new AccountError("not-on-web");
+              await relay.update(me, fields.get("task") ?? "", {
+                text,
+                state: "COMPLETED",
+                by: "person",
+              });
+              redirect(`${back}&done=answered`);
+            }
+          } catch (error) {
+            const code =
+              error instanceof AccountError || error instanceof RelayError
+                ? error.code
+                : "account-failed";
+            redirect(`${back}&error=${encodeURIComponent(code)}`);
+          }
+          return true;
+        }
+        if (web)
+          await relay.joinWeb(place.office, person.id, {
+            name: person.name,
+            description: "",
+          });
+        const members = await relay.members(place.office);
+        const nameOf = (id: string) =>
+          members.find((one) => one.id === id)?.card.name ?? "";
+        const tasks = await relay.tasks(me, 50);
+        const shown = (task: (typeof tasks)[number], asked: boolean) => {
+          const first = task.history.find((m) => m.role === "user");
+          const answer = [...task.history]
+            .reverse()
+            .find((m) => m.role === "agent");
+          const done = ["COMPLETED", "FAILED", "CANCELED", "REJECTED"].includes(
+            task.status.state,
+          );
+          return {
+            id: task.id,
+            other:
+              nameOf(asked ? task.metadata.from : task.metadata.to) ||
+              task.metadata.guest ||
+              "",
+            text: first?.parts.map((part) => part.text ?? "").join("\n") ?? "",
+            ...(answer
+              ? {
+                  answer: answer.parts
+                    .map((part) => part.text ?? "")
+                    .join("\n"),
+                }
+              : {}),
+            state: (answer ? "answered" : done ? "closed" : "waiting") as
+              | "waiting"
+              | "answered"
+              | "closed",
+            when: new Date(task.status.timestamp).toLocaleString(lang),
+          };
+        };
+        const done = url.searchParams.get("done");
+        const failed = failure();
+        html(
+          200,
+          requestsPage({
+            lang,
+            office: { id: place.office, name: place.name },
+            web,
+            colleagues: members
+              .filter((one) => one.id !== me.id)
+              .map((one) => ({
+                id: one.id,
+                name: one.card.name,
+                ...(one.web ? { web: true } : {}),
+              })),
+            asked: tasks
+              .filter((task) => task.metadata.to === me.id)
+              .map((task) => shown(task, true))
+              .sort(
+                (a, b) =>
+                  Number(b.state === "waiting") - Number(a.state === "waiting"),
+              ),
+            sent: tasks
+              .filter((task) => task.metadata.from === me.id)
+              .map((task) => shown(task, false)),
+            ...(done === "sent" || done === "answered" ? { done } : {}),
+            ...(failed ? { error: failed } : {}),
           }),
         );
         return true;

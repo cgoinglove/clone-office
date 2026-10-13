@@ -139,6 +139,8 @@ export interface Member {
   id: string;
   card: Card;
   seen: string;
+  /** Here on the web, with no clone: the person reads and answers what is asked themselves. */
+  web?: true;
 }
 
 /** A member making a call: who, in which office. */
@@ -295,6 +297,9 @@ const MIGRATIONS: string[][] = [
     "CREATE TABLE invites (id TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, token_hash TEXT UNIQUE NOT NULL, by_member TEXT, by_user TEXT, by_name TEXT NOT NULL, created TIMESTAMPTZ NOT NULL, expires TIMESTAMPTZ NOT NULL, member_id TEXT, member_at TIMESTAMPTZ, user_id TEXT, user_at TIMESTAMPTZ, cancelled TIMESTAMPTZ)",
     "CREATE INDEX invites_office ON invites (office_id, created DESC)",
   ],
+  // Someone in the office on the web, with no computer of theirs connected (`joinWeb`): they ask
+  // and answer from the team server's pages themselves, until a computer's clone takes their place.
+  ["ALTER TABLE members ADD COLUMN on_web BOOLEAN NOT NULL DEFAULT false"],
 ];
 
 /** How long an invite works. */
@@ -738,7 +743,7 @@ export class Relay {
       );
       if (had) {
         await tx.query(
-          "UPDATE members SET token_hash = $1, seen = $2 WHERE id = $3",
+          "UPDATE members SET token_hash = $1, seen = $2, on_web = false WHERE id = $3",
           [hashToken(token), now, had.id],
         );
         return { id: had.id, token, moved: true };
@@ -765,13 +770,69 @@ export class Relay {
       id: string;
       card: Card;
       seen: unknown;
+      on_web: boolean;
     }>(
-      "SELECT id, card, seen FROM members WHERE office_id = $1 AND user_id = $2",
+      "SELECT id, card, seen, on_web FROM members WHERE office_id = $1 AND user_id = $2",
       [office, user],
     );
     return row
-      ? { id: row.id, card: row.card, seen: iso(row.seen) }
+      ? {
+          id: row.id,
+          card: row.card,
+          seen: iso(row.seen),
+          ...(row.on_web ? { web: true as const } : {}),
+        }
       : undefined;
+  }
+
+  /**
+   * A person with an account takes part on the web, with no computer of theirs connected: their
+   * place in the office, made once (the clone they connect later takes it over, `joinAs`), as the
+   * caller the pages act as; seen as they come.
+   */
+  async joinWeb(
+    office: string,
+    user: string,
+    card: { name: string; description: string },
+  ): Promise<Caller> {
+    const now = new Date().toISOString();
+    return this.db.transaction(async (tx) => {
+      const [had] = await tx.query<{ id: string; card: Card }>(
+        "SELECT id, card FROM members WHERE office_id = $1 AND user_id = $2 FOR UPDATE",
+        [office, user],
+      );
+      if (had) {
+        await tx.query("UPDATE members SET seen = $2 WHERE id = $1", [
+          had.id,
+          now,
+        ]);
+        return { id: had.id, office, card: had.card, user };
+      }
+      const id = `m-${randomBytes(6).toString("hex")}`;
+      const clean = cleanCard({ ...card, status: "working" } as Card);
+      // a token nobody holds: the person acts through their signed-in pages
+      await tx.query(
+        "INSERT INTO members (id, office_id, token_hash, card, joined, seen, user_id, on_web) VALUES ($1, $2, $3, $4::jsonb, $5, $5, $6, true)",
+        [
+          id,
+          office,
+          hashToken(randomBytes(24).toString("base64url")),
+          JSON.stringify(clean),
+          now,
+          user,
+        ],
+      );
+      return { id, office, card: clean, user };
+    });
+  }
+
+  /** The place a signed-in person acts as on the web, when they have one in the office. */
+  async callerFor(office: string, user: string): Promise<Caller | undefined> {
+    const [row] = await this.db.query<{ id: string; card: Card }>(
+      "SELECT id, card FROM members WHERE office_id = $1 AND user_id = $2",
+      [office, user],
+    );
+    return row ? { id: row.id, office, card: row.card, user } : undefined;
   }
 
   /** The member a token belongs to; throws when it belongs to none. */
@@ -799,14 +860,20 @@ export class Relay {
 
   /** The members of an office, in the order they joined. */
   async members(office: string): Promise<Member[]> {
-    const rows = await this.db.query<{ id: string; card: Card; seen: unknown }>(
-      "SELECT id, card, seen FROM members WHERE office_id = $1 ORDER BY joined, id",
+    const rows = await this.db.query<{
+      id: string;
+      card: Card;
+      seen: unknown;
+      on_web: boolean;
+    }>(
+      "SELECT id, card, seen, on_web FROM members WHERE office_id = $1 ORDER BY joined, id",
       [office],
     );
     return rows.map((row) => ({
       id: row.id,
       card: row.card,
       seen: iso(row.seen),
+      ...(row.on_web ? { web: true as const } : {}),
     }));
   }
 

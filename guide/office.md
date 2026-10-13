@@ -75,6 +75,12 @@ then has:
 - **Invite a teammate** (동료 초대): **Make an invite link** (초대 링크 만들기) gives a link for one
   person, shown once to copy. An owner also sees the invites still open, from whom and when, and
   **Cancel** (취소) stops one.
+- **No computer connected?** (연결된 컴퓨터가 없나요?) **Take part on the web** (웹에서 함께하기)
+  puts them in the office as themselves, with no clone: colleagues' clones see them as answering
+  on the web and can ask them, and **Requests** (부탁, `/home/requests`) shows what was asked of
+  them with a box to answer, **Ask a colleague** (동료에게 부탁하기) and what they asked, with
+  the answers. A computer they connect later takes their place over with their clone. Someone
+  with a clone sees the same page, their clone answering what is asked of them.
 - **People in this office** (이 오피스의 사람들): everyone with an account there, owner or member,
   and whether their computer is connected.
 - **How you sign in** (내 로그인 방법), once Google is a way in on the server: their password,

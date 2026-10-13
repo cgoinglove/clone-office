@@ -1994,3 +1994,116 @@ test("a new server's admin is made with the link whoever runs it has, once; the 
     await db.close();
   }
 });
+
+test("someone with no computer takes part on the web: colleagues' clones ask them, and they answer and ask from the page", async () => {
+  const { createServer } = await import("node:http");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay);
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const post = (path: string, cookie: string, fields: Record<string, string>) =>
+    fetch(`${base}${path}`, {
+      method: "POST",
+      headers: {
+        cookie,
+        "sec-fetch-site": "same-origin",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(fields),
+      redirect: "manual",
+    });
+  try {
+    // Ana's clone runs on her computer; Ben has an account and no computer connected.
+    const ana = await relay.join({
+      key: office.key,
+      card: {
+        name: "Ana",
+        description: "Payments",
+        status: "working",
+      } as never,
+    });
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "a long password",
+    });
+    const cookie = cookieOf(ben.cookies);
+    const home = await (
+      await fetch(`${base}/home`, { headers: { cookie } })
+    ).text();
+    assert.match(home, /No computer connected\?/);
+    const joined = await post("/home/web", cookie, {});
+    assert.match(
+      joined.headers.get("location") ?? "",
+      /^\/home\/requests\?office=/,
+    );
+    // Clones see him as on the web.
+    const members = await relay.members(office.id);
+    const benMember = members.find((one) => one.card.name === "Ben");
+    assert.equal(benMember?.web, true);
+    // Ana's clone asks him; the page shows it with a box to answer.
+    const caller = await relay.memberByToken(ana.token);
+    const task = await relay.send(
+      caller,
+      benMember?.id ?? "",
+      "Is the refund flow on for Friday?",
+    );
+    const page = await (
+      await fetch(`${base}/home/requests?office=${office.id}`, {
+        headers: { cookie },
+      })
+    ).text();
+    assert.match(page, /Ana asks/);
+    assert.match(page, /Is the refund flow on for Friday\?/);
+    assert.match(page, /name="task" value="/);
+    // His answer goes back as his own, and the request is done.
+    const answered = await post("/home/requests/answer", cookie, {
+      office: office.id,
+      task: task.id,
+      text: "Yes, from 9am.",
+    });
+    assert.match(answered.headers.get("location") ?? "", /done=answered/);
+    const done = await relay.task(task.id);
+    assert.equal(done.status.state, "COMPLETED");
+    const last = done.history.at(-1);
+    assert.equal(last?.parts[0]?.text, "Yes, from 9am.");
+    assert.equal((last?.metadata as { by?: string } | undefined)?.by, "person");
+    // He asks Ana's clone from the page.
+    const asked = await post("/home/requests/ask", cookie, {
+      office: office.id,
+      to: ana.id,
+      text: "Can you share the payout sheet?",
+    });
+    assert.match(asked.headers.get("location") ?? "", /done=sent/);
+    const sent = await relay.tasks(caller, 10);
+    assert.ok(
+      sent.some(
+        (one) =>
+          one.history[0]?.parts[0]?.text === "Can you share the payout sheet?",
+      ),
+    );
+    // Connecting a computer later hands his place to his clone: it no longer answers on the web.
+    const code = await accounts.setupCode(ben.person.id, office.id);
+    assert.ok(code.code);
+    await relay.joinAs(office.id, ben.person.id, "Ben");
+    assert.equal(
+      (await relay.memberOf(office.id, ben.person.id))?.web,
+      undefined,
+    );
+    const again = await relay.send(caller, benMember?.id ?? "", "Another one");
+    const refused = await post("/home/requests/answer", cookie, {
+      office: office.id,
+      task: again.id,
+      text: "From the web",
+    });
+    assert.match(refused.headers.get("location") ?? "", /error=not-on-web/);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});

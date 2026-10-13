@@ -70,7 +70,12 @@ export async function POST(request: Request) {
     }
     if (input.action === "members")
       return Response.json({
-        members: others.map((m) => ({ id: m.id, ...m.card })),
+        members: others.map((m) => ({
+          id: m.id,
+          ...m.card,
+          // no clone of theirs: the person reads and answers on the team server's page
+          ...((m as { web?: boolean }).web ? { onWeb: true } : {}),
+        })),
       });
     const wanted = input.to.trim().toLowerCase();
     const to =

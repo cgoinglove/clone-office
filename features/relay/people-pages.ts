@@ -13,6 +13,34 @@ import { escape, type PageLanguage, shell } from "./page.ts";
 const WORDS = {
   en: {
     inviteTitle: "{from} invites you to their office",
+    webTitle: "No computer connected?",
+    webWhat:
+      "Take part from here: colleagues' clones can ask you, and you answer them and ask them on this page. A computer you connect later takes this over with your clone.",
+    webJoin: "Take part on the web",
+    requestsLink: "Requests",
+    requestsTitle: "Requests",
+    askedOfYou: "Asked of you",
+    askedNone: "Nothing is waiting for you.",
+    youAsked: "You asked",
+    youAskedNone: "You haven't asked anyone yet.",
+    askTitle: "Ask a colleague",
+    askTo: "Who",
+    askText: "What you need",
+    askSend: "Send",
+    answerLabel: "Your answer",
+    answerSend: "Send answer",
+    fromWho: "{name} asks",
+    toWho: "To {name}",
+    stateWaiting: "Waiting",
+    stateAnswered: "Answered",
+    stateClosed: "Closed",
+    cloneHandles:
+      "Your clone answers what is asked of you on your computer; what it needs from you comes in the app or on your phone.",
+    refresh: "Refresh",
+    askSent: "Sent. The answer shows here when it comes.",
+    answerSent: "Answer sent.",
+    onWeb: "on the web",
+    noColleagues: "Nobody else is in this office yet.",
     inviteTitleNobody: "You are invited to an office",
     what: "In this office, everyone's clone (an AI that works like them) takes and answers the team's requests, and brings each person only the calls that are theirs.",
     accountInstead: "Or make an account on the team server",
@@ -207,6 +235,8 @@ const WORDS = {
       "For now, only this server's admin can sign in with a password.",
     resetMadeTold: "Their page says you made it, and they can stop it.",
     errors: {
+      "text-missing": "Write something first.",
+      "not-on-web": "Your clone answers these on your computer.",
       "invite-used": "This invite made an account already. Ask for a new one.",
       "admin-link-ended": "This setup link has ended.",
       "too-many-invites":
@@ -269,6 +299,34 @@ const WORDS = {
   },
   ko: {
     inviteTitle: "{from} 님이 오피스에 초대했어요",
+    webTitle: "연결된 컴퓨터가 없나요?",
+    webWhat:
+      "여기서 함께할 수 있어요. 동료의 클론이 나에게 물으면 이 페이지에서 답하고, 나도 여기서 동료에게 부탁해요. 나중에 컴퓨터를 연결하면 내 클론이 이어받아요.",
+    webJoin: "웹에서 함께하기",
+    requestsLink: "부탁",
+    requestsTitle: "부탁",
+    askedOfYou: "나에게 온 부탁",
+    askedNone: "기다리는 부탁이 없어요.",
+    youAsked: "내가 한 부탁",
+    youAskedNone: "아직 부탁한 게 없어요.",
+    askTitle: "동료에게 부탁하기",
+    askTo: "누구에게",
+    askText: "필요한 것",
+    askSend: "보내기",
+    answerLabel: "내 답",
+    answerSend: "답 보내기",
+    fromWho: "{name} 님의 부탁",
+    toWho: "{name} 님에게",
+    stateWaiting: "기다리는 중",
+    stateAnswered: "답 옴",
+    stateClosed: "끝남",
+    cloneHandles:
+      "나에게 온 부탁은 내 컴퓨터의 클론이 답해요. 클론이 나에게 물을 것은 앱이나 휴대폰으로 와요.",
+    refresh: "새로 고침",
+    askSent: "보냈어요. 답이 오면 여기에 보여요.",
+    answerSent: "답을 보냈어요.",
+    onWeb: "웹",
+    noColleagues: "아직 이 오피스에 다른 사람이 없어요.",
     inviteTitleNobody: "오피스에 초대받았어요",
     what: "이 오피스에서는 사람마다 클론(나처럼 일하는 AI)이 팀의 부탁을 받고 답하며, 사람에게는 그 사람이 정할 것만 가져와요.",
     accountInstead: "또는 팀 서버에 계정 만들기",
@@ -461,6 +519,8 @@ const WORDS = {
     resetMadeTold:
       "링크를 만든 것은 그 사람의 페이지에도 보이고, 그 사람이 링크를 막을 수 있어요.",
     errors: {
+      "text-missing": "먼저 내용을 적어 주세요.",
+      "not-on-web": "이 부탁은 내 컴퓨터의 클론이 답해요.",
       "invite-used": "이 초대로 이미 계정을 만들었어요. 새 초대를 받아 주세요.",
       "admin-link-ended": "끝난 설정 링크예요.",
       "too-many-invites":
@@ -523,6 +583,34 @@ const WORDS = {
   },
   zh: {
     inviteTitle: "{from}邀请你加入他们的办公室",
+    webTitle: "没有连接电脑？",
+    webWhat:
+      "可以在这里参与：同事的分身向你提问时，你在这个页面回答，也可以在这里向同事提出请求。之后连接电脑，你的分身会接手。",
+    webJoin: "在网页上参与",
+    requestsLink: "请求",
+    requestsTitle: "请求",
+    askedOfYou: "发给你的请求",
+    askedNone: "没有等你处理的请求。",
+    youAsked: "你发出的请求",
+    youAskedNone: "你还没有向谁提出请求。",
+    askTitle: "向同事提出请求",
+    askTo: "发给谁",
+    askText: "你需要什么",
+    askSend: "发送",
+    answerLabel: "你的回答",
+    answerSend: "发送回答",
+    fromWho: "{name}的请求",
+    toWho: "发给{name}",
+    stateWaiting: "等待中",
+    stateAnswered: "已回答",
+    stateClosed: "已结束",
+    cloneHandles:
+      "发给你的请求由你电脑上的分身回答；它需要你决定的事会出现在应用或手机上。",
+    refresh: "刷新",
+    askSent: "已发送。回答到了会显示在这里。",
+    answerSent: "回答已发送。",
+    onWeb: "网页",
+    noColleagues: "这个办公室里还没有其他人。",
     inviteTitleNobody: "你收到了一个办公室的邀请",
     what: "在这个办公室里，每个人的分身（一个像本人一样工作的 AI）会接收并回答团队的请求，只把该本人决定的事交给本人。",
     accountInstead: "或者在团队服务器上创建账号",
@@ -700,6 +788,8 @@ const WORDS = {
     adminsOnlyNote: "目前只有这台服务器的管理员可以用密码登录。",
     resetMadeTold: "对方的页面会显示是你生成的，对方也可以停用它。",
     errors: {
+      "text-missing": "请先写点内容。",
+      "not-on-web": "这些由你电脑上的分身回答。",
       "invite-used": "已经用这个邀请创建过账号了。请要一个新的邀请。",
       "admin-link-ended": "这个设置链接已结束。",
       "too-many-invites": "仍可使用的邀请太多了。请先取消一些。",
@@ -755,6 +845,34 @@ const WORDS = {
   },
   ja: {
     inviteTitle: "{from}さんからオフィスへの招待が届いています",
+    webTitle: "コンピューターをつないでいませんか？",
+    webWhat:
+      "ここから参加できます。同僚のクローンから聞かれたらこのページで答え、ここから同僚に依頼もできます。あとでコンピューターをつなぐと、あなたのクローンが引き継ぎます。",
+    webJoin: "Webで参加する",
+    requestsLink: "依頼",
+    requestsTitle: "依頼",
+    askedOfYou: "あなたへの依頼",
+    askedNone: "待っている依頼はありません。",
+    youAsked: "あなたが出した依頼",
+    youAskedNone: "まだ誰にも依頼していません。",
+    askTitle: "同僚に依頼する",
+    askTo: "宛先",
+    askText: "必要なこと",
+    askSend: "送信",
+    answerLabel: "あなたの回答",
+    answerSend: "回答を送る",
+    fromWho: "{name}さんからの依頼",
+    toWho: "{name}さんへ",
+    stateWaiting: "待機中",
+    stateAnswered: "回答あり",
+    stateClosed: "終了",
+    cloneHandles:
+      "あなたへの依頼は、あなたのコンピューターのクローンが答えます。クローンがあなたに聞きたいことは、アプリかスマートフォンに届きます。",
+    refresh: "再読み込み",
+    askSent: "送信しました。回答が来たらここに表示されます。",
+    answerSent: "回答を送りました。",
+    onWeb: "Web",
+    noColleagues: "このオフィスにはまだ他の人がいません。",
     inviteTitleNobody: "オフィスに招待されています",
     what: "このオフィスでは、一人ひとりのクローン（本人のように働くAI）がチームの依頼を受けて答え、本人が決めるべきことだけを本人に届けます。",
     accountInstead: "または、チームのサーバーでアカウントを作る",
@@ -954,6 +1072,8 @@ const WORDS = {
     resetMadeTold:
       "作ったことは相手のページにも表示され、相手はリンクを止められます。",
     errors: {
+      "text-missing": "先に内容を書いてください。",
+      "not-on-web": "これはあなたのコンピューターのクローンが答えます。",
       "invite-used":
         "この招待ですでにアカウントが作られています。新しい招待をもらってください。",
       "admin-link-ended": "この設定リンクは終了しています。",
@@ -1025,6 +1145,34 @@ const WORDS = {
   },
   es: {
     inviteTitle: "{from} te invita a su oficina",
+    webTitle: "¿No tienes una computadora conectada?",
+    webWhat:
+      "Participa desde aquí: los clones de tus colegas pueden preguntarte, y tú respondes y les pides cosas en esta página. Si luego conectas una computadora, tu clon toma el relevo.",
+    webJoin: "Participar en la web",
+    requestsLink: "Solicitudes",
+    requestsTitle: "Solicitudes",
+    askedOfYou: "Lo que te piden",
+    askedNone: "No tienes nada pendiente.",
+    youAsked: "Lo que pediste",
+    youAskedNone: "Aún no has pedido nada a nadie.",
+    askTitle: "Pedir algo a un colega",
+    askTo: "A quién",
+    askText: "Qué necesitas",
+    askSend: "Enviar",
+    answerLabel: "Tu respuesta",
+    answerSend: "Enviar respuesta",
+    fromWho: "{name} te pide",
+    toWho: "Para {name}",
+    stateWaiting: "En espera",
+    stateAnswered: "Respondida",
+    stateClosed: "Cerrada",
+    cloneHandles:
+      "Tu clon responde lo que te piden desde tu computadora; lo que necesita de ti llega a la app o a tu teléfono.",
+    refresh: "Actualizar",
+    askSent: "Enviado. La respuesta aparecerá aquí cuando llegue.",
+    answerSent: "Respuesta enviada.",
+    onWeb: "en la web",
+    noColleagues: "Todavía no hay nadie más en esta oficina.",
     inviteTitleNobody: "Te invitaron a una oficina",
     what: "En esta oficina, el clon de cada persona (una IA que trabaja como ella) recibe y responde las solicitudes del equipo, y a cada persona solo le trae las decisiones que le tocan.",
     accountInstead: "O crea una cuenta en el servidor del equipo",
@@ -1224,6 +1372,8 @@ const WORDS = {
       "Por ahora, solo quien administra este servidor puede iniciar sesión con contraseña.",
     resetMadeTold: "Su página dice que lo creaste, y puede detenerlo.",
     errors: {
+      "text-missing": "Escribe algo primero.",
+      "not-on-web": "Tu clon responde esto desde tu computadora.",
       "invite-used":
         "Ya se creó una cuenta con esta invitación. Pide una nueva.",
       "admin-link-ended": "Este enlace de configuración terminó.",
@@ -1292,6 +1442,34 @@ const WORDS = {
   },
   pt: {
     inviteTitle: "{from} convida você para o escritório",
+    webTitle: "Nenhum computador conectado?",
+    webWhat:
+      "Participe por aqui: os clones dos colegas podem perguntar a você, e você responde e faz pedidos nesta página. Se depois conectar um computador, seu clone assume.",
+    webJoin: "Participar pela web",
+    requestsLink: "Pedidos",
+    requestsTitle: "Pedidos",
+    askedOfYou: "Pedidos para você",
+    askedNone: "Nada esperando por você.",
+    youAsked: "Seus pedidos",
+    youAskedNone: "Você ainda não pediu nada a ninguém.",
+    askTitle: "Pedir a um colega",
+    askTo: "Para quem",
+    askText: "O que você precisa",
+    askSend: "Enviar",
+    answerLabel: "Sua resposta",
+    answerSend: "Enviar resposta",
+    fromWho: "{name} pede",
+    toWho: "Para {name}",
+    stateWaiting: "Esperando",
+    stateAnswered: "Respondido",
+    stateClosed: "Encerrado",
+    cloneHandles:
+      "Seu clone responde no seu computador o que pedem a você; o que ele precisar de você chega pelo app ou pelo celular.",
+    refresh: "Atualizar",
+    askSent: "Enviado. A resposta aparece aqui quando chegar.",
+    answerSent: "Resposta enviada.",
+    onWeb: "na web",
+    noColleagues: "Ainda não há mais ninguém neste escritório.",
     inviteTitleNobody: "Você recebeu um convite para um escritório",
     what: "Neste escritório, o clone de cada pessoa (uma IA que trabalha como ela) recebe e responde os pedidos da equipe, e traz a cada pessoa só as decisões que são dela.",
     accountInstead: "Ou crie uma conta no servidor da equipe",
@@ -1492,6 +1670,8 @@ const WORDS = {
     resetMadeTold:
       "A página da pessoa mostra que você o criou, e ela pode pará-lo.",
     errors: {
+      "text-missing": "Escreva algo primeiro.",
+      "not-on-web": "Seu clone responde isso no seu computador.",
       "invite-used": "Uma conta já foi criada com este convite. Peça um novo.",
       "admin-link-ended": "Este link de configuração terminou.",
       "too-many-invites":
@@ -1770,6 +1950,103 @@ export function resetMadePage(input: {
   );
 }
 
+/** One request on the web page: asked of the reader, or by them. */
+export interface WebRequest {
+  id: string;
+  /** The other one's name: who asked, or who was asked. */
+  other: string;
+  text: string;
+  answer?: string;
+  state: "waiting" | "answered" | "closed";
+  when: string;
+}
+
+/**
+ * Requests on the web, for someone with no computer connected (they answer here themselves) or
+ * with one (their clone answers; they see and ask from here): what was asked of them, asking a
+ * colleague, and what they asked.
+ */
+export function requestsPage(input: {
+  lang: PageLanguage;
+  office: { id: string; name: string };
+  /** Here on the web with no clone: they answer what is asked of them on this page. */
+  web: boolean;
+  colleagues: { id: string; name: string; web?: boolean }[];
+  asked: WebRequest[];
+  sent: WebRequest[];
+  done?: "sent" | "answered";
+  error?: string;
+}): string {
+  const { lang } = input;
+  const title = say(lang, "requestsTitle");
+  const at = `office=${encodeURIComponent(input.office.id)}`;
+  const officeField = `<input type="hidden" name="office" value="${escape(input.office.id)}">`;
+  const state = (one: WebRequest) =>
+    `<span class="tag">${say(lang, one.state === "waiting" ? "stateWaiting" : one.state === "answered" ? "stateAnswered" : "stateClosed")}</span>`;
+  const asked = input.asked
+    .map(
+      (
+        one,
+      ) => `<li><span class="who"><b>${say(lang, "fromWho", { name: one.other })}</b>${state(one)}<small>${escape(one.when)}</small></span>
+<p class="request">${escape(one.text)}</p>${
+        one.answer ? `<p class="note">${escape(one.answer)}</p>` : ""
+      }${
+        input.web && one.state === "waiting"
+          ? `<form method="post" action="/home/requests/answer">${officeField}<input type="hidden" name="task" value="${escape(one.id)}">
+<label for="answer-${escape(one.id)}">${say(lang, "answerLabel")}</label>
+<textarea id="answer-${escape(one.id)}" name="text" required maxlength="8000"></textarea>
+<button type="submit">${say(lang, "answerSend")}</button>
+</form>`
+          : ""
+      }</li>`,
+    )
+    .join("");
+  const sent = input.sent
+    .map(
+      (
+        one,
+      ) => `<li><span class="who"><b>${say(lang, "toWho", { name: one.other })}</b>${state(one)}<small>${escape(one.when)}</small></span>
+<p class="request">${escape(one.text)}</p>${one.answer ? `<p>${escape(one.answer)}</p>` : ""}</li>`,
+    )
+    .join("");
+  return shell(
+    lang,
+    title,
+    `<h1>${title}${input.office.name ? ` · ${escape(input.office.name)}` : ""}</h1>
+${input.done ? `<p class="done" role="status">${say(lang, input.done === "sent" ? "askSent" : "answerSent")}</p>` : ""}
+${problem(lang, input.error)}
+<section>
+<h2>${say(lang, "askedOfYou")}</h2>
+${input.web ? "" : `<p class="note">${say(lang, "cloneHandles")}</p>`}
+${asked ? `<ul class="rows requests">${asked}</ul>` : `<p class="note">${say(lang, "askedNone")}</p>`}
+</section>
+<section>
+<h2>${say(lang, "askTitle")}</h2>
+${
+  input.colleagues.length
+    ? `<form method="post" action="/home/requests/ask">${officeField}
+<label for="to">${say(lang, "askTo")}</label>
+<select id="to" name="to" required>${input.colleagues
+        .map(
+          (one) =>
+            `<option value="${escape(one.id)}">${escape(one.name)}${one.web ? ` (${say(lang, "onWeb")})` : ""}</option>`,
+        )
+        .join("")}</select>
+<label for="text">${say(lang, "askText")}</label>
+<textarea id="text" name="text" required maxlength="8000"></textarea>
+<button type="submit">${say(lang, "askSend")}</button>
+</form>`
+    : `<p class="note">${say(lang, "noColleagues")}</p>`
+}
+</section>
+<section>
+<h2>${say(lang, "youAsked")}</h2>
+${sent ? `<ul class="rows requests">${sent}</ul>` : `<p class="note">${say(lang, "youAskedNone")}</p>`}
+</section>
+<p><a href="/home/requests?${at}">${say(lang, "refresh")}</a> · <a href="/home?${at}">${say(lang, "backHome")}</a></p>`,
+  );
+}
+
 /** Where the server's admin is made, with the link whoever runs it has. */
 export function setupPage(input: {
   lang: PageLanguage;
@@ -1835,6 +2112,11 @@ export function homePage(input: {
   office?: { id: string; name: string };
   /** An invite the reader just made, shown once to copy. */
   invited?: { link: string; days: number };
+  /**
+   * The reader's place in the office: on the web (no computer), or a clone; none yet, with no
+   * computer connected, offers taking part on the web.
+   */
+  place?: "web" | "clone";
   /** The office's invites still open, for its owners to see and cancel. */
   invites?: {
     id: string;
@@ -1982,6 +2264,15 @@ ${
           : say(lang, "notConnected")
       }</p>
 </section>
+${
+  input.place
+    ? `<p><a class="button quiet" href="/home/requests?${at}">${say(lang, "requestsLink")}</a></p>`
+    : `<section id="web">
+<h2>${say(lang, "webTitle")}</h2>
+<p>${say(lang, "webWhat")}</p>
+<form method="post" action="/home/web">${officeField}<button type="submit" class="quiet">${say(lang, "webJoin")}</button></form>
+</section>`
+}
 <section id="invite">
 <h2>${say(lang, "inviteTeam")}</h2>
 <p>${say(lang, "inviteWhat", { days: String(input.invited?.days ?? 7) })}</p>
