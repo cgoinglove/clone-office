@@ -510,7 +510,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   make others owners, make a new invite link (the office key changes; those in stay) and name the
   office (`Accounts` `removePerson`, `removeClone`, `makeOwner`, `newInvite`, `renameOffice`),
   each looked at once on its own page first (`confirmPage`); the invite's page folds the account
-  away below the guide. `npx clone-office connect <link>` (`bin/clone-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
+  away below the guide. The signed-in pages share a band in the brand's colour with the office,
+  three tabs (My clone at `/home`, Requests, Office at `/home/office`) and the person's menu
+  (`/home/account`), drawn by `people-pages.ts` `homeBand`, sent with `HOME_HEADERS` (scripts from
+  this server alone: the page's own `home-client.ts` at `/assets/home.mjs`). My clone is a
+  conversation with one's own clone (`own_messages`, a day at most; `/home/clone/thread`, `/say`,
+  `/choose` for the page, `/own/allow`, `/own/answer`, `/own/ask`, `/own/<id>/take`,
+  `/own/ask/<id>/settle` for the clone; news reaches it as an inbox event `own`), its Markdown drawn
+  escaped (`answerHtml`). `npx clone-office connect <link>` (`bin/clone-office.mjs`) claims it, keeps the token in `settings.json` (`office`, closing an
   office this computer hosted), and starts the app. `RELAY_PUBLIC_URL` is the address people reach
   a server at behind a proxy.
 - `features/minime/office/`: the clone's side. `client.ts` (where its relay is and who it is
@@ -545,7 +552,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   conversation the brain has `colleagues` and `ask_colleague` (`gate/tools.ts`); the screens'
   office is `/office`, `/requests` and the column's To decide (`features/minime/shell/`), with
   Settings › Office and the clone's Requests it takes, and the route `app/api/me/office`.
-  `invited.ts` keeps an invite the launcher was given (`settings.json` `invite`) until joining or
+  `own-chat.ts` is the person talking to this clone from the team server's page (relay.ts
+  `ownSay`, only while Settings › Office › Talk from the team server is on, preferences `webChat`,
+  which `syncOwnAllow` tells the relay): their words become a turn in a conversation of its own
+  here (`state.json` `ownChat`), its questions go to the page as buttons (`wordAsk`) and a choice
+  there answers them (`gate/answer.ts` `answerChoice`), and its answer, or a code the page words,
+  goes back once done. `invited.ts` keeps an invite the launcher was given (`settings.json` `invite`) until joining or
   opening an office uses it. `meeting.ts` is this clone in a meeting: in each round it says one thing
   for its person or passes, found first in their own records (`conversation_search` since the day
   before; a session with `audience: "colleagues"`, so the tool server leaves the person's office and
