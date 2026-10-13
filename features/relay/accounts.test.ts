@@ -1788,6 +1788,11 @@ test("wrong tries are counted against the address the trusted proxy saw, an IPv6
     const root = await fetch(`${base}/`, { redirect: "manual" });
     assert.equal(root.status, 303);
     assert.equal(root.headers.get("location"), "/home");
+    // A HEAD is answered as its GET, with no body.
+    const head = await fetch(`${base}/login`, { method: "HEAD" });
+    assert.equal(head.status, 200);
+    assert.match(head.headers.get("content-type") ?? "", /text\/html/);
+    assert.equal(await head.text(), "");
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();

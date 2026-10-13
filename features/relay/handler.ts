@@ -315,6 +315,9 @@ export function relayHandler(
     request: IncomingMessage,
     response: ServerResponse,
   ): Promise<void> => {
+    // A HEAD (a link preview, a check that the server is up) is answered as its GET is; Node sends
+    // no body for it, as it decided when the response was made.
+    if (request.method === "HEAD") request.method = "GET";
     const send = (status: number, data: unknown) => {
       // what comes back may be someone's own (their conversation with their clone): never kept
       response.writeHead(status, {
