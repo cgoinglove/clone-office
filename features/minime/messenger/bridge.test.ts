@@ -131,6 +131,12 @@ test("the person's own bot: the first to write is let in by the code their phone
     },
     turn,
   });
+  // A turn's answer is sent before the turn has quite ended; words that start the next wait for it.
+  const idle = () =>
+    until(
+      () => !(bridge as unknown as { busy: boolean }).busy,
+      "the turn before to end",
+    );
 
   await assert.rejects(
     bridge.connect("discord", "wrong-token-wrong-token"),
@@ -176,6 +182,8 @@ test("the person's own bot: the first to write is let in by the code their phone
   bot.write(stranger, "let me in");
   await until(() => bot.sent.length === 5);
   assert.match(bot.sent[4].text, /already talks with someone else/);
+  // The turn before has ended, so these words are a turn of their own rather than "still on it".
+  await idle();
   bot.write(ana, "And tomorrow?");
   await until(() => bot.sent.length === 6);
   assert.equal(turns.length, 2);
@@ -187,6 +195,7 @@ test("the person's own bot: the first to write is let in by the code their phone
   );
 
   // Its question comes with buttons, and a press answers it.
+  await idle();
   bot.write(ana, "ask me");
   await until(() => bot.sent.length === 7);
   const question = bot.sent[6];
@@ -208,6 +217,7 @@ test("the person's own bot: the first to write is let in by the code their phone
   assert.equal(bot.sent[7].text, "Then Tue.");
 
   // Or their own words answer it.
+  await idle();
   bot.write(ana, "ask me");
   await until(() => bot.sent.length === 9);
   bot.write(ana, "Wednesday works");
@@ -217,6 +227,7 @@ test("the person's own bot: the first to write is let in by the code their phone
   // "/new" starts another conversation.
   bot.write(ana, "/new");
   await until(() => bot.sent.length === 11);
+  await idle();
   bot.write(ana, "Fresh start");
   await until(() => bot.sent.length === 12);
   assert.equal(turns.at(-1)?.chat, undefined);
