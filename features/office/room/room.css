@@ -507,7 +507,7 @@
 .of-wrap .bub::after {
   content: "";
   position: absolute;
-  left: calc(50% - 6px);
+  left: var(--tail, calc(50% - 6px));
   bottom: -6px;
   width: 12px;
   height: 12px;
@@ -534,7 +534,7 @@
   font-size: 12.5px;
 }
 .of-wrap .bub.meet::after {
-  left: calc(16% - 6px);
+  left: var(--tail, calc(16% - 6px));
 }
 .of-wrap .bub.small .who {
   display: none;

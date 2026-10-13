@@ -42,6 +42,8 @@ const WORDS = {
       "This office runs on {from}'s computer: join from the same Wi-Fi or network, while their Clone Office is open.",
     localNobody:
       "This office runs on a teammate's computer: join from the same Wi-Fi or network, while their Clone Office is open.",
+    localNetwork:
+      "This team server is on a private network: join from that same network (in the office, or through its VPN).",
     other: "On another kind of computer?",
     mac: "Mac",
     windows: "Windows",
@@ -82,6 +84,8 @@ const WORDS = {
       "이 오피스는 {from} 님의 컴퓨터에서 열려 있어요. {from} 님의 Clone Office가 켜져 있을 때, 같은 와이파이에서 들어와 주세요.",
     localNobody:
       "이 오피스는 동료의 컴퓨터에서 열려 있어요. 동료의 Clone Office가 켜져 있을 때, 같은 와이파이에서 들어와 주세요.",
+    localNetwork:
+      "이 팀 서버는 사내 네트워크에 있어요. 같은 네트워크(사무실, 또는 그 네트워크의 VPN)에서 들어와 주세요.",
     other: "다른 컴퓨터인가요?",
     mac: "Mac",
     windows: "Windows",
@@ -122,6 +126,8 @@ const WORDS = {
       "这个办公室运行在{from}的电脑上：请在对方的 Clone Office 开着时，从同一个 Wi-Fi 或网络加入。",
     localNobody:
       "这个办公室运行在一位同事的电脑上：请在对方的 Clone Office 开着时，从同一个 Wi-Fi 或网络加入。",
+    localNetwork:
+      "这个团队服务器在内部网络上：请从同一个网络（办公室里，或通过它的 VPN）加入。",
     other: "用的是别的电脑？",
     mac: "Mac",
     windows: "Windows",
@@ -167,6 +173,8 @@ const WORDS = {
       "このオフィスは{from}さんのコンピューターで動いています。相手のClone Officeが開いている間に、同じWi-Fiかネットワークから参加してください。",
     localNobody:
       "このオフィスはチームメイトのコンピューターで動いています。相手のClone Officeが開いている間に、同じWi-Fiかネットワークから参加してください。",
+    localNetwork:
+      "このチームサーバーは社内ネットワークにあります。同じネットワーク（オフィス内、またはそのVPN経由）から参加してください。",
     other: "別の種類のコンピューターですか？",
     mac: "Mac",
     windows: "Windows",
@@ -210,6 +218,8 @@ const WORDS = {
       "Esta oficina funciona en la computadora de {from}: únete desde el mismo Wi-Fi o red, mientras su Clone Office esté abierto.",
     localNobody:
       "Esta oficina funciona en la computadora de un colega: únete desde el mismo Wi-Fi o red, mientras su Clone Office esté abierto.",
+    localNetwork:
+      "Este servidor del equipo está en una red privada: únete desde esa misma red (en la oficina o por su VPN).",
     other: "¿Usas otro tipo de computadora?",
     mac: "Mac",
     windows: "Windows",
@@ -253,6 +263,8 @@ const WORDS = {
       "Este escritório roda no computador de {from}: entre pelo mesmo Wi-Fi ou rede, enquanto o Clone Office dessa pessoa estiver aberto.",
     localNobody:
       "Este escritório roda no computador de um colega: entre pelo mesmo Wi-Fi ou rede, enquanto o Clone Office dele estiver aberto.",
+    localNetwork:
+      "Este servidor da equipe está numa rede privada: entre por essa mesma rede (no escritório ou pela VPN dela).",
     other: "Está em outro tipo de computador?",
     mac: "Mac",
     windows: "Windows",
@@ -284,6 +296,9 @@ function say(
 }
 
 /** The computer a page was opened on, from its User-Agent; a Mac when it does not say. */
+/** Where an office is reached from: a teammate's computer, or a server in a private network. */
+export type Local = "computer" | "network";
+
 export function osOf(userAgent: string | undefined): Os {
   const agent = userAgent ?? "";
   if (/iPhone|iPad|iPod|Android/i.test(agent)) return "phone";
@@ -367,8 +382,8 @@ export function installGuide(input: {
   command: string;
   link: string;
   from?: string;
-  /** The office runs on a teammate's computer, on a private network. */
-  local?: boolean;
+  /** The office runs on a teammate's computer, or on a server in a private network. */
+  local?: Local;
 }): string {
   const { lang } = input;
   const from = input.from ? { from: input.from } : undefined;
@@ -392,7 +407,13 @@ export function installGuide(input: {
 <li><b>${say(lang, "paste")}</b><pre>${escape(input.command)}</pre><small>${say(lang, "pasteNote")}</small></li>
 <li><b>${say(lang, "answer")}</b><span>${say(lang, from ? "answerFrom" : "answerNobody", from)}</span></li>
 </ol>
-${input.local ? `<p class="note">${say(lang, from ? "local" : "localNobody", from)}</p>` : ""}
+${
+  input.local === "computer"
+    ? `<p class="note">${say(lang, from ? "local" : "localNobody", from)}</p>`
+    : input.local === "network"
+      ? `<p class="note">${say(lang, "localNetwork")}</p>`
+      : ""
+}
 <details><summary>${say(lang, "other")}</summary>
 <ul class="others">${others
     .map((other) => {

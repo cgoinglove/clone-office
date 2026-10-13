@@ -1010,7 +1010,10 @@ export function createOffice(
       kind,
       typed: kind.startsWith("say") ? 0 : 1e9,
     };
-    if (!kind.startsWith("say")) b.txt.textContent = text;
+    // how wide it is once all is typed, measured once, so it can be kept inside the room's edges
+    b.txt.textContent = text;
+    b.w = el.offsetWidth;
+    if (kind.startsWith("say")) b.txt.textContent = "";
     bubbles.set(p.id, b);
     refreshMood(p);
     return b;
@@ -2164,10 +2167,26 @@ export function createOffice(
         if (b.el.hidden === show) b.el.hidden = !show;
         saying = show && bubbles.has(p.id);
         // what is said in a meeting by the nook leans away from the wall, off the clock
-        const t = `translate(${r1(hx)}px, ${r1(hy - 4)}px) translate(${b.kind.includes("meet") ? "-16%" : "-50%"}, -100%)`;
+        const anchor = b.kind.includes("meet") ? 0.16 : 0.5;
+        // kept inside the room's edges, its tail still over the head that says it
+        const left = hx - b.w * anchor,
+          shift =
+            left < 8
+              ? 8 - left
+              : left + b.w > cw - 8
+                ? cw - 8 - (left + b.w)
+                : 0;
+        const t = `translate(${r1(hx + shift)}px, ${r1(hy - 4)}px) translate(${-anchor * 100}%, -100%)`;
         if (show && b.t !== t) {
           b.t = t;
           b.el.style.transform = t;
+          const tail = shift
+            ? `${r1(Math.min(b.w - 18, Math.max(6, b.w * anchor - shift - 6)))}px`
+            : "";
+          if (b.tail !== tail) {
+            b.tail = tail;
+            b.el.style.setProperty("--tail", tail || null);
+          }
         }
       }
       // round the meeting's table the clones are named in the meeting's own column: tags there would pile up

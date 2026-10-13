@@ -4,7 +4,7 @@
 // escaped before it is shown. Node runs this file as it is, like the rest of the relay.
 
 import type { AllInSync } from "../../i18n/sync.ts";
-import { installGuide, type Os } from "./install.ts";
+import { installGuide, type Local, type Os } from "./install.ts";
 
 const WORDS = {
   en: {
@@ -173,6 +173,8 @@ footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem
 .acts form { margin: 0; }
 .acts button, button.small { margin: 0; padding: .3rem .7rem; font-size: .85rem; border-radius: 8px; }
 .acts a.small { display: inline-flex; align-items: center; min-height: 2rem; padding: 0 .4rem; }
+.links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 .25rem; }
+.links a { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 .25rem; }
 .acts a.button { padding: .3rem .7rem; font-size: .85rem; border-radius: 8px; }
 details > summary { cursor: pointer; color: var(--muted); font-size: .85rem; list-style: none; }
 details:not(.account) > summary { display: inline-flex; align-items: center; min-height: 2rem; }
@@ -332,7 +334,7 @@ export function invitePage(input: {
   link: string;
   os: Os;
   command: string;
-  local?: boolean;
+  local?: Local;
 }): string {
   const head = inviteHead(input.lang, input.from);
   return shell(

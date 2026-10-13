@@ -68,6 +68,7 @@ import {
 import {
   isPrivateHost,
   joinCommand,
+  type Local,
   osOf,
   PACKAGE_PATH,
   servedPackage,
@@ -282,6 +283,13 @@ export function relayHandler(
         "",
     );
   };
+  // Opened on someone's computer, or a server reached only inside a private network.
+  const where = (at: string): Local | undefined =>
+    options.onComputer
+      ? "computer"
+      : isPrivateHost(new URL(at).hostname)
+        ? "network"
+        : undefined;
   const member = (request: IncomingMessage) =>
     relay.memberByToken(
       (request.headers.authorization ?? "").replace(/^Bearer\s+/i, ""),
@@ -363,8 +371,7 @@ export function relayHandler(
       return {
         os: osOf(request.headers["user-agent"]),
         command: joinCommand({ base: at, key, from: who }),
-        local:
-          Boolean(options.onComputer) || isPrivateHost(new URL(at).hostname),
+        local: where(at),
       };
     };
     /**
@@ -1563,9 +1570,7 @@ export function relayHandler(
               key: invite[1],
               from: who || undefined,
             }),
-            local:
-              Boolean(options.onComputer) ||
-              isPrivateHost(new URL(origin).hostname),
+            local: where(origin),
           }),
         );
         return;

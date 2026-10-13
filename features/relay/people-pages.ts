@@ -7,7 +7,7 @@
 
 import type { AllInSync } from "../../i18n/sync.ts";
 import type { SignInMethods, SignInSettings, SignInWays } from "./accounts.ts";
-import { installGuide, npxLine, type Os } from "./install.ts";
+import { installGuide, type Local, npxLine, type Os } from "./install.ts";
 import { escape, type PageLanguage, shell } from "./page.ts";
 
 const WORDS = {
@@ -31,6 +31,7 @@ const WORDS = {
     youAskedNone: "You haven't asked anyone yet.",
     askTitle: "Ask a colleague",
     askTo: "Who",
+    askPick: "Pick a colleague",
     askText: "What you need",
     askSend: "Send",
     answerLabel: "Your answer",
@@ -326,6 +327,7 @@ const WORDS = {
     youAskedNone: "아직 부탁한 게 없어요.",
     askTitle: "동료에게 부탁하기",
     askTo: "누구에게",
+    askPick: "동료를 골라 주세요",
     askText: "필요한 것",
     askSend: "보내기",
     answerLabel: "내 답",
@@ -619,6 +621,7 @@ const WORDS = {
     youAskedNone: "你还没有向谁提出请求。",
     askTitle: "向同事提出请求",
     askTo: "发给谁",
+    askPick: "选择一位同事",
     askText: "你需要什么",
     askSend: "发送",
     answerLabel: "你的回答",
@@ -890,6 +893,7 @@ const WORDS = {
     youAskedNone: "まだ誰にも依頼していません。",
     askTitle: "同僚に依頼する",
     askTo: "宛先",
+    askPick: "同僚を選んでください",
     askText: "必要なこと",
     askSend: "送信",
     answerLabel: "あなたの回答",
@@ -1199,6 +1203,7 @@ const WORDS = {
     youAskedNone: "Aún no has pedido nada a nadie.",
     askTitle: "Pedir algo a un colega",
     askTo: "A quién",
+    askPick: "Elige a un colega",
     askText: "Qué necesitas",
     askSend: "Enviar",
     answerLabel: "Tu respuesta",
@@ -1505,6 +1510,7 @@ const WORDS = {
     youAskedNone: "Você ainda não pediu nada a ninguém.",
     askTitle: "Pedir a um colega",
     askTo: "Para quem",
+    askPick: "Escolha um colega",
     askText: "O que você precisa",
     askSend: "Enviar",
     answerLabel: "Sua resposta",
@@ -1861,7 +1867,7 @@ export function signUpPage(input: {
   link: string;
   os: Os;
   command: string;
-  local?: boolean;
+  local?: Local;
   /** The ways the server lets people in. */
   methods: SignInMethods;
   error?: string;
@@ -2095,7 +2101,12 @@ ${
   input.colleagues.length
     ? `<form method="post" action="/home/requests/ask">${officeField}
 <label for="to">${say(lang, "askTo")}</label>
-<select id="to" name="to" required>${input.colleagues
+<select id="to" name="to" required>${
+        // nobody picked until the person picks: a first name chosen for them is easy to send to
+        input.colleagues.length > 1
+          ? `<option value="" disabled selected>${say(lang, "askPick")}</option>`
+          : ""
+      }${input.colleagues
         .map(
           (one) =>
             `<option value="${escape(one.id)}">${escape(one.name)}${one.web ? ` (${say(lang, "onWeb")})` : ""}</option>`,
@@ -2112,7 +2123,7 @@ ${
 <h2>${say(lang, "youAsked")}</h2>
 ${sent ? `<ul class="rows requests">${sent}</ul>` : `<p class="note">${say(lang, "youAskedNone")}</p>`}
 </section>
-<p><a href="/home/requests?${at}">${say(lang, "refresh")}</a> · <a href="/home?${at}">${say(lang, "backHome")}</a></p>`,
+<p class="links"><a href="/home/requests?${at}">${say(lang, "refresh")}</a> · <a href="/home?${at}">${say(lang, "backHome")}</a></p>`,
   );
 }
 
