@@ -21,7 +21,44 @@ that are yours.
 ## Get started
 
 Clone Office runs on your own computer: that is where your clone learns how you work, uses your files
-and tools, and keeps what it learns. Setting it up takes about five minutes, with no coding.
+and tools, and keeps what it learns. Setting it up takes about five minutes, with no coding. There
+are two ways to get it, and both are the same app, keeping your clone in the same place
+(`~/.clone-office`):
+
+| | **Download the desktop app** | **Run it with Node.js** |
+|---|---|---|
+| What you need | Nothing else | Node.js 22.13 or later |
+| How it opens | A window of its own, and an icon in the menu bar or tray | A tab in your browser |
+| Updates | Installs them itself on Windows and Linux (AppImage); on a Mac, Settings links to the new download | Start it again with `npx -y clone-office@latest` |
+
+### Download the desktop app
+
+Get the file for your computer from the
+[latest release](https://github.com/cgoinglove/clone-office/releases/latest):
+
+- **Mac**: `Clone-Office-<version>-mac-arm64.dmg` for Apple silicon (M1 and later),
+  `…-mac-x64.dmg` for an Intel Mac. Open it and drag Clone Office into Applications.
+- **Windows**: `Clone-Office-<version>-win-x64-setup.exe`. Run it; it installs for you alone,
+  with no administrator.
+- **Linux**: `Clone-Office-<version>-linux-x86_64.AppImage`, or the `.deb` for Ubuntu and Debian
+  (`sudo apt install ./clone-office_<version>_amd64.deb`).
+
+The app is not signed with a developer certificate yet, so your system asks once before the first
+open:
+
+- **Mac**: in Applications, right-click (or Control-click) Clone Office and choose **Open**, then
+  **Open** again. If it still says it cannot be opened (macOS 15 and later), open
+  **System Settings › Privacy & Security**, scroll down, and click **Open Anyway** beside
+  Clone Office.
+- **Windows**: if SmartScreen says "Windows protected your PC", click **More info**, then
+  **Run anyway**.
+- **Linux**: make the AppImage executable before opening it: right-click it › **Properties** ›
+  **Permissions** › **Allow executing file as program**, or `chmod +x Clone-Office-*.AppImage`.
+
+Closing the window leaves your clone running, so it keeps answering colleagues; it is in the menu
+bar (Mac) or the tray (Windows, Linux), where **Quit Clone Office** stops it.
+
+### Or run it with Node.js
 
 1. **Install Node.js** 22.13 or later: the installer for your system from
    [nodejs.org](https://nodejs.org/en/download). Have it already? Skip this.
@@ -34,11 +71,15 @@ and tools, and keeps what it learns. Setting it up takes about five minutes, wit
    ```
 
 Invited by a teammate? Open the link they sent you: its page shows these steps for your computer,
-with a line that also joins their office (`npx -y clone-office join "<invite link>"`).
+with a line that also joins their office (`npx -y clone-office join "<invite link>"`); in the
+desktop app, paste the link in the first steps' team step instead.
 Use Claude Code, Codex or another AI that works on your computer? Ask it to set Clone Office up for
 you: [llms.txt](llms.txt) tells it how, and leaves the choices to you.
 
-It opens in your browser. The first steps take about three minutes, and each can wait:
+### The first steps
+
+The app opens (in its window, or in your browser). The first steps take about three minutes, and
+each can wait:
 
 1. **Pick what it thinks with**: your ChatGPT plan, your Claude subscription, an API key, or a
    model on your computer.
@@ -49,12 +90,13 @@ It opens in your browser. The first steps take about three minutes, and each can
    with an invite link, or open one on this computer.
 
 Then Home opens: what waits on you, the requests on their way, what your clone did, and a short
-list of first things to try. It runs while the
-terminal window is open, and `npx -y clone-office` starts it again later. To have it start with your
-computer instead, so your clone answers colleagues with no window open, turn on **Start with this
-computer** in Settings › General, or run `npx -y clone-office service install` (macOS, Linux and
-Windows; `service uninstall` undoes it). When something does not work, `npx -y clone-office doctor`
-says what and what to do.
+list of first things to try. The desktop app runs until you quit it from its icon. Run with
+Node.js, it runs while the terminal window is open, and `npx -y clone-office` starts it again
+later. To have it start with your computer, so your clone answers colleagues with no window open,
+turn on **Start with this computer** in Settings › General (with Node.js,
+`npx -y clone-office service install` does the same; `service uninstall` undoes it). When something
+does not work with Node.js, `npx -y clone-office doctor` says what and what to do; the desktop app
+keeps what happened in `~/.clone-office/logs/desktop.log`.
 
 ## What it does
 
@@ -178,8 +220,9 @@ meetings (sixty days), the skills members chose to share and a team key, sealed,
 conversations. Settings › General
 lists every file your clone keeps.
 
-Chrome offers to install the app as a window of its own, and Settings › General says when a newer
-version is out, with the line that starts it.
+Run with Node.js, Chrome offers to install the app as a window of its own, and Settings › General
+says when a newer version is out, with the line that starts it; the desktop app updates itself, or
+on a Mac links to the new download there.
 
 ## From source
 
@@ -190,15 +233,17 @@ pnpm dev        # http://127.0.0.1:3000
 
 To try an office alone, run a second clone with its own folder, port and build folder:
 `CLONE_OFFICE_HOME=~/.clone-office-b CLONE_OFFICE_DEV_DIR=.next-b pnpm dev --port 3001`.
-`node scripts/pack.mjs` builds the npm package from the committed files without publishing it.
+`node scripts/pack.mjs` builds the npm package from the committed files without publishing it, and
+`pnpm desktop` (`node desktop/build.mjs`) the desktop app for this system, in `desktop/release/`
+([desktop/build.mjs](desktop/build.mjs) says how, and which variables sign it).
 
 The screen speaks English, Korean, Simplified Chinese, Japanese, Spanish and Brazilian Portuguese;
 a language is one file under `messages/`.
 
 ## Status
 
-0.1.0: early. Coming next: the browser as its hands, a desktop app, and a clone that runs on the
-team's server for people who don't install anything. See [CHANGELOG.md](CHANGELOG.md),
+0.1.0: early. The desktop app is new and not yet signed with a developer certificate. Coming next: a
+clone that runs on the team's server for people who don't install anything. See [CHANGELOG.md](CHANGELOG.md),
 [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ## License

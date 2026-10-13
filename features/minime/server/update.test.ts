@@ -52,3 +52,55 @@ test("a newer plain release is offered with the line that starts it; anything el
   }) as typeof fetch);
   assert.equal(asked, false);
 });
+
+test("inside the desktop app, the app says what is newer, ready or to download; npm is not asked", async () => {
+  let asked = false;
+  const npmAsked = (async () => {
+    asked = true;
+    return new Response("{}");
+  }) as typeof fetch;
+  assert.deepEqual(
+    await updateStatus("0.1.0", true, npmAsked, async () => ({
+      newer: "0.2.0",
+      ready: true,
+      download: null,
+    })),
+    {
+      current: "0.1.0",
+      newer: "0.2.0",
+      command: null,
+      ready: true,
+      download: null,
+    },
+  );
+  assert.deepEqual(
+    await updateStatus("0.1.0", true, npmAsked, async () => ({
+      newer: "0.2.0",
+      ready: false,
+      download: "https://github.com/o/r/releases/tag/v0.2.0",
+    })),
+    {
+      current: "0.1.0",
+      newer: "0.2.0",
+      command: null,
+      ready: false,
+      download: "https://github.com/o/r/releases/tag/v0.2.0",
+    },
+  );
+  // Nothing newer, or the app did not answer: nothing is offered.
+  for (const said of [
+    { newer: "0.1.0", ready: true, download: "x" },
+    undefined,
+  ])
+    assert.deepEqual(
+      await updateStatus("0.1.0", true, npmAsked, async () => said),
+      {
+        current: "0.1.0",
+        newer: null,
+        command: null,
+        ready: false,
+        download: null,
+      },
+    );
+  assert.equal(asked, false);
+});

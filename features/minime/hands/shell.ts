@@ -202,9 +202,12 @@ function startSandbox(): Promise<Sandbox> {
 /** A variable named like a key, a token or a secret: never handed to a command (after Thursday). */
 const SECRET_NAME =
   /KEY|TOKEN|SECRET|PASS|_PWD|CREDENTIAL|_AUTH|_DSN|DATABASE_URL|COOKIE|SESSION/i;
-/** What the app set for itself, which a command would mistake for its own. */
+/**
+ * What the app set for itself, which a command would mistake for its own: in the desktop app,
+ * ELECTRON_RUN_AS_NODE would have any Electron app a command starts run as Node instead.
+ */
 const APP_OWN =
-  /^(PORT|HOSTNAME|NODE_ENV|INIT_CWD|NEXT_MANUAL_SIG_HANDLE)$|^_*NEXT_|^TURBOPACK|^npm_|^MINIME_|^CLONE_OFFICE_/i;
+  /^(PORT|HOSTNAME|NODE_ENV|INIT_CWD|NEXT_MANUAL_SIG_HANDLE|ELECTRON_RUN_AS_NODE)$|^_*NEXT_|^TURBOPACK|^npm_|^MINIME_|^CLONE_OFFICE_/i;
 
 /** The environment a command runs with: the person's own, less secrets and the app's, caches kept in the workspace. */
 export function shellEnv(

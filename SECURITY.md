@@ -43,7 +43,9 @@ assistant that can read and act for you is one that can do so wrongly. What keep
   ask passes through the relay and is not kept. Subscriptions (Claude, ChatGPT) are never shared.
 - One request goes out that nobody asked for by name: Settings › General asks npm's registry
   (`registry.npmjs.org/clone-office/latest`) which version is newest, at most once in six hours,
-  only when the app runs from the npm package. Nothing goes with it.
+  only when the app runs from the npm package. Nothing goes with it. The desktop app asks the
+  project's GitHub Releases instead, a minute after it starts and then every six hours, and on
+  Windows and Linux (AppImage) downloads a newer version from there; nothing goes with that either.
 
 ## Running a team server
 

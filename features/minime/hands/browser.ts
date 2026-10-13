@@ -13,6 +13,7 @@
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
+import { nodeEnv } from "../server/desktop.ts";
 import { appDir, minimeHome } from "../server/paths.ts";
 
 export {
@@ -108,6 +109,7 @@ export function browserServer(options: {
       ...(options.watched ? [] : ["--headless"]),
     ],
     env: {
+      ...nodeEnv(),
       PATH: process.env.PATH ?? "",
       HOME: process.env.HOME ?? "",
       ...(process.env.USERPROFILE

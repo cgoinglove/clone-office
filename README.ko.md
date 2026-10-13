@@ -20,6 +20,39 @@ AI에게 부탁할 내용을 정리해 달라고 합니다. 그걸 Slack에 붙�
 
 Clone Office는 내 컴퓨터에서 돌아갑니다. 클론이 내가 일하는 방식을 배우고, 내 파일과 도구를 쓰고,
 배운 것을 간직하는 곳이 바로 내 컴퓨터이기 때문입니다. 설치는 5분 정도 걸리고 코딩은 필요 없습니다.
+설치하는 길은 두 가지이고, 어느 쪽이든 같은 앱이며 클론은 같은 곳(`~/.clone-office`)에 남습니다.
+
+| | **데스크톱 앱 내려받기** | **Node.js로 실행** |
+|---|---|---|
+| 필요한 것 | 없음 | Node.js 22.13 이상 |
+| 열리는 곳 | 앱 창, 그리고 메뉴 막대나 트레이의 아이콘 | 브라우저 탭 |
+| 업데이트 | Windows와 Linux(AppImage)는 스스로 업데이트, Mac은 설정에서 새 파일 링크 | `npx -y clone-office@latest`로 다시 켜기 |
+
+### 데스크톱 앱 내려받기
+
+[최신 릴리스](https://github.com/cgoinglove/clone-office/releases/latest)에서 내 컴퓨터에 맞는 파일을
+받습니다.
+
+- **Mac**: Apple 실리콘(M1 이후)은 `Clone-Office-<버전>-mac-arm64.dmg`, Intel Mac은 `…-mac-x64.dmg`.
+  열어서 Clone Office를 응용 프로그램 폴더로 끌어다 놓습니다.
+- **Windows**: `Clone-Office-<버전>-win-x64-setup.exe`. 실행하면 나에게만 설치되고, 관리자 권한은
+  필요 없습니다.
+- **Linux**: `Clone-Office-<버전>-linux-x86_64.AppImage`, 또는 Ubuntu·Debian용 `.deb`
+  (`sudo apt install ./clone-office_<버전>_amd64.deb`).
+
+아직 개발자 인증서로 서명하지 않은 앱이라, 처음 열 때 한 번 시스템이 확인을 받습니다.
+
+- **Mac**: 응용 프로그램 폴더에서 Clone Office를 오른쪽 클릭(또는 Control-클릭)하고 **열기**, 다시
+  **열기**를 누릅니다. 그래도 열 수 없다고 나오면(macOS 15 이후) **시스템 설정 › 개인정보 보호 및 보안**을
+  열고 아래로 내려 Clone Office 옆의 **확인 없이 열기**를 누릅니다.
+- **Windows**: SmartScreen이 "Windows의 PC 보호"를 띄우면 **추가 정보**를 누르고 **실행**을 누릅니다.
+- **Linux**: 열기 전에 AppImage를 실행 가능하게 합니다. 오른쪽 클릭 › **속성** › **권한** ›
+  **파일을 프로그램으로 실행 허용**, 또는 `chmod +x Clone-Office-*.AppImage`.
+
+창을 닫아도 클론은 계속 돌아가며 동료에게 답합니다. 메뉴 막대(Mac)나 트레이(Windows, Linux)에 있고,
+그곳의 **Clone Office 종료**로 끕니다.
+
+### 또는 Node.js로 실행
 
 1. **Node.js 설치** 22.13 이상: [nodejs.org](https://nodejs.org/en/download)에서 내 운영체제에 맞는
    설치 파일을 받습니다. 이미 있다면 건너뜁니다.
@@ -32,11 +65,14 @@ Clone Office는 내 컴퓨터에서 돌아갑니다. 클론이 내가 일하는 
    ```
 
 동료에게 초대를 받았다면 받은 링크를 엽니다. 그 페이지가 내 컴퓨터에 맞춰 이 단계를 보여 주고, 동료의
-오피스에도 함께 들어가는 한 줄(`npx -y clone-office join "<invite link>"`)을 알려 줍니다.
+오피스에도 함께 들어가는 한 줄(`npx -y clone-office join "<invite link>"`)을 알려 줍니다. 데스크톱
+앱에서는 첫 단계의 팀 단계에 그 링크를 붙여 넣습니다.
 Claude Code, Codex처럼 내 컴퓨터에서 일하는 AI를 쓴다면 Clone Office 설치를 맡겨도 됩니다.
 [llms.txt](llms.txt)가 방법을 알려 주고, 고를 것은 나에게 남겨 둡니다.
 
-그러면 브라우저에서 앱이 열립니다. 첫 단계는 3분 정도 걸리고, 어느 단계든 나중으로 미룰 수 있습니다.
+### 첫 단계
+
+앱이 열립니다(앱 창이나 브라우저에서). 첫 단계는 3분 정도 걸리고, 어느 단계든 나중으로 미룰 수 있습니다.
 
 1. **AI 모델 고르기**: 내 ChatGPT 요금제, 내 Claude 구독, API 키, 또는 내 컴퓨터에서 돌아가는 모델 중
    하나를 고릅니다.
@@ -46,12 +82,13 @@ Claude Code, Codex처럼 내 컴퓨터에서 일하는 AI를 쓴다면 Clone Off
 3. **나는 누구이고 팀이 있는지 알려 주기**: 지금은 혼자 쓰거나, 초대 링크로 팀 오피스에 들어가거나,
    이 컴퓨터에서 오피스를 엽니다.
 
-그다음에는 홈이 열립니다. 나를 기다리는 일, 오가는 부탁, 클론이 대신 한 일과 처음 해 볼 일이 보입니다. 클론은 터미널
-창이 열려 있는 동안 돌아가고, 나중에 다시 켤 때는 `npx -y clone-office`를 실행합니다. 창을 열어 두지
-않아도 클론이 동료에게 답하게 하려면 컴퓨터와 함께 켜지게 합니다. 설정 › 일반에서 **컴퓨터와 함께 켜기**를
-켜거나 `npx -y clone-office service install`을 실행합니다(macOS, Linux, Windows 지원. 되돌릴 때는
-`service uninstall`). 잘 안 될 때는 `npx -y clone-office doctor`가 무엇이 안 되는지, 어떻게 하면 되는지
-알려 줍니다.
+그다음에는 홈이 열립니다. 나를 기다리는 일, 오가는 부탁, 클론이 대신 한 일과 처음 해 볼 일이 보입니다.
+데스크톱 앱은 아이콘에서 종료할 때까지 돌아갑니다. Node.js로 실행했다면 터미널 창이 열려 있는 동안 돌아가고,
+나중에 다시 켤 때는 `npx -y clone-office`를 실행합니다. 창을 열어 두지 않아도 클론이 동료에게 답하게 하려면
+설정 › 일반에서 **컴퓨터와 함께 켜기**를 켭니다(Node.js로 쓸 때는 `npx -y clone-office service install`도
+같고, 되돌릴 때는 `service uninstall`). Node.js로 쓸 때 잘 안 되면 `npx -y clone-office doctor`가 무엇이 안
+되는지, 어떻게 하면 되는지 알려 줍니다. 데스크톱 앱은 일어난 일을 `~/.clone-office/logs/desktop.log`에
+남깁니다.
 
 ## 하는 일
 
@@ -168,8 +205,9 @@ claude plugin install clone-office@clone-office
 클론들이 한 말(60일), 멤버가 공유하기로 한 스킬, 봉인된 팀 키만 남습니다. 기억이나 대화는 남지 않습니다. 설정 › 일반에서 클론이
 간직한 모든 파일을 볼 수 있습니다.
 
-Chrome에서는 앱을 독립된 창으로 설치할 수 있습니다. 새 버전이 나오면 설정 › 일반에서 알려 주고, 새 버전을
-켜는 한 줄도 함께 보여 줍니다.
+Node.js로 실행하면 Chrome에서 앱을 독립된 창으로 설치할 수 있고, 새 버전이 나오면 설정 › 일반에서 알려
+주며 새 버전을 켜는 한 줄도 함께 보여 줍니다. 데스크톱 앱은 스스로 업데이트하고, Mac에서는 그 자리에 새
+파일을 받는 링크를 보여 줍니다.
 
 ## 소스에서 실행
 
@@ -180,15 +218,17 @@ pnpm dev        # http://127.0.0.1:3000
 
 혼자 오피스를 시험하려면 폴더, 포트, 빌드 폴더를 따로 둔 두 번째 클론을 띄웁니다:
 `CLONE_OFFICE_HOME=~/.clone-office-b CLONE_OFFICE_DEV_DIR=.next-b pnpm dev --port 3001`.
-`node scripts/pack.mjs`는 커밋된 파일로 npm 패키지를 만들고, 게시는 하지 않습니다.
+`node scripts/pack.mjs`는 커밋된 파일로 npm 패키지를 만들고, 게시는 하지 않습니다. `pnpm desktop`
+(`node desktop/build.mjs`)은 이 컴퓨터용 데스크톱 앱을 `desktop/release/`에 만듭니다
+([desktop/build.mjs](desktop/build.mjs)에 방법과 서명에 쓰는 변수가 있습니다).
 
 화면은 영어, 한국어, 중국어 간체, 일본어, 스페인어, 브라질 포르투갈어로 볼 수 있습니다. 언어 하나는
 `messages/` 아래 파일 하나입니다.
 
 ## 상태
 
-0.1.0, 초기 단계입니다. 다음에 올 것은 클론의 손이 되는 브라우저, 데스크톱 앱, 그리고 아무것도 설치하지
-않는 사람을 위해 팀 서버에서 도는 클론입니다. 자세한 내용은 [CHANGELOG.md](CHANGELOG.md),
+0.1.0, 초기 단계입니다. 데스크톱 앱은 새로 나왔고 아직 개발자 인증서로 서명하지 않았습니다. 다음에 올
+것은 아무것도 설치하지 않는 사람을 위해 팀 서버에서 도는 클론입니다. 자세한 내용은 [CHANGELOG.md](CHANGELOG.md),
 [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md)에 있습니다.
 
 ## 라이선스

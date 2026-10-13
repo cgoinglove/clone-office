@@ -3,9 +3,12 @@
 // phone or their team is answered even before this computer's page is opened. Their flows keep
 // their times from then on too, and once they are past the first steps (which choose the folders
 // left out), the search index is kept caught up. The skills the app ships are brought in, as
-// Hermes Agent syncs its bundled skills on start.
+// Hermes Agent syncs its bundled skills on start. Started by the desktop app, the server ends with
+// it (server/desktop.ts).
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  const { endWithDesktop } = await import("./features/minime/server/desktop");
+  endWithDesktop();
   const { startMessenger } = await import("./features/minime/messenger/bridge");
   const { startOfficeOnBoot } = await import("./features/minime/office/boot");
   const { bringShippedSkills } = await import(

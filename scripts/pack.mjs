@@ -8,7 +8,12 @@
 // language out of step stops it. The package is left in dist/; nothing is published (the release
 // workflow publishes it, .github/workflows/release.yml).
 //
-//   node scripts/pack.mjs [--working]
+// With --folder, the same package is left unpacked in that folder instead, for the desktop app
+// (desktop/build.mjs), which carries its server inside and installs nothing at the person's end:
+// the app keeps the dependencies Next.js traced for its standalone server (installed flat, as npm
+// lays them out, so the traced folder is plain files), and the desktop build adds the rest.
+//
+//   node scripts/pack.mjs [--working] [--folder <path>]
 //   PACK_VERSION=0.2.0-next.4 node scripts/pack.mjs   a build carrying another version (a canary)
 
 import { execFileSync, spawnSync } from "node:child_process";
@@ -21,12 +26,18 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 const working = process.argv.includes("--working");
+const folderAt = process.argv.indexOf("--folder");
+const folder =
+  folderAt >= 0 && process.argv[folderAt + 1]
+    ? resolve(process.argv[folderAt + 1])
+    : undefined;
+if (folderAt >= 0 && !folder) throw new Error("--folder needs a path.");
 const work = mkdtempSync(join(tmpdir(), "clone-office-pack-"));
 const source = join(work, "clone-office");
 const out = join(work, "package");
@@ -102,7 +113,15 @@ try {
   console.log("==> Installing dependencies");
   run(
     "pnpm",
-    ["install", "--frozen-lockfile", "--prefer-offline", "--ignore-scripts"],
+    [
+      "install",
+      "--frozen-lockfile",
+      "--prefer-offline",
+      "--ignore-scripts",
+      // The desktop app keeps the traced dependencies: laid out flat, they are plain folders
+      // rather than links into pnpm's store.
+      ...(folder ? ["--config.node-linker=hoisted"] : []),
+    ],
     source,
   );
 
@@ -122,8 +141,18 @@ try {
     recursive: true,
     verbatimSymlinks: true,
   });
-  // The dependencies come from npm, for this computer's system, not from the build's folder.
-  rmSync(join(out, "app", "node_modules"), { recursive: true, force: true });
+  if (folder) {
+    // The desktop app keeps what Next.js traced, all but sharp, which only resizes pictures
+    // through /_next/image (nothing here asks it to) and is native code for the build's system.
+    for (const name of ["sharp", "@img"])
+      rmSync(join(out, "app", "node_modules", name), {
+        recursive: true,
+        force: true,
+      });
+  } else {
+    // The dependencies come from npm, for this computer's system, not from the build's folder.
+    rmSync(join(out, "app", "node_modules"), { recursive: true, force: true });
+  }
   // Next's file tracing copies the rule files a path pattern in them names (`.claude/rules`);
   // they are notes for whoever works on the code, never part of the app.
   rmSync(join(out, "app", ".claude"), { recursive: true, force: true });
@@ -255,9 +284,16 @@ try {
     )}\n`,
   );
 
-  console.log("==> Packing");
-  mkdirSync(join(repo, "dist"), { recursive: true });
-  run("npm", ["pack", "--pack-destination", join(repo, "dist")], out);
+  if (folder) {
+    console.log(`==> Leaving the package in ${folder}`);
+    rmSync(folder, { recursive: true, force: true });
+    mkdirSync(dirname(folder), { recursive: true });
+    cpSync(out, folder, { recursive: true, verbatimSymlinks: true });
+  } else {
+    console.log("==> Packing");
+    mkdirSync(join(repo, "dist"), { recursive: true });
+    run("npm", ["pack", "--pack-destination", join(repo, "dist")], out);
+  }
 } finally {
   rmSync(work, { recursive: true, force: true });
 }

@@ -22,6 +22,7 @@ moves it, so a test never touches your own clone).
 | `pnpm build` | the production build |
 | `node scripts/pack.mjs --working` | the npm package from your working tree, into `dist/`, published nowhere |
 | `node scripts/smoke.mjs` | starts that package as a person would and opens it (CI does this on Linux, macOS and Windows) |
+| `pnpm desktop --working` | the desktop app for this system from your working tree, into `desktop/release/` (`--dir` leaves it unpacked; `--mac`, `--win` or `--linux` and `--arch arm64\|x64` pick another); its tools install themselves the first time |
 
 ## Issues
 
@@ -52,14 +53,20 @@ after Thursday's):
   its squash commit and is checked (`pr-title.yml`).
 - Every push to main updates one open **Release PR** (release-please) with the next version and the
   changelog its commits earned. Merging it releases: the commit is tagged, the GitHub Release
-  written, CI runs again (the install on all three systems included), and the package goes to npm
-  with provenance.
+  written, CI runs again (the install on all three systems included), the package goes to npm
+  with provenance, and the desktop app is built on macOS, Windows and Linux and attached to the
+  release ([`desktop.yml`](.github/workflows/desktop.yml)), where its updates are found.
 - **Run workflow** on *Release* from main: `next` publishes a test build of main as
   `npx clone-office@next`; `latest` publishes the version `package.json` says, for a publish that
-  failed after its tag.
+  failed after its tag. **Run workflow** on *Desktop* builds the desktop app again, for a release's
+  tag or, with none, as the run's files only.
 
 The package's trusted publisher on npmjs.com is this repository and `release.yml`, so no npm token
-is stored anywhere.
+is stored anywhere. The desktop app is unsigned until these repository secrets are set: for
+macOS, `MAC_CSC_LINK` (a Developer ID Application certificate as base64 .p12) and
+`MAC_CSC_KEY_PASSWORD`, with `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD` and `APPLE_TEAM_ID` to
+notarize it; for Windows, `WIN_CSC_LINK` and `WIN_CSC_KEY_PASSWORD` (a code signing certificate as
+base64 .pfx). A signed Mac build updates itself as Windows and Linux do.
 
 ## What the project holds to
 

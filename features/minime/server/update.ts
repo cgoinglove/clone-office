@@ -1,7 +1,11 @@
 // Whether a newer Clone Office is on npm, after Thursday's features/settings/update.ts. A copy
 // started from npm never changes by itself, so Settings › General asks npm's registry which version
 // is newest, at most once in six hours, and says what to type to move to it. It is the one request
-// the app makes that nobody asked for by name (SECURITY.md says so): no data goes with it.
+// the app makes that nobody asked for by name (SECURITY.md says so): no data goes with it. The
+// desktop app keeps its own updates (desktop/src/updates.mjs), and the server asks it instead
+// (server/desktop.ts): an update it is fetching or has ready, or where to download one by hand.
+
+import { askDesktop, inDesktop } from "./desktop.ts";
 
 /** The package on npm. */
 export const PACKAGE = "clone-office";
@@ -71,17 +75,46 @@ export interface UpdateStatus {
   newer: string | null;
   /** The line that starts the newest one, once this one is closed. */
   command: string | null;
+  /** In the desktop app: the newer version is downloaded, and restarting puts it in place. */
+  ready?: boolean;
+  /** In the desktop app, where it cannot replace itself: the page to download the newer one from. */
+  download?: string | null;
+}
+
+/** What the desktop app says of its updates (desktop/src/updates.mjs). */
+export interface DesktopUpdate {
+  newer: string | null;
+  ready: boolean;
+  download: string | null;
 }
 
 /**
  * What Settings says. Only a copy started from the package asks: run from source, moving on is
- * `git pull`, theirs to decide.
+ * `git pull`, theirs to decide. Inside the desktop app, the app says.
  */
 export async function updateStatus(
   current = process.env.NEXT_PUBLIC_APP_VERSION ?? "",
   fromPackage = Boolean(process.env.CLONE_OFFICE_APP_DIR),
   ask: typeof fetch = fetch,
+  desktop: (() => Promise<DesktopUpdate | undefined>) | undefined = inDesktop()
+    ? () => askDesktop<DesktopUpdate>("update")
+    : undefined,
 ): Promise<UpdateStatus> {
+  if (desktop) {
+    const said = await desktop();
+    const newer =
+      typeof said?.newer === "string" && isNewer(said.newer, current)
+        ? said.newer
+        : null;
+    return {
+      current,
+      newer,
+      command: null,
+      ready: Boolean(newer && said?.ready),
+      download:
+        newer && typeof said?.download === "string" ? said.download : null,
+    };
+  }
   if (!fromPackage || !current) return { current, newer: null, command: null };
   const latest = await latestVersion(ask);
   const newer = latest && isNewer(latest, current) ? latest : null;

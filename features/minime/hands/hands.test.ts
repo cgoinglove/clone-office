@@ -131,6 +131,7 @@ test("a command never gets the person's secrets or the app's own settings, and k
       CLONE_OFFICE_HOME: "/home/a/.clone-office",
       MINIME_GATE_SECRET: "s",
       NODE_ENV: "production",
+      ELECTRON_RUN_AS_NODE: "1",
     } as NodeJS.ProcessEnv,
     "/ws",
   );
@@ -142,6 +143,7 @@ test("a command never gets the person's secrets or the app's own settings, and k
     "CLONE_OFFICE_HOME",
     "MINIME_GATE_SECRET",
     "NODE_ENV",
+    "ELECTRON_RUN_AS_NODE",
   ])
     assert.equal(env[gone], undefined, gone);
   assert.equal(env.npm_config_cache, "/ws/.cache/npm");

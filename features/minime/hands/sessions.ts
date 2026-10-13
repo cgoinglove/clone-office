@@ -13,6 +13,7 @@ import { basename, sep } from "node:path";
 import { logRun } from "../brain/runlog.ts";
 import { denyRules, pathRule } from "../gate/rules.ts";
 import { claudeCommand, cleanEnv, defaultModel } from "../server/brain.ts";
+import { nodeEnv } from "../server/desktop.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
 import { minimeHome } from "../server/paths.ts";
 import { projectDirs } from "../server/sources/claude-code.ts";
@@ -268,6 +269,7 @@ function permissionServer(chat: string): string {
         command: process.execPath,
         args: ["--no-warnings", process.argv[1] ?? ""],
         env: {
+          ...nodeEnv(),
           MINIME_ROLE: "permission",
           MINIME_GATE_URL: process.env.MINIME_GATE_URL ?? "",
           MINIME_GATE_SECRET: process.env.MINIME_GATE_SECRET ?? "",
