@@ -20,9 +20,9 @@
     "desktop": "node desktop/build.mjs"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.72",
-    "@ai-sdk/google": "^4.0.88",
-    "@ai-sdk/openai": "^4.0.84",
+    "@ai-sdk/anthropic": "^4.0.78",
+    "@ai-sdk/google": "^4.0.93",
+    "@ai-sdk/openai": "^4.0.91",
     "@anthropic-ai/sandbox-runtime": "0.0.79",
     "@base-ui/react": "^1.9.0",
     "@electric-sql/pglite": "^0.5.8",
@@ -33,7 +33,7 @@
     "@streamdown/code": "^2.0.0",
     "@streamdown/math": "^1.0.2",
     "@streamdown/mermaid": "^1.0.2",
-    "ai": "^7.0.123",
+    "ai": "^7.0.137",
     "better-auth": "1.7.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
