@@ -15,6 +15,7 @@ const WORDS = {
     inviteTitle: "{from} invites you to their office",
     onWebPerson: "On the web, no computer connected",
     answerFrom: "Answer from {name}",
+    answerFromClone: "Answer from {name}'s clone",
     requestsWaiting: "Requests · {count} waiting",
     inviteFor: "For whom (optional)",
     inviteOnce: "Copy it now: it is shown only once.",
@@ -65,7 +66,7 @@ const WORDS = {
     yourOffice: "Your office",
     connectTitle: "Connect your computer",
     connectWhat:
-      "Your clone runs on your computer: it learns from your AI records there, thinks with your own AI, and works with your files. Run this once in a terminal on that computer (it needs Node.js 22 or later, from nodejs.org):",
+      "Your clone runs on your computer: it learns from your AI records there, thinks with your own AI, and works with your files. Run this once in a terminal on that computer (it needs Node.js 22.13 or later, from nodejs.org):",
     makeCommand: "Make my connect command",
     commandNote:
       "It works once, for 10 minutes; make a new one any time. Connecting another computer moves your clone there.",
@@ -247,6 +248,8 @@ const WORDS = {
       "admin-link-ended": "This setup link has ended.",
       "too-many-invites":
         "This office has too many open invites. Cancel some first.",
+      "too-many-invites-mine":
+        "You have 10 invites still open. One opens up again when someone uses one, or after its week.",
       "invite-wrong": "There is no such invite.",
       "name-missing": "Say your name.",
       "account-exists":
@@ -307,6 +310,7 @@ const WORDS = {
     inviteTitle: "{from} 님이 오피스에 초대했어요",
     onWebPerson: "웹에서 함께해요 (연결된 컴퓨터 없음)",
     answerFrom: "{name} 님의 답",
+    answerFromClone: "{name} 님 클론의 답",
     requestsWaiting: "부탁 · {count}개 기다려요",
     inviteFor: "누구에게 보내나요 (선택)",
     inviteOnce: "지금 복사해 두세요. 한 번만 보여요.",
@@ -357,7 +361,7 @@ const WORDS = {
     yourOffice: "내 오피스",
     connectTitle: "내 컴퓨터 연결",
     connectWhat:
-      "클론은 내 컴퓨터에서 돌아요. 그 컴퓨터의 AI 기록으로 나를 배우고, 내 AI로 생각하고, 내 파일로 일해요. 그 컴퓨터의 터미널에서 이 한 줄을 한 번 실행하세요 (Node.js 22 이상이 필요해요, nodejs.org):",
+      "클론은 내 컴퓨터에서 돌아요. 그 컴퓨터의 AI 기록으로 나를 배우고, 내 AI로 생각하고, 내 파일로 일해요. 그 컴퓨터의 터미널에서 이 한 줄을 한 번 실행하세요 (Node.js 22.13 이상이 필요해요, nodejs.org):",
     makeCommand: "연결 명령 만들기",
     commandNote:
       "한 번, 10분 동안만 돼요. 언제든 새로 만들 수 있어요. 다른 컴퓨터를 연결하면 클론이 그리로 옮겨 가요.",
@@ -537,6 +541,8 @@ const WORDS = {
       "admin-link-ended": "끝난 설정 링크예요.",
       "too-many-invites":
         "쓸 수 있는 초대가 너무 많아요. 몇 개를 먼저 취소해 주세요.",
+      "too-many-invites-mine":
+        "아직 쓸 수 있는 내 초대가 10개예요. 누가 하나를 쓰거나 일주일이 지나면 다시 만들 수 있어요.",
       "invite-wrong": "없는 초대예요.",
       "name-missing": "이름을 적어 주세요.",
       "account-exists": "그 이메일로 만든 계정이 이미 있어요. 로그인해 주세요.",
@@ -597,6 +603,7 @@ const WORDS = {
     inviteTitle: "{from}邀请你加入他们的办公室",
     onWebPerson: "在网页上参与（没有连接电脑）",
     answerFrom: "{name}的回答",
+    answerFromClone: "{name}的分身的回答",
     requestsWaiting: "请求 · {count} 个等待中",
     inviteFor: "发给谁（可选）",
     inviteOnce: "现在就复制：它只显示一次。",
@@ -647,7 +654,7 @@ const WORDS = {
     yourOffice: "你的办公室",
     connectTitle: "连接你的电脑",
     connectWhat:
-      "你的分身在你的电脑上运行：它从那里的 AI 记录中学习，用你自己的 AI 思考，用你的文件工作。请在那台电脑的终端里运行一次这行命令（需要 Node.js 22 或更高版本，可从 nodejs.org 获取）：",
+      "你的分身在你的电脑上运行：它从那里的 AI 记录中学习，用你自己的 AI 思考，用你的文件工作。请在那台电脑的终端里运行一次这行命令（需要 Node.js 22.13 或更高版本，可从 nodejs.org 获取）：",
     makeCommand: "生成我的连接命令",
     commandNote:
       "只能用一次，10 分钟内有效；随时可以重新生成。连接另一台电脑，会把你的分身移到那台电脑上。",
@@ -811,6 +818,8 @@ const WORDS = {
       "invite-used": "已经用这个邀请创建过账号了。请要一个新的邀请。",
       "admin-link-ended": "这个设置链接已结束。",
       "too-many-invites": "仍可使用的邀请太多了。请先取消一些。",
+      "too-many-invites-mine":
+        "你还有 10 个可用的邀请。有人用掉一个或满一周后，就能再发。",
       "invite-wrong": "没有这个邀请。",
       "name-missing": "请填写你的名字。",
       "account-exists": "这个邮箱已经有账号了：请直接登录。",
@@ -865,6 +874,7 @@ const WORDS = {
     inviteTitle: "{from}さんからオフィスへの招待が届いています",
     onWebPerson: "Webで参加（コンピューター未接続）",
     answerFrom: "{name}さんの回答",
+    answerFromClone: "{name}さんのクローンの回答",
     requestsWaiting: "依頼 · {count}件待ち",
     inviteFor: "誰に送るか（任意）",
     inviteOnce: "今コピーしてください。表示は一度だけです。",
@@ -916,7 +926,7 @@ const WORDS = {
     yourOffice: "あなたのオフィス",
     connectTitle: "コンピューターをつなぐ",
     connectWhat:
-      "クローンはあなたのコンピューターで動きます。そこにあるAIの記録から学び、あなた自身のAIで考え、あなたのファイルで作業します。そのコンピューターのターミナルで、これを一度実行してください（Node.js 22以降が必要です。nodejs.orgから入手できます）：",
+      "クローンはあなたのコンピューターで動きます。そこにあるAIの記録から学び、あなた自身のAIで考え、あなたのファイルで作業します。そのコンピューターのターミナルで、これを一度実行してください（Node.js 22.13以降が必要です。nodejs.orgから入手できます）：",
     makeCommand: "接続コマンドを作成",
     commandNote:
       "1回だけ、10分間有効です。いつでも作り直せます。別のコンピューターをつなぐと、クローンはそちらに移ります。",
@@ -1103,6 +1113,8 @@ const WORDS = {
       "admin-link-ended": "この設定リンクは終了しています。",
       "too-many-invites":
         "まだ使える招待が多すぎます。先にいくつか取り消してください。",
+      "too-many-invites-mine":
+        "まだ使える招待が 10 件あります。誰かが 1 件使うか、1 週間たつと、また作れます。",
       "invite-wrong": "その招待は存在しません。",
       "name-missing": "名前を入力してください。",
       "account-exists":
@@ -1171,6 +1183,7 @@ const WORDS = {
     inviteTitle: "{from} te invita a su oficina",
     onWebPerson: "En la web, sin computadora conectada",
     answerFrom: "Respuesta de {name}",
+    answerFromClone: "Respuesta del clon de {name}",
     requestsWaiting: "Solicitudes · {count} en espera",
     inviteFor: "Para quién (opcional)",
     inviteOnce: "Cópialo ahora: solo se muestra una vez.",
@@ -1222,7 +1235,7 @@ const WORDS = {
     yourOffice: "Tu oficina",
     connectTitle: "Conecta tu computadora",
     connectWhat:
-      "Tu clon funciona en tu computadora: aprende de tus registros de IA que hay ahí, piensa con tu propia IA y trabaja con tus archivos. Ejecuta esto una vez en una terminal de esa computadora (necesita Node.js 22 o posterior, de nodejs.org):",
+      "Tu clon funciona en tu computadora: aprende de tus registros de IA que hay ahí, piensa con tu propia IA y trabaja con tus archivos. Ejecuta esto una vez en una terminal de esa computadora (necesita Node.js 22.13 o posterior, de nodejs.org):",
     makeCommand: "Crear mi comando de conexión",
     commandNote:
       "Funciona una sola vez, durante 10 minutos; crea uno nuevo cuando quieras. Si conectas otra computadora, tu clon se muda ahí.",
@@ -1409,6 +1422,8 @@ const WORDS = {
       "admin-link-ended": "Este enlace de configuración terminó.",
       "too-many-invites":
         "Esta oficina tiene demasiadas invitaciones abiertas. Cancela algunas primero.",
+      "too-many-invites-mine":
+        "Tienes 10 invitaciones abiertas. Podrás crear otra cuando alguien use una o pase su semana.",
       "invite-wrong": "Esa invitación no existe.",
       "name-missing": "Escribe tu nombre.",
       "account-exists": "Ya hay una cuenta con ese correo: inicia sesión.",
@@ -1474,6 +1489,7 @@ const WORDS = {
     inviteTitle: "{from} convida você para o escritório",
     onWebPerson: "Na web, sem computador conectado",
     answerFrom: "Resposta de {name}",
+    answerFromClone: "Resposta do clone de {name}",
     requestsWaiting: "Pedidos · {count} esperando",
     inviteFor: "Para quem (opcional)",
     inviteOnce: "Copie agora: ele aparece só uma vez.",
@@ -1525,7 +1541,7 @@ const WORDS = {
     yourOffice: "Seu escritório",
     connectTitle: "Conecte seu computador",
     connectWhat:
-      "Seu clone roda no seu computador: ele aprende com os seus registros de IA de lá, pensa com a sua própria IA e trabalha com os seus arquivos. Rode isto uma vez em um terminal desse computador (precisa do Node.js 22 ou mais recente, em nodejs.org):",
+      "Seu clone roda no seu computador: ele aprende com os seus registros de IA de lá, pensa com a sua própria IA e trabalha com os seus arquivos. Rode isto uma vez em um terminal desse computador (precisa do Node.js 22.13 ou mais recente, em nodejs.org):",
     makeCommand: "Criar meu comando de conexão",
     commandNote:
       "Funciona uma vez, por 10 minutos; crie um novo quando quiser. Conectar outro computador leva seu clone para lá.",
@@ -1712,6 +1728,8 @@ const WORDS = {
       "admin-link-ended": "Este link de configuração terminou.",
       "too-many-invites":
         "Este escritório tem convites abertos demais. Cancele alguns primeiro.",
+      "too-many-invites-mine":
+        "Você tem 10 convites abertos. Dá para criar outro quando alguém usar um ou quando a semana dele acabar.",
       "invite-wrong": "Esse convite não existe.",
       "name-missing": "Informe seu nome.",
       "account-exists": "Já existe uma conta com esse e-mail: entre com ela.",
@@ -1803,6 +1821,9 @@ export function errorWords(lang: PageLanguage, code: string): string {
     Object.hasOwn(errors, code) ? errors[code] : errors["account-failed"],
   );
 }
+
+/** Failures of making an invite: said where the invite is made, which the page opens on. */
+const INVITE_ERRORS = new Set(["too-many-invites", "too-many-invites-mine"]);
 
 const problem = (lang: PageLanguage, code?: string) =>
   code ? `<p class="error" role="alert">${errorWords(lang, code)}</p>` : "";
@@ -1998,6 +2019,8 @@ export interface WebRequest {
   other: string;
   text: string;
   answer?: string;
+  /** The answer was its person's own, not their clone's. */
+  byPerson?: boolean;
   state: "waiting" | "answered" | "closed";
   when: string;
 }
@@ -2049,7 +2072,7 @@ export function requestsPage(input: {
       (
         one,
       ) => `<li><span class="who"><b>${say(lang, "toWho", { name: one.other })}</b>${state(one)}<small>${escape(one.when)}</small></span>
-<p class="request">${escape(one.text)}</p>${one.answer ? `<p class="note"><b>${say(lang, "answerFrom", { name: one.other })}</b><br>${escape(one.answer)}</p>` : ""}</li>`,
+<p class="request">${escape(one.text)}</p>${one.answer ? `<p class="note"><b>${say(lang, one.byPerson ? "answerFrom" : "answerFromClone", { name: one.other })}</b><br>${escape(one.answer)}</p>` : ""}</li>`,
     )
     .join("");
   const waiting = input.web
@@ -2292,7 +2315,7 @@ export function homePage(input: {
     lang,
     counted(title, input.waiting ?? 0),
     `<h1>${title}</h1>
-${problem(lang, input.error)}
+${INVITE_ERRORS.has(input.error ?? "") ? "" : problem(lang, input.error)}
 ${input.done === "stopped" ? `<p class="done" role="status">${say(lang, "stoppedDone")}</p>` : ""}
 ${notices}
 ${switcher}
@@ -2332,6 +2355,7 @@ ${
 }
 <section id="invite">
 <h2>${say(lang, "inviteTeam")}</h2>
+${INVITE_ERRORS.has(input.error ?? "") ? problem(lang, input.error) : ""}
 <p>${say(lang, "inviteWhat", { days: String(input.invited?.days ?? 7) })}</p>
 ${
   input.invited

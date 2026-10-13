@@ -12,6 +12,8 @@ export interface RoomPerson {
   status: "active" | "away" | "offline";
   /** Away in a meeting. */
   inMeeting?: boolean;
+  /** No clone: they take part on the team server's page, so their desk stays empty. */
+  onWeb?: boolean;
   /** How to work with them, their ME.md lines. */
   ways?: string[];
   /** The kinds of request they take. */
@@ -115,6 +117,8 @@ export interface RoomWords {
     goingTo: Name;
     /** At an empty desk: its person has gone home. */
     off: string;
+    /** At the empty desk of someone who takes part on the web, with no clone. */
+    onWeb: string;
   };
   say: {
     isIn: Name;

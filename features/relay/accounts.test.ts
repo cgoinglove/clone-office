@@ -1757,6 +1757,16 @@ test("wrong tries are counted against the address the trusted proxy saw, an IPv6
       await wrong(`10.0.0.${n}, 2001:db8:1:2::${n.toString(16)}, 198.51.100.1`);
     assert.equal((await wrong("2001:db8:1:2::ffff, 198.51.100.1")).status, 429);
     assert.equal((await wrong("2001:db8:1:3::1, 198.51.100.1")).status, 400);
+    // A link opened meanwhile from there is asked to wait, never called missing.
+    const link = (line: string) =>
+      fetch(`${base}/i/${office.key}`, {
+        headers: { "x-forwarded-for": line },
+        redirect: "manual",
+      });
+    const waiting = await link("2001:db8:1:2::1, 198.51.100.1");
+    assert.equal(waiting.status, 429);
+    assert.match(await waiting.text(), /Too many tries from here/);
+    assert.notEqual((await link("2001:db8:1:3::1, 198.51.100.1")).status, 429);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();
@@ -2179,7 +2189,7 @@ test("connecting a computer whose clone joined with an invite makes that clone t
     const { code } = await accounts.setupCode(cy.person.id, office.id);
     const claimed = await accounts.claim(code, clone.token);
     assert.equal(claimed.member, clone.id, "the clone already there is taken");
-    assert.equal(claimed.moved, true);
+    assert.equal(claimed.moved, false, "nothing left another computer");
     await assert.rejects(relay.memberByToken(clone.token), {
       code: "office-member-unknown",
     });
@@ -2220,6 +2230,37 @@ test("connecting a computer whose clone joined with an invite makes that clone t
     );
     assert.notEqual(eveClone.member, clone.id, "Cy's clone stays Cy's");
     assert.equal((await relay.memberOf(office.id, cy.person.id))?.id, clone.id);
+
+    // Fay's app joined with the invite, then Fay took part on the web, then connected that
+    // computer: the computer takes her place on the web, and the clone it joined with goes.
+    const fayClone = await relay.join({
+      key: office.key,
+      card: { name: "Fay", description: "" },
+    });
+    const fay = await accounts.signUp(office.key, {
+      name: "Fay",
+      email: "fay@example.com",
+      password: "fay's long password",
+    });
+    const onWeb = await relay.joinWeb(office.id, fay.person.id, {
+      name: "Fay",
+      description: "",
+    });
+    const fayIn = await accounts.claim(
+      (await accounts.setupCode(fay.person.id, office.id)).code,
+      fayClone.token,
+    );
+    assert.equal(fayIn.member, onWeb.id, "her place on the web is taken");
+    assert.equal(fayIn.moved, false, "no other computer had it");
+    assert.equal(
+      (await relay.members(office.id)).filter((m) => m.card.name === "Fay")
+        .length,
+      1,
+      "one seat for Fay",
+    );
+    await assert.rejects(relay.memberByToken(fayClone.token), {
+      code: "office-member-unknown",
+    });
   } finally {
     await db.close();
   }

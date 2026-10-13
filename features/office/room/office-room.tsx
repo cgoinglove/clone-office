@@ -118,6 +118,7 @@ export function OfficeRoom({
         inMeeting: t("room.plate.inMeeting"),
         goingTo: (name) => t("room.plate.goingTo", { name }),
         off: t("room.plate.off"),
+        onWeb: t("room.plate.onWeb"),
       },
       say: {
         isIn: (name) => t("room.say.isIn", { name }),

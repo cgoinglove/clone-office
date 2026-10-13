@@ -183,7 +183,11 @@ function settingsFile() {
  */
 async function keepInvite(link) {
   const url = new URL(link);
-  const from = url.searchParams.get("from");
+  // Printed to the terminal: control characters (an escape sequence in the link) are left out.
+  const from = url.searchParams
+    .get("from")
+    ?.replace(/[\u0000-\u001f\u007f-\u009f]/g, "")
+    .slice(0, 80);
   try {
     await fetch(url, { signal: AbortSignal.timeout(15_000) });
   } catch {

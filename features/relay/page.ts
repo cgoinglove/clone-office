@@ -14,6 +14,8 @@ const WORDS = {
     sent: "Sent. {asker} has your answer:",
     closed: "This link is closed.",
     missing: "There is no such link.",
+    tooManyTries:
+      "Too many tries from here. Wait a few minutes, then open the link again.",
     inviteEndedTitle: "This invite has ended",
     inviteEnded:
       "It was used, cancelled, or a week has passed. Ask whoever invited you for a new link.",
@@ -27,6 +29,8 @@ const WORDS = {
     sent: "보냈어요. {asker} 님에게 이렇게 전했어요:",
     closed: "이미 끝난 링크예요.",
     missing: "없는 링크예요.",
+    tooManyTries:
+      "여기서 너무 여러 번 시도했어요. 몇 분 뒤 링크를 다시 열어 주세요.",
     inviteEndedTitle: "끝난 초대 링크예요",
     inviteEnded:
       "이미 쓰였거나, 취소됐거나, 일주일이 지났어요. 초대한 사람에게 새 링크를 받아 주세요.",
@@ -40,6 +44,7 @@ const WORDS = {
     sent: "已发送。{asker}收到了你的回答：",
     closed: "这个链接已关闭。",
     missing: "没有这个链接。",
+    tooManyTries: "这里的尝试次数太多。请等几分钟再打开链接。",
     inviteEndedTitle: "这个邀请已结束",
     inviteEnded:
       "它已被使用、已被取消，或者已经过了一周。请向邀请你的人要一个新链接。",
@@ -52,6 +57,8 @@ const WORDS = {
     sent: "送信しました。{asker}さんに届いた回答：",
     closed: "このリンクはすでに終了しています。",
     missing: "このリンクは存在しません。",
+    tooManyTries:
+      "ここからの試行が多すぎます。数分待ってから、もう一度リンクを開いてください。",
     inviteEndedTitle: "この招待は終了しています",
     inviteEnded:
       "使用済みか、取り消されたか、1週間が過ぎました。招待した人に新しいリンクをもらってください。",
@@ -65,6 +72,8 @@ const WORDS = {
     sent: "Enviado. {asker} ya tiene tu respuesta:",
     closed: "Este enlace está cerrado.",
     missing: "Este enlace no existe.",
+    tooManyTries:
+      "Demasiados intentos desde aquí. Espera unos minutos y vuelve a abrir el enlace.",
     inviteEndedTitle: "Esta invitación terminó",
     inviteEnded:
       "Ya se usó, se canceló o pasó una semana. Pide un enlace nuevo a quien te invitó.",
@@ -78,6 +87,8 @@ const WORDS = {
     sent: "Enviado. {asker} recebeu sua resposta:",
     closed: "Este link já foi encerrado.",
     missing: "Este link não existe.",
+    tooManyTries:
+      "Tentativas demais daqui. Espere alguns minutos e abra o link de novo.",
     inviteEndedTitle: "Este convite terminou",
     inviteEnded:
       "Ele já foi usado, foi cancelado ou passou uma semana. Peça um link novo a quem convidou você.",
@@ -337,6 +348,12 @@ ${installGuide(input)}
 
 export function missingPage(lang: PageLanguage): string {
   const text = say(lang, "missing");
+  return shell(lang, text, `<p>${text}</p>`);
+}
+
+/** A link opened from an address that missed too often lately: asked to wait, not told it is gone. */
+export function tooManyTriesPage(lang: PageLanguage): string {
+  const text = say(lang, "tooManyTries");
   return shell(lang, text, `<p>${text}</p>`);
 }
 

@@ -447,9 +447,11 @@ export function HomeScreen() {
                 <ul className="flex flex-col gap-2">
                   {colleagues.slice(0, 8).map((member) => {
                     const code = statusCode(member.card.status);
+                    // On the web: no clone to have gone quiet, so never off.
                     const off =
                       code === "off" ||
-                      Date.now() - Date.parse(member.seen) > 120_000;
+                      (code !== "web" &&
+                        Date.now() - Date.parse(member.seen) > 120_000);
                     return (
                       <li
                         key={member.id}

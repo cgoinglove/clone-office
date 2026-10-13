@@ -21,8 +21,17 @@ const OLD_WORDS: Record<string, Status> = {
   Off: "off",
 };
 
-export function statusCode(status: string | undefined): Status | undefined {
+/**
+ * A status only the office gives: someone taking part on the team server's page, with no clone
+ * (the relay's `web`), never one a person picks.
+ */
+export type ShownStatus = Status | "web";
+
+export function statusCode(
+  status: string | undefined,
+): ShownStatus | undefined {
   if (!status) return undefined;
+  if (status === "web") return "web";
   return (STATUSES as readonly string[]).includes(status)
     ? (status as Status)
     : OLD_WORDS[status];
@@ -133,13 +142,14 @@ export function roomData(
         role: member.card.description,
         mine,
         status:
-          status === "off" || (gone && !mine)
+          status === "off" || status === "web" || (gone && !mine)
             ? "offline"
             : status === "meeting" || status === "away"
               ? "away"
               : "active",
         // away in a meeting, which their tag says rather than just away
         ...(status === "meeting" && !gone ? { inMeeting: true } : {}),
+        ...(status === "web" ? { onWeb: true } : {}),
         ways: member.card.howToWork ?? [],
         menu: member.card.skills?.map((skill) => skill.name) ?? [],
       };

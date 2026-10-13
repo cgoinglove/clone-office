@@ -570,11 +570,18 @@ export class Relay {
           "SELECT count(*)::int AS open, count(*) FILTER (WHERE (by_member IS NOT NULL AND by_member = $2) OR (by_user IS NOT NULL AND by_user = $3))::int AS mine FROM invites WHERE office_id = $1 AND NOT own AND cancelled IS NULL AND expires > now() AND (member_id IS NULL OR user_at IS NULL)",
           [office, by.member ?? null, by.user ?? null],
         );
-        if (open >= OPEN_INVITES || (!by.owner && mine >= OPEN_INVITES_EACH))
+        if (open >= OPEN_INVITES)
           throw new RelayError(
             429,
             "Too many invites are open.",
             "too-many-invites",
+          );
+        // A person's own limit, which only time or use lifts: they cannot see the office's list.
+        if (!by.owner && mine >= OPEN_INVITES_EACH)
+          throw new RelayError(
+            429,
+            `You have ${OPEN_INVITES_EACH} invites open.`,
+            "too-many-invites-mine",
           );
       }
       await tx.query(
@@ -771,23 +778,32 @@ export class Relay {
     const token = randomBytes(24).toString("base64url");
     const now = new Date().toISOString();
     return this.db.transaction(async (tx) => {
-      const [had] = await tx.query<{ id: string }>(
-        "SELECT id FROM members WHERE office_id = $1 AND user_id = $2 FOR UPDATE",
+      const [had] = await tx.query<{ id: string; on_web: boolean }>(
+        "SELECT id, on_web FROM members WHERE office_id = $1 AND user_id = $2 FOR UPDATE",
         [office, user],
       );
       if (had) {
+        // The clone this computer joined with the invite before its person took part on the web
+        // goes (what it asked stays): one person has one place, which this computer now takes.
+        if (adopt)
+          await tx.query(
+            "DELETE FROM members WHERE token_hash = $1 AND office_id = $2 AND user_id IS NULL AND id <> $3",
+            [hashToken(adopt), office, had.id],
+          );
         await tx.query(
           "UPDATE members SET token_hash = $1, seen = $2, on_web = false WHERE id = $3",
           [hashToken(token), now, had.id],
         );
-        return { id: had.id, token, moved: true };
+        // Moved from another computer, whose token stops working; a place on the web is taken over.
+        return { id: had.id, token, moved: !had.on_web };
       }
       if (adopt) {
         const [kept] = await tx.query<{ id: string }>(
           "UPDATE members SET user_id = $3, token_hash = $4, seen = $5, on_web = false WHERE token_hash = $1 AND office_id = $2 AND user_id IS NULL RETURNING id",
           [hashToken(adopt), office, user, hashToken(token), now],
         );
-        if (kept) return { id: kept.id, token, moved: true };
+        // This computer's own clone, now the account's: nothing moved.
+        if (kept) return { id: kept.id, token, moved: false };
       }
       const id = `m-${randomBytes(6).toString("hex")}`;
       await tx.query(
@@ -850,7 +866,8 @@ export class Relay {
         return { id: had.id, office, card: had.card, user };
       }
       const id = `m-${randomBytes(6).toString("hex")}`;
-      const clean = cleanCard({ ...card, status: "working" } as Card);
+      // Status "web": no clone at work for them, whatever their card said (room-data.ts statusCode).
+      const clean = cleanCard({ ...card, status: "web" } as Card);
       // a token nobody holds: the person acts through their signed-in pages
       await tx.query(
         "INSERT INTO members (id, office_id, token_hash, card, joined, seen, user_id, on_web) VALUES ($1, $2, $3, $4::jsonb, $5, $5, $6, true)",

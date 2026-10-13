@@ -2107,7 +2107,7 @@ export function createOffice(
   }
   /** What a clone's name tag says beside its name: only what is so now, and nothing for one at ease. */
   function plateOf(p) {
-    if (!p.present) return [W.plate.off, "off"];
+    if (!p.present) return [p.onWeb ? W.plate.onWeb : W.plate.off, "off"];
     if (asking(p))
       return [
         p.mine ? W.plate.needsYou : W.plate.deciding,
@@ -2683,6 +2683,7 @@ export function createOffice(
         (q) => OPEN.has(q.state) || q.state === "INPUT_REQUIRED",
       ).length;
       p.inMeeting = !!r.inMeeting;
+      p.onWeb = !!r.onWeb;
       p.doneToday = to.filter(
         (q) => q.state === "COMPLETED" && q.at >= today.getTime(),
       ).length;

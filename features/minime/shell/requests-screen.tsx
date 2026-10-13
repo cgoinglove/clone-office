@@ -76,8 +76,16 @@ export function RequestsScreen() {
   const received = (data?.tasks ?? []).filter(
     (task) => task.metadata.from !== me,
   );
+  // Finished by the clone: not one its person answered themselves (here, or on the web).
   const handled = received.filter(
-    (task) => task.status.state === "COMPLETED" && !yours.has(task.id),
+    (task) =>
+      task.status.state === "COMPLETED" &&
+      !yours.has(task.id) &&
+      !task.history.some(
+        (message) =>
+          message.role === "agent" &&
+          (message.metadata as { by?: string } | undefined)?.by === "person",
+      ),
   ).length;
   const { indexOf } = office;
   const colleagues = members

@@ -302,6 +302,10 @@ export function useOffice(
       return;
     }
     lastText.current = text;
+    // Someone taking part on the web has no clone: said so wherever the office shows them.
+    for (const member of data.members ?? [])
+      if ((member as { web?: boolean }).web)
+        member.card = { ...member.card, status: "web" };
     setOffice(data);
     // A request whose state moved since the last look, or one first seen already answered (sent
     // and answered between two looks): its answer may be in a conversation.

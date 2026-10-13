@@ -78,6 +78,7 @@ import {
   missingPage,
   pageLanguage,
   replyPage,
+  tooManyTriesPage,
 } from "./page.ts";
 import {
   adminLinkEndedPage,
@@ -437,7 +438,11 @@ export function relayHandler(
           (/^[\w-]{4,128}$/.test(url.searchParams.get("key") ?? "")
             ? (url.searchParams.get("key") ?? undefined)
             : undefined);
-        if (invited && (tries.blocked(from) || !(await relay.knows(invited)))) {
+        if (invited && tries.blocked(from)) {
+          html(429, tooManyTriesPage(lang));
+          return true;
+        }
+        if (invited && !(await relay.knows(invited))) {
           tries.miss(from);
           html(404, missingPage(lang));
           return true;
@@ -493,10 +498,11 @@ export function relayHandler(
           redirect(`/login?key=${joining[1]}`);
           return true;
         }
-        if (
-          tries.blocked(from) ||
-          !(await accounts.enter(joining[1], person.id))
-        ) {
+        if (tries.blocked(from)) {
+          html(429, tooManyTriesPage(lang));
+          return true;
+        }
+        if (!(await accounts.enter(joining[1], person.id))) {
           tries.miss(from);
           html(404, missingPage(lang));
           return true;
@@ -509,7 +515,11 @@ export function relayHandler(
         return true;
       }
       if (key) {
-        if (tries.blocked(from) || !(await relay.knows(key))) {
+        if (tries.blocked(from)) {
+          html(429, tooManyTriesPage(lang));
+          return true;
+        }
+        if (!(await relay.knows(key))) {
           tries.miss(from);
           // an invite that worked once says so, rather than that there is nothing here
           const ended = await relay.inviteEnded(key);
@@ -523,8 +533,11 @@ export function relayHandler(
         // An invite already used for an account leaves the page with its guide alone.
         const invite = await relay.invite(key);
         const accountMade = Boolean(invite?.account);
+        // Who invited, as the invite keeps it: the link's own "from" can say anything.
         const who =
-          url.searchParams.get("from")?.trim().slice(0, 80) || undefined;
+          invite?.by ||
+          url.searchParams.get("from")?.trim().slice(0, 80) ||
+          undefined;
         const link = `${base()}${path}${url.search}`;
         if (!post) {
           const person = await accounts.person(cookie);
@@ -622,10 +635,11 @@ export function relayHandler(
           redirect("/login?done=admin-made");
           return true;
         }
-        if (
-          tries.blocked(from) ||
-          !(await accounts.adminLinkWorks(adminSetup[1]))
-        ) {
+        if (tries.blocked(from)) {
+          html(429, tooManyTriesPage(lang));
+          return true;
+        }
+        if (!(await accounts.adminLinkWorks(adminSetup[1]))) {
           tries.miss(from);
           html(410, adminLinkEndedPage(lang));
           return true;
@@ -1056,6 +1070,11 @@ export function relayHandler(
                   answer: answer.parts
                     .map((part) => part.text ?? "")
                     .join("\n"),
+                  // whose words: the colleague's own, or their clone's
+                  ...((answer.metadata as { by?: string } | undefined)?.by ===
+                  "person"
+                    ? { byPerson: true }
+                    : {}),
                 }
               : {}),
             state: (answer ? "answered" : done ? "closed" : "waiting") as
@@ -1509,14 +1528,23 @@ export function relayHandler(
       if (invite && request.method === "GET") {
         const lang = pageLanguage(request.headers["accept-language"]);
         const from = address(request);
-        if (tries.blocked(from) || !(await relay.knows(invite[1]))) {
+        // Asked to wait, never told a link is gone, and a visit while waiting is not one more miss.
+        if (tries.blocked(from)) {
+          response.writeHead(429, PAGE_HEADERS);
+          response.end(tooManyTriesPage(lang));
+          return;
+        }
+        if (!(await relay.knows(invite[1]))) {
           tries.miss(from);
           const ended = await relay.inviteEnded(invite[1]);
           response.writeHead(ended ? 410 : 404, PAGE_HEADERS);
           response.end(ended ? inviteEndedPage(lang) : missingPage(lang));
           return;
         }
-        const who = url.searchParams.get("from")?.trim().slice(0, 80);
+        // Who invited, as the invite keeps it: the link's own "from" can say anything.
+        const who =
+          (await relay.invite(invite[1]))?.by ||
+          url.searchParams.get("from")?.trim().slice(0, 80);
         const host = request.headers.host ?? "relay";
         // Behind a proxy that ends HTTPS, the link keeps the address people reach.
         const proto =

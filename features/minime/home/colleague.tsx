@@ -45,8 +45,10 @@ export function Colleague({
   const common = useTranslations("common");
   const look = looksOf({ id: member.id }, index);
   const status = statusCode(member.card.status);
+  // On the web: no clone to have gone quiet, so never off.
   const off =
-    status === "off" || Date.now() - Date.parse(member.seen) > 120_000;
+    status === "off" ||
+    (status !== "web" && Date.now() - Date.parse(member.seen) > 120_000);
   const takes = (member.card.skills ?? []).map((skill) => skill.name);
   return (
     <li className="flex flex-col gap-2 rounded-xl px-1 py-2">

@@ -109,9 +109,12 @@ export function OfficeSection({
             const mine = member.id === data.me?.id;
             const look = looksOf({ id: member.id, mine }, index);
             const status = statusCode(member.card.status);
+            // On the web: no clone to have gone quiet, so never off.
             const off =
               status === "off" ||
-              (!mine && Date.now() - Date.parse(member.seen) > 120_000);
+              (!mine &&
+                status !== "web" &&
+                Date.now() - Date.parse(member.seen) > 120_000);
             return (
               <li
                 key={member.id}
