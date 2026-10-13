@@ -85,8 +85,10 @@ async function ask(path, headers = {}) {
 }
 
 let ok = false;
-let reason = "it did not answer within five minutes";
-const until = Date.now() + 5 * 60_000;
+// npx installs the package before it starts: on a Windows runner that alone took four minutes of
+// five, so the wait is for starting at all, not for how fast.
+let reason = "it did not answer within ten minutes";
+const until = Date.now() + 10 * 60_000;
 while (Date.now() < until) {
   if (exited !== null) {
     reason = `it stopped (exit ${exited}) before it answered`;
