@@ -14,6 +14,7 @@ import {
   Link2,
   Loader2,
   LogOut,
+  MessageSquare,
   Pencil,
   UserPlus,
   Users,
@@ -162,6 +163,8 @@ export function OfficeSection({
       </Group>
 
       <TeamKeys />
+
+      <WebChat />
 
       <Meetings
         standup={data.standup ?? undefined}
@@ -627,6 +630,26 @@ function Leave({
         busy={busy}
         error={error ? problemText(error) : undefined}
         onConfirm={onLeave}
+      />
+    </Group>
+  );
+}
+
+/**
+ * Talking to this clone from the team server's page, away from this computer: off until the person
+ * turns it on (preferences `webChat`; office/own-chat.ts).
+ */
+function WebChat() {
+  const t = useTranslations("settings.office.webChat");
+  const app = useApp();
+  return (
+    <Group title={t("title")} hint={t("hint")}>
+      <Toggle
+        icon={<MessageSquare className="size-4" />}
+        title={t("take")}
+        body={t("takeHint")}
+        checked={Boolean(app.preferences?.webChat)}
+        onChange={(webChat) => void app.changePreferences({ webChat })}
       />
     </Group>
   );

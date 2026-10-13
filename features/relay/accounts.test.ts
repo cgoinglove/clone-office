@@ -219,7 +219,14 @@ test("from the invite link to a connected computer, as a person does it: sign up
     const own = await (
       await fetch(`${base}/home`, { headers: { cookie } })
     ).text();
-    assert.match(own, /Hi Ben[\s\S]*No computer is connected yet/);
+    // Their page opens on their clone, which they have yet to connect; their account says so too.
+    assert.match(own, /You have no clone yet[\s\S]*Connect your computer/);
+    assert.match(
+      await (
+        await fetch(`${base}/home/account`, { headers: { cookie } })
+      ).text(),
+      /No computer is connected yet/,
+    );
     // The office's key is never on a page; an invite is made there, one link per person.
     assert.doesNotMatch(own, new RegExp(office.key));
     const madeHere = await inviteOnPage(base, cookie);
@@ -271,9 +278,16 @@ test("from the invite link to a connected computer, as a person does it: sign up
       headers: { authorization: `Bearer ${settings.office.token}` },
     });
     assert.equal(members.status, 200, "the computer's own token works");
+    // Their account names the computer; their page opens on talking to their clone.
+    assert.match(
+      await (
+        await fetch(`${base}/home/account`, { headers: { cookie } })
+      ).text(),
+      /Connected: Ben/,
+    );
     assert.match(
       await (await fetch(`${base}/home`, { headers: { cookie } })).text(),
-      /Connected: Ben/,
+      /Talking to your clone from here is off[\s\S]*id="thread"/,
     );
     await assert.rejects(
       run(process.execPath, [bin, "connect", link, "--no-start"], { env }),
@@ -986,7 +1000,9 @@ test("with Google, as people do it: an invite makes an account, a password's acc
     assert.equal((await accounts.person(viaGoogle.cookie))?.id, ben.person.id);
     assert.match(
       await (
-        await fetch(`${base}/home`, { headers: { cookie: viaGoogle.cookie } })
+        await fetch(`${base}/home/account`, {
+          headers: { cookie: viaGoogle.cookie },
+        })
       ).text(),
       /How you sign in[\s\S]*Email and password[\s\S]*Google[\s\S]*Connected/,
     );
@@ -1871,7 +1887,7 @@ test("an invite is for one person: one clone and one account, a week, cancelled 
     const admin = cookieOf(ana.cookies);
     const open = (await asked()).path.slice("/i/".length);
     const home = await (
-      await fetch(`${base}/home`, { headers: { cookie: admin } })
+      await fetch(`${base}/home/office`, { headers: { cookie: admin } })
     ).text();
     assert.match(home, /Invites still open/);
     const id = /name="invite" value="(i-[0-9a-f]+)"/.exec(home)?.[1] ?? "";
@@ -2095,7 +2111,7 @@ test("someone with no computer takes part on the web: colleagues' clones ask the
     const home = await (
       await fetch(`${base}/home`, { headers: { cookie } })
     ).text();
-    assert.match(home, /No computer connected\?/);
+    assert.match(home, /Take part on the web without a computer/);
     const joined = await post("/home/web", cookie, {});
     assert.match(
       joined.headers.get("location") ?? "",

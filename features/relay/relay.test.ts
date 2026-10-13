@@ -218,7 +218,7 @@ test("news reaches a waiting inbox in another relay process, and without a notif
     const started = Date.now();
     await relay.send(ana, ben.id, "Heard over there?");
     const [event] = await waiting;
-    assert.ok(event.type !== "meeting");
+    assert.ok(event.type === "task" || event.type === "update");
     assert.equal(event.task.history[0].parts[0].text, "Heard over there?");
     assert.ok(Date.now() - started < 1500, "woken by the notification");
 
@@ -230,7 +230,7 @@ test("news reaches a waiting inbox in another relay process, and without a notif
       [ben.id, event.task.id],
     );
     const [late] = await quiet;
-    assert.ok(late.type !== "meeting");
+    assert.ok(late.type === "task" || late.type === "update");
     assert.equal(late.task.id, event.task.id);
   } finally {
     await other.close();

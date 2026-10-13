@@ -8,7 +8,8 @@
 import type { AllInSync } from "../../i18n/sync.ts";
 import type { SignInMethods, SignInSettings, SignInWays } from "./accounts.ts";
 import { installGuide, type Local, npxLine, type Os } from "./install.ts";
-import { escape, type PageLanguage, shell } from "./page.ts";
+import { escape, MARK, type PageLanguage, shell } from "./page.ts";
+import type { OwnMessage } from "./relay.ts";
 
 const WORDS = {
   en: {
@@ -93,6 +94,46 @@ const WORDS = {
     inviteMade: "Send this to one person:",
     inviteMake: "Make an invite link",
     signOut: "Sign out",
+    tabClone: "My clone",
+    tabRequests: "Requests",
+    tabOffice: "Office",
+    menuLabel: "Your menu",
+    accountTitle: "Your account",
+    computerOn: "Your clone is working on your computer",
+    computerOff:
+      "Your computer is off or asleep. What you write here waits until it is back.",
+    chatOff:
+      "Talking to your clone from here is off. Turn it on in Clone Office on your computer: Settings › Office › Talk from the team server.",
+    chatPlaceholder: "Tell your clone…",
+    chatSend: "Send",
+    chatEmpty:
+      "Ask your clone anything, as you would at your computer. It answers from there.",
+    chatWorking: "Your clone is answering…",
+    chatWaiting: "Waiting for your computer…",
+    cloneLabel: "Your clone",
+    toDecide: "To decide",
+    askSettled: "Answered on your computer",
+    askChosen: "Answered: {choice}",
+    chatKept:
+      "Kept here for a day. The whole conversation stays on your computer.",
+    chatRefresh: "Refresh to see the answer.",
+    chatFailed:
+      "Your clone couldn't answer this time. Try again, or look at it on your computer.",
+    chatLimit:
+      "Your AI plan has reached its usage limit. Try again later, or pick another model on your computer.",
+    noCloneTitle: "You have no clone yet",
+    noCloneWhat:
+      "Your clone runs on your computer. Connect it, and you can talk to it here while it answers colleagues for you.",
+    connectCta: "Connect your computer",
+    webCta: "Take part on the web without a computer",
+    onWebTitle: "You take part on the web",
+    onWebWhat:
+      "Colleagues' clones ask you here, and you answer under Requests. Connect a computer and your clone takes your place.",
+    moveComputer: "Connect another computer",
+    connectHow:
+      "Run this once in a terminal on that computer (it needs Node.js 22.13 or later, from nodejs.org):",
+    officeTitle: "The office",
+    officeDrawingOff: "The office drawing needs JavaScript.",
     runTitle: "Run this on your computer",
     runWhat:
       "This link connects a computer to your office. Run it in a terminal on that computer:",
@@ -243,6 +284,10 @@ const WORDS = {
       "For now, only this server's admin can sign in with a password.",
     resetMadeTold: "Their page says you made it, and they can stop it.",
     errors: {
+      "web-chat-off":
+        "Talking to your clone from here is off. Turn it on in Clone Office on your computer.",
+      "no-clone": "There is no clone to talk to: connect your computer first.",
+      "too-long": "That is too long to send at once.",
       "text-missing": "Write something first.",
       "not-on-web": "Your clone answers these on your computer.",
       "invite-used": "This invite made an account already. Ask for a new one.",
@@ -390,6 +435,45 @@ const WORDS = {
     inviteMade: "한 사람에게 보내 주세요:",
     inviteMake: "초대 링크 만들기",
     signOut: "로그아웃",
+    tabClone: "내 클론",
+    tabRequests: "부탁",
+    tabOffice: "오피스",
+    menuLabel: "내 메뉴",
+    accountTitle: "내 계정",
+    computerOn: "내 클론이 내 컴퓨터에서 일하고 있어요",
+    computerOff:
+      "내 컴퓨터가 꺼져 있거나 잠들었어요. 여기에 쓴 말은 켜지면 전해져요.",
+    chatOff:
+      "여기서 클론과 이야기하기가 꺼져 있어요. 내 컴퓨터의 Clone Office › 설정 › 오피스 › 팀 서버에서 이야기하기를 켜 주세요.",
+    chatPlaceholder: "내 클론에게 말하기",
+    chatSend: "보내기",
+    chatEmpty:
+      "내 컴퓨터에서처럼 무엇이든 말해 보세요. 클론이 그 컴퓨터에서 답해요.",
+    chatWorking: "클론이 답하는 중이에요",
+    chatWaiting: "컴퓨터를 기다리는 중이에요",
+    cloneLabel: "내 클론",
+    toDecide: "정할 것",
+    askSettled: "내 컴퓨터에서 답했어요",
+    askChosen: "답했어요: {choice}",
+    chatKept: "여기에는 하루만 남아요. 대화 전체는 내 컴퓨터에 있어요.",
+    chatRefresh: "새로 고치면 답이 보여요.",
+    chatFailed:
+      "클론이 이번에는 답하지 못했어요. 다시 해 보거나, 내 컴퓨터에서 확인해 주세요.",
+    chatLimit:
+      "AI 요금제의 사용 한도에 닿았어요. 조금 뒤에 다시 하거나, 내 컴퓨터에서 다른 모델을 골라 주세요.",
+    noCloneTitle: "내 클론이 아직 없어요",
+    noCloneWhat:
+      "클론은 내 컴퓨터에서 돌아요. 연결하면 여기서 클론과 이야기하고, 클론이 동료에게 대신 답해요.",
+    connectCta: "내 컴퓨터 연결하기",
+    webCta: "컴퓨터 없이 웹에서 함께하기",
+    onWebTitle: "웹에서 함께하고 있어요",
+    onWebWhat:
+      "동료의 클론이 여기로 물어 오면 부탁 탭에서 답해요. 컴퓨터를 연결하면 내 클론이 이어받아요.",
+    moveComputer: "다른 컴퓨터 연결",
+    connectHow:
+      "그 컴퓨터의 터미널에서 이 한 줄을 한 번 실행하세요 (Node.js 22.13 이상이 필요해요, nodejs.org):",
+    officeTitle: "오피스",
+    officeDrawingOff: "오피스 그림은 자바스크립트가 켜져 있어야 보여요.",
     runTitle: "내 컴퓨터에서 실행하세요",
     runWhat:
       "이 링크는 컴퓨터를 내 오피스에 연결해요. 그 컴퓨터의 터미널에서 실행하세요:",
@@ -537,6 +621,10 @@ const WORDS = {
     resetMadeTold:
       "링크를 만든 것은 그 사람의 페이지에도 보이고, 그 사람이 링크를 막을 수 있어요.",
     errors: {
+      "web-chat-off":
+        "여기서 클론과 이야기하기가 꺼져 있어요. 내 컴퓨터의 Clone Office에서 켜 주세요.",
+      "no-clone": "이야기할 클론이 없어요. 먼저 내 컴퓨터를 연결해 주세요.",
+      "too-long": "한 번에 보내기에 너무 길어요.",
       "text-missing": "먼저 내용을 적어 주세요.",
       "not-on-web": "이 부탁은 내 컴퓨터의 클론이 답해요.",
       "invite-used": "이 초대로 이미 계정을 만들었어요. 새 초대를 받아 주세요.",
@@ -683,6 +771,41 @@ const WORDS = {
     inviteMade: "把它发给一个人：",
     inviteMake: "生成邀请链接",
     signOut: "退出登录",
+    tabClone: "我的分身",
+    tabRequests: "请求",
+    tabOffice: "办公室",
+    menuLabel: "我的菜单",
+    accountTitle: "我的账户",
+    computerOn: "你的分身正在你的电脑上工作",
+    computerOff: "你的电脑已关机或休眠。在这里写的话会等它回来后再送达。",
+    chatOff:
+      "从这里和分身对话的功能已关闭。请在你电脑上的 Clone Office › 设置 › 办公室 › 在团队服务器上对话 中打开。",
+    chatPlaceholder: "对你的分身说…",
+    chatSend: "发送",
+    chatEmpty: "像在电脑前一样问分身任何事。它会在那台电脑上回答。",
+    chatWorking: "分身正在回答…",
+    chatWaiting: "正在等你的电脑…",
+    cloneLabel: "我的分身",
+    toDecide: "待决定",
+    askSettled: "已在你的电脑上回答",
+    askChosen: "已回答：{choice}",
+    chatKept: "这里只保留一天，完整的对话在你的电脑上。",
+    chatRefresh: "刷新就能看到回答。",
+    chatFailed: "分身这次没能回答。再试一次，或在你的电脑上查看。",
+    chatLimit: "AI 套餐的用量已达上限。稍后再试，或在你的电脑上换一个模型。",
+    noCloneTitle: "你还没有分身",
+    noCloneWhat:
+      "分身在你的电脑上运行。连接后，你可以在这里和它对话，它也会替你回答同事。",
+    connectCta: "连接你的电脑",
+    webCta: "不用电脑，在网页上参与",
+    onWebTitle: "你正在网页上参与",
+    onWebWhat:
+      "同事的分身会在这里问你，你在“请求”里回答。连接电脑后，你的分身会接手。",
+    moveComputer: "连接另一台电脑",
+    connectHow:
+      "请在那台电脑的终端里运行一次这行命令（需要 Node.js 22.13 或更高版本，可从 nodejs.org 获取）：",
+    officeTitle: "办公室",
+    officeDrawingOff: "办公室的画面需要开启 JavaScript。",
     runTitle: "在你的电脑上运行这个",
     runWhat: "这个链接会把一台电脑连接到你的办公室。请在那台电脑的终端里运行：",
     people: "这个办公室的成员",
@@ -816,6 +939,10 @@ const WORDS = {
     adminsOnlyNote: "目前只有这台服务器的管理员可以用密码登录。",
     resetMadeTold: "对方的页面会显示是你生成的，对方也可以停用它。",
     errors: {
+      "web-chat-off":
+        "从这里和分身对话的功能已关闭。请在电脑上的 Clone Office 里打开。",
+      "no-clone": "没有可以对话的分身：请先连接你的电脑。",
+      "too-long": "内容太长，无法一次发送。",
       "text-missing": "请先写点内容。",
       "not-on-web": "这些由你电脑上的分身回答。",
       "invite-used": "已经用这个邀请创建过账号了。请要一个新的邀请。",
@@ -956,6 +1083,45 @@ const WORDS = {
     inviteMade: "一人に送ってください：",
     inviteMake: "招待リンクを作る",
     signOut: "サインアウト",
+    tabClone: "自分のクローン",
+    tabRequests: "依頼",
+    tabOffice: "オフィス",
+    menuLabel: "メニュー",
+    accountTitle: "アカウント",
+    computerOn: "クローンがあなたのコンピューターで働いています",
+    computerOff:
+      "コンピューターがオフかスリープ中です。ここに書いたことは、戻ったときに届きます。",
+    chatOff:
+      "ここからクローンと話す機能はオフです。コンピューターの Clone Office ›「設定」›「オフィス」›「チームサーバーから話す」でオンにしてください。",
+    chatPlaceholder: "クローンに話しかける",
+    chatSend: "送信",
+    chatEmpty:
+      "コンピューターの前と同じように、何でも話しかけてください。クローンがそのコンピューターで答えます。",
+    chatWorking: "クローンが答えています…",
+    chatWaiting: "コンピューターを待っています…",
+    cloneLabel: "自分のクローン",
+    toDecide: "決めること",
+    askSettled: "コンピューターで答えました",
+    askChosen: "答えました：{choice}",
+    chatKept: "ここには1日だけ残ります。会話の全体はコンピューターにあります。",
+    chatRefresh: "再読み込みすると答えが見えます。",
+    chatFailed:
+      "今回はクローンが答えられませんでした。もう一度試すか、コンピューターで確認してください。",
+    chatLimit:
+      "AIプランの利用上限に達しました。しばらくしてから試すか、コンピューターで別のモデルを選んでください。",
+    noCloneTitle: "まだクローンがいません",
+    noCloneWhat:
+      "クローンはあなたのコンピューターで動きます。つなぐと、ここでクローンと話せて、クローンが同僚に代わりに答えます。",
+    connectCta: "コンピューターをつなぐ",
+    webCta: "コンピューターなしでウェブから参加",
+    onWebTitle: "ウェブから参加しています",
+    onWebWhat:
+      "同僚のクローンがここであなたに尋ね、あなたは「依頼」で答えます。コンピューターをつなぐと、クローンが引き継ぎます。",
+    moveComputer: "別のコンピューターをつなぐ",
+    connectHow:
+      "そのコンピューターのターミナルで、これを一度実行してください（Node.js 22.13以降が必要です。nodejs.orgから入手できます）：",
+    officeTitle: "オフィス",
+    officeDrawingOff: "オフィスの絵を見るには JavaScript が必要です。",
     runTitle: "コンピューターでこれを実行",
     runWhat:
       "このリンクは、コンピューターをあなたのオフィスにつなぎます。そのコンピューターのターミナルで実行してください：",
@@ -1110,6 +1276,11 @@ const WORDS = {
     resetMadeTold:
       "作ったことは相手のページにも表示され、相手はリンクを止められます。",
     errors: {
+      "web-chat-off":
+        "ここからクローンと話す機能はオフです。コンピューターの Clone Office でオンにしてください。",
+      "no-clone":
+        "話せるクローンがいません。先にコンピューターをつないでください。",
+      "too-long": "一度に送るには長すぎます。",
       "text-missing": "先に内容を書いてください。",
       "not-on-web": "これはあなたのコンピューターのクローンが答えます。",
       "invite-used":
@@ -1267,6 +1438,46 @@ const WORDS = {
     inviteMade: "Envíalo a una sola persona:",
     inviteMake: "Crear un enlace de invitación",
     signOut: "Cerrar sesión",
+    tabClone: "Mi clon",
+    tabRequests: "Solicitudes",
+    tabOffice: "Oficina",
+    menuLabel: "Tu menú",
+    accountTitle: "Tu cuenta",
+    computerOn: "Tu clon está trabajando en tu computadora",
+    computerOff:
+      "Tu computadora está apagada o en reposo. Lo que escribas aquí espera hasta que vuelva.",
+    chatOff:
+      "Hablar con tu clon desde aquí está desactivado. Actívalo en Clone Office en tu computadora: Configuración › Oficina › Hablar desde el servidor del equipo.",
+    chatPlaceholder: "Dile algo a tu clon…",
+    chatSend: "Enviar",
+    chatEmpty:
+      "Pídele a tu clon lo que quieras, como en tu computadora. Responde desde allí.",
+    chatWorking: "Tu clon está respondiendo…",
+    chatWaiting: "Esperando a tu computadora…",
+    cloneLabel: "Tu clon",
+    toDecide: "Por decidir",
+    askSettled: "Respondido en tu computadora",
+    askChosen: "Respondido: {choice}",
+    chatKept:
+      "Se guarda aquí un día. La conversación completa queda en tu computadora.",
+    chatRefresh: "Actualiza para ver la respuesta.",
+    chatFailed:
+      "Tu clon no pudo responder esta vez. Inténtalo de nuevo o revísalo en tu computadora.",
+    chatLimit:
+      "Tu plan de IA llegó a su límite de uso. Inténtalo más tarde o elige otro modelo en tu computadora.",
+    noCloneTitle: "Aún no tienes un clon",
+    noCloneWhat:
+      "Tu clon funciona en tu computadora. Conéctala y podrás hablar con él aquí mientras responde a tus colegas por ti.",
+    connectCta: "Conectar tu computadora",
+    webCta: "Participar en la web sin computadora",
+    onWebTitle: "Participas en la web",
+    onWebWhat:
+      "Los clones de tus colegas te preguntan aquí y tú respondes en Solicitudes. Conecta una computadora y tu clon toma tu lugar.",
+    moveComputer: "Conectar otra computadora",
+    connectHow:
+      "Ejecuta esto una vez en una terminal de esa computadora (necesita Node.js 22.13 o posterior, de nodejs.org):",
+    officeTitle: "La oficina",
+    officeDrawingOff: "El dibujo de la oficina necesita JavaScript.",
     runTitle: "Ejecuta esto en tu computadora",
     runWhat:
       "Este enlace conecta una computadora a tu oficina. Ejecútalo en una terminal de esa computadora:",
@@ -1420,6 +1631,11 @@ const WORDS = {
       "Por ahora, solo quien administra este servidor puede iniciar sesión con contraseña.",
     resetMadeTold: "Su página dice que lo creaste, y puede detenerlo.",
     errors: {
+      "web-chat-off":
+        "Hablar con tu clon desde aquí está desactivado. Actívalo en Clone Office en tu computadora.",
+      "no-clone":
+        "No hay un clon con quien hablar: conecta primero tu computadora.",
+      "too-long": "Es demasiado largo para enviarlo de una vez.",
       "text-missing": "Escribe algo primero.",
       "not-on-web": "Tu clon responde esto desde tu computadora.",
       "invite-used":
@@ -1574,6 +1790,46 @@ const WORDS = {
     inviteMade: "Envie para uma pessoa só:",
     inviteMake: "Criar um link de convite",
     signOut: "Sair",
+    tabClone: "Meu clone",
+    tabRequests: "Pedidos",
+    tabOffice: "Escritório",
+    menuLabel: "Seu menu",
+    accountTitle: "Sua conta",
+    computerOn: "Seu clone está trabalhando no seu computador",
+    computerOff:
+      "Seu computador está desligado ou em repouso. O que você escrever aqui espera até ele voltar.",
+    chatOff:
+      "Falar com seu clone daqui está desligado. Ligue no Clone Office do seu computador: Configurações › Escritório › Falar pelo servidor da equipe.",
+    chatPlaceholder: "Diga algo ao seu clone…",
+    chatSend: "Enviar",
+    chatEmpty:
+      "Peça qualquer coisa ao seu clone, como no seu computador. Ele responde de lá.",
+    chatWorking: "Seu clone está respondendo…",
+    chatWaiting: "Esperando o seu computador…",
+    cloneLabel: "Seu clone",
+    toDecide: "Para decidir",
+    askSettled: "Respondido no seu computador",
+    askChosen: "Respondido: {choice}",
+    chatKept:
+      "Fica aqui por um dia. A conversa inteira fica no seu computador.",
+    chatRefresh: "Atualize para ver a resposta.",
+    chatFailed:
+      "Seu clone não conseguiu responder desta vez. Tente de novo ou veja no seu computador.",
+    chatLimit:
+      "Seu plano de IA atingiu o limite de uso. Tente mais tarde ou escolha outro modelo no seu computador.",
+    noCloneTitle: "Você ainda não tem um clone",
+    noCloneWhat:
+      "Seu clone roda no seu computador. Conecte-o e você pode falar com ele aqui enquanto ele responde aos colegas por você.",
+    connectCta: "Conectar seu computador",
+    webCta: "Participar pela web sem computador",
+    onWebTitle: "Você participa pela web",
+    onWebWhat:
+      "Os clones dos colegas perguntam a você aqui, e você responde em Pedidos. Conecte um computador e seu clone assume seu lugar.",
+    moveComputer: "Conectar outro computador",
+    connectHow:
+      "Rode isto uma vez em um terminal desse computador (precisa do Node.js 22.13 ou mais recente, em nodejs.org):",
+    officeTitle: "O escritório",
+    officeDrawingOff: "O desenho do escritório precisa de JavaScript.",
     runTitle: "Rode isto no seu computador",
     runWhat:
       "Este link conecta um computador ao seu escritório. Rode em um terminal desse computador:",
@@ -1728,6 +1984,11 @@ const WORDS = {
     resetMadeTold:
       "A página da pessoa mostra que você o criou, e ela pode pará-lo.",
     errors: {
+      "web-chat-off":
+        "Falar com seu clone daqui está desligado. Ligue no Clone Office do seu computador.",
+      "no-clone":
+        "Não há clone para conversar: conecte seu computador primeiro.",
+      "too-long": "É longo demais para enviar de uma vez.",
       "text-missing": "Escreva algo primeiro.",
       "not-on-web": "Seu clone responde isso no seu computador.",
       "invite-used": "Uma conta já foi criada com este convite. Peça um novo.",
@@ -2046,6 +2307,8 @@ export function requestsPage(input: {
   sent: WebRequest[];
   done?: "sent" | "answered";
   error?: string;
+  /** The signed-in pages' top, with this page as its Requests tab. */
+  band?: Omit<Band, "tab">;
 }): string {
   const { lang } = input;
   const title = say(lang, "requestsTitle");
@@ -2123,7 +2386,14 @@ ${
 <h2>${say(lang, "youAsked")}</h2>
 ${sent ? `<ul class="rows requests">${sent}</ul>` : `<p class="note">${say(lang, "youAskedNone")}</p>`}
 </section>
-<p class="links"><a href="/home/requests?${at}">${say(lang, "refresh")}</a> · <a href="/home?${at}">${say(lang, "backHome")}</a></p>`,
+<p class="links"><a href="/home/requests?${at}">${say(lang, "refresh")}</a></p>`,
+    undefined,
+    input.band
+      ? {
+          band: homeBand(lang, { ...input.band, tab: "requests" }),
+          style: HOME_STYLE,
+        }
+      : {},
   );
 }
 
@@ -2185,9 +2455,277 @@ export interface HomeClone {
   seen: string;
 }
 
+/** Where the signed-in pages are: the person's clone, the requests, the office, their account. */
+export type HomeTab = "clone" | "requests" | "office" | "account";
+
+/** What the signed-in pages share at their top: the office, its tabs, and the person's menu. */
+export interface Band {
+  office?: { id: string; name: string };
+  /** The offices the person is in, to switch between when there are several. */
+  offices?: { id: string; name: string }[];
+  tab: HomeTab;
+  name: string;
+  admin?: boolean;
+  /** Requests waiting on the person's own answer, counted on their tab. */
+  waiting?: number;
+}
+
+/** The signed-in pages' top: the office on the brand's colour, its tabs, and the person's menu. */
+export function homeBand(lang: PageLanguage, band: Band): string {
+  const office = band.office;
+  const at = office ? `?office=${encodeURIComponent(office.id)}` : "";
+  const officeName = (office && escape(office.name)) || say(lang, "yourOffice");
+  const offices = band.offices ?? [];
+  const switcher =
+    office && offices.length > 1
+      ? `<details class="pick"><summary aria-label="${say(lang, "yourOffices")}"></summary><ul class="menu">${offices
+          .map(
+            (one) =>
+              `<li><a href="/home?office=${encodeURIComponent(one.id)}"${one.id === office.id ? ' aria-current="page"' : ""}>${escape(one.name) || say(lang, "thatOffice")}</a></li>`,
+          )
+          .join("")}</ul></details>`
+      : "";
+  const initial = escape(Array.from(band.name.trim())[0] ?? "·");
+  const tab = (id: HomeTab, href: string, words: string) =>
+    `<a href="${href}"${band.tab === id ? ' aria-current="page"' : ""}>${words}</a>`;
+  return `<header class="band">
+<div class="band-row"><a class="band-office" href="/home${at}">${MARK}<span>${officeName}</span></a>${switcher}
+<details class="me"><summary aria-label="${say(lang, "menuLabel")}"><span class="avatar" aria-hidden="true">${initial}</span></summary><div class="menu">
+<p class="menu-name">${escape(band.name)}</p>
+<a href="/home/account${at}">${say(lang, "accountTitle")}</a>
+${band.admin ? `<a href="/home/admin">${say(lang, "adminLink")}</a>` : ""}
+<form method="post" action="/logout"><button type="submit" class="ghost">${say(lang, "signOut")}</button></form>
+</div></details></div>
+${
+  office
+    ? `<nav class="tabs" aria-label="${officeName}">${tab("clone", `/home${at}`, say(lang, "tabClone"))}${tab(
+        "requests",
+        `/home/requests${at}`,
+        `${say(lang, "tabRequests")}${band.waiting ? ` <span class="count">${band.waiting}</span>` : ""}`,
+      )}${tab("office", `/home/office${at}`, say(lang, "tabOffice"))}</nav>`
+    : ""
+}
+</header>`;
+}
+
+/** A person's conversation with their own clone, as their page shows it. */
+export interface HomeChat {
+  /** Their clone lets them talk to it from here (its person turned it on). */
+  on: boolean;
+  /** Its computer is there now. */
+  present: boolean;
+  messages: OwnMessage[];
+}
+
+/** Words inside a line of an answer: code, bold and links to web pages, the rest as text. */
+function inline(text: string): string {
+  return escape(text)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(
+      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+    );
+}
+
+/**
+ * A clone's answer, which it writes in Markdown, as the page draws it: paragraphs, lists, headings
+ * as bold lines, code blocks, and inline code, bold and links. Everything is escaped first; no
+ * other mark becomes HTML.
+ */
+export function answerHtml(text: string): string {
+  const out: string[] = [];
+  const blocks = text.split(/^```[^\n]*\n?/m);
+  blocks.forEach((block, index) => {
+    // between fences: code, as it is
+    if (index % 2 === 1) {
+      out.push(`<pre><code>${escape(block.replace(/\n$/, ""))}</code></pre>`);
+      return;
+    }
+    let list: { tag: "ul" | "ol"; items: string[] } | undefined;
+    let para: string[] = [];
+    const flush = () => {
+      if (para.length) out.push(`<p>${para.join("<br>")}</p>`);
+      para = [];
+      if (list)
+        out.push(
+          `<${list.tag}>${list.items.map((item) => `<li>${item}</li>`).join("")}</${list.tag}>`,
+        );
+      list = undefined;
+    };
+    for (const line of block.split("\n")) {
+      const bullet = /^\s*[-*•]\s+(.*)$/.exec(line);
+      const numbered = /^\s*\d+[.)]\s+(.*)$/.exec(line);
+      const heading = /^#{1,6}\s+(.*)$/.exec(line);
+      if (bullet || numbered) {
+        const tag = bullet ? "ul" : "ol";
+        if (para.length || (list && list.tag !== tag)) flush();
+        list ??= { tag, items: [] };
+        list.items.push(inline((bullet ?? numbered)?.[1] ?? ""));
+      } else if (heading) {
+        flush();
+        out.push(`<p><strong>${inline(heading[1])}</strong></p>`);
+      } else if (!line.trim()) flush();
+      else {
+        if (list) flush();
+        para.push(inline(line));
+      }
+    }
+    flush();
+  });
+  return out.join("");
+}
+
+/** One line of the conversation shown as the reader reads it: an answer's code in their words. */
+function ownWords(lang: PageLanguage, message: OwnMessage): string {
+  if (!message.code) return answerHtml(message.text);
+  if (message.code === "web-chat-off") return say(lang, "chatOff");
+  if (message.code.startsWith("brain-limit")) return say(lang, "chatLimit");
+  return say(lang, "chatFailed");
+}
+
+/**
+ * The conversation itself: what waits on the person first, then what was said, then whether the
+ * clone is answering. The page's script asks for it again while an answer is on its way.
+ */
+export function chatThread(
+  lang: PageLanguage,
+  chat: HomeChat,
+  office: string,
+): { html: string; waiting: boolean } {
+  const officeField = `<input type="hidden" name="office" value="${escape(office)}">`;
+  const answered = new Set(
+    chat.messages
+      .filter((m) => m.kind === "answer" && m.replyTo)
+      .map((m) => m.replyTo),
+  );
+  const open = chat.messages.filter((m) => m.kind === "ask" && !m.chosen);
+  const asks = open
+    .map(
+      (ask) =>
+        `<form class="decide" method="post" action="/home/clone/choose">${officeField}<input type="hidden" name="ask" value="${escape(ask.id)}"><p class="decide-head">${say(lang, "toDecide")}</p><p class="decide-text">${escape(ask.text)}</p><div class="decide-acts">${(
+          ask.choices ?? []
+        )
+          .map(
+            (choice) =>
+              `<button type="submit" name="value" value="${escape(choice.value)}" class="quiet small">${escape(choice.label)}</button>`,
+          )
+          .join("")}</div></form>`,
+    )
+    .join("");
+  const lines = chat.messages
+    .map((m) => {
+      if (m.kind === "said") return `<p class="msg mine">${escape(m.text)}</p>`;
+      if (m.kind === "answer")
+        return `<div class="msg clone${m.code ? " failed" : ""}"><small>${say(lang, "cloneLabel")}</small>${m.code ? `<p>${ownWords(lang, m)}</p>` : ownWords(lang, m)}</div>`;
+      if (!m.chosen) return "";
+      const label =
+        m.chosen === "settled"
+          ? say(lang, "askSettled")
+          : say(lang, "askChosen", {
+              choice:
+                m.choices?.find((one) => one.value === m.chosen)?.label ?? "",
+            });
+      // what was asked, as its card said it in its first lines, and the answer
+      const asked = m.text.split("\n").slice(0, 2).join(" ");
+      return `<p class="msg note">${escape(asked.length > 140 ? `${asked.slice(0, 139)}…` : asked)} · ${label}</p>`;
+    })
+    .join("");
+  const last = [...chat.messages].reverse().find((m) => m.kind === "said");
+  const waiting = Boolean(last && !answered.has(last.id));
+  const working = waiting
+    ? `<p class="working" role="status"><span class="spin" aria-hidden="true"></span>${say(lang, chat.present ? "chatWorking" : "chatWaiting")}</p><noscript><p class="note">${say(lang, "chatRefresh")}</p></noscript>`
+    : "";
+  return {
+    html: `${asks}${
+      chat.messages.length
+        ? lines
+        : `<p class="chat-empty">${say(lang, "chatEmpty")}</p>`
+    }${working}`,
+    waiting,
+  };
+}
+
+/** What the signed-in pages add to the server's own style: the band, tabs and the conversation. */
+export const HOME_STYLE = `
+body { min-height: 100vh; display: flex; flex-direction: column; }
+.band { background: var(--brand-fill); color: #fff; }
+.band-row { max-width: 46rem; margin: 0 auto; padding: .7rem 1rem .4rem; display: flex; align-items: center; gap: .5rem; }
+.band-office { display: flex; align-items: center; gap: .5rem; color: inherit; text-decoration: none; font-weight: 600; min-width: 0; flex: 0 1 auto; }
+.band-office span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.band .mark { width: 1.4rem; height: 1.4rem; color: #fff; flex: none; }
+.band .mark .eye { fill: var(--brand-fill); }
+.band details { position: relative; }
+.band details > summary { color: inherit; font-size: 1rem; min-height: 2.75rem; min-width: 2.75rem; justify-content: center; }
+.band details.me { margin-left: auto; }
+.band details.me > summary::after { display: none; }
+.band details.pick > summary::after { border-color: #fff; margin-left: 0; }
+.avatar { width: 2rem; height: 2rem; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; font-weight: 700; font-size: .9rem; }
+.band .menu { position: absolute; right: 0; top: calc(100% + .25rem); z-index: 5; min-width: 13rem; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; padding: .4rem; box-shadow: 0 12px 32px rgba(0,0,0,.18); display: flex; flex-direction: column; gap: .1rem; list-style: none; margin: 0; }
+.band details.pick .menu { left: 0; right: auto; }
+.band .menu a, .band .menu button { display: flex; align-items: center; min-height: 2.5rem; padding: 0 .6rem; border-radius: 8px; color: var(--fg); text-decoration: none; width: 100%; margin: 0; font-weight: 500; justify-content: flex-start; }
+.band .menu a:hover, .band .menu button:hover { background: var(--soft); }
+.band .menu a[aria-current="page"] { font-weight: 700; }
+.band .menu form { margin: 0; }
+.menu-name { margin: .2rem .6rem .3rem; font-size: .85rem; color: var(--muted); }
+.tabs { max-width: 46rem; margin: 0 auto; padding: 0 .6rem .55rem; display: flex; gap: .25rem; overflow-x: auto; }
+.tabs a { color: rgba(255,255,255,.82); text-decoration: none; font-weight: 600; font-size: .95rem; padding: .45rem .85rem; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: .35rem; min-height: 2.5rem; }
+.tabs a:hover { color: #fff; background: rgba(255,255,255,.12); }
+.tabs a[aria-current="page"] { color: #fff; background: rgba(255,255,255,.22); }
+.tabs .count { background: var(--waiting); color: #fff; border-radius: 999px; font-size: .75rem; padding: 0 .45rem; line-height: 1.4; }
+.band :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+main { width: 100%; }
+main.chat { flex: 1; display: flex; flex-direction: column; gap: 0; padding-top: 0; padding-bottom: 0; }
+.status { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; margin: 0; padding: .9rem 0 .2rem; }
+.status i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--muted); flex: none; }
+.status i.on { background: var(--brand); }
+.callout { margin: .6rem 0 0; padding: .75rem .9rem; border-radius: 12px; background: var(--soft); font-size: .92rem; }
+.thread { flex: 1; display: flex; flex-direction: column; gap: .6rem; padding: 1rem 0; }
+.msg { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.mine { align-self: flex-end; max-width: 85%; background: var(--brand-fill); color: #fff; padding: .55rem .85rem; border-radius: 18px 18px 6px 18px; }
+.msg.clone { align-self: flex-start; max-width: 92%; }
+.msg.clone small { display: block; color: var(--muted); font-size: .78rem; margin-bottom: .1rem; }
+.msg.clone { white-space: normal; }
+.msg.clone p { margin: 0 0 .5rem; }
+.msg.clone p:last-child { margin-bottom: 0; }
+.msg.clone ul, .msg.clone ol { margin: 0 0 .5rem; padding-left: 1.3rem; }
+.msg.clone pre { margin: 0 0 .5rem; white-space: pre-wrap; user-select: text; -webkit-user-select: text; }
+.msg.clone code { font: .88em/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--soft); border-radius: 5px; padding: .05rem .3rem; }
+.msg.clone pre code { background: none; padding: 0; }
+.msg.clone.failed p { color: var(--muted); }
+.msg.note { font-size: .85rem; color: var(--muted); align-self: center; text-align: center; }
+.chat-empty { color: var(--muted); margin: auto 0 0; }
+.working { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; margin: 0; }
+.spin { width: .9rem; height: .9rem; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--brand); animation: spin .9s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.decide { margin: 0; padding: .75rem .9rem; border-radius: 14px; background: color-mix(in srgb, var(--waiting) 9%, transparent); display: flex; flex-direction: column; gap: .4rem; }
+.decide-head { margin: 0; font-weight: 700; font-size: .85rem; color: var(--waiting); }
+.decide-text { margin: 0; white-space: pre-wrap; font-size: .95rem; }
+.decide-acts { display: flex; flex-wrap: wrap; gap: .4rem; }
+.decide-acts button { margin: 0; border-radius: 999px; }
+.compose { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0 1rem; margin: 0; }
+.compose-box { display: flex; align-items: flex-end; gap: .5rem; border: 1px solid var(--field); border-radius: 26px; padding: .35rem .35rem .35rem 1rem; background: var(--bg); }
+.compose-box:focus-within { border-color: var(--brand); }
+.compose textarea { border: 0; padding: .45rem 0; min-height: 1.6rem; max-height: 12rem; resize: none; background: transparent; outline: none; margin: 0; }
+.compose button.send { width: 2.5rem; height: 2.5rem; border-radius: 50%; padding: 0; margin: 0; display: grid; place-items: center; flex: none; }
+.compose button.send svg { width: 1.1rem; height: 1.1rem; }
+.compose textarea:disabled + button.send { opacity: .45; }
+.chat-foot { margin: .4rem .2rem 0; font-size: .78rem; color: var(--muted); }
+.empty-state { display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; padding-top: 1.5rem; }
+.empty-state h2 { font-size: 1.2rem; }
+.empty-state form { margin: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.room-slot { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-height: 18rem; display: grid; place-items: center; color: var(--muted); }
+`;
+
+const SEND_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>`;
+
 export function homePage(input: {
   lang: PageLanguage;
   name: string;
+  /** Which tab of the signed-in pages this is. */
+  tab?: Exclude<HomeTab, "requests">;
   /** The reader's account id, to mark them in the list. */
   me?: string;
   /** The office shown, and the others the reader is in, to switch between. */
@@ -2201,6 +2739,10 @@ export function homePage(input: {
   place?: "web" | "clone";
   /** For someone on the web: how many requests wait on their answer. */
   waiting?: number;
+  /** Their conversation with their own clone, when they have one. */
+  chat?: HomeChat;
+  /** The office drawing for the Office tab, made by room-page.ts. */
+  room?: string;
   /** The office's invites still open, for its owners to see and cancel. */
   invites?: {
     id: string;
@@ -2239,7 +2781,7 @@ export function homePage(input: {
   done?: "stopped";
 }): string {
   const { lang } = input;
-  const title = say(lang, "hello", { name: input.name });
+  const tab = input.tab ?? "clone";
   const notices = (input.events ?? [])
     // just stopped, the line saying so is enough
     .filter(
@@ -2267,103 +2809,98 @@ export function homePage(input: {
   const officeField = office
     ? `<input type="hidden" name="office" value="${escape(office.id)}">`
     : "";
-  const offices = input.offices ?? [];
-  const switcher =
-    office && offices.length > 1
-      ? `<section>
-<h2>${say(lang, "yourOffices")}</h2>
-<ul class="ways">${offices
-          .map((one) =>
-            one.id === office.id
-              ? `<li><span class="who"><b aria-current="page">${escape(one.name) || say(lang, "thatOffice")}</b></span><span class="tag">${say(lang, "showing")}</span></li>`
-              : `<li><span class="who"><a href="/home?office=${encodeURIComponent(one.id)}">${escape(one.name) || say(lang, "thatOffice")}</a></span></li>`,
-          )
-          .join("")}</ul>
-</section>`
-      : "";
-  const personRow = (person: HomePerson) => {
-    const self = person.id === input.me;
-    const acts =
-      owner && !self
-        ? `<span class="acts">${
-            person.role === "member"
-              ? `<a class="small" href="/home/people/owner?user=${encodeURIComponent(person.id)}&amp;${at}">${say(lang, "makeOwner")}</a>`
-              : ""
-          }<a class="small" href="/home/people/remove?user=${encodeURIComponent(person.id)}&amp;${at}">${say(lang, "remove")}</a></span>`
-        : "";
-    return `<li><span class="who"><b>${escape(person.name)}</b><span class="tag">${say(lang, person.role === "owner" ? "owner" : "member")}</span>${self ? `<span class="tag">${say(lang, "you")}</span>` : ""}<small>${escape(person.email)} · ${
-      person.web
-        ? say(lang, "onWebPerson")
-        : person.seen
-          ? say(lang, "cloneIn", { when: person.seen })
-          : say(lang, "cloneOut")
-    }</small></span>${acts}</li>`;
-  };
-  const clones = owner ? (input.clones ?? []) : [];
-  const ways = input.ways;
-  // How one signs in shows once Google is a way here: where Google can be connected, or already is.
-  const signIn =
-    ways && (input.methods?.google || ways.google)
-      ? `<section>
+  const band = homeBand(lang, {
+    tab,
+    name: input.name,
+    admin: input.admin,
+    ...(office ? { office } : {}),
+    offices: input.offices ?? [],
+    ...(input.waiting ? { waiting: input.waiting } : {}),
+  });
+  const top = `${INVITE_ERRORS.has(input.error ?? "") ? "" : problem(lang, input.error)}
+${input.done === "stopped" ? `<p class="done" role="status">${say(lang, "stoppedDone")}</p>` : ""}
+${notices}`;
+  const title = say(lang, "hello", { name: input.name });
+  const page = (body: string, main?: string, scripts?: string[]) =>
+    shell(lang, counted(title, input.waiting ?? 0), body, undefined, {
+      band,
+      style: HOME_STYLE,
+      ...(main ? { main } : {}),
+      ...(scripts ? { scripts } : {}),
+    });
+  if (!office) return page(`${top}<p>${errorWords(lang, "not-in-office")}</p>`);
+  const connect = input.command
+    ? `<p>${say(lang, "connectHow")}</p><pre>${escape(input.command)}</pre><p class="note">${say(lang, "commandNote")}</p>`
+    : `<form method="post" action="/home/pair">${officeField}<button type="submit">${say(lang, "connectCta")}</button></form>`;
+
+  if (tab === "account") {
+    const ways = input.ways;
+    const signIn =
+      ways && (input.methods?.google || ways.google)
+        ? `<section>
 <h2>${say(lang, "waysTitle")}</h2>
 <ul class="ways">${
-          ways.password
-            ? `<li><span class="who"><b>${say(lang, "waysPassword")}</b></span><span class="tag">${say(lang, "inUse")}</span></li>`
-            : ""
-        }<li><span class="who"><b>${say(lang, "waysGoogle")}</b>${
-          ways.google ? "" : `<small>${say(lang, "connectGoogleWhat")}</small>`
-        }</span>${
-          ways.google
-            ? `<span class="tag">${say(lang, "linked")}</span>`
-            : `<span class="acts"><a class="small" href="/home/google">${say(lang, "connectGoogle")}</a></span>`
-        }</li></ul>
+            ways.password
+              ? `<li><span class="who"><b>${say(lang, "waysPassword")}</b></span><span class="tag">${say(lang, "inUse")}</span></li>`
+              : ""
+          }<li><span class="who"><b>${say(lang, "waysGoogle")}</b>${
+            ways.google
+              ? ""
+              : `<small>${say(lang, "connectGoogleWhat")}</small>`
+          }</span>${
+            ways.google
+              ? `<span class="tag">${say(lang, "linked")}</span>`
+              : `<span class="acts"><a class="small" href="/home/google">${say(lang, "connectGoogle")}</a></span>`
+          }</li></ul>
 </section>`
-      : "";
-  const adminLink = input.admin
-    ? `<p><a href="/home/admin">${say(lang, "adminLink")}</a></p>`
-    : "";
-  return shell(
-    lang,
-    counted(title, input.waiting ?? 0),
-    `<h1>${title}</h1>
-${INVITE_ERRORS.has(input.error ?? "") ? "" : problem(lang, input.error)}
-${input.done === "stopped" ? `<p class="done" role="status">${say(lang, "stoppedDone")}</p>` : ""}
-${notices}
-${switcher}
-${
-  office
-    ? `${switcher ? "" : `<p class="note">${say(lang, "yourOffice")}${office.name ? `: ${escape(office.name)}` : ""}</p>`}
+        : "";
+    return page(`${top}
+<h1>${say(lang, "accountTitle")}</h1>
 <section>
-<h2>${switcher ? say(lang, "connectTitleTo", { office: escape(office.name) || say(lang, "thatOffice") }) : say(lang, "connectTitle")}</h2>
-<p>${say(lang, "connectWhat")}</p>
+<h2>${say(lang, "connectTitle")}</h2>
+<p class="note">${
+      input.computer
+        ? say(lang, "connected", {
+            name: input.computer.name,
+            when: input.computer.seen,
+          })
+        : say(lang, "notConnected")
+    }</p>
 ${
   input.command
-    ? `<pre>${escape(input.command)}</pre>`
-    : `<form method="post" action="/home/pair">${officeField}<button type="submit">${say(lang, "makeCommand")}</button></form>`
+    ? connect
+    : `<form method="post" action="/home/pair">${officeField}<button type="submit" class="quiet">${say(lang, input.computer ? "moveComputer" : "connectCta")}</button></form>`
 }
-<p class="note">${say(lang, "commandNote")}</p>
-<p class="note">${
-        input.computer
-          ? say(lang, "connected", {
-              name: input.computer.name,
-              when: input.computer.seen,
-            })
-          : say(lang, "notConnected")
-      }</p>
 </section>
-${
-  input.place
-    ? `<p><a class="button${input.waiting ? "" : " quiet"}" href="/home/requests?${at}">${
-        input.waiting
-          ? say(lang, "requestsWaiting", { count: String(input.waiting) })
-          : say(lang, "requestsLink")
-      }</a></p>`
-    : `<section id="web">
-<h2>${say(lang, "webTitle")}</h2>
-<p>${say(lang, "webWhat")}</p>
-<form method="post" action="/home/web">${officeField}<button type="submit" class="quiet">${say(lang, "webJoin")}</button></form>
-</section>`
-}
+${signIn}
+${input.admin ? `<p><a href="/home/admin">${say(lang, "adminLink")}</a></p>` : ""}
+<form method="post" action="/logout"><button type="submit" class="quiet">${say(lang, "signOut")}</button></form>`);
+  }
+
+  if (tab === "office") {
+    const personRow = (person: HomePerson) => {
+      const self = person.id === input.me;
+      const acts =
+        owner && !self
+          ? `<span class="acts">${
+              person.role === "member"
+                ? `<a class="small" href="/home/people/owner?user=${encodeURIComponent(person.id)}&amp;${at}">${say(lang, "makeOwner")}</a>`
+                : ""
+            }<a class="small" href="/home/people/remove?user=${encodeURIComponent(person.id)}&amp;${at}">${say(lang, "remove")}</a></span>`
+          : "";
+      return `<li><span class="who"><b>${escape(person.name)}</b><span class="tag">${say(lang, person.role === "owner" ? "owner" : "member")}</span>${self ? `<span class="tag">${say(lang, "you")}</span>` : ""}<small>${escape(person.email)} · ${
+        person.web
+          ? say(lang, "onWebPerson")
+          : person.seen
+            ? say(lang, "cloneIn", { when: person.seen })
+            : say(lang, "cloneOut")
+      }</small></span>${acts}</li>`;
+    };
+    const clones = owner ? (input.clones ?? []) : [];
+    return page(
+      `${top}
+<h1 class="visually-hidden">${say(lang, "officeTitle")}</h1>
+${input.room ?? ""}
 <section id="invite">
 <h2>${say(lang, "inviteTeam")}</h2>
 ${INVITE_ERRORS.has(input.error ?? "") ? problem(lang, input.error) : ""}
@@ -2387,7 +2924,6 @@ ${
         .join("")}</ul>`
     : ""
 }
-${owner ? `<p class="note"><a href="/home/invite/new?${at}">${say(lang, "newLink")}</a></p>` : ""}
 </section>
 ${
   people.length
@@ -2416,16 +2952,49 @@ ${
   owner
     ? `<section>
 <h2>${say(lang, "officeName")}</h2>
-<form method="post" action="/home/office/name" class="inline">${officeField}<input name="name" maxlength="80" value="${escape(office.name)}" aria-label="${say(lang, "officeName")}"><button type="submit">${say(lang, "save")}</button></form>
+<form method="post" action="/home/office/name" class="inline">${officeField}<input name="name" maxlength="80" value="${escape(office.name)}" aria-label="${say(lang, "officeName")}"><button type="submit" class="quiet">${say(lang, "save")}</button></form>
+<p class="note"><a href="/home/invite/new?${at}">${say(lang, "newLink")}</a></p>
 </section>`
     : ""
-}`
-    : `<p>${errorWords(lang, "not-in-office")}</p>`
-}
-${signIn}
-${adminLink}
-<form method="post" action="/logout"><button type="submit" class="quiet">${say(lang, "signOut")}</button></form>`,
-  );
+}`,
+      undefined,
+      ["/assets/home.mjs"],
+    );
+  }
+
+  // My clone: talking to it, or how to have one.
+  if (input.place === "clone" && input.chat) {
+    const chat = input.chat;
+    const thread = chatThread(lang, chat, office.id);
+    return page(
+      `${top}
+<p class="status"><i class="${chat.present ? "on" : ""}"></i>${say(lang, chat.present ? "computerOn" : "computerOff")}</p>
+${chat.on ? "" : `<p class="callout">${say(lang, "chatOff")}</p>`}
+<div id="thread" class="thread" aria-live="polite" data-office="${escape(office.id)}" data-waiting="${thread.waiting ? "1" : "0"}">${thread.html}</div>
+<form id="say" class="compose" method="post" action="/home/clone/say">${officeField}<div class="compose-box"><textarea id="say-text" name="text" rows="1" maxlength="8000" required placeholder="${say(lang, "chatPlaceholder")}" aria-label="${say(lang, "chatPlaceholder")}"${chat.on ? "" : " disabled"}></textarea><button type="submit" class="send" aria-label="${say(lang, "chatSend")}"${chat.on ? "" : " disabled"}>${SEND_ICON}</button></div><p class="chat-foot">${say(lang, "chatKept")}</p><p id="say-error" class="error" role="alert" hidden></p></form>`,
+      "chat",
+      ["/assets/home.mjs"],
+    );
+  }
+  if (input.place === "web")
+    return page(`${top}
+<section class="empty-state">
+<h2>${say(lang, "onWebTitle")}</h2>
+<p>${say(lang, "onWebWhat")}</p>
+<p><a class="button${input.waiting ? "" : " quiet"}" href="/home/requests?${at}">${
+      input.waiting
+        ? say(lang, "requestsWaiting", { count: String(input.waiting) })
+        : say(lang, "requestsLink")
+    }</a></p>
+${connect}
+</section>`);
+  return page(`${top}
+<section class="empty-state">
+<h2>${say(lang, "noCloneTitle")}</h2>
+<p>${say(lang, "noCloneWhat")}</p>
+${connect}
+${input.command ? "" : `<form method="post" action="/home/web">${officeField}<button type="submit" class="quiet">${say(lang, "webCta")}</button></form>`}
+</section>`);
 }
 
 /** A count of people said with its own sentence, in the singular for one; nothing for none. */

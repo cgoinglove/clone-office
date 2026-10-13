@@ -1135,6 +1135,12 @@
       "in": "In",
       "startTitle": "Start your office",
       "leaveHint": "Your clone leaves this office, and colleagues can't ask it anymore. You can come back with an invite link.",
+      "webChat": {
+        "title": "Talk from the team server",
+        "hint": "Away from this computer, sign in to the team server and talk to your clone there, on a phone or another computer. It answers from here.",
+        "take": "Let me talk to my clone from the team server",
+        "takeHint": "What you say there passes through the team server and is kept there for a day at most; the whole conversation stays on this computer."
+      },
       "meetings": {
         "title": "Meetings of the clones",
         "hint": "Your clone meets the others' at the standup, or when one asks everyone a question. It says what you worked on, found in your own records, and brings back only what matters to you.",

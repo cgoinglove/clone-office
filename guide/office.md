@@ -65,16 +65,27 @@ Someone who cannot install now can still answer a colleague's clone by the reply
 Below the steps, **Or make an account on this office's server** (또는 이 오피스 서버에 계정 만들기)
 makes an account there instead: with **Continue with Google** (Google 계정으로 계속하기) where the
 server's admin turned Google on, or with a name, an email and a password of 8 characters or more,
-or signs in with one they have (**Sign in**, 로그인, at `/login`). Their own page on the server
-then has:
+or signs in with one they have (**Sign in**, 로그인, at `/login`; the server's own address leads
+there, or to their page once signed in). Their page on the server has the office's name on a band
+in the app's colour, three tabs, **My clone** (내 클론), **Requests** (부탁) and **Office**
+(오피스), and a round button with their initial for **Your account** (내 계정), the server's sign-in
+settings for its admin, and **Sign out** (로그아웃).
 
-- **Connect your computer** (내 컴퓨터 연결): **Make my connect command** (연결 명령 만들기) gives
-  one line, `npx clone-office connect <link>`, to run once in a terminal on the computer their
-  clone should live on. It works once, for ten minutes; a new one can be made any time. Run, it
-  puts their clone in the office under their account and opens the app there. Their page on the
-  server then says which clone is connected. One person has one clone: connecting another
-  computer moves it there, and the one before leaves the office.
-- **Invite a teammate** (동료 초대): **Make an invite link** (초대 링크 만들기) gives a link for one
+- **My clone** (내 클론), the first tab: with no clone yet, **Connect your computer** (내 컴퓨터
+  연결하기) gives one line, `npx clone-office connect <link>`, to run once in a terminal on the
+  computer their clone should live on. It works once, for ten minutes; a new one can be made any
+  time. Run, it puts their clone in the office under their account and opens the app there. One
+  person has one clone: connecting another computer (from **Your account**) moves it there, and
+  the one before leaves the office. With a clone, this tab is a conversation with it, as in the
+  app: what they write goes to their clone on their computer, which answers there, and its answer
+  comes back to the page; what it must ask them (may it read a file, which of two) shows at the
+  top under **To decide** (정할 것) with its buttons. This works only once they turn on **Settings
+  › Office › Talk from the team server** (설정 › 오피스 › 팀 서버에서 이야기하기) in the app,
+  off at first: what they say there passes through the team server and is kept there a day at
+  most, while the whole conversation stays on their computer (a conversation of its own in the
+  app). When their computer is off or asleep, the page says so, and what they write waits until
+  it is back.
+- **Invite a teammate** (동료 초대), on the **Office** tab: **Make an invite link** (초대 링크 만들기) gives a link for one
   person, shown once to copy (a reload makes no other). An owner also sees the invites still open,
   for whom, from whom and when, and **Cancel** (취소) stops one.
 - **No computer connected?** (연결된 컴퓨터가 없나요?) **Take part on the web** (웹에서 함께하기)
@@ -86,9 +97,10 @@ then has:
   they connect later takes their place over with their clone (one that computer joined with the
   invite meanwhile goes, so they keep one place). Someone
   with a clone sees the same page, their clone answering what is asked of them.
-- **People in this office** (이 오피스의 사람들): everyone with an account there, owner or member,
-  and whether their computer is connected.
-- **How you sign in** (내 로그인 방법), once Google is a way in on the server: their password,
+- **People in this office** (이 오피스의 사람들), on the **Office** tab: everyone with an account
+  there, owner or member, and whether their computer is connected; for owners, the office's name
+  and a new invite link too.
+- **How you sign in** (내 로그인 방법), under **Your account**, once Google is a way in on the server: their password,
   and **Connect Google** (Google 연결) to sign in with their Google account too. A Google account
   never joins an account made with a password by its email alone (whoever made that account
   first could otherwise keep a way into it); it is connected here, signed in.

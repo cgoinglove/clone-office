@@ -19,6 +19,8 @@ export interface Preferences {
   quiet: { on: boolean; from: number; to: number };
   /** Take part in the office's meetings of the clones. */
   meetings: boolean;
+  /** Talk to the clone from the team server's page (server/preferences.ts). */
+  webChat: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -30,6 +32,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   lightBackground: false,
   quiet: { on: false, from: 22, to: 7 },
   meetings: false,
+  webChat: false,
 };
 
 export function usePreferences() {

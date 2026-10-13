@@ -1135,6 +1135,12 @@
       "in": "Online",
       "startTitle": "Crie seu escritório",
       "leaveHint": "Seu clone sai deste escritório, e os colegas não podem mais pedir nada a ele. Você pode voltar com um link de convite.",
+      "webChat": {
+        "title": "Falar pelo servidor da equipe",
+        "hint": "Longe deste computador, entre no servidor da equipe e fale com seu clone por lá, pelo celular ou outro computador. Ele responde daqui.",
+        "take": "Falar com meu clone pelo servidor da equipe",
+        "takeHint": "O que você diz lá passa pelo servidor da equipe e fica lá por no máximo um dia; a conversa inteira fica neste computador."
+      },
       "meetings": {
         "title": "Reuniões dos clones",
         "hint": "Seu clone se reúne com os dos outros na reunião diária, ou quando alguém faz uma pergunta a todos. Ele conta no que você trabalhou, a partir dos seus próprios registros, e traz só o que importa para você.",

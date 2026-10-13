@@ -154,7 +154,35 @@ export interface Caller {
 
 export type InboxEvent =
   | { seq: number; type: "task" | "update"; task: Task }
-  | { seq: number; type: "meeting"; meeting: Meeting };
+  | { seq: number; type: "meeting"; meeting: Meeting }
+  | { seq: number; type: "own"; own: OwnNews };
+
+/** What a clone hears of its person on the team server's page: words to it, or a question answered. */
+export type OwnNews =
+  | { id: string; kind: "said"; text: string }
+  | { id: string; kind: "chosen"; value: string };
+
+/** One line of a person's conversation with their own clone on the team server's page. */
+export interface OwnMessage {
+  id: string;
+  /** The person's words ("said"), the clone's answer ("answer"), or its question to them ("ask"). */
+  kind: "said" | "answer" | "ask";
+  text: string;
+  at: string;
+  /** Said: the clone has taken it and is answering. */
+  taken?: boolean;
+  /** An answer: the words it answers, and a code the page words in place of text (a failure). */
+  replyTo?: string;
+  code?: string;
+  /** A question: its choices as its buttons carry them, and the one given (or "settled" elsewhere). */
+  choices?: { label: string; value: string }[];
+  chosen?: string;
+}
+
+/** How long the page keeps a person's conversation with their clone. */
+export const OWN_HOURS = 24;
+/** How much one line of it may say. */
+export const OWN_CHARS = 8000;
 
 /** The office's standup, or one clone's question to everyone. */
 export type MeetingKind = "standup" | "question";
@@ -305,6 +333,14 @@ const MIGRATIONS: string[][] = [
   [
     "ALTER TABLE invites ADD COLUMN own BOOLEAN NOT NULL DEFAULT false",
     "ALTER TABLE invites ADD COLUMN note TEXT NOT NULL DEFAULT ''",
+  ],
+  // A person talking to their own clone from the team server's page (`ownSay`): what they said and
+  // what it answers, kept a day at most so the page can show it (the clone keeps the conversation
+  // on its computer), and whether the clone lets them (`own_chat`, which its person turns on).
+  [
+    "ALTER TABLE members ADD COLUMN own_chat BOOLEAN NOT NULL DEFAULT false",
+    "CREATE TABLE own_messages (id TEXT PRIMARY KEY, member_id TEXT NOT NULL REFERENCES members (id) ON DELETE CASCADE, kind TEXT NOT NULL, text TEXT NOT NULL, data JSONB NOT NULL DEFAULT '{}'::jsonb, at TIMESTAMPTZ NOT NULL, taken TIMESTAMPTZ)",
+    "CREATE INDEX own_messages_member ON own_messages (member_id, at)",
   ],
 ];
 
@@ -1993,14 +2029,179 @@ export class Relay {
     await this.db.query("DELETE FROM files WHERE expires < $1", [
       now.toISOString(),
     ]);
+    // A person's conversation with their clone past its day.
+    await this.db.query("DELETE FROM own_messages WHERE at < $1", [
+      new Date(now.getTime() - OWN_HOURS * 60 * 60 * 1000).toISOString(),
+    ]);
     // Postgres reclaims what was deleted by itself (autovacuum); PGlite has no such worker.
     if (this.db.kind === "pglite") await this.db.exec("VACUUM");
+  }
+
+  // ---- A person talking to their own clone from the team server's page ----
+
+  /** The clone says whether its person may talk to it from the team server's page. */
+  async ownAllow(member: Caller, on: boolean): Promise<void> {
+    await this.db.query("UPDATE members SET own_chat = $2 WHERE id = $1", [
+      member.id,
+      on,
+    ]);
+  }
+
+  /**
+   * The person's conversation with their clone as their page shows it: the last day's lines, oldest
+   * first, and whether the clone lets them talk to it from here.
+   */
+  async ownThread(
+    member: string,
+    now = new Date(),
+  ): Promise<{ on: boolean; messages: OwnMessage[] }> {
+    const [row] = await this.db.query<{ own_chat: boolean }>(
+      "SELECT own_chat FROM members WHERE id = $1",
+      [member],
+    );
+    const rows = await this.db.query<OwnRow>(
+      "SELECT * FROM own_messages WHERE member_id = $1 AND at > $2 ORDER BY at, id LIMIT 200",
+      [member, new Date(now.getTime() - OWN_HOURS * 3_600_000).toISOString()],
+    );
+    return { on: Boolean(row?.own_chat), messages: rows.map(ownMessage) };
+  }
+
+  /** The person's words to their clone, for it to take from its inbox. */
+  async ownSay(member: string, text: string): Promise<OwnMessage> {
+    const words = String(text ?? "").trim();
+    if (!words)
+      throw new RelayError(400, "Say something first.", "bad-request");
+    if (words.length > OWN_CHARS)
+      throw new RelayError(400, "That is too long.", "too-long");
+    const at = new Date().toISOString();
+    const id = `o-${randomBytes(9).toString("base64url")}`;
+    await this.db.transaction(async (tx) => {
+      const [row] = await tx.query<{ own_chat: boolean; on_web: boolean }>(
+        "SELECT own_chat, on_web FROM members WHERE id = $1",
+        [member],
+      );
+      if (!row || row.on_web)
+        throw new RelayError(409, "No clone to talk to.", "no-clone");
+      if (!row.own_chat)
+        throw new RelayError(
+          409,
+          "Talking to the clone from here is off.",
+          "web-chat-off",
+        );
+      await tx.query(
+        "INSERT INTO own_messages (id, member_id, kind, text, at) VALUES ($1, $2, 'said', $3, $4)",
+        [id, member, words, at],
+      );
+      await notify(tx, member, "own", id, at);
+    });
+    return { id, kind: "said", text: words, at };
+  }
+
+  /** The clone has taken the person's words and is answering them. */
+  async ownTake(member: Caller, id: string): Promise<void> {
+    await this.db.query(
+      "UPDATE own_messages SET taken = $3 WHERE id = $1 AND member_id = $2 AND kind = 'said' AND taken IS NULL",
+      [id, member.id, new Date().toISOString()],
+    );
+  }
+
+  /** The clone's answer to its person's words: its text, or a code their page words. */
+  async ownAnswer(
+    member: Caller,
+    input: { replyTo?: string; text?: string; code?: string },
+  ): Promise<OwnMessage> {
+    const text = String(input.text ?? "").slice(0, OWN_CHARS * 3);
+    const code =
+      typeof input.code === "string" &&
+      /^[a-z][a-z-]{1,40}(@\d{9,12})?$/.test(input.code)
+        ? input.code
+        : undefined;
+    if (!text.trim() && !code)
+      throw new RelayError(400, "An answer needs words.", "bad-request");
+    const replyTo =
+      typeof input.replyTo === "string" && /^o-[\w-]{6,40}$/.test(input.replyTo)
+        ? input.replyTo
+        : undefined;
+    const at = new Date().toISOString();
+    const id = `o-${randomBytes(9).toString("base64url")}`;
+    const data = { ...(replyTo ? { replyTo } : {}), ...(code ? { code } : {}) };
+    await this.db.query(
+      "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'answer', $3, $4::jsonb, $5)",
+      [id, member.id, text, JSON.stringify(data), at],
+    );
+    if (replyTo) await this.ownTake(member, replyTo);
+    return { id, kind: "answer", text, at, ...data };
+  }
+
+  /** The clone's question to its person, with its choices as buttons carry them. */
+  async ownAsk(
+    member: Caller,
+    input: { text?: string; choices?: unknown },
+  ): Promise<OwnMessage> {
+    const text = String(input.text ?? "")
+      .trim()
+      .slice(0, OWN_CHARS);
+    const choices = (Array.isArray(input.choices) ? input.choices : [])
+      .slice(0, 8)
+      .map((one: { label?: unknown; value?: unknown }) => ({
+        label: String(one?.label ?? "").slice(0, 120),
+        value: String(one?.value ?? "").slice(0, 200),
+      }))
+      .filter((one) => one.label && one.value);
+    if (!text || !choices.length)
+      throw new RelayError(
+        400,
+        "A question needs words and choices.",
+        "bad-request",
+      );
+    const at = new Date().toISOString();
+    const id = `o-${randomBytes(9).toString("base64url")}`;
+    await this.db.query(
+      "INSERT INTO own_messages (id, member_id, kind, text, data, at) VALUES ($1, $2, 'ask', $3, $4::jsonb, $5)",
+      [id, member.id, text, JSON.stringify({ choices }), at],
+    );
+    return { id, kind: "ask", text, at, choices };
+  }
+
+  /**
+   * The person's answer to their clone's question, from their page: one of its choices, once; the
+   * clone hears it in its inbox.
+   */
+  async ownChoose(member: string, ask: string, value: string): Promise<void> {
+    const at = new Date().toISOString();
+    await this.db.transaction(async (tx) => {
+      const [row] = await tx.query<OwnRow>(
+        "SELECT * FROM own_messages WHERE id = $1 AND member_id = $2 AND kind = 'ask' FOR UPDATE",
+        [ask, member],
+      );
+      if (!row || typeof row.data?.chosen === "string")
+        throw new RelayError(
+          409,
+          "This question is no longer waiting.",
+          "no-longer-waiting",
+        );
+      if (!(row.data?.choices ?? []).some((one) => one.value === value))
+        throw new RelayError(400, "Not one of its choices.", "bad-request");
+      await tx.query(
+        "UPDATE own_messages SET data = data || $2::jsonb WHERE id = $1",
+        [ask, JSON.stringify({ chosen: value })],
+      );
+      await notify(tx, member, "own", ask, at);
+    });
+  }
+
+  /** A question answered elsewhere (on the computer, the phone) or no longer asked: it stops waiting here. */
+  async ownSettle(member: Caller, ask: string): Promise<void> {
+    await this.db.query(
+      "UPDATE own_messages SET data = data || '{\"chosen\":\"settled\"}'::jsonb WHERE id = $1 AND member_id = $2 AND kind = 'ask' AND NOT (data ? 'chosen')",
+      [ask, member.id],
+    );
   }
 
   private async events(member: string, after: number): Promise<InboxEvent[]> {
     const rows = await this.db.query<{
       seq: string | number;
-      type: "task" | "update" | "meeting";
+      type: "task" | "update" | "meeting" | "own";
       task_id: string;
     }>(
       "SELECT seq, type, task_id FROM events WHERE member = $1 AND seq > $2 ORDER BY seq LIMIT 50",
@@ -2009,7 +2210,9 @@ export class Relay {
     // Each request once, however many of the news are about it, as it is now.
     const ids = [
       ...new Set(
-        rows.filter((row) => row.type !== "meeting").map((row) => row.task_id),
+        rows
+          .filter((row) => row.type === "task" || row.type === "update")
+          .map((row) => row.task_id),
       ),
     ];
     const found = ids.length
@@ -2024,6 +2227,26 @@ export class Relay {
     const out: InboxEvent[] = [];
     for (const row of rows) {
       const seq = Number(row.seq);
+      if (row.type === "own") {
+        // Words from the person's page, or their answer to the clone's question; gone since, none.
+        const [own] = await this.db.query<OwnRow>(
+          "SELECT * FROM own_messages WHERE id = $1 AND member_id = $2",
+          [row.task_id, member],
+        );
+        if (own?.kind === "said")
+          out.push({
+            seq,
+            type: "own",
+            own: { id: own.id, kind: "said", text: own.text },
+          });
+        else if (own?.kind === "ask" && typeof own.data?.chosen === "string")
+          out.push({
+            seq,
+            type: "own",
+            own: { id: own.id, kind: "chosen", value: own.data.chosen },
+          });
+        continue;
+      }
       if (row.type === "meeting") {
         // A meeting let go since is no news.
         const meeting = await this.meetingById(row.task_id).catch(
@@ -2152,11 +2375,41 @@ async function attach(
   return named;
 }
 
+interface OwnRow {
+  id: string;
+  member_id: string;
+  kind: "said" | "answer" | "ask";
+  text: string;
+  data: {
+    replyTo?: string;
+    code?: string;
+    choices?: { label: string; value: string }[];
+    chosen?: string;
+  } | null;
+  at: unknown;
+  taken: unknown;
+}
+
+function ownMessage(row: OwnRow): OwnMessage {
+  const data = row.data ?? {};
+  return {
+    id: row.id,
+    kind: row.kind,
+    text: row.text,
+    at: iso(row.at),
+    ...(row.kind === "said" && row.taken ? { taken: true } : {}),
+    ...(data.replyTo ? { replyTo: data.replyTo } : {}),
+    ...(data.code ? { code: data.code } : {}),
+    ...(data.choices ? { choices: data.choices } : {}),
+    ...(typeof data.chosen === "string" ? { chosen: data.chosen } : {}),
+  };
+}
+
 /** News for a member's inbox; every relay process hears it once the transaction commits. */
 async function notify(
   tx: Sql,
   member: string,
-  type: "task" | "update" | "meeting",
+  type: "task" | "update" | "meeting" | "own",
   task: string,
   at: string,
 ): Promise<void> {

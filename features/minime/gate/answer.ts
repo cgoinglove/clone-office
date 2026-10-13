@@ -46,3 +46,24 @@ export async function answerPerson(
   answerAsk(id, answer, Boolean(rule));
   return { ok: true, ...(rule ? { rule } : {}) };
 }
+
+/**
+ * An answer as a question's button carries it (permission: allow, always, deny; a rule: yes or no;
+ * a question: its choice's index), given to the question still waiting; false when it no longer is.
+ */
+export async function answerChoice(
+  id: string,
+  value: string,
+): Promise<{ ok: boolean; answer: string }> {
+  const waiting = pendingAsks().find((ask) => ask.id === id);
+  if (!waiting) return { ok: false, answer: value };
+  let answer = value;
+  let always = false;
+  if (waiting.ask.kind === "permission") {
+    answer = value === "deny" ? "deny" : "allow";
+    always = value === "always";
+  } else if (waiting.ask.kind === "question")
+    answer = waiting.ask.choices?.[Number(value)] ?? value;
+  const done = await answerPerson(id, answer, always);
+  return { ok: done.ok, answer };
+}

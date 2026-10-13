@@ -1135,6 +1135,12 @@
       "in": "En línea",
       "startTitle": "Crea tu oficina",
       "leaveHint": "Tu clon sale de esta oficina y tus colegas ya no pueden pedirle nada. Puedes volver con un enlace de invitación.",
+      "webChat": {
+        "title": "Hablar desde el servidor del equipo",
+        "hint": "Lejos de esta computadora, inicia sesión en el servidor del equipo y habla allí con tu clon, desde el teléfono u otra computadora. Responde desde aquí.",
+        "take": "Hablar con mi clon desde el servidor del equipo",
+        "takeHint": "Lo que digas allí pasa por el servidor del equipo y se guarda allí un día como máximo; la conversación completa queda en esta computadora."
+      },
       "meetings": {
         "title": "Reuniones de los clones",
         "hint": "Tu clon se reúne con los de los demás en la reunión diaria, o cuando alguien les hace una pregunta a todos. Cuenta en qué trabajaste, a partir de tus propios registros, y te trae solo lo que te importa.",

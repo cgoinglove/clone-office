@@ -26,6 +26,7 @@ import {
 import { filesLine, takeFiles } from "./files.ts";
 import { forgetLater, handleRequest } from "./handle.ts";
 import { bringBack, type Names, owesRound, speak } from "./meeting.ts";
+import { onOwn, syncOwnAllow } from "./own-chat.ts";
 import { changeState, holdWorker, loadState } from "./state.ts";
 
 interface Worker {
@@ -232,6 +233,8 @@ async function loop(worker: Worker): Promise<void> {
         await resume(worker, office);
       }
       await openStandupOnTime(worker, office).catch(() => {});
+      // Whether the person may talk to it from the team server's page, as they set it here.
+      await syncOwnAllow(office).catch(() => {});
       const { after } = await loadState();
       worker.abort = new AbortController();
       const { events, next } = await inbox(office, after, worker.abort.signal);
@@ -263,6 +266,15 @@ function onEvent(
 ): void {
   if (event.type === "meeting") {
     onMeeting(worker, office, event.meeting, cards);
+    return;
+  }
+  if (event.type === "own") {
+    // The person, on the team server's page: words to their clone, or a question answered there.
+    void onOwn(office, event.own, worker.gateUrl, worker.language).catch(
+      (error) => {
+        worker.problem = problemCode(error);
+      },
+    );
     return;
   }
   const { task } = event;

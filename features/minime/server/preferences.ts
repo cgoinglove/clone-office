@@ -45,6 +45,12 @@ export interface Preferences {
    * turn it on, or start a meeting themselves.
    */
   meetings: boolean;
+  /**
+   * Talk to this clone from the team server's page, away from this computer: what is said there
+   * passes through the team server (kept a day at most) and becomes a conversation here. Off until
+   * the person turns it on.
+   */
+  webChat: boolean;
 }
 
 /** The work that may go to the lighter model when the person wants it. */
@@ -64,6 +70,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   lightBackground: false,
   quiet: { on: false, from: 22, to: 7 },
   meetings: false,
+  webChat: false,
 };
 
 const hourOf = (value: unknown, fallback: number) =>
@@ -120,6 +127,10 @@ export function cleanPreferences(input: unknown): Preferences {
       typeof raw.meetings === "boolean"
         ? raw.meetings
         : DEFAULT_PREFERENCES.meetings,
+    webChat:
+      typeof raw.webChat === "boolean"
+        ? raw.webChat
+        : DEFAULT_PREFERENCES.webChat,
   };
 }
 

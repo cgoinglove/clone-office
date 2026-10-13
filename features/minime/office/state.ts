@@ -48,6 +48,8 @@ export interface OfficeState {
   meetings: Record<string, { at: string; chat?: string }>;
   /** The day (YYYY-MM-DD, the person's own) this clone last opened the scheduled standup. */
   standup?: string;
+  /** The conversation here that what the person says on the team server's page goes into. */
+  ownChat?: string;
 }
 
 /**

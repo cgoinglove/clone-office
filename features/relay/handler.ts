@@ -65,6 +65,7 @@ import {
   GOOGLE_CALLBACK,
   googleProblem,
 } from "./accounts.ts";
+import { HOME_CLIENT } from "./home-client.ts";
 import {
   isPrivateHost,
   joinCommand,
@@ -84,8 +85,10 @@ import {
 import {
   adminLinkEndedPage,
   adminPage,
+  chatThread,
   confirmPage,
   connectCommand,
+  errorWords,
   homePage,
   newPasswordPage,
   requestsPage,
@@ -100,6 +103,7 @@ import {
   FILES_PER_MESSAGE,
   FINAL,
   INVITE_DAYS,
+  PRESENT_MS,
   type Relay,
   RelayError,
   type TaskState,
@@ -120,6 +124,16 @@ const PAGE_HEADERS = {
     "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
   "referrer-policy": "same-origin",
   "x-content-type-options": "nosniff",
+};
+
+/**
+ * The signed-in pages (the person's clone, requests, office): the same, with scripts and calls to
+ * this server alone, for the conversation that comes in as it is answered and the office drawing.
+ */
+const HOME_HEADERS = {
+  ...PAGE_HEADERS,
+  "content-security-policy":
+    "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
 };
 
 /**
@@ -303,9 +317,14 @@ export function relayHandler(
       response.writeHead(status, { "content-type": "application/json" });
       response.end(JSON.stringify(data));
     };
-    const html = (status: number, page: string, cookies: string[] = []) => {
+    const html = (
+      status: number,
+      page: string,
+      cookies: string[] = [],
+      headers: Record<string, string> = PAGE_HEADERS,
+    ) => {
       response.writeHead(status, {
-        ...PAGE_HEADERS,
+        ...headers,
         ...(cookies.length ? { "set-cookie": cookies } : {}),
       });
       response.end(page);
@@ -768,6 +787,8 @@ export function relayHandler(
       }
       if (
         (path === "/home" && request.method === "GET") ||
+        (path === "/home/office" && request.method === "GET") ||
+        (path === "/home/account" && request.method === "GET") ||
         (path === "/home/pair" && post) ||
         (path === "/home/invite" && post) ||
         (path === "/home/invite/cancel" && post) ||
@@ -791,7 +812,7 @@ export function relayHandler(
           if (place?.role === "owner")
             await relay.cancelInvite(place.office, fields?.get("invite") ?? "");
           redirect(
-            `/home${place ? `?office=${encodeURIComponent(place.office)}` : ""}#invite`,
+            `/home/office${place ? `?office=${encodeURIComponent(place.office)}` : ""}#invite`,
           );
           return true;
         }
@@ -816,7 +837,7 @@ export function relayHandler(
             redirect("/home");
             return true;
           }
-          const back = `/home?office=${encodeURIComponent(place.office)}`;
+          const back = `/home/office?office=${encodeURIComponent(place.office)}`;
           try {
             const made = await relay.makeInvite(place.office, {
               user: person.id,
@@ -872,6 +893,13 @@ export function relayHandler(
           homePage({
             lang,
             name: person.name,
+            tab:
+              path === "/home/office"
+                ? "office"
+                : path === "/home/account" ||
+                    (path === "/home/pair" && fields?.get("tab") === "account")
+                  ? "account"
+                  : "clone",
             me: person.id,
             owner,
             admin: await accounts.isAdmin(person.id),
@@ -976,6 +1004,15 @@ export function relayHandler(
                 }
               : {}),
             ...(command ? { command } : {}),
+            // their conversation with their own clone, on its tab
+            ...(mine && !mine.web && path !== "/home/office"
+              ? {
+                  chat: {
+                    present: Date.now() - Date.parse(mine.seen) < PRESENT_MS,
+                    ...(await relay.ownThread(mine.id)),
+                  },
+                }
+              : {}),
           }),
           // shown once: the next look at the page has no link to copy again
           madeToken
@@ -983,7 +1020,74 @@ export function relayHandler(
                 "sub-office.invited=; Path=/home; Max-Age=0; HttpOnly; SameSite=Strict",
               ]
             : [],
+          HOME_HEADERS,
         );
+        return true;
+      }
+      // Talking to one's own clone from the page (relay.ts `ownSay`): the conversation as it stands,
+      // for the page's script; words to it; an answer to its question. A form posts back to the page.
+      if (
+        (path === "/home/clone/thread" && request.method === "GET") ||
+        (path === "/home/clone/say" && post) ||
+        (path === "/home/clone/choose" && post)
+      ) {
+        const json =
+          !post ||
+          /application\/json/.test(String(request.headers.accept ?? ""));
+        const person = await accounts.person(cookie);
+        if (!person) {
+          if (json) send(401, { error: "Sign in first.", code: "signed-out" });
+          else redirect("/login");
+          return true;
+        }
+        const fields = post
+          ? new URLSearchParams(await raw(request))
+          : undefined;
+        const place = placeOf(
+          await accounts.places(person.id),
+          fields ? fields.get("office") : url.searchParams.get("office"),
+        );
+        const mine = place
+          ? await relay.memberOf(place.office, person.id)
+          : undefined;
+        const back = place
+          ? `/home?office=${encodeURIComponent(place.office)}`
+          : "/home";
+        if (!place || !mine || mine.web) {
+          if (json)
+            send(409, { error: "No clone to talk to.", code: "no-clone" });
+          else redirect(back);
+          return true;
+        }
+        // Its computer answers while its clone waits at its inbox.
+        const present = Date.now() - Date.parse(mine.seen) < PRESENT_MS;
+        try {
+          if (path === "/home/clone/say")
+            await relay.ownSay(mine.id, fields?.get("text") ?? "");
+          else if (path === "/home/clone/choose")
+            await relay.ownChoose(
+              mine.id,
+              fields?.get("ask") ?? "",
+              fields?.get("value") ?? "",
+            );
+          if (json) {
+            const chat = { present, ...(await relay.ownThread(mine.id)) };
+            send(200, { ...chat, ...chatThread(lang, chat, place.office) });
+          } else redirect(`${back}#chat`);
+        } catch (error) {
+          const failed =
+            error instanceof RelayError
+              ? error
+              : new RelayError(500, "It failed.", "account-failed");
+          if (json)
+            send(failed.status, {
+              error: failed.message,
+              code: failed.code,
+              words: errorWords(lang, failed.code),
+            });
+          else
+            redirect(`${back}&error=${encodeURIComponent(failed.code)}#chat`);
+        }
         return true;
       }
       // Requests on the web: what was asked of the person, asking a colleague, and what they asked.
@@ -1129,7 +1233,29 @@ export function relayHandler(
               .map((task) => shown(task, false)),
             ...(done === "sent" || done === "answered" ? { done } : {}),
             ...(failed ? { error: failed } : {}),
+            band: {
+              office: { id: place.office, name: place.name },
+              offices: places.map((one) => ({
+                id: one.office,
+                name: one.name,
+              })),
+              name: person.name,
+              admin: await accounts.isAdmin(person.id),
+              // what waits on their own answer, for one on the web
+              ...(web
+                ? {
+                    waiting: tasks.filter(
+                      (task) =>
+                        task.metadata.to === me.id &&
+                        !FINAL.includes(task.status.state) &&
+                        !task.history.some((m) => m.role === "agent"),
+                    ).length,
+                  }
+                : {}),
+            },
           }),
+          [],
+          HOME_HEADERS,
         );
         return true;
       }
@@ -1383,7 +1509,8 @@ export function relayHandler(
           redirect("/home");
           return true;
         }
-        const home = `/home?office=${encodeURIComponent(place.office)}`;
+        // these are the office's: back to its tab
+        const home = `/home/office?office=${encodeURIComponent(place.office)}`;
         const what = admin[1];
         if (!post) {
           const user = url.searchParams.get("user") ?? "";
@@ -1534,6 +1661,16 @@ export function relayHandler(
             answer: answer?.parts[0]?.text,
           }),
         );
+        return;
+      }
+      // The signed-in pages' own script (home-client.ts).
+      if (request.method === "GET" && path === "/assets/home.mjs") {
+        response.writeHead(200, {
+          "content-type": "text/javascript; charset=utf-8",
+          "cache-control": "no-cache",
+          "x-content-type-options": "nosniff",
+        });
+        response.end(HOME_CLIENT);
         return;
       }
       const invite = /^\/i\/([\w-]{4,128})$/.exec(path);
@@ -1688,6 +1825,45 @@ export function relayHandler(
             input.by === "person" ? "person" : undefined,
           ),
         });
+      }
+      // The clone's side of its person talking to it from their page (relay.ts `ownSay`).
+      if (request.method === "POST" && path === "/own/allow") {
+        const me = await member(request);
+        const input = await body(request);
+        await relay.ownAllow(me, input.on === true);
+        return send(200, { on: input.on === true });
+      }
+      if (request.method === "POST" && path === "/own/answer") {
+        const me = await member(request);
+        const input = await body(request);
+        return send(200, {
+          message: await relay.ownAnswer(me, {
+            replyTo:
+              typeof input.replyTo === "string" ? input.replyTo : undefined,
+            text: typeof input.text === "string" ? input.text : undefined,
+            code: typeof input.code === "string" ? input.code : undefined,
+          }),
+        });
+      }
+      if (request.method === "POST" && path === "/own/ask") {
+        const me = await member(request);
+        const input = await body(request);
+        return send(200, {
+          message: await relay.ownAsk(me, {
+            text: typeof input.text === "string" ? input.text : undefined,
+            choices: input.choices,
+          }),
+        });
+      }
+      const ownTaken = /^\/own\/(o-[\w-]{6,40})\/take$/.exec(path);
+      if (request.method === "POST" && ownTaken) {
+        await relay.ownTake(await member(request), ownTaken[1]);
+        return send(200, { ok: true });
+      }
+      const ownSettled = /^\/own\/ask\/(o-[\w-]{6,40})\/settle$/.exec(path);
+      if (request.method === "POST" && ownSettled) {
+        await relay.ownSettle(await member(request), ownSettled[1]);
+        return send(200, { ok: true });
       }
       if (request.method === "POST" && path === "/meetings") {
         const me = await member(request);

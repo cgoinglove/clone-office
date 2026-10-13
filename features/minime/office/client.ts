@@ -10,6 +10,8 @@ import type {
   MeetingKind,
   MeetingPost,
   Member,
+  OwnMessage,
+  OwnNews,
   Task,
   TaskState,
 } from "../../relay/relay.ts";
@@ -31,6 +33,7 @@ export type {
   MeetingKind,
   MeetingPost,
   Member,
+  OwnNews,
   SharedSkill,
   Task,
   TaskState,
@@ -543,6 +546,61 @@ export async function postToMeeting(
       { token: office.token, body: post },
     )
   ).meeting;
+}
+
+// ---- The person talking to this clone from the team server's page ----
+
+/** Says whether the person may talk to this clone from the team server's page. */
+export async function ownAllow(
+  office: OfficeConfig,
+  on: boolean,
+): Promise<void> {
+  await call(office.relay, "/own/allow", { token: office.token, body: { on } });
+}
+
+/** The person's words are taken: their page shows the clone answering. */
+export async function ownTake(office: OfficeConfig, id: string): Promise<void> {
+  await call(office.relay, `/own/${encodeURIComponent(id)}/take`, {
+    token: office.token,
+    body: {},
+  });
+}
+
+/** The clone's answer to its person's words on the page: its text, or a code the page words. */
+export async function ownAnswer(
+  office: OfficeConfig,
+  answer: { replyTo?: string; text?: string; code?: string },
+): Promise<OwnMessage> {
+  return (
+    await call<{ message: OwnMessage }>(office.relay, "/own/answer", {
+      token: office.token,
+      body: answer,
+    })
+  ).message;
+}
+
+/** A question to the person on their page, with its choices as its buttons carry them. */
+export async function ownAsk(
+  office: OfficeConfig,
+  ask: { text: string; choices: { label: string; value: string }[] },
+): Promise<OwnMessage> {
+  return (
+    await call<{ message: OwnMessage }>(office.relay, "/own/ask", {
+      token: office.token,
+      body: ask,
+    })
+  ).message;
+}
+
+/** A question answered elsewhere (here, on the phone) or no longer asked stops waiting on the page. */
+export async function ownSettle(
+  office: OfficeConfig,
+  ask: string,
+): Promise<void> {
+  await call(office.relay, `/own/ask/${encodeURIComponent(ask)}/settle`, {
+    token: office.token,
+    body: {},
+  });
 }
 
 export function inbox(

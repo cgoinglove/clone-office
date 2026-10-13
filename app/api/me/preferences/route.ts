@@ -1,4 +1,6 @@
 import * as z from "zod";
+import { loadOffice } from "@/features/minime/office/client";
+import { syncOwnAllow } from "@/features/minime/office/own-chat";
 import { refuse } from "@/features/minime/server/guard";
 import {
   readPreferences,
@@ -27,6 +29,7 @@ const Body = z.object({
     })
     .optional(),
   meetings: z.boolean().optional(),
+  webChat: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -35,5 +38,11 @@ export async function POST(request: Request) {
   const body = Body.safeParse(await request.json().catch(() => null));
   if (!body.success)
     return Response.json({ error: "bad-request" }, { status: 400 });
-  return Response.json(await writePreferences(body.data));
+  const preferences = await writePreferences(body.data);
+  // The team server's page knows at once whether the person may talk to their clone there.
+  if (body.data.webChat !== undefined) {
+    const office = await loadOffice().catch(() => undefined);
+    if (office) await syncOwnAllow(office, true).catch(() => {});
+  }
+  return Response.json(preferences);
 }
