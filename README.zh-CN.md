@@ -75,7 +75,7 @@ POSTGRES_PASSWORD=<letters and digits> docker compose up -d
 docker compose logs relay   # the invite link
 ```
 
-或者用你已有的 Postgres 手动运行：`DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`（没有 Postgres 时，办公室会保存在一个文件夹里）。放到公网上时，请放在 HTTPS（Caddy 或 nginx）后面，并设置 `RELAY_TRUST_PROXY=1` 和 `RELAY_PUBLIC_URL`。
+或者用你已有的 Postgres 手动运行：`DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`（没有 Postgres 时，办公室会保存在一个文件夹里）。放到公网上时，请放在 HTTPS（Caddy 或 nginx）后面，并设置 `RELAY_TRUST_PROXY=1`（前面还有 CDN 时设为 `2`）和 `RELAY_PUBLIC_URL`。
 
 先打开邀请链接，注册你的账号（在安装步骤下方）：第一个账号就是办公室的所有者。然后把同一条链接发给团队。每个人可以照着页面上的步骤，只凭这条链接加入；也可以在那里注册账号，之后服务器上属于他们的页面会给出一行命令，以他们的名字把电脑连上来：
 

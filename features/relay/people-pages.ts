@@ -172,6 +172,9 @@ const WORDS = {
     newPasswordFor: "A new password for {name}",
     resetOpen:
       "On {when}, {name} made a link to reset your password. It works once, for {minutes} more minutes. If you didn't ask for it, stop it.",
+    resetOpenOne:
+      "On {when}, {name} made a link to reset your password. It works once, for 1 more minute. If you didn't ask for it, stop it.",
+    passwordOffBlocked: "Passwords can't be turned off yet",
     resetStop: "Stop the link",
     resetStopped:
       "On {when}, {name} made a link to reset your password. You stopped it.",
@@ -401,6 +404,9 @@ const WORDS = {
     newPasswordFor: "{name} 님의 새 비밀번호",
     resetOpen:
       "{when}에 {name} 님이 내 비밀번호 재설정 링크를 만들었어요. 앞으로 {minutes}분 동안 한 번 쓸 수 있어요. 내가 부탁한 게 아니라면 링크를 막아 주세요.",
+    resetOpenOne:
+      "{when}에 {name} 님이 내 비밀번호 재설정 링크를 만들었어요. 앞으로 1분 동안 한 번 쓸 수 있어요. 내가 부탁한 게 아니라면 링크를 막아 주세요.",
+    passwordOffBlocked: "아직 비밀번호를 끌 수 없어요",
     resetStop: "링크 막기",
     resetStopped: "{when}에 {name} 님이 만든 비밀번호 재설정 링크를 막았어요.",
     resetEnded:
@@ -618,6 +624,9 @@ const WORDS = {
     newPasswordFor: "为{name}设置新密码",
     resetOpen:
       "{name}于 {when} 为你的密码生成了重置链接。它还可以用一次，剩余 {minutes} 分钟。如果不是你请求的，请停用它。",
+    resetOpenOne:
+      "{name}于 {when} 为你的密码生成了重置链接。它还可以用一次，剩余 1 分钟。如果不是你请求的，请停用它。",
+    passwordOffBlocked: "现在还不能关闭密码登录",
     resetStop: "停用链接",
     resetStopped: "{name}于 {when} 生成的密码重置链接已被你停用。",
     resetEnded: "{name}于 {when} 生成的密码重置链接没有被使用，已经失效。",
@@ -844,6 +853,9 @@ const WORDS = {
     newPasswordFor: "{name}さんの新しいパスワード",
     resetOpen:
       "{when}に{name}さんがあなたのパスワードのリセット用リンクを作りました。あと{minutes}分、一度だけ使えます。頼んでいない場合は止めてください。",
+    resetOpenOne:
+      "{when}に{name}さんがあなたのパスワードのリセット用リンクを作りました。あと1分、一度だけ使えます。頼んでいない場合は止めてください。",
+    passwordOffBlocked: "まだパスワードをオフにできません",
     resetStop: "リンクを止める",
     resetStopped:
       "{when}に{name}さんが作ったパスワードのリセット用リンクを止めました。",
@@ -1089,6 +1101,9 @@ const WORDS = {
     newPasswordFor: "Una contraseña nueva para {name}",
     resetOpen:
       "El {when}, {name} creó un enlace para restablecer tu contraseña. Sirve una vez, durante {minutes} minutos más. Si no lo pediste, detenlo.",
+    resetOpenOne:
+      "El {when}, {name} creó un enlace para restablecer tu contraseña. Sirve una vez, durante 1 minuto más. Si no lo pediste, detenlo.",
+    passwordOffBlocked: "Aún no se pueden desactivar las contraseñas",
     resetStop: "Detener el enlace",
     resetStopped:
       "El {when}, {name} creó un enlace para restablecer tu contraseña. Lo detuviste.",
@@ -1330,6 +1345,9 @@ const WORDS = {
     newPasswordFor: "Uma senha nova para {name}",
     resetOpen:
       "Em {when}, {name} criou um link para redefinir a sua senha. Ele funciona uma vez, por mais {minutes} minutos. Se você não pediu, pare o link.",
+    resetOpenOne:
+      "Em {when}, {name} criou um link para redefinir a sua senha. Ele funciona uma vez, por mais 1 minuto. Se você não pediu, pare o link.",
+    passwordOffBlocked: "Ainda não dá para desligar as senhas",
     resetStop: "Parar o link",
     resetStopped:
       "Em {when}, {name} criou um link para redefinir a sua senha. Você o parou.",
@@ -1670,7 +1688,12 @@ export function homePage(input: {
   const { lang } = input;
   const title = say(lang, "hello", { name: input.name });
   const notices = (input.events ?? [])
-    .filter((event) => event.kind === "reset-link")
+    // just stopped, the line saying so is enough
+    .filter(
+      (event) =>
+        event.kind === "reset-link" &&
+        !(input.done === "stopped" && event.state === "stopped"),
+    )
     .map((event) => {
       const named = {
         name: event.by,
@@ -1679,7 +1702,7 @@ export function homePage(input: {
       };
       // one that still works stands out, with the way to stop it; the rest are a quiet line
       return event.state === "open"
-        ? `<form method="post" action="/home/reset/stop" class="alert" role="alert"><p>${say(lang, "resetOpen", named)}</p><button type="submit" class="danger small">${say(lang, "resetStop")}</button></form>`
+        ? `<form method="post" action="/home/reset/stop" class="alert" role="alert"><p>${say(lang, event.minutes === 1 ? "resetOpenOne" : "resetOpen", named)}</p><button type="submit" class="danger small">${say(lang, "resetStop")}</button></form>`
         : `<p class="note">${say(lang, event.state === "stopped" ? "resetStopped" : "resetEnded", named)}</p>`;
     })
     .join("");
@@ -1879,7 +1902,10 @@ export function confirmPage(input: {
     name: input.name ?? "",
     office: input.office || WORDS[lang].thatOffice,
   };
-  const title = say(lang, titleKey, named);
+  // Something that cannot be done now is said as it is, not asked.
+  const title = input.blocked
+    ? say(lang, "passwordOffBlocked")
+    : say(lang, titleKey, named);
   const hidden = Object.entries(input.fields ?? {})
     .map(
       ([name, value]) =>
@@ -1900,8 +1926,8 @@ export function confirmPage(input: {
     title,
     `<h1>${title}</h1>
 ${input.what === "join" && input.invitedBy ? `<p>${say(lang, "joinFrom", { from: input.invitedBy })}</p>` : ""}
-<p>${say(lang, whatKey, named)}</p>
-${locked ? `<p>${locked}</p>` : ""}
+${input.blocked ? "" : `<p>${say(lang, whatKey, named)}</p>`}
+${locked && !input.blocked ? `<p>${locked}</p>` : ""}
 ${
   input.blocked
     ? `${problem(lang, input.blocked)}

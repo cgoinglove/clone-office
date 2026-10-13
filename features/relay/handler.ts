@@ -57,6 +57,7 @@
 
 import { readFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { isIPv6 } from "node:net";
 import { A2A_ERRORS, a2aCall, agentCard } from "./a2a.ts";
 import {
   AccountError,
@@ -141,10 +142,18 @@ class Tries {
     // without end, and a miss never walks every address.
     this.seen.delete(from);
     this.seen.set(from, [...kept, now]);
+    // One blocked stays blocked: what goes is the longest quiet of those still let try.
     while (this.seen.size > Tries.MOST) {
-      const oldest = this.seen.keys().next().value;
-      if (oldest === undefined) break;
-      this.seen.delete(oldest);
+      let gone = false;
+      for (const [address, times] of this.seen)
+        if (
+          times.filter((at) => now - at < this.windowMs).length < this.limit
+        ) {
+          this.seen.delete(address);
+          gone = true;
+          break;
+        }
+      if (!gone) break;
     }
   }
 
@@ -154,6 +163,26 @@ class Tries {
   }
 
   static readonly MOST = 10_000;
+}
+
+/**
+ * Who a try is counted against: an IPv4 address, or an IPv6 address's /64, which one home or
+ * server holds whole (counting each of its addresses apart would let it try without end).
+ */
+export function triesKey(address: string): string {
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(address);
+  if (mapped) return mapped[1];
+  if (!isIPv6(address)) return address;
+  const [head, tail = ""] = address.split("%")[0].split("::");
+  const left = head ? head.split(":") : [];
+  const right = address.includes("::") && tail ? tail.split(":") : [];
+  const groups = address.includes("::")
+    ? [...left, ...Array(8 - left.length - right.length).fill("0"), ...right]
+    : left;
+  return `${groups
+    .slice(0, 4)
+    .map((group) => Number.parseInt(group, 16).toString(16))
+    .join(":")}::/64`;
 }
 
 async function raw(request: IncomingMessage): Promise<string> {
@@ -205,7 +234,11 @@ export function relayHandler(
   relay: Relay,
   options: {
     /** Behind a proxy of one's own: take the caller's address from X-Forwarded-For. */
-    trustProxy?: boolean;
+    /**
+     * Behind proxies: how many (true is one), so the address counted is the one the outermost
+     * trusted proxy saw.
+     */
+    trustProxy?: boolean | number;
     /** People's accounts: the invite page makes one, and one's own page connects one's computer. */
     accounts?: Accounts;
     /** The address people reach the server at, for the links and lines its pages give. */
@@ -219,17 +252,24 @@ export function relayHandler(
   const accounts = options.accounts;
   const tries = new Tries(20, 10 * 60 * 1000);
   setInterval(() => tries.sweep(), 60 * 1000).unref();
-  // Behind a proxy, the address it saw: the last one on the line, which it added itself (the
-  // ones before are whatever the caller sent).
-  const address = (request: IncomingMessage): string =>
-    (options.trustProxy
-      ? String(request.headers["x-forwarded-for"] ?? "")
-          .split(",")
-          .at(-1)
-          ?.trim()
-      : "") ||
-    request.socket.remoteAddress ||
-    "";
+  // Behind proxies, the address the outermost trusted one saw: each adds the address it was
+  // reached from at the end of the line, so it is that many from the end (the ones before are
+  // whatever the caller sent). Tries are counted by it, an IPv6 one by its /64.
+  const hops =
+    options.trustProxy === true
+      ? 1
+      : Math.max(0, Number(options.trustProxy) || 0);
+  const address = (request: IncomingMessage): string => {
+    const line = String(request.headers["x-forwarded-for"] ?? "")
+      .split(",")
+      .map((one) => one.trim())
+      .filter(Boolean);
+    return triesKey(
+      (hops ? (line.at(-hops) ?? line[0]) : "") ||
+        request.socket.remoteAddress ||
+        "",
+    );
+  };
   const member = (request: IncomingMessage) =>
     relay.memberByToken(
       (request.headers.authorization ?? "").replace(/^Bearer\s+/i, ""),
@@ -495,7 +535,11 @@ export function relayHandler(
                 name: person.name,
                 office: (await accounts.officeOf(key))?.name ?? "",
                 action: `/i/${key}/join`,
-                signOutNext: `/i/${key}?account`,
+                signOutNext: `/i/${key}?${
+                  who
+                    ? `from=${encodeURIComponent(who).replace(/[!'()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)}&`
+                    : ""
+                }account`,
                 ...(who ? { invitedBy: who } : {}),
               }),
             );
@@ -608,7 +652,7 @@ export function relayHandler(
         // account with that invite.
         const next = new URLSearchParams(await raw(request)).get("next") ?? "";
         redirect(
-          /^\/i\/[\w-]{4,128}\?account$/.test(next)
+          /^\/i\/[\w-]{4,128}\?(?:from=[\w.~%-]{1,400}&)?account$/.test(next)
             ? `${next}#account`
             : "/login",
           await accounts.signOut(cookie),

@@ -103,8 +103,8 @@ function say(
 }
 
 const STYLE = `
-:root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --field: #8a8d93; --soft: rgba(13,13,13,.06); --brand: #0169cc; --brand-fill: #0169cc; --brand-soft: rgba(1,105,204,.1); --on: #0169cc; --danger: #dc2626; --error: #c43d18; --g-bg: #ffffff; --g-line: #747775; --g-fg: #1f1f1f; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --field: #6b6f76; --soft: rgba(255,255,255,.08); --brand: #0a84ff; --brand-fill: #0060df; --brand-soft: rgba(10,132,255,.16); --on: #6cb4ff; --danger: #b91c1c; --error: #ff7a55; --g-bg: #131314; --g-line: #8e918f; --g-fg: #e3e3e3; color-scheme: dark; } }
+:root { --bg: #ffffff; --fg: #0d0d0d; --muted: #62656b; --line: rgba(13,13,13,.12); --field: #8a8d93; --soft: rgba(13,13,13,.06); --brand: #0169cc; --brand-fill: #0169cc; --brand-soft: rgba(1,105,204,.1); --on: #0169cc; --danger: #dc2626; --error: #c43d18; --waiting: #c43d18; --g-bg: #ffffff; --g-line: #747775; --g-fg: #1f1f1f; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0e0f11; --fg: #f1f2f4; --muted: #a2a5ac; --line: rgba(255,255,255,.14); --field: #6b6f76; --soft: rgba(255,255,255,.08); --brand: #0a84ff; --brand-fill: #0060df; --brand-soft: rgba(10,132,255,.16); --on: #6cb4ff; --danger: #b91c1c; --error: #ff7a55; --waiting: #ff7a55; --g-bg: #131314; --g-line: #8e918f; --g-fg: #e3e3e3; color-scheme: dark; } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
 :lang(ko) body { font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif; }
@@ -193,8 +193,8 @@ details.account[open] > summary { margin-bottom: .75rem; }
 .ways .who { flex: 1 1 12rem; min-width: 0; }
 .ways .who small { display: block; color: var(--muted); font-size: .85rem; }
 .field-error { color: var(--error); font-size: .9rem; margin: -.4rem 0 .75rem; }
-/* something about one's account that wants them now: a reset link they may not have asked for */
-.alert { display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; margin: 0; border: 1px solid var(--error); border-radius: 14px; padding: .9rem 1rem; }
+/* something about one's account that waits on them: a reset link they may not have asked for (ember, as the app marks what waits) */
+.alert { display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; margin: 0; border: 1px solid var(--waiting); border-radius: 14px; padding: .9rem 1rem; }
 .alert p { margin: 0; }
 button:disabled { opacity: .5; cursor: not-allowed; }
 `;

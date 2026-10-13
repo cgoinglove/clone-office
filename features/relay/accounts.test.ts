@@ -1235,8 +1235,11 @@ test("a forgotten password, a removed account, another office's invite and odd a
       benPage,
       /Stopped\. That link can no longer change your password/,
     );
+    assert.doesNotMatch(benPage, /You stopped it/, "said once, just stopped");
     assert.match(
-      benPage,
+      await (
+        await fetch(`${base}/home`, { headers: { cookie: benCookie } })
+      ).text(),
       /Ana made a link to reset your password\. You stopped it/,
     );
     // A stop from another site is refused.
@@ -1532,10 +1535,28 @@ test("sign-in's edges: Google starts at its own address, an invite asks unless t
       `/i/${office.key}?account#account`,
     );
     assert.equal(await accounts.person(cookieOf(other1.cookies)), undefined);
+    // the inviter's name goes along, so the invite reads as it did
+    const named = await accounts.signIn({
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    const withName = await fetch(
+      `${base}/logout`,
+      post(
+        { next: `/i/${office.key}?from=Ana%20Lee%21&account` },
+        cookieOf(named.cookies),
+      ),
+    );
+    assert.equal(
+      withName.headers.get("location"),
+      `/i/${office.key}?from=Ana%20Lee%21&account#account`,
+    );
     for (const next of [
       "//elsewhere.example/i/abcd?account",
       "https://elsewhere.example",
       "/home/admin",
+      `/i/${office.key}?from=a b&account`,
+      `/i/${office.key}?from=x&next=//elsewhere.example&account`,
     ]) {
       const other2 = await accounts.signIn({
         email: "ben@example.com",
@@ -1620,6 +1641,10 @@ test("the admin's pages say what a change would do before it fails, and an invit
         headers: { cookie: admin },
       })
     ).text();
+    assert.match(
+      blocked,
+      /<h1>Passwords can(?:'|&#39;)t be turned off yet<\/h1>/,
+    );
     assert.match(blocked, /Connect your own Google account first/);
     assert.match(blocked, /href="\/home\/google"/);
     assert.doesNotMatch(
@@ -1651,6 +1676,54 @@ test("the admin's pages say what a change would do before it fails, and an invit
       link.endsWith("?from=Mo%24%28id%29%60whoami%60%21x%20민아"),
       link,
     );
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("wrong tries are counted against the address the trusted proxy saw, an IPv6 one by its /64", async () => {
+  const { createServer } = await import("node:http");
+  const { relayHandler, triesKey } = await import("./handler.ts");
+  assert.equal(triesKey("203.0.113.7"), "203.0.113.7");
+  assert.equal(triesKey("::ffff:203.0.113.7"), "203.0.113.7");
+  assert.equal(triesKey("2001:db8:1:2:aaaa::1"), "2001:db8:1:2::/64");
+  assert.equal(triesKey("2001:0db8:0001:0002:ffff:1:2:3"), "2001:db8:1:2::/64");
+  assert.equal(triesKey("2001:db8::7"), "2001:db8:0:0::/64");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay);
+  const office = await relay.office();
+  // two proxies in front: the second from the end of the line is the caller's
+  const server = createServer(relayHandler(relay, { accounts, trustProxy: 2 }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  try {
+    await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    const wrong = (line: string) =>
+      fetch(`${base}/login`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          "sec-fetch-site": "same-origin",
+          "x-forwarded-for": line,
+        },
+        body: new URLSearchParams({
+          email: "ana@example.com",
+          password: "not the password",
+        }),
+        redirect: "manual",
+      });
+    // whatever the caller puts first, and from any address in one /64, it is one caller
+    for (let n = 0; n < 20; n++)
+      await wrong(`10.0.0.${n}, 2001:db8:1:2::${n.toString(16)}, 198.51.100.1`);
+    assert.equal((await wrong("2001:db8:1:2::ffff, 198.51.100.1")).status, 429);
+    assert.equal((await wrong("2001:db8:1:3::1, 198.51.100.1")).status, 400);
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();

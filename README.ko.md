@@ -120,7 +120,7 @@ docker compose logs relay   # the invite link
 
 또는 가지고 있는 Postgres로 직접 띄웁니다: `DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`
 (Postgres가 없으면 오피스를 폴더에 보관합니다). 인터넷에 열 때는 HTTPS(Caddy나 nginx) 뒤에 두고
-`RELAY_TRUST_PROXY=1`과 `RELAY_PUBLIC_URL`을 설정합니다.
+`RELAY_TRUST_PROXY=1`(그 앞에 CDN이 있으면 `2`)과 `RELAY_PUBLIC_URL`을 설정합니다.
 
 먼저 초대 링크를 열고 계정을 만듭니다(설치 단계 아래에 있습니다). 처음 만든 계정이 오피스의 주인이 됩니다.
 같은 링크를 팀에 보냅니다. 팀원은 각자 그 페이지의 단계를 따라 링크만으로 들어올 수도 있고, 거기서 계정을

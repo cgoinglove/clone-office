@@ -66,7 +66,8 @@ const accounts = await Accounts.open(db, relay, { publicUrl, sealKey });
 
 const server = createServer(
   relayHandler(relay, {
-    trustProxy: process.env.RELAY_TRUST_PROXY === "1",
+    // how many proxies stand in front (1 for one of your own, 2 with a CDN before it)
+    trustProxy: Number(process.env.RELAY_TRUST_PROXY) || 0,
     accounts,
     publicUrl,
     // Started by someone's app: the office lives on their computer, reached on their network.

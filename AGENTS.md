@@ -453,8 +453,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   the server's own pages (Fetch Metadata), and Google's refusals read in the person's words
   (`googleProblem`); a form from another site is refused (Fetch Metadata first, else the Origin; the pages keep
   their referrer within the server, so a browser's own form never comes as "null"), and wrong
-  sign-ins count against the caller's address (behind a trusted proxy, the last one it added; at
-  most 10,000 addresses, the longest quiet let go first). An office's owners also remove people (their
+  sign-ins count against the caller's address (behind trusted proxies, the one the outermost saw,
+  `RELAY_TRUST_PROXY` saying how many; an IPv6 one by its /64, `triesKey`; at most 10,000, the
+  longest quiet of those not blocked let go first). An office's owners also remove people (their
   clone's place goes at once, what they asked stays) or clones that joined with the bare key,
   make others owners, make a new invite link (the office key changes; those in stay) and name the
   office (`Accounts` `removePerson`, `removeClone`, `makeOwner`, `newInvite`, `renameOffice`),

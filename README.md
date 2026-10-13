@@ -126,7 +126,7 @@ docker compose logs relay   # the invite link
 
 or by hand with a Postgres you have: `DATABASE_URL=postgres://… npx clone-office relay --host
 0.0.0.0` (without one it keeps the office in a folder). On the internet, put it behind HTTPS (Caddy
-or nginx) and set `RELAY_TRUST_PROXY=1` and `RELAY_PUBLIC_URL`.
+or nginx) and set `RELAY_TRUST_PROXY=1` (`2` with a CDN in front of it) and `RELAY_PUBLIC_URL`.
 
 Open the invite link first and make your account (under the setup steps): the first account owns
 the office. Send the same link to your team. Each person can follow the steps on its page, which
