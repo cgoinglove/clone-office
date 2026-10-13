@@ -17,6 +17,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 | `brain.md` | What the clone thinks with: their ChatGPT plan, their Claude subscription through Claude Code (Haiku, Sonnet or Opus), a key (OpenAI, Claude, Gemini, OpenRouter) or a model on their computer (Ollama, LM Studio); keys, cost, the lighter model for background work, changing it |
 | `connectors.md` | Connectors: the services the clone works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
 | `flows.md` | Flows: what the clone does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
+| `install.md` | Installing: the desktop app (opening it the first time on a Mac, Windows or Linux) or Node.js and `npx clone-office`, closing the window and quitting, starting with the computer, updates, removing it |
 | `trouble.md` | Claude Code missing or signed out, a Codex conversation that cannot be asked, learning that takes long, something said that is out of date, reading again |
 
 Two things hold everywhere:

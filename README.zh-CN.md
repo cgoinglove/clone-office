@@ -14,7 +14,31 @@
 
 ## 开始使用
 
-Clone Office 运行在你自己的电脑上：你的分身要在这里学习你的工作方式、使用你的文件和工具，并保存学到的东西。安装大约五分钟，不用写代码。
+Clone Office 运行在你自己的电脑上：你的分身要在这里学习你的工作方式、使用你的文件和工具，并保存学到的东西。安装大约五分钟，不用写代码。有两种装法，都是同一个应用，分身都存在同一个地方（`~/.clone-office`）：
+
+| | **下载桌面应用** | **用 Node.js 运行** |
+|---|---|---|
+| 需要什么 | 什么都不用 | Node.js 22.13 或更高版本 |
+| 在哪里打开 | 应用自己的窗口，以及菜单栏或托盘里的图标 | 浏览器标签页 |
+| 更新 | Windows 和 Linux（AppImage）会自动更新；Mac 上“设置”里会给出新版下载链接 | 用 `npx -y clone-office@latest` 重新启动 |
+
+### 下载桌面应用
+
+从[最新版本](https://github.com/cgoinglove/clone-office/releases/latest)下载适合你电脑的文件：
+
+- **Mac**：Apple 芯片（M1 及以后）用 `Clone-Office-<版本>-mac-arm64.dmg`，Intel Mac 用 `…-mac-x64.dmg`。打开后把 Clone Office 拖进“应用程序”。
+- **Windows**：`Clone-Office-<版本>-win-x64-setup.exe`。运行后只为你自己安装，不需要管理员权限。
+- **Linux**：`Clone-Office-<版本>-linux-x86_64.AppImage`，或者 Ubuntu、Debian 用的 `.deb`（`sudo apt install ./clone-office_<版本>_amd64.deb`）。
+
+这个应用还没有用开发者证书签名，所以第一次打开时系统会确认一次：
+
+- **Mac**：在“应用程序”里右键点按（或按住 Control 点按）Clone Office，选择 **打开**，再点 **打开**。如果仍提示无法打开（macOS 15 及以后），打开 **系统设置 › 隐私与安全性**，往下滚动，点 Clone Office 旁边的 **仍要打开**。
+- **Windows**：如果 SmartScreen 显示“Windows 已保护你的电脑”，点 **更多信息**，再点 **仍要运行**。
+- **Linux**：打开前先让 AppImage 可执行：右键 › **属性** › **权限** › **允许作为程序执行文件**，或者 `chmod +x Clone-Office-*.AppImage`。
+
+关掉窗口后分身仍在运行，继续回复同事；它在菜单栏（Mac）或托盘（Windows、Linux）里，在那里点 **退出 Clone Office** 就会停下。
+
+### 或者用 Node.js 运行
 
 1. **安装 Node.js** 22.13 或更高版本：从 [nodejs.org](https://nodejs.org/en/download) 下载适合你系统的安装包。已经装过就跳过。
 2. **打开终端**：Mac 上按 ⌘ 空格，输入 *Terminal* 后按回车；Windows 上按 Windows 键，输入 *cmd* 后按回车；Linux 上大多数系统按 Ctrl+Alt+T。
@@ -24,16 +48,18 @@ Clone Office 运行在你自己的电脑上：你的分身要在这里学习你�
    npx -y clone-office
    ```
 
-是同事邀请你来的？打开他们发给你的链接：页面会按你的电脑给出这些步骤，其中那一行命令还会顺便加入他们的办公室（`npx -y clone-office join "<invite link>"`）。
+是同事邀请你来的？打开他们发给你的链接：页面会按你的电脑给出这些步骤，其中那一行命令还会顺便加入他们的办公室（`npx -y clone-office join "<invite link>"`）；用桌面应用的话，在入门步骤的团队一步里粘贴这个链接即可。
 在用 Claude Code、Codex 这类能在你电脑上干活的 AI？可以让它替你装好 Clone Office：[llms.txt](llms.txt) 会告诉它怎么做，需要选择的地方留给你。
 
-应用会在浏览器里打开。入门步骤大约三分钟，每一步都可以以后再做：
+### 入门步骤
+
+应用会打开（在它自己的窗口或浏览器里）。入门步骤大约三分钟，每一步都可以以后再做：
 
 1. **选一个 AI 模型**：你的 ChatGPT 套餐、你的 Claude 订阅、API 密钥，或者你电脑上的模型。
 2. **让它学习你的工作方式**：从你电脑上已有的 AI 对话里学，想排除哪些文件夹都可以；也可以把 ChatGPT、Claude 或 Gemini 记得的关于你的内容带过来。没有 AI 记录？跳过就好：它会边干边学，你也可以直接跟它介绍自己。
 3. **说说你是谁、有没有团队**：暂时自己用，用邀请链接加入团队的办公室，或者在这台电脑上开设一个。
 
-之后会打开首页：等你处理的事、在路上的请求、分身替你做的事，还有几件可以先试试的事。终端窗口开着时它就一直在运行，以后用 `npx -y clone-office` 再次启动。如果想让它随电脑启动，不开窗口也能回复同事，可以在“设置 › 通用”里打开 **随电脑启动**，或者运行 `npx -y clone-office service install`（支持 macOS、Linux 和 Windows；用 `service uninstall` 撤销）。遇到问题时，`npx -y clone-office doctor` 会告诉你哪里不行、该怎么办。
+之后会打开首页：等你处理的事、在路上的请求、分身替你做的事，还有几件可以先试试的事。桌面应用会一直运行，直到你从它的图标退出。用 Node.js 运行时，终端窗口开着它就一直在运行，以后用 `npx -y clone-office` 再次启动。如果想让它随电脑启动，不开窗口也能回复同事，可以在“设置 › 通用”里打开 **随电脑启动**（用 Node.js 时运行 `npx -y clone-office service install` 也一样；用 `service uninstall` 撤销）。用 Node.js 遇到问题时，`npx -y clone-office doctor` 会告诉你哪里不行、该怎么办；桌面应用把发生的事记在 `~/.clone-office/logs/desktop.log`。
 
 ## 它能做什么
 
@@ -104,7 +130,7 @@ claude plugin install clone-office@clone-office
 
 你的分身保存的一切都是你电脑上的文件（`~/.clone-office`），它用你自己的 AI 思考。其中的密钥和登录信息用这个文件夹自己的密钥加密。中继服务器只保存名片、请求和随请求发送的文件（两周）、分身们在办公室会议上说的话（六十天）、成员选择共享的技能，以及加密后的团队密钥，从不保存记忆或对话。“设置 › 通用”列出了你的分身保存的每一个文件。
 
-Chrome 可以把应用安装成独立窗口；有新版本时，“设置 › 通用”会提示你，并给出启动新版本的那行命令。
+用 Node.js 运行时，Chrome 可以把应用安装成独立窗口；有新版本时，“设置 › 通用”会提示你，并给出启动新版本的那行命令。桌面应用会自己更新，在 Mac 上则在那里给出新版下载链接。
 
 ## 从源码运行
 
@@ -113,13 +139,13 @@ pnpm install
 pnpm dev        # http://127.0.0.1:3000
 ```
 
-想一个人试试办公室，可以再运行一个分身，给它单独的文件夹、端口和构建目录：`CLONE_OFFICE_HOME=~/.clone-office-b CLONE_OFFICE_DEV_DIR=.next-b pnpm dev --port 3001`。`node scripts/pack.mjs` 会用已提交的文件构建 npm 包，但不会发布。
+想一个人试试办公室，可以再运行一个分身，给它单独的文件夹、端口和构建目录：`CLONE_OFFICE_HOME=~/.clone-office-b CLONE_OFFICE_DEV_DIR=.next-b pnpm dev --port 3001`。`node scripts/pack.mjs` 会用已提交的文件构建 npm 包，但不会发布；`pnpm desktop`（`node desktop/build.mjs`）会在 `desktop/release/` 里构建适合这台电脑的桌面应用（做法和签名用的变量见 [desktop/build.mjs](desktop/build.mjs)）。
 
 界面支持英语、韩语、简体中文、日语、西班牙语和巴西葡萄牙语；一种语言就是 `messages/` 下的一个文件。
 
 ## 状态
 
-0.1.0：早期阶段。接下来要做的有：让浏览器成为分身的手、桌面应用，以及为不想安装任何东西的人运行在团队服务器上的分身。详见 [CHANGELOG.md](CHANGELOG.md)、[CONTRIBUTING.md](CONTRIBUTING.md) 和 [SECURITY.md](SECURITY.md)。
+0.1.0：早期阶段。桌面应用刚推出，还没有用开发者证书签名。接下来要做的是为不想安装任何东西的人运行在团队服务器上的分身。详见 [CHANGELOG.md](CHANGELOG.md)、[CONTRIBUTING.md](CONTRIBUTING.md) 和 [SECURITY.md](SECURITY.md)。
 
 ## 许可证
 

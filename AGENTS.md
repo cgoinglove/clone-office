@@ -749,8 +749,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   tests, build; the package built once and started on Linux, macOS and Windows; an old Node told
   what to do), `release.yml` (release-please's Release PR; merging it tags, checks again and
   publishes to npm with provenance through trusted publishing; by hand, `next` for a test build or
-  `latest` for the first release), `pr-title.yml` (conventional titles); actions are pinned to the
-  commit of their release tag and dependabot moves them.
+  `latest` for the first release; a `latest` then calls `desktop.yml`), `desktop.yml` (the desktop
+  app for each system, attached to the release; called by the release, since a release written
+  with the workflow's token starts no workflow, or started by a release a person publishes or by
+  hand), `pr-title.yml` (conventional titles); actions are pinned to the commit of their release tag
+  and dependabot moves them.
   The launcher (`npx clone-office`) starts the app on 127.0.0.1 from port 4417 and opens `/`;
   `npx clone-office relay` starts a relay; `npx clone-office join <invite link>` keeps the invite in
   `settings.json` (`invite`, after checking the office answers) and starts the app, whose first
@@ -766,6 +769,36 @@ These words help discussion. They do not mandate separate services, tables or UI
   the login item and npm's latest, each with what to do. In the package,
   `CLONE_OFFICE_APP_DIR` tells the app where its guide and tool server are (`server/paths.ts`
   `appDir`, `toolServerPath`).
+- `desktop/`: the desktop app, one downloaded file per system with no Node.js to install (Electron,
+  after Orca's; its own `package.json` and lockfile, installed with `pnpm --dir desktop install
+  --ignore-workspace`, so the repository's install never fetches Electron). `build.mjs` (`pnpm
+  desktop`) makes the server (`scripts/pack.mjs --folder`: the npm package unpacked, keeping the
+  dependencies Next.js traced, installed flat, sharp left out; npm adds the rest the bundles load,
+  as npx would; the same for every system, so CI makes it once, `--server-only`, and each system
+  takes it, `--server <.tgz>`), drops what only another system runs (the sandbox's helpers), bundles
+  `src/main.mjs` with esbuild (the loading page, the words: each language's `desktop` part of
+  `messages/`), and runs electron-builder (`electron-builder.config.cjs`: mac dmg and zip for arm64
+  and x64, Windows NSIS, Linux AppImage and deb; the server beside the asar as plain files;
+  `beforeBuild` false so nothing of the repository's node_modules is gathered; unsigned, mac signed
+  ad hoc, unless CSC_LINK/CSC_KEY_PASSWORD, APPLE_* and WIN_CSC_* say otherwise; each language's
+  folder-access lines in InfoPlist.strings). `src/`: `main.mjs` (one instance per clone folder,
+  Chromium's state in `<home>/desktop`; finds the app already answering for the folder, `app.json`
+  while its process lives, else starts the package's server from 4417 or `--port` with Electron as
+  Node, `server.mjs`, and restarts it after a crash; the window: sandboxed, no Node, its own origin
+  only, other pages and new windows in the person's browser, notifications and clipboard writes the
+  only permissions; closing hides it in the menu bar or tray, quitting stops the server first;
+  menus and tray in the screen's language, the `locale` cookie, `words.mjs`), `home.mjs` (the
+  launcher's folder and port rules), `shell-path.mjs` (the login shell's PATH and LANG, as Orca and
+  VS Code take them, so `claude`, `codex` and `git` are found), `login-item.mjs` (the app as the
+  login item: Electron's on macOS and Windows, an XDG autostart entry on Linux, opened with
+  `--hidden`), `updates.mjs` (electron-updater from GitHub Releases where the app can replace
+  itself: Windows, AppImage, a signed Mac; elsewhere the release's page to download). The server
+  asks the app what only it can do over the IPC channel between them
+  (`features/minime/server/desktop.ts` `askDesktop`: the login item behind
+  `app/api/me/service`, updates behind `app/api/me/update`) and ends when it closes; whatever the
+  server starts with `process.execPath` is told `ELECTRON_RUN_AS_NODE` (`nodeEnv`, where a child
+  gets an environment of its own), which the clone's own commands never inherit (`hands/shell.ts`).
+  `guide/install.md` is the person's side of both ways in.
 
 `pnpm dev` serves on loopback. This is Next.js 16; consult the installed Next documentation
 before relying on older APIs. Use typecheck, lint, `pnpm test` and build as appropriate to the change.
