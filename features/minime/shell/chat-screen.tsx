@@ -39,18 +39,26 @@ export function ChatScreen() {
   const draft = useRef<HTMLTextAreaElement>(null);
   const insertRef = useRef<(text: string) => void>(() => {});
 
-  // A conversation asked for by its address (the sidebar's links) is opened, then the address
-  // goes back to the screen's own.
+  // The address names the conversation open, so a reload, Back or a second tab comes back to it:
+  // one asked for by its address (the sidebar's links) is opened once, and the address follows
+  // whichever conversation is open after (a new one, another picked elsewhere).
   const wanted = params.get("c");
   const openChat = chat.openChat;
   const current = chat.chatId;
+  const opened = useRef<string | null>(null);
   useEffect(() => {
-    if (!wanted) return;
-    void (async () => {
-      if (wanted !== current) await openChat(wanted);
-      router.replace("/chat");
-    })();
-  }, [wanted, current, openChat, router]);
+    if (!wanted || wanted === opened.current) return;
+    opened.current = wanted;
+    if (wanted !== current) void openChat(wanted);
+  }, [wanted, current, openChat]);
+  const shown = useRef(current);
+  useEffect(() => {
+    const changed = current !== shown.current;
+    shown.current = current;
+    if (!current || current === wanted || (!changed && wanted)) return;
+    opened.current = current;
+    router.replace(`/chat?c=${encodeURIComponent(current)}`);
+  }, [current, wanted, router]);
 
   // Words handed over by another screen (asking by a link from the requests) go into the box;
   // what was asked from Home's box is asked at once, in a new conversation.
