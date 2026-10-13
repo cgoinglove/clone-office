@@ -86,7 +86,11 @@ export function FileScreen({ path }: { path: string }) {
         url = URL.createObjectURL(blob);
         setShown({ kind: "image", url, blob });
       } else if (ext === "pdf") {
-        url = URL.createObjectURL(blob);
+        // Always shown as a PDF, whatever the file holds: a link named .pdf to one of the clone's
+        // pages would otherwise open that page with this app's origin.
+        url = URL.createObjectURL(
+          new Blob([blob], { type: "application/pdf" }),
+        );
         setShown({ kind: "pdf", url, blob });
       } else if (
         blob.type.startsWith("text/") ||

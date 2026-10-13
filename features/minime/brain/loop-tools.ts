@@ -6,7 +6,14 @@
 // with nobody to ask, it is refused. Folders they kept out stay out whatever is asked.
 
 import { createReadStream } from "node:fs";
-import { glob, open, readdir, readFile, stat } from "node:fs/promises";
+import {
+  glob,
+  open,
+  readdir,
+  readFile,
+  realpath,
+  stat,
+} from "node:fs/promises";
 import { homedir } from "node:os";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { createInterface } from "node:readline";
@@ -475,16 +482,26 @@ function resultText(result: { content?: unknown; isError?: unknown }): string {
 }
 
 /** A result as the model gets it: through the session's scratch folder, or cut without one. */
-/** Whether a Read or Grep looks inside the session's scratch folder. */
-export function fromScratch(
+/**
+ * Whether a Read or Grep can reach the session's scratch folder: a file inside it, or a search of a
+ * folder inside it or holding it, by real paths (a link or another name for a folder, as /private
+ * is for /tmp on macOS, leads to the same files).
+ */
+export async function fromScratch(
   dir: string | undefined,
   input: Record<string, unknown>,
-): boolean {
+): Promise<boolean> {
   if (!dir) return false;
   const target = String(input.file_path ?? input.path ?? "");
   if (!target || !isAbsolute(target)) return false;
-  const inside = relative(resolve(dir), resolve(target));
-  return inside === "" || (!inside.startsWith("..") && !isAbsolute(inside));
+  const real = async (path: string) =>
+    realpath(path).catch(() => resolve(path));
+  const [scratch, looked] = await Promise.all([real(dir), real(target)]);
+  const within = (inner: string, outer: string) => {
+    const rel = relative(outer, inner);
+    return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+  };
+  return within(looked, scratch) || within(scratch, looked);
 }
 
 const bounded = (spill: Spill | undefined, tool: string, text: string) =>
@@ -892,7 +909,7 @@ export async function loopTools(options: {
           );
           // What the scratch folder holds came from tools (a page, a service's answer, a long
           // output): read back, it stays marked as outside text, as it was when it first came.
-          const text = fromScratch(options.spill?.dir, input)
+          const text = (await fromScratch(options.spill?.dir, input))
             ? untrusted(
                 "a tool's earlier answer, from the scratch folder",
                 read,

@@ -114,16 +114,17 @@ export async function sealKeyMatches(
     .update(key)
     .digest("hex")
     .slice(0, 32);
+  // The first to start keeps its own; any other, started at the same moment, reads it back.
+  await db.query(
+    `INSERT INTO server_settings (name, value) VALUES ('seal-key', $1) ON CONFLICT (name) ${
+      reseal ? "DO UPDATE SET value = excluded.value" : "DO NOTHING"
+    }`,
+    [fingerprint],
+  );
   const [kept] = await db.query<{ value: string }>(
     "SELECT value FROM server_settings WHERE name = 'seal-key'",
   );
-  if (kept && kept.value !== fingerprint && !reseal) return false;
-  if (!kept || kept.value !== fingerprint)
-    await db.query(
-      "INSERT INTO server_settings (name, value) VALUES ('seal-key', $1) ON CONFLICT (name) DO UPDATE SET value = excluded.value",
-      [fingerprint],
-    );
-  return true;
+  return kept?.value === fingerprint;
 }
 
 interface Kept {

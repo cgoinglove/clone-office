@@ -347,7 +347,7 @@ export async function sendLink(
     "/links",
     { token: office.token, body: { name, text } },
   );
-  return { task, url: new URL(link, base).toString() };
+  return { task, url: onRelay(link, base) };
 }
 
 /** The office's invite link, naming the one who gives it. */
@@ -358,8 +358,24 @@ export async function inviteLink(
   const { path } = await call<{ path: string }>(office.relay, "/invite", {
     token: office.token,
   });
-  const url = new URL(path, base);
+  const url = new URL(onRelay(path, base));
   if (office.card.name) url.searchParams.set("from", office.card.name);
+  return url.toString();
+}
+
+/**
+ * A page the relay names, as a link on the relay itself: only a path there is taken, so an answer
+ * naming another place (another site, a `javascript:` link) is never opened as the relay's.
+ */
+export function onRelay(path: string, base: string): string {
+  if (!/^\/(?![/\\])/.test(path))
+    throw new OfficeError(
+      "relay-unreachable",
+      "The relay named no page of its own.",
+    );
+  const url = new URL(path, base);
+  if (url.origin !== new URL(base).origin)
+    throw new OfficeError("relay-unreachable", "The relay named another site.");
   return url.toString();
 }
 
@@ -376,7 +392,7 @@ export async function serverLink(
     token: office.token,
     body: key ? { key } : {},
   });
-  return new URL(path, office.relay).toString();
+  return onRelay(path, office.relay);
 }
 
 export async function sendRequest(

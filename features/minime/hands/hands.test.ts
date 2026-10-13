@@ -170,6 +170,9 @@ test("write_file stays inside the workspace, and a link cannot lead it out", asy
   assert.ok("error" in (await insideWorkspace("/etc/passwd", workspace)));
   assert.ok("error" in (await insideWorkspace("door/x.md", workspace)));
   assert.ok("error" in (await insideWorkspace("", workspace)));
+  // Nor a file that is itself a link out, dangling or not: it would be written through.
+  symlinkSync(join(root, "outside", "target.txt"), join(workspace, "out.txt"));
+  assert.ok("error" in (await insideWorkspace("out.txt", workspace)));
 });
 
 test("write_file also puts a temporary file in the session's scratch folder, and nowhere else outside the workspace", async () => {

@@ -248,25 +248,49 @@ test("a file of any size is read in parts and searched; a service's long answer 
   }
 });
 
-test("what the scratch folder holds is read back as outside text; the person's own files are not", async () => {
+test("what the scratch folder holds is read back as outside text, by whatever path; the person's own files are not", async () => {
   const { fromScratch } = await import("./loop-tools.ts");
-  const dir = "/tmp/clone/scratch/0b9f4c1e-aaaa-bbbb-cccc-123456789abc";
-  assert.equal(fromScratch(dir, { file_path: `${dir}/web-x.txt` }), true);
-  assert.equal(
-    fromScratch(dir, { path: dir }),
-    true,
-    "a search of the whole folder",
-  );
-  assert.equal(
-    fromScratch(dir, { file_path: "/tmp/clone/scratch/other/x.txt" }),
-    false,
-  );
-  assert.equal(fromScratch(dir, { file_path: `${dir}/../../notes.md` }), false);
-  assert.equal(fromScratch(dir, { file_path: "relative.txt" }), false);
-  assert.equal(
-    fromScratch(undefined, { file_path: `${dir}/web-x.txt` }),
-    false,
-  );
+  const { mkdirSync, symlinkSync } = await import("node:fs");
+  const base = mkdtempSync(join(tmpdir(), "scratch-read-"));
+  const dir = join(base, "scratch", "0b9f4c1e-aaaa-bbbb-cccc-123456789abc");
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, "web-x.txt"), "saved");
+  symlinkSync(dir, join(base, "another-name"));
+  try {
+    assert.equal(
+      await fromScratch(dir, { file_path: join(dir, "web-x.txt") }),
+      true,
+    );
+    assert.equal(
+      await fromScratch(dir, {
+        file_path: join(base, "another-name", "web-x.txt"),
+      }),
+      true,
+      "by another name for the folder",
+    );
+    assert.equal(
+      await fromScratch(dir, { path: dir }),
+      true,
+      "a search of the folder",
+    );
+    assert.equal(
+      await fromScratch(dir, { path: base }),
+      true,
+      "a search of a folder holding it",
+    );
+    assert.equal(await fromScratch(dir, { path: "/" }), true);
+    assert.equal(
+      await fromScratch(dir, { file_path: join(base, "notes.md") }),
+      false,
+    );
+    assert.equal(await fromScratch(dir, { file_path: "relative.txt" }), false);
+    assert.equal(
+      await fromScratch(undefined, { file_path: join(dir, "web-x.txt") }),
+      false,
+    );
+  } finally {
+    rmSync(base, { recursive: true, force: true });
+  }
 });
 
 test("Electron's run-as-Node flag reaches only a program started on the app's own executable", async () => {

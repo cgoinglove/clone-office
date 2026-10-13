@@ -2004,7 +2004,7 @@ test("a new server's admin is made with the link whoever runs it has, once; the 
       (await fetch(`${base}${path}`, { redirect: "manual" })).headers.get(
         "location",
       ),
-      "/login?error=admin-made",
+      "/login?done=admin-made",
     );
     assert.equal(await accounts.adminLink(), undefined);
     // The clone's own account link makes its person's account, joined to that clone.
@@ -2150,6 +2150,77 @@ test("someone with no computer takes part on the web: colleagues' clones ask the
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();
+    await db.close();
+  }
+});
+
+test("connecting a computer whose clone joined with an invite makes that clone the account's, not a second one", async () => {
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  try {
+    const accounts = await Accounts.open(db, relay);
+    const office = await relay.office();
+    const other = await relay.office("another-office-key");
+    await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    // Cy's app joined first, with no account; then Cy made one and connects that computer.
+    const clone = await relay.join({
+      key: office.key,
+      card: { name: "Cy", description: "" },
+    });
+    const cy = await accounts.signUp(office.key, {
+      name: "Cy",
+      email: "cy@example.com",
+      password: "cy's long password",
+    });
+    const { code } = await accounts.setupCode(cy.person.id, office.id);
+    const claimed = await accounts.claim(code, clone.token);
+    assert.equal(claimed.member, clone.id, "the clone already there is taken");
+    assert.equal(claimed.moved, true);
+    await assert.rejects(relay.memberByToken(clone.token), {
+      code: "office-member-unknown",
+    });
+    assert.equal((await relay.memberByToken(claimed.token)).id, clone.id);
+    assert.equal((await relay.memberOf(office.id, cy.person.id))?.id, clone.id);
+    assert.deepEqual(await accounts.keyedClones(office.id), []);
+    assert.equal(
+      (await relay.members(office.id)).filter((m) => m.card.name === "Cy")
+        .length,
+      1,
+      "one seat for Cy",
+    );
+
+    // A token from another office, or a clone that is someone's already, is never taken over.
+    const elsewhere = await relay.join({
+      key: other.key,
+      card: { name: "Dee", description: "" },
+    });
+    const dee = await accounts.signUp(office.key, {
+      name: "Dee",
+      email: "dee@example.com",
+      password: "dee's long password",
+    });
+    const deeFirst = await accounts.claim(
+      (await accounts.setupCode(dee.person.id, office.id)).code,
+      elsewhere.token,
+    );
+    assert.notEqual(deeFirst.member, elsewhere.id);
+    assert.equal((await relay.memberByToken(elsewhere.token)).id, elsewhere.id);
+    const eve = await accounts.signUp(office.key, {
+      name: "Eve",
+      email: "eve@example.com",
+      password: "eve's long password",
+    });
+    const eveClone = await accounts.claim(
+      (await accounts.setupCode(eve.person.id, office.id)).code,
+      claimed.token,
+    );
+    assert.notEqual(eveClone.member, clone.id, "Cy's clone stays Cy's");
+    assert.equal((await relay.memberOf(office.id, cy.person.id))?.id, clone.id);
+  } finally {
     await db.close();
   }
 });

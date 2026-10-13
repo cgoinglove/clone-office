@@ -619,7 +619,7 @@ export function relayHandler(
       const adminSetup = /^\/setup\/([\w-]{16,64})$/.exec(path);
       if (adminSetup && (request.method === "GET" || post)) {
         if (await accounts.hasAdmin()) {
-          redirect("/login?error=admin-made");
+          redirect("/login?done=admin-made");
           return true;
         }
         if (
@@ -677,7 +677,9 @@ export function relayHandler(
               ...(failed ? { error: failed } : {}),
               ...(url.searchParams.get("done") === "reset"
                 ? { done: "reset" as const }
-                : {}),
+                : url.searchParams.get("done") === "admin-made"
+                  ? { done: "admin-made" as const }
+                  : {}),
             }),
           );
           return true;
@@ -796,7 +798,7 @@ export function relayHandler(
               owner: place.role === "owner",
             });
             redirect(`${back}#invite`, [
-              `sub-office.invited=${made.token}; Path=/home; Max-Age=120; HttpOnly; SameSite=Strict`,
+              `sub-office.invited=${made.token}; Path=/home; Max-Age=120; HttpOnly; SameSite=Strict${options.publicUrl?.startsWith("https:") ? "; Secure" : ""}`,
             ]);
           } catch (error) {
             const code =
@@ -829,7 +831,14 @@ export function relayHandler(
           people.find((one) => one.id === person.id)?.role === "owner";
         const clones =
           place && owner ? await accounts.keyedClones(place.office) : [];
-        const seen = (iso: string) => new Date(iso).toLocaleString(lang);
+        // to the minute, as people read a time; seconds say nothing here
+        const seen = (iso: string) =>
+          new Date(iso).toLocaleString(lang, {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          });
         const failed = failure();
         html(
           200,
@@ -935,7 +944,7 @@ export function relayHandler(
               ? {
                   computer: {
                     name: mine.card.name,
-                    seen: new Date(mine.seen).toLocaleString(lang),
+                    seen: seen(mine.seen),
                   },
                 }
               : {}),
@@ -1437,7 +1446,10 @@ export function relayHandler(
           throw new RelayError(429, "Too many tries.", "too-many-tries");
         const input = await body(request);
         try {
-          const claimed = await accounts.claim(String(input.code ?? ""));
+          const claimed = await accounts.claim(
+            String(input.code ?? ""),
+            typeof input.token === "string" ? input.token : undefined,
+          );
           send(200, { relay: base(), ...claimed });
         } catch (error) {
           if (error instanceof RelayError && error.code === "setup-expired")

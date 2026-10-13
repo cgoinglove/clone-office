@@ -84,8 +84,8 @@ const WORDS = {
     setupWhat:
       "You'll be its admin: you decide how people sign in, and you invite your team. Make your account here. This link works once.",
     setupTitle: "Set up this team server",
-    inviteAccountIn: "account made",
-    inviteCloneIn: "clone joined",
+    inviteHalfAccount: "account made · clone not joined yet",
+    inviteHalfClone: "clone joined · no account yet",
     inviteFrom: "From {by}, {when}",
     invitesTitle: "Invites still open",
     inviteMade: "Send this to one person:",
@@ -204,6 +204,7 @@ const WORDS = {
       "Send this link to {name} yourself. It works once, for an hour:",
     newPassword: "New password (8 characters or more)",
     setPassword: "Save the new password",
+    adminMade: "This server is set up already. Sign in.",
     resetDone: "Your password is changed. Sign in with it.",
     joinTitle: "Join {office} too?",
     joinWhat:
@@ -240,7 +241,6 @@ const WORDS = {
       "For now, only this server's admin can sign in with a password.",
     resetMadeTold: "Their page says you made it, and they can stop it.",
     errors: {
-      "admin-made": "This server is set up already. Sign in.",
       "text-missing": "Write something first.",
       "not-on-web": "Your clone answers these on your computer.",
       "invite-used": "This invite made an account already. Ask for a new one.",
@@ -377,8 +377,8 @@ const WORDS = {
     setupWhat:
       "이 서버의 관리자가 돼요. 사람들이 어떻게 로그인할지 정하고, 팀을 초대해요. 여기서 계정을 만드세요. 이 링크는 한 번만 쓸 수 있어요.",
     setupTitle: "이 팀 서버 설정하기",
-    inviteAccountIn: "계정 만듦",
-    inviteCloneIn: "클론 들어옴",
+    inviteHalfAccount: "계정 만듦 · 클론은 아직",
+    inviteHalfClone: "클론 들어옴 · 계정은 아직",
     inviteFrom: "{by} 님, {when}",
     invitesTitle: "아직 쓸 수 있는 초대",
     inviteMade: "한 사람에게 보내 주세요:",
@@ -494,6 +494,7 @@ const WORDS = {
       "이 링크를 {name} 님에게 직접 보내 주세요. 한 번, 1시간 동안만 돼요:",
     newPassword: "새 비밀번호 (8자 이상)",
     setPassword: "새 비밀번호 저장",
+    adminMade: "이 서버는 이미 설정됐어요. 로그인하세요.",
     resetDone: "비밀번호를 바꿨어요. 새 비밀번호로 로그인하세요.",
     joinTitle: "{office}에도 들어갈까요?",
     joinWhat:
@@ -530,7 +531,6 @@ const WORDS = {
     resetMadeTold:
       "링크를 만든 것은 그 사람의 페이지에도 보이고, 그 사람이 링크를 막을 수 있어요.",
     errors: {
-      "admin-made": "이 서버는 이미 설정됐어요. 로그인하세요.",
       "text-missing": "먼저 내용을 적어 주세요.",
       "not-on-web": "이 부탁은 내 컴퓨터의 클론이 답해요.",
       "invite-used": "이 초대로 이미 계정을 만들었어요. 새 초대를 받아 주세요.",
@@ -666,8 +666,8 @@ const WORDS = {
     setupWhat:
       "你将成为它的管理员：决定大家如何登录，并邀请你的团队。请在这里创建你的账号。这个链接只能用一次。",
     setupTitle: "设置这台团队服务器",
-    inviteAccountIn: "账号已创建",
-    inviteCloneIn: "分身已加入",
+    inviteHalfAccount: "账号已创建 · 分身尚未加入",
+    inviteHalfClone: "分身已加入 · 尚未创建账号",
     inviteFrom: "{by}，{when}",
     invitesTitle: "仍可使用的邀请",
     inviteMade: "把它发给一个人：",
@@ -773,6 +773,7 @@ const WORDS = {
     resetMadeWhat: "请把这个链接亲自发给{name}。只能用一次，1 小时内有效：",
     newPassword: "新密码（至少 8 位）",
     setPassword: "保存新密码",
+    adminMade: "这台服务器已经设置好了。请登录。",
     resetDone: "密码已更改。请用新密码登录。",
     joinTitle: "也加入{office}吗？",
     joinWhat: "你正以{name}的身份登录。{office}的成员会看到你的名字和邮箱。",
@@ -805,7 +806,6 @@ const WORDS = {
     adminsOnlyNote: "目前只有这台服务器的管理员可以用密码登录。",
     resetMadeTold: "对方的页面会显示是你生成的，对方也可以停用它。",
     errors: {
-      "admin-made": "这台服务器已经设置好了。请登录。",
       "text-missing": "请先写点内容。",
       "not-on-web": "这些由你电脑上的分身回答。",
       "invite-used": "已经用这个邀请创建过账号了。请要一个新的邀请。",
@@ -935,8 +935,8 @@ const WORDS = {
     setupWhat:
       "あなたがこのサーバーの管理者になります。サインイン方法を決め、チームを招待します。ここでアカウントを作ってください。このリンクは1回だけ使えます。",
     setupTitle: "このチームサーバーを設定する",
-    inviteAccountIn: "アカウント作成済み",
-    inviteCloneIn: "クローン参加済み",
+    inviteHalfAccount: "アカウント作成済み · クローンはまだ",
+    inviteHalfClone: "クローン参加済み · アカウントはまだ",
     inviteFrom: "{by}さん、{when}",
     invitesTitle: "まだ使える招待",
     inviteMade: "一人に送ってください：",
@@ -1056,6 +1056,7 @@ const WORDS = {
       "このリンクを{name}さんに直接送ってください。1回だけ、1時間有効です：",
     newPassword: "新しいパスワード（8文字以上）",
     setPassword: "新しいパスワードを保存",
+    adminMade: "このサーバーはすでに設定済みです。サインインしてください。",
     resetDone:
       "パスワードを変更しました。新しいパスワードでサインインしてください。",
     joinTitle: "{office}にも参加しますか？",
@@ -1095,8 +1096,6 @@ const WORDS = {
     resetMadeTold:
       "作ったことは相手のページにも表示され、相手はリンクを止められます。",
     errors: {
-      "admin-made":
-        "このサーバーはすでに設定済みです。サインインしてください。",
       "text-missing": "先に内容を書いてください。",
       "not-on-web": "これはあなたのコンピューターのクローンが答えます。",
       "invite-used":
@@ -1243,8 +1242,8 @@ const WORDS = {
     setupWhat:
       "Serás quien lo administra: decides cómo inicia sesión la gente e invitas a tu equipo. Crea tu cuenta aquí. Este enlace sirve una sola vez.",
     setupTitle: "Configura este servidor del equipo",
-    inviteAccountIn: "cuenta creada",
-    inviteCloneIn: "clon unido",
+    inviteHalfAccount: "cuenta creada · el clon aún no se ha unido",
+    inviteHalfClone: "clon unido · aún sin cuenta",
     inviteFrom: "De {by}, {when}",
     invitesTitle: "Invitaciones aún abiertas",
     inviteMade: "Envíalo a una sola persona:",
@@ -1365,6 +1364,7 @@ const WORDS = {
       "Envía tú mismo este enlace a {name}. Funciona una vez, durante una hora:",
     newPassword: "Contraseña nueva (8 caracteres o más)",
     setPassword: "Guardar la contraseña nueva",
+    adminMade: "Este servidor ya está configurado. Inicia sesión.",
     resetDone: "Tu contraseña cambió. Inicia sesión con ella.",
     joinTitle: "¿Unirte también a {office}?",
     joinWhat:
@@ -1402,7 +1402,6 @@ const WORDS = {
       "Por ahora, solo quien administra este servidor puede iniciar sesión con contraseña.",
     resetMadeTold: "Su página dice que lo creaste, y puede detenerlo.",
     errors: {
-      "admin-made": "Este servidor ya está configurado. Inicia sesión.",
       "text-missing": "Escribe algo primero.",
       "not-on-web": "Tu clon responde esto desde tu computadora.",
       "invite-used":
@@ -1546,8 +1545,8 @@ const WORDS = {
     setupWhat:
       "Você vai administrá-lo: decide como as pessoas entram e convida a sua equipe. Crie sua conta aqui. Este link funciona uma vez só.",
     setupTitle: "Configure este servidor da equipe",
-    inviteAccountIn: "conta criada",
-    inviteCloneIn: "clone entrou",
+    inviteHalfAccount: "conta criada · o clone ainda não entrou",
+    inviteHalfClone: "clone entrou · ainda sem conta",
     inviteFrom: "De {by}, {when}",
     invitesTitle: "Convites ainda abertos",
     inviteMade: "Envie para uma pessoa só:",
@@ -1668,6 +1667,7 @@ const WORDS = {
       "Envie você mesmo este link para {name}. Funciona uma vez, por uma hora:",
     newPassword: "Senha nova (8 caracteres ou mais)",
     setPassword: "Salvar a senha nova",
+    adminMade: "Este servidor já está configurado. Entre.",
     resetDone: "Sua senha foi alterada. Entre com ela.",
     joinTitle: "Entrar também em {office}?",
     joinWhat:
@@ -1706,7 +1706,6 @@ const WORDS = {
     resetMadeTold:
       "A página da pessoa mostra que você o criou, e ela pode pará-lo.",
     errors: {
-      "admin-made": "Este servidor já está configurado. Entre.",
       "text-missing": "Escreva algo primeiro.",
       "not-on-web": "Seu clone responde isso no seu computador.",
       "invite-used": "Uma conta já foi criada com este convite. Peça um novo.",
@@ -1780,6 +1779,10 @@ const _wordsInStep: AllInSync<typeof WORDS> & Record<PageLanguage, unknown> =
 
 type Words = (typeof WORDS)["en"];
 type Key = Exclude<keyof Words, "errors">;
+
+/** A tab's title with what waits on the person before it, as the app's own tab carries it. */
+const counted = (title: string, waiting: number) =>
+  waiting > 0 ? `(${waiting}) ${title}` : title;
 
 function say(
   lang: PageLanguage,
@@ -1901,8 +1904,8 @@ export function signInPage(input: {
   key?: string;
   methods: SignInMethods;
   error?: string;
-  /** A word for what just happened: the password was changed. */
-  done?: "reset";
+  /** A word for what just happened: the password was changed, or the server was set up already. */
+  done?: "reset" | "admin-made";
   email?: string;
 }): string {
   const { lang } = input;
@@ -1912,7 +1915,7 @@ export function signInPage(input: {
     title,
     `<h1>${title}</h1>
 ${problem(lang, input.error)}
-${input.done === "reset" ? `<p class="done" role="status">${say(lang, "resetDone")}</p>` : ""}
+${input.done ? `<p class="done" role="status">${say(lang, input.done === "reset" ? "resetDone" : "adminMade")}</p>` : ""}
 ${googleWay(lang, input.methods, `/login/google${input.key ? `?key=${encodeURIComponent(input.key)}` : ""}`)}
 ${
   input.methods.password
@@ -2049,9 +2052,12 @@ export function requestsPage(input: {
 <p class="request">${escape(one.text)}</p>${one.answer ? `<p class="note"><b>${say(lang, "answerFrom", { name: one.other })}</b><br>${escape(one.answer)}</p>` : ""}</li>`,
     )
     .join("");
+  const waiting = input.web
+    ? input.asked.filter((one) => one.state === "waiting").length
+    : 0;
   return shell(
     lang,
-    title,
+    counted(title, waiting),
     `<h1>${title}${input.office.name ? ` · ${escape(input.office.name)}` : ""}</h1>
 ${input.done ? `<p class="done" role="status">${say(lang, input.done === "sent" ? "askSent" : "answerSent")}</p>` : ""}
 ${problem(lang, input.error)}
@@ -2284,7 +2290,7 @@ export function homePage(input: {
     : "";
   return shell(
     lang,
-    title,
+    counted(title, input.waiting ?? 0),
     `<h1>${title}</h1>
 ${problem(lang, input.error)}
 ${input.done === "stopped" ? `<p class="done" role="status">${say(lang, "stoppedDone")}</p>` : ""}
@@ -2334,14 +2340,14 @@ ${
 <p class="note">${say(lang, "inviteOnce")}</p>`
     : ""
 }
-<form method="post" action="/home/invite" class="inline">${officeField}<input name="note" maxlength="80" aria-label="${say(lang, "inviteFor")}" placeholder="${say(lang, "inviteFor")}"><button type="submit" class="quiet">${say(lang, "inviteMake")}</button></form>
+<form method="post" action="/home/invite">${officeField}<label for="invite-note">${say(lang, "inviteFor")}</label><input id="invite-note" name="note" maxlength="80" autocomplete="off"><button type="submit" class="quiet">${say(lang, "inviteMake")}</button></form>
 ${
   owner && input.invites?.length
     ? `<h3>${say(lang, "invitesTitle")}</h3>
 <ul class="rows">${input.invites
         .map(
           (one) =>
-            `<li><span class="who">${one.note ? `<b>${escape(one.note)}</b> ` : ""}${say(lang, "inviteFrom", { by: one.by, when: one.created })}${one.clone ? `<span class="tag">${say(lang, "inviteCloneIn")}</span>` : ""}${one.account ? `<span class="tag">${say(lang, "inviteAccountIn")}</span>` : ""}</span><form method="post" action="/home/invite/cancel" class="acts">${officeField}<input type="hidden" name="invite" value="${escape(one.id)}"><button type="submit" class="ghost small">${say(lang, "cancel")}</button></form></li>`,
+            `<li><span class="who">${one.note ? `<b>${escape(one.note)}</b> ` : ""}${say(lang, "inviteFrom", { by: one.by, when: one.created })}${one.clone ? `<span class="tag">${say(lang, "inviteHalfClone")}</span>` : one.account ? `<span class="tag">${say(lang, "inviteHalfAccount")}</span>` : ""}</span><form method="post" action="/home/invite/cancel" class="acts">${officeField}<input type="hidden" name="invite" value="${escape(one.id)}"><button type="submit" class="ghost small">${say(lang, "cancel")}</button></form></li>`,
         )
         .join("")}</ul>`
     : ""

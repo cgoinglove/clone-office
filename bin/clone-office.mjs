@@ -226,12 +226,23 @@ async function connect(link) {
     process.exit(1);
   }
   const server = `${url.protocol}//${url.host}`;
+  // The clone this computer already has in that office (joined with an invite) goes along: shown
+  // with the code, it becomes this account's rather than a second place being made.
+  const had = readSettings(settingsFile()).office;
+  const sameRelay = (() => {
+    try {
+      return new URL(had?.relay).host === url.host;
+    } catch {
+      return false;
+    }
+  })();
+  const token = sameRelay && had?.token ? had.token : undefined;
   let answer;
   try {
     const response = await fetch(`${server}/pair/claim`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, ...(token ? { token } : {}) }),
       signal: AbortSignal.timeout(20_000),
     });
     answer = { ok: response.ok, ...(await response.json().catch(() => ({}))) };

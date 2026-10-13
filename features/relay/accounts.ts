@@ -1516,7 +1516,11 @@ export class Accounts {
    * A computer claims a setup code: its mini-me becomes the person's in that office, with a token
    * of its own (the computer's lasting credential, apart from the code that admitted it).
    */
-  async claim(code: string): Promise<{
+  async claim(
+    code: string,
+    /** The token this computer's clone already holds, to be made the account's (`joinAs`). */
+    adopt?: string,
+  ): Promise<{
     office: { id: string; name: string };
     member: string;
     token: string;
@@ -1551,6 +1555,7 @@ export class Accounts {
       office.id,
       taken.user_id,
       person.name,
+      adopt,
     );
     return {
       office,

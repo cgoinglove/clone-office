@@ -496,7 +496,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   `joinAs`), and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:
-  `Relay.joinAs` moves it). `people-pages.ts` is the invite's sign-up page, sign-in (Google first
+  `Relay.joinAs` moves it, or takes over the clone that computer joined with an invite when `connect` sends its token). `people-pages.ts` is the invite's sign-up page, sign-in (Google first
   where it is on, as a link, since the pages' forms post only to the server), one's own page with
   the line to run, the people in the office and how one signs in, and the admin's sign-in settings
   (`adminPage`), plain HTML with no scripts and the app's mark; going to Google starts only from

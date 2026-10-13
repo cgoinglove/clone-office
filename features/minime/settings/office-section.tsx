@@ -440,7 +440,11 @@ function ServerLink() {
             })
               .then((r) => r.json())
               .then((data) => {
-                if (typeof data?.url !== "string")
+                // only a web page goes into the tab, never a script or another kind of link
+                if (
+                  typeof data?.url !== "string" ||
+                  !/^https?:$/.test(new URL(data.url).protocol)
+                )
                   throw new Error(String(data?.error ?? "relay-unreachable"));
                 if (tab) tab.location.href = data.url;
                 else window.open(data.url, "_blank", "noopener");

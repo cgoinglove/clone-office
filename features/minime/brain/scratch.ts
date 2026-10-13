@@ -211,7 +211,8 @@ export class Spill {
     const body = pageable(text);
     try {
       await mkdir(dir, { recursive: true, mode: 0o700 });
-      await writeFile(path, body, { mode: 0o600 });
+      // a new file, never one already there (nor a link someone left under its name)
+      await writeFile(path, body, { mode: 0o600, flag: "wx" });
     } catch {
       return undefined;
     }

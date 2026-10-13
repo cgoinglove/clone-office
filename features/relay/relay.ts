@@ -761,6 +761,12 @@ export class Relay {
     office: string,
     user: string,
     name: string,
+    /**
+     * The token this computer's clone already holds in the office, joined with an invite: shown
+     * with the setup code, both secrets of one person, that clone becomes the account's instead of
+     * a second place being made for them.
+     */
+    adopt?: string,
   ): Promise<{ id: string; token: string; moved: boolean }> {
     const token = randomBytes(24).toString("base64url");
     const now = new Date().toISOString();
@@ -775,6 +781,13 @@ export class Relay {
           [hashToken(token), now, had.id],
         );
         return { id: had.id, token, moved: true };
+      }
+      if (adopt) {
+        const [kept] = await tx.query<{ id: string }>(
+          "UPDATE members SET user_id = $3, token_hash = $4, seen = $5, on_web = false WHERE token_hash = $1 AND office_id = $2 AND user_id IS NULL RETURNING id",
+          [hashToken(adopt), office, user, hashToken(token), now],
+        );
+        if (kept) return { id: kept.id, token, moved: true };
       }
       const id = `m-${randomBytes(6).toString("hex")}`;
       await tx.query(

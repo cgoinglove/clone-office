@@ -16,8 +16,15 @@
 
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { existsSync } from "node:fs";
-import { mkdir, realpath, stat, writeFile } from "node:fs/promises";
+import { constants, existsSync } from "node:fs";
+import {
+  lstat,
+  mkdir,
+  open,
+  realpath,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { loadTrust } from "../gate/rules.ts";
@@ -322,7 +329,7 @@ async function run(
     // Kept with the session's other temporary files when it has a scratch folder.
     file = join(scratchDir() ?? join(workspace, ".outputs"), `bash-${id}.txt`);
     await mkdir(dirname(file), { recursive: true });
-    await writeFile(file, text).catch(() => {
+    await writeFile(file, text, { flag: "wx" }).catch(() => {
       file = undefined;
     });
   }
@@ -411,6 +418,10 @@ export async function insideWorkspace(
   const realWorkspace = await realpath(workspace).catch(() => workspace);
   if (real !== realWorkspace && !real.startsWith(realWorkspace + sep))
     return { error: "That folder leads out of the workspace." };
+  // Nor the file itself: a link there (one a command made) would be written through, anywhere.
+  const self = await lstat(path).catch(() => undefined);
+  if (self?.isSymbolicLink())
+    return { error: "That file is a link; links are never written through." };
   return { path };
 }
 
@@ -437,7 +448,28 @@ async function writeInWorkspace(
   if (Buffer.byteLength(content, "utf8") > 10 * 1024 * 1024)
     return { result: "Too large for one file (10 MB).", isError: true };
   await mkdir(dirname(where.path), { recursive: true });
-  await writeFile(where.path, content);
+  // Opened without following a link, should one appear there after the look above.
+  const file = await open(
+    where.path,
+    constants.O_WRONLY |
+      constants.O_CREAT |
+      constants.O_TRUNC |
+      (constants.O_NOFOLLOW ?? 0),
+    0o644,
+  ).catch((error: NodeJS.ErrnoException) => error);
+  if (file instanceof Error)
+    return {
+      result:
+        file.code === "ELOOP"
+          ? "That file is a link; links are never written through."
+          : `Not written: ${file.message}`,
+      isError: true,
+    };
+  try {
+    await file.writeFile(content);
+  } finally {
+    await file.close();
+  }
   if (inScratch && "path" in inScratch)
     return {
       result: `Wrote ${where.path} (${content.length} characters) in the scratch folder.`,
