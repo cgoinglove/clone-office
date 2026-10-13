@@ -72,20 +72,20 @@ Clone Office 运行在你自己的电脑上：你的分身要在这里学习你�
 
 ```sh
 POSTGRES_PASSWORD=<letters and digits> docker compose up -d
-docker compose logs relay   # the invite link
+docker compose logs relay   # the link that makes you its admin
 ```
 
 或者用你已有的 Postgres 手动运行：`DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`（没有 Postgres 时，办公室会保存在一个文件夹里）。放到公网上时，请放在 HTTPS（Caddy 或 nginx）后面，并设置 `RELAY_TRUST_PROXY=1`（前面还有 CDN 时设为 `2`）和 `RELAY_PUBLIC_URL`。
 
-先打开邀请链接，注册你的账号（在安装步骤下方）：第一个账号就是办公室的所有者。然后把同一条链接发给团队。每个人可以照着页面上的步骤，只凭这条链接加入；也可以在那里注册账号，之后服务器上属于他们的页面会给出一行命令，以他们的名字把电脑连上来：
+先打开日志里的设置链接（只能用一次，一天内有效；重启后会打印新的），注册你的账号：你就是这台服务器的管理员。然后在服务器上你的页面邀请团队：每个邀请链接只给一个人用，一周内有效，所以没有里面的人邀请，谁也进不来。每个人可以照着页面上的步骤，只凭这条链接加入；也可以在那里注册账号，之后服务器上属于他们的页面会给出一行命令，以他们的名字把电脑连上来：
 
 ```sh
 npx clone-office connect https://<your server>/p/<one-time code>
 ```
 
-所有者在这个页面上能看到办公室里的所有人，可以移除某人（其分身立刻停止）、把别人设为所有者、生成新的邀请链接（旧链接随即失效），以及给办公室命名。
+所有者在这个页面上能看到办公室里的所有人和仍可使用的邀请（并可以取消），可以移除某人（其分身立刻停止）、把别人设为所有者，以及给办公室命名。
 
-大家可以用邮箱和密码登录；服务器管理员（第一个注册的账号）在自己页面的**登录设置**里设置好 Google 之后，也可以用 Google 账号登录：在 Google Cloud Console 创建 OAuth 客户端，并把页面显示的重定向 URI 填进去即可。每种登录方式都可以在那里开启或关闭，始终至少保留一种；客户端密钥用 `RELAY_ENCRYPTION_KEY` 加密保存（把数据放在文件夹里的服务器则用旁边的 `secret.key`）。
+大家可以用邮箱和密码登录；服务器管理员在自己页面的**登录设置**里设置好 Google 之后，也可以用 Google 账号登录：在 Google Cloud Console 创建 OAuth 客户端，并把页面显示的重定向 URI 填进去即可。每种登录方式都可以在那里开启或关闭，始终至少保留一种；客户端密钥用服务器生成一次、与数据库分开保存的密钥加密保存（数据文件夹旁的 `secret.key`，或 `RELAY_KEY_DIR`；在 compose 文件里是单独的卷；也可以用 `RELAY_ENCRYPTION_KEY` 直接提供）。
 
 **从任何 A2A 智能体**：办公室的每个成员都是中继服务器上的一个 [A2A](https://a2a-protocol.org) v1.0 智能体，地址是 `/a2a/<member>`（名片在 `/a2a/<member>/.well-known/agent-card.json`）。加入了办公室的智能体（用办公室密钥调用 `POST /join` 拿到令牌）可以像分身一样用 `SendMessage` 询问同事的分身，分身会按其主人设定的方式回答。Hermes Agent 的 a2a 工具和官方 SDK 都能直接使用。
 

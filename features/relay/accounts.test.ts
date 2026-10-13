@@ -196,11 +196,24 @@ test("from the invite link to a connected computer, as a person does it: sign up
       await fetch(`${base}/home`, { headers: { cookie } })
     ).text();
     assert.match(own, /Hi Ben[\s\S]*No computer is connected yet/);
+    // The office's key is never on a page; an invite is made there, one link per person.
+    assert.doesNotMatch(own, new RegExp(office.key));
+    const invited = await (
+      await fetch(`${base}/home/invite`, {
+        method: "POST",
+        headers: {
+          cookie,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: "",
+      })
+    ).text();
     assert.match(
-      own,
-      new RegExp(`/i/${office.key}\\?from=Ben`),
-      "the team's invite link",
+      invited,
+      /<pre>http:\/\/[^<]+\/i\/[\w-]{24}\?from=Ben<\/pre>/,
+      "the invite just made",
     );
+    assert.doesNotMatch(invited, new RegExp(office.key));
 
     const paired = await (
       await fetch(`${base}/home/pair`, { method: "POST", headers: { cookie } })
@@ -1669,7 +1682,13 @@ test("the admin's pages say what a change would do before it fails, and an invit
       password: "a long password",
     });
     const page = await (
-      await fetch(`${base}/home`, { headers: { cookie: cookieOf(mo.cookies) } })
+      await fetch(`${base}/home/invite`, {
+        method: "POST",
+        headers: {
+          cookie: cookieOf(mo.cookies),
+          "sec-fetch-site": "same-origin",
+        },
+      })
     ).text();
     const link = /<pre>(http:[^<]*\/i\/[^<]*)<\/pre>/.exec(page)?.[1] ?? "";
     assert.ok(
@@ -1724,6 +1743,251 @@ test("wrong tries are counted against the address the trusted proxy saw, an IPv6
       await wrong(`10.0.0.${n}, 2001:db8:1:2::${n.toString(16)}, 198.51.100.1`);
     assert.equal((await wrong("2001:db8:1:2::ffff, 198.51.100.1")).status, 429);
     assert.equal((await wrong("2001:db8:1:3::1, 198.51.100.1")).status, 400);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("an invite is for one person: one clone and one account, a week, cancelled by an owner; the office's key stays its own", async () => {
+  const { createServer } = await import("node:http");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay);
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const card = (name: string) =>
+    ({ name, description: "", status: "working" }) as never;
+  try {
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    // A member's app asks for an invite: a new one each time, never the office's key.
+    const host = await relay.join({
+      key: office.key,
+      card: card("Ana's clone"),
+    });
+    const asked = async () =>
+      (await (
+        await fetch(`${base}/invite`, {
+          headers: { authorization: `Bearer ${host.token}` },
+        })
+      ).json()) as { path: string; days: number };
+    const one = await asked();
+    const two = await asked();
+    assert.notEqual(one.path, two.path);
+    assert.equal(one.days, 7);
+    assert.doesNotMatch(one.path, new RegExp(office.key));
+    const token = one.path.slice("/i/".length);
+    // Its page opens without using it.
+    assert.equal((await fetch(`${base}/i/${token}`)).status, 200);
+    assert.equal((await fetch(`${base}/i/${token}`)).status, 200);
+    // One clone joins with it; a second cannot.
+    const ben = await relay.join({ key: token, card: card("Ben") });
+    await assert.rejects(relay.join({ key: token, card: card("Eve") }), {
+      code: "office-key-wrong",
+    });
+    // The same person makes their account with it: their clone becomes this account's.
+    const benAccount = await accounts.signUp(token, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    const [linked] = await db.query<{ user_id: string }>(
+      "SELECT user_id FROM members WHERE id = $1",
+      [ben.id],
+    );
+    assert.equal(linked.user_id, benAccount.person.id, "one person, one clone");
+    // Used for both, it has ended, and says so.
+    await assert.rejects(
+      accounts.signUp(token, {
+        name: "Eve",
+        email: "eve@example.com",
+        password: "eve's long password",
+      }),
+      /invite-wrong|invite-used/,
+    );
+    const ended = await fetch(`${base}/i/${token}`);
+    assert.equal(ended.status, 410);
+    assert.match(await ended.text(), /This invite has ended/);
+    // Two people never make an account each with one link.
+    const shared = (await asked()).path.slice("/i/".length);
+    const both = await Promise.allSettled(
+      ["cy", "dee"].map((name) =>
+        accounts.signUp(shared, {
+          name,
+          email: `${name}@example.com`,
+          password: "a long password",
+        }),
+      ),
+    );
+    assert.equal(both.filter((one) => one.status === "fulfilled").length, 1);
+    // An account made, its page keeps the guide for a clone but no second account.
+    const half = await (await fetch(`${base}/i/${shared}`)).text();
+    assert.match(half, /An account was made with this invite already/);
+    assert.doesNotMatch(half, /name="password"/);
+    // An owner sees the open invites and cancels one; it stops working at once.
+    const admin = cookieOf(ana.cookies);
+    const open = (await asked()).path.slice("/i/".length);
+    const home = await (
+      await fetch(`${base}/home`, { headers: { cookie: admin } })
+    ).text();
+    assert.match(home, /Invites still open/);
+    const id = /name="invite" value="(i-[0-9a-f]+)"/.exec(home)?.[1] ?? "";
+    assert.ok(id);
+    const cancelled = await fetch(`${base}/home/invite/cancel`, {
+      method: "POST",
+      headers: {
+        cookie: admin,
+        "sec-fetch-site": "same-origin",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ invite: id }),
+      redirect: "manual",
+    });
+    assert.equal(cancelled.status, 303);
+    const left = (await relay.invites(office.id)).filter((one) => one.open);
+    assert.ok(!left.some((one) => one.id === id));
+    // A member who is not an owner cannot cancel one.
+    const benCookie = cookieOf(benAccount.cookies);
+    const still = left[0]?.id ?? "";
+    await fetch(`${base}/home/invite/cancel`, {
+      method: "POST",
+      headers: {
+        cookie: benCookie,
+        "sec-fetch-site": "same-origin",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ invite: still }),
+      redirect: "manual",
+    });
+    assert.ok(
+      (await relay.invites(office.id)).find((one) => one.id === still)?.open,
+    );
+    // Past its week, an invite ends.
+    await db.query("UPDATE invites SET expires = now() - interval '1 minute'");
+    await assert.rejects(relay.join({ key: open, card: card("Late") }), {
+      code: "office-key-wrong",
+    });
+    // The office's own key still joins, for whoever runs the server.
+    await relay.join({ key: office.key, card: card("Operator") });
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await relay.close();
+    await db.close();
+  }
+});
+
+test("a new server's admin is made with the link whoever runs it has, once; the app that runs it gets one, and a clone without an account a link to make its own", async () => {
+  const { createServer } = await import("node:http");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const accounts = await Accounts.open(db, relay);
+  const office = await relay.office();
+  const server = createServer(relayHandler(relay, { accounts }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const form = (fields: Record<string, string>) => ({
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "sec-fetch-site": "same-origin",
+    },
+    body: new URLSearchParams(fields),
+    redirect: "manual" as const,
+  });
+  try {
+    // The office opened on someone's computer: its app's clone is in, nobody owns it yet.
+    const host = await relay.join({
+      key: office.key,
+      card: { name: "Ana", description: "", status: "working" } as never,
+    });
+    assert.equal(await accounts.hasAdmin(), false);
+    const first = await accounts.adminLink();
+    assert.ok(first);
+    // Asked again, a new link; the one before ends.
+    const asked = await fetch(`${base}/server-link`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${host.token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ key: office.key }),
+    });
+    const { path } = (await asked.json()) as { path: string };
+    assert.match(path, /^\/setup\/[\w-]{24}$/);
+    assert.equal((await fetch(`${base}/setup/${first}`)).status, 410);
+    // Without the office's key, the clone gets a link to make its own account, not the admin's.
+    const own = (await (
+      await fetch(`${base}/server-link`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${host.token}`,
+          "content-type": "application/json",
+        },
+        body: "{}",
+      })
+    ).json()) as { path: string };
+    assert.match(own.path, /^\/i\/[\w-]{24}\?account#account$/);
+    // The setup link makes the admin: an owner of the server's first office.
+    const page = await fetch(`${base}${path}`);
+    assert.equal(page.status, 200);
+    assert.match(await page.text(), /Set up this team server/);
+    const made = await fetch(
+      `${base}${path}`,
+      form({
+        name: "Ana",
+        email: "ana@example.com",
+        password: "a long password",
+      }),
+    );
+    assert.equal(made.headers.get("location"), "/home/admin?done=welcome");
+    const ana = await accounts.signIn({
+      email: "ana@example.com",
+      password: "a long password",
+    });
+    assert.equal(await accounts.isAdmin(ana.person.id), true);
+    // Once: the link ends, and no other is made.
+    assert.equal(
+      (await fetch(`${base}${path}`, { redirect: "manual" })).headers.get(
+        "location",
+      ),
+      "/login",
+    );
+    assert.equal(await accounts.adminLink(), undefined);
+    // The clone's own account link makes its person's account, joined to that clone.
+    await fetch(
+      `${base}${own.path.replace("?account#account", "")}`,
+      form({
+        name: "Ana B",
+        email: "anab@example.com",
+        password: "a long password",
+      }),
+    );
+    const [{ user_id }] = await db.query<{ user_id: string | null }>(
+      "SELECT user_id FROM members WHERE id = $1",
+      [host.id],
+    );
+    assert.ok(user_id);
+    // With an account, the app's link is the sign-in.
+    const after = (await (
+      await fetch(`${base}/server-link`, {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${host.token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ key: office.key }),
+      })
+    ).json()) as { path: string };
+    assert.equal(after.path, "/login");
   } finally {
     await new Promise((resolve) => server.close(resolve));
     await relay.close();

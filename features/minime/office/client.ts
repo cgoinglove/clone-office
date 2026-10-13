@@ -363,6 +363,22 @@ export async function inviteLink(
   return url.toString();
 }
 
+/**
+ * Where to open the team server's own pages for this clone's person: the link that makes the
+ * server's admin (for the app that runs the office, holding its `key`, while it has none), a link
+ * to make their own account there (joined to this clone), or its sign-in.
+ */
+export async function serverLink(
+  office: OfficeConfig,
+  key?: string,
+): Promise<string> {
+  const { path } = await call<{ path: string }>(office.relay, "/server-link", {
+    token: office.token,
+    body: key ? { key } : {},
+  });
+  return new URL(path, office.relay).toString();
+}
+
 export async function sendRequest(
   office: OfficeConfig,
   to: string,

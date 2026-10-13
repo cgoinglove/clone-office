@@ -72,8 +72,15 @@ import {
   PACKAGE_PATH,
   servedPackage,
 } from "./install.ts";
-import { invitePage, missingPage, pageLanguage, replyPage } from "./page.ts";
 import {
+  inviteEndedPage,
+  invitePage,
+  missingPage,
+  pageLanguage,
+  replyPage,
+} from "./page.ts";
+import {
+  adminLinkEndedPage,
   adminPage,
   confirmPage,
   connectCommand,
@@ -81,12 +88,14 @@ import {
   newPasswordPage,
   resetMadePage,
   runPage,
+  setupPage,
   signInPage,
   signUpPage,
 } from "./people-pages.ts";
 import {
   FILE_BYTES,
   FILES_PER_MESSAGE,
+  INVITE_DAYS,
   type Relay,
   RelayError,
   type TaskState,
@@ -364,7 +373,9 @@ export function relayHandler(
       // Only the people's own pages and Google's way back: the clones' calls pass straight on.
       if (
         !key &&
-        !/^\/(?:login|logout|home|reset|p\/|pair\/|i\/|api\/auth\/)/.test(path)
+        !/^\/(?:login|logout|home|reset|setup\/|p\/|pair\/|i\/|api\/auth\/)/.test(
+          path,
+        )
       )
         return false;
       const lang = pageLanguage(request.headers["accept-language"]);
@@ -498,9 +509,18 @@ export function relayHandler(
       if (key) {
         if (tries.blocked(from) || !(await relay.knows(key))) {
           tries.miss(from);
-          html(404, missingPage(lang));
+          // an invite that worked once says so, rather than that there is nothing here
+          const ended = await relay.inviteEnded(key);
+          html(
+            ended ? 410 : 404,
+            ended ? inviteEndedPage(lang) : missingPage(lang),
+          );
           return true;
         }
+        const office = await accounts.officeOf(key);
+        // An invite already used for an account leaves the page with its guide alone.
+        const invite = await relay.invite(key);
+        const accountMade = Boolean(invite?.account);
         const who =
           url.searchParams.get("from")?.trim().slice(0, 80) || undefined;
         const link = `${base()}${path}${url.search}`;
@@ -508,8 +528,8 @@ export function relayHandler(
           const person = await accounts.person(cookie);
           if (person) {
             const places = await accounts.places(person.id);
-            if (places.some((place) => place.key === key)) {
-              redirect("/home");
+            if (places.some((place) => place.office === office?.id)) {
+              redirect(`/home?office=${encodeURIComponent(office?.id ?? "")}`);
               return true;
             }
             // An account Google just made from this very invite lands in its office; anyone
@@ -533,7 +553,7 @@ export function relayHandler(
                 lang,
                 what: "join",
                 name: person.name,
-                office: (await accounts.officeOf(key))?.name ?? "",
+                office: office?.name ?? "",
                 action: `/i/${key}/join`,
                 signOutNext: `/i/${key}?${
                   who
@@ -558,6 +578,7 @@ export function relayHandler(
               // Google sent them back here: the page says why at its top.
               ...(failed ? { error: failed, errorAtTop: true } : {}),
               ...(url.searchParams.has("account") ? { openAccount: true } : {}),
+              ...(accountMade ? { accountMade } : {}),
             }),
           );
           return true;
@@ -583,6 +604,50 @@ export function relayHandler(
               link,
               methods,
               ...guide(key, who),
+              error: code,
+              name: filled.name,
+              email: filled.email,
+              ...(accountMade ? { accountMade } : {}),
+            }),
+          );
+        }
+        return true;
+      }
+      // The server's admin made with the link its operator has, while it has none.
+      const adminSetup = /^\/setup\/([\w-]{16,64})$/.exec(path);
+      if (adminSetup && (request.method === "GET" || post)) {
+        if (await accounts.hasAdmin()) {
+          redirect("/login");
+          return true;
+        }
+        if (
+          tries.blocked(from) ||
+          !(await accounts.adminLinkWorks(adminSetup[1]))
+        ) {
+          tries.miss(from);
+          html(410, adminLinkEndedPage(lang));
+          return true;
+        }
+        if (!post) {
+          html(200, setupPage({ lang }));
+          return true;
+        }
+        const fields = new URLSearchParams(await raw(request));
+        const filled = {
+          name: fields.get("name") ?? "",
+          email: fields.get("email") ?? "",
+          password: fields.get("password") ?? "",
+        };
+        try {
+          const made = await accounts.makeAdmin(adminSetup[1], filled);
+          redirect("/home/admin?done=welcome", made.cookies);
+        } catch (error) {
+          const code =
+            error instanceof AccountError ? error.code : "account-failed";
+          html(
+            400,
+            setupPage({
+              lang,
               error: code,
               name: filled.name,
               email: filled.email,
@@ -672,7 +737,9 @@ export function relayHandler(
       }
       if (
         (path === "/home" && request.method === "GET") ||
-        (path === "/home/pair" && post)
+        (path === "/home/pair" && post) ||
+        (path === "/home/invite" && post) ||
+        (path === "/home/invite/cancel" && post)
       ) {
         const person = await accounts.person(cookie);
         if (!person) {
@@ -680,10 +747,30 @@ export function relayHandler(
           return true;
         }
         const places = await accounts.places(person.id);
-        const chosen = post
-          ? new URLSearchParams(await raw(request)).get("office")
+        const fields = post
+          ? new URLSearchParams(await raw(request))
+          : undefined;
+        const chosen = fields
+          ? fields.get("office")
           : url.searchParams.get("office");
         const place = placeOf(places, chosen);
+        if (path === "/home/invite/cancel") {
+          // an owner stops one of the office's invites
+          if (place?.role === "owner")
+            await relay.cancelInvite(place.office, fields?.get("invite") ?? "");
+          redirect(
+            `/home${place ? `?office=${encodeURIComponent(place.office)}` : ""}#invite`,
+          );
+          return true;
+        }
+        // An invite for one person, made here by anyone in the office.
+        const invited =
+          place && path === "/home/invite"
+            ? await relay.makeInvite(place.office, {
+                user: person.id,
+                name: person.name,
+              })
+            : undefined;
         const command =
           place && path === "/home/pair"
             ? connectCommand(
@@ -744,8 +831,31 @@ export function relayHandler(
                   office: {
                     id: place.office,
                     name: place.name,
-                    invite: inviteLink(place.key, person.name),
                   },
+                  ...(invited
+                    ? {
+                        invited: {
+                          link: inviteLink(invited.token, person.name),
+                          days: INVITE_DAYS,
+                        },
+                      }
+                    : {}),
+                  ...(owner
+                    ? {
+                        invites: (await relay.invites(place.office))
+                          .filter((one) => one.open)
+                          .map((one) => ({
+                            id: one.id,
+                            by: one.by,
+                            created: new Date(one.created).toLocaleDateString(
+                              lang,
+                              { month: "long", day: "numeric" },
+                            ),
+                            clone: one.clone,
+                            account: one.account,
+                          })),
+                      }
+                    : {}),
                   offices: places.map((one) => ({
                     id: one.office,
                     name: one.name,
@@ -868,7 +978,11 @@ export function relayHandler(
             200,
             await page({
               ...(failed ? { error: failed } : {}),
-              ...(done === "saved" || done === "password-back" ? { done } : {}),
+              ...(done === "saved" ||
+              done === "password-back" ||
+              done === "welcome"
+                ? { done }
+                : {}),
               ...(/^[a-z-]{2,40}$/.test(googleFailed)
                 ? {
                     googleError: googleFailed,
@@ -1168,8 +1282,9 @@ export function relayHandler(
         const from = address(request);
         if (tries.blocked(from) || !(await relay.knows(invite[1]))) {
           tries.miss(from);
-          response.writeHead(404, PAGE_HEADERS);
-          response.end(missingPage(lang));
+          const ended = await relay.inviteEnded(invite[1]);
+          response.writeHead(ended ? 410 : 404, PAGE_HEADERS);
+          response.end(ended ? inviteEndedPage(lang) : missingPage(lang));
           return;
         }
         const who = url.searchParams.get("from")?.trim().slice(0, 80);
@@ -1213,9 +1328,43 @@ export function relayHandler(
         response.end(content);
         return;
       }
+      // An invite for one person, which a member's app copies for them (each call makes one).
       if (request.method === "GET" && path === "/invite") {
         const me = await member(request);
-        return send(200, { path: `/i/${await relay.officeKey(me.office)}` });
+        const made = await relay.makeInvite(me.office, {
+          member: me.id,
+          name: me.card.name,
+        });
+        return send(200, {
+          path: `/i/${made.token}`,
+          expires: made.expires,
+          days: INVITE_DAYS,
+        });
+      }
+      // Where a member's app opens the team server's pages for its person: the link that makes
+      // the server's admin, for the app that runs the office (it holds its key) while there is
+      // none; a link to make their own account, when their clone has none there; else sign-in.
+      if (request.method === "POST" && path === "/server-link") {
+        const me = await member(request);
+        if (!accounts) return send(200, { path: "/" });
+        const input = await body(request);
+        const key = typeof input.key === "string" ? input.key : "";
+        if (key && !(await accounts.hasAdmin())) {
+          const [first] = await relay.officesByAge(1);
+          if (first?.id === me.office && first.key === key) {
+            const token = await accounts.adminLink();
+            if (token) return send(200, { path: `/setup/${token}` });
+          }
+        }
+        if (!me.user) {
+          const made = await relay.makeInvite(me.office, {
+            member: me.id,
+            name: me.card.name,
+            forMember: me.id,
+          });
+          return send(200, { path: `/i/${made.token}?account#account` });
+        }
+        return send(200, { path: "/login" });
       }
       if (request.method === "POST" && path === "/links") {
         const me = await member(request);

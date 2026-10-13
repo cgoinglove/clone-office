@@ -14,6 +14,9 @@ const WORDS = {
     sent: "Sent. {asker} has your answer:",
     closed: "This link is closed.",
     missing: "There is no such link.",
+    inviteEndedTitle: "This invite has ended",
+    inviteEnded:
+      "It was used, cancelled, or a week has passed. Ask whoever invited you for a new link.",
     footer:
       "Sent by {asker}'s clone, with Clone Office. Your answer goes only to {asker}.",
   },
@@ -24,6 +27,9 @@ const WORDS = {
     sent: "보냈어요. {asker} 님에게 이렇게 전했어요:",
     closed: "이미 끝난 링크예요.",
     missing: "없는 링크예요.",
+    inviteEndedTitle: "끝난 초대 링크예요",
+    inviteEnded:
+      "이미 쓰였거나, 취소됐거나, 일주일이 지났어요. 초대한 사람에게 새 링크를 받아 주세요.",
     footer:
       "{asker} 님의 클론이 Clone Office로 보낸 질문이에요. 답은 {asker} 님에게만 가요.",
   },
@@ -34,6 +40,9 @@ const WORDS = {
     sent: "已发送。{asker}收到了你的回答：",
     closed: "这个链接已关闭。",
     missing: "没有这个链接。",
+    inviteEndedTitle: "这个邀请已结束",
+    inviteEnded:
+      "它已被使用、已被取消，或者已经过了一周。请向邀请你的人要一个新链接。",
     footer: "由{asker}的分身通过 Clone Office 发送。你的回答只会发给{asker}。",
   },
   ja: {
@@ -43,6 +52,9 @@ const WORDS = {
     sent: "送信しました。{asker}さんに届いた回答：",
     closed: "このリンクはすでに終了しています。",
     missing: "このリンクは存在しません。",
+    inviteEndedTitle: "この招待は終了しています",
+    inviteEnded:
+      "使用済みか、取り消されたか、1週間が過ぎました。招待した人に新しいリンクをもらってください。",
     footer:
       "{asker}さんのクローンがClone Officeで送った質問です。回答は{asker}さんにだけ届きます。",
   },
@@ -53,6 +65,9 @@ const WORDS = {
     sent: "Enviado. {asker} ya tiene tu respuesta:",
     closed: "Este enlace está cerrado.",
     missing: "Este enlace no existe.",
+    inviteEndedTitle: "Esta invitación terminó",
+    inviteEnded:
+      "Ya se usó, se canceló o pasó una semana. Pide un enlace nuevo a quien te invitó.",
     footer:
       "Enviado por el clon de {asker}, con Clone Office. Tu respuesta solo le llega a {asker}.",
   },
@@ -63,6 +78,9 @@ const WORDS = {
     sent: "Enviado. {asker} recebeu sua resposta:",
     closed: "Este link já foi encerrado.",
     missing: "Este link não existe.",
+    inviteEndedTitle: "Este convite terminou",
+    inviteEnded:
+      "Ele já foi usado, foi cancelado ou passou uma semana. Peça um link novo a quem convidou você.",
     footer:
       "Enviado pelo clone de {asker}, com o Clone Office. Sua resposta vai só para {asker}.",
   },
@@ -314,6 +332,16 @@ ${installGuide(input)}
 export function missingPage(lang: PageLanguage): string {
   const text = say(lang, "missing");
   return shell(lang, text, `<p>${text}</p>`);
+}
+
+/** An invite link that worked once: used, cancelled or past its week. */
+export function inviteEndedPage(lang: PageLanguage): string {
+  const title = say(lang, "inviteEndedTitle");
+  return shell(
+    lang,
+    title,
+    `<h1>${title}</h1>\n<p>${say(lang, "inviteEnded")}</p>`,
+  );
 }
 
 export function replyPage(input: {

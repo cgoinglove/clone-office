@@ -542,8 +542,10 @@
     "copied": "Copiado",
     "relayPlaceholder": "O endereço do escritório ou um link de convite",
     "invite": "Convidar um colega",
-    "inviteNote": "Qualquer pessoa com este link pode entrar no seu escritório; envie só para a sua equipe. Aberto no navegador, ele cria a conta da pessoa e dá a ela uma linha que conecta o computador dela.",
+    "inviteNote": "Cada link é para uma pessoa: funciona uma vez, durante 7 dias. Aberto no navegador, ele guia a pessoa para configurar o clone ou criar uma conta no servidor da equipe.",
     "copyInvite": "Copiar convite",
+    "makeInvite": "Criar um link de convite",
+    "anotherInvite": "Criar outro",
     "room": {
       "label": "O escritório: a mesa de cada pessoa com seu clone e os pedidos que vão e vêm entre eles",
       "floor": "Andar {n}",
@@ -1566,7 +1568,7 @@
       "here": "Aberto neste computador · {count, plural, one {# pessoa} other {# pessoas}}",
       "at": "{host} · {count, plural, one {# pessoa} other {# pessoas}}",
       "invite": "Convidar um colega",
-      "invited": "Link de convite copiado",
+      "invited": "Link de convite copiado: para uma pessoa, durante 7 dias",
       "shortcuts": "Atalhos de teclado"
     },
     "keys": {

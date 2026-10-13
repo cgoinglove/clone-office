@@ -13,7 +13,7 @@ In the first steps (**You and your team**, 나와 우리 팀), or any time under
   the clone's folder) and puts their card in it. Teammates on the same network (the same Wi-Fi,
   or the same office network) join with the invite link they send. Settings › Office then says
   **Open on this computer** (이 컴퓨터에서 열려 있어요), with the address teammates reach and
-  **Copy invite** (초대 링크 복사). The first time, the computer may ask whether the app may accept
+  **Make an invite link** (초대 링크 만들기). The first time, the computer may ask whether the app may accept
   incoming connections; it has to, for teammates to reach it. The office rests while the computer
   sleeps or the app is closed, and teammates cannot reach it then; it opens again at the same
   address, with the same key, when the app is back. On another network the address can change,
@@ -28,8 +28,12 @@ the clone write that line from what it knows of them; they correct it before goi
 nothing is shared until then. Colleagues who join appear at their desks in the office, in **Ask a colleague**
 (동료에게 부탁) on the Chat and Requests screens, and under **People** (사람들) in Settings › Office.
 
-Anyone in the office can copy the invite link in Settings › Office and send it. Anyone with the
-link can join, so it goes only to the team.
+Anyone in the office can make an invite link in Settings › Office (**Make an invite link**, 초대 링크
+만들기), or with **Invite a colleague** (동료 초대) in their menu, which copies one, and send it.
+Each link is for one person: it works once to join a clone and once to make an account on the team
+server, for seven days, so nobody joins without someone inside asking them. A clone and an account
+made with the same link are one person's. The office's key itself is never in a link; it stays with
+whoever runs the server.
 
 ### From the invite link, in a browser
 
@@ -45,11 +49,6 @@ computer?**, 다른 컴퓨터인가요?), about five minutes and no coding.
 4. Their browser opens Clone Office. The first steps already say who invited them, and their clone
    joins that office at the end. Someone set up already finds Settings › Office open with the link
    in place.
-
-Someone who uses an AI that works on their computer (Claude Code, Codex and the like) can open
-**Use an AI that works on your computer?** (내 컴퓨터에서 일하는 AI를 쓰나요?) below the steps and
-paste what it shows into that AI: the same steps, with the same line, for it to do. The choices in
-the first steps stay theirs. The repository's `llms.txt` says the same for any AI that reads it.
 
 Someone who uses an AI that works on their computer (Claude Code, Codex and the like) can open
 **Use an AI that works on your computer?** (내 컴퓨터에서 일하는 AI를 쓰나요?) below the steps and
@@ -73,7 +72,9 @@ then has:
   puts their clone in the office under their account and opens the app there. Their page on the
   server then says which clone is connected. One person has one clone: connecting another
   computer moves it there, and the one before leaves the office.
-- **Invite a teammate** (동료 초대): the office's invite link, to send on.
+- **Invite a teammate** (동료 초대): **Make an invite link** (초대 링크 만들기) gives a link for one
+  person, shown once to copy. An owner also sees the invites still open, from whom and when, and
+  **Cancel** (취소) stops one.
 - **People in this office** (이 오피스의 사람들): everyone with an account there, owner or member,
   and whether their computer is connected.
 - **How you sign in** (내 로그인 방법), once Google is a way in on the server: their password,
@@ -83,8 +84,10 @@ then has:
 - **Sign out** (로그아웃).
 
 **Sign-in settings** (로그인 설정, `/home/admin`) are the server's admin's: the owners of the office
-the server was started with (the first account made there). They apply to every office on the
-server:
+the server was started with. The admin is made with the setup link whoever runs the server has
+(**Set up this team server**, 이 팀 서버 설정하기): its log prints one at each start while it has
+no admin, working once, for a day; for an office opened on someone's computer, their app opens it
+(Settings › Office › **Open the team server**). The settings apply to every office on the server:
 
 - **Email and password** (이메일과 비밀번호): on or off. It turns off only while Google is on and
   the admin connected their own Google account, so they keep a way in; the page says how many
@@ -95,8 +98,9 @@ server:
   paste the client ID and secret into the page; **Save and turn on** (저장하고 켜기). Google sends
   people back only to an https address or to localhost, so a server others reach sits behind
   https with `RELAY_PUBLIC_URL` set to that address. The secret is sealed on the server
-  (AES-256-GCM under `RELAY_ENCRYPTION_KEY`, or the `secret.key` beside a server's own data
-  folder) and never shown again; without such a key it is not kept at all. Google turns off or on
+  (AES-256-GCM under a key the server makes once and keeps apart from its database: the
+  `secret.key` beside a data folder, or in `RELAY_KEY_DIR` for a server on Postgres, a volume of
+  its own in the compose file; `RELAY_ENCRYPTION_KEY` gives one instead) and never shown again. Google turns off or on
   any time with its settings kept, and **Remove Google settings** (Google 설정 지우기) deletes the
   client and its secret, asked once.
 - One way always stays on. A Google account makes a new account only from an invite's page, and
@@ -132,13 +136,16 @@ too?** (이 오피스에도 들어갈까요?), as their name and email will show
 on a shared browser signs out there and goes on to make their own account with that invite.
 
 From the app, Settings › Office › **Team server** (팀 서버) › **Open the team server** (팀 서버
-열기) opens these pages for an office on a server: one's own page when signed in there, else the
-sign-in, which offers to make an account with the office's invite.
+열기) opens these pages where they should start: for an office open on this computer whose server
+has no admin yet, the setup link that makes this person its admin; for someone whose clone has no
+account there, a link to make one, joined to their clone; else one's own page, or the sign-in.
 
-The first account made in an office owns it. An owner also sees, on that page: **Remove**
+The server's admin owns its first office; in another office, the first account made with its key
+owns it. An owner also sees, on that page: **Remove**
 (내보내기) beside a person (their clone stops working in the office at once; what they asked and
 answered stays), **Make owner** (주인으로), clones that joined with the link without an account,
-**Make a new invite link** (새 초대 링크 만들기; the old link stops working, everyone in stays in),
+**Change the office key** (오피스 키 바꾸기; links made with the office key stop working, while
+invites and everyone in stay),
 and **Office name** (오피스 이름). Each change is shown once more on its own page before it is
 made. The server keeps their password only hashed and their session in a cookie, signed with a
 secret sealed like Google's; what Google gives it when someone signs in is kept encrypted, and the

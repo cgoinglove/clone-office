@@ -146,6 +146,8 @@ export interface Caller {
   id: string;
   office: string;
   card: Card;
+  /** The account on the server this clone is its person's, when it has one. */
+  user?: string;
 }
 
 export type InboxEvent =
@@ -286,7 +288,32 @@ const MIGRATIONS: string[][] = [
     "ALTER TABLE account_events ADD COLUMN done_at TIMESTAMPTZ",
     "CREATE UNIQUE INDEX account_events_token ON account_events (token_hash) WHERE token_hash IS NOT NULL",
   ],
+  // Invites, one per person (`makeInvite`): a link that works once for a clone and once for an
+  // account, for a week, kept only as its token's hash. The office's key stays its own: the key
+  // the server's operator holds, never handed out in a link.
+  [
+    "CREATE TABLE invites (id TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, token_hash TEXT UNIQUE NOT NULL, by_member TEXT, by_user TEXT, by_name TEXT NOT NULL, created TIMESTAMPTZ NOT NULL, expires TIMESTAMPTZ NOT NULL, member_id TEXT, member_at TIMESTAMPTZ, user_id TEXT, user_at TIMESTAMPTZ, cancelled TIMESTAMPTZ)",
+    "CREATE INDEX invites_office ON invites (office_id, created DESC)",
+  ],
 ];
+
+/** How long an invite works. */
+export const INVITE_DAYS = 7;
+/** The most invites an office keeps open at once, so making them never grows without end. */
+const OPEN_INVITES = 200;
+
+/** One invite as an office's people see it: who made it, until when, and what it was used for. */
+export interface Invite {
+  id: string;
+  by: string;
+  created: string;
+  expires: string;
+  /** A clone joined with it, and an account was made with it. */
+  clone: boolean;
+  account: boolean;
+  /** Still works: not cancelled, not past its time, and something left to use it for. */
+  open: boolean;
+}
 
 /**
  * What an office keeps for all its members: the OAuth client a vendor wants registered first, and
@@ -310,6 +337,36 @@ export class RelayError extends Error {
 const iso = (value: unknown): string => new Date(value as string).toISOString();
 const hashToken = (token: string): string =>
   createHash("sha256").update(token).digest("hex");
+
+interface InviteRow {
+  id: string;
+  by_name: string;
+  created: unknown;
+  expires: unknown;
+  member_id: string | null;
+  user_at: unknown;
+  cancelled: unknown;
+}
+
+const stamp = (value: unknown): string =>
+  value instanceof Date ? value.toISOString() : String(value ?? "");
+
+function inviteOf(row: InviteRow): Invite {
+  const clone = Boolean(row.member_id);
+  const account = Boolean(row.user_at);
+  return {
+    id: row.id,
+    by: row.by_name,
+    created: stamp(row.created),
+    expires: stamp(row.expires),
+    clone,
+    account,
+    open:
+      !row.cancelled &&
+      new Date(stamp(row.expires)).getTime() > Date.now() &&
+      !(clone && account),
+  };
+}
 
 interface TaskRow {
   id: string;
@@ -438,12 +495,166 @@ export class Relay {
     return row.key;
   }
 
-  /** Whether a key opens an office here, for its invite page. */
+  /**
+   * Whether a link's key opens an office here, for its invite page: the office's own key, or an
+   * invite that still works for something.
+   */
   async knows(key: string): Promise<boolean> {
     const rows = await this.db.query("SELECT 1 FROM offices WHERE key = $1", [
       key,
     ]);
+    if (rows.length) return true;
+    const invite = await this.invite(key);
+    return Boolean(invite && (!invite.clone || !invite.account));
+  }
+
+  /**
+   * A new invite to a member's office (or, from the server's pages, a person's): a link for one
+   * person, which works once to join a clone and once to make an account, for a week.
+   */
+  async makeInvite(
+    office: string,
+    by: {
+      member?: string;
+      user?: string;
+      name: string;
+      /** A clone's own: only an account is left to make with it, which becomes its person's. */
+      forMember?: string;
+    },
+  ): Promise<{ token: string; expires: string }> {
+    const token = randomBytes(18).toString("base64url");
+    const expires = new Date(
+      Date.now() + INVITE_DAYS * 24 * 60 * 60 * 1000,
+    ).toISOString();
+    await this.db.transaction(async (tx) => {
+      // Past their time, invites are let go as new ones are made; too many open ones refuse more.
+      await tx.query(
+        "DELETE FROM invites WHERE office_id = $1 AND expires < now() - interval '30 days'",
+        [office],
+      );
+      const [{ open }] = await tx.query<{ open: number }>(
+        "SELECT count(*)::int AS open FROM invites WHERE office_id = $1 AND cancelled IS NULL AND expires > now() AND (member_id IS NULL OR user_at IS NULL)",
+        [office],
+      );
+      if (open >= OPEN_INVITES)
+        throw new RelayError(
+          429,
+          "This office has too many open invites.",
+          "too-many-invites",
+        );
+      await tx.query(
+        "INSERT INTO invites (id, office_id, token_hash, by_member, by_user, by_name, created, expires, member_id, member_at) VALUES ($1, $2, $3, $4, $5, $6, now(), $7, $8, CASE WHEN $8::text IS NULL THEN NULL ELSE now() END)",
+        [
+          `i-${randomBytes(6).toString("hex")}`,
+          office,
+          hashToken(token),
+          by.member ?? null,
+          by.user ?? null,
+          by.name.slice(0, 80),
+          expires,
+          by.forMember ?? null,
+        ],
+      );
+    });
+    return { token, expires };
+  }
+
+  /** An invite by its token while it is not cancelled nor past its time, with its office. */
+  async invite(
+    token: string,
+  ): Promise<
+    (Invite & { office: string; member?: string; user?: string }) | undefined
+  > {
+    const [row] = await this.db.query<
+      InviteRow & { office_id: string; user_id: string | null }
+    >(
+      "SELECT * FROM invites WHERE token_hash = $1 AND cancelled IS NULL AND expires > now()",
+      [hashToken(token)],
+    );
+    return row
+      ? {
+          ...inviteOf(row),
+          office: row.office_id,
+          ...(row.member_id ? { member: row.member_id } : {}),
+          ...(row.user_id ? { user: row.user_id } : {}),
+        }
+      : undefined;
+  }
+
+  /** Whether a link's key was an invite that no longer works (used, cancelled or past its time). */
+  async inviteEnded(token: string): Promise<boolean> {
+    const [row] = await this.db.query(
+      "SELECT 1 FROM invites WHERE token_hash = $1",
+      [hashToken(token)],
+    );
+    return Boolean(row) && !(await this.knows(token));
+  }
+
+  /** The offices here, the first made first: the server's own is the first. */
+  async officesByAge(limit = 10): Promise<{ id: string; key: string }[]> {
+    return this.db.query<{ id: string; key: string }>(
+      "SELECT id, key FROM offices ORDER BY created, id LIMIT $1",
+      [limit],
+    );
+  }
+
+  /** An office's invites of the last weeks, the newest first, for its owners. */
+  async invites(office: string): Promise<Invite[]> {
+    const rows = await this.db.query<InviteRow>(
+      "SELECT * FROM invites WHERE office_id = $1 AND created > now() - interval '30 days' ORDER BY created DESC LIMIT 100",
+      [office],
+    );
+    return rows.map(inviteOf);
+  }
+
+  /** Stops an invite of an office from working; what it was used for stays. */
+  async cancelInvite(office: string, id: string): Promise<boolean> {
+    const rows = await this.db.query(
+      "UPDATE invites SET cancelled = now() WHERE id = $1 AND office_id = $2 AND cancelled IS NULL RETURNING 1",
+      [id, office],
+    );
     return rows.length > 0;
+  }
+
+  /**
+   * Takes an invite for an account, once: the account's person is then the one it was for. Taken
+   * before the account is made, so two people never make one each with the same link; `undo` gives
+   * it back should the account not be made.
+   */
+  async takeInviteForAccount(token: string): Promise<
+    | {
+        office: string;
+        settle: (user: string) => Promise<void>;
+        undo: () => Promise<void>;
+      }
+    | undefined
+  > {
+    const [row] = await this.db.query<{ id: string; office_id: string }>(
+      "UPDATE invites SET user_at = now() WHERE token_hash = $1 AND user_at IS NULL AND cancelled IS NULL AND expires > now() RETURNING id, office_id",
+      [hashToken(token)],
+    );
+    if (!row) return undefined;
+    return {
+      office: row.office_id,
+      settle: async (user) => {
+        // The clone that joined with the same link is this person's: one person, one clone.
+        const [invite] = await this.db.query<{ member_id: string | null }>(
+          "UPDATE invites SET user_id = $2 WHERE id = $1 RETURNING member_id",
+          [row.id, user],
+        );
+        if (invite?.member_id)
+          await this.db.query(
+            "UPDATE members SET user_id = $2 WHERE id = $1 AND user_id IS NULL AND NOT EXISTS (SELECT 1 FROM members WHERE office_id = $3 AND user_id = $2)",
+            [invite.member_id, user, row.office_id],
+          );
+      },
+      undo: async () => {
+        await this.db.query(
+          "UPDATE invites SET user_at = NULL WHERE id = $1 AND user_id IS NULL",
+          [row.id],
+        );
+      },
+    };
   }
 
   /** Join with an office's key, or update one's card with one's token. */
@@ -462,24 +673,49 @@ export class Relay {
       );
       return { id: member.id, token: input.token };
     }
-    const [office] = input.key
-      ? await this.db.query<{ id: string }>(
-          "SELECT id FROM offices WHERE key = $1",
-          [input.key],
-        )
-      : [];
-    if (!office)
-      throw new RelayError(
-        403,
-        "That is not this office's key.",
-        "office-key-wrong",
-      );
     const id = `m-${randomBytes(6).toString("hex")}`;
     const token = randomBytes(24).toString("base64url");
-    await this.db.query(
-      "INSERT INTO members (id, office_id, token_hash, card, joined, seen) VALUES ($1, $2, $3, $4::jsonb, $5, $5)",
-      [id, office.id, hashToken(token), JSON.stringify(card), now],
-    );
+    // The office's own key, or an invite not yet used for a clone, which this join uses: the
+    // member goes in with it as one step, so two clones never join with the same link.
+    const joined = await this.db.transaction(async (tx) => {
+      const [office] = input.key
+        ? await tx.query<{ id: string }>(
+            "SELECT id FROM offices WHERE key = $1",
+            [input.key],
+          )
+        : [];
+      const [invite] =
+        !office && input.key
+          ? await tx.query<{ office_id: string; user_id: string | null }>(
+              "UPDATE invites SET member_id = $2, member_at = now() WHERE token_hash = $1 AND member_id IS NULL AND cancelled IS NULL AND expires > now() RETURNING office_id, user_id",
+              [hashToken(input.key), id],
+            )
+          : [];
+      const at = office?.id ?? invite?.office_id;
+      if (!at) return false;
+      // made with the same link as an account already: that person's clone
+      const user =
+        invite?.user_id &&
+        !(
+          await tx.query(
+            "SELECT 1 FROM members WHERE office_id = $1 AND user_id = $2",
+            [at, invite.user_id],
+          )
+        ).length
+          ? invite.user_id
+          : null;
+      await tx.query(
+        "INSERT INTO members (id, office_id, token_hash, card, joined, seen, user_id) VALUES ($1, $2, $3, $4::jsonb, $5, $5, $6)",
+        [id, at, hashToken(token), JSON.stringify(card), now, user],
+      );
+      return true;
+    });
+    if (!joined)
+      throw new RelayError(
+        403,
+        "That is not this office's key, or its invite was used already or has ended.",
+        "office-key-wrong",
+      );
     return { id, token };
   }
 
@@ -541,14 +777,24 @@ export class Relay {
   /** The member a token belongs to; throws when it belongs to none. */
   async memberByToken(token: string): Promise<Caller> {
     const [row] = token
-      ? await this.db.query<{ id: string; office_id: string; card: Card }>(
-          "SELECT id, office_id, card FROM members WHERE token_hash = $1",
+      ? await this.db.query<{
+          id: string;
+          office_id: string;
+          card: Card;
+          user_id: string | null;
+        }>(
+          "SELECT id, office_id, card, user_id FROM members WHERE token_hash = $1",
           [hashToken(token)],
         )
       : [];
     if (!row)
       throw new RelayError(401, "Unknown member.", "office-member-unknown");
-    return { id: row.id, office: row.office_id, card: row.card };
+    return {
+      id: row.id,
+      office: row.office_id,
+      card: row.card,
+      ...(row.user_id ? { user: row.user_id } : {}),
+    };
   }
 
   /** The members of an office, in the order they joined. */

@@ -13,6 +13,7 @@ import {
   openMeeting,
   problemCode,
   sendRequest,
+  serverLink,
   setTeamSetting,
   tasks,
   teamSetting,
@@ -32,6 +33,7 @@ import {
   closeHere,
   hostProblem,
   hostsOffice,
+  loadHost,
   networkAddress,
   openHere,
   publicRelay,
@@ -186,6 +188,7 @@ const Body = z.discriminatedUnion("action", [
   }),
   z.object({ action: z.literal("leave") }),
   z.object({ action: z.literal("invite") }),
+  z.object({ action: z.literal("server-link") }),
   z.object({
     action: z.literal("draft"),
     locale: z.string().max(35).default("en"),
@@ -381,6 +384,11 @@ export async function POST(request: Request) {
       return Response.json({
         url: await inviteLink(office, await publicRelay(office)),
       });
+    if (input.action === "server-link") {
+      // the office open on this computer: its key asks for the link that makes the server's admin
+      const host = (await hostsOffice(office)) ? await loadHost() : undefined;
+      return Response.json({ url: await serverLink(office, host?.key) });
+    }
     if (input.action === "send")
       return Response.json({
         // Typed on the page by the person themselves.

@@ -12,9 +12,13 @@ RUN node -e "const d = require('/tmp/app-package.json').dependencies; require('f
 # one shared file it imports, at the same places, so its relative imports hold.
 COPY --chown=node:node features/relay/ ./features/relay/
 COPY --chown=node:node lib/seal.ts ./lib/seal.ts
-USER node
+# The sealing key's folder, a volume of its own in the compose file: kept apart from the database.
+RUN mkdir -p /relay/keys && chown node:node /relay/keys
+ENV RELAY_KEY_DIR=/relay/keys
 ENV NODE_ENV=production
+USER node
 EXPOSE 3200
 # DATABASE_URL picks the Postgres server; without it the office is kept in /relay/relay-data.
-# RELAY_ENCRYPTION_KEY lets it keep team keys (features/relay/team-ai.ts).
+# The key that seals team keys and sign-in secrets is made once in /relay/keys, unless
+# RELAY_ENCRYPTION_KEY gives one (features/relay/team-ai.ts).
 CMD ["node", "features/relay/server.ts", "--host", "0.0.0.0"]

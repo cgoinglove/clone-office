@@ -440,10 +440,18 @@ These words help discussion. They do not mandate separate services, tables or UI
   `resetLink`, as no mail is sent (never an owner's, nor one with Google, `resetAllowed`, asked
   again when it is used; its token kept hashed, here and by Better Auth; told on the person's page,
   `account_events`, where they stop one they did not ask for, `stopResets`), and removing an
-  account, `removeAccount`; a
+  account, `removeAccount`; the admin itself is made with a setup link while the server has none
+  (`adminLink`, `makeAdmin`, `/setup/<token>`: printed at each start, a day, once, kept hashed;
+  the app that opened the office asks for it with the office's key, `POST /server-link`, which
+  otherwise gives a clone without an account a link to make one); a
   signed-in person joins another office only once asked, unless Google just made their account
   from that invite, `sub-office.join`), puts a person in the office whose invite they signed up with
-  (the first owns it; `office_people`), and makes a computer's setup code (hashed in
+  (`office_people`; the first made with the office's key owns it). Invites are one per person
+  (`relay.ts` `makeInvite`, table `invites`): a link that joins one clone and makes one account,
+  for a week, kept hashed, taken as one step each (`join`, `takeInviteForAccount`), the clone and
+  the account then one person's; anyone in the office makes one (`GET /invite` for the app, Invite
+  a teammate on one's page), owners see and cancel the open ones; the office's key never goes in a
+  link and stays its operator's, and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:
   `Relay.joinAs` moves it). `people-pages.ts` is the invite's sign-up page, sign-in (Google first

@@ -542,8 +542,10 @@
     "copied": "Copied",
     "relayPlaceholder": "The office's address, or an invite link",
     "invite": "Invite a colleague",
-    "inviteNote": "Anyone with this link can join your office; send it only to your team. Opened in a browser, it makes their account and gives them one line that connects their computer.",
+    "inviteNote": "Each link is for one person: it works once, for 7 days. Opened in a browser, it guides them to set up their clone, or to make an account on the team server.",
     "copyInvite": "Copy invite",
+    "makeInvite": "Make an invite link",
+    "anotherInvite": "Make another",
     "room": {
       "label": "The office: each person's desk with their clone, and the requests going between them",
       "floor": "Floor {n}",
@@ -1566,7 +1568,7 @@
       "here": "Open on this computer · {count, plural, one {# person} other {# people}}",
       "at": "{host} · {count, plural, one {# person} other {# people}}",
       "invite": "Invite a colleague",
-      "invited": "Invite link copied",
+      "invited": "Invite link copied: for one person, for 7 days",
       "shortcuts": "Keyboard shortcuts"
     },
     "keys": {

@@ -10,9 +10,10 @@
 // (accounts.ts); RELAY_PUBLIC_URL is the address they reach it at, when a proxy stands in front,
 // and the one Google sends people back to once the admin turns Google sign-in on.
 
+import { mkdir } from "node:fs/promises";
 import { createServer } from "node:http";
 import { networkInterfaces } from "node:os";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { Accounts } from "./accounts.ts";
 import { openDatabase } from "./db.ts";
@@ -53,8 +54,17 @@ meetingRounds.unref();
 const publicUrl = process.env.RELAY_PUBLIC_URL || undefined;
 // Team keys are sealed with a key kept apart from the database (team-ai.ts).
 const daily = Number(process.env.RELAY_TEAM_AI_DAILY);
-// One key seals both the team keys and the sign-in secrets (the session secret, Google's).
-const sealKey = await relaySealKey(db.kind === "postgres" ? undefined : target);
+// One key seals both the team keys and the sign-in secrets (the session secret, Google's). It is
+// RELAY_ENCRYPTION_KEY, else one made once and kept in a file apart from the database: beside a
+// PGlite folder's data, or for a Postgres in RELAY_KEY_DIR (`relay-keys` here by default; the
+// compose file keeps it in a volume of its own), so a server works with secrets from its start.
+const keyDir =
+  db.kind === "postgres"
+    ? process.env.RELAY_KEY_DIR || resolve("relay-keys")
+    : target;
+if (db.kind === "postgres" && !process.env.RELAY_ENCRYPTION_KEY?.trim())
+  await mkdir(keyDir, { recursive: true, mode: 0o700 });
+const sealKey = await relaySealKey(keyDir);
 const teamAi = new TeamAi(
   relay,
   sealKey,
@@ -86,11 +96,26 @@ server.listen(Number(values.port), values.host as string, () => {
       for (const net of list ?? [])
         if (net.family === "IPv4" && !net.internal)
           console.log(`on your network: http://${net.address}:${port}`);
-  console.log(`office key: ${office.key}`);
-  // Whoever started the relay opens this first: the first account made there owns the office.
-  console.log(
-    `invite link (make your account here first): ${publicUrl ?? `http://${values.host === "0.0.0.0" || values.host === "::" ? "<address above>" : values.host}:${port}`}/i/${office.key}`,
-  );
+  const at =
+    publicUrl?.replace(/\/+$/, "") ??
+    `http://${values.host === "0.0.0.0" || values.host === "::" ? "<address above>" : values.host}:${port}`;
+  // The office's own key, for whoever runs the server; people are invited from their pages.
+  console.log(`office key (keep it to yourself): ${office.key}`);
+  // Until it has one, the link that makes the server's admin: whoever runs it opens it first.
+  void accounts
+    .adminLink()
+    .then((token) =>
+      console.log(
+        token
+          ? `set up this server (make its admin account; works once, for a day): ${at}/setup/${token}`
+          : `people sign in at: ${at}/login`,
+      ),
+    )
+    .catch(() => {});
+  if (db.kind === "postgres" && !process.env.RELAY_ENCRYPTION_KEY?.trim())
+    console.log(
+      `sealing key: ${join(keyDir, "secret.key")} (back it up apart from the database)`,
+    );
   // Never the URL itself: it carries the database's password.
   console.log(
     `kept in: ${db.kind === "postgres" ? "Postgres (database URL)" : target}`,

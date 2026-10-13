@@ -24,7 +24,7 @@ const WORDS = {
     create: "Make my account",
     haveAccount: "Already have an account?",
     signInLink: "Sign in",
-    keep: "Anyone with this link can join this office; keep it within your team.",
+    keep: "This link is for one person: it works once, for a week.",
     signInTitle: "Sign in to your office",
     signIn: "Sign in",
     noAccount: "No account yet? Open your office's invite link to make one.",
@@ -39,7 +39,24 @@ const WORDS = {
     connected: "Connected: {name}'s clone, last seen {when}.",
     notConnected: "No computer is connected yet.",
     inviteTeam: "Invite a teammate",
-    inviteWhat: "Send them this link; they make their account with it.",
+    inviteWhat: "Each link is for one person: it works once, for {days} days.",
+    accountMade:
+      "An account was made with this invite already. Sign in to it, or ask for a new invite.",
+    welcome:
+      "You're this server's admin. People sign in with email and password; Google is optional, below. Then invite your team from your page.",
+    adminLinkEnded:
+      "It was used, or a day has passed. Whoever runs the server gets a new one in its log when it starts again, or from the app that opened the office (Settings › Office › Open the team server).",
+    adminLinkEndedTitle: "This setup link has ended",
+    setupButton: "Make my admin account",
+    setupWhat:
+      "You'll be its admin: you decide how people sign in, and you invite your team. Make your account here. This link works once.",
+    setupTitle: "Set up this team server",
+    inviteAccountIn: "account made",
+    inviteCloneIn: "clone joined",
+    inviteFrom: "From {by}, {when}",
+    invitesTitle: "Invites still open",
+    inviteMade: "Send this to one person:",
+    inviteMake: "Make an invite link",
     signOut: "Sign out",
     runTitle: "Run this on your computer",
     runWhat:
@@ -66,10 +83,10 @@ const WORDS = {
     cloneTitle: "Remove {name}'s clone from this office?",
     cloneWhat:
       "It stops working here at once. What it asked and answered stays.",
-    newLink: "Make a new invite link",
-    newLinkTitle: "Make a new invite link?",
+    newLink: "Change the office key",
+    newLinkTitle: "Change the office key?",
     newLinkWhat:
-      "The link you sent before stops working. Everyone already in stays in.",
+      "Links made with the office key stop working. Invites, and everyone already in, are not affected.",
     officeName: "Office name",
     save: "Save",
     cancel: "Cancel",
@@ -190,6 +207,10 @@ const WORDS = {
       "For now, only this server's admin can sign in with a password.",
     resetMadeTold: "Their page says you made it, and they can stop it.",
     errors: {
+      "invite-used": "This invite made an account already. Ask for a new one.",
+      "admin-link-ended": "This setup link has ended.",
+      "too-many-invites":
+        "This office has too many open invites. Cancel some first.",
       "invite-wrong": "There is no such invite.",
       "name-missing": "Say your name.",
       "account-exists":
@@ -259,7 +280,7 @@ const WORDS = {
     create: "계정 만들기",
     haveAccount: "계정이 이미 있나요?",
     signInLink: "로그인",
-    keep: "이 링크가 있으면 누구나 이 오피스에 들어올 수 있어요. 팀 안에서만 나눠 주세요.",
+    keep: "이 링크는 한 사람용이에요. 한 번, 일주일 동안 쓸 수 있어요.",
     signInTitle: "내 오피스에 로그인",
     signIn: "로그인",
     noAccount: "아직 계정이 없나요? 오피스 초대 링크를 열면 만들 수 있어요.",
@@ -274,7 +295,25 @@ const WORDS = {
     connected: "연결됨: {name} 님의 클론, 마지막으로 본 때 {when}.",
     notConnected: "아직 연결된 컴퓨터가 없어요.",
     inviteTeam: "동료 초대",
-    inviteWhat: "이 링크를 보내면 동료가 그걸로 계정을 만들어요.",
+    inviteWhat:
+      "링크 하나는 한 사람용이에요. 한 번, {days}일 동안 쓸 수 있어요.",
+    accountMade:
+      "이 초대로 이미 계정을 만들었어요. 그 계정으로 로그인하거나 새 초대를 받아 주세요.",
+    welcome:
+      "이 서버의 관리자가 됐어요. 사람들은 이메일과 비밀번호로 로그인해요. Google은 아래에서 원할 때 켜면 돼요. 그다음 내 페이지에서 팀을 초대하세요.",
+    adminLinkEnded:
+      "이미 쓰였거나 하루가 지났어요. 서버를 운영하는 사람은 서버를 다시 켜면 로그에서, 또는 오피스를 연 앱에서(설정 › 오피스 › 팀 서버 열기) 새 링크를 받을 수 있어요.",
+    adminLinkEndedTitle: "끝난 설정 링크예요",
+    setupButton: "관리자 계정 만들기",
+    setupWhat:
+      "이 서버의 관리자가 돼요. 사람들이 어떻게 로그인할지 정하고, 팀을 초대해요. 여기서 계정을 만드세요. 이 링크는 한 번만 쓸 수 있어요.",
+    setupTitle: "이 팀 서버 설정하기",
+    inviteAccountIn: "계정 만듦",
+    inviteCloneIn: "클론 들어옴",
+    inviteFrom: "{by} 님, {when}",
+    invitesTitle: "아직 쓸 수 있는 초대",
+    inviteMade: "한 사람에게 보내 주세요:",
+    inviteMake: "초대 링크 만들기",
     signOut: "로그아웃",
     runTitle: "내 컴퓨터에서 실행하세요",
     runWhat:
@@ -299,10 +338,10 @@ const WORDS = {
     keyedWhat: "여기 계정 없이, 앱에서 초대 링크로 바로 들어온 클론이에요.",
     cloneTitle: "{name} 님의 클론을 이 오피스에서 내보낼까요?",
     cloneWhat: "여기서 바로 멈춰요. 주고받은 부탁은 남아요.",
-    newLink: "새 초대 링크 만들기",
-    newLinkTitle: "새 초대 링크를 만들까요?",
+    newLink: "오피스 키 바꾸기",
+    newLinkTitle: "오피스 키를 바꿀까요?",
     newLinkWhat:
-      "예전에 보낸 링크는 더 쓸 수 없어요. 이미 들어온 사람은 그대로예요.",
+      "오피스 키로 만든 링크는 더 쓸 수 없어요. 초대 링크와 이미 들어온 사람은 그대로예요.",
     officeName: "오피스 이름",
     save: "저장",
     cancel: "취소",
@@ -422,6 +461,10 @@ const WORDS = {
     resetMadeTold:
       "링크를 만든 것은 그 사람의 페이지에도 보이고, 그 사람이 링크를 막을 수 있어요.",
     errors: {
+      "invite-used": "이 초대로 이미 계정을 만들었어요. 새 초대를 받아 주세요.",
+      "admin-link-ended": "끝난 설정 링크예요.",
+      "too-many-invites":
+        "쓸 수 있는 초대가 너무 많아요. 몇 개를 먼저 취소해 주세요.",
       "invite-wrong": "없는 초대예요.",
       "name-missing": "이름을 적어 주세요.",
       "account-exists": "그 이메일로 만든 계정이 이미 있어요. 로그인해 주세요.",
@@ -491,7 +534,7 @@ const WORDS = {
     create: "创建我的账号",
     haveAccount: "已经有账号了？",
     signInLink: "登录",
-    keep: "拿到这个链接的任何人都能加入这个办公室，请只在团队内分享。",
+    keep: "这个链接只给一个人用：只能用一次，一周内有效。",
     signInTitle: "登录你的办公室",
     signIn: "登录",
     noAccount: "还没有账号？打开你们办公室的邀请链接来创建。",
@@ -506,7 +549,24 @@ const WORDS = {
     connected: "已连接：{name}的分身，最近在线 {when}。",
     notConnected: "还没有连接任何电脑。",
     inviteTeam: "邀请同事",
-    inviteWhat: "把这个链接发给对方，对方用它创建账号。",
+    inviteWhat: "每个链接只给一个人用：只能用一次，{days} 天内有效。",
+    accountMade:
+      "已经用这个邀请创建过账号了。请登录那个账号，或者要一个新的邀请。",
+    welcome:
+      "你已成为这台服务器的管理员。大家用邮箱和密码登录；Google 登录可在下方按需开启。然后在你的页面邀请团队。",
+    adminLinkEnded:
+      "它已被使用，或者已经过了一天。运行服务器的人可以在服务器重新启动后的日志里，或在打开这个办公室的应用里（设置 › 办公室 › 打开团队服务器）拿到新链接。",
+    adminLinkEndedTitle: "这个设置链接已结束",
+    setupButton: "创建我的管理员账号",
+    setupWhat:
+      "你将成为它的管理员：决定大家如何登录，并邀请你的团队。请在这里创建你的账号。这个链接只能用一次。",
+    setupTitle: "设置这台团队服务器",
+    inviteAccountIn: "账号已创建",
+    inviteCloneIn: "分身已加入",
+    inviteFrom: "{by}，{when}",
+    invitesTitle: "仍可使用的邀请",
+    inviteMade: "把它发给一个人：",
+    inviteMake: "生成邀请链接",
     signOut: "退出登录",
     runTitle: "在你的电脑上运行这个",
     runWhat: "这个链接会把一台电脑连接到你的办公室。请在那台电脑的终端里运行：",
@@ -529,9 +589,10 @@ const WORDS = {
     keyedWhat: "这些分身是有人在应用里用邀请链接加入的，没有在这里创建账号。",
     cloneTitle: "把{name}的分身移出这个办公室？",
     cloneWhat: "它会立刻停止在这里工作。它提过和回答过的请求会保留。",
-    newLink: "生成新的邀请链接",
-    newLinkTitle: "生成新的邀请链接？",
-    newLinkWhat: "之前发出的链接会失效。已经在办公室里的人不受影响。",
+    newLink: "更换办公室密钥",
+    newLinkTitle: "要更换办公室密钥吗？",
+    newLinkWhat:
+      "用办公室密钥生成的链接将无法再使用。邀请链接和已经加入的人不受影响。",
     officeName: "办公室名称",
     save: "保存",
     cancel: "取消",
@@ -639,6 +700,9 @@ const WORDS = {
     adminsOnlyNote: "目前只有这台服务器的管理员可以用密码登录。",
     resetMadeTold: "对方的页面会显示是你生成的，对方也可以停用它。",
     errors: {
+      "invite-used": "已经用这个邀请创建过账号了。请要一个新的邀请。",
+      "admin-link-ended": "这个设置链接已结束。",
+      "too-many-invites": "仍可使用的邀请太多了。请先取消一些。",
       "invite-wrong": "没有这个邀请。",
       "name-missing": "请填写你的名字。",
       "account-exists": "这个邮箱已经有账号了：请直接登录。",
@@ -702,7 +766,7 @@ const WORDS = {
     create: "アカウントを作成",
     haveAccount: "アカウントをお持ちですか？",
     signInLink: "サインイン",
-    keep: "このリンクがあれば誰でもこのオフィスに参加できます。チームの中だけで共有してください。",
+    keep: "このリンクは一人用です。1回だけ、1週間使えます。",
     signInTitle: "オフィスにサインイン",
     signIn: "サインイン",
     noAccount:
@@ -718,7 +782,24 @@ const WORDS = {
     connected: "接続済み：{name}さんのクローン、最終オンライン {when}。",
     notConnected: "まだコンピューターがつながっていません。",
     inviteTeam: "チームメイトを招待",
-    inviteWhat: "このリンクを送ると、相手はそれでアカウントを作れます。",
+    inviteWhat: "リンクは一人用です。1回だけ、{days}日間使えます。",
+    accountMade:
+      "この招待ですでにアカウントが作られています。そのアカウントでサインインするか、新しい招待をもらってください。",
+    welcome:
+      "このサーバーの管理者になりました。みんなはメールとパスワードでサインインします。Google は下で必要なときにオンにできます。次に、あなたのページからチームを招待しましょう。",
+    adminLinkEnded:
+      "すでに使われたか、1日が過ぎました。サーバーを動かしている人は、サーバーを再起動したときのログか、オフィスを開いたアプリ（設定 › オフィス › チームサーバーを開く）から新しいリンクを受け取れます。",
+    adminLinkEndedTitle: "この設定リンクは終了しています",
+    setupButton: "管理者アカウントを作る",
+    setupWhat:
+      "あなたがこのサーバーの管理者になります。サインイン方法を決め、チームを招待します。ここでアカウントを作ってください。このリンクは1回だけ使えます。",
+    setupTitle: "このチームサーバーを設定する",
+    inviteAccountIn: "アカウント作成済み",
+    inviteCloneIn: "クローン参加済み",
+    inviteFrom: "{by}さん、{when}",
+    invitesTitle: "まだ使える招待",
+    inviteMade: "一人に送ってください：",
+    inviteMake: "招待リンクを作る",
     signOut: "サインアウト",
     runTitle: "コンピューターでこれを実行",
     runWhat:
@@ -744,10 +825,10 @@ const WORDS = {
       "ここでアカウントを作らず、誰かのアプリから招待リンクで参加したクローンです。",
     cloneTitle: "{name}さんのクローンをこのオフィスから外しますか？",
     cloneWhat: "すぐにここで動かなくなります。やりとりした依頼は残ります。",
-    newLink: "新しい招待リンクを作る",
-    newLinkTitle: "新しい招待リンクを作りますか？",
+    newLink: "オフィスキーを変える",
+    newLinkTitle: "オフィスキーを変えますか？",
     newLinkWhat:
-      "前に送ったリンクは使えなくなります。すでに参加している人はそのままです。",
+      "オフィスキーで作ったリンクは使えなくなります。招待リンクと、すでに参加している人はそのままです。",
     officeName: "オフィス名",
     save: "保存",
     cancel: "キャンセル",
@@ -873,6 +954,11 @@ const WORDS = {
     resetMadeTold:
       "作ったことは相手のページにも表示され、相手はリンクを止められます。",
     errors: {
+      "invite-used":
+        "この招待ですでにアカウントが作られています。新しい招待をもらってください。",
+      "admin-link-ended": "この設定リンクは終了しています。",
+      "too-many-invites":
+        "まだ使える招待が多すぎます。先にいくつか取り消してください。",
       "invite-wrong": "その招待は存在しません。",
       "name-missing": "名前を入力してください。",
       "account-exists":
@@ -950,7 +1036,7 @@ const WORDS = {
     create: "Crear mi cuenta",
     haveAccount: "¿Ya tienes una cuenta?",
     signInLink: "Iniciar sesión",
-    keep: "Cualquiera con este enlace puede unirse a esta oficina; compártelo solo dentro de tu equipo.",
+    keep: "Este enlace es para una persona: sirve una vez, durante una semana.",
     signInTitle: "Inicia sesión en tu oficina",
     signIn: "Iniciar sesión",
     noAccount:
@@ -966,7 +1052,25 @@ const WORDS = {
     connected: "Conectado: el clon de {name}, visto por última vez {when}.",
     notConnected: "Todavía no hay ninguna computadora conectada.",
     inviteTeam: "Invita a un colega",
-    inviteWhat: "Envíale este enlace; con él crea su cuenta.",
+    inviteWhat:
+      "Cada enlace es para una persona: sirve una vez, durante {days} días.",
+    accountMade:
+      "Ya se creó una cuenta con esta invitación. Inicia sesión con ella o pide una invitación nueva.",
+    welcome:
+      "Ahora administras este servidor. La gente inicia sesión con correo y contraseña; Google es opcional, más abajo. Después, invita a tu equipo desde tu página.",
+    adminLinkEnded:
+      "Ya se usó o pasó un día. Quien ejecuta el servidor obtiene uno nuevo en su registro al reiniciarlo, o desde la app que abrió la oficina (Ajustes › Oficina › Abrir el servidor del equipo).",
+    adminLinkEndedTitle: "Este enlace de configuración terminó",
+    setupButton: "Crear mi cuenta de administración",
+    setupWhat:
+      "Serás quien lo administra: decides cómo inicia sesión la gente e invitas a tu equipo. Crea tu cuenta aquí. Este enlace sirve una sola vez.",
+    setupTitle: "Configura este servidor del equipo",
+    inviteAccountIn: "cuenta creada",
+    inviteCloneIn: "clon unido",
+    inviteFrom: "De {by}, {when}",
+    invitesTitle: "Invitaciones aún abiertas",
+    inviteMade: "Envíalo a una sola persona:",
+    inviteMake: "Crear un enlace de invitación",
     signOut: "Cerrar sesión",
     runTitle: "Ejecuta esto en tu computadora",
     runWhat:
@@ -993,10 +1097,10 @@ const WORDS = {
     cloneTitle: "¿Quitar el clon de {name} de esta oficina?",
     cloneWhat:
       "Deja de funcionar aquí de inmediato. Lo que pidió y respondió se queda.",
-    newLink: "Crear un nuevo enlace de invitación",
-    newLinkTitle: "¿Crear un nuevo enlace de invitación?",
+    newLink: "Cambiar la clave de la oficina",
+    newLinkTitle: "¿Cambiar la clave de la oficina?",
     newLinkWhat:
-      "El enlace que enviaste antes deja de funcionar. Quienes ya están dentro siguen dentro.",
+      "Los enlaces hechos con la clave de la oficina dejan de funcionar. Las invitaciones y quienes ya están dentro no se ven afectados.",
     officeName: "Nombre de la oficina",
     save: "Guardar",
     cancel: "Cancelar",
@@ -1120,6 +1224,11 @@ const WORDS = {
       "Por ahora, solo quien administra este servidor puede iniciar sesión con contraseña.",
     resetMadeTold: "Su página dice que lo creaste, y puede detenerlo.",
     errors: {
+      "invite-used":
+        "Ya se creó una cuenta con esta invitación. Pide una nueva.",
+      "admin-link-ended": "Este enlace de configuración terminó.",
+      "too-many-invites":
+        "Esta oficina tiene demasiadas invitaciones abiertas. Cancela algunas primero.",
       "invite-wrong": "Esa invitación no existe.",
       "name-missing": "Escribe tu nombre.",
       "account-exists": "Ya hay una cuenta con ese correo: inicia sesión.",
@@ -1194,7 +1303,7 @@ const WORDS = {
     create: "Criar minha conta",
     haveAccount: "Já tem uma conta?",
     signInLink: "Entrar",
-    keep: "Qualquer pessoa com este link pode entrar neste escritório; compartilhe só com a sua equipe.",
+    keep: "Este link é para uma pessoa: funciona uma vez, durante uma semana.",
     signInTitle: "Entre no seu escritório",
     signIn: "Entrar",
     noAccount:
@@ -1210,7 +1319,25 @@ const WORDS = {
     connected: "Conectado: clone de {name}, visto por último {when}.",
     notConnected: "Nenhum computador conectado ainda.",
     inviteTeam: "Convide um colega",
-    inviteWhat: "Envie este link; a pessoa cria a conta com ele.",
+    inviteWhat:
+      "Cada link é para uma pessoa: funciona uma vez, durante {days} dias.",
+    accountMade:
+      "Uma conta já foi criada com este convite. Entre com ela ou peça um convite novo.",
+    welcome:
+      "Agora você administra este servidor. As pessoas entram com e-mail e senha; o Google é opcional, logo abaixo. Depois, convide a sua equipe pela sua página.",
+    adminLinkEnded:
+      "Ele já foi usado ou passou um dia. Quem roda o servidor recebe um novo no registro ao reiniciá-lo, ou pelo app que abriu o escritório (Configurações › Escritório › Abrir o servidor da equipe).",
+    adminLinkEndedTitle: "Este link de configuração terminou",
+    setupButton: "Criar minha conta de administração",
+    setupWhat:
+      "Você vai administrá-lo: decide como as pessoas entram e convida a sua equipe. Crie sua conta aqui. Este link funciona uma vez só.",
+    setupTitle: "Configure este servidor da equipe",
+    inviteAccountIn: "conta criada",
+    inviteCloneIn: "clone entrou",
+    inviteFrom: "De {by}, {when}",
+    invitesTitle: "Convites ainda abertos",
+    inviteMade: "Envie para uma pessoa só:",
+    inviteMake: "Criar um link de convite",
     signOut: "Sair",
     runTitle: "Rode isto no seu computador",
     runWhat:
@@ -1237,10 +1364,10 @@ const WORDS = {
     cloneTitle: "Remover o clone de {name} deste escritório?",
     cloneWhat:
       "Ele para de funcionar aqui na hora. O que pediu e respondeu continua aqui.",
-    newLink: "Criar um novo link de convite",
-    newLinkTitle: "Criar um novo link de convite?",
+    newLink: "Trocar a chave do escritório",
+    newLinkTitle: "Trocar a chave do escritório?",
     newLinkWhat:
-      "O link que você enviou antes para de funcionar. Quem já está dentro continua dentro.",
+      "Os links feitos com a chave do escritório param de funcionar. Os convites e quem já está dentro não são afetados.",
     officeName: "Nome do escritório",
     save: "Salvar",
     cancel: "Cancelar",
@@ -1365,6 +1492,10 @@ const WORDS = {
     resetMadeTold:
       "A página da pessoa mostra que você o criou, e ela pode pará-lo.",
     errors: {
+      "invite-used": "Uma conta já foi criada com este convite. Peça um novo.",
+      "admin-link-ended": "Este link de configuração terminou.",
+      "too-many-invites":
+        "Este escritório tem convites abertos demais. Cancele alguns primeiro.",
       "invite-wrong": "Esse convite não existe.",
       "name-missing": "Informe seu nome.",
       "account-exists": "Já existe uma conta com esse e-mail: entre com ela.",
@@ -1500,6 +1631,8 @@ export function signUpPage(input: {
   errorAtTop?: boolean;
   /** Come from the sign-in page to make an account: the account part shows open. */
   openAccount?: boolean;
+  /** The invite made an account already: the part says so, with the way to sign in. */
+  accountMade?: boolean;
   name?: string;
   email?: string;
 }): string {
@@ -1518,11 +1651,15 @@ ${input.errorAtTop ? problem(lang, input.error) : ""}
 ${installGuide(input)}
 <details class="account" id="account"${input.error || input.openAccount ? " open" : ""}><summary>${say(lang, "accountInstead")}</summary>
 <section>
-<p class="note">${say(lang, "accountWhy")}</p>
-${input.errorAtTop ? "" : problem(lang, input.error)}
-${googleWay(lang, input.methods, google)}
 ${
-  input.methods.password
+  input.accountMade
+    ? `<p>${say(lang, "accountMade")}</p>`
+    : `<p class="note">${say(lang, "accountWhy")}</p>
+${input.errorAtTop ? "" : problem(lang, input.error)}
+${googleWay(lang, input.methods, google)}`
+}
+${
+  input.methods.password && !input.accountMade
     ? `<form method="post" action="${escape(here)}#account" class="auth">
 <label for="name">${say(lang, "name")}</label>
 <input id="name" name="name" required maxlength="80" autocomplete="name" value="${escape(input.name ?? "")}">
@@ -1633,6 +1770,45 @@ export function resetMadePage(input: {
   );
 }
 
+/** Where the server's admin is made, with the link whoever runs it has. */
+export function setupPage(input: {
+  lang: PageLanguage;
+  error?: string;
+  name?: string;
+  email?: string;
+}): string {
+  const { lang } = input;
+  const title = say(lang, "setupTitle");
+  return shell(
+    lang,
+    title,
+    `<h1>${title}</h1>
+<p>${say(lang, "setupWhat")}</p>
+${problem(lang, input.error)}
+<form method="post" class="auth">
+<label for="name">${say(lang, "name")}</label>
+<input id="name" name="name" required maxlength="80" autocomplete="name" value="${escape(input.name ?? "")}">
+<label for="email">${say(lang, "email")}</label>
+<input id="email" name="email" type="email" required maxlength="200" autocomplete="email" value="${escape(input.email ?? "")}">
+<label for="password">${say(lang, "password")}</label>
+<input id="password" name="password" type="password" required minlength="8" maxlength="128" autocomplete="new-password">
+<button type="submit">${say(lang, "setupButton")}</button>
+</form>`,
+  );
+}
+
+/** A setup link used or past its day. */
+export function adminLinkEndedPage(lang: PageLanguage): string {
+  const title = say(lang, "adminLinkEndedTitle");
+  return shell(
+    lang,
+    title,
+    `<h1>${title}</h1>
+<p>${say(lang, "adminLinkEnded")}</p>
+<p><a href="/login">${say(lang, "signInLink")}</a></p>`,
+  );
+}
+
 /** One's own page: one's office, the line that connects one's computer, and the team's invite link. */
 export interface HomePerson {
   id: string;
@@ -1656,7 +1832,17 @@ export function homePage(input: {
   /** The reader's account id, to mark them in the list. */
   me?: string;
   /** The office shown, and the others the reader is in, to switch between. */
-  office?: { id: string; name: string; invite: string };
+  office?: { id: string; name: string };
+  /** An invite the reader just made, shown once to copy. */
+  invited?: { link: string; days: number };
+  /** The office's invites still open, for its owners to see and cancel. */
+  invites?: {
+    id: string;
+    by: string;
+    created: string;
+    clone: boolean;
+    account: boolean;
+  }[];
   offices?: { id: string; name: string }[];
   computer?: { name: string; seen: string };
   command?: string;
@@ -1796,11 +1982,28 @@ ${
           : say(lang, "notConnected")
       }</p>
 </section>
-<section>
+<section id="invite">
 <h2>${say(lang, "inviteTeam")}</h2>
-<p>${say(lang, "inviteWhat")}</p>
-<pre>${escape(office.invite)}</pre>
-${owner ? `<p><a href="/home/invite/new?${at}">${say(lang, "newLink")}</a></p>` : ""}
+<p>${say(lang, "inviteWhat", { days: String(input.invited?.days ?? 7) })}</p>
+${
+  input.invited
+    ? `<p class="done" role="status">${say(lang, "inviteMade")}</p>
+<pre>${escape(input.invited.link)}</pre>`
+    : ""
+}
+<form method="post" action="/home/invite#invite">${officeField}<button type="submit" class="quiet">${say(lang, "inviteMake")}</button></form>
+${
+  owner && input.invites?.length
+    ? `<h3>${say(lang, "invitesTitle")}</h3>
+<ul class="rows">${input.invites
+        .map(
+          (one) =>
+            `<li><span class="who">${say(lang, "inviteFrom", { by: one.by, when: one.created })}${one.clone ? `<span class="tag">${say(lang, "inviteCloneIn")}</span>` : ""}${one.account ? `<span class="tag">${say(lang, "inviteAccountIn")}</span>` : ""}</span><form method="post" action="/home/invite/cancel" class="acts">${officeField}<input type="hidden" name="invite" value="${escape(one.id)}"><button type="submit" class="ghost small">${say(lang, "cancel")}</button></form></li>`,
+        )
+        .join("")}</ul>`
+    : ""
+}
+${owner ? `<p class="note"><a href="/home/invite/new?${at}">${say(lang, "newLink")}</a></p>` : ""}
 </section>
 ${
   people.length
@@ -1969,8 +2172,8 @@ export function adminPage(input: {
   /** A failure of the Google form, said under it with what was typed kept. */
   googleError?: string;
   clientId?: string;
-  /** A word for what just happened: saved, and maybe passwords back on for everyone with it. */
-  done?: "saved" | "password-back";
+  /** A word for what just happened: saved (maybe passwords back on for everyone with it), or the admin just made. */
+  done?: "saved" | "password-back" | "welcome";
 }): string {
   const { lang, settings } = input;
   const title = say(lang, "adminTitle");
@@ -2093,7 +2296,13 @@ ${setUp}
     `<h1>${title}</h1>
 <p class="note">${say(lang, "adminWhat")}</p>
 ${problem(lang, input.error)}
-${input.done ? `<p class="done" role="status">${say(lang, input.done === "password-back" ? "passwordBack" : "saved")}</p>` : ""}
+${
+  input.done === "welcome"
+    ? `<p class="done" role="status">${say(lang, "welcome")} <a href="/home#invite">${say(lang, "inviteTeam")}</a></p>`
+    : input.done
+      ? `<p class="done" role="status">${say(lang, input.done === "password-back" ? "passwordBack" : "saved")}</p>`
+      : ""
+}
 ${password}
 ${googleSection}
 ${peopleSection}

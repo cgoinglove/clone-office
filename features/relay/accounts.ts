@@ -28,6 +28,8 @@ import { type Relay, RelayError } from "./relay.ts";
 
 /** How long a computer's setup code works. */
 export const SETUP_MS = 10 * 60 * 1000;
+/** How long the link that makes the server's admin works. */
+const ADMIN_LINK_MS = 24 * 60 * 60 * 1000;
 
 /** Where Google sends people back to on this server (Better Auth's own route). */
 export const GOOGLE_CALLBACK = "/api/auth/callback/google";
@@ -254,6 +256,8 @@ export class Accounts {
   private resets: Map<string, string>;
   /** Reset links made one at a time, so each reads back its own token. */
   private resetting: Promise<unknown> = Promise.resolve();
+  /** Making the server's admin, one at a time. */
+  private admitting: Promise<unknown> = Promise.resolve();
   /** The Google client the settings open, worked out once per settings. */
   private client: ReturnType<Accounts["opened"]>;
 
@@ -554,6 +558,86 @@ export class Accounts {
 
   private async mustAdmin(user: string): Promise<void> {
     if (!(await this.isAdmin(user))) throw new AccountError("not-admin");
+  }
+
+  /** Whether the server has its admin yet. */
+  async hasAdmin(): Promise<boolean> {
+    const [row] = await this.db.query(
+      "SELECT 1 FROM office_people WHERE role = 'owner' AND office_id = (SELECT id FROM offices ORDER BY created, id LIMIT 1) LIMIT 1",
+    );
+    return Boolean(row);
+  }
+
+  /**
+   * The link that makes the server's admin while it has none, for whoever runs it (its log at
+   * start, or the app that opened the office on its computer): a new one each time it is asked,
+   * the one before then ending; it works for a day and is kept only as its hash.
+   */
+  async adminLink(): Promise<string | undefined> {
+    if (await this.hasAdmin()) return undefined;
+    const token = randomBytes(18).toString("base64url");
+    const value = JSON.stringify({
+      hash: hash(token),
+      until: new Date(Date.now() + ADMIN_LINK_MS).toISOString(),
+    });
+    await this.db.query(
+      "INSERT INTO server_settings (name, value) VALUES ('admin-link', $1) ON CONFLICT (name) DO UPDATE SET value = excluded.value",
+      [value],
+    );
+    return token;
+  }
+
+  /** Whether a link still makes the server's admin. */
+  async adminLinkWorks(token: string): Promise<boolean> {
+    if (await this.hasAdmin()) return false;
+    const [row] = await this.db.query<{ value: string }>(
+      "SELECT value FROM server_settings WHERE name = 'admin-link'",
+    );
+    if (!row) return false;
+    try {
+      const kept = JSON.parse(row.value) as { hash?: string; until?: string };
+      return (
+        kept.hash === hash(token) &&
+        new Date(String(kept.until)).getTime() > Date.now()
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Makes the server's admin with its link: their account, an owner of the office the server was
+   * started with. Once, one at a time: the link ends as it is used.
+   */
+  async makeAdmin(
+    token: string,
+    input: { name: string; email: string; password: string },
+  ): Promise<{ person: Person; cookies: string[] }> {
+    const made = this.admitting.then(async () => {
+      if (!(await this.adminLinkWorks(token)))
+        throw new AccountError("admin-link-ended");
+      const name = input.name.trim().slice(0, 80);
+      if (!name) throw new AccountError("name-missing");
+      const response = (await this.current.api.signUpEmail({
+        body: { name, email: input.email.trim(), password: input.password },
+        asResponse: true,
+      })) as Response;
+      if (!response.ok) throw new AccountError(await refusal(response));
+      const { user } = (await response.json()) as { user: Person };
+      await this.db.transaction(async (tx) => {
+        await tx.query(
+          "INSERT INTO office_people (office_id, user_id, role, joined) SELECT id, $1, 'owner', now() FROM offices ORDER BY created, id LIMIT 1 ON CONFLICT (office_id, user_id) DO UPDATE SET role = 'owner'",
+          [user.id],
+        );
+        await tx.query("DELETE FROM server_settings WHERE name = 'admin-link'");
+      });
+      return {
+        person: { id: user.id, name: user.name, email: user.email },
+        cookies: response.headers.getSetCookie(),
+      };
+    });
+    this.admitting = made.catch(() => undefined);
+    return made;
   }
 
   /** How a person signs in: with a password, with Google, or both. */
@@ -1078,15 +1162,44 @@ export class Accounts {
     return this.officeByKey(key);
   }
 
-  /** The office an invite's key opens. */
+  /**
+   * The office a link's key opens: the office's own key (its operator's), or an invite to it that
+   * still works, `invite` then saying so.
+   */
   private async officeByKey(
     key: string,
-  ): Promise<{ id: string; name: string } | undefined> {
+  ): Promise<{ id: string; name: string; invite?: true } | undefined> {
     const [row] = await this.db.query<{ id: string; name: string }>(
       "SELECT id, name FROM offices WHERE key = $1",
       [key],
     );
-    return row;
+    if (row) return row;
+    const invite = await this.relay.invite(key);
+    if (!invite) return undefined;
+    const [office] = await this.db.query<{ id: string; name: string }>(
+      "SELECT id, name FROM offices WHERE id = $1",
+      [invite.office],
+    );
+    return office ? { ...office, invite: true } : undefined;
+  }
+
+  /**
+   * Puts a person in the office a link opens: with the office's key, as `place` does; with an
+   * invite, only while it has not made an account yet, which it then has (their clone, joined with
+   * the same link, becomes this account's).
+   */
+  private async enterWith(key: string, user: string): Promise<boolean> {
+    const office = await this.officeByKey(key);
+    if (!office) return false;
+    if (!office.invite) {
+      await this.place(office.id, user);
+      return true;
+    }
+    const taken = await this.relay.takeInviteForAccount(key);
+    if (!taken) return false;
+    await this.place(taken.office, user);
+    await taken.settle(user);
+    return true;
   }
 
   /**
@@ -1122,13 +1235,29 @@ export class Accounts {
     if (!office) throw new AccountError("invite-wrong");
     const name = input.name.trim().slice(0, 80);
     if (!name) throw new AccountError("name-missing");
-    const response = (await this.current.api.signUpEmail({
-      body: { name, email: input.email.trim(), password: input.password },
-      asResponse: true,
-    })) as Response;
-    if (!response.ok) throw new AccountError(await refusal(response));
+    // An invite makes one account: taken first, given back should this one not be made.
+    const taken = office.invite
+      ? await this.relay.takeInviteForAccount(key)
+      : undefined;
+    if (office.invite && !taken) throw new AccountError("invite-used");
+    let made: Response;
+    try {
+      made = (await this.current.api.signUpEmail({
+        body: { name, email: input.email.trim(), password: input.password },
+        asResponse: true,
+      })) as Response;
+    } catch (error) {
+      await taken?.undo();
+      throw error;
+    }
+    if (!made.ok) {
+      await taken?.undo();
+      throw new AccountError(await refusal(made));
+    }
+    const response = made;
     const { user } = (await response.json()) as { user: Person };
     await this.place(office.id, user.id);
+    await taken?.settle(user.id);
     return {
       person: { id: user.id, name: user.name, email: user.email },
       cookies: response.headers.getSetCookie(),
@@ -1159,10 +1288,7 @@ export class Accounts {
       );
       throw new AccountError("password-off");
     }
-    if (key) {
-      const office = await this.officeByKey(key);
-      if (office) await this.place(office.id, user.id);
-    }
+    if (key) await this.enterWith(key, user.id);
     return {
       person: { id: user.id, name: user.name, email: user.email },
       cookies: response.headers.getSetCookie(),
@@ -1195,10 +1321,7 @@ export class Accounts {
 
   /** A signed-in person opening another invite: they join that office too. */
   async enter(key: string, user: string): Promise<boolean> {
-    const office = await this.officeByKey(key);
-    if (!office) return false;
-    await this.place(office.id, user);
-    return true;
+    return this.enterWith(key, user);
   }
 
   /** The offices a person is in, the first they joined first. */

@@ -121,30 +121,32 @@ through setting up with one line that joins your office. The office rests while 
 
 ```sh
 POSTGRES_PASSWORD=<letters and digits> docker compose up -d
-docker compose logs relay   # the invite link
+docker compose logs relay   # the link that makes you its admin
 ```
 
 or by hand with a Postgres you have: `DATABASE_URL=postgres://… npx clone-office relay --host
 0.0.0.0` (without one it keeps the office in a folder). On the internet, put it behind HTTPS (Caddy
 or nginx) and set `RELAY_TRUST_PROXY=1` (`2` with a CDN in front of it) and `RELAY_PUBLIC_URL`.
 
-Open the invite link first and make your account (under the setup steps): the first account owns
-the office. Send the same link to your team. Each person can follow the steps on its page, which
-join with the link alone, or make an account there too; their page on the server then gives them
-one line that connects their computer under their name:
+Open the setup link from the log first (it works once, for a day; a restart prints a new one) and
+make your account: you are the server's admin. Then invite your team from your page there: each
+invite link is for one person and works for a week, so nobody joins without someone inside asking
+them. Each person can follow the steps on its page, which join with the link alone, or make an
+account there too; their page on the server then gives them one line that connects their computer
+under their name:
 
 ```sh
 npx clone-office connect https://<your server>/p/<one-time code>
 ```
 
-Owners see everyone in the office on that page, can remove someone (their clone stops at once),
-make others owners, make a new invite link (old ones stop working) and name the office.
+Owners see everyone in the office on that page and the invites still open (and cancel them), can
+remove someone (their clone stops at once), make others owners and name the office.
 
-People sign in with an email and a password, or with Google once the server's admin (the first
-account) sets it up under **Sign-in settings** on their page: an OAuth client from Google Cloud
+People sign in with an email and a password, or with Google once the server's admin sets it up under **Sign-in settings** on their page: an OAuth client from Google Cloud
 Console, its redirect URI the one the page shows. Each way turns on or off there, one always stays
-on, and the client secret is kept sealed with `RELAY_ENCRYPTION_KEY` (a server keeping its data in
-a folder seals with the `secret.key` beside it). No mail is sent: someone who forgot their password
+on, and the client secret is kept sealed with a key the server makes once and keeps apart from the
+database (`secret.key` beside a data folder, or in `RELAY_KEY_DIR`, a volume of its own in the
+compose file; `RELAY_ENCRYPTION_KEY` gives one instead). No mail is sent: someone who forgot their password
 gets a one-time reset link from the admin, and `RELAY_PASSWORD_SIGNIN=1` keeps passwords on
 whatever the page says, should the admin ever lose their own way in.
 

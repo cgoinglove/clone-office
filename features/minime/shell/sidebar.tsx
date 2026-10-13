@@ -22,7 +22,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { memo, type ReactNode, useRef, useState } from "react";
+import { memo, type ReactNode, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -319,32 +319,37 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
   const name = app.name ?? t("me.you");
   const role = app.profile.role?.trim();
   const line = joined ? tOffice(`status.${status}`) : role;
-  // The invite link is asked for each time the menu opens, so a click copies it at once and it is
-  // always the link of the office the person is in now: undefined while it is asked for, null
-  // when the office could not say (the click then shows Settings › Office, which says why).
-  const [invite, setInvite] = useState<string | null>();
-  // only the latest ask is kept, so an answer late from an earlier office never wins
-  const asking = useRef(0);
-
-  const loadInvite = () => {
-    const ask = ++asking.current;
-    setInvite(undefined);
-    if (!joined) return;
-    void fetch("/api/me/office", {
+  // An invite is for one person, so one is made only when asked for: the click copies it as it
+  // comes (a clipboard item that waits for it), else Settings › Office shows it, or why not.
+  const [making, setMaking] = useState(false);
+  const copyInvite = () => {
+    const shown = () => app.setSettings("office");
+    if (
+      !joined ||
+      !navigator.clipboard?.write ||
+      typeof ClipboardItem === "undefined"
+    )
+      return shown();
+    setMaking(true);
+    const made = fetch("/api/me/office", {
       method: "POST",
       headers: HEADERS,
       body: JSON.stringify({ action: "invite" }),
     })
       .then((response) => response.json())
       .then((answer) => {
-        if (ask !== asking.current) return;
-        setInvite(typeof answer?.url === "string" ? answer.url : null);
-      })
-      .catch(() => ask === asking.current && setInvite(null));
+        if (typeof answer?.url !== "string") throw new Error("no invite");
+        return new Blob([answer.url], { type: "text/plain" });
+      });
+    void navigator.clipboard
+      .write([new ClipboardItem({ "text/plain": made })])
+      .then(() => say(t("me.invited")))
+      .catch(shown)
+      .finally(() => setMaking(false));
   };
 
   return (
-    <DropdownMenu onOpenChange={(open) => open && loadInvite()}>
+    <DropdownMenu>
       <DropdownMenuTrigger
         render={
           <button
@@ -422,20 +427,8 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
                 </span>
               </span>
             </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={invite === undefined}
-              onClick={() => {
-                // Where the link could not be had, or the page cannot write to the clipboard, the
-                // office's settings show it (or why not).
-                const shown = () => app.setSettings("office");
-                if (!invite || !navigator.clipboard) return shown();
-                void navigator.clipboard
-                  .writeText(invite)
-                  .then(() => say(t("me.invited")))
-                  .catch(shown);
-              }}
-            >
-              {invite === undefined ? (
+            <DropdownMenuItem disabled={making} onClick={copyInvite}>
+              {making ? (
                 <Loader2 className="animate-spin text-muted-foreground" />
               ) : (
                 <UserPlus className="text-muted-foreground" />

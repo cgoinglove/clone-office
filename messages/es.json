@@ -542,8 +542,10 @@
     "copied": "Copiado",
     "relayPlaceholder": "La dirección de la oficina o un enlace de invitación",
     "invite": "Invitar a un colega",
-    "inviteNote": "Cualquiera con este enlace puede unirse a tu oficina; envíalo solo a tu equipo. Al abrirlo en un navegador, crea su cuenta y le da una línea que conecta su computadora.",
+    "inviteNote": "Cada enlace es para una persona: sirve una vez, durante 7 días. Al abrirlo en el navegador, le guía para configurar su clon o crear una cuenta en el servidor del equipo.",
     "copyInvite": "Copiar invitación",
+    "makeInvite": "Crear un enlace de invitación",
+    "anotherInvite": "Crear otro",
     "room": {
       "label": "La oficina: el escritorio de cada persona con su clon, y las solicitudes que van y vienen entre ellos",
       "floor": "Piso {n}",
@@ -1566,7 +1568,7 @@
       "here": "Abierta en este ordenador · {count, plural, one {# persona} other {# personas}}",
       "at": "{host} · {count, plural, one {# persona} other {# personas}}",
       "invite": "Invitar a un compañero",
-      "invited": "Enlace de invitación copiado",
+      "invited": "Enlace de invitación copiado: para una persona, durante 7 días",
       "shortcuts": "Atajos de teclado"
     },
     "keys": {

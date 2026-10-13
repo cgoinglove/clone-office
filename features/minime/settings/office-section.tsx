@@ -12,15 +12,17 @@ import {
   Copy,
   ExternalLink,
   Link2,
+  Loader2,
   LogOut,
   Pencil,
+  UserPlus,
   Users,
   Wifi,
   WifiOff,
 } from "lucide-react";
 import { useFormatter, useLocale, useNow, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { Bot } from "@/features/office";
@@ -86,11 +88,11 @@ export function OfficeSection({
         {data.here ? <Here here={data.here} /> : <Invite busy={office.busy} />}
       </Group>
 
-      {!data.here && data.relay && /^https?:\/\//.test(data.relay) && (
+      {data.relay && /^https?:\/\//.test(data.relay) && (
         // The team server's own pages: one's account, the people, and, for whoever looks after
-        // the server, how people sign in to it.
+        // the server (for an office open here, this computer's person), how people sign in.
         <Group title={tS("server")} hint={tS("serverHint")}>
-          <ServerLink relay={data.relay} />
+          <ServerLink />
         </Group>
       )}
 
@@ -385,13 +387,17 @@ function Join({
   );
 }
 
-/** Copying the office's invite link, made ahead so a click copies it at once. */
-function useInviteLink(skip = false) {
+/**
+ * An invite link, made when the person asks for one: each is for one person, so none is made
+ * ahead of a click.
+ */
+function useInvite() {
   const [url, setUrl] = useState<string>();
   const [problem, setProblem] = useState<string | null>(null);
-  useEffect(() => {
-    if (skip) return;
-    let live = true;
+  const [busy, setBusy] = useState(false);
+  const make = () => {
+    setBusy(true);
+    setProblem(null);
     void fetch("/api/me/office", {
       method: "POST",
       headers: HEADERS,
@@ -399,38 +405,99 @@ function useInviteLink(skip = false) {
     })
       .then((r) => r.json())
       .then((data) => {
-        if (!live) return;
         if (typeof data?.url === "string") setUrl(data.url);
         else setProblem(String(data?.error ?? "relay-unreachable"));
       })
-      .catch(() => live && setProblem("relay-unreachable"));
-    return () => {
-      live = false;
-    };
-  }, [skip]);
-  return { url, problem };
+      .catch(() => setProblem("relay-unreachable"))
+      .finally(() => setBusy(false));
+  };
+  return { url, problem, busy, make };
 }
 
 /**
  * The team server's own pages, opened at its sign-in with the office's invite: someone signed in
  * there goes on to their page, someone with no account there is shown how to make one with it.
  */
-function ServerLink({ relay }: { relay: string }) {
+function ServerLink() {
   const tS = useTranslations("settings.office");
-  const { url } = useInviteLink();
-  const key = url ? /\/i\/([\w-]{4,128})/.exec(url)?.[1] : undefined;
-  const at = relay.replace(/\/+$/, "");
+  const problemText = useProblem();
+  const [problem, setProblem] = useState<string | null>(null);
   return (
-    <div>
-      <a
-        href={key ? `${at}/login?key=${encodeURIComponent(key)}` : `${at}/home`}
-        target="_blank"
-        rel="noreferrer"
-        className={cn(buttonVariants({ variant: "secondary" }))}
-      >
-        {tS("serverOpen")}
-        <ExternalLink />
-      </a>
+    <div className="flex flex-col gap-2">
+      <div>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            // The tab opens with the click, then goes where the office says: the link that makes
+            // the server's admin, one to make this person's account, or the sign-in.
+            const tab = window.open("about:blank", "_blank");
+            if (tab) tab.opener = null;
+            setProblem(null);
+            void fetch("/api/me/office", {
+              method: "POST",
+              headers: HEADERS,
+              body: JSON.stringify({ action: "server-link" }),
+            })
+              .then((r) => r.json())
+              .then((data) => {
+                if (typeof data?.url !== "string")
+                  throw new Error(String(data?.error ?? "relay-unreachable"));
+                if (tab) tab.location.href = data.url;
+                else window.open(data.url, "_blank", "noopener");
+              })
+              .catch((error: Error) => {
+                tab?.close();
+                setProblem(error.message || "relay-unreachable");
+              });
+          }}
+        >
+          {tS("serverOpen")}
+          <ExternalLink />
+        </Button>
+      </div>
+      {problem && (
+        <p className="text-xs text-destructive">{problemText(problem)}</p>
+      )}
+    </div>
+  );
+}
+
+/** Making an invite link, then copying it, with what it is for. */
+function InviteMaker({ busy: away }: { busy: boolean }) {
+  const t = useTranslations("office");
+  const problemText = useProblem();
+  const { url, problem, busy, make } = useInvite();
+  return (
+    <div className="flex flex-col gap-2">
+      {url ? (
+        <CopyLink url={url} label={t("copyInvite")} />
+      ) : (
+        <div>
+          <Button disabled={busy || away} onClick={make}>
+            {busy ? <Loader2 className="animate-spin" /> : <UserPlus />}
+            {t("makeInvite")}
+          </Button>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">
+        {t("inviteNote")}
+        {url && (
+          <>
+            {" "}
+            <button
+              type="button"
+              className="underline underline-offset-2 hover:text-foreground"
+              disabled={busy}
+              onClick={make}
+            >
+              {t("anotherInvite")}
+            </button>
+          </>
+        )}
+      </p>
+      {problem && (
+        <p className="text-xs text-destructive">{problemText(problem)}</p>
+      )}
     </div>
   );
 }
@@ -472,7 +539,6 @@ function Here({
 }) {
   const t = useTranslations("office");
   const problemText = useProblem();
-  const { url } = useInviteLink(Boolean(here.problem));
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-center gap-2 text-sm">
@@ -486,7 +552,7 @@ function Here({
           {here.relay.replace(/^https?:\/\//, "")}
         </code>
       </div>
-      {!here.problem && <CopyLink url={url} label={t("copyInvite")} />}
+      {!here.problem && <InviteMaker busy={false} />}
       <p
         className={cn(
           "text-xs",
@@ -503,20 +569,9 @@ function Here({
   );
 }
 
-/** One link to bring a colleague in: the relay and the office's key, on the relay's invite page. */
+/** Bringing a colleague in: a link for one person, on the relay's invite page. */
 function Invite({ busy }: { busy: boolean }) {
-  const t = useTranslations("office");
-  const problemText = useProblem();
-  const { url, problem } = useInviteLink(busy);
-  return (
-    <div className="flex flex-col gap-2">
-      <CopyLink url={url} label={t("copyInvite")} />
-      <p className="text-xs text-muted-foreground">{t("inviteNote")}</p>
-      {problem && (
-        <p className="text-xs text-destructive">{problemText(problem)}</p>
-      )}
-    </div>
-  );
+  return <InviteMaker busy={busy} />;
 }
 
 /** Leaving the office; for the one open here, closing it, which teammates feel, so it asks once. */
