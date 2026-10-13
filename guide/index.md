@@ -14,7 +14,7 @@ language. Name a screen or button the way they see it, and never name a file fro
 | `reading.md` | What it reads from their computer and what it never opens, leaving a folder out, the search over their past AI conversations, where their data goes |
 | `office.md` | The office: opening one on their computer or joining by an invite link, cards, asking a colleague's clone (also from Claude Code, with the Clone Office plugin), answering requests that come in, what goes to the relay and what never does, sharing skills with the office and adding colleagues', files between clones |
 | `phone.md` | Talking with the clone from Discord, Telegram or Slack on their phone: setting up their own bot, letting their phone in by its code, questions as buttons, what comes to the phone by itself while they are away from the page, when it does not answer |
-| `brain.md` | What the clone thinks with: their ChatGPT plan, their Claude subscription through Claude Code (Haiku, Sonnet or Opus), a key (OpenAI, Claude, Gemini, OpenRouter) or a model on their computer (Ollama, LM Studio); keys, cost, the lighter model for background work, changing it |
+| `brain.md` | What the clone thinks with: their ChatGPT plan, their Claude subscription through Claude Code (Haiku, Sonnet or Opus), a key (OpenAI, Claude, Gemini, OpenRouter) or a model on their computer (Ollama, LM Studio); keys, cost, the backup model for when it is busy, the lighter model for background work, changing it; long work: the to-do list, helpers, the scratch folder |
 | `connectors.md` | Connectors: the services the clone works in (Notion, Linear, Jira and Confluence, GitHub, Google), connecting each, registering Google's client once for the team, what it asks before using them, disconnecting, when it does not work |
 | `flows.md` | Flows: what the clone does on its own at set times, how they make one by asking, when it runs and what a run may do, where its answers go |
 | `trouble.md` | Claude Code missing or signed out, a Codex conversation that cannot be asked, learning that takes long, something said that is out of date, reading again |
@@ -78,7 +78,12 @@ Two things hold everywhere:
   While the clone is answering, what they write still goes: it shows **Waits for its next step**
   (다음 단계 전에 읽어요) with an X to take it back, and the clone reads it before its next step
   (with a key's model) or as soon as this answer is done (with Claude Code), then **Read** (읽음),
-  after Thursday's step-in. Under
+  after Thursday's step-in. For work of several steps the clone keeps a **To-do list** (할 일) above
+  its answer: each step ticked as it is done, the one under way turning while it works (as Claude
+  Code shows its own); a new list takes the place of the last, and opening the conversation again
+  shows the last one. When it sends a helper off (`brain.md`, "Long work"), a line says what the
+  helper is on and when it finished. When their model was busy and the backup model finished the
+  answer, a line says so (**Your model was busy, so … finished this answer**). Under
   the box, **Ask a colleague** (동료에게) and **Every so often** (정해진 때마다) start the sentence
   for them. On a wide screen the right side shows **The office now** (지금 오피스): the office, live;
   the requests in motion; today's flows. The button at the top folds it away.
@@ -97,7 +102,8 @@ Two things hold everywhere:
   them, any day, latest first: each answer it sent a colleague and whether it did so on its own,
   told them, or sent what they saw; answers it held back; requests it sent; what they allowed from
   now on or took back; flows run. A request opens where it is answered.)
-- **Settings** (설정) has six sections. **AI model** (AI 모델: the model it uses, learning after each
+- **Settings** (설정) has six sections. **AI model** (AI 모델: the model it uses, its **Backup model**
+  (예비 모델) for when that one is busy, learning after each
   conversation, the lighter model for background work), **Permissions** (권한: how much it does on
   its own, what it does without asking, folders left out), **Connectors** (도구 연결),
   **Notifications & phone** (알림·휴대폰: the phone, when kept questions come, quiet hours),
@@ -241,10 +247,13 @@ This is version 0.1, an early one.
 - Work with its own hands, in their own work only (never for a colleague's request):
   - **A workspace** of its own, the `workspace` folder in the clone's folder, where it makes what
     it makes, downloads and installs.
+  - **A scratch folder** for each conversation, `scratch/<session>/` in the clone's folder, for
+    what it needs only while it works (`brain.md`, "Long work"); removed on its own a week after
+    the conversation was last used.
   - **Commands** in that workspace, inside the computer's own sandbox (as Claude Code's are, on
     macOS and on Linux with bubblewrap): they may read their files but never their keys, passwords
-    or the folders they left out, may write only in the workspace, and never reach the computer's
-    own services. The card shows the command; **Don't ask again for commands in its sandbox**
+    or the folders they left out, may write only in the workspace and the conversation's scratch
+    folder, and never reach the computer's own services. The card shows the command; **Don't ask again for commands in its sandbox**
     (앞으로 샌드박스 안의 명령은 묻지 않기) lets them run alone. Where there is no sandbox (Windows,
     or folders left out by name on Linux), every command is asked, every time.
   - **Its own browser** (Chrome where it is installed, else Edge or Chromium), on a profile of its

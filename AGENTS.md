@@ -199,8 +199,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   started. Settings is one dialog of six sections (`features/minime/settings/`, after
   Thursday's, marked as the column marks its places; an ember dot where something wants the
   person, red where something is broken),
-  each laid out with `parts.tsx`: AI model (the brain, learning after each conversation, the lighter
-  model), Permissions (`permissions-section.tsx`: how much it does alone, rules taken back,
+  each laid out with `parts.tsx`: AI model (the brain and its backup model, learning after each
+  conversation, the lighter model), Permissions (`permissions-section.tsx`: how much it does alone, rules taken back,
   the folders it reads), Connectors, Notifications & phone (the messenger, kept questions' hours,
   quiet hours), Office (`office-section.tsx`: open here, join, invite, the team server's own page
   for an office on a server (one's account there and, for its admin, how people sign in), people,
@@ -317,18 +317,47 @@ These words help discussion. They do not mandate separate services, tables or UI
   the person's own conversation and five minutes elsewhere, and gives OpenAI and the ChatGPT plan a
   `prompt_cache_key` made from the session's unchanging start; `runlog.ts` keeps what was read
   from the cache, which Settings › AI model shows as a share.
+  Long work, after Claude Code, Codex and Hermes Agent, on either brain: a to-do list
+  (`todos.ts`: the loop's `todo_write`, after Claude Code's TodoWrite and Codex's update_plan, the
+  whole list each call, one item in progress, Hermes' caps; on Claude Code its own TodoWrite or
+  TaskCreate/TaskUpdate, followed in its stream as Claude Code rebuilds a list, `claudeTodos`; a
+  `todos` session event either way, which the chat draws as one card and keeps); a scratch folder
+  per session (`scratch.ts`: `scratch/<session>/`, a copy sharing the one it came from, named last
+  in the system prompt so the shared start stays cached, `withoutScratch` for the cache key,
+  readable by its own `Read(...)` rule, writable by `write_file` and the sandboxed shell through
+  `MINIME_SCRATCH_DIR`, folders unused for `SCRATCH_DAYS` removed, real session folders only; on the
+  loop a tool's answer past its share of the window, `Spill`, 15% for one and 30% for a step after
+  Hermes' budget, is saved there whole and answered with a preview and the path, Claude Code's
+  `<persisted-output>`, JSON laid out and long lines broken so Read reaches all of it; without a
+  folder it is cut head and tail, as Codex cuts; Read reads a file of any size in parts and Grep
+  searches one named alone however large); helpers (`subtask.ts`: the loop's `delegate_task`, after
+  Claude Code's Agent and Hermes' delegate_task, a fresh `runLoop` on the same brain with the
+  session's connections and guard, `SUBTASK_GUIDE`, reading tools by default (services' reading
+  ones, never the browser), the shell for work, no memory, list or helpers of its own, three at a
+  time and eight a session, its report alone back, each a `subtask` line in the run log with
+  `parent` and `within`; only in the person's own work; on Claude Code its own Agent tool there,
+  `claudeTools`, its sub-agents' messages kept out of the session's words by
+  `parent_tool_use_id`, `claude-stream.ts`); and a backup model (`choice.ts` `fallback`,
+  `setFallback`: another Claude alias for Claude Code, passed as `--fallback-model`, its
+  `model_fallback` event read; any reached model for the loop, `fallback.ts` `withFallback`, which
+  lets the AI SDK retry first and then sends that call and the rest of the turn to the backup, with
+  its own call options and only its vendor's own tools; never for a wrong key or a refusal; a
+  `fallback` session event, said in the conversation).
   The page's part is `features/minime/brain-panel.tsx` (vendor marks, ways, models with one
   suggested and picked to start with; Claude Code's own Haiku, Sonnet or Opus, kept as the
   choice's `model`; `useBrainChoice` behind `BrainPicker`, the one field Settings and the first
   steps share, opening on vendors and what the one in hand offers, after Thursday's model picker,
   with the team's models first when the office keeps keys; the keys themselves are added in
-  Settings › Office, `TeamKeys`) with the route `app/api/me/brain`.
+  Settings › Office, `TeamKeys`; the same field with `role="fallback"` sets the backup in Settings ›
+  AI model, offering only what fits) with the route `app/api/me/brain`.
   `session.ts` runs a session on the person's own Claude Code
   with those tools (the brain is a replaceable process: everything else talks to it only through
-  `runSession`); `review.ts` looks back over a finished session and keeps what it taught;
+  `runSession`; its stream is read by `claude-stream.ts`); `review.ts` looks back over a finished
+  session and keeps what it taught;
   `runlog.ts` writes one line per session to `logs/runs.jsonl` (purpose, time, context, usage,
-  cost; never conversation text), and `usageSummary` reads the last 30 days of it by what it was
-  for, which Settings › AI model shows (`settings/usage-section.tsx`, `app/api/me/usage`).
+  cost, the backup moved to; never conversation text), and `usageSummary` reads the last 30 days
+  of it by what it was for (a helper with what sent it), which Settings › AI model shows
+  (`settings/usage-section.tsx`, `app/api/me/usage`).
 - `features/minime/chat/`: the conversations with the clone, kept by the app itself
   (`store.ts`, one append-only JSON-lines file per conversation under `chats/`), so a conversation
   outlives any brain session. `turn.ts` runs one turn: it resumes the brain's session, carries a
@@ -343,8 +372,12 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`brain/context.ts`: `contextWindow`, `carryPoint`, three quarters of it and at most 100K;
   `sessionLost` knows the services' words for a full window). Inside one turn on the app's own loop,
   earlier tool results are cut once half the window is used (`brain/prune.ts`, Hermes' first phase,
-  through the AI SDK's `prepareStep`, and the session is kept cut), and Read gives at most 60,000
-  characters at once. Conversations are searchable like the person's other
+  through the AI SDK's `prepareStep`, and the session is kept cut), a single long one goes to the
+  session's scratch folder (`brain/scratch.ts`), and Read gives at most 60,000 characters at once.
+  The turn sends the to-do list, helpers and a move to the backup model as they come (`todos`,
+  `subtask`, `fallback`); the list (`store.ts` `setTodos`, `ChatInfo.todos` and `todosAt`) and the
+  move (role `fallback`) are kept, so a conversation opens on its last list, and the steps still
+  open go on with a fresh session. Conversations are searchable like the person's other
   AI conversations.
 - `features/minime/gate/`: the trust gate. Code decides what goes to the person; the brain only
   proposes. In a conversation the clone may also read (files, the web), and Claude Code asks
@@ -599,7 +632,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   sandbox runtime as Claude Code's are (Seatbelt on macOS, bubblewrap on Linux; started once per
   tool server): reading everywhere but keys, secrets, mail, browsers' profiles, the clone's sealed
   files and the folders left out (by path, or by name where the sandbox takes patterns), writing
-  in the workspace and the temporary folder only, the network through its proxy, never this
+  in the workspace, the session's scratch folder (`write_file` takes a full path there too, and a
+  long output is kept there) and the temporary folder only, the network through its proxy, never this
   computer's own addresses, secrets kept out of the environment and caches in the workspace; the
   tool asks the person itself (`askPermission`), unless `auto` or "from now on" lets a sandboxed
   command alone; with no sandbox every command is asked and never kept. `browser.ts` starts

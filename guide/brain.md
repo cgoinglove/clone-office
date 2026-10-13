@@ -71,6 +71,47 @@ in as they use it, whatever the clone itself thinks with.
 Changing the brain keeps everything. A conversation started with one brain goes on with another
 from its own record.
 
+## Backup model
+
+Under the model, Settings › AI model has a **Backup model** (예비 모델): the same field, picked the
+same way, for when their model is overloaded, rate-limited or failing on its vendor's side. The
+clone first tries again a couple of times, as it always does; if that does not get through, it
+finishes the answer with the backup, and the conversation says so in a line (**Your model was busy,
+so … finished this answer**). Their next message goes to their own model again. A wrong key, a
+signed-out plan or a refused request is not a reason to move: those are said as they are.
+
+- With **My Claude subscription** (Claude Code), the backup is another Claude through the same
+  Claude Code (Claude Code moves itself, its own `--fallback-model`).
+- With any other way, the backup is any model the clone can reach: another vendor's with their key,
+  their ChatGPT plan, the team's key, or a model on this computer. Their own model is never its own
+  backup.
+- **None** (없음) takes the backup away. Picking another model keeps the backup while it still fits.
+
+## Long work
+
+When something takes several steps, the clone works through it the way Claude Code does:
+
+- **A to-do list** (할 일): it writes the steps first, marks the one it is on and ticks each as it is
+  done, and they see it above the answer as it goes. It is kept with the conversation, so opening
+  it again shows the last list, and a long conversation carried into a fresh session takes the
+  steps still open with it.
+- **Helpers** (도우미, with a key's model, the ChatGPT plan or a model on this computer): a long
+  search or a lot of reading that the rest does not wait on can go to a helper, a fresh session of
+  the clone that sees none of the conversation, reads (or, when sent to work, also uses the
+  clone's shell and workspace), and brings back only its report. A few run side by side, at most
+  eight for one answer, and a helper never sends helpers of its own or writes the clone's memory.
+  What a helper may not do alone is asked on their screen exactly as the clone's own requests are,
+  and refused with nobody to ask. Helpers work only in their own work, never on a colleague's
+  request. Each is its own line in the run log, counted with the work that sent it. With Claude
+  Code, the clone uses Claude Code's own sub-agents the same way, in the same places.
+- **A scratch folder** for each conversation, `scratch/<session>/` in the clone's folder: when a
+  tool answers more than the model can read at once (a long web page, a service's whole database,
+  a command's long output), the whole answer is saved there and the clone reads a preview with
+  the path, then the parts it needs, instead of losing the rest. How much one answer may take
+  follows the model's window, so a small model on this computer is never filled by one answer. The
+  clone also keeps its own temporary files there. A scratch folder is removed on its own a week
+  after its conversation was last used; nothing else is touched.
+
 **Last 30 days** (지난 30일), at the end of Settings › AI model, says what the clone used its AI
 for: their conversations, colleagues' requests and meetings, flows, and learning how they work,
 each with how often, how many failed, the tokens, and how much of what was sent the vendor read
