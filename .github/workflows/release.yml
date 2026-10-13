@@ -3,7 +3,8 @@ name: Release
 # After Thursday's release. Nobody tags anything by hand: every push to main updates one open
 # "Release PR" that carries the next version and the changelog its commits earned (conventional
 # commits: feat, fix, perf, …), and merging that PR is the decision to release. The run on that
-# merge tags the commit, writes the GitHub Release, checks everything again and publishes to npm.
+# merge tags the commit, writes the GitHub Release, checks everything again, publishes to npm, and
+# then builds the desktop app for each system onto that release (desktop.yml).
 #
 # Run by hand (Actions › Release › Run workflow), from main only:
 #   next    a test build of main as `npx clone-office@next`, versioned as the next minor's
@@ -59,6 +60,10 @@ jobs:
     # A branch's own workflow file must not publish.
     if: (needs.prepare.outputs.released == 'true' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    outputs:
+      # What the desktop app is built as (desktop below).
+      version: ${{ steps.what.outputs.version }}
+      tag: ${{ steps.what.outputs.tag }}
     permissions:
       # Writing the tag and the GitHub Release of a first (or recovered) `latest`.
       contents: write
@@ -133,3 +138,17 @@ jobs:
         env:
           VERSION: ${{ steps.what.outputs.version }}
           GH_TOKEN: ${{ github.token }}
+
+  # The desktop app for each system, attached to the GitHub Release just written (desktop.yml), for
+  # `latest` only: a `next` test build has no release to attach to. A release written with this
+  # run's token starts no workflow by itself, so it is called from here.
+  desktop:
+    needs: publish
+    if: needs.publish.outputs.tag == 'latest'
+    uses: ./.github/workflows/desktop.yml
+    with:
+      tag: v${{ needs.publish.outputs.version }}
+    # Its signing secrets, once they are set.
+    secrets: inherit
+    permissions:
+      contents: write
