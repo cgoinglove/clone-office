@@ -15,7 +15,13 @@
   `npm install -g @openai/codex@latest`). Work also needs the project to be in git; outside git a
   Codex conversation can still be asked.
 - **"The brain did not answer"**: what the service said is shown under it, as it said it (a model
-  their plan does not include, a limit reached). Try again, or pick another model under **AI model**.
+  their plan does not include, for one). Try again, or pick another model under **AI model**.
+- **"Your AI plan has reached its usage limit"** (AI 요금제의 사용 한도에 닿았어요): their plan's
+  usage limit (Claude's five-hour or weekly one, for one) refused the call; the message says when it
+  can be used again, in their own time. Until then, pick another model under **AI model**, or wait.
+  A colleague who asked meanwhile is told the clone could not answer now and to send it again later.
+- **"The model server on this computer refused the call"**: Ollama or LM Studio answered but would
+  not take the call (it asks for a key, or the model is not loaded). Check it there.
 - **"The service did not accept that key"** or **"needs a key"**: the key was mistyped, removed or
   ran out of credit at the service. Make a new one there and paste it under **AI model** (AI 모델).
 - **"Can't reach the office"** (오피스에 연결하지 못했어요), at the top of Home, Requests and Office: the
@@ -25,7 +31,9 @@
   office's address and, for an office opened on this computer, what went wrong.
 - **Learning takes long**: with years of AI conversations the first reading can take a minute;
   the page shows what it is doing and roughly how far along it is. It keeps going if they close
-  or reload the page, and the page picks it up again when reopened.
+  or reload the page, and the page picks it up again when reopened, or when the computer wakes.
+- **The laptop was closed mid-work**: the time a reading, an answer or a piece of work may take
+  counts only while the computer is awake, so it goes on when the lid opens.
 - **It said something out of date**: anything it kept about changing things may be stale. Tell it
   ("that's not true anymore"); it checks their computer and corrects what it kept.
 - **It got them wrong**: use **Correct** (고치기) or **Remove** (지우기) on that line under **What it
