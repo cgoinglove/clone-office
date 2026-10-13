@@ -1,7 +1,8 @@
 // Everything a mini-me keeps on this computer, file by file, so the person can see exactly what is
 // stored and where. Text files (memory, skills, notes, the record of the last reading, settings)
 // come with their text; the search index and anything large come with their size only. The office
-// opened on this computer (`relay/`, a database's own files) is one entry, with its whole size.
+// opened on this computer (`relay/`, a database's own files) is one entry, with its whole size, and
+// so is the desktop app's window (`desktop/`, its browser's own cookies, storage and caches).
 
 import { readdir, readFile, stat } from "node:fs/promises";
 import { join, relative, sep } from "node:path";
@@ -119,11 +120,15 @@ export async function storedFiles(home = minimeHome()): Promise<StoredFile[]> {
       if (out.length >= FILES_MAX) return;
       if (entry.name === ".lock" || entry.name.endsWith(".tmp")) continue;
       const full = join(/*turbopackIgnore: true*/ dir, entry.name);
-      if (entry.isDirectory() && depth === 0 && entry.name === "relay") {
+      if (
+        entry.isDirectory() &&
+        depth === 0 &&
+        (entry.name === "relay" || entry.name === "desktop")
+      ) {
         const { size, modified } = await folderSize(full);
         out.push({
-          path: "relay/",
-          group: "office",
+          path: `${entry.name}/`,
+          group: entry.name === "relay" ? "office" : "other",
           size,
           modified: new Date(modified || Date.now()).toISOString(),
         });

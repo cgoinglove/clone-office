@@ -25,6 +25,7 @@ import { MemoryStore, type Target } from "../memory/store.ts";
 import { MEMORY_GUIDANCE } from "../memory/tool.ts";
 import { keepAwake } from "../server/awake.ts";
 import { claudeCommand, cleanEnv, defaultModel } from "../server/brain.ts";
+import { nodeEnv } from "../server/desktop.ts";
 import {
   appDir,
   connectorHeadersPath,
@@ -315,6 +316,16 @@ interface StreamEvent {
 /** A command as a shell reads it, its paths quoted (POSIX shells and Windows' alike). */
 const quoted = (path: string) => `"${path.replace(/"/g, '\\"')}"`;
 
+/**
+ * What goes before the headers helper's command: inside the desktop app, the variable that has
+ * its executable run as Node, said again where a POSIX shell takes it, should Claude Code run the
+ * helper with an environment of its own (on Windows it is inherited, as it is anyway elsewhere).
+ */
+const helperPrefix = () =>
+  Object.keys(nodeEnv()).length && process.platform !== "win32"
+    ? "ELECTRON_RUN_AS_NODE=1 "
+    : "";
+
 /** What the mini-me's own tool server is told: where its stores are, who it serves, the gate. */
 export function toolServerEnv(
   actor: "minime" | "review",
@@ -328,6 +339,8 @@ export function toolServerEnv(
   own = false,
 ): Record<string, string> {
   return {
+    // Started with the app's own executable, which is Electron's inside the desktop app.
+    ...nodeEnv(),
     ...(own ? { MINIME_OWN_WORK: "1" } : {}),
     ...(origin ? { MINIME_ORIGIN: origin.from } : {}),
     ...(origin?.chat ? { MINIME_ORIGIN_CHAT: origin.chat } : {}),
@@ -388,7 +401,7 @@ export function mcpConfig(
           {
             type: "http",
             url: entry.url,
-            headersHelper: `${quoted(process.execPath)} --no-warnings ${quoted(connectorHeadersPath())} ${entry.id} ${quoted(minimeHome())}`,
+            headersHelper: `${helperPrefix()}${quoted(process.execPath)} --no-warnings ${quoted(connectorHeadersPath())} ${entry.id} ${quoted(minimeHome())}`,
           },
         ]),
       ),

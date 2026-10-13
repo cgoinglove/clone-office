@@ -40,6 +40,9 @@
   "exclude": [
     "node_modules",
     "dist",
+    // The desktop app's build: a copy of the packaged app, and what electron-builder makes
+    "desktop/stage",
+    "desktop/release",
     "**/*.local.*",
     "plugin/hooks",
     "plugin/.claude-plugin"

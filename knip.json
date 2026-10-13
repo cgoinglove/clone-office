@@ -12,6 +12,7 @@
   ],
   "ignore": [
     ".design-sync/**",
+    "desktop/**",
     "components/ui/**",
     "skills/**",
     "plugin/.claude-plugin/types/**"

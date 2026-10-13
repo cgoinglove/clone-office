@@ -36,11 +36,16 @@ const THEME_ICONS = { system: Monitor, light: Sun, dark: Moon } as const;
 
 const HEADERS = { "x-clone-office": "1" };
 
-/** npm's newer version and the line that starts it, once Settings opens; nothing when none. */
+/**
+ * A newer version once Settings opens, nothing when none: from npm, with the line that starts it;
+ * in the desktop app, ready to restart into, or a page to download it from.
+ */
 function useUpdate() {
   const [update, setUpdate] = useState<{
     newer: string | null;
     command: string | null;
+    ready?: boolean;
+    download?: string | null;
   } | null>(null);
   useEffect(() => {
     let live = true;
@@ -52,7 +57,36 @@ function useUpdate() {
       live = false;
     };
   }, []);
-  return update?.newer && update.command ? update : null;
+  return update?.newer && (update.command || update.ready || update.download)
+    ? update
+    : null;
+}
+
+/** Restarts the desktop app into the version it has ready; says so when it cannot. */
+function useRestartToUpdate() {
+  const [restarting, setRestarting] = useState(false);
+  const [problem, setProblem] = useState<string>();
+  const restart = () => {
+    setProblem(undefined);
+    setRestarting(true);
+    fetch("/api/me/update", {
+      method: "POST",
+      headers: { ...HEADERS, "content-type": "application/json" },
+      body: JSON.stringify({ restart: true }),
+    })
+      .then(async (response) => {
+        if (response.ok) return;
+        setRestarting(false);
+        setProblem(
+          ((await response.json().catch(() => ({}))) as { error?: string })
+            .error ?? "update-failed",
+        );
+      })
+      .catch(() => {
+        // The app closes as it restarts, and the answer may never come.
+      });
+  };
+  return { restarting, problem, restart };
 }
 
 /** Whether the app starts with the computer, and turning it on or off; nothing until known. */
@@ -192,6 +226,7 @@ export function GeneralSection() {
   const t = useTranslations("settings.general");
   const common = useTranslations("common");
   const update = useUpdate();
+  const restart = useRestartToUpdate();
   const [copied, setCopied] = useState(false);
   const locale = useLocale();
   const router = useRouter();
@@ -302,6 +337,46 @@ export function GeneralSection() {
                   </button>
                 </Tip>
               </div>
+            </div>
+          )}
+          {update?.ready && (
+            <div className="flex flex-col gap-2 rounded-lg bg-muted p-3">
+              <p className="flex items-start gap-1.5 text-[13px]">
+                <ArrowUpCircle className="mt-0.5 size-3.5 shrink-0" />
+                {t("updateReady", { version: update.newer ?? "" })}
+              </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="self-start"
+                loading={restart.restarting}
+                onClick={restart.restart}
+              >
+                {t("updateRestart")}
+              </Button>
+              {restart.problem && (
+                <p className="text-[13px] text-destructive">
+                  {problemText(restart.problem)}
+                </p>
+              )}
+            </div>
+          )}
+          {update?.download && !update.ready && (
+            <div className="flex flex-col gap-2 rounded-lg bg-muted p-3">
+              <p className="flex items-start gap-1.5 text-[13px]">
+                <ArrowUpCircle className="mt-0.5 size-3.5 shrink-0" />
+                {t("updateDownload", { version: update.newer ?? "" })}
+              </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="self-start"
+                render={
+                  <a href={update.download} target="_blank" rel="noreferrer" />
+                }
+              >
+                {t("updateDownloadButton")}
+              </Button>
             </div>
           )}
         </div>

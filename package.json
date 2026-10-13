@@ -15,8 +15,9 @@
     "format": "biome format --write",
     "typecheck": "next typegen && tsc --noEmit",
     "knip": "knip",
-    "test": "tsx --test \"features/**/*.test.ts\" \"plugin/**/*.test.ts\" \"i18n/**/*.test.ts\" \"bin/**/*.test.mjs\"",
-    "relay": "node features/relay/server.ts"
+    "test": "tsx --test \"features/**/*.test.ts\" \"plugin/**/*.test.ts\" \"i18n/**/*.test.ts\" \"bin/**/*.test.mjs\" \"desktop/src/**/*.test.mjs\"",
+    "relay": "node features/relay/server.ts",
+    "desktop": "node desktop/build.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.72",

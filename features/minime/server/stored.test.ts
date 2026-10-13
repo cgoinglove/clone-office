@@ -70,6 +70,22 @@ test("the office opened on this computer is one entry with its whole size, not i
   );
 });
 
+test("the desktop app's window keeps its browser's files as one entry, not hundreds", async () => {
+  mkdirSync(join(root, "desktop", "Code Cache", "js"), { recursive: true });
+  writeFileSync(join(root, "desktop", "Cookies"), Buffer.alloc(40));
+  writeFileSync(
+    join(root, "desktop", "Code Cache", "js", "a"),
+    Buffer.alloc(60),
+  );
+  const files = await storedFiles(root);
+  assert.deepEqual(
+    files
+      .filter((f) => f.path.startsWith("desktop"))
+      .map((f) => [f.group, f.path, f.size]),
+    [["other", "desktop/", 100]],
+  );
+});
+
 test("a connected service's sign-in is listed with the services, its tokens and verifier masked", async () => {
   mkdirSync(join(root, "connectors"), { recursive: true });
   writeFileSync(
