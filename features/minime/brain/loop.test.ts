@@ -13,7 +13,15 @@ import { convertArrayToReadableStream, MockLanguageModelV4 } from "ai/test";
 
 const root = mkdtempSync(join(tmpdir(), "minime-loop-"));
 process.env.CLONE_OFFICE_HOME = root;
-after(() => rmSync(root, { recursive: true, force: true }));
+// The clone's browser, started for the person's own work, may still be writing as it closes.
+after(() =>
+  rmSync(root, {
+    recursive: true,
+    force: true,
+    maxRetries: 10,
+    retryDelay: 100,
+  }),
+);
 
 const usage = {
   inputTokens: { total: 120, noCache: 100, cacheRead: 20, cacheWrite: 0 },
