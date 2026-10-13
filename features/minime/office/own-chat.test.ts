@@ -46,6 +46,21 @@ test("the code a page shows is the one the clone and the relay compute", async (
   }
 });
 
+test("the conversation and the words already acted on are kept across a restart", async () => {
+  const { changeState, loadState } = await import("./state.ts");
+  await changeState((state) => {
+    state.ownChat = "c-1";
+    state.ownNonces = { "n-1": 5 };
+  });
+  const state = await loadState();
+  assert.equal(state.ownChat, "c-1");
+  assert.deepEqual(state.ownNonces, { "n-1": 5 });
+  await changeState((s) => {
+    s.ownChat = undefined;
+    s.ownNonces = undefined;
+  });
+});
+
 test("only what a paired browser signed, freshly and once, is acted on", async () => {
   const { signedHere } = await import("./own-chat.ts");
   const mine = await browser();
@@ -60,6 +75,12 @@ test("only what a paired browser signed, freshly and once, is acted on", async (
   const good = await mine.sign({ ...said, at: Date.now(), nonce: nonce() });
   assert.equal(await signedHere(good, said), true);
   // the same signed words a second time: the relay cannot replay them
+  assert.equal(await signedHere(good, said), false);
+  // nor after the app started again, which forgets what it held in memory
+  const held = (
+    globalThis as { __minimeOwnChat?: { seen: Map<string, number> } }
+  ).__minimeOwnChat;
+  held?.seen.clear();
   assert.equal(await signedHere(good, said), false);
 
   // words other than those signed

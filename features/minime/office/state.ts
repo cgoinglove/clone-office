@@ -126,6 +126,19 @@ export async function loadState(): Promise<OfficeState> {
       ...(typeof parsed.standup === "string"
         ? { standup: parsed.standup }
         : {}),
+      // the team server page's conversation, and the signed words already acted on (own-chat.ts)
+      ...(typeof parsed.ownChat === "string"
+        ? { ownChat: parsed.ownChat }
+        : {}),
+      ...(parsed.ownNonces && typeof parsed.ownNonces === "object"
+        ? {
+            ownNonces: Object.fromEntries(
+              Object.entries(parsed.ownNonces).filter(
+                ([, at]) => typeof at === "number",
+              ),
+            ) as Record<string, number>,
+          }
+        : {}),
     };
   } catch {
     return {
