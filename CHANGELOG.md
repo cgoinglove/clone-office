@@ -3,6 +3,29 @@
 Versions after 0.1.0 are written here by release-please from the commits on main
 (CONTRIBUTING.md, "Releasing").
 
+## [0.3.0](https://github.com/cgoinglove/clone-office/compare/v0.2.0...v0.3.0) (2026-10-13)
+
+
+### Features
+
+* **relay:** the Office tab draws the office as the app does, wide, beside the invites and people ([86d3cd9](https://github.com/cgoinglove/clone-office/commit/86d3cd95fbfa55e9df3e9f733d9cdfa8dae23bb9))
+* **relay:** the team server can draw the office on its own pages: the room's files served from a fixed list, a look built as the app builds it for the signed-in person's own place, a start module with no inline script and the policy its page sends, in the page's language with the app's own words, shipped in the package and the Docker image ([68332b3](https://github.com/cgoinglove/clone-office/commit/68332b38fc8d132c77098166e09492f09987bfd9))
+* **relay:** the team server's own page is the person's office on a band in the brand's colour with three tabs, and its first is a conversation with their own clone on their computer, its questions answered there with its own buttons, once they turn it on in the app; what is said passes through the server and is kept there a day at most ([afdd234](https://github.com/cgoinglove/clone-office/commit/afdd234d230a38603373532373c3aa2e20336b27))
+* **web-chat:** only a browser its person paired talks to their clone, every word signed ([8ad05da](https://github.com/cgoinglove/clone-office/commit/8ad05da661e71aaff1fcc60cdfbd49dc3b0d2f40))
+
+
+### Fixes
+
+* **relay:** a HEAD is answered as its GET, without the body, rather than not found ([67dd1b8](https://github.com/cgoinglove/clone-office/commit/67dd1b841e1807f97ee5c8ca3e0fa22a08d79027))
+* **relay:** the server's own address leads to one's page, or to signing in, rather than an error ([45e02a9](https://github.com/cgoinglove/clone-office/commit/45e02a9aa4c1dcb89dc57fb592724ac97878df68))
+* **web-chat:** the last words stay in sight once the pairing shows or goes ([11da2b2](https://github.com/cgoinglove/clone-office/commit/11da2b233f126920e0581b52833f794255bed1eb))
+* **web-chat:** the office state keeps the team server page's conversation and the signed words already acted on, which reading it used to drop ([31e02ef](https://github.com/cgoinglove/clone-office/commit/31e02ef139f1a051a7baf8efdd4f6215647fd02b))
+
+
+### Docs
+
+* the code map names the team server's tabs and the conversation with one's own clone ([2e304fc](https://github.com/cgoinglove/clone-office/commit/2e304fc69a06842ce7957b8e7a4d3238fd724b93))
+
 ## [0.2.0](https://github.com/cgoinglove/clone-office/compare/v0.1.0...v0.2.0) (2026-10-13)
 
 
