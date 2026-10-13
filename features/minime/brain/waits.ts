@@ -17,16 +17,23 @@ const AWAKE_TICK_MS = 5_000;
 export function awakeTimeout(ms: number, onTimeout: () => void): () => void {
   let left = ms;
   let last = Date.now();
+  // Once, however the interval is stopped: a look already queued never fires it again.
+  let over = false;
+  const stop = () => {
+    over = true;
+    clearInterval(timer);
+  };
   const timer = setInterval(() => {
+    if (over) return;
     const now = Date.now();
     const gap = now - last;
     last = now;
     left -= gap > AWAKE_TICK_MS * 4 ? AWAKE_TICK_MS : gap;
     if (left > 0) return;
-    clearInterval(timer);
+    stop();
     onTimeout();
   }, AWAKE_TICK_MS);
-  return () => clearInterval(timer);
+  return stop;
 }
 
 /** An abort signal after `ms` of the computer awake (awakeTimeout), and how to stop counting. */
