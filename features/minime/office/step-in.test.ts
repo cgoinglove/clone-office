@@ -235,7 +235,12 @@ test("what comes while the clone answers is read before its answer leaves", asyn
   ]);
   const before = said().length;
   const going = handle(task.id);
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  // written once the clone is making its answer, however long a busy computer takes to get there
+  await settle(async () =>
+    said()
+      .slice(before)
+      .some((call) => call.args.includes("--json-schema")),
+  );
   await write(task.id, "Same place as last time?");
   await going;
   const again = said()
