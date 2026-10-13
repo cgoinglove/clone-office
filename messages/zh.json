@@ -35,6 +35,8 @@
     "office-member-unknown": "办公室已经认不出你的分身了。请退出办公室后重新加入。",
     "request-closed": "这个请求已经结束了。",
     "ai-busy": "AI 服务正忙。请稍后再试。",
+    "brain-limit": "AI 套餐的用量已达上限。可以在“AI 模型”里换一个模型继续，或稍后再试。",
+    "brain-limit-until": "AI 套餐的用量已达上限，{time} 起可以再次使用。想在此之前继续，请在“AI 模型”里换一个模型。",
     "timeout": "耗时太久，已停止。请重试。",
     "learn-failed": "这次没能学完。请重试。",
     "fix-failed": "没能改好这一条。请重试。",
@@ -70,6 +72,7 @@
     "brain-key-wrong": "服务不接受这个密钥。请检查后重新粘贴。",
     "brain-unreachable": "连不上这个服务。请稍后再试。",
     "brain-local-unreachable": "这个地址没有回应。Ollama 或 LM Studio 在运行吗？",
+    "brain-local-refused": "这台电脑上的模型服务器拒绝了请求。请检查它的设置（它要求的密钥、已加载的模型）后再试。",
     "brain-chatgpt-signed-out": "你的分身用的是你的 ChatGPT 套餐：请在“AI 模型”里重新登录。",
     "chatgpt-unreachable": "连不上 OpenAI。请稍后再试。",
     "meeting-alone": "现在办公室里没有别人，开不了会。",
@@ -481,7 +484,8 @@
       "working": "工作中",
       "meeting": "会议中",
       "away": "离开",
-      "off": "已下班"
+      "off": "已下班",
+      "web": "在网页上参与"
     },
     "colleagues": "同事",
     "nobody": "还没有其他分身。把邀请链接发给同事吧。",
@@ -591,6 +595,7 @@
         "away": "离开",
         "goingTo": "→ {name}",
         "off": "已下班",
+        "onWeb": "在网页上参与",
         "workingFor": "处理{name}的请求",
         "workingForYou": "处理你的请求",
         "inMeeting": "开会中"

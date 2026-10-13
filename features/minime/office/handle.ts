@@ -21,6 +21,7 @@ import { denyRules, loadTrust, pathRule } from "../gate/rules.ts";
 import { savedText } from "../saved-text.ts";
 import { logActivity } from "../server/activity.ts";
 import { loadExcludes } from "../server/exclude.ts";
+import { errorCode } from "../server/ndjson.ts";
 import {
   type CheckOutcome,
   checkBeforeSending,
@@ -642,7 +643,9 @@ async function answer(options: {
         state: "FAILED",
         text: passing(result.error)
           ? "Could not answer now: the AI service was busy. Please send it again a little later."
-          : "Could not answer this request.",
+          : errorCode(result.error)?.startsWith("brain-limit")
+            ? "Could not answer now: the AI plan this clone thinks with reached its usage limit. Please send it again later."
+            : "Could not answer this request.",
       });
       return;
     }

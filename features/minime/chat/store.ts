@@ -86,7 +86,7 @@ type Line =
       quiet?: boolean;
     }
   | { type: "session"; session: string; context?: number; at: string }
-  | { type: "carried"; summary: string; at: string }
+  | { type: "carried"; summary: string; upTo?: number; at: string }
   | { type: "reviewed"; session: string; at: string }
   // The person named it themselves, or put it away and brought it back.
   | { type: "title"; title: string; at: string }
@@ -232,8 +232,21 @@ export async function markReviewed(id: string, session: string): Promise<void> {
 }
 
 /** The conversation goes on in a fresh session that starts from this summary. */
-export async function carryOver(id: string, summary: string): Promise<void> {
-  await append(id, { type: "carried", summary, at: new Date().toISOString() });
+/**
+ * The conversation goes on in a fresh session with this summary of its first `upTo` messages (the
+ * ones before the message that is being answered, which the fresh session gets as itself).
+ */
+export async function carryOver(
+  id: string,
+  summary: string,
+  upTo?: number,
+): Promise<void> {
+  await append(id, {
+    type: "carried",
+    summary,
+    ...(upTo === undefined ? {} : { upTo }),
+    at: new Date().toISOString(),
+  });
 }
 
 /** The clone's to-do list as it now stands, so the conversation opens on it again. */
@@ -294,7 +307,10 @@ function parse(raw: string): {
       info.session = undefined;
       info.context = undefined;
       info.summary = line.summary;
-      info.carriedFrom = messages.length;
+      info.carriedFrom =
+        typeof line.upTo === "number"
+          ? Math.min(line.upTo, messages.length)
+          : messages.length;
     }
   }
   return { info, messages };

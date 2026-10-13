@@ -1,10 +1,11 @@
 // What a session on the person's own Claude Code says as it works, read from its stream-json
 // events (`claude -p --output-format stream-json --verbose`): its words, how much of the model's
 // window it used, what it kept, its to-do list (todos.ts), the sub-agents it sent with its own Agent
-// tool, a move to the fallback model ("model_fallback", which `--fallback-model` makes), and how it
-// ended. What a sub-agent says (its messages name the Agent call they belong to,
+// tool, a move to the fallback model ("model_fallback", which `--fallback-model` makes), the plan's
+// usage limit refusing it ("rate_limit_event"), and how it ended. What a sub-agent says (its messages name the Agent call they belong to,
 // parent_tool_use_id) is its own: only the session's own words reach the person and its context.
 
+import { limitProblem } from "../../../i18n/problem.ts";
 import { reportKept, WATCHED } from "./events.ts";
 import { modelLabel } from "./providers.ts";
 import type { SessionEvent } from "./session.ts";
@@ -25,7 +26,12 @@ export interface StreamEvent {
   total_cost_usd?: number;
   /** A "model_fallback" system event: the model it moved to. */
   fallback_model?: string;
+  /** A "rate_limit_event": whether the plan's limit let the call through, and when it lifts. */
+  rate_limit_info?: { status?: string; resetsAt?: number };
   message?: {
+    /** "<synthetic>" for Claude Code's own notices (a limit, an API error), never the model's words. */
+    model?: string;
+    id?: string;
     usage?: Record<string, number>;
     content?: {
       type?: string;
@@ -57,6 +63,10 @@ export class ClaudeStream {
   context?: number;
   turns?: number;
   cost?: number;
+  /** The message the session's words last came from: another one's words start a new paragraph. */
+  private wordsFrom?: string;
+  /** When the plan's limit that refused this session lifts (unix seconds; 0 when not said). */
+  private limited?: number;
   private readonly kept = new Map<string, Record<string, unknown>>();
   private readonly agents = new Map<string, string>();
   private readonly todos: ReturnType<typeof claudeTodos>;
@@ -80,6 +90,11 @@ export class ClaudeStream {
     if (typeof event.session_id === "string") this.id = event.session_id;
     const own = !event.parent_tool_use_id;
     const parts = event.message?.content ?? [];
+    if (
+      event.type === "rate_limit_event" &&
+      event.rate_limit_info?.status === "rejected"
+    )
+      this.limited = event.rate_limit_info.resetsAt ?? 0;
     if (event.type === "system" && event.subtype === "model_fallback")
       this.onEvent?.({
         type: "fallback",
@@ -94,9 +109,21 @@ export class ClaudeStream {
     }
     if (event.type === "assistant")
       for (const part of parts) {
-        if (own && part.type === "text" && part.text) {
-          this.text += part.text;
-          this.onEvent?.({ type: "text", text: part.text });
+        if (
+          own &&
+          part.type === "text" &&
+          part.text &&
+          event.message?.model !== "<synthetic>"
+        ) {
+          // Each message of the session is its own paragraph, as Claude Code shows them.
+          const from = event.message?.id;
+          const text =
+            this.text && from && this.wordsFrom && from !== this.wordsFrom
+              ? `\n\n${part.text}`
+              : part.text;
+          if (from) this.wordsFrom = from;
+          this.text += text;
+          this.onEvent?.({ type: "text", text });
         }
         if (part.type !== "tool_use" || !part.id) continue;
         if (WATCHED.has(part.name ?? ""))
@@ -143,7 +170,11 @@ export class ClaudeStream {
     this.cost = event.total_cost_usd;
     return {
       ok: !event.is_error,
-      error: event.is_error ? String(event.result ?? event.subtype) : undefined,
+      error: !event.is_error
+        ? undefined
+        : this.limited !== undefined
+          ? limitProblem(this.limited)
+          : String(event.result ?? event.subtype),
       structured: event.structured_output,
       usage: event.usage,
     };

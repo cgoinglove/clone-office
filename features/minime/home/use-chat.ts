@@ -103,12 +103,19 @@ export function useChat(lang: string) {
     return id;
   }, []);
 
+  /** Whether a conversation was picked (by its address, the list, a new one): the latest is then not opened over it. */
+  const picked = useRef(false);
+  /** The latest conversation asked to open: one that answers after a later one is left closed. */
+  const opening = useRef(0);
+
   /** Opens one conversation from its own record, with the questions still waiting in it. */
-  const openChat = useCallback(async (id: string) => {
+  const openChat = useCallback(async (id: string, latest = false) => {
+    if (!latest) picked.current = true;
+    const turn = ++opening.current;
     const response = await fetch(`/api/me/chats?id=${encodeURIComponent(id)}`, {
       headers: HEADERS,
     }).catch(() => undefined);
-    if (!response?.ok) return;
+    if (!response?.ok || turn !== opening.current) return;
     const data = (await response.json()) as {
       id: string;
       title?: string;
@@ -125,6 +132,7 @@ export function useChat(lang: string) {
       .catch(() => ({ asks: [] }))) as {
       asks: { id: string; ask: GateAsk }[];
     };
+    if (turn !== opening.current) return;
     setChatId(data.id);
     setOpenTitle(data.title);
     const said = data.messages.map((m): Turn => {
@@ -183,7 +191,9 @@ export function useChat(lang: string) {
       setChats(data.chats ?? []);
       setMore(Boolean(data.more));
       setAsked(Boolean(data.asked) || Boolean(data.chats?.length));
-      if (openLatest && data.chats?.[0]) await openChat(data.chats[0].id);
+      // The app opens on the latest conversation, unless one was picked while the list came.
+      if (openLatest && !picked.current && data.chats?.[0])
+        await openChat(data.chats[0].id, true);
     },
     [openChat],
   );
@@ -243,6 +253,8 @@ export function useChat(lang: string) {
   }, [openChat, loadChats]);
 
   const newChat = useCallback(() => {
+    picked.current = true;
+    opening.current += 1;
     chatRef.current = undefined;
     setChatId(undefined);
     setOpenTitle(undefined);

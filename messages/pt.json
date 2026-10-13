@@ -35,6 +35,8 @@
     "office-member-unknown": "O escritório não reconhece mais seu clone. Saia do escritório e entre de novo.",
     "request-closed": "Esse pedido já foi encerrado.",
     "ai-busy": "O serviço de IA estava ocupado. Tente de novo daqui a pouco.",
+    "brain-limit": "Seu plano de IA atingiu o limite de uso por enquanto. Escolha outro modelo em Modelo de IA para continuar, ou tente mais tarde.",
+    "brain-limit-until": "Seu plano de IA atingiu o limite de uso. Volta a ficar disponível: {time}. Para continuar antes, escolha outro modelo em Modelo de IA.",
     "timeout": "Demorou demais e foi interrompido. Tente de novo.",
     "learn-failed": "Desta vez não consegui terminar de aprender. Tente de novo.",
     "fix-failed": "Não consegui fazer essa correção. Tente de novo.",
@@ -70,6 +72,7 @@
     "brain-key-wrong": "O serviço não aceitou essa chave. Confira e cole de novo.",
     "brain-unreachable": "Não foi possível acessar o serviço. Tente de novo daqui a pouco.",
     "brain-local-unreachable": "Nada respondeu nesse endereço. O Ollama ou o LM Studio está aberto?",
+    "brain-local-refused": "O servidor de modelos deste computador recusou a chamada. Confira as configurações dele (uma chave que ele peça, o modelo carregado) e tente de novo.",
     "brain-chatgpt-signed-out": "Seu clone usa seu plano do ChatGPT: entre de novo em Modelo de IA.",
     "chatgpt-unreachable": "Não foi possível acessar a OpenAI. Tente de novo daqui a pouco.",
     "meeting-alone": "Não há mais ninguém no escritório agora, então não há com quem se reunir.",
@@ -481,7 +484,8 @@
       "working": "Trabalhando",
       "meeting": "Em reunião",
       "away": "Ausente",
-      "off": "Fora"
+      "off": "Fora",
+      "web": "Na web"
     },
     "colleagues": "Colegas",
     "nobody": "Ainda não há outros clones. Envie o link de convite para um colega.",
@@ -591,6 +595,7 @@
         "away": "ausente",
         "goingTo": "→ {name}",
         "off": "fora",
+        "onWeb": "na web",
         "workingFor": "no pedido de {name}",
         "workingForYou": "no seu pedido",
         "inMeeting": "em reunião"

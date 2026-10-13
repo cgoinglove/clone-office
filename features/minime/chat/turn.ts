@@ -263,7 +263,8 @@ export async function runTurn(options: {
             ]
               .filter(Boolean)
               .join("\n\n");
-      await carryOver(info.id, summary);
+      // The summary covers what came before this message, which the fresh session is asked.
+      await carryOver(info.id, summary, before.length);
       session = undefined;
       send({ type: "carried" });
     }

@@ -129,13 +129,39 @@ export function useLearn(lang: string, onDone?: () => void) {
   }, []);
 
   const follow = useCallback(
-    (signal?: AbortSignal) =>
-      stream("/api/me/learn", undefined, onEvent, signal).catch(
-        (error: Error) => {
-          if (error.name !== "AbortError")
-            setState((s) => ({ ...s, problem: error.message }));
-        },
-      ),
+    async (signal?: AbortSignal) => {
+      // A reading goes on in the server when the page's connection goes (the computer slept, the
+      // network changed): the page looks again until it hears how it ended. The server replays a
+      // running reading from its start, so what the page had is rebuilt rather than added to.
+      for (let tries = 0; !signal?.aborted; tries++) {
+        if (tries) setState((s) => ({ ...s, kept: [], sources: [] }));
+        let ended = false;
+        try {
+          await stream(
+            "/api/me/learn",
+            undefined,
+            (event) => {
+              if (["done", "error", "idle"].includes(String(event.type)))
+                ended = true;
+              onEvent(event);
+            },
+            signal,
+          );
+        } catch (error) {
+          if ((error as Error).name === "AbortError") return;
+          // The server answered with a refusal: said, not tried again. A connection that failed
+          // (fetch's TypeError) is.
+          if (!(error instanceof TypeError)) {
+            setState((s) => ({ ...s, problem: (error as Error).message }));
+            return;
+          }
+        }
+        if (ended || signal?.aborted) return;
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.min(2000 * 2 ** tries, 30_000)),
+        );
+      }
+    },
     [onEvent],
   );
 

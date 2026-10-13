@@ -17,6 +17,7 @@ import { lstat, mkdir, readdir, rm, utimes, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { pathRule } from "../gate/rules.ts";
 import { minimeHome } from "../server/paths.ts";
+import { partOf, unmark } from "./untrusted.ts";
 
 /**
  * Days a scratch folder is kept after it was last used. A conversation taken up again within the
@@ -136,13 +137,26 @@ export function resultLimits(window: number): { result: number; step: number } {
  * Nothing is left out; only line breaks are added.
  */
 export function pageable(text: string): string {
-  const trimmed = text.trim();
-  if (/^[[{]/.test(trimmed) && trimmed.length > SAVED_LINE)
+  // A web page's or a service's answer comes marked as outside text (untrusted.ts): what it holds
+  // is laid out, and the mark kept around it.
+  if (unmark(text)) return partOf(text, pageable);
+  const json = (raw: string) => {
+    const trimmed = raw.trim();
+    if (!/^[[{]/.test(trimmed) || trimmed.length <= SAVED_LINE)
+      return undefined;
     try {
       return JSON.stringify(JSON.parse(trimmed), null, 2);
     } catch {
       // Not JSON after all: broken by length below.
+      return undefined;
     }
+  };
+  const whole = json(text);
+  if (whole) return whole;
+  // JSON after a heading line, as a web page comes: its status and address, then its body.
+  const gap = text.indexOf("\n\n");
+  const after = gap > 0 && gap < 500 ? json(text.slice(gap + 2)) : undefined;
+  if (after) return `${text.slice(0, gap)}\n\n${after}`;
   return text
     .split("\n")
     .flatMap((line) => {
@@ -222,7 +236,7 @@ Output too large (${text.length.toLocaleString("en-US")} characters, ${lines.toL
 Read it in parts with Read (offset and limit, by line) or search it with Grep; do not call the tool again for the same thing.
 
 Preview (first ${PREVIEW_CHARS.toLocaleString("en-US")} characters):
-${preview(text)}
+${partOf(text, (body) => preview(body))}
 </persisted-output>`;
   }
 }
@@ -230,7 +244,9 @@ ${preview(text)}
 /** The start and end of a text within `max` characters, saying how much was left out between them. */
 export function cut(text: string, max: number): string {
   if (text.length <= max) return text;
-  const head = text.slice(0, Math.floor(max * 0.7));
-  const tail = text.slice(text.length - Math.floor(max * 0.3));
-  return `${head}\n\n[… ${(text.length - head.length - tail.length).toLocaleString("en-US")} characters cut from the middle of ${text.length.toLocaleString("en-US")}. Ask for less, or for the part you need.]\n\n${tail}`;
+  const head = Math.floor(max * 0.7);
+  const tail = Math.floor(max * 0.3);
+  const note = `[… ${(text.length - head - tail).toLocaleString("en-US")} characters cut from the middle of ${text.length.toLocaleString("en-US")}. Ask for less, or for the part you need.]`;
+  // Each part of an outside text is marked as one, and the note between them is the app's own.
+  return `${partOf(text, (body) => body.slice(0, head))}\n\n${note}\n\n${partOf(text, (body) => body.slice(Math.max(0, body.length - tail)))}`;
 }

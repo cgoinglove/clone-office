@@ -8,6 +8,7 @@
 import { createReadStream } from "node:fs";
 import {
   glob,
+  mkdir,
   open,
   readdir,
   readFile,
@@ -371,13 +372,41 @@ async function webFetchTool(input: Record<string, unknown>): Promise<string> {
   if (response instanceof Error)
     return `The page could not be opened: ${response.message}`;
   const type = response.headers.get("content-type") ?? "";
-  const body = (await response.text().catch(() => "")).slice(0, PAGE_BYTES);
+  const { body, more } = await bodyUpTo(response, PAGE_BYTES);
   const text = /html/i.test(type) ? pageText(body) : body;
   // The whole page: a long one goes to the session's scratch folder, with a preview (scratch.ts).
-  return untrusted(
+  const page = untrusted(
     `web ${response.url}`,
     `${response.status} ${response.url}\n\n${text}`,
   );
+  return more
+    ? `${page}\n\n[The page goes on past ${PAGE_BYTES.toLocaleString("en-US")} characters; this is its start only.]`
+    : page;
+}
+
+/** A response's text up to `max` characters, read no further, and whether more was left. */
+async function bodyUpTo(
+  response: Response,
+  max: number,
+): Promise<{ body: string; more: boolean }> {
+  const reader = response.body?.getReader();
+  if (!reader) return { body: "", more: false };
+  const decoder = new TextDecoder();
+  let body = "";
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return { body: body + decoder.decode(), more: false };
+      body += decoder.decode(value, { stream: true });
+      if (body.length > max) {
+        await reader.cancel().catch(() => {});
+        return { body: body.slice(0, max), more: true };
+      }
+    }
+  } catch {
+    // The connection went mid-way: what came is the page as far as it could be read.
+    return { body, more: body.length > 0 };
+  }
 }
 
 const LOCAL_TOOLS: Record<
@@ -546,7 +575,9 @@ export async function connectServers(options: {
       }),
     ).catch(() => {});
   }
-  if (options.browser)
+  if (options.browser) {
+    // Its folder is made on first use, and a process started in a folder not there fails to start.
+    await mkdir(workspaceDir(), { recursive: true }).catch(() => {});
     await join(
       BROWSER,
       new StdioClientTransport({
@@ -557,6 +588,7 @@ export async function connectServers(options: {
         stderr: "ignore",
       }),
     ).catch(() => {});
+  }
   for (const server of options.extra ?? [])
     await join(server.name, server.transport);
   return {

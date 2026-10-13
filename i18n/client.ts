@@ -4,9 +4,10 @@
 // the screen, else their browser's own, whatever it is), picking one, and errors read in the
 // screen's language.
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback } from "react";
 import { LOCALE_COOKIE } from "./locales";
+import { type ErrorWords, problemWords } from "./problem";
 
 /** The language the mini-me works in: the one picked for the screen, else the browser's own. */
 export function personTag(): string {
@@ -34,19 +35,18 @@ export function languagePicked(): boolean {
     .some((cookie) => cookie.startsWith(`${LOCALE_COOKIE}=`));
 }
 
-type ErrorKey = Parameters<ReturnType<typeof useTranslations<"errors">>>[0];
-
 /**
  * An error as the person reads it: the app's routes answer with a code (`claude-missing`,
- * `relay-unreachable`), read here in the screen's language; anything else is shown as it came.
+ * `relay-unreachable`, `brain-limit@<when it lifts>`), read here in the screen's language;
+ * anything else is shown as it came.
  */
 export function useProblem(): (error: string) => string {
   const t = useTranslations("errors");
+  const locale = useLocale();
   return useCallback(
     (error: string) =>
-      t.has(error as ErrorKey)
-        ? t(error as ErrorKey)
-        : t("generic", { detail: error }),
-    [t],
+      problemWords(t as unknown as ErrorWords, error, locale) ??
+      t("generic", { detail: error }),
+    [t, locale],
   );
 }

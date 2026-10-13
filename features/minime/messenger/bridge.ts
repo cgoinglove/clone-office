@@ -599,7 +599,7 @@ export class Bridge {
   private async converse(message: Incoming): Promise<void> {
     const bot = this.bot;
     if (!bot) return;
-    const { t, errors } = await words();
+    const { t, problem } = await words();
     const settings = await loadMessenger();
     void bot.typing(message.channel);
     const typing = setInterval(() => void bot.typing(message.channel), 8000);
@@ -634,12 +634,7 @@ export class Bridge {
             answered = true;
             const code = event.code ?? "";
             said.push(
-              bot.send(
-                message.channel,
-                code && errors.has(code as never)
-                  ? errors(code as never)
-                  : t("failed"),
-              ),
+              bot.send(message.channel, (code && problem(code)) || t("failed")),
             );
           }
         },
@@ -982,9 +977,7 @@ export class Bridge {
     }).format(new Date(ending.at));
     const text = !ending.failed
       ? ending.text
-      : w.errors.has(ending.text as never)
-        ? w.errors(ending.text as never)
-        : w.t("failed");
+      : (w.problem(ending.text) ?? w.t("failed"));
     return `${w.chat("flowRan", { name: ending.name, at })}\n\n${text}`;
   }
 }

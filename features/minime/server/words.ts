@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { createFormatter, createTranslator } from "next-intl";
 import { isLocale, type Locale } from "../../../i18n/locales.ts";
 import { loadMessages } from "../../../i18n/messages.ts";
+import { type ErrorWords, problemWords } from "../../../i18n/problem.ts";
 import type english from "../../../messages/en.json";
 import { settingsPath } from "./exclude.ts";
 
@@ -35,6 +36,7 @@ const wordsMade = new Map<Locale, Promise<Words>>();
 
 async function makeWords(locale: Locale) {
   const messages = (await loadMessages(locale)) as typeof english;
+  const errors = createTranslator({ locale, messages, namespace: "errors" });
   return {
     locale,
     t: createTranslator({ locale, messages, namespace: "messenger" }),
@@ -46,7 +48,10 @@ async function makeWords(locale: Locale) {
       locale,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     }),
-    errors: createTranslator({ locale, messages, namespace: "errors" }),
+    errors,
+    /** A failure's code in these words (a limit with when it lifts), or nothing for one it has none for. */
+    problem: (error: string) =>
+      problemWords(errors as unknown as ErrorWords, error, locale),
     plugin: createTranslator({ locale, messages, namespace: "plugin" }),
   };
 }

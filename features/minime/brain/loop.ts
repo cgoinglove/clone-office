@@ -64,6 +64,7 @@ import {
 } from "./scratch.ts";
 import {
   ALLOWED_TOOLS,
+  OUTSIDE_GUIDANCE,
   SELF_ASKING_TOOLS,
   type SessionOptions,
   type SessionResult,
@@ -82,6 +83,7 @@ import {
   subtaskTool,
 } from "./subtask.ts";
 import { todoTool } from "./todos.ts";
+import { awakeSignal } from "./waits.ts";
 
 type ApiChoice = Extract<BrainChoice, { kind: "api" }>;
 
@@ -309,7 +311,10 @@ const TEAM_CODES = new Set([
   "office-member-unknown",
 ]);
 
-function failure(thrown: unknown): string {
+/** For the AI SDK's onError: what failed is answered by `failure`, never printed. */
+const quiet = () => {};
+
+function failure(thrown: unknown, local = false): string {
   if (thrown instanceof LoopError) return thrown.code;
   // What the AI SDK gave up on after its retries is told by the last failure it saw.
   const error = rootError(thrown);
@@ -323,7 +328,8 @@ function failure(thrown: unknown): string {
       // A vendor's own answer.
     }
     if (error.statusCode === 401 || error.statusCode === 403)
-      return "brain-key-wrong";
+      // A model on this computer is reached with no key of the person's: its server refused.
+      return local ? "brain-local-refused" : "brain-key-wrong";
     // The same codes as a busy or slow Claude Code, so a request is retried alike (office/handle.ts).
     if ([429, 503, 529].includes(error.statusCode ?? 0)) return "ai-busy";
   }
@@ -448,7 +454,7 @@ export async function runLoop(
     [
       LOOP_GUIDE,
       helping
-        ? [SUBTASK_GUIDE, profileBlock(await readProfile())]
+        ? [SUBTASK_GUIDE, OUTSIDE_GUIDANCE, profileBlock(await readProfile())]
             .filter(Boolean)
             .join("\n\n")
         : await systemPrompt(undefined, options.language),
@@ -462,10 +468,12 @@ export async function runLoop(
   let context: number | undefined;
   let moved: string | undefined;
   let servers: Servers | undefined;
+  let stopDeadline = () => {};
   const finish = async (
     result: Omit<SessionResult, "text" | "sessionId" | "systemPrompt">,
     turns?: number,
   ): Promise<SessionResult> => {
+    stopDeadline();
     release();
     // A helper's connections are the session's that sent it, which closes them.
     if (!helping) await servers?.close();
@@ -576,8 +584,13 @@ export async function runLoop(
           ? { browser: browserServer({ watched: Boolean(gate) }) }
           : {}),
       }));
+    // Counted while the computer is awake: a laptop closed mid-work goes on when it opens.
+    const deadline = awakeSignal(
+      options.timeoutMs ?? (gate ? 15 * 60_000 : 180_000),
+    );
+    stopDeadline = deadline.stop;
     const timeout = AbortSignal.any([
-      AbortSignal.timeout(options.timeoutMs ?? (gate ? 15 * 60_000 : 180_000)),
+      deadline.signal,
       ...(helping ? [helping.signal] : []),
     ]);
     // When the window fills, earlier tool results are cut before the next step (prune.ts), and a
@@ -686,6 +699,9 @@ export async function runLoop(
     };
     const maxRetries = deps.retries ?? RETRIES;
     const run = streamText({
+      // A failure ends the run and is said in the person's words (failure), not printed to the
+      // terminal the person may keep open, as the AI SDK does by default.
+      onError: quiet,
       model,
       instructions: system,
       messages,
@@ -744,6 +760,9 @@ export async function runLoop(
           : "Without calling any more tools, give your person your answer now: what you found and did, and what is left.",
       };
       const closing = streamText({
+        // A failure ends the run and is said in the person's words (failure), not printed to the
+        // terminal the person may keep open, as the AI SDK does by default.
+        onError: quiet,
         model,
         instructions: system,
         messages: [...messages, ...withSteps(answered), nudge],
@@ -782,6 +801,9 @@ export async function runLoop(
       };
       // Streamed, as a ChatGPT plan takes nothing else.
       const shaped = streamText({
+        // A failure ends the run and is said in the person's words (failure), not printed to the
+        // terminal the person may keep open, as the AI SDK does by default.
+        onError: quiet,
         model,
         instructions: system,
         messages: [...kept, ask],
@@ -835,6 +857,9 @@ export async function runLoop(
       turns,
     );
   } catch (error) {
-    return finish({ ok: false, error: failure(error) });
+    return finish({
+      ok: false,
+      error: failure(error, choice.provider === "local"),
+    });
   }
 }

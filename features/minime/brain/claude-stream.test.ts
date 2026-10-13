@@ -180,3 +180,65 @@ test("a session that fails says so in its result", () => {
     },
   );
 });
+
+test("a plan's usage limit ends the session as a limit with when it lifts, and its notice is not the clone's words", () => {
+  const events: SessionEvent[] = [];
+  const stream = new ClaudeStream({ onEvent: (event) => events.push(event) });
+  // As Claude Code 2.x sends them when the five-hour limit refuses the call.
+  stream.read({
+    type: "rate_limit_event",
+    rate_limit_info: { status: "rejected", resetsAt: 1791890400 },
+  });
+  stream.read({
+    type: "assistant",
+    message: {
+      model: "<synthetic>",
+      content: [
+        {
+          type: "text",
+          text: "You've hit your session limit · resets 8:20pm (Asia/Seoul)",
+        },
+      ],
+    },
+  });
+  const end = stream.read({
+    type: "result",
+    is_error: true,
+    result: "You've hit your session limit · resets 8:20pm (Asia/Seoul)",
+  });
+  assert.equal(end?.ok, false);
+  assert.equal(end?.error, "brain-limit@1791890400");
+  assert.equal(stream.text, "");
+  assert.deepEqual(events, []);
+});
+
+test("a limit that only warned, or let the call through, changes nothing", () => {
+  const stream = new ClaudeStream();
+  stream.read({
+    type: "rate_limit_event",
+    rate_limit_info: { status: "allowed_warning", resetsAt: 1791890400 },
+  });
+  stream.read({
+    type: "assistant",
+    message: { content: [{ type: "text", text: "Done." }] },
+  });
+  const end = stream.read({ type: "result", is_error: false });
+  assert.equal(end?.ok, true);
+  assert.equal(stream.text, "Done.");
+});
+
+test("the session's messages read as paragraphs, not run together", () => {
+  const stream = new ClaudeStream();
+  const say = (id: string, text: string) =>
+    stream.read({
+      type: "assistant",
+      message: { id, content: [{ type: "text", text }] },
+    });
+  say("m1", "Sending two helpers.");
+  say("m1", " Both started.");
+  say("m2", "Here is the summary.");
+  assert.equal(
+    stream.text,
+    "Sending two helpers. Both started.\n\nHere is the summary.",
+  );
+});

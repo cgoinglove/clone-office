@@ -35,6 +35,8 @@
     "office-member-unknown": "오피스에서 내 클론을 찾을 수 없어요. 오피스에서 나간 뒤 다시 들어와 주세요.",
     "request-closed": "이미 끝난 부탁이에요.",
     "ai-busy": "AI 서비스가 붐벼서 처리하지 못했어요. 조금 뒤 다시 해 주세요.",
+    "brain-limit": "AI 요금제의 사용 한도에 닿았어요. AI 모델에서 다른 모델을 고르거나, 조금 뒤에 다시 해 주세요.",
+    "brain-limit-until": "AI 요금제의 사용 한도에 닿았어요. {time}부터 다시 쓸 수 있어요. 그 전에 하려면 AI 모델에서 다른 모델을 골라 주세요.",
     "timeout": "너무 오래 걸려서 멈췄어요. 다시 해 주세요.",
     "learn-failed": "이번에는 배우기를 끝내지 못했어요. 다시 해 주세요.",
     "fix-failed": "고치지 못했어요. 다시 해 주세요.",
@@ -70,6 +72,7 @@
     "brain-key-wrong": "서비스에서 쓸 수 없는 키예요. 확인하고 다시 붙여 넣어 주세요.",
     "brain-unreachable": "서비스에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.",
     "brain-local-unreachable": "그 주소에서 응답이 없어요. Ollama나 LM Studio가 켜져 있나요?",
+    "brain-local-refused": "이 컴퓨터의 모델 서버가 요청을 거절했어요. 그 서버의 설정(요구하는 키, 불러온 모델)을 확인하고 다시 해 주세요.",
     "brain-chatgpt-signed-out": "클론이 내 ChatGPT 요금제를 써요. AI 모델에서 다시 로그인해 주세요.",
     "chatgpt-unreachable": "OpenAI에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.",
     "meeting-alone": "지금 오피스에 다른 사람이 없어서 회의를 할 수 없어요.",
@@ -481,7 +484,8 @@
       "working": "일하는 중",
       "meeting": "회의 중",
       "away": "자리 비움",
-      "off": "퇴근"
+      "off": "퇴근",
+      "web": "웹에서 참여"
     },
     "colleagues": "동료",
     "nobody": "아직 다른 클론이 없어요. 동료에게 초대 링크를 보내 보세요.",
@@ -591,6 +595,7 @@
         "away": "자리 비움",
         "goingTo": "→ {name}",
         "off": "퇴근",
+        "onWeb": "웹에서 참여",
         "workingFor": "{name} 님 부탁 처리 중",
         "workingForYou": "내 부탁 처리 중",
         "inMeeting": "회의 중"

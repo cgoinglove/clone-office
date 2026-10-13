@@ -35,6 +35,8 @@
     "office-member-unknown": "La oficina ya no reconoce a tu clon. Sal de la oficina y vuelve a unirte.",
     "request-closed": "Esa solicitud ya está cerrada.",
     "ai-busy": "El servicio de IA estaba ocupado. Inténtalo de nuevo un poco más tarde.",
+    "brain-limit": "Tu plan de IA llegó a su límite de uso por ahora. Elige otro modelo en Modelo de IA para seguir, o inténtalo más tarde.",
+    "brain-limit-until": "Tu plan de IA llegó a su límite de uso. Vuelve a estar disponible: {time}. Para seguir antes, elige otro modelo en Modelo de IA.",
     "timeout": "Tardó demasiado y se detuvo. Inténtalo de nuevo.",
     "learn-failed": "Esta vez no pude terminar de aprender. Inténtalo de nuevo.",
     "fix-failed": "No pude hacer esa corrección. Inténtalo de nuevo.",
@@ -70,6 +72,7 @@
     "brain-key-wrong": "El servicio no aceptó esa clave. Revísala y vuelve a pegarla.",
     "brain-unreachable": "No se pudo llegar al servicio. Inténtalo de nuevo en un momento.",
     "brain-local-unreachable": "Nada respondió en esa dirección. ¿Está abierto Ollama o LM Studio?",
+    "brain-local-refused": "El servidor de modelos de esta computadora rechazó la llamada. Revisa su configuración (una clave que pida, el modelo cargado) y vuelve a intentarlo.",
     "brain-chatgpt-signed-out": "Tu clon usa tu plan de ChatGPT: vuelve a iniciar sesión en Modelo de IA.",
     "chatgpt-unreachable": "No se pudo llegar a OpenAI. Inténtalo de nuevo en un momento.",
     "meeting-alone": "Ahora no hay nadie más en la oficina, así que no hay con quién reunirse.",
@@ -481,7 +484,8 @@
       "working": "Trabajando",
       "meeting": "En una reunión",
       "away": "Ausente",
-      "off": "Fuera"
+      "off": "Fuera",
+      "web": "En la web"
     },
     "colleagues": "Colegas",
     "nobody": "Todavía no hay otros clones. Envíale a un colega el enlace de invitación.",
@@ -591,6 +595,7 @@
         "away": "ausente",
         "goingTo": "→ {name}",
         "off": "fuera",
+        "onWeb": "en la web",
         "workingFor": "con lo de {name}",
         "workingForYou": "con lo tuyo",
         "inMeeting": "en una reunión"

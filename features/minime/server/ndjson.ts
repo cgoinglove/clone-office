@@ -1,6 +1,8 @@
 // A streamed answer of one JSON object per line, as the screen's routes send their progress. The
 // work keeps going when the page goes away: a closed stream only stops the sending.
 
+import { limitProblem } from "../../../i18n/problem.ts";
+
 export function ndjson(
   work: (send: (event: unknown) => void) => Promise<void>,
 ): Response {
@@ -60,10 +62,12 @@ export function languageName(tag: string | undefined): string | undefined {
 /** Failures the screen says in the person's language (messages/*.json, "errors"). */
 const CODES = new Set([
   "claude-missing",
+  "brain-limit",
   "claude-signed-out",
   "brain-no-answer",
   "brain-key-missing",
   "brain-key-wrong",
+  "brain-local-refused",
   "brain-chatgpt-signed-out",
   "ai-busy",
   "timeout",
@@ -84,6 +88,13 @@ const CODES = new Set([
 export function errorCode(message: string | undefined): string | undefined {
   if (!message) return undefined;
   if (CODES.has(message)) return message;
+  // A plan's usage limit, with when it lifts (claude-stream.ts reads it from Claude Code's
+  // rate_limit_event); its own words otherwise, as an older Claude Code sends them.
+  if (/^brain-limit(@\d+)?$/.test(message)) return message;
+  const reached = /usage limit reached\|(\d+)/i.exec(message);
+  if (reached) return limitProblem(Number(reached[1]));
+  if (/hit your (\w+ )?limit|usage limit reached/i.test(message))
+    return limitProblem();
   if (/\b(529|503|429)\b|overloaded|rate.?limit/i.test(message))
     return "ai-busy";
   if (/timed? ?out|did not finish in time/i.test(message)) return "timeout";

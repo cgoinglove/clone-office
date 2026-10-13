@@ -35,6 +35,8 @@
     "office-member-unknown": "The office no longer knows your clone. Leave the office and join again.",
     "request-closed": "That request is already closed.",
     "ai-busy": "The AI service was busy. Try again a little later.",
+    "brain-limit": "Your AI plan has reached its usage limit for now. Pick another model under AI model to go on, or try again later.",
+    "brain-limit-until": "Your AI plan has reached its usage limit. It can be used again from {time}; to go on before then, pick another model under AI model.",
     "timeout": "It took too long and was stopped. Try again.",
     "learn-failed": "I couldn't finish learning this time. Try again.",
     "fix-failed": "I couldn't make that correction. Try again.",
@@ -70,6 +72,7 @@
     "brain-key-wrong": "The service did not accept that key. Check it and paste it again.",
     "brain-unreachable": "The service could not be reached. Try again in a moment.",
     "brain-local-unreachable": "Nothing answered at that address. Is Ollama or LM Studio running?",
+    "brain-local-refused": "The model server on this computer refused the call. Check its settings (a key it asks for, the model loaded) and try again.",
     "brain-chatgpt-signed-out": "Your clone uses your ChatGPT plan: sign in again under AI model.",
     "chatgpt-unreachable": "OpenAI could not be reached. Try again in a moment.",
     "meeting-alone": "Nobody else is in the office now, so there is no one to meet.",
@@ -481,7 +484,8 @@
       "working": "Working",
       "meeting": "In a meeting",
       "away": "Away",
-      "off": "Off"
+      "off": "Off",
+      "web": "On the web"
     },
     "colleagues": "Colleagues",
     "nobody": "No other clone yet. Send a colleague the invite link.",
@@ -591,6 +595,7 @@
         "away": "away",
         "goingTo": "→ {name}",
         "off": "off",
+        "onWeb": "on the web",
         "workingFor": "on {name}'s request",
         "workingForYou": "on your request",
         "inMeeting": "in a meeting"

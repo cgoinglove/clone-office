@@ -6,6 +6,7 @@
 // changed history costs the prompt cache, so this runs only when the window is filling.
 
 import type { ModelMessage } from "ai";
+import { partOf } from "./untrusted.ts";
 
 /** Share of the window past which earlier tool results are cut. */
 export const PRESSURE = 0.5;
@@ -68,7 +69,7 @@ export function pruneToolResults(messages: ModelMessage[]): ModelMessage[] {
       const value =
         earlier !== undefined
           ? `[The same result as an earlier call of ${earlier}.]`
-          : `[An earlier result of ${tool}, ${text.length} characters, cut to save room. It began: ${text.slice(0, HEAD)}… Call the tool again if you need it whole.]`;
+          : `[An earlier result of ${tool}, ${text.length} characters, cut to save room. It began: ${partOf(text, (body) => `${body.slice(0, HEAD)}…`)} Call the tool again if you need it whole.]`;
       return { ...part, output: { type: "text", value } };
     });
     return { ...message, content } as ModelMessage;

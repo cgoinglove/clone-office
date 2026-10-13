@@ -28,3 +28,24 @@ export function untrusted(source: string, text: string): string {
   );
   return `<untrusted source="${from}">\n${body}\n</untrusted>`;
 }
+
+const MARKED = /^(<untrusted source="[^"]*">)\n([\s\S]*)\n<\/untrusted>$/;
+
+/** What a marked text holds and how its mark opens, or nothing for a text not marked. */
+export function unmark(
+  text: string,
+): { open: string; body: string } | undefined {
+  const marked = MARKED.exec(text);
+  return marked ? { open: marked[1], body: marked[2] } : undefined;
+}
+
+/**
+ * A part of a text (its start, a piece of it), marked again when the text was marked, so the part
+ * never leaves a mark open and the app's own words that follow it are not read as outside text.
+ */
+export function partOf(text: string, part: (body: string) => string): string {
+  const marked = unmark(text);
+  return marked
+    ? `${marked.open}\n${part(marked.body)}\n</untrusted>`
+    : part(text);
+}
