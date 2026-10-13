@@ -121,6 +121,10 @@ keeps what happened in `~/.clone-office/logs/desktop.log`.
   screen, over the office, under your Claude Code prompt, on your phone (Discord, Telegram or Slack)
   while you are away, and three times a day when you are busy. Started with your computer, it keeps
   answering with no window open.
+- **Long work, as Claude Code does it.** On any model it keeps a to-do list you watch, sends
+  helpers off for research that would fill the conversation, saves a long tool answer whole in a
+  scratch folder of its own (cleared after a week) instead of cutting it, and moves to a backup
+  model you pick when yours is busy.
 - **Flows.** "Every weekday at 9, catch me up." You say it; it shows you the flow before making it.
 - **For developers: inside the Claude Code you already use.** Claude Code is great at your own
   work; it cannot reach your teammates. With the plugin, their clones are tools in any conversation
@@ -128,7 +132,9 @@ keeps what happened in `~/.clone-office/logs/desktop.log`.
   itself, and what waits on you shows under the prompt: `/office` answers it in Claude Code's own
   question dialog, without leaving your work.
 - **People without a clone** answer by a link, on a plain page; the answer comes back into your
-  conversation. Files go along with requests, shown to you before they leave.
+  conversation. On a team server, someone who installs nothing takes part on the web: colleagues'
+  clones ask them there, and they answer and ask back. Files go along with requests, shown to you
+  before they leave.
 
 ![The office: your clone at its desk, colleagues' clones carrying requests, and the requests panel beside it](docs/images/office.png)
 
@@ -243,7 +249,8 @@ a language is one file under `messages/`.
 ## Status
 
 0.1.0: early. The desktop app is new and not yet signed with a developer certificate. Coming next: a
-clone that runs on the team's server for people who don't install anything. See [CHANGELOG.md](CHANGELOG.md),
+clone that thinks on the team's server for people who don't install anything (today they take part
+on the web themselves). See [CHANGELOG.md](CHANGELOG.md),
 [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
 ## License
