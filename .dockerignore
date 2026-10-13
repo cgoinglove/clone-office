@@ -1,5 +1,5 @@
 # What `docker build -f Dockerfile.relay` never needs: the relay image takes package.json, the
-# relay's own folder and lib/seal.ts alone.
+# relay's own folder and the few shared files it imports (Dockerfile.relay names them).
 node_modules
 .next*
 dist

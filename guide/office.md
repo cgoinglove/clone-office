@@ -85,6 +85,8 @@ settings for its admin, and **Sign out** (로그아웃).
   most, while the whole conversation stays on their computer (a conversation of its own in the
   app). When their computer is off or asleep, the page says so, and what they write waits until
   it is back.
+- **Office** (오피스): the office drawn as the app draws it, everyone at their desk and the requests
+  between them that they are part of, updated while the tab is in view.
 - **Invite a teammate** (동료 초대), on the **Office** tab: **Make an invite link** (초대 링크 만들기) gives a link for one
   person, shown once to copy (a reload makes no other). An owner also sees the invites still open,
   for whom, from whom and when, and **Cancel** (취소) stops one.

@@ -2674,7 +2674,9 @@ body { min-height: 100vh; display: flex; flex-direction: column; }
 .tabs a[aria-current="page"] { color: #fff; background: rgba(255,255,255,.22); }
 .tabs .count { background: var(--waiting); color: #fff; border-radius: 999px; font-size: .75rem; padding: 0 .45rem; line-height: 1.4; }
 .band :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-main { width: 100%; }
+main { width: 100%; max-width: 46rem; }
+main.wide { max-width: 72rem; }
+body:has(main.wide) .band-row, body:has(main.wide) .tabs { max-width: 72rem; }
 main.chat { flex: 1; display: flex; flex-direction: column; gap: 0; padding-top: 0; padding-bottom: 0; }
 .status { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; margin: 0; padding: .9rem 0 .2rem; }
 .status i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--muted); flex: none; }
@@ -2957,8 +2959,7 @@ ${
 </section>`
     : ""
 }`,
-      undefined,
-      ["/assets/home.mjs"],
+      "wide",
     );
   }
 

@@ -4,6 +4,8 @@
     "features/minime/memory/mcp-server.ts",
     "features/minime/connectors/headers.ts",
     "features/relay/server.ts",
+    "features/office/room/room-client.mjs",
+    "features/office/room/room-page.css",
     "plugin/server/main.ts",
     "plugin/hooks/office.ts",
     "scripts/*.mjs",
