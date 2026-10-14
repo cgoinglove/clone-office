@@ -174,6 +174,8 @@ function onEvent(
     );
     return;
   }
+  // A kind of news this version does not know (an older team server's meeting) is passed over.
+  if (event.type !== "task" && event.type !== "update") return;
   const { task } = event;
   if (task.metadata.to === office.member) {
     // Canceled by the one asking: questions kept about it no longer wait for the person.

@@ -308,8 +308,10 @@ const MIGRATIONS: string[][] = [
     "ALTER TABLE members ADD COLUMN own_keys JSONB NOT NULL DEFAULT '[]'::jsonb",
   ],
   // The team's Slack (slack.ts): the app an owner connected, its tokens sealed, and each thread a
-  // request was asked in, with how many of its answers were posted there.
+  // request was asked in, with how many of its answers were posted there. The meetings' news, which
+  // nothing reads any more, goes.
   [
+    "DELETE FROM events WHERE type = 'meeting'",
     "CREATE TABLE office_slack (office_id TEXT PRIMARY KEY REFERENCES offices (id) ON DELETE CASCADE, sealed TEXT NOT NULL, team TEXT NOT NULL, bot_user TEXT NOT NULL, set_by TEXT NOT NULL, updated TIMESTAMPTZ NOT NULL)",
     "CREATE TABLE slack_threads (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, channel TEXT NOT NULL, thread_ts TEXT NOT NULL, task_id TEXT NOT NULL, asker TEXT NOT NULL, slack_user TEXT NOT NULL, lang TEXT NOT NULL, posted INT NOT NULL DEFAULT 0, done BOOLEAN NOT NULL DEFAULT false, created TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, channel, thread_ts))",
     "CREATE INDEX slack_threads_open ON slack_threads (done) WHERE NOT done",
@@ -1977,12 +1979,14 @@ export class Relay {
   }
 
   private async events(member: string, after: number): Promise<InboxEvent[]> {
+    // News of a kind no longer kept (a meeting of the clones) is passed over in the database itself,
+    // so a page of nothing else never holds the inbox back.
     const rows = await this.db.query<{
       seq: string | number;
       type: string;
       task_id: string;
     }>(
-      "SELECT seq, type, task_id FROM events WHERE member = $1 AND seq > $2 ORDER BY seq LIMIT 50",
+      "SELECT seq, type, task_id FROM events WHERE member = $1 AND seq > $2 AND type IN ('task', 'update', 'own') ORDER BY seq LIMIT 50",
       [member, after],
     );
     // Each request once, however many of the news are about it, as it is now.

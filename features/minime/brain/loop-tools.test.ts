@@ -345,3 +345,46 @@ test("answering a colleague, files named like keys and passwords are neither rea
     rmSync(folder, { recursive: true, force: true });
   }
 });
+
+test("a link is read where it leads, and a pattern never leaves its folder", async () => {
+  const root = mkdtempSync(join(tmpdir(), "minime-loop-links-"));
+  try {
+    const { mkdirSync, symlinkSync } = await import("node:fs");
+    const work = join(root, "work");
+    const outside = join(root, "private");
+    mkdirSync(work);
+    mkdirSync(outside);
+    writeFileSync(join(outside, "diary.txt"), "dear diary\n");
+    writeFileSync(join(work, "notes.md"), "plain notes\n");
+    symlinkSync(join(outside, "diary.txt"), join(work, "notes-link.md"));
+    symlinkSync(join(outside, "diary.txt"), join(work, "innocent.txt"));
+    const none = { clients: [], close: async () => {} };
+    const tools = await loopTools({
+      servers: none,
+      guard: { allow: [`Read(//${work.slice(1)}/**)`], deny: [] },
+      reads: true,
+    });
+    assert.match(
+      await run(tools, "Read", { file_path: join(work, "notes.md") }),
+      /plain notes/,
+    );
+    // inside the allowed folder by name, outside it in truth: not let through alone
+    assert.equal(
+      await run(tools, "Read", { file_path: join(work, "innocent.txt") }),
+      REFUSED.alone,
+    );
+    assert.match(
+      await run(tools, "Glob", { pattern: "../**/*", path: work }),
+      /stays inside its folder/,
+    );
+    const listed = await run(tools, "Glob", { pattern: "**/*", path: work });
+    assert.match(listed, /notes\.md/);
+    assert.doesNotMatch(listed, /innocent|diary/);
+    assert.doesNotMatch(
+      await run(tools, "Grep", { pattern: "diary", path: work }),
+      /dear diary/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

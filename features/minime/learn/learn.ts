@@ -30,6 +30,7 @@ import { atomicWrite, readText } from "../memory/files.ts";
 import { NoteStore, WORK_MAP } from "../memory/notes.ts";
 import { MemoryStore, type Target } from "../memory/store.ts";
 import { ABOUT_WORDS, CARD_SCHEMA } from "../office/card.ts";
+import { keepWorkFolders } from "../office/work-folders.ts";
 import { cleanRoutines, type Routine } from "../routine.ts";
 import { minimeHome } from "../server/paths.ts";
 import { type About, cleanAbout } from "../server/profile.ts";
@@ -463,6 +464,9 @@ export async function keepMap(
       : { action: "rewrite", path: WORK_MAP, summary, body, source },
   ]);
   if (!result.success) return [];
+  // The folders themselves, kept by code apart from the page: what a colleague's request may read
+  // (office/work-folders.ts), which no session's note can widen.
+  await keepWorkFolders([...kept.keys()]).catch(() => {});
   onEvent?.({ type: "note", changes: [WORK_MAP] } as SessionEvent);
   return [...kept].map(([path, about]) => ({ path, about }));
 }

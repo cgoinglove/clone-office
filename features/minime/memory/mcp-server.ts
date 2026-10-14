@@ -48,7 +48,7 @@ import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
 import { appDir, minimeHome } from "../server/paths.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
 import { callHubTool, SKILL_INSTALL_TOOL, SKILLS_FIND_TOOL } from "./hub.ts";
-import { NOTE_TOOLS, NoteStore } from "./notes.ts";
+import { NOTE_TOOLS, NoteStore, WORK_MAP } from "./notes.ts";
 import { type Actor, SKILL_TOOLS, SkillStore } from "./skills.ts";
 import { MemoryStore } from "./store.ts";
 import { callMemoryTool, MEMORY_TOOL } from "./tool.ts";
@@ -213,6 +213,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return text(view, "error" in view);
     }
     case NOTE_TOOLS.write.name: {
+      // The map of where the person's work lives is theirs: a colleague's words never redraw it.
+      if (
+        answering &&
+        (operations as { path?: unknown }[]).some(
+          (op) => String(op?.path ?? "").replace(/\.md$/, "") === WORK_MAP,
+        )
+      )
+        return text(
+          {
+            success: false,
+            error:
+              "The map of where your person's work lives is theirs to change, not while answering a colleague.",
+          },
+          true,
+        );
       const result = await notes.apply(operations);
       return text(result, !result.success);
     }

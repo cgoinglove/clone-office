@@ -5,7 +5,7 @@
 // WebFetch). What the person has not let it do alone is asked on their screen through the gate;
 // with nobody to ask, it is refused. Folders they kept out stay out whatever is asked.
 
-import { createReadStream } from "node:fs";
+import { createReadStream, realpathSync } from "node:fs";
 import {
   glob,
   mkdir,
@@ -16,7 +16,14 @@ import {
   stat,
 } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, isAbsolute, join, relative, resolve } from "node:path";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from "node:path";
 import { createInterface } from "node:readline";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -55,6 +62,20 @@ const within = (path: string, folder: string) => {
   return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
 };
 
+/**
+ * Where a path really leads, past every link: what a rule, a folder kept out or a secret's name is
+ * checked against, since reading follows the link (a file in an allowed folder linking to the
+ * clone's own folder is the clone's own folder). One not there yet is its real folder's.
+ */
+export function realPath(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    const parent = dirname(path);
+    return parent === path ? path : join(realPath(parent), basename(path));
+  }
+}
+
 /** The file or folder a reading tool's call is about. */
 function targetOf(
   tool: string,
@@ -80,7 +101,11 @@ export function ruleAllows(
     if (!found) continue;
     const [, kind, spec] = found;
     const target = targetOf(tool, input);
-    if (kind === "Read" && target && within(target, rulePath(spec)))
+    if (
+      kind === "Read" &&
+      target &&
+      within(realPath(target), realPath(rulePath(spec)))
+    )
       return true;
     if (
       kind === "WebFetch" &&
@@ -104,7 +129,9 @@ export function keptOut(
 ): boolean {
   if (ruleAllows(deny, tool, input)) return true;
   const target = targetOf(tool, input);
-  return Boolean(target && isExcluded(target, loadExcludes()));
+  if (!target) return false;
+  const excludes = loadExcludes();
+  return isExcluded(target, excludes) || isExcluded(realPath(target), excludes);
 }
 
 // ---- Reading the person's files and the web, as Claude Code's own tools do ----
@@ -233,6 +260,14 @@ async function globTool(
 ): Promise<string> {
   const base = fullPath(input.path);
   const pattern = String(input.pattern ?? "**/*");
+  // The pattern stays inside the folder the call was let into: never up, never elsewhere.
+  if (
+    isAbsolute(pattern) ||
+    pattern.startsWith("~") ||
+    pattern.split(/[\\/]/).includes("..")
+  )
+    return "A pattern stays inside its folder: give the folder as path instead.";
+  const inside = realPath(base);
   const excludes = loadExcludes();
   const found: string[] = [];
   for await (const entry of glob(pattern, {
@@ -240,8 +275,10 @@ async function globTool(
     exclude: (name: string) => SKIPPED.has(name.split(/[\\/]/).at(-1) ?? ""),
   })) {
     const path = join(base, String(entry));
-    if (isExcluded(path, excludes)) continue;
-    if (context.secretsOut && secretFile(basename(path))) continue;
+    const real = realPath(path);
+    if (!within(real, inside)) continue;
+    if (isExcluded(path, excludes) || isExcluded(real, excludes)) continue;
+    if (context.secretsOut && (secretFile(path) || secretFile(real))) continue;
     found.push(path);
     if (found.length >= FOUND_MAX) break;
   }
@@ -315,7 +352,10 @@ async function grepTool(
       stream.destroy();
     }
   };
-  if (one?.isFile() && !(context.secretsOut && secretFile(basename(base))))
+  if (
+    one?.isFile() &&
+    !(context.secretsOut && (secretFile(base) || secretFile(realPath(base))))
+  )
     await lookThrough(base, one.size);
   while (
     folders.length &&
@@ -330,7 +370,7 @@ async function grepTool(
     for (const entry of entries) {
       const path = join(folder, entry.name);
       if (SKIPPED.has(entry.name) || isExcluded(path, excludes)) continue;
-      if (context.secretsOut && secretFile(entry.name)) continue;
+      if (context.secretsOut && secretFile(path)) continue;
       if (entry.isDirectory()) folders.push(path);
       else if (entry.isFile() && (!nameMatch || nameMatch.test(entry.name))) {
         files++;
@@ -681,12 +721,11 @@ export async function guarded(
   run: () => Promise<string>,
 ): Promise<string> {
   if (keptOut(guard.deny, tool, input)) return REFUSED.out;
-  if (
-    guard.secretsOut &&
-    tool === "Read" &&
-    secretFile(basename(fullPath(input.file_path)))
-  )
-    return REFUSED.secret;
+  if (guard.secretsOut && (tool === "Read" || tool === "Grep")) {
+    const target = targetOf(tool, input) as string;
+    if (secretFile(target) || secretFile(realPath(target)))
+      return REFUSED.secret;
+  }
   if (!ruleAllows(guard.allow, tool, input)) {
     if (!guard.gate) return REFUSED.alone;
     const answer = await askGate(guard.gate, {
