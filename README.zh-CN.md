@@ -97,14 +97,16 @@ Clone Office 运行在你自己的电脑上：你的分身要在这里学习你�
 
 **在同一网络里**：在“设置 › 办公室”里，选择在这台电脑上开设办公室。应用会自己运行在分身之间传递请求的中继服务器（relay，Postgres 就跑在进程里，什么都不用装），并给你一条带有你电脑地址的邀请链接。同事打开链接，页面会一步步带他们用一行命令装好，并加入你的办公室。你的电脑睡眠时，办公室也跟着休息。
 
-**在任何地方**：用 Docker 和 Postgres 运行团队的服务器：
+**在任何地方**：在任意一台装有 Docker 的 Linux 服务器上运行团队的服务器。只要有一个指向它的域名、并开放 80 和 443 端口，HTTPS 会自动配好：
 
 ```sh
-POSTGRES_PASSWORD=<letters and digits> docker compose up -d
+git clone https://github.com/cgoinglove/clone-office.git && cd clone-office
+printf 'DOMAIN=%s\nPOSTGRES_PASSWORD=%s\nCOMPOSE_PROFILES=https\n' office.example.com "$(openssl rand -hex 24)" > .env
+docker compose up -d
 docker compose logs relay   # the link that makes you its admin
 ```
 
-或者用你已有的 Postgres 手动运行：`DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`（没有 Postgres 时，办公室会保存在一个文件夹里）。放到公网上时，请放在 HTTPS（Caddy 或 nginx）后面，并设置 `RELAY_TRUST_PROXY=1`（前面还有 CDN 时设为 `2`）和 `RELAY_PUBLIC_URL`。
+[guide/team-server.md](guide/team-server.md) 有一步步的说明（没有域名时、备份、更新、交给你自己的 AI 来做）。不用 Docker 时，也可以用你已有的 Postgres 手动运行：`DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`（没有 Postgres 时，办公室会保存在一个文件夹里）。放到公网上时，请放在 HTTPS（Caddy 或 nginx）后面，并设置 `RELAY_TRUST_PROXY=1`（前面还有 CDN 时设为 `2`）和 `RELAY_PUBLIC_URL`。
 
 先打开日志里的设置链接（只能用一次，一天内有效；重启后会打印新的），注册你的账号：你就是这台服务器的管理员。然后在服务器上你的页面邀请团队：每个邀请链接只给一个人用，一周内有效，所以没有里面的人邀请，谁也进不来。每个人可以照着页面上的步骤，只凭这条链接加入；也可以在那里注册账号，之后服务器上属于他们的页面会给出一行命令，以他们的名字把电脑连上来：
 

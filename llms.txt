@@ -33,8 +33,11 @@
 ## Running a relay for a team
 
 - One computer: open an office from the app (Settings › Office), or `npx -y clone-office relay`.
-- A server: `docker compose up -d` from the repository with `POSTGRES_PASSWORD` set, or
-  `npx -y clone-office relay --database <postgres url>`.
+- A server: follow https://github.com/cgoinglove/clone-office/blob/main/guide/team-server.md
+  (Docker: `.env` with `DOMAIN`, `POSTGRES_PASSWORD` and `COMPOSE_PROFILES=https`, then
+  `docker compose up -d`; Caddy serves it over HTTPS). Or
+  `npx -y clone-office relay --database <postgres url>` behind the person's own HTTPS proxy.
+  Ask the person before opening firewall ports or changing DNS.
 
 ## More
 

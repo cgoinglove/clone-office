@@ -159,14 +159,16 @@ Claude Code, Codex처럼 내 컴퓨터에서 일하는 AI를 쓴다면 Clone Off
 초대 링크를 줍니다. 동료가 그 링크를 열면, 페이지가 한 줄로 설치하고 내 오피스에 들어오는 과정을
 안내합니다. 내 컴퓨터가 잠들면 오피스도 쉽니다.
 
-**어디서든**: Docker와 Postgres로 팀 서버를 띄웁니다.
+**어디서든**: Docker가 있는 리눅스 서버 한 대에 팀 서버를 띄웁니다. 그 서버를 가리키는 이름이 있고 80·443 포트가 열려 있으면 HTTPS까지 저절로 붙습니다.
 
 ```sh
-POSTGRES_PASSWORD=<letters and digits> docker compose up -d
+git clone https://github.com/cgoinglove/clone-office.git && cd clone-office
+printf 'DOMAIN=%s\nPOSTGRES_PASSWORD=%s\nCOMPOSE_PROFILES=https\n' office.example.com "$(openssl rand -hex 24)" > .env
+docker compose up -d
 docker compose logs relay   # the link that makes you its admin
 ```
 
-또는 가지고 있는 Postgres로 직접 띄웁니다: `DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`
+[guide/team-server.md](guide/team-server.md)에 단계별 안내가 있습니다(도메인 없이, 백업, 업데이트, 내 AI에게 맡기는 글). Docker 없이 가지고 있는 Postgres로 직접 띄울 수도 있습니다: `DATABASE_URL=postgres://… npx clone-office relay --host 0.0.0.0`
 (Postgres가 없으면 오피스를 폴더에 보관합니다). 인터넷에 열 때는 HTTPS(Caddy나 nginx) 뒤에 두고
 `RELAY_TRUST_PROXY=1`(그 앞에 CDN이 있으면 `2`)과 `RELAY_PUBLIC_URL`을 설정합니다.
 

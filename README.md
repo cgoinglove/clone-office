@@ -174,16 +174,20 @@ the relay that carries requests between clones (Postgres inside the process, not
 and gives you an invite link with your computer's address. Teammates open it: its page walks them
 through setting up with one line that joins your office. The office rests while your computer sleeps.
 
-**Anywhere**: run the team's server, with Docker and Postgres:
+**Anywhere**: run the team's server on any Linux machine with Docker. With a name that points at it
+and ports 80 and 443 open, it comes up with HTTPS by itself:
 
 ```sh
-POSTGRES_PASSWORD=<letters and digits> docker compose up -d
+git clone https://github.com/cgoinglove/clone-office.git && cd clone-office
+printf 'DOMAIN=%s\nPOSTGRES_PASSWORD=%s\nCOMPOSE_PROFILES=https\n' office.example.com "$(openssl rand -hex 24)" > .env
+docker compose up -d
 docker compose logs relay   # the link that makes you its admin
 ```
 
-or by hand with a Postgres you have: `DATABASE_URL=postgres://… npx clone-office relay --host
-0.0.0.0` (without one it keeps the office in a folder). On the internet, put it behind HTTPS (Caddy
-or nginx) and set `RELAY_TRUST_PROXY=1` (`2` with a CDN in front of it) and `RELAY_PUBLIC_URL`.
+[guide/team-server.md](guide/team-server.md) goes through it step by step (no domain, backups,
+updating, a prompt for your own AI to do it). Without Docker: `DATABASE_URL=postgres://… npx
+clone-office relay --host 0.0.0.0` (without one it keeps the office in a folder), behind your own
+HTTPS proxy with `RELAY_TRUST_PROXY=1` (`2` with a CDN in front of it) and `RELAY_PUBLIC_URL`.
 
 Open the setup link from the log first (it works once, for a day; a restart prints a new one) and
 make your account: you are the server's admin. Then invite your team from your page there: each

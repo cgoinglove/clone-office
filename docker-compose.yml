@@ -1,7 +1,12 @@
 # A relay for an office, with its own Postgres, on any machine with Docker (a server, an EC2
 # instance, a computer in the office):
-#   POSTGRES_PASSWORD=<letters and digits> docker compose up -d
+#   echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)" > .env    # once; every command reads .env
+#   docker compose up -d
 #   docker compose logs relay        # the link that makes the server's admin: open it first
+# On the internet, with HTTPS (Caddy fetches the certificate; the name must point at this machine,
+# and ports 80 and 443 be open; without a domain, <the IP with dashes>.sslip.io names it), .env
+# also says DOMAIN=office.example.com and COMPOSE_PROFILES=https. guide/team-server.md walks
+# through it.
 # RELAY_KEY sets the office key; RELAY_PORT the port people reach it on (3200); RELAY_TRUST_PROXY=1
 # (2 with a CDN in front of that proxy) and RELAY_PUBLIC_URL (https://office.example.com) when it
 # sits behind an HTTPS proxy of your own.
@@ -33,8 +38,9 @@ services:
     environment:
       DATABASE_URL: postgres://relay:${POSTGRES_PASSWORD}@postgres:5432/relay
       RELAY_KEY: ${RELAY_KEY:-}
-      RELAY_TRUST_PROXY: ${RELAY_TRUST_PROXY:-}
-      RELAY_PUBLIC_URL: ${RELAY_PUBLIC_URL:-}
+      # behind the https profile's Caddy, one proxy and the domain's address, unless set otherwise
+      RELAY_TRUST_PROXY: ${RELAY_TRUST_PROXY:-${DOMAIN:+1}}
+      RELAY_PUBLIC_URL: ${RELAY_PUBLIC_URL:-${DOMAIN:+https://${DOMAIN:-}}}
       RELAY_ENCRYPTION_KEY: ${RELAY_ENCRYPTION_KEY:-}
       RELAY_PASSWORD_SIGNIN: ${RELAY_PASSWORD_SIGNIN:-}
       # Calls one person's clone may make with one vendor's team key a day (0 for no limit).
@@ -50,6 +56,27 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+  # HTTPS in front of the relay, with `--profile https` and DOMAIN set: Caddy gets and renews the
+  # certificate itself and passes everything on to the relay.
+  caddy:
+    profiles: [https]
+    image: caddy:2-alpine
+    environment:
+      DOMAIN: ${DOMAIN:-}
+    # DOMAIN is read here rather than interpolated, so the file still reads without the profile
+    command:
+      - sh
+      - -c
+      - 'test -n "$$DOMAIN" || { echo "Set DOMAIN to the name that points at this machine." >&2; exit 1; }; exec caddy reverse-proxy --from "$$DOMAIN" --to relay:3200'
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy:/data
+    depends_on:
+      - relay
+    restart: unless-stopped
 volumes:
   postgres:
   relay-keys:
+  caddy:

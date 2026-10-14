@@ -407,7 +407,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   inbox looks again every two seconds where notifications do not arrive. `handler.ts` is the HTTP
   side as one handler another host can mount (it also limits wrong office keys from one address);
   `server.ts` runs it. `Dockerfile.relay` and `docker-compose.yml` run it with Postgres on any
-  machine with Docker. Members join with the office key and then use their own token; a clone
+  machine with Docker (`--profile https`, or `COMPOSE_PROFILES=https` in `.env`, puts Caddy in front
+  with HTTPS for `DOMAIN`; `guide/team-server.md`). Members join with the office key and then use their own token; a clone
   waits at its inbox (long polling) because it sits on a personal computer out of reach. Shapes follow
   A2A v1.0.0: an AgentCard per member, a Task per request with a contextId, Messages with roles
   user/agent and text parts, A2A's task states (a message the member's person wrote themselves, or a
@@ -450,8 +451,11 @@ These words help discussion. They do not mandate separate services, tables or UI
   setting up a clone with it (`install.ts`: Node.js, a terminal, then one line,
   `npx -y clone-office join "<link>"`, or with the app taken from the relay itself when it serves its
   own package, `CLONE_OFFICE_PACKAGE_FILE` at `/clone-office.tgz`, for a team's own build or before
-  the app is on npm; the steps for the computer its User-Agent names and the
-  others folded; on a phone, open it on a computer; on a private network, join from the same one;
+  the app is on npm; a tab per kind of computer, the one its User-Agent names
+  picked first, with the keys to press, Node.js's own installer of the current LTS
+  (`nodeInstallers`, from nodejs.org's release list, asked in the background), a Copy button (the
+  page's only script, `INSTALL_SCRIPT`), what the terminal shows once it worked, and the usual
+  failures answered; on a phone, open it on a computer; on a private network, join from the same one;
   folded below, the same steps as words for the person's own AI on their computer, `agentPrompt`,
   as the repository's `llms.txt` gives any AI),
   and the join form fills in the relay and key from it (`office/invite.ts`).
