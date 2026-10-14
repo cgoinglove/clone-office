@@ -2263,6 +2263,22 @@ test("connecting a computer whose clone joined with an invite makes that clone t
       key: office.key,
       card: { name: "Fay", description: "" },
     });
+    // While it was the invite's own, a colleague asked it something and it asked them something.
+    const gilJoined = await relay.join({
+      key: office.key,
+      card: { name: "Gil", description: "" },
+    });
+    const gil = await relay.memberByToken(gilJoined.token);
+    const askedOfIt = await relay.send(gil, fayClone.id, "Lunch on Friday?");
+    const itAsked = await relay.send(
+      await relay.memberByToken(fayClone.token),
+      gil.id,
+      "Is the deck done?",
+    );
+    const met = await relay.openMeeting(
+      await relay.memberByToken(fayClone.token),
+      { kind: "standup" },
+    );
     const fay = await accounts.signUp(office.key, {
       name: "Fay",
       email: "fay@example.com",
@@ -2287,6 +2303,24 @@ test("connecting a computer whose clone joined with an invite makes that clone t
     await assert.rejects(relay.memberByToken(fayClone.token), {
       code: "office-member-unknown",
     });
+    // What it asked and was asked comes with it, under the one place.
+    const fayNow = await relay.memberByToken(fayIn.token);
+    const hers = await relay.tasks(fayNow);
+    assert.deepEqual(
+      [askedOfIt.id, itAsked.id].map((id) => hers.some((t) => t.id === id)),
+      [true, true],
+    );
+    assert.equal(
+      (await relay.taskFor(gil, askedOfIt.id)).metadata.to,
+      onWeb.id,
+    );
+    assert.equal(
+      (await relay.taskFor(gil, itAsked.id)).metadata.from,
+      onWeb.id,
+    );
+    const meeting = await relay.meeting(fayNow, met.id);
+    assert.equal(meeting.openedBy, onWeb.id);
+    assert.ok(!meeting.members.includes(fayClone.id));
   } finally {
     await db.close();
   }

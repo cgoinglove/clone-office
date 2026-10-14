@@ -845,12 +845,19 @@ export class Relay {
       );
       if (had) {
         // The clone this computer joined with the invite before its person took part on the web
-        // goes (what it asked stays): one person has one place, which this computer now takes.
-        if (adopt)
-          await tx.query(
-            "DELETE FROM members WHERE token_hash = $1 AND office_id = $2 AND user_id IS NULL AND id <> $3",
+        // becomes that place: one person has one place, which this computer now takes, and what
+        // the clone asked and was asked, its files, meetings and shares, goes with it rather than
+        // being split from the person's history.
+        if (adopt) {
+          const [clone] = await tx.query<{ id: string }>(
+            "SELECT id FROM members WHERE token_hash = $1 AND office_id = $2 AND user_id IS NULL AND id <> $3 FOR UPDATE",
             [hashToken(adopt), office, had.id],
           );
+          if (clone) {
+            await moveMember(tx, office, clone.id, had.id);
+            await tx.query("DELETE FROM members WHERE id = $1", [clone.id]);
+          }
+        }
         // talking to it from the page is off until the computer now holding it turns it on
         await tx.query(
           "UPDATE members SET token_hash = $1, seen = $2, on_web = false, own_chat = false WHERE id = $3",
@@ -2495,6 +2502,54 @@ async function attach(
     });
   }
   return named;
+}
+
+/**
+ * Everything of one member's in an office put under another's id, as one person's two places become
+ * one (`joinAs`): the requests either way and their messages, files, meetings and what it set or
+ * shared. The day's count of team-key calls stays where it was made.
+ */
+async function moveMember(
+  tx: Sql,
+  office: string,
+  from: string,
+  to: string,
+): Promise<void> {
+  const args = [office, from, to];
+  await tx.query(
+    "UPDATE messages SET from_member = $3 WHERE from_member = $2 AND task_id IN (SELECT id FROM tasks WHERE office_id = $1)",
+    args,
+  );
+  await tx.query(
+    "UPDATE tasks SET from_member = $3 WHERE office_id = $1 AND from_member = $2",
+    args,
+  );
+  await tx.query(
+    "UPDATE tasks SET to_member = $3 WHERE office_id = $1 AND to_member = $2",
+    args,
+  );
+  await tx.query(
+    "UPDATE files SET owner = $3 WHERE office_id = $1 AND owner = $2",
+    args,
+  );
+  await tx.query(
+    "UPDATE meeting_posts SET from_member = $3 WHERE from_member = $2 AND meeting_id IN (SELECT id FROM meetings WHERE office_id = $1)",
+    args,
+  );
+  await tx.query(
+    "UPDATE meetings SET opened_by = $3 WHERE office_id = $1 AND opened_by = $2",
+    args,
+  );
+  await tx.query(
+    // in the order they take turns
+    "UPDATE meetings SET members = (SELECT jsonb_agg(CASE WHEN m.value = to_jsonb($2::text) THEN to_jsonb($3::text) ELSE m.value END ORDER BY m.n) FROM jsonb_array_elements(members) WITH ORDINALITY AS m(value, n)) WHERE office_id = $1 AND members @> jsonb_build_array($2::text)",
+    args,
+  );
+  for (const table of ["shared_skills", "office_settings", "invites"])
+    await tx.query(
+      `UPDATE ${table} SET by_member = $3 WHERE office_id = $1 AND by_member = $2`,
+      args,
+    );
 }
 
 /**
