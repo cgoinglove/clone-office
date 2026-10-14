@@ -3,6 +3,49 @@
 Versions after 0.1.0 are written here by release-please from the commits on main
 (CONTRIBUTING.md, "Releasing").
 
+## [0.4.0](https://github.com/cgoinglove/clone-office/compare/v0.3.0...v0.4.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* take the clones' meetings out
+
+### Features
+
+* ask colleagues' clones from the AI you already use ([30037e6](https://github.com/cgoinglove/clone-office/commit/30037e6766931395e409dea60c219ef682547465))
+* **office:** a colleague's question is answered from the work itself ([f3fa8f7](https://github.com/cgoinglove/clone-office/commit/f3fa8f7dcf097f9c0ffaa9d76bbcb042e3df3178))
+* **office:** the clock stands apart from the room, behind the left wall on two posts where the board stood, and the floor's frame takes it in ([887aee2](https://github.com/cgoinglove/clone-office/commit/887aee2c50a816e5d150d25c20ce9650d2ab1610))
+* **relay:** ask a colleague's clone from the team's Slack ([d2d6cc1](https://github.com/cgoinglove/clone-office/commit/d2d6cc19a7c9171cfcc35f28ff6fe7721fb41d22))
+* **relay:** the team server's requests page looks again on its own every quarter minute while in sight, its tab's count and title with it, and never while something is being written or picked there ([6890ff7](https://github.com/cgoinglove/clone-office/commit/6890ff7494b6c58bab0c305a99da8e223d72cb5b))
+
+
+### Fixes
+
+* a place taken off the map stays off for colleagues, and the last small things ([aaac33a](https://github.com/cgoinglove/clone-office/commit/aaac33aced0c291df002159bcfbcc6f1af08d121))
+* adding the office's tools to an AI app keeps its settings as they were ([5e41dac](https://github.com/cgoinglove/clone-office/commit/5e41dac696fffe37fab26417e555e9080f5d082d))
+* **brain:** Glob walks folders itself, never through a link ([c552ccf](https://github.com/cgoinglove/clone-office/commit/c552ccfaba3612af84585949f8fca4bc9d0e886e))
+* CI on Linux and the relay image ([45f3257](https://github.com/cgoinglove/clone-office/commit/45f3257d3dbecd311aed45dce770ca95334b9a16))
+* **i18n:** the Korean notice says the work folders, not the clone's own ([1dab7ee](https://github.com/cgoinglove/clone-office/commit/1dab7ee24d9944df0f8a38460dc4465c1bcd752d))
+* **office:** what a colleague's request may now read is said once, never widened silently ([40b7911](https://github.com/cgoinglove/clone-office/commit/40b7911943e1bd6e491ae3e35fddaefe42de7370))
+* **office:** what a colleague's request reads is held by code, past links and patterns ([ecadd76](https://github.com/cgoinglove/clone-office/commit/ecadd769b213a4b1a1761d44e4465a39230861a9))
+* **plugin:** the office tools in an AI app never send a secret, the clone's own files or a folder kept out ([031bcf7](https://github.com/cgoinglove/clone-office/commit/031bcf7bb1a6394cd591c72415defe4296ebec4e))
+* **relay:** Slack knows who is who by a link, keeps out shared channels, and posts every answer ([aae4cd0](https://github.com/cgoinglove/clone-office/commit/aae4cd06803101bf99882747fa34a7d7a50ddf41))
+* **relay:** when the clone a computer joined with an invite becomes its person's place on the web, what it asked and was asked, its files, meetings and shares go with it rather than being split from their history ([d65803f](https://github.com/cgoinglove/clone-office/commit/d65803f1fb45d208bfec808f075caabd3302f8df))
+* **security:** the app's own routes answer only on this computer's own names ([07f55ba](https://github.com/cgoinglove/clone-office/commit/07f55ba38b81cc0d8eb010949710df28a7c90924))
+* what the demo showed, after the refocus ([e55d056](https://github.com/cgoinglove/clone-office/commit/e55d056f90e764851e88f05662033f1bae8f4d1e))
+* what the demo team's real run showed ([68c7e52](https://github.com/cgoinglove/clone-office/commit/68c7e52709ae34ed6c4cab61590dcef955f9f235))
+* what the second look found in what a colleague's request reads, Slack and the AI apps ([6bbeae2](https://github.com/cgoinglove/clone-office/commit/6bbeae2abd438e772e90588576370b402b9d9302))
+
+
+### Under the hood
+
+* take the clones' meetings out ([c92d9a5](https://github.com/cgoinglove/clone-office/commit/c92d9a52fc5752843df013a8a621934ba5bb69fa))
+
+
+### Docs
+
+* lead with answering teammates from the work, asked from wherever they are ([be9dc15](https://github.com/cgoinglove/clone-office/commit/be9dc153635149bef64141c6312248772c39063c))
+
 ## [0.3.0](https://github.com/cgoinglove/clone-office/compare/v0.2.0...v0.3.0) (2026-10-13)
 
 
