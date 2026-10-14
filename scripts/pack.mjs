@@ -190,6 +190,8 @@ try {
     ["features/relay/server.ts", "relay.mjs"],
     ["features/minime/connectors/headers.ts", "connector-headers.mjs"],
     ["features/minime/server/places-walk.ts", "places-walk.mjs"],
+    // the office's tools for the AI apps a person works in (bin/ai-apps.mjs)
+    ["plugin/server/main.ts", "office-mcp.mjs"],
   ])
     await build({
       entryPoints: [join(source, entry)],

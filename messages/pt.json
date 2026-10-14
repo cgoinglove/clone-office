@@ -97,7 +97,13 @@
     "skill-name-invalid": "Esse não é um nome de habilidade. Um nome usa letras minúsculas, números, pontos, hífens ou sublinhados, e começa com uma letra ou um número.",
     "not-forgotten": "Não deu para remover agora. Tente de novo em instantes.",
     "brain-fallback-unfit": "Esse não pode ser reserva do modelo que você usa. Com sua assinatura do Claude, a reserva é outro Claude.",
-    "brain-fallback-same": "Escolha um modelo diferente do que você usa."
+    "brain-fallback-same": "Escolha um modelo diferente do que você usa.",
+    "config-unreadable": "Não foi possível ler o arquivo de configurações desse app, então nada foi alterado. Corrija ou apague o arquivo e tente de novo.",
+    "app-missing": "Esse app não está neste computador. Instale-o e tente de novo.",
+    "add-failed": "Não foi possível adicionar seu escritório a esse app. Tente de novo em instantes.",
+    "remove-failed": "Não foi possível remover seu escritório desse app. Tente de novo em instantes.",
+    "mcp-failed": "Não foi possível alterar esse app daqui. Tente de novo em instantes.",
+    "no-launcher": "Não foi possível alterar esse app daqui. Tente de novo em instantes."
   },
   "start": {
     "title": "Começar",
@@ -1136,6 +1142,16 @@
         "takeHint": "Só os navegadores que você parear aqui podem falar com ele. O que você diz lá passa pelo servidor da equipe e fica lá por um dia no máximo; a conversa inteira fica neste computador.",
         "browsers": "{count, plural, =0 {Nenhum navegador pareado ainda: a página do servidor da equipe mostra como.} one {# navegador pareado} other {# navegadores pareados}}",
         "forget": "Desparear todos"
+      },
+      "aiApps": {
+        "title": "Pergunte pela IA que você já usa",
+        "hint": "Adicione seu escritório ao app de IA com que você trabalha. Depois pergunte lá, como “pergunte ao clone do Ben como funcionam os reembolsos”, e a resposta volta para esse app.",
+        "add": "Adicionar",
+        "on": "Adicionado",
+        "remove": "Remover",
+        "added": "Adicionado ao {name}. Reinicie o {name} para começar a perguntar.",
+        "removed": "Removido do {name}.",
+        "none": "Nenhum app de IA compatível está neste computador: Claude, Claude Code, Codex, Cursor ou Gemini CLI."
       }
     },
     "requests": {
@@ -1149,7 +1165,7 @@
       "folders": "Pastas que ele lê",
       "foldersHint": "Ele só lê as pastas marcadas. Uma deixada de fora nunca é lida nem pesquisada, nos registros de nenhuma ferramenta de IA.",
       "answerFromWork": "Responder aos colegas a partir destas pastas",
-      "answerFromWorkHint": "Quando um colega pergunta, seu clone lê aqui sem perguntar a você, para responder a partir do próprio trabalho. Não muda nada e nunca abre arquivos com chaves ou senhas."
+      "answerFromWorkHint": "Quando um colega pergunta, seu clone lê estas pastas sem perguntar a você, para responder a partir do seu trabalho real. Nunca muda nada nem abre arquivos com chaves ou senhas."
     },
     "files": {
       "loading": "Carregando…",

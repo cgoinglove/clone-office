@@ -97,7 +97,13 @@
     "skill-name-invalid": "Ese no es un nombre de habilidad. Un nombre usa letras minúsculas, números, puntos, guiones o guiones bajos, y empieza por una letra o un número.",
     "not-forgotten": "No se pudo quitar ahora. Vuelve a intentarlo en un momento.",
     "brain-fallback-unfit": "Ese no puede respaldar el modelo que usas. Con tu suscripción de Claude, el respaldo es otro Claude.",
-    "brain-fallback-same": "Elige un modelo distinto del que usas."
+    "brain-fallback-same": "Elige un modelo distinto del que usas.",
+    "config-unreadable": "No se pudo leer el archivo de ajustes de esa app, así que no se cambió nada. Corrige o borra el archivo y vuelve a intentarlo.",
+    "app-missing": "Esa app no está en este equipo. Instálala y vuelve a intentarlo.",
+    "add-failed": "No se pudo añadir tu oficina a esa app. Inténtalo de nuevo en un momento.",
+    "remove-failed": "No se pudo quitar tu oficina de esa app. Inténtalo de nuevo en un momento.",
+    "mcp-failed": "No se pudo cambiar esa app desde aquí. Inténtalo de nuevo en un momento.",
+    "no-launcher": "No se pudo cambiar esa app desde aquí. Inténtalo de nuevo en un momento."
   },
   "start": {
     "title": "Empezar",
@@ -1136,6 +1142,16 @@
         "takeHint": "Solo los navegadores que emparejes aquí pueden hablar con él. Lo que digas allí pasa por el servidor del equipo y se guarda allí un día como máximo; la conversación completa queda en esta computadora.",
         "browsers": "{count, plural, =0 {Aún no hay navegadores emparejados: la página del servidor del equipo muestra cómo.} one {# navegador emparejado} other {# navegadores emparejados}}",
         "forget": "Desemparejar todos"
+      },
+      "aiApps": {
+        "title": "Pregunta desde la IA que ya usas",
+        "hint": "Añade tu oficina a la app de IA con la que trabajas. Luego pregunta allí, por ejemplo “pregúntale al clon de Ben cómo funcionan los reembolsos”, y la respuesta vuelve a esa app.",
+        "add": "Añadir",
+        "on": "Añadida",
+        "remove": "Quitar",
+        "added": "Añadida a {name}. Reinicia {name} para empezar a preguntar.",
+        "removed": "Quitada de {name}.",
+        "none": "No hay en este equipo ninguna app de IA compatible: Claude, Claude Code, Codex, Cursor o Gemini CLI."
       }
     },
     "requests": {
@@ -1149,7 +1165,7 @@
       "folders": "Carpetas que lee",
       "foldersHint": "Solo lee las carpetas marcadas. Una excluida nunca se lee ni se busca, en los registros de ninguna herramienta de IA.",
       "answerFromWork": "Responder a tus compañeros desde estas carpetas",
-      "answerFromWorkHint": "Cuando un compañero pregunta, tu clon lee aquí sin preguntarte, para responder desde el trabajo mismo. No cambia nada y nunca abre archivos con claves o contraseñas."
+      "answerFromWorkHint": "Cuando un compañero pregunta, tu clon lee estas carpetas sin preguntarte, para responder desde tu trabajo real. Nunca cambia nada ni abre archivos con claves o contraseñas."
     },
     "files": {
       "loading": "Cargando…",

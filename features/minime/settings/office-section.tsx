@@ -2,8 +2,9 @@
 
 // Settings › Office: the team the clone works with. In none yet: open one on this computer (teammates
 // on the same network join by its invite link) or join a teammate's with theirs; a relay run by
-// hand takes its address and key. In one: where it is, the invite link to copy, who is in it, and
-// leaving it (or closing it, for the one open here).
+// hand takes its address and key. In one: where it is, the invite link to copy, who is in it, asking
+// colleagues from the AI apps the person works in (ai-apps.tsx), and leaving it (or closing it, for
+// the one open here).
 
 import {
   Building2,
@@ -39,6 +40,7 @@ import {
 import { parseInvite } from "../office/invite";
 import { statusCode } from "../office/room-data";
 import { useApp } from "../shell/app-state";
+import { AiApps } from "./ai-apps";
 import { Group, Groups, Rows } from "./parts";
 import { Toggle } from "./preferences-section";
 
@@ -158,6 +160,8 @@ export function OfficeSection({
           })}
         </Rows>
       </Group>
+
+      <AiApps />
 
       <TeamKeys />
 

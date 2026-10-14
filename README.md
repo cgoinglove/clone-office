@@ -204,6 +204,19 @@ agent that has joined the office (`POST /join` with the office key gives it a to
 colleague's clone with `SendMessage`, as a clone does, and the clone answers it the way its person
 set. Hermes Agent's a2a tools and the official SDKs work with it as they are.
 
+## Ask from the AI you already use
+
+Your colleagues' clones become tools in the AI app you work in: Claude's desktop app, Claude Code,
+Codex, Cursor or Gemini CLI. Settings › Office › **Ask from the AI you already use** adds them, or:
+
+```sh
+npx clone-office mcp add claude-desktop   # or claude-code, codex, cursor, gemini
+```
+
+Restart that app, then ask there in plain words ("ask Ben's clone how refunds work"); the answer
+comes back in that app. `npx clone-office mcp list` shows where it is added, and `mcp remove <app>`
+takes it out, leaving the rest of that app's settings as they were.
+
 ## Claude Code plugin
 
 In a terminal (or as `/plugin …` inside Claude Code):

@@ -616,7 +616,16 @@ These words help discussion. They do not mandate separate services, tables or UI
   joined and calling the relay directly; `ask_colleague` and `answer_colleague` take `files` (put
   at the relay first, their paths in Claude Code's own question), and `office_file` takes a file
   that came into the app's `office/files/<request>/` with the app's index. A tool waits a minute for its answer and notes how much
-  of the request the conversation has read (`office/claude-code/<request>.json`). The mod
+  of the request the conversation has read (`office/claude-code/<request>.json`). The same server
+  is the office's tools for any AI app a person works in (10-14: everyone keeps their own AI),
+  bundled as `dist/office-mcp.mjs` and run by `npx clone-office mcp`; `bin/ai-apps.mjs` adds it to
+  Claude's desktop app, Cursor and Gemini CLI (their JSON files), Codex (its config.toml) and Claude
+  Code (`claude mcp add --scope user`), writing only the `clone-office` entry and leaving a file that
+  does not read alone, the server copied to `mcp/office.mjs` in the clone's folder (brought up to
+  date at start, `server/office-mcp.ts`) and named with `CLONE_OFFICE_HOME`; Settings › Office ›
+  Ask from the AI you already use (`settings/ai-apps.tsx`, `app/api/me/ai-apps`) runs the same
+  command. Started by the plugin (`.mcp.json`, `CLONE_OFFICE_LATE=conversation`), a later answer is
+  said to come into the conversation; elsewhere `office_requests` looks for it. The mod
   (`hooks/office.ts`, Claude Code's mods API) learns the request from the tool's reply, keeps it
   in the plugin's store per conversation, looks at the relay itself every 10 seconds (a plugin's
   own call to its MCP tools would need the person's leave each time), and brings what comes later
@@ -836,7 +845,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   service on Linux, both restarted only after a crash (the launcher exits quietly when it already
   runs), and a hidden script in the Startup folder on Windows; Settings › General's **Start with
   this computer** runs the same command through `app/api/me/service`. In the package,
-  `npx clone-office doctor` (`bin/doctor.mjs`) checks Node, the folder, the running app, the AI
+  `npx clone-office mcp [list | add <app> | remove <app>]` puts the office's tools in a person's AI
+  apps (`bin/ai-apps.mjs`, above). `npx clone-office doctor` (`bin/doctor.mjs`) checks Node, the folder, the running app, the AI
   model's sign-in (`claude auth status`, no model call), the office's relay with the member's token,
   the login item and npm's latest, each with what to do. In the package,
   `CLONE_OFFICE_APP_DIR` tells the app where its guide and tool server are (`server/paths.ts`

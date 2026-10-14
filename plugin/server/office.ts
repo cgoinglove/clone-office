@@ -1,13 +1,16 @@
-// The Clone Office tools for a person's own Claude Code. The person's mini-me belongs to an office,
-// a relay where each colleague has a mini-me; with these tools a Claude Code conversation sees who
-// is there, asks one of them, answers what it asks back, and looks at those requests. The office is
+// The Clone Office tools for a person's own AI: Claude Code through the plugin, or any app that
+// starts an MCP server (Claude's desktop app, Codex, Cursor, Gemini CLI: bin/ai-apps.mjs). The
+// person's mini-me belongs to an office, a relay where each colleague has a mini-me; with these
+// tools a conversation sees who is there, asks one of them, answers what it asks back, and looks
+// at those requests. The office is
 // found where the Clone Office app keeps it (settings.json "office" in ~/.clone-office, or
 // CLONE_OFFICE_HOME), and the relay is called directly, so this works while the app is closed.
 //
 // A quick answer comes back in the tool's own result. For a later one (the colleague's mini-me is
 // asking its person, which can take hours) the tool notes how much of the request the conversation
-// has read (office/claude-code/<request>.json), and the plugin's mod brings what comes after into
-// that conversation once it is idle (../hooks/office.ts).
+// has read (office/claude-code/<request>.json), and in Claude Code the plugin's mod brings what
+// comes after into that conversation once it is idle (../hooks/office.ts; the plugin says so with
+// CLONE_OFFICE_LATE=conversation). Elsewhere the conversation looks again with office_requests.
 //
 // Files go with a request or an answer: put at the relay first, then named on the message (the
 // person sees their paths in Claude Code's own question before the tool runs). Files that come are
@@ -35,6 +38,12 @@ import {
   type TaskState,
 } from "../lib/news.ts";
 import { type Progress, type Tool, type ToolResult, text } from "./mcp.ts";
+
+/** A later answer comes into the conversation by itself (the plugin's mod), or is looked up. */
+const LATE_COMES = process.env.CLONE_OFFICE_LATE === "conversation";
+const LATE = LATE_COMES
+  ? "a later one is brought into this conversation when it arrives"
+  : "for a later one, look again with office_requests when your person asks or the work needs it";
 
 /** How long a tool waits for its answer: most come in seconds, unless a person must be asked. */
 export const WAIT_MS = Number(process.env.CLONE_OFFICE_ASK_WAIT_MS) || 60_000;
@@ -84,8 +93,7 @@ export const TOOLS: Tool[] = [
   },
   {
     name: "ask_colleague",
-    description:
-      "Ask a colleague's clone something that is theirs to know, check or decide: how their part works, whether they can take something on, a review, their go-ahead. It answers from what it knows of its person and their work, and asks its person what only they can give. Write the request so it stands on its own: what you need, by when, and why, with only what they need from this conversation. A quick answer comes back here; a later one is brought into this conversation when it arrives.",
+    description: `Ask a colleague's clone something that is theirs to know, check or decide: how their part works, whether they can take something on, a review, their go-ahead. It answers from what it knows of its person and their work, and asks its person what only they can give. Write the request so it stands on its own: what you need, by when, and why, with only what they need from this conversation. A quick answer comes back here; ${LATE}.`,
     inputSchema: {
       type: "object",
       properties: {
@@ -458,7 +466,9 @@ async function ask(
       away
         ? `It is not around now and picks the request up when ${name}'s computer is on.`
         : `It is still on it, perhaps asking ${name}.`,
-      "The answer is brought into this conversation when it comes, so go on with other work meanwhile; office_requests shows where it stands.",
+      LATE_COMES
+        ? "The answer is brought into this conversation when it comes, so go on with other work meanwhile; office_requests shows where it stands."
+        : "Go on with other work meanwhile; office_requests shows where it stands and the answer once it comes.",
     ].join(" "),
   );
 }

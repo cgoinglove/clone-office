@@ -112,6 +112,8 @@ function startServer(home: string) {
       ...process.env,
       CLONE_OFFICE_HOME: home,
       CLONE_OFFICE_ASK_WAIT_MS: "3000",
+      // started as the plugin starts it (../.mcp.json): a later answer comes in by itself
+      CLONE_OFFICE_LATE: "conversation",
     },
     stdio: ["pipe", "pipe", "inherit"],
   });

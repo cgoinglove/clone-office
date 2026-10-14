@@ -97,7 +97,13 @@
     "skill-name-invalid": "这不能作为技能的名称。名称只能用小写字母、数字、点、连字符或下划线，并以字母或数字开头。",
     "not-forgotten": "暂时无法移除，请稍后再试。",
     "brain-fallback-unfit": "它不能作为你当前模型的备用。使用 Claude 订阅时，备用模型也要是另一个 Claude。",
-    "brain-fallback-same": "请选一个和当前模型不同的模型。"
+    "brain-fallback-same": "请选一个和当前模型不同的模型。",
+    "config-unreadable": "无法读取该应用的设置文件，所以没有做任何修改。请修复或删除该文件后重试。",
+    "app-missing": "这台电脑上没有该应用。安装后再试一次。",
+    "add-failed": "没能把办公室添加到该应用。请稍后再试。",
+    "remove-failed": "没能从该应用移除办公室。请稍后再试。",
+    "mcp-failed": "无法在这里修改该应用。请稍后再试。",
+    "no-launcher": "无法在这里修改该应用。请稍后再试。"
   },
   "start": {
     "title": "开始使用",
@@ -1136,6 +1142,16 @@
         "takeHint": "只有你在这里配对的浏览器才能和它对话。在那里说的话会经过团队服务器，最多保留一天；完整对话留在这台电脑上。",
         "browsers": "{count, plural, =0 {还没有配对的浏览器：在团队服务器的页面上可以配对。} other {已配对 # 个浏览器}}",
         "forget": "全部取消配对"
+      },
+      "aiApps": {
+        "title": "在你常用的 AI 里提问",
+        "hint": "把办公室加到你平时工作的 AI 应用里。之后在那里问，比如“问问 Ben 的分身退款是怎么处理的”，回答会回到那个应用。",
+        "add": "添加",
+        "on": "已添加",
+        "remove": "移除",
+        "added": "已添加到 {name}。重启 {name} 后即可提问。",
+        "removed": "已从 {name} 移除。",
+        "none": "这台电脑上没有可配合使用的 AI 应用：Claude、Claude Code、Codex、Cursor 或 Gemini CLI。"
       }
     },
     "requests": {
@@ -1149,7 +1165,7 @@
       "folders": "要读取的文件夹",
       "foldersHint": "它只读取勾选的文件夹。排除的文件夹在任何 AI 工具的记录里都不会被读取或搜索。",
       "answerFromWork": "回答同事时也看这些文件夹",
-      "answerFromWorkHint": "同事提问时，你的分身会直接读取这里，根据实际工作来回答。它不会修改任何内容，也从不打开存有密钥或密码的文件。"
+      "answerFromWorkHint": "同事提问时，你的分身会直接读取这些文件夹，根据你的实际工作来回答。它不会修改任何内容，也不会打开存有密钥或密码的文件。"
     },
     "files": {
       "loading": "加载中…",

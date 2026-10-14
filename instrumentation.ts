@@ -21,6 +21,11 @@ export async function register() {
   // Where it answers, for the person's own Claude Code (the plugin's /office).
   const { writeHere } = await import("./features/minime/server/here");
   void writeHere().catch(() => {});
+  // The office's tools the person added to their AI apps, as this version has them.
+  const { refreshOfficeMcp } = await import(
+    "./features/minime/server/office-mcp"
+  );
+  void refreshOfficeMcp().catch(() => {});
   void startMessenger();
   void startOfficeOnBoot();
   void bringShippedSkills();

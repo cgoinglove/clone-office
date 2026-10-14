@@ -97,7 +97,13 @@
     "skill-name-invalid": "That isn't a skill's name. A name uses lowercase letters, digits, dots, dashes or underscores, and starts with a letter or digit.",
     "not-forgotten": "That couldn't be taken back just now. Try again in a moment.",
     "brain-fallback-unfit": "That can't back up the model you use. With your Claude subscription, the backup is another Claude.",
-    "brain-fallback-same": "Pick a model other than the one you use."
+    "brain-fallback-same": "Pick a model other than the one you use.",
+    "config-unreadable": "That app’s settings file couldn’t be read, so nothing in it was changed. Fix or remove the file, then try again.",
+    "app-missing": "That app isn’t on this computer. Install it, then try again.",
+    "add-failed": "Couldn’t add your office to that app. Try again in a moment.",
+    "remove-failed": "Couldn’t remove your office from that app. Try again in a moment.",
+    "mcp-failed": "Couldn’t change that app from here. Try again in a moment.",
+    "no-launcher": "Couldn’t change that app from here. Try again in a moment."
   },
   "start": {
     "title": "Get started",
@@ -1136,6 +1142,16 @@
         "takeHint": "Only browsers you pair here can talk to it. What you say there passes through the team server and is kept there a day at most; the whole conversation stays on this computer.",
         "browsers": "{count, plural, =0 {No browser paired yet: the team server's page shows how.} one {# browser paired} other {# browsers paired}}",
         "forget": "Unpair all"
+      },
+      "aiApps": {
+        "title": "Ask from the AI you already use",
+        "hint": "Add your office to the AI app you work in. Then ask there, like “ask Ben’s clone how refunds work”, and the answer comes back in that app.",
+        "add": "Add",
+        "on": "Added",
+        "remove": "Remove",
+        "added": "Added to {name}. Restart {name} to start asking.",
+        "removed": "Removed from {name}.",
+        "none": "None of the AI apps it works with are on this computer: Claude, Claude Code, Codex, Cursor or Gemini CLI."
       }
     },
     "requests": {
@@ -1149,7 +1165,7 @@
       "folders": "Folders it reads",
       "foldersHint": "It reads only the ticked folders. One left out is never read or searched, in any AI tool's records.",
       "answerFromWork": "Answer colleagues from these folders",
-      "answerFromWorkHint": "When a colleague asks, your clone reads here without asking you, so the answer comes from the work itself. It changes nothing and never opens files that hold keys or passwords."
+      "answerFromWorkHint": "When a colleague asks, your clone reads these folders without asking you, so it answers from your actual work. It never changes anything or opens files with keys or passwords."
     },
     "files": {
       "loading": "Loading…",

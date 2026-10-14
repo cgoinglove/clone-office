@@ -10,6 +10,9 @@
 //   npx clone-office service install | uninstall | status
 //                               start with the computer, no window open (bin/service.mjs)
 //   npx clone-office doctor      what works and what does not here, each with what to do
+//   npx clone-office mcp [list | add <app> | remove <app>]
+//                               ask colleagues' clones from Claude, Claude Code, Codex, Cursor or
+//                               Gemini CLI: the office's tools as their MCP server (bin/ai-apps.mjs)
 // `join` and `connect` each take either link.
 //
 // The app listens on this computer only. Its port is the first free one from 4417, unless
@@ -110,6 +113,41 @@ if (args[0] === "relay") {
     args.includes("--json") ? JSON.stringify(result) : result.message,
   );
   process.exit(result.ok ? 0 : 1);
+} else if (args[0] === "mcp") {
+  const json = args.includes("--json");
+  const [action, id] = args.slice(1).filter((arg) => !arg.startsWith("--"));
+  if (!action) {
+    // The server itself, on stdin and stdout, as an app starts it.
+    const bundled = join(root, "dist", "office-mcp.mjs");
+    await import(
+      existsSync(bundled) ? bundled : join(root, "plugin", "server", "main.ts")
+    );
+  } else {
+    const apps = await import("./ai-apps.mjs");
+    const result =
+      action === "list"
+        ? { ok: true, apps: apps.listApps() }
+        : action === "add"
+          ? apps.addApp(id, { root, appHome: appHome() })
+          : action === "remove"
+            ? apps.removeApp(id)
+            : { ok: false, message: "unknown-action" };
+    if (json) console.log(JSON.stringify(result));
+    else if (result.apps)
+      for (const app of result.apps)
+        console.log(
+          `${app.added ? "✓" : app.present ? "·" : " "} ${app.id.padEnd(15)} ${app.name}${app.present ? "" : " (not on this computer)"}`,
+        );
+    else
+      console.log(
+        result.ok
+          ? action === "add"
+            ? `Added to ${id}. Restart it to see the office's tools.`
+            : `Taken out of ${id}.`
+          : `Not done: ${result.message}.`,
+      );
+    process.exit(result.ok ? 0 : 1);
+  }
 } else if (args[0] === "connect" || args[0] === "join") {
   if (isInvite(args[1])) await keepInvite(args[1]);
   else await connect(args[1]);

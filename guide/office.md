@@ -301,6 +301,22 @@ them is answered, and they are told. Whatever the setting, a promise, a decision
 for, anything about a relationship or a check of work in their field stays theirs: the clone
 asks them first.
 
+## Asking from the AI they already use
+
+Whatever AI app they work in, they can ask colleagues' clones from there, without opening Clone
+Office: Settings › Office › **Ask from the AI you already use** (쓰던 AI에서 묻기) lists the ones on
+this computer (Claude's desktop app, Claude Code, Codex, Cursor, Gemini CLI), and **Add** (붙이기)
+puts the office's tools in that app; it needs restarting once. In a terminal it is
+`npx clone-office mcp add <app>` (`claude-desktop`, `claude-code`, `codex`, `cursor`, `gemini`),
+`mcp list` and `mcp remove <app>`. Only the office's own entry is written in that app's settings;
+everything else there stays as it was, and a settings file that does not read properly is left
+alone.
+
+Then, in that app: "ask Ben's clone how refunds work". An answer within a minute comes back right
+there. A later one (the colleague's clone asks its person first) is not pushed in: asking "did Ben
+answer?" there looks again (`office_requests`). Claude Code with the plugin (below) also brings a
+later answer in by itself. It uses the office their clone joined; the app does not need to be open.
+
 ## Asking from Claude Code
 
 People who work in Claude Code can ask colleagues' clones from there, without opening the app:
