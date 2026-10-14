@@ -143,16 +143,25 @@ export async function keepWorkFolders(
 ): Promise<void> {
   await withLock(minimeHome(), async () => {
     const settings = await readSettings();
-    const before = Array.isArray(settings.workFolders)
-      ? settings.workFolders.filter(
-          (path): path is string => typeof path === "string",
-        )
-      : [];
-    const next = [...new Set([...paths, ...before])]
+    const list = (value: unknown) =>
+      Array.isArray(value)
+        ? value.filter((path): path is string => typeof path === "string")
+        : [];
+    const next = [...new Set([...paths, ...list(settings.workFolders)])]
       .filter((path) => !forget.includes(path))
       .slice(0, 60);
+    // what the person took off stays off for colleagues, from either source, until a reading
+    // finds it again
+    const out = [
+      ...new Set([
+        ...forget,
+        ...list(settings.workFoldersOut).filter(
+          (path) => !paths.includes(path),
+        ),
+      ]),
+    ].slice(0, 200);
     await writeSettings(
-      `${JSON.stringify({ ...settings, workFolders: next }, null, 2)}\n`,
+      `${JSON.stringify({ ...settings, workFolders: next, workFoldersOut: out }, null, 2)}\n`,
     );
   });
 }
@@ -160,7 +169,16 @@ export async function keepWorkFolders(
 /** The folders a colleague's request may read in, none inside another, the outermost kept. */
 export async function workFolders(now = Date.now()): Promise<string[]> {
   const excludes = loadExcludes();
-  const kept = (await readSettings()).workFolders;
+  const settings = await readSettings();
+  const kept = settings.workFolders;
+  const off = new Set<string>();
+  for (const given of Array.isArray(settings.workFoldersOut)
+    ? settings.workFoldersOut
+    : [])
+    if (typeof given === "string") {
+      const folder = await workFolder(given, { excludes });
+      if (folder) off.add(folded(folder));
+    }
   const recent = await recentFolders(
     now - DAYS * 24 * 60 * 60 * 1000,
     MOST,
@@ -173,7 +191,8 @@ export async function workFolders(now = Date.now()): Promise<string[]> {
     ...recent.map((folder) => folder.path),
   ]) {
     const folder = await workFolder(given, { excludes });
-    if (folder && !found.includes(folder)) found.push(folder);
+    if (folder && !found.includes(folder) && !off.has(folded(folder)))
+      found.push(folder);
   }
   const outer = found.filter(
     (folder) =>

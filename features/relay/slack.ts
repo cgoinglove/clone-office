@@ -933,7 +933,7 @@ export class TeamSlack {
       // Only the offices this process holds a connection for, each its share, the newest first,
       // so no office's many open requests keep another's answers waiting.
       const rows = await this.db.query<ThreadRow>(
-        "SELECT office_id, task_id, channel, thread_ts, asker, slack_user, lang, posted FROM (SELECT *, row_number() OVER (PARTITION BY office_id ORDER BY created DESC) AS n FROM slack_threads WHERE NOT done AND office_id = ANY($1::text[])) t WHERE n <= 50",
+        "SELECT office_id, task_id, channel, thread_ts, asker, slack_user, lang, posted FROM (SELECT *, row_number() OVER (PARTITION BY office_id ORDER BY created DESC) AS newest, row_number() OVER (PARTITION BY office_id ORDER BY created) AS oldest FROM slack_threads WHERE NOT done AND office_id = ANY($1::text[])) t WHERE newest <= 50 OR oldest <= 25",
         [[...this.links.keys()]],
       );
       for (const row of rows) {

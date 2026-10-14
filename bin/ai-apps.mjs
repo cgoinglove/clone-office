@@ -137,7 +137,21 @@ function nodeOnPath() {
       .toString()
       .split(/\r?\n/)[0]
       .trim();
-    return found || undefined;
+    if (!found) return undefined;
+    // one the server runs on (22.13 or later), else the app's own executable does it
+    const [major, minor] = execFileSync(
+      found,
+      ["-p", "process.versions.node"],
+      {
+        stdio: ["ignore", "pipe", "ignore"],
+        timeout: 5000,
+      },
+    )
+      .toString()
+      .trim()
+      .split(".")
+      .map(Number);
+    return major > 22 || (major === 22 && minor >= 13) ? found : undefined;
   } catch {
     return undefined;
   }
