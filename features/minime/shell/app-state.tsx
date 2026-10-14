@@ -38,7 +38,13 @@ export function useAppState() {
   // While the person looks at a page, what waits on them is shown here, not sent to their phone.
   usePresence();
   const [lang, setLang] = useState("en");
-  useEffect(() => setLang(personTag()), []);
+  // Until the page knows its language, nothing is sent saying it: "en" is only a placeholder, and
+  // the server keeps what a page says as the person's language for what runs with no page open.
+  const [langKnown, setLangKnown] = useState(false);
+  useEffect(() => {
+    setLang(personTag());
+    setLangKnown(true);
+  }, []);
 
   const [profile, setProfile] = useState<Profile>({});
   useEffect(() => {
@@ -53,7 +59,7 @@ export function useAppState() {
   const { chat, turns: conversation } = useChat(lang);
   const learn = useLearn(lang);
   const { preferences, change: changePreferences } = usePreferences();
-  const office = useOffice(lang, {
+  const office = useOffice(langKnown ? lang : undefined, {
     onNews: chat.refresh,
     profile,
     batchHours: preferences?.batchHours,

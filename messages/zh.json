@@ -673,7 +673,8 @@
     "tools": "你常用的工具",
     "toolsPlaceholder": "例如：Figma、Notion、Claude Code",
     "leaveTitle": "要离开办公室吗？",
-    "closeTitle": "要关闭这台电脑上的办公室吗？"
+    "closeTitle": "要关闭这台电脑上的办公室吗？",
+    "laterNote": "{name} 确认后会再回复你。"
   },
   "files": {
     "title": "我保存的所有文件",
@@ -1325,6 +1326,7 @@
       "yourTurn": "待你决定",
       "answerHere": "直接在这里回答",
       "fromColleague": "{name}的分身问",
+      "fromPerson": "{name} 在问",
       "fromClone": "你的分身问",
       "open": "打开",
       "inNow": "在岗 {count}/{all}",

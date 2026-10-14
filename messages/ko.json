@@ -673,7 +673,8 @@
     "tools": "쓰는 도구",
     "toolsPlaceholder": "예: Figma, Notion, Claude Code",
     "leaveTitle": "오피스에서 나갈까요?",
-    "closeTitle": "이 컴퓨터에서 연 오피스를 닫을까요?"
+    "closeTitle": "이 컴퓨터에서 연 오피스를 닫을까요?",
+    "laterNote": "{name} 님이 확인하고 다시 알려 드릴게요."
   },
   "files": {
     "title": "클론이 저장한 파일",
@@ -1325,6 +1326,7 @@
       "yourTurn": "정할 것",
       "answerHere": "여기서 바로 답할 수 있어요",
       "fromColleague": "{name} 님의 클론이 물어요",
+      "fromPerson": "{name} 님이 물어요",
       "fromClone": "내 클론이 물어요",
       "open": "열기",
       "inNow": "출근 {count}/{all}",

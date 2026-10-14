@@ -212,7 +212,16 @@ export function TurnRows({
             )}
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span className="text-xs text-muted-foreground">
-                {from ? t("fromColleague", { name: fromName }) : t("fromClone")}
+                {from
+                  ? t(
+                      app.office.onWeb.has(from)
+                        ? "fromPerson"
+                        : "fromColleague",
+                      {
+                        name: fromName,
+                      },
+                    )
+                  : t("fromClone")}
               </span>
               <span
                 id={question}

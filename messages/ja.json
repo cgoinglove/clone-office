@@ -673,7 +673,8 @@
     "tools": "使っているツール",
     "toolsPlaceholder": "例：Figma、Notion、Claude Code",
     "leaveTitle": "オフィスを退出しますか？",
-    "closeTitle": "このコンピューターで開いたオフィスを閉じますか？"
+    "closeTitle": "このコンピューターで開いたオフィスを閉じますか？",
+    "laterNote": "{name}さんが確認して、あとでお返事します。"
   },
   "files": {
     "title": "保存しているすべてのファイル",
@@ -1325,6 +1326,7 @@
       "yourTurn": "決めること",
       "answerHere": "ここで答えられます",
       "fromColleague": "{name}さんのクローンからの質問",
+      "fromPerson": "{name}さんが聞いています",
       "fromClone": "あなたのクローンからの質問",
       "open": "開く",
       "inNow": "出勤 {count}/{all}",

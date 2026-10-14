@@ -279,7 +279,9 @@ async function connect(link) {
     relay: answer.relay || server,
     member: answer.member,
     token: answer.token,
-    card: { name: answer.name, description: "" },
+    // what this clone already said of its person (what they do, what they look after) stays on its
+    // card; the account's name is the one shown
+    card: { description: "", ...(was?.card ?? {}), name: answer.name },
   };
   writeSettings(path, settings);
   console.log(

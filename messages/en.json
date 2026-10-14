@@ -673,7 +673,8 @@
     "tools": "Tools you work in",
     "toolsPlaceholder": "e.g. Figma, Notion, Claude Code",
     "leaveTitle": "Leave the office?",
-    "closeTitle": "Close the office on this computer?"
+    "closeTitle": "Close the office on this computer?",
+    "laterNote": "{name} will get back to you on this."
   },
   "files": {
     "title": "All files I keep",
@@ -1325,6 +1326,7 @@
       "yourTurn": "To decide",
       "answerHere": "Answer right here",
       "fromColleague": "{name}'s clone asks",
+      "fromPerson": "{name} asks",
       "fromClone": "Your clone asks",
       "open": "Open",
       "inNow": "{count} of {all} in",

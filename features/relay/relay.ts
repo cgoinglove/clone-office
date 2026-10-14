@@ -1835,7 +1835,8 @@ export class Relay {
       }
       const present = (
         await tx.query<{ id: string }>(
-          "SELECT id FROM members WHERE office_id = $1 AND (seen > $2 OR id = $3) ORDER BY joined, id",
+          // someone taking part on the web has no clone to speak for them, so their place never holds a round up
+          "SELECT id FROM members WHERE office_id = $1 AND NOT on_web AND (seen > $2 OR id = $3) ORDER BY joined, id",
           [
             from.office,
             new Date(now.getTime() - PRESENT_MS).toISOString(),

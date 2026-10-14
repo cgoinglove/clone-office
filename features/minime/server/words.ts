@@ -55,5 +55,6 @@ async function makeWords(locale: Locale) {
     problem: (error: string) =>
       problemWords(errors as unknown as ErrorWords, error, locale),
     plugin: createTranslator({ locale, messages, namespace: "plugin" }),
+    office: createTranslator({ locale, messages, namespace: "office" }),
   };
 }

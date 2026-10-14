@@ -260,7 +260,7 @@ export function statusText(t: OfficeWords, status: string | undefined): string {
 export const SOLO_ID = "me";
 
 export function useOffice(
-  lang: string,
+  lang: string | undefined,
   {
     onNews,
     profile,
@@ -291,7 +291,9 @@ export function useOffice(
   const lastText = useRef("");
   const load = useCallback(async () => {
     const text = await fetch(
-      `/api/me/office?locale=${encodeURIComponent(lang)}`,
+      lang
+        ? `/api/me/office?locale=${encodeURIComponent(lang)}`
+        : "/api/me/office",
       { headers: HEADERS },
     )
       .then((r) => r.text())
@@ -484,6 +486,12 @@ export function useOffice(
     (id?: string) => (id ? (order.get(id) ?? 0) : 0),
     [order],
   );
+  // those taking part on the web ask in their own name: they have no clone
+  const onWeb = useMemo(
+    () =>
+      new Set(members.filter((m) => m.card.status === "web").map((m) => m.id)),
+    [members],
+  );
   const me = office?.me?.id;
   const others = useMemo(
     () => members.filter((m) => m.id !== me),
@@ -504,6 +512,7 @@ export function useOffice(
       answered,
       room,
       names,
+      onWeb,
       indexOf,
       others,
     }),
@@ -519,6 +528,7 @@ export function useOffice(
       answered,
       room,
       names,
+      onWeb,
       indexOf,
       others,
     ],

@@ -165,3 +165,14 @@ test("a meeting needs someone else in the office", async () => {
   // Another office does not see it.
   await assert.rejects(relay.meeting(solo, opened.id), /No such meeting/);
 });
+
+test("someone taking part on the web is not in a meeting of the clones, so no round waits for them", async () => {
+  const [ana, ben, dee] = await office("Ana", "Ben", "Dee");
+  // Dee is seen, as the web page sees them, but has no clone to speak for them.
+  await db.query("UPDATE members SET on_web = true WHERE id = $1", [dee.id]);
+  const opened = await relay.openMeeting(ana, {
+    kind: "question",
+    topic: "Anything blocking Friday?",
+  });
+  assert.deepEqual(opened.members.sort(), [ana.id, ben.id].sort());
+});

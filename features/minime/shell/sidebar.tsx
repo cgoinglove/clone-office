@@ -246,9 +246,12 @@ export function Sidebar({
                 from={item.from}
                 who={
                   item.from
-                    ? t("office.fromColleague", {
-                        name: office.names.get(item.from) ?? "",
-                      })
+                    ? t(
+                        office.onWeb.has(item.from)
+                          ? "office.fromPerson"
+                          : "office.fromColleague",
+                        { name: office.names.get(item.from) ?? "" },
+                      )
                     : t("office.fromClone")
                 }
                 line={askLine(tAsk, item.ask)}

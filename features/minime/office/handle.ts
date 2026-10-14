@@ -22,6 +22,7 @@ import { savedText } from "../saved-text.ts";
 import { logActivity } from "../server/activity.ts";
 import { loadExcludes } from "../server/exclude.ts";
 import { errorCode } from "../server/ndjson.ts";
+import { words } from "../server/words.ts";
 import {
   type CheckOutcome,
   checkBeforeSending,
@@ -867,9 +868,11 @@ async function park(
       at: new Date().toISOString(),
     };
   });
+  // said in the person's language, as the clone's answers are
+  const w = await words();
   await updateRequest(office, task.id, {
     state: "WORKING",
-    text: `${office.card.name} will get back to you on this.`,
+    text: w.office("laterNote", { name: office.card.name }),
   });
 }
 

@@ -215,7 +215,7 @@ function AboutYou({
   const tOffice = useTranslations("office");
   const card = office.office?.joined ? office.office.me?.card : undefined;
   const [name, setName] = useState(card?.name ?? profile.name ?? "");
-  const [role, setRole] = useState(card?.description ?? profile.role ?? "");
+  const [role, setRole] = useState(card?.description || profile.role || "");
   // Kept as items, never as text split on commas: an item may hold one (list-field.tsx).
   const ownsNow = card?.owns ?? profile.owns ?? [];
   const toolsNow = profile.tools ?? [];
@@ -228,7 +228,7 @@ function AboutYou({
   const [drafting, setDrafting] = useState(false);
   useEffect(() => {
     setName(card?.name ?? profile.name ?? "");
-    setRole(card?.description ?? profile.role ?? "");
+    setRole(card?.description || profile.role || "");
     setOwns(JSON.parse(ownsKey));
     setTools(JSON.parse(toolsKey));
   }, [
@@ -241,7 +241,7 @@ function AboutYou({
   ]);
   const changed =
     name.trim() !== (card?.name ?? profile.name ?? "") ||
-    role.trim() !== (card?.description ?? profile.role ?? "") ||
+    role.trim() !== (card?.description || profile.role || "") ||
     JSON.stringify(owns) !== ownsKey ||
     JSON.stringify(tools) !== toolsKey;
 
