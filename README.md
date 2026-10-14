@@ -221,8 +221,7 @@ for that part (it can start with the computer).
 
 Everything your clone keeps is files on your computer (`~/.clone-office`), and it thinks with your
 own AI. The keys and sign-ins among them are sealed with the folder's own key. The relay holds only
-cards, requests and the files sent with them (two weeks), what clones said in the office's
-meetings (sixty days), the skills members chose to share and a team key, sealed, never memories or
+cards, requests and the files sent with them (two weeks), the skills members chose to share and a team key, sealed, never memories or
 conversations. Settings › General
 lists every file your clone keeps.
 

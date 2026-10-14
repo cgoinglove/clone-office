@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { OfficeRoom } from "@/features/office/room/office-room";
 import { HEADERS, type Task } from "../home/use-office";
 import { useApp } from "./app-state";
-import { useMeetings } from "./meeting";
 import { Flap, Mark, PhaseChip, phaseOf } from "./parts";
 
 interface FlowLine {
@@ -53,16 +52,11 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
     return office.names.get(other) ?? task.metadata.guest ?? t("someone");
   };
   const latest = moving[0];
-  // A meeting of the clones going on says so first: the office is where to watch it.
-  const { current } = useMeetings();
-  const meeting = current?.state === "open" ? current : undefined;
-  const line = meeting
-    ? t("meeting", { round: meeting.round, rounds: meeting.rounds })
-    : latest
-      ? latest.metadata.from === me
-        ? t("goingTo", { name: nameOf(latest) })
-        : t("comingFrom", { name: nameOf(latest) })
-      : t("quiet");
+  const line = latest
+    ? latest.metadata.from === me
+      ? t("goingTo", { name: nameOf(latest) })
+      : t("comingFrom", { name: nameOf(latest) })
+    : t("quiet");
 
   const [flows, setFlows] = useState<FlowLine[] | null>(null);
   useEffect(() => {
@@ -119,7 +113,7 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
             <span
               aria-hidden
               className={
-                latest || meeting
+                latest
                   ? "size-1.5 shrink-0 animate-pulse rounded-full bg-brand motion-reduce:animate-none"
                   : "size-1.5 shrink-0 rounded-full bg-muted-foreground/50"
               }

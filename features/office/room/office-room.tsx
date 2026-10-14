@@ -126,7 +126,6 @@ export function OfficeRoom({
         bring: (to, from, what) => t("room.say.bring", { to, from, what }),
         leftOnDesk: (name) => t("room.say.leftOnDesk", { name }),
       },
-      meeting: { on: t("room.meeting.on") },
       lobby: {
         greeting: (hour, name) =>
           t(

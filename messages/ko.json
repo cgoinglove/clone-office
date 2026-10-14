@@ -75,10 +75,6 @@
     "brain-local-refused": "이 컴퓨터의 모델 서버가 요청을 거절했어요. 그 서버의 설정(요구하는 키, 불러온 모델)을 확인하고 다시 해 주세요.",
     "brain-chatgpt-signed-out": "클론이 내 ChatGPT 요금제를 써요. AI 모델에서 다시 로그인해 주세요.",
     "chatgpt-unreachable": "OpenAI에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.",
-    "meeting-alone": "지금 오피스에 다른 사람이 없어서 회의를 할 수 없어요.",
-    "meeting-closed": "이미 끝난 회의예요.",
-    "meeting-said": "내 클론은 이번 회차에 이미 말했어요.",
-    "meeting-not-in": "내 클론은 이 회의에 참여하고 있지 않아요.",
     "claude-signed-out": "Claude Code에 로그인돼 있지 않아요. 터미널에서 claude를 실행해 로그인한 뒤 다시 해 주세요.",
     "brain-no-answer": "모델이 답하지 않았어요. 받은 내용은 아래에 있어요. 다시 해 보거나 다른 모델을 골라 주세요.",
     "brain-team-no-office": "클론이 오피스의 팀 키를 쓰는데, 지금은 오피스에 들어가 있지 않아요. 다시 들어가거나 AI 모델에서 다른 방법을 골라 주세요.",
@@ -642,9 +638,6 @@
         "yourFloor": "우리 층",
         "label": "우리 회사 건물, 우리 층이 표시돼 있어요"
       },
-      "meeting": {
-        "on": "회의 중"
-      },
       "clock": {
         "in": "출근"
       }
@@ -1143,19 +1136,6 @@
         "takeHint": "여기서 짝지어 준 브라우저만 클론과 이야기할 수 있어요. 거기서 한 말은 팀 서버를 거쳐 오고, 팀 서버에는 하루까지만 남아요. 대화 전체는 이 컴퓨터에 있어요.",
         "browsers": "{count, plural, =0 {아직 짝지은 브라우저가 없어요. 팀 서버 페이지에서 짝지을 수 있어요.} other {짝지은 브라우저 #개}}",
         "forget": "모두 끊기"
-      },
-      "meetings": {
-        "title": "클론 회의",
-        "hint": "아침 회의나 누군가 모두에게 질문할 때, 내 클론이 다른 클론들과 만나요. 내 기록에서 찾은 내 일을 말하고, 나에게 중요한 것만 가져와요.",
-        "take": "내 클론 참여시키기",
-        "takeHint": "클론이 한 말은 오피스 모두에게 보여요. 직접 회의를 시작하면 저절로 켜져요.",
-        "daily": "매일 아침 회의",
-        "dailyHint": "오피스 전체에 적용돼요. 정한 요일, 정한 시각에 오피스에 있는 클론들이 한 번 모여요.",
-        "time": "시각",
-        "save": "저장",
-        "none": "매일 아침 회의 없음",
-        "set": "{days} {time}",
-        "remove": "매일 아침 회의 끄기"
       }
     },
     "requests": {
@@ -1242,7 +1222,7 @@
       "none": "아직 없어요.",
       "groups": {
         "conversations": "나와의 대화",
-        "colleagues": "동료 부탁과 회의",
+        "colleagues": "동료 부탁",
         "flows": "플로우",
         "learning": "나를 배우기",
         "other": "기타"
@@ -1457,8 +1437,7 @@
       "flows": "오늘 플로우",
       "all": "모두 보기",
       "noFlows": "오늘 예정된 플로우가 없어요. 만들어 보기",
-      "flowStarter": "평일 아침 9시마다 ",
-      "meeting": "회의 중 · {round}/{rounds}회차"
+      "flowStarter": "평일 아침 9시마다 "
     },
     "request": {
       "loading": "불러오는 중…",
@@ -1485,33 +1464,6 @@
       "themselves": "{name} 님",
       "selfWaiting": "{name} 님이 다시 썼어요. 직접 답해 주세요:",
       "waitsFor": "{name} 님의 답을 기다리고 있어요."
-    },
-    "meeting": {
-      "standup": "아침 회의",
-      "question": "모두에게 묻기",
-      "start": "아침 회의 시작하기",
-      "ask": "모두에게 묻기",
-      "askPlaceholder": "모두의 클론에게 무엇을 물어볼까요?",
-      "askSend": "묻기",
-      "on": "진행 중 · {round}/{rounds}회차",
-      "over": "끝남 · {time}",
-      "roundStandup1": "1회차 · 한 일, 할 일, 필요한 것",
-      "roundStandup2": "2회차 · 각자 일과 이어지는 것만",
-      "roundQuestion1": "1회차 · 답",
-      "roundQuestion2": "2회차 · 덧붙이는 말",
-      "asks": "{name} 님의 클론이 물어요",
-      "cloneOf": "{name} 님의 클론",
-      "yours": "내 클론",
-      "to": "{name} 님에게",
-      "passed": "덧붙일 말 없음: {names}",
-      "waiting": "클론 {count}명을 기다리는 중",
-      "nothingYet": "클론들이 각자 사람의 기록을 찾아보고 있어요…",
-      "back": "나에게 온 내용 보기",
-      "sittingOut": "내 클론은 이번 회의에 참여하지 않아요.",
-      "letIn": "참여시키기",
-      "latest": "지난 회의",
-      "close": "닫기",
-      "hint": "클론들은 각 사람의 기록을 보고, 회차마다 한 가지씩 말해요. 끝나면 사람마다 그 사람에게 중요한 것만 전해요."
     },
     "home": {
       "hello": {
@@ -1549,12 +1501,10 @@
       "linkStarter": "링크를 만들어서 물어봐 줘: ",
       "did": "오늘 클론이 한 일",
       "answered": "{name} 님에게 답함",
-      "meetingBack": "{kind}: 나에게 온 내용",
       "flowRan": "“{name}” 실행함",
       "flowFailed": "“{name}” 끝내지 못함",
       "didEmpty": "오늘은 아직 없어요. 동료가 나에게 무언가 물으면 클론이 먼저 답하고, 여기에 보여요.",
       "today": "오늘",
-      "standupAt": "클론들의 아침 회의",
       "nothingToday": "오늘 정해진 일이 없어요. 플로우를 만들어 보세요: “평일 9시마다 밀린 일 알려 줘”.",
       "flowStarter": "평일 아침 9시마다 나를 기다리는 일 짧게 알려 줘",
       "in": "출근",
@@ -1597,7 +1547,6 @@
       "moreRows": "{count, plural, other {#줄 더 있어요}}. 전부 보려면 파일을 저장하세요.",
       "other": "이 파일은 그 파일을 여는 앱에서 열려요. 저장해 주세요."
     },
-    "meetingOn": "클론 회의 중",
     "chatAnswering": "클론이 여기서 답하는 중",
     "search": "검색",
     "fold": "사이드바 접기",

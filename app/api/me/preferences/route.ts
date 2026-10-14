@@ -28,7 +28,6 @@ const Body = z.object({
       to: z.number().int().min(0).max(23),
     })
     .optional(),
-  meetings: z.boolean().optional(),
   webChat: z.boolean().optional(),
 });
 

@@ -44,10 +44,6 @@ export interface OfficeState {
   }[];
   /** Questions about requests that wait for the person, by id; the request goes on when answered. */
   later: Record<string, Later>;
-  /** Meetings of the clones brought back to the person: when, and the conversation it went into. */
-  meetings: Record<string, { at: string; chat?: string }>;
-  /** The day (YYYY-MM-DD, the person's own) this clone last opened the scheduled standup. */
-  standup?: string;
   /** The conversation here that what the person says on the team server's page goes into. */
   ownChat?: string;
   /** Signed words from the page already acted on, by nonce, so none runs twice (own-chat.ts). */
@@ -122,10 +118,6 @@ export async function loadState(): Promise<OfficeState> {
       approvals: parsed.approvals ?? {},
       outcomes: Array.isArray(parsed.outcomes) ? parsed.outcomes : [],
       later: parsed.later ?? {},
-      meetings: parsed.meetings ?? {},
-      ...(typeof parsed.standup === "string"
-        ? { standup: parsed.standup }
-        : {}),
       // the team server page's conversation, and the signed words already acted on (own-chat.ts)
       ...(typeof parsed.ownChat === "string"
         ? { ownChat: parsed.ownChat }
@@ -148,19 +140,18 @@ export async function loadState(): Promise<OfficeState> {
       approvals: {},
       outcomes: [],
       later: {},
-      meetings: {},
     };
   }
 }
 
-/** How long what was done for a request or a meeting is kept once nothing waits on it. */
+/** How long what was done for a request is kept once nothing waits on it. */
 const KEEP_DAYS = 120;
 /** Requests sent from conversations remembered, the latest (they carry no date). */
 const KEEP_SENT = 2000;
 
 /**
  * The state without what no longer matters, so the file read and written on every change stays
- * small after years of requests: old requests nothing waits on, old meetings, the oldest sent.
+ * small after years of requests: old requests nothing waits on, the oldest sent.
  */
 export function trimmed(state: OfficeState, now = Date.now()): OfficeState {
   const before = now - KEEP_DAYS * 24 * 60 * 60 * 1000;
@@ -175,8 +166,6 @@ export function trimmed(state: OfficeState, now = Date.now()): OfficeState {
       !waited.has(id)
     )
       delete state.handled[id];
-  for (const [id, entry] of Object.entries(state.meetings))
-    if (old(entry.at)) delete state.meetings[id];
   const sent = Object.keys(state.sent);
   for (const id of sent.slice(0, Math.max(0, sent.length - KEEP_SENT)))
     delete state.sent[id];

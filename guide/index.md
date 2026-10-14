@@ -36,8 +36,7 @@ Two things hold everywhere:
 - **The column on the left** is always there. At its top, **New chat** (새 대화, ⇧⌘O) and **Search**
   (검색, ⌘K: one box that finds a conversation, a request or a colleague, opens a place or a part of
   Settings, or asks the clone what was typed with ⌘↵); then the four places: **Home** (홈),
-  **Requests** (부탁, with how many are open), **Office** (오피스, which says when the clones are
-  meeting) and **Your clone** (내 클론, with how far it has read while it reads); the place open is
+  **Requests** (부탁, with how many are open), **Office** (오피스) and **Your clone** (내 클론, with how far it has read while it reads); the place open is
   the shaded row. **To decide** (정할 것) appears below them only when something waits on them, one
   line each: the face of the clone that asked, with a red dot, the question, and how long it has
   waited; a click goes where it is answered. Then their conversations, under **Today**, **Yesterday**,
@@ -71,8 +70,8 @@ Two things hold everywhere:
   they leave the screen), so a stray tap is never a decision made in their name; meanwhile it no
   longer counts as waiting, and the keyboard moves on to the next question once it is sent; **Requests on their way** (오가는 부탁), those waiting on
   them first; and beside them, **Today** (오늘), the day in one panel: **What your clone did**
-  (클론이 한 일: whom it answered for them, meetings it brought back, flows it ran), **Still to
-  come** (남은 일정: the clones' standup, today's flows) and their **Colleagues** (동료). A part with
+  (클론이 한 일: whom it answered for them, flows it ran), **Still to
+  come** (남은 일정: today's flows) and their **Colleagues** (동료). A part with
   nothing in it says so in one line.
 - **Chat** (대화): the conversation with their clone, and the box, **Ask your clone anything**
   (클론에게 무엇이든 부탁해 보세요). A new chat starts with the clone's hello and things to try.

@@ -390,8 +390,6 @@ export function createOffice(
         add(th.x0, th.y0, th.x1, th.y1, 4, () =>
           lowTableSvg(th.x0, th.y0, th.x1, th.y1),
         );
-        // the reading corner's low table is where a meeting of the clones gathers
-        fl.meetAt = [(th.x0 + th.x1) / 2, (th.y0 + th.y1) / 2];
       } else if (th.kind === "plant")
         add(
           th.x - 2.4,
@@ -1301,162 +1299,6 @@ export function createOffice(
     setTimeout(() => g.remove(), 3600);
   }
 
-  // ---- a meeting of the clones: those in it gather round the reading corner's low table, each
-  // says its piece over its head as it comes in, and they go back to their desks once it is over
-  let meet = null;
-  /** Places round the low table for `n` mini-mes, on the side away from the shelf. */
-  function meetSeats(fl, n) {
-    const c = fl.meetAt;
-    if (!c) return [];
-    const out = [];
-    for (let i = 0; i < n; i++) {
-      const ring = Math.floor(i / 8),
-        inRing = Math.min(8, n - ring * 8),
-        a = -0.12 * Math.PI + (1.24 * Math.PI * ((i % 8) + 0.5)) / inRing;
-      out.push([
-        // wide enough apart that each face shows, drawn as large as clones are from afar
-        c[0] + Math.cos(a) * (17 + ring * 7),
-        c[1] + Math.sin(a) * (11 + ring * 6),
-      ]);
-    }
-    return out;
-  }
-  async function joinMeeting(p, seat, center) {
-    await until(() => !p.busy);
-    if (!meet?.open || !meet.members.has(p.id) || !here(p)) return;
-    p.busy = true;
-    p.doing = { kind: "meeting" };
-    meet.going.add(p.id);
-    try {
-      if (p.seated) await wait(200);
-      await walkTo(p, seat);
-      lookAt(p, { pos: center });
-      meet.at.add(p.id);
-      const said = meet.waiting.get(p.id);
-      if (said) {
-        meet.waiting.delete(p.id);
-        speak(p, said);
-      }
-      if (!meet.open) await leaveMeeting(p);
-    } catch (e) {
-      p.busy = false;
-      p.doing = null;
-      throw e;
-    }
-  }
-  async function leaveMeeting(p) {
-    if (p.doing?.kind !== "meeting") return;
-    try {
-      await wait(400 + Math.random() * 900);
-      await walkTo(p, p.desk.seat);
-      p.seated = true;
-      p.pos = [...p.desk.seat];
-      leap(p);
-    } finally {
-      p.busy = false;
-      p.doing = null;
-      p.bot.gaze = null;
-      settle(p);
-    }
-  }
-  /**
-   * One post said over its mini-me's head. The meeting has one floor: each waits for the one
-   * before to be read, as people take turns, and an answer looks at whom it answers.
-   */
-  function speak(p, post) {
-    const m = meet;
-    if (!m) return;
-    m.queue.push([p, post]);
-    if (!m.speaking)
-      spawn(async () => {
-        m.speaking = true;
-        try {
-          while (m.queue.length) {
-            const [who, said] = m.queue.shift();
-            const to = said.replyTo && m.posts.get(said.replyTo);
-            const other = to && people.get(to.from);
-            if (other && other !== who && here(other)) lookAt(who, other);
-            leap(who);
-            const ms = 5500 + Math.min(4500, said.text.length * 28);
-            say(who, clip(said.text, 96), ms, "say meet");
-            await wait(ms - 400);
-          }
-        } finally {
-          m.speaking = false;
-        }
-      });
-  }
-  /** Brings the floor in line with the office's meeting: who gathers, who speaks, when they go back. */
-  function syncMeeting(m) {
-    if (!m) {
-      if (meet?.open) endMeeting();
-      meet = null;
-      return;
-    }
-    if (!meet || meet.id !== m.id) {
-      if (meet?.open) endMeeting();
-      // what was said before this view saw the meeting is not said again, but its last words are
-      const before = new Set(m.posts.slice(0, -1).map((post) => post.id));
-      meet = {
-        id: m.id,
-        open: false,
-        members: new Set(m.members),
-        going: new Set(),
-        at: new Set(),
-        said: before,
-        waiting: new Map(),
-        posts: new Map(),
-        queue: [],
-        speaking: false,
-      };
-    }
-    for (const post of m.posts) meet.posts.set(post.id, post);
-    if (m.state === "open" && !meet.open && plan) {
-      meet.open = true;
-      const fl = floors[plan.index],
-        center = fl.meetAt,
-        gathering = m.members
-          .map((id) => people.get(id))
-          .filter(
-            (p) =>
-              p &&
-              p.present &&
-              p.floor === plan.index &&
-              !(p.mine && m.mineOut),
-          ),
-        seats = meetSeats(fl, gathering.length);
-      if (center)
-        gathering.forEach((p, i) =>
-          spawn(() => joinMeeting(p, seats[i], center)),
-        );
-    }
-    for (const post of m.posts) {
-      if (meet.said.has(post.id)) continue;
-      meet.said.add(post.id);
-      const p = people.get(post.from);
-      if (!p || !post.text.trim() || !here(p)) continue;
-      // one still on its way says it once it sits down
-      if (meet.going.has(p.id) && !meet.at.has(p.id))
-        meet.waiting.set(p.id, post);
-      else speak(p, post);
-    }
-    if (m.state === "closed" && meet.open) endMeeting();
-  }
-  function endMeeting() {
-    const m = meet;
-    if (!m) return;
-    m.open = false;
-    // everyone stays until the last word is read, then goes back to their desk
-    spawn(async () => {
-      await until(() => !m.speaking && !m.queue.length);
-      await wait(1200);
-      for (const id of m.at) {
-        const p = people.get(id);
-        if (p) spawn(() => leaveMeeting(p));
-      }
-    });
-  }
-
   // ---- camera
   function screenBounds(bx) {
     let a0 = Infinity,
@@ -1701,15 +1543,13 @@ export function createOffice(
       now =
         d && (d.kind === "ask" || d.kind === "answer")
           ? W.plate.goingTo(d.who.name)
-          : d?.kind === "meeting"
-            ? W.meeting.on
-            : p.taskFull
-              ? W.panel.workingOn(p.taskFull)
-              : p.waitOn
-                ? p.waitOnMe
-                  ? W.panel.waitingForYou
-                  : W.panel.waitingFor(p.waitOn)
-                : "";
+          : p.taskFull
+            ? W.panel.workingOn(p.taskFull)
+            : p.waitOn
+              ? p.waitOnMe
+                ? W.panel.waitingForYou
+                : W.panel.waitingFor(p.waitOn)
+              : "";
     body += `<div class="pblock"><small>${esc(W.panel.now)}</small><ul class="rows">${now ? `<li><i></i>${esc(now)}</li>` : `<li class="none">${esc(p.status === "offline" ? W.panel.notIn(p.name) : p.status === "away" ? statusWord(p) : W.panel.free)}</li>`}</ul></div>`;
     if (!p.mine && p.ways?.length)
       body += `<div class="pblock"><small>${esc(W.panel.ways(p.name))}</small><ul class="rows">${p.ways
@@ -2134,7 +1974,6 @@ export function createOffice(
     const d = p.doing;
     if (d && (d.kind === "ask" || d.kind === "answer"))
       return [W.plate.goingTo(d.who.name), "on"];
-    if (d?.kind === "meeting") return [W.meeting.on, "on"];
     if (p.mood === "working")
       return [
         p.workFrom === me?.id
@@ -2172,17 +2011,10 @@ export function createOffice(
         }
         if (simT > b.until) unsay(p);
         const show =
-          onFloor &&
-          inside &&
-          // a meeting is watched from afar too: what the clones say there always shows
-          (detail ||
-            p.mine ||
-            b.kind.includes("mine") ||
-            b.kind.includes("meet"));
+          onFloor && inside && (detail || p.mine || b.kind.includes("mine"));
         if (b.el.hidden === show) b.el.hidden = !show;
         saying = show && bubbles.has(p.id);
-        // what is said in a meeting by the nook leans away from the wall, off the clock
-        const anchor = b.kind.includes("meet") ? 0.16 : 0.5;
+        const anchor = 0.5;
         // kept inside the room's edges, its tail still over the head that says it
         const left = hx - b.w * anchor,
           shift =
@@ -2204,15 +2036,11 @@ export function createOffice(
           }
         }
       }
-      // round the meeting's table the clones are named in the meeting's own column: tags there would pile up
-      const meeting = p.doing?.kind === "meeting" && !!meet?.at.has(p.id);
       const showPlate =
         (onFloor || (home && !p.present)) &&
         inside &&
         !saying &&
-        (hover === p.id ||
-          focus === p ||
-          (!meeting && (near || p.mine || asking(p))));
+        (hover === p.id || focus === p || near || p.mine || asking(p));
       if (!showPlate) {
         if (!p.plate.hidden) p.plate.hidden = true;
         continue;
@@ -2749,8 +2577,6 @@ export function createOffice(
         next.requests.map((r) => [r.id, r.state + (r.held ? "+" : "")]),
       );
       reset(roster);
-      meet = null;
-      syncMeeting(next.meeting);
       return;
     }
     const animate = !!before && inView && opened && !REDUCED;
@@ -2772,7 +2598,6 @@ export function createOffice(
         queue(r.id, () => answerBack(r));
     }
     applyData();
-    syncMeeting(next.meeting);
     if (lobbyOn) fillCard();
   }
   function tick(dt, now) {

@@ -113,7 +113,7 @@ When something takes several steps, the clone works through it the way Claude Co
   after its conversation was last used; nothing else is touched.
 
 **Last 30 days** (지난 30일), at the end of Settings › AI model, says what the clone used its AI
-for: their conversations, colleagues' requests and meetings, flows, and learning how they work,
+for: their conversations, colleagues' requests, flows, and learning how they work,
 each with how often, how many failed, the tokens, and how much of what was sent the vendor read
 from its cache (cheaper and faster than sending it anew; the clone keeps what it sends first the
 same from call to call so that share stays high). With Claude Code it also gives what that

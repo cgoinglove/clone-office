@@ -4,7 +4,7 @@
 // (Paperclip's rule for every screen; ChatGPT, Grok and Lindy left a chat as home for named lists).
 // One box asks the clone (or a colleague, by name); then what to decide now, answered in place;
 // the requests on their way, by whose turn it is; what the clone did for them today; and today's
-// meeting, flows and colleagues. While the app is new, its first steps come before all that.
+// flows and colleagues. While the app is new, its first steps come before all that.
 
 import {
   ArrowDownLeft,
@@ -14,7 +14,6 @@ import {
   Check,
   ChevronRight,
   Link2,
-  MessagesSquare,
   Repeat,
   UserPlus,
 } from "lucide-react";
@@ -56,7 +55,6 @@ function startOfDay(now = new Date()): number {
 export function HomeScreen() {
   const t = useTranslations("shell.home");
   const tOffice = useTranslations("office");
-  const tMeeting = useTranslations("shell.meeting");
   const format = useFormatter();
   const router = useRouter();
   const app = useApp();
@@ -107,8 +105,7 @@ export function HomeScreen() {
         b.status.timestamp.localeCompare(a.status.timestamp),
     );
 
-  // What the clone did for the person today: answers it gave colleagues, meetings it brought back,
-  // flows it ran.
+  // What the clone did for the person today: answers it gave colleagues, flows it ran.
   const did: {
     key: string;
     at: string;
@@ -139,23 +136,6 @@ export function HomeScreen() {
         detail: askedText(task),
         href: `/requests/${encodeURIComponent(task.id)}`,
       })),
-    ...(data?.meetings ?? [])
-      .filter(
-        (meeting) =>
-          meeting.state === "closed" &&
-          today(meeting.closed) &&
-          Boolean(me) &&
-          meeting.members.includes(me as string) &&
-          data?.meetingChats?.[meeting.id],
-      )
-      .map((meeting) => ({
-        key: `m:${meeting.id}`,
-        at: meeting.closed ?? meeting.created,
-        icon: <MessagesSquare className="size-4 text-muted-foreground" />,
-        text: t("meetingBack", { kind: tMeeting(meeting.kind) }),
-        detail: meeting.kind === "question" ? meeting.topic : undefined,
-        href: `/chat?c=${encodeURIComponent(data?.meetingChats?.[meeting.id] ?? "")}`,
-      })),
     ...flows
       .filter((flow) => today(flow.last?.at))
       .map((flow) => ({
@@ -171,12 +151,7 @@ export function HomeScreen() {
       })),
   ].sort((a, b) => b.at.localeCompare(a.at));
 
-  // Today, still to come: the standup if the office holds one today, and the flows due.
-  const standup = data?.standup;
-  const standupToday =
-    standup && standup.days.includes(new Date().getDay())
-      ? standup.time
-      : undefined;
+  // Today, still to come: the flows due.
   const coming = flows
     .filter(
       (flow) =>
@@ -402,15 +377,6 @@ export function HomeScreen() {
 
             <Group title={t("coming")}>
               <ul className="flex flex-col gap-2">
-                {standupToday && (
-                  <li className="flex items-center gap-2.5 text-[13.5px]">
-                    <MessagesSquare className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="flex-1">{t("standupAt")}</span>
-                    <span className="text-xs text-muted-foreground tabular-nums">
-                      {standupToday}
-                    </span>
-                  </li>
-                )}
                 {coming.map((flow) => (
                   <li
                     key={flow.id}
@@ -423,7 +389,7 @@ export function HomeScreen() {
                     </span>
                   </li>
                 ))}
-                {!standupToday && !coming.length && (
+                {!coming.length && (
                   <li>
                     <button
                       type="button"

@@ -66,7 +66,7 @@ test("the check holds back what none of the answer's sources show, where sources
     checkPrompt("Q", "A", [], false, undefined, [], [], false, []),
     /named nowhere its facts came from/,
   );
-  // A meeting's line asks for no sources: nothing is held back for that.
+  // Asked with no list of sources at all, nothing is held back for that.
   assert.doesNotMatch(checkPrompt("Q", "A"), /none of the places above show/);
 });
 

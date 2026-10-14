@@ -151,7 +151,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   after the columns ChatGPT, Claude and Linear keep: New chat and Search (⌘K,
   `command-palette.tsx`: conversations, requests, colleagues, places and Settings' sections, or
   asking the clone what was typed), then the four places, Home, Requests, Office and Your clone,
-  each saying what goes on there (open requests, a meeting of the clones, the reading) and marked
+  each saying what goes on there (open requests, the reading) and marked
   as Thursday marks its own, lucide's line icons, the open one by its row
   (`features/brand/nav-icons.tsx`); **To decide** (정할 것, 10-10, the user found "your turn"
   unclear) when something waits (`your-turn.ts`: questions about colleagues' requests, live at the
@@ -180,7 +180,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   decide now answered in place, the choices of equal weight, an answer kept on its row with Undo
   before it goes and a tap just after the rows moved not taken
   (`turn-rows.tsx`, shared with the office's board, a pill on a phone), the requests on their way, and beside them the
-  day in one panel: what the clone did, today's standup and flows, and colleagues; an empty part is
+  day in one panel: what the clone did, today's flows, and colleagues; an empty part is
   one line, never an empty box); `/chat` (`chat-screen.tsx`: one
   conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's hello and things to try
   when it is new, helpers under the box that start a sentence, and on a wide screen the office
@@ -189,8 +189,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   `/requests/[id]` (`request-screen.tsx`: the clones' exchange, the person's turn answered in
   place, held with Undo as Home's rows hold it, `turn-rows.tsx` `PendingAnswer`, files, the
   colleague); `/office` (`office-screen.tsx`: the floor, its lobby once a day,
-  with the person's turn laid over it to answer there, and the clones' meeting beside it while one
-  goes on, round by round, started from its header: `meeting.tsx`); `/clone` (`clone-screen.tsx`: what it
+  with the person's turn laid over it to answer there); `/clone` (`clone-screen.tsx`: what it
   knows, the requests it takes, flows, and what it did in their name any day, `activity-list.tsx`
   from `server/activity.ts`'s `logs/activity.jsonl`: answers sent and how, held back, requests sent,
   "from now on" made or taken back, flows run). `parts.tsx` holds the screens' own marks (`PhaseChip`,
@@ -235,8 +234,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   asked), where new kinds of request start, when kept questions come (`batchHours`), learning after
   each conversation (`review.ts` skips when off), the lobby, background work on the brain's lighter
   model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), quiet
-  hours for the phone (`quietFor`), and taking part in the office's meetings of the clones
-  (`meetings`). Every default keeps the app as careful as before.
+  hours for the phone (`quietFor`). Every default keeps the app as careful as before.
 - `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded,update,skills}`, which
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
@@ -416,18 +414,16 @@ These words help discussion. They do not mandate separate services, tables or UI
   member's token asks that clone (`SendMessage`, waiting for the answer or not; `GetTask`,
   `ListTasks`, `CancelTask`; a message without a task id goes on with the request still open in its
   contextId, as Hermes Agent's a2a tools go on; checked with the official `a2a-sdk` and with Hermes
-  Agent's own tools). Meetings are the clones talking together (`POST /meetings`, a standup or a
-  question to everyone): the members present take part, each says one thing a round or passes, a
-  round ends when all have spoken or after four minutes (`advanceMeetings`, on a timer in
-  `server.ts`), and everyone in the office reads it; a scheduled standup is held once a day. Members
+  Agent's own tools). The clones' meetings were taken out on 10-14 (the user: for fun, not why
+  anyone uses it); the relay's `meetings` tables stay as made, what they held let go after its 60
+  days by `tidy`, and a `meeting` event still in an inbox is passed over. Members
   share skills with their office (`skills.ts`, `/skills`): one per name per office, its files whole
   as base64 (256 KB, 50 files, 200 skills an office), its description from SKILL.md and its hash
   made by the relay; only the one who shared it updates it, and they or an owner of the office take
   it out; members only. It keeps
-  only cards and requests, their files, meetings (60 days), shared skills, and a few settings an office shares
+  only cards and requests, their files, shared skills, and a few settings an office shares
   (`/settings/:name`: the OAuth client a vendor wants registered once for the team,
-  `connector:<vendor>`, and the standup's days, time and zone, `meeting:standup`, which any member
-  sets and all read), and team keys (`team-ai.ts`: one API key per vendor the office shares, team
+  `connector:<vendor>`, which any member sets and all read), and team keys (`team-ai.ts`: one API key per vendor the office shares, team
   billing; sealed with `lib/seal.ts` under RELAY_ENCRYPTION_KEY or a `secret.key` kept apart (the
   PGlite folder's, or `RELAY_KEY_DIR`'s for Postgres), never in the database alone, its fingerprint
   kept so a relay with another key stops instead of making new secrets (`sealKeyMatches`;
@@ -497,7 +493,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   `joinAs`), and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:
-  `Relay.joinAs` moves it, or takes over the clone that computer joined with an invite when `connect` sends its token, whose requests, files, meetings and shares then go under the one place, `moveMember`). `people-pages.ts` is the invite's sign-up page, sign-in (Google first
+  `Relay.joinAs` moves it, or takes over the clone that computer joined with an invite when `connect` sends its token, whose requests, files and shares then go under the one place, `moveMember`). `people-pages.ts` is the invite's sign-up page, sign-in (Google first
   where it is on, as a link, since the pages' forms post only to the server), one's own page with
   the line to run, the people in the office and how one signs in, and the admin's sign-in settings
   (`adminPage`), plain HTML with no scripts and the app's mark (the signed-in tabs alone load this
@@ -573,15 +569,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   here (`state.json` `ownChat`, made when first needed, `ownConversation`), its questions go to the page as buttons (`wordAsk`) and a choice
   there answers them (`gate/answer.ts` `answerChoice`), and its answer, or a code the page words,
   goes back once done. `invited.ts` keeps an invite the launcher was given (`settings.json` `invite`) until joining or
-  opening an office uses it. `meeting.ts` is this clone in a meeting: in each round it says one thing
-  for its person or passes, found first in their own records (`conversation_search` since the day
-  before; a session with `audience: "colleagues"`, so the tool server leaves the person's office and
-  flows out, as when answering a colleague), then looked at once more as an answer is (`check.ts`):
-  what that holds back is not said. Once it is over, it tells its person only what matters to them,
-  in a conversation of the meeting's own with what was said (`state.json` `meetings`). It takes part
-  only when the person turned it on (`preferences.meetings`, off at first; starting a meeting turns
-  it on), else it passes at once; the worker opens the standup at the office's time
-  (`standupDue`). The office's work starts with the server (`office/boot.ts`
+  opening an office uses it. The office's work starts with the server (`office/boot.ts`
   from `instrumentation.ts`: the office open here, and the loop that answers colleagues), and
   again whenever a page asks about the office.
 - `features/office/room/`: the office floor, from the confirmed design (`docs/office-room.local.d/`,
@@ -598,9 +586,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   coming in or going home through the lift, one at work, one asking its person; no tea runs, no
   vacuum, no hearts or smiles, and the office opens as it is, everyone in already seated. Each
   clone is named over its head with what it is on (`plateOf`; at an empty desk, whose it is), all
-  of them once the floor is near enough to read. A meeting of the clones (`RoomData.meeting`)
-  gathers its members round the reading nook's low table, where they take turns, what each said
-  over its head, and go back once the last word is read; `example` (the first steps) opens with
+  of them once the floor is near enough to read; `example` (the first steps) opens with
   everyone seated and named, the desks framed close, without the clock; `setInset` keeps room at
   the sides for what the page lays over it (a panel at the right that ends partway down lets the
   floor pass beneath it, `clearOf`), `onPanel` and `closePanel` let the page's own panel and the

@@ -20,7 +20,8 @@ import { TITLE_MAX } from "./limits.ts";
  * "office": an answer from a colleague's mini-me to a request sent from this conversation.
  * "told": what the mini-me answered a colleague for the person, told to them ("do it and tell me").
  * "flow": one of the person's flows ran (its name); the mini-me's answer follows.
- * "meeting": what a clone said in a meeting of the office's clones, its person's name first.
+ * "meeting": what a clone said in a meeting of the office's clones, its person's name first (kept
+ * in conversations from when the clones held meetings, and shown as it was).
  * "fallback": the model the person picked was busy, and the answer came from the fallback model,
  * named here (brain/fallback.ts).
  */

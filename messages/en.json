@@ -75,10 +75,6 @@
     "brain-local-refused": "The model server on this computer refused the call. Check its settings (a key it asks for, the model loaded) and try again.",
     "brain-chatgpt-signed-out": "Your clone uses your ChatGPT plan: sign in again under AI model.",
     "chatgpt-unreachable": "OpenAI could not be reached. Try again in a moment.",
-    "meeting-alone": "Nobody else is in the office now, so there is no one to meet.",
-    "meeting-closed": "That meeting is already over.",
-    "meeting-said": "Your clone already spoke in this round.",
-    "meeting-not-in": "Your clone isn't in that meeting.",
     "claude-signed-out": "Claude Code is not signed in. Open a terminal, run claude, and sign in; then try again.",
     "brain-no-answer": "The model did not answer. What it said is below; try again, or pick another model.",
     "brain-team-no-office": "Your clone uses the office's team key, but it isn't in an office now. Join again, or pick another way under AI model.",
@@ -642,9 +638,6 @@
         "yourFloor": "your floor",
         "label": "Your company's building, with your floor marked"
       },
-      "meeting": {
-        "on": "In the meeting"
-      },
       "clock": {
         "in": "In"
       }
@@ -1143,19 +1136,6 @@
         "takeHint": "Only browsers you pair here can talk to it. What you say there passes through the team server and is kept there a day at most; the whole conversation stays on this computer.",
         "browsers": "{count, plural, =0 {No browser paired yet: the team server's page shows how.} one {# browser paired} other {# browsers paired}}",
         "forget": "Unpair all"
-      },
-      "meetings": {
-        "title": "Meetings of the clones",
-        "hint": "Your clone meets the others' at the standup, or when one asks everyone a question. It says what you worked on, found in your own records, and brings back only what matters to you.",
-        "take": "Let my clone take part",
-        "takeHint": "What it says goes to everyone in the office. Starting a meeting yourself turns this on.",
-        "daily": "Daily standup",
-        "dailyHint": "For the whole office: on these days, at this time, the clones in the office meet once.",
-        "time": "Time",
-        "save": "Save",
-        "none": "No daily standup",
-        "set": "On {days} at {time}",
-        "remove": "Stop the daily standup"
       }
     },
     "requests": {
@@ -1242,7 +1222,7 @@
       "none": "Nothing yet.",
       "groups": {
         "conversations": "Your conversations",
-        "colleagues": "Colleagues' requests and meetings",
+        "colleagues": "Colleagues' requests",
         "flows": "Flows",
         "learning": "Learning how you work",
         "other": "Other"
@@ -1457,8 +1437,7 @@
       "flows": "Today's flows",
       "all": "All",
       "noFlows": "Nothing scheduled today. Make one",
-      "flowStarter": "Every weekday at 9am, ",
-      "meeting": "Meeting · round {round} of {rounds}"
+      "flowStarter": "Every weekday at 9am, "
     },
     "request": {
       "loading": "Loading…",
@@ -1485,33 +1464,6 @@
       "themselves": "{name}",
       "selfWaiting": "{name} wrote again. Answer it yourself:",
       "waitsFor": "Waiting for {name} to answer."
-    },
-    "meeting": {
-      "standup": "Standup",
-      "question": "Question to everyone",
-      "start": "Start the standup",
-      "ask": "Ask everyone",
-      "askPlaceholder": "What should everyone's clones answer?",
-      "askSend": "Ask",
-      "on": "Going on · round {round} of {rounds}",
-      "over": "Over · {time}",
-      "roundStandup1": "Round 1 · what they did, what's next, what they need",
-      "roundStandup2": "Round 2 · only what touches their own work",
-      "roundQuestion1": "Round 1 · answers",
-      "roundQuestion2": "Round 2 · follow-ups",
-      "asks": "{name}'s clone asks",
-      "cloneOf": "{name}'s clone",
-      "yours": "Your clone",
-      "to": "to {name}",
-      "passed": "Nothing to add: {names}",
-      "waiting": "Waiting for {count, plural, one {# clone} other {# clones}}",
-      "nothingYet": "The clones are looking through their people's records…",
-      "back": "What came back to you",
-      "sittingOut": "Your clone is sitting this one out.",
-      "letIn": "Let it take part",
-      "latest": "Last meeting",
-      "close": "Close",
-      "hint": "The clones speak from their people's own records, one thing a round. Afterwards each clone tells its person only what matters to them."
     },
     "home": {
       "hello": {
@@ -1549,12 +1501,10 @@
       "linkStarter": "Make a link to ask someone: ",
       "did": "What your clone did today",
       "answered": "Answered {name}",
-      "meetingBack": "{kind}: what came back to you",
       "flowRan": "Ran “{name}”",
       "flowFailed": "“{name}” did not finish",
       "didEmpty": "Nothing yet today. When a colleague asks you something, your clone answers first, and it shows up here.",
       "today": "Today",
-      "standupAt": "The clones' standup",
       "nothingToday": "Nothing set for today. Try a flow: “every weekday at 9, catch me up”.",
       "flowStarter": "Every weekday at 9, tell me briefly what is waiting on me",
       "in": "In",
@@ -1597,7 +1547,6 @@
       "moreRows": "{count, plural, one {# more row} other {# more rows}}: save the file to see them all.",
       "other": "This kind of file opens in its own app: save it."
     },
-    "meetingOn": "Clones meeting",
     "chatAnswering": "Your clone is answering here",
     "search": "Search",
     "fold": "Hide sidebar",

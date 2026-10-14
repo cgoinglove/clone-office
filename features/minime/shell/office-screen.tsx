@@ -2,11 +2,9 @@
 
 // The office, as its own screen: the drawing fills it, its lobby once a day as the person clocks
 // in. What waits on the person hangs over it as the office's own board, and the simple ones are
-// answered right there (yes or no, allow or not); anything longer opens where it belongs. The
-// clones' meetings start from its header; while one goes on, the clones gather on the floor and
-// what they say is read beside it.
+// answered right there (yes or no, allow or not); anything longer opens where it belongs.
 
-import { ChevronDown, ChevronUp, MessagesSquare, UserPlus } from "lucide-react";
+import { ChevronDown, ChevronUp, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,7 +14,6 @@ import { OfficeRoom } from "@/features/office/room/office-room";
 import { useSlashKey } from "@/hooks/use-hotkey";
 import { cn } from "@/lib/utils";
 import { useApp } from "./app-state";
-import { MeetingPanel, MeetingStart, useMeetings } from "./meeting";
 import { OfficeTrouble } from "./office-trouble";
 import { TurnRows } from "./turn-rows";
 import { type TurnItem, turnHref } from "./your-turn";
@@ -53,18 +50,15 @@ function useSmall() {
   return small;
 }
 
-/** The board's width, which the office keeps clear at its right; the meeting's, at its left. */
+/** The board's width, which the office keeps clear at its right. */
 const BOARD = 340;
-const MEETING = 340;
 
 export function OfficeScreen() {
   const t = useTranslations("shell.office");
-  const tMeeting = useTranslations("shell.meeting");
   const app = useApp();
   const router = useRouter();
   const { office, preferences } = app;
   const data = office.office;
-  const members = data?.members ?? [];
   const turns = app.turns;
   // the floor and its lobby count what waits as the column does
   const waits = app.toDecide.length;
@@ -85,19 +79,6 @@ export function OfficeScreen() {
   const moving = (data?.tasks ?? []).filter((task) =>
     ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
   ).length;
-  // A meeting going on (or just over) shows beside the floor; the last one, when asked for.
-  const { current, latest } = useMeetings();
-  const [closedId, setClosedId] = useState<string>();
-  const [showLatest, setShowLatest] = useState(false);
-  const shown =
-    current && current.id !== closedId
-      ? current
-      : showLatest
-        ? latest
-        : undefined;
-  // the meeting's buttons keep their room through the lobby and the ride (unseen, out of reach), so
-  // the header does not grow as the doors open and the floor is not framed again
-  const meets = app.joined && members.length > 1;
   // how far down the board over the office reaches: the floor may pass beneath it
   const [boardHeight, setBoardHeight] = useState(0);
   // the office's own panel about one person and the board take turns at the right
@@ -146,26 +127,6 @@ export function OfficeScreen() {
           </p>
         </div>
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
-          {meets && (
-            <span className={cn("contents", atLobby && "invisible")}>
-              <MeetingStart
-                onStarted={() => {
-                  setClosedId(undefined);
-                  setShowLatest(false);
-                }}
-              />
-              {latest && !shown && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowLatest(true)}
-                >
-                  <MessagesSquare />
-                  {tMeeting("latest")}
-                </Button>
-              )}
-            </span>
-          )}
           <Button
             variant="secondary"
             size="sm"
@@ -189,7 +150,6 @@ export function OfficeScreen() {
             insetHeight={small ? 0 : boardHeight}
             turnShown
             onPanel={setPanelOpen}
-            insetLeft={shown && meets && !atLobby ? MEETING + 32 : 0}
             onEnter={() => {
               rememberClockIn();
               // the lobby's button goes with the lobby: the keyboard lands on the office
@@ -247,16 +207,6 @@ export function OfficeScreen() {
             <span className="tabular-nums">{app.toDecide.length}</span>
             <ChevronDown className="size-3.5" />
           </button>
-        )}
-        {shown && meets && !atLobby && (
-          <MeetingPanel
-            meeting={shown}
-            width={MEETING}
-            onClose={() => {
-              setClosedId(shown.id);
-              setShowLatest(false);
-            }}
-          />
         )}
       </div>
     </div>

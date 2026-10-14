@@ -75,10 +75,6 @@
     "brain-local-refused": "这台电脑上的模型服务器拒绝了请求。请检查它的设置（它要求的密钥、已加载的模型）后再试。",
     "brain-chatgpt-signed-out": "你的分身用的是你的 ChatGPT 套餐：请在“AI 模型”里重新登录。",
     "chatgpt-unreachable": "连不上 OpenAI。请稍后再试。",
-    "meeting-alone": "现在办公室里没有别人，开不了会。",
-    "meeting-closed": "这场会议已经结束了。",
-    "meeting-said": "你的分身这一轮已经发过言了。",
-    "meeting-not-in": "你的分身不在这场会议里。",
     "claude-signed-out": "Claude Code 还没登录。请打开终端，运行 claude 并登录，然后重试。",
     "brain-no-answer": "模型没有回答。它的输出在下面；请重试，或者换一个模型。",
     "brain-team-no-office": "你的分身用的是办公室的团队密钥，但它现在不在办公室里。请重新加入，或者在“AI 模型”里换一种方式。",
@@ -642,9 +638,6 @@
         "yourFloor": "你的楼层",
         "label": "公司大楼，标出了你所在的楼层"
       },
-      "meeting": {
-        "on": "会议中"
-      },
       "clock": {
         "in": "在岗"
       }
@@ -1143,19 +1136,6 @@
         "takeHint": "只有你在这里配对的浏览器才能和它对话。在那里说的话会经过团队服务器，最多保留一天；完整对话留在这台电脑上。",
         "browsers": "{count, plural, =0 {还没有配对的浏览器：在团队服务器的页面上可以配对。} other {已配对 # 个浏览器}}",
         "forget": "全部取消配对"
-      },
-      "meetings": {
-        "title": "分身们的会议",
-        "hint": "你的分身会在晨会上，或有人向所有人提问时，和其他分身开会。它从你自己的记录里找出你做了什么来说，只把和你有关的带回来。",
-        "take": "让我的分身参加",
-        "takeHint": "它说的话，办公室里的所有人都看得到。你自己发起会议时，这项会自动打开。",
-        "daily": "每日晨会",
-        "dailyHint": "对整个办公室生效：在这些日子的这个时间，办公室里的分身会开一次会。",
-        "time": "时间",
-        "save": "保存",
-        "none": "没有每日晨会",
-        "set": "{days} {time}",
-        "remove": "停止每日晨会"
       }
     },
     "requests": {
@@ -1242,7 +1222,7 @@
       "none": "还没有。",
       "groups": {
         "conversations": "和你的对话",
-        "colleagues": "同事的请求和会议",
+        "colleagues": "同事的请求",
         "flows": "自动流程",
         "learning": "学习你的工作方式",
         "other": "其他"
@@ -1457,8 +1437,7 @@
       "flows": "今天的自动流程",
       "all": "全部",
       "noFlows": "今天没有安排。新建一个",
-      "flowStarter": "每个工作日上午 9 点，",
-      "meeting": "会议 · 第 {round}/{rounds} 轮"
+      "flowStarter": "每个工作日上午 9 点，"
     },
     "request": {
       "loading": "加载中…",
@@ -1485,33 +1464,6 @@
       "themselves": "{name}",
       "selfWaiting": "{name}又发来了消息。请你亲自回答：",
       "waitsFor": "等待{name}回答。"
-    },
-    "meeting": {
-      "standup": "晨会",
-      "question": "向所有人提问",
-      "start": "开始晨会",
-      "ask": "问所有人",
-      "askPlaceholder": "要所有人的分身回答什么？",
-      "askSend": "提问",
-      "on": "进行中 · 第 {round}/{rounds} 轮",
-      "over": "已结束 · {time}",
-      "roundStandup1": "第 1 轮 · 做了什么、接下来做什么、需要什么",
-      "roundStandup2": "第 2 轮 · 只说和自己工作有关的",
-      "roundQuestion1": "第 1 轮 · 回答",
-      "roundQuestion2": "第 2 轮 · 追问",
-      "asks": "{name}的分身问",
-      "cloneOf": "{name}的分身",
-      "yours": "你的分身",
-      "to": "对{name}",
-      "passed": "没有补充：{names}",
-      "waiting": "{count, plural, other {等待 # 个分身}}",
-      "nothingYet": "分身们正在翻看各自本人的记录…",
-      "back": "带回给你的",
-      "sittingOut": "你的分身这次不参加。",
-      "letIn": "让它参加",
-      "latest": "上次会议",
-      "close": "关闭",
-      "hint": "分身们根据各自本人的记录发言，每轮说一件事。会后，每个分身只把和本人有关的事告诉本人。"
     },
     "home": {
       "hello": {
@@ -1549,12 +1501,10 @@
       "linkStarter": "生成一个链接去问别人：",
       "did": "今天你的分身做了什么",
       "answered": "回答了{name}",
-      "meetingBack": "{kind}：带回给你的",
       "flowRan": "运行了“{name}”",
       "flowFailed": "“{name}”没有完成",
       "didEmpty": "今天还没有。同事问你事情时，你的分身会先回答，并显示在这里。",
       "today": "今天",
-      "standupAt": "分身们的晨会",
       "nothingToday": "今天没有安排。试试自动流程：“每个工作日 9 点，帮我汇总一下”。",
       "flowStarter": "每个工作日 9 点，简单告诉我有什么在等我处理",
       "in": "在岗",
@@ -1597,7 +1547,6 @@
       "moreRows": "{count, plural, other {还有 # 行}}，保存文件即可全部查看。",
       "other": "这种文件需要用它自己的应用打开，请先保存。"
     },
-    "meetingOn": "分身会议中",
     "chatAnswering": "你的分身正在这里回答",
     "search": "搜索",
     "fold": "收起侧栏",

@@ -21,10 +21,6 @@
 //   GET  /tasks/:id     -> {task}                       one request, to the one asking or asked
 //   GET  /tasks         -> {tasks}                      one's requests, sent and received
 //   GET  /inbox?after=N -> {events, next}               waits up to 25 s for what concerns one
-//   POST /meetings      {kind, topic?, language?, scheduled?} -> {meeting}   the clones talk together
-//   GET  /meetings      -> {meetings}                   the office's latest meetings
-//   GET  /meetings/:id  -> {meeting}                    one, with what was said
-//   POST /meetings/:id/posts {round, text?, replyTo?} -> {meeting}   one's clone says its piece
 //   GET  /a2a/:member/.well-known/agent-card.json      a member as an A2A agent (a2a.ts)
 //   POST /a2a/:member   A2A v1.0 JSON-RPC: SendMessage, GetTask, ListTasks, CancelTask
 //   POST /links         {name, text} -> {task, link}    a request to someone without a mini-me
@@ -1900,48 +1896,6 @@ export function relayHandler(
         await relay.ownSettle(await member(request), ownSettled[1]);
         return send(200, { ok: true });
       }
-      if (request.method === "POST" && path === "/meetings") {
-        const me = await member(request);
-        const input = await body(request);
-        return send(200, {
-          meeting: await relay.openMeeting(me, {
-            kind: String(input.kind ?? ""),
-            topic: typeof input.topic === "string" ? input.topic : undefined,
-            language:
-              typeof input.language === "string" ? input.language : undefined,
-            scheduled: input.scheduled === true,
-          }),
-        });
-      }
-      if (request.method === "GET" && path === "/meetings") {
-        const me = await member(request);
-        // A round whose time is up ends here too, where no timer runs.
-        await relay.advanceMeetings();
-        return send(200, {
-          meetings: await relay.meetings(
-            me,
-            Number(url.searchParams.get("limit") ?? 10) || 10,
-          ),
-        });
-      }
-      const meetingPath = /^\/meetings\/([\w-]+)(\/posts)?$/.exec(path);
-      if (meetingPath && request.method === "GET" && !meetingPath[2]) {
-        const me = await member(request);
-        await relay.advanceMeetings();
-        return send(200, { meeting: await relay.meeting(me, meetingPath[1]) });
-      }
-      if (meetingPath && request.method === "POST" && meetingPath[2]) {
-        const me = await member(request);
-        const input = await body(request);
-        return send(200, {
-          meeting: await relay.postToMeeting(me, meetingPath[1], {
-            round: Number(input.round),
-            text: typeof input.text === "string" ? input.text : undefined,
-            replyTo:
-              typeof input.replyTo === "string" ? input.replyTo : undefined,
-          }),
-        });
-      }
       const a2a =
         /^\/a2a\/([\w-]{1,64})(\/\.well-known\/agent(?:-card)?\.json)?\/?$/.exec(
           path,
@@ -2068,10 +2022,9 @@ export function relayHandler(
       let setting: RegExpExecArray | null = null;
       if (path.startsWith("/settings/"))
         try {
-          setting =
-            /^\/settings\/(connector:[a-z0-9-]{1,40}|meeting:standup)$/.exec(
-              decodeURIComponent(path),
-            );
+          setting = /^\/settings\/(connector:[a-z0-9-]{1,40})$/.exec(
+            decodeURIComponent(path),
+          );
         } catch {
           setting = null;
         }

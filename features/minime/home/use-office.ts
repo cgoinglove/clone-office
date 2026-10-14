@@ -77,38 +77,6 @@ export interface Member {
   seen: string;
 }
 
-/** A meeting of the office's clones: the standup, or one clone's question to everyone. */
-export interface Meeting {
-  id: string;
-  kind: "standup" | "question";
-  topic: string;
-  language: string;
-  openedBy: string;
-  members: string[];
-  round: number;
-  rounds: number;
-  state: "open" | "closed";
-  created: string;
-  roundEnds: string;
-  closed?: string;
-  /** What each clone said in each round; an empty text is a pass. Round 0 is the question asked. */
-  posts: {
-    id: string;
-    from: string;
-    round: number;
-    replyTo?: string;
-    text: string;
-    at: string;
-  }[];
-}
-
-/** When the office's clones hold their standup, in the time zone of who set it. */
-export interface StandupTime {
-  days: number[];
-  time: string;
-  zone: string;
-}
-
 export interface Office {
   joined: boolean;
   /** An invite the launcher kept for joining, while the person is in no office. */
@@ -125,16 +93,8 @@ export interface Office {
   members?: Member[];
   tasks?: Task[];
   asks?: { id: string; chat?: string; ask: GateAsk }[];
-  /** The office's latest meetings of the clones, newest first. */
-  meetings?: Meeting[];
-  /** The standup's time, if the office set one. */
-  standup?: StandupTime | null;
-  /** The person lets their clone take part in meetings. */
-  meetingsOn?: boolean;
   /** How many browsers the person paired to talk to their clone from the team server's page. */
   webKeys?: number;
-  /** The conversation each meeting was brought back into, by meeting. */
-  meetingChats?: Record<string, string>;
   /** Questions about requests kept for the person: answering one lets the request go on. */
   later?: {
     id: string;
@@ -265,14 +225,11 @@ export function useOffice(
     onNews,
     profile,
     batchHours,
-    meetingsOn,
   }: {
     onNews?: () => void;
     profile?: Profile;
     /** The day's moments questions kept for later come at (Settings › Preferences). */
     batchHours?: number[];
-    /** The person lets their clone take part in meetings (unknown until read). */
-    meetingsOn?: boolean;
   } = {},
 ) {
   const tAsk = useTranslations("ask");
@@ -438,14 +395,7 @@ export function useOffice(
   const room: RoomData | null = useMemo(() => {
     void minute;
     if (!office) return null;
-    if (office.joined)
-      return roomData(
-        office,
-        due.length,
-        line,
-        Date.now(),
-        meetingsOn === false,
-      );
+    if (office.joined) return roomData(office, due.length, line, Date.now());
     // In no office yet: the person's own desk, and their clone at it.
     return {
       people: [
@@ -460,16 +410,7 @@ export function useOffice(
       requests: [],
       waiting: { count: due.length, ...(line ? { text: line } : {}) },
     };
-  }, [
-    office,
-    due.length,
-    line,
-    profile?.name,
-    profile?.role,
-    you,
-    meetingsOn,
-    minute,
-  ]);
+  }, [office, due.length, line, profile?.name, profile?.role, you, minute]);
 
   const members = useMemo(() => office?.members ?? [], [office]);
   const names = useMemo(

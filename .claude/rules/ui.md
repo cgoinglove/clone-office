@@ -59,8 +59,7 @@ the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`
 office's live column `office-rail.tsx`; the turns are `home/chat-view.tsx` `TurnRow`, the clone's
 to-do list one card above its answer, `TodoCard`, and a helper or a move to the backup model a
 quiet line), `/requests` and
-`/requests/[id]`, `/office` (the floor with the person's turn over it at the right, and the
-clones' meeting at the left while one goes on, `meeting.tsx`, started from its header), `/clone` (what it knows,
+`/requests/[id]`, `/office` (the floor with the person's turn over it at the right), `/clone` (what it knows,
 the requests it takes, flows), and `/files/<path>` (what the clone made in its workspace, opened by the
 link in its answer, `file-screen.tsx`; a page runs in a frame without the app's origin). Home, Requests and Office open with one line when the office cannot be reached, saying what to
 do (`office-trouble.tsx`), so an empty office never passes for a quiet one. What the screens share

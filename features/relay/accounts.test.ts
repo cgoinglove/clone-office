@@ -2275,10 +2275,6 @@ test("connecting a computer whose clone joined with an invite makes that clone t
       gil.id,
       "Is the deck done?",
     );
-    const met = await relay.openMeeting(
-      await relay.memberByToken(fayClone.token),
-      { kind: "standup" },
-    );
     const fay = await accounts.signUp(office.key, {
       name: "Fay",
       email: "fay@example.com",
@@ -2318,9 +2314,6 @@ test("connecting a computer whose clone joined with an invite makes that clone t
       (await relay.taskFor(gil, itAsked.id)).metadata.from,
       onWeb.id,
     );
-    const meeting = await relay.meeting(fayNow, met.id);
-    assert.equal(meeting.openedBy, onWeb.id);
-    assert.ok(!meeting.members.includes(fayClone.id));
   } finally {
     await db.close();
   }

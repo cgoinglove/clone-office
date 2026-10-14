@@ -236,8 +236,6 @@ export function officeRoomHtml(input: {
 
 /** How many of a viewer's requests the room looks at, as the app's look (GET /tasks) does. */
 const TASKS = 50;
-/** The office's latest meetings, as the app asks for them. */
-const MEETINGS = 5;
 
 /**
  * The room's files and the look for the office's page. Answers whether it handled the request;
@@ -322,13 +320,9 @@ export async function roomRoutes(input: {
   const viewer = mine
     ? { id: mine.id, office, card: mine.card, user: person.id }
     : undefined;
-  const [members, tasks, meetings] = await Promise.all([
+  const [members, tasks] = await Promise.all([
     relay.members(office),
     viewer ? relay.tasks(viewer, TASKS) : Promise.resolve([]),
-    relay.meetings(
-      viewer ?? { id: "", office, card: { name: "", description: "" } },
-      MEETINGS,
-    ),
   ]);
   // Someone on the web has no clone to ask them: what was asked of them and not yet answered waits
   // on them, as their page counts it. A clone's questions wait on its own computer.
@@ -343,12 +337,8 @@ export async function roomRoutes(input: {
   send(
     200,
     roomData(
-      { me: mine ? { id: mine.id } : undefined, members, tasks, meetings },
+      { me: mine ? { id: mine.id } : undefined, members, tasks },
       waiting,
-      undefined,
-      Date.now(),
-      // with no clone, nothing of theirs walks to a meeting
-      Boolean(mine?.web),
     ),
   );
   return true;

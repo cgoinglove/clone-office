@@ -206,8 +206,8 @@ export interface SessionOptions {
    */
   standing?: { allow: string[]; deny: string[] };
   /**
-   * What the session writes goes to colleagues (a meeting of the clones): the person's own office
-   * and flows stay out of reach, as when answering a colleague's request.
+   * What the session writes goes to colleagues: the person's own office and flows stay out of
+   * reach, as when answering a colleague's request.
    */
   audience?: "colleagues";
   /**
@@ -260,7 +260,6 @@ export type SessionPurpose =
   | "check"
   | "card"
   | "flow"
-  | "meeting"
   /** One word asked of the brain the person picked, to see that it answers (`probe.ts`). */
   | "probe"
   /** A piece of work a session sent off to a fresh session of its own (`subtask.ts`). */

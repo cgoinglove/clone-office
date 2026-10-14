@@ -75,10 +75,6 @@
     "brain-local-refused": "El servidor de modelos de esta computadora rechazó la llamada. Revisa su configuración (una clave que pida, el modelo cargado) y vuelve a intentarlo.",
     "brain-chatgpt-signed-out": "Tu clon usa tu plan de ChatGPT: vuelve a iniciar sesión en Modelo de IA.",
     "chatgpt-unreachable": "No se pudo llegar a OpenAI. Inténtalo de nuevo en un momento.",
-    "meeting-alone": "Ahora no hay nadie más en la oficina, así que no hay con quién reunirse.",
-    "meeting-closed": "Esa reunión ya terminó.",
-    "meeting-said": "Tu clon ya habló en esta ronda.",
-    "meeting-not-in": "Tu clon no está en esa reunión.",
     "claude-signed-out": "Claude Code no tiene una sesión iniciada. Abre una terminal, ejecuta claude e inicia sesión; luego inténtalo de nuevo.",
     "brain-no-answer": "El modelo no respondió. Lo que dijo está abajo; inténtalo de nuevo o elige otro modelo.",
     "brain-team-no-office": "Tu clon usa la clave del equipo de la oficina, pero ahora no está en ninguna oficina. Vuelve a unirte o elige otra opción en Modelo de IA.",
@@ -642,9 +638,6 @@
         "yourFloor": "tu piso",
         "label": "El edificio de tu empresa, con tu planta marcada"
       },
-      "meeting": {
-        "on": "En la reunión"
-      },
       "clock": {
         "in": "Aquí"
       }
@@ -1143,19 +1136,6 @@
         "takeHint": "Solo los navegadores que emparejes aquí pueden hablar con él. Lo que digas allí pasa por el servidor del equipo y se guarda allí un día como máximo; la conversación completa queda en esta computadora.",
         "browsers": "{count, plural, =0 {Aún no hay navegadores emparejados: la página del servidor del equipo muestra cómo.} one {# navegador emparejado} other {# navegadores emparejados}}",
         "forget": "Desemparejar todos"
-      },
-      "meetings": {
-        "title": "Reuniones de los clones",
-        "hint": "Tu clon se reúne con los de los demás en la reunión diaria, o cuando alguien les hace una pregunta a todos. Cuenta en qué trabajaste, a partir de tus propios registros, y te trae solo lo que te importa.",
-        "take": "Dejar que mi clon participe",
-        "takeHint": "Lo que dice llega a todos en la oficina. Si inicias tú una reunión, esto se activa.",
-        "daily": "Reunión diaria",
-        "dailyHint": "Para toda la oficina: estos días, a esta hora, los clones de la oficina se reúnen una vez.",
-        "time": "Hora",
-        "save": "Guardar",
-        "none": "Sin reunión diaria",
-        "set": "{days} a las {time}",
-        "remove": "Quitar la reunión diaria"
       }
     },
     "requests": {
@@ -1242,7 +1222,7 @@
       "none": "Nada todavía.",
       "groups": {
         "conversations": "Tus conversaciones",
-        "colleagues": "Solicitudes y reuniones de compañeros",
+        "colleagues": "Solicitudes de compañeros",
         "flows": "Rutinas",
         "learning": "Aprender cómo trabajas",
         "other": "Otros"
@@ -1457,8 +1437,7 @@
       "flows": "Rutinas de hoy",
       "all": "Todas",
       "noFlows": "Nada programado para hoy. Crea una",
-      "flowStarter": "De lunes a viernes a las 9, ",
-      "meeting": "Reunión · ronda {round} de {rounds}"
+      "flowStarter": "De lunes a viernes a las 9, "
     },
     "request": {
       "loading": "Cargando…",
@@ -1485,33 +1464,6 @@
       "themselves": "{name}",
       "selfWaiting": "{name} volvió a escribir. Respóndele tú:",
       "waitsFor": "Esperando a que {name} responda."
-    },
-    "meeting": {
-      "standup": "Reunión diaria",
-      "question": "Pregunta para todos",
-      "start": "Empezar la reunión diaria",
-      "ask": "Preguntar a todos",
-      "askPlaceholder": "¿Qué deberían responder los clones de todos?",
-      "askSend": "Preguntar",
-      "on": "En curso · ronda {round} de {rounds}",
-      "over": "Terminó · {time}",
-      "roundStandup1": "Ronda 1 · qué hicieron, qué sigue, qué necesitan",
-      "roundStandup2": "Ronda 2 · solo lo que toca su propio trabajo",
-      "roundQuestion1": "Ronda 1 · respuestas",
-      "roundQuestion2": "Ronda 2 · seguimiento",
-      "asks": "El clon de {name} pregunta",
-      "cloneOf": "Clon de {name}",
-      "yours": "Tu clon",
-      "to": "para {name}",
-      "passed": "Nada que agregar: {names}",
-      "waiting": "Esperando a {count, plural, one {# clon} other {# clones}}",
-      "nothingYet": "Los clones están revisando los registros de sus personas…",
-      "back": "Lo que volvió para ti",
-      "sittingOut": "Tu clon no participa en esta.",
-      "letIn": "Dejar que participe",
-      "latest": "Última reunión",
-      "close": "Cerrar",
-      "hint": "Los clones hablan a partir de los registros de sus personas, una cosa por ronda. Después, cada clon le cuenta a su persona solo lo que le importa."
     },
     "home": {
       "hello": {
@@ -1549,12 +1501,10 @@
       "linkStarter": "Crea un enlace para preguntarle a alguien: ",
       "did": "Lo que hizo tu clon hoy",
       "answered": "Le respondió a {name}",
-      "meetingBack": "{kind}: lo que volvió para ti",
       "flowRan": "Ejecutó “{name}”",
       "flowFailed": "“{name}” no terminó",
       "didEmpty": "Nada todavía hoy. Cuando un colega te pregunte algo, tu clon responde primero y aparece aquí.",
       "today": "Hoy",
-      "standupAt": "Reunión diaria de los clones",
       "nothingToday": "Nada programado para hoy. Prueba una rutina: “de lunes a viernes a las 9, ponme al día”.",
       "flowStarter": "De lunes a viernes a las 9, dime en pocas palabras qué me está esperando",
       "in": "En línea",
@@ -1597,7 +1547,6 @@
       "moreRows": "{count, plural, one {# fila más} other {# filas más}}: guarda el archivo para verlas todas.",
       "other": "Este tipo de archivo se abre en su propia app: guárdalo."
     },
-    "meetingOn": "Reunión de clones",
     "chatAnswering": "Tu clon está respondiendo aquí",
     "search": "Buscar",
     "fold": "Ocultar barra lateral",

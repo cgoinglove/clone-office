@@ -8,8 +8,8 @@
 // the office gives a clone asking, and how long it has waited; their conversations, only once
 // there are some, under headings by day and a page at a time (recent-chats.tsx); and at the foot
 // the person: their name and office status, opening their menu (status, the office and where it
-// is, inviting, shortcuts), with Settings beside it. A place says what goes on there (the requests open, a meeting under way,
-// the reading), never a line telling the person what the column is. The column folds away
+// is, inviting, shortcuts), with Settings beside it. A place says what goes on there (the requests
+// open, the reading), never a line telling the person what the column is. The column folds away
 // (⌘\), and on a narrow window it is a drawer (app-shell.tsx).
 
 import {
@@ -34,7 +34,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ShinyText } from "@/components/ui/shiny-text";
 import { say } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
 import { APP_NAME } from "@/features/brand/logo";
@@ -112,7 +111,6 @@ export function Sidebar({
   const open = (data?.tasks ?? []).filter((task) =>
     ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
   ).length;
-  const meeting = (data?.meetings ?? []).some((item) => item.state === "open");
   const { indexOf } = office;
   const active = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
@@ -126,8 +124,6 @@ export function Sidebar({
           {open}
         </span>
       );
-    if (key === "office" && meeting)
-      return <ShinyText text={t("meetingOn")} className="text-[11.5px]" />;
     if (key === "clone" && reading)
       return (
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground tabular-nums">
