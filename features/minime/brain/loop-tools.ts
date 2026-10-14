@@ -57,8 +57,14 @@ export function fullPath(path: unknown): string {
   return isAbsolute(given) ? resolve(given) : resolve(homedir(), given);
 }
 
+/** On a disk that does not tell letters' cases apart (macOS, Windows), nor does a rule. */
+const folded = (path: string) =>
+  process.platform === "darwin" || process.platform === "win32"
+    ? path.toLowerCase()
+    : path;
+
 const within = (path: string, folder: string) => {
-  const rel = relative(folder, path);
+  const rel = relative(folded(folder), folded(path));
   return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
 };
 
@@ -69,7 +75,8 @@ const within = (path: string, folder: string) => {
  */
 export function realPath(path: string): string {
   try {
-    return realpathSync(path);
+    // the system's own: the disk's spelling of each name, whatever case it was asked in
+    return realpathSync.native(path);
   } catch {
     const parent = dirname(path);
     return parent === path ? path : join(realPath(parent), basename(path));
@@ -131,7 +138,21 @@ export function keptOut(
   const target = targetOf(tool, input);
   if (!target) return false;
   const excludes = loadExcludes();
-  return isExcluded(target, excludes) || isExcluded(realPath(target), excludes);
+  if (isExcluded(target, excludes)) return true;
+  // as they really are on both sides: a folder kept out by a link's name, a path by its real one
+  return isExcluded(realPath(target), realExcludes(excludes));
+}
+
+/** The folders kept out as paths, where they really lead; names stay names. */
+function realExcludes(excludes: string[]): string[] {
+  return excludes.flatMap((pattern) => {
+    if (!pattern.includes("/") && !pattern.includes("\\")) return [pattern];
+    const full = pattern.startsWith("~")
+      ? join(homedir(), pattern.slice(1))
+      : pattern;
+    const real = realPath(full);
+    return real === full ? [pattern] : [pattern, real];
+  });
 }
 
 // ---- Reading the person's files and the web, as Claude Code's own tools do ----

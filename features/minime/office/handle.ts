@@ -711,7 +711,8 @@ async function answer(options: {
       // "Ask me first": the person sees the answer before it goes, whatever the check finds,
       // unless they already gave it themselves while it was made. Files always, and an answer
       // their step-in could not be worked into.
-      approve: approving || files.length > 0 || showFirst,
+      // And always an answer that goes to a Slack channel, which everyone there reads.
+      approve: approving || files.length > 0 || showFirst || inChannel,
       from: from?.name,
       byPerson: first?.metadata.by === "person",
       files,
@@ -729,7 +730,7 @@ async function answer(options: {
       ...forKind.filter((flow) => outcome.about?.includes(flow.id)),
     ];
     trust = heldTo(kind.trust, followed);
-    approving = trust === "ask" && said.length === 0;
+    approving = (trust === "ask" && said.length === 0) || inChannel;
     for (const flow of followed)
       await changeFlow(flow.id, (f) => ({
         ...f,

@@ -7,6 +7,7 @@ import { memoryDir, notesDir } from "../brain/session.ts";
 import { atomicWrite, readText } from "../memory/files.ts";
 import { NoteStore, WORK_MAP } from "../memory/notes.ts";
 import { MemoryStore } from "../memory/store.ts";
+import { keepWorkFolders } from "../office/work-folders.ts";
 import { type Known, withoutKnown } from "./known.ts";
 import { learnPath, MAP_LINE } from "./learn.ts";
 
@@ -44,6 +45,8 @@ export async function forgetKnown(item: Known): Promise<boolean> {
       ]);
       if (!done.success) return false;
     }
+    // and what a colleague's request may read with it (office/work-folders.ts)
+    await keepWorkFolders([], [item.path]).catch(() => {});
   } else {
     // Only a page the reading writes, by its own path: nothing else in the notes is reached here.
     const { path } = item;

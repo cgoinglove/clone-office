@@ -48,7 +48,7 @@ import { LEAVE_OUT_TOOL, leaveOut } from "../server/leave-out.ts";
 import { appDir, minimeHome } from "../server/paths.ts";
 import { GUIDE_TOOL, readGuide } from "./guide.ts";
 import { callHubTool, SKILL_INSTALL_TOOL, SKILLS_FIND_TOOL } from "./hub.ts";
-import { NOTE_TOOLS, NoteStore, WORK_MAP } from "./notes.ts";
+import { NOTE_TOOLS, NoteStore, normalizePath, WORK_MAP } from "./notes.ts";
 import { type Actor, SKILL_TOOLS, SkillStore } from "./skills.ts";
 import { MemoryStore } from "./store.ts";
 import { callMemoryTool, MEMORY_TOOL } from "./tool.ts";
@@ -217,7 +217,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       if (
         answering &&
         (operations as { path?: unknown }[]).some(
-          (op) => String(op?.path ?? "").replace(/\.md$/, "") === WORK_MAP,
+          (op) => normalizePath(String(op?.path ?? "")).path === WORK_MAP,
         )
       )
         return text(

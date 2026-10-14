@@ -83,7 +83,9 @@ function allowed(
   clone: string,
   excludes: string[],
 ): boolean {
-  if (!inside(path, home) || UNRULY.test(path)) return false;
+  // the system's own separator is no character of a name
+  const plain = sep === "\\" ? path.replaceAll("\\", "/") : path;
+  if (!inside(path, home) || UNRULY.test(plain)) return false;
   const parts = relative(folded(home), folded(path)).split(sep).filter(Boolean);
   if (!parts.length) return false;
   if (parts.some((part) => part.startsWith(".") || NEVER.has(part)))
@@ -131,12 +133,26 @@ async function readSettings(): Promise<Record<string, unknown>> {
   }
 }
 
-/** Keeps the map's folders as the person's own reading found them (learn.ts `keepMap`). */
-export async function keepWorkFolders(paths: string[]): Promise<void> {
+/**
+ * Keeps the folders a reading found (learn.ts `keepMap`), the newest first, with those earlier
+ * readings kept; `forget` takes one out again (learn/forget.ts), as the person's × does.
+ */
+export async function keepWorkFolders(
+  paths: string[],
+  forget: string[] = [],
+): Promise<void> {
   await withLock(minimeHome(), async () => {
     const settings = await readSettings();
+    const before = Array.isArray(settings.workFolders)
+      ? settings.workFolders.filter(
+          (path): path is string => typeof path === "string",
+        )
+      : [];
+    const next = [...new Set([...paths, ...before])]
+      .filter((path) => !forget.includes(path))
+      .slice(0, 60);
     await writeSettings(
-      `${JSON.stringify({ ...settings, workFolders: paths.slice(0, 60) }, null, 2)}\n`,
+      `${JSON.stringify({ ...settings, workFolders: next }, null, 2)}\n`,
     );
   });
 }

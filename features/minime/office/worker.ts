@@ -52,8 +52,6 @@ export function startOffice(gateUrl: string, language?: string): void {
   }
   const worker: Worker = { running: true, gateUrl, language, busy: new Set() };
   holder.__minimeOffice = worker;
-  // What changed in what a colleague's request may read, said once (announce.ts).
-  void announceColleagueReads().catch(() => {});
   // Once per process, however often the office is left and joined again.
   if (!holder.__minimeOfficeSignals) {
     holder.__minimeOfficeSignals = true;
@@ -116,6 +114,9 @@ function sleep(ms: number): Promise<void> {
 const RESUME_EVERY_MS = 5 * 60 * 1000;
 
 async function loop(worker: Worker): Promise<void> {
+  // What changed in what a colleague's request may read, said (and services connected before
+  // kept off) before any request is answered on this version (announce.ts).
+  await announceColleagueReads().catch(() => {});
   // Soon after starting, look again once: a process that was stopping may still have held a
   // request at the first look. Then every five minutes.
   let nextResume = 0;

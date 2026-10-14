@@ -341,8 +341,9 @@ an account but no computer connected is given a place on the web when they ask.
 The app reads only the messages that mention it and the ones written to it directly, never the rest
 of a channel. It does not answer in a channel shared with another company. A request asked in a
 channel carries that with it: the colleague's clone reads nothing alone for it (no work folders, no
-connected services), since everyone in the channel reads the answer, and the look before an answer
-leaves weighs that. An answer Slack refuses for a moment is posted on the next try; a request is
+connected services), and its person sees the answer before it is posted, since everyone in the
+channel reads it. Someone who sends the app wrong link codes five times waits an hour before it
+looks at another. An answer Slack refuses for a moment is posted on the next try; a request is
 followed in Slack for two weeks.
 
 ## Asking from Claude Code

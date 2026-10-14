@@ -464,9 +464,10 @@ export async function keepMap(
       : { action: "rewrite", path: WORK_MAP, summary, body, source },
   ]);
   if (!result.success) return [];
-  // The folders themselves, kept by code apart from the page: what a colleague's request may read
-  // (office/work-folders.ts), which no session's note can widen.
-  await keepWorkFolders([...kept.keys()]).catch(() => {});
+  // The folders themselves, kept by code apart from the page: what this reading found and what the
+  // person's earlier readings kept, never what the page gained since, which a session may write
+  // (office/work-folders.ts).
+  await keepWorkFolders(entries.map((entry) => entry.path)).catch(() => {});
   onEvent?.({ type: "note", changes: [WORK_MAP] } as SessionEvent);
   return [...kept].map(([path, about]) => ({ path, about }));
 }

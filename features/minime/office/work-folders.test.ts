@@ -138,8 +138,24 @@ test("the office tools an AI app runs keep the clone's list of secret files, and
       writeFileSync(join(home, file), "x");
     writeFileSync(join(clone, "secret.key"), "x");
     symlinkSync(join(clone, "secret.key"), join(home, "proj", "notes.md"));
+    mkdirSync(join(home, ".codex"));
+    writeFileSync(join(home, ".codex", "auth.json"), "x");
+    writeFileSync(join(home, ".zsh_history"), "x");
+    mkdirSync(join(home, "Library", "Application Support", "Claude"), {
+      recursive: true,
+    });
+    writeFileSync(
+      join(home, "Library", "Application Support", "Claude", "config.json"),
+      "x",
+    );
     const why = (file: string) =>
-      leaving.mayNotLeave(join(home, file), file, clone, ["client-*"]);
+      leaving.mayNotLeave(join(home, file), file, clone, ["client-*"], home);
+    for (const file of [
+      ".codex/auth.json",
+      ".zsh_history",
+      "Library/Application Support/Claude/config.json",
+    ])
+      assert.match((await why(file)) ?? "", /settings and sign-ins|keys/, file);
     assert.equal(await why("proj/plan.md"), undefined);
     assert.match((await why("proj/.env")) ?? "", /keys or passwords/);
     assert.match(
@@ -151,4 +167,19 @@ test("the office tools an AI app runs keep the clone's list of secret files, and
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
+});
+
+test("a folder kept out stays out whatever case it is asked in, where the disk ignores case", async () => {
+  const { isExcluded } = await import("../server/exclude.ts");
+  const out = isExcluded("/Users/a/Work/PRIVATE/plan.txt", [
+    "/Users/a/work/private",
+  ]);
+  assert.equal(
+    out,
+    process.platform === "darwin" || process.platform === "win32",
+  );
+  assert.ok(
+    isExcluded("/Users/a/work/private/plan.txt", ["/Users/a/work/private"]),
+  );
+  assert.ok(isExcluded("/Users/a/Client-X/plan.txt", ["client-*"]));
 });

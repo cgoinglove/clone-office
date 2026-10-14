@@ -69,8 +69,14 @@ const GONE = new Set([
   "thread_not_found",
   "message_not_found",
   "restricted_action",
+  "msg_too_long",
+  "invalid_arguments",
+  "no_text",
   ...REFUSED,
 ]);
+
+/** Wrong codes one Slack account may send in an hour before no more are looked at. */
+const CODE_TRIES = 5;
 
 /** The app as Slack makes it from this, with exactly what it uses. */
 export const SLACK_MANIFEST = {
@@ -93,6 +99,7 @@ export const SLACK_MANIFEST = {
         "app_mentions:read",
         "channels:read",
         "groups:read",
+        "mpim:read",
         "chat:write",
         "chat:write.customize",
         "im:history",
@@ -349,6 +356,8 @@ export class TeamSlack {
   private timer?: ReturnType<typeof setInterval>;
   private polling = false;
   private synced = 0;
+  /** Wrong codes each Slack account sent lately, so a code is never found by trying them all. */
+  private tries = new Map<string, number[]>();
 
   constructor(
     relay: Relay,
@@ -689,7 +698,14 @@ export class TeamSlack {
     // A code from one's page, sent directly: this Slack account is them from now on.
     const code = /^\s*(\d{6})\s*$/.exec(plainWords(text))?.[1];
     if (direct && code) {
+      const key = `${office}:${user}`;
+      const hour = Date.now() - 60 * 60 * 1000;
+      const wrong = (this.tries.get(key) ?? []).filter((at) => at > hour);
+      if (wrong.length >= CODE_TRIES) return reply(words(lang, "codeWrong"));
+      // counted before it is looked at, so codes sent all at once are counted all the same
+      this.tries.set(key, [...wrong, Date.now()]);
       const name = await this.takeCode(office, code, user, asker.name);
+      if (name) this.tries.delete(key);
       return reply(
         name ? words(lang, "linked", name) : words(lang, "codeWrong"),
       );
@@ -753,14 +769,18 @@ export class TeamSlack {
 
   /** Whether a channel is the workspace's own, not shared with another company; unsure is no. */
   private async ownChannel(link: Link, channel: string): Promise<boolean> {
-    try {
-      const { channel: found } = await this.call<{
-        channel?: { is_ext_shared?: boolean; is_shared?: boolean };
-      }>("conversations.info", { channel }, link.tokens.bot);
-      return Boolean(found) && !found?.is_ext_shared && !found?.is_shared;
-    } catch {
-      return false;
-    }
+    // asked twice before taking a moment's failure for no
+    for (let attempt = 0; attempt < 2; attempt++)
+      try {
+        const { channel: found } = await this.call<{
+          channel?: { is_ext_shared?: boolean; is_shared?: boolean };
+        }>("conversations.info", { channel }, link.tokens.bot);
+        return Boolean(found) && !found?.is_ext_shared && !found?.is_shared;
+      } catch (error) {
+        if (error instanceof SlackRefused) return false;
+        await sleep(500);
+      }
+    return false;
   }
 
   /** Sends the request and remembers the thread it is answered in. */
@@ -910,9 +930,10 @@ export class TeamSlack {
           ).toISOString(),
         ],
       );
-      // Only the offices this process holds a connection for, the oldest first, each its share.
+      // Only the offices this process holds a connection for, each its share, the newest first,
+      // so no office's many open requests keep another's answers waiting.
       const rows = await this.db.query<ThreadRow>(
-        "SELECT * FROM slack_threads WHERE NOT done AND office_id = ANY($1::text[]) ORDER BY created LIMIT 500",
+        "SELECT office_id, task_id, channel, thread_ts, asker, slack_user, lang, posted FROM (SELECT *, row_number() OVER (PARTITION BY office_id ORDER BY created DESC) AS n FROM slack_threads WHERE NOT done AND office_id = ANY($1::text[])) t WHERE n <= 50",
         [[...this.links.keys()]],
       );
       for (const row of rows) {

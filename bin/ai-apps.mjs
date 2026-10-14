@@ -112,19 +112,35 @@ function writeWhole(file, text) {
   renameSync(next, target);
 }
 
-/** Runs the claude command, which on Windows npm puts in as a .cmd only a shell starts. */
+/**
+ * Runs the claude command; on Windows through the shell, which finds it as installed (npm's
+ * claude.cmd, or the native claude.exe). What it said when it failed rides on the error.
+ */
 function claude(args) {
   const windows = process.platform === "win32";
   const quoted = (arg) => `"${String(arg).replace(/"/g, '""')}"`;
-  execFileSync(
-    windows ? "claude.cmd" : "claude",
-    windows ? args.map(quoted) : args,
-    {
-      stdio: "ignore",
-      timeout: 20_000,
-      shell: windows,
-    },
-  );
+  execFileSync("claude", windows ? args.map(quoted) : args, {
+    stdio: ["ignore", "pipe", "pipe"],
+    timeout: 20_000,
+    shell: windows,
+  });
+}
+
+/** Node on the PATH, for an app started inside the desktop app rather than by Node itself. */
+function nodeOnPath() {
+  try {
+    const found = execFileSync(
+      process.platform === "win32" ? "where" : "which",
+      ["node"],
+      { stdio: ["ignore", "pipe", "ignore"], timeout: 5000 },
+    )
+      .toString()
+      .split(/\r?\n/)[0]
+      .trim();
+    return found || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** The table Codex reads the server from, as a TOML section's header. */
@@ -157,6 +173,19 @@ export function withoutTomlServer(text) {
     else held = [];
   }
   return out.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+/** Whether a config.toml names the server some way other than its own table. */
+export function tomlOtherwise(text) {
+  let inServers = false;
+  for (const line of text.split("\n")) {
+    if (/^\s*\[/.test(line))
+      inServers = /^\s*\[\s*mcp_servers\s*\]\s*(#.*)?$/.test(line);
+    else if (/^\s*mcp_servers\s*\.\s*"?clone-office"?\s*[.=]/.test(line))
+      return true;
+    else if (inServers && /^\s*"?clone-office"?\s*[.=]/.test(line)) return true;
+  }
+  return false;
 }
 
 /** A TOML basic string: JSON's escapes, and the delete character too, which TOML forbids bare. */
@@ -242,17 +271,17 @@ export function serverEntry({ root, appHome }) {
     mkdirSync(dirname(file), { recursive: true });
     copyFileSync(bundled, file);
   }
+  // Inside the desktop app, the computer's own Node when it has one: the app's executable moves
+  // (an AppImage is mounted anew each time, a Mac app may run from where it was downloaded).
+  // Else the app itself as Node, an AppImage named where it lies.
+  const node = process.versions.electron ? nodeOnPath() : process.execPath;
   return {
-    // The desktop app's own executable as Node; an AppImage's from where it lies, not where it
-    // was mounted this time, which is gone once the app quits.
     command:
-      process.versions.electron && process.env.APPIMAGE
-        ? process.env.APPIMAGE
-        : process.execPath,
+      node ?? (process.env.APPIMAGE ? process.env.APPIMAGE : process.execPath),
     args: [file],
     env: {
       CLONE_OFFICE_HOME: appHome,
-      ...(process.versions.electron ? { ELECTRON_RUN_AS_NODE: "1" } : {}),
+      ...(node ? {} : { ELECTRON_RUN_AS_NODE: "1" }),
     },
   };
 }
@@ -286,8 +315,10 @@ export function addApp(
       ];
       try {
         claude(add);
-      } catch {
-        // there already: taken out only now, so a failure never leaves it with none
+      } catch (error) {
+        // there already: taken out only now and only for that, so a failure never leaves none
+        if (!/already exists/i.test(String(error?.stderr ?? error?.message)))
+          throw error;
         claude(["mcp", "remove", "--scope", "user", NAME]);
         claude(add);
       }
@@ -295,6 +326,9 @@ export function addApp(
     }
     if (id === "codex") {
       const text = existsSync(at.file) ? readFileSync(at.file, "utf8") : "";
+      // written another way (inline or dotted keys): left alone rather than doubled
+      if (tomlOtherwise(text))
+        return { ok: false, message: "config-unreadable" };
       const kept = withoutTomlServer(text).trimEnd();
       writeWhole(
         at.file,

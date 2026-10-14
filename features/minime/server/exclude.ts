@@ -47,16 +47,19 @@ export function isExcluded(
   patterns: readonly string[],
 ): boolean {
   if (!path || !patterns.length) return false;
-  const normalized = path.replaceAll("\\", "/");
+  // a disk that does not tell letters' cases apart keeps a folder out whatever case it is asked in
+  const fold = process.platform === "darwin" || process.platform === "win32";
+  const normalized = (fold ? path.toLowerCase() : path).replaceAll("\\", "/");
   const names = normalized.split("/").filter(Boolean);
   for (const raw of patterns) {
     const pattern = raw.trim().replaceAll("\\", "/");
     if (pattern.includes("/")) {
-      const base = (
+      const spelled = (
         pattern.startsWith("~")
           ? homedir().replaceAll(sep, "/") + pattern.slice(1)
           : pattern
       ).replace(/\/+$/, "");
+      const base = fold ? spelled.toLowerCase() : spelled;
       if (normalized === base || normalized.startsWith(`${base}/`)) return true;
       continue;
     }

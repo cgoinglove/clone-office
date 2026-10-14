@@ -324,6 +324,23 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
     await new Promise((resolve) => setTimeout(resolve, 100));
     assert.equal(slack.posted.length, before + 4);
 
+    // A code is never found by trying them all: after five wrong ones, even the right one is not
+    // looked at for an hour.
+    const calCode = await team.linkCode(office.id, cal.person.id);
+    const wrongCode = calCode === "999999" ? "999998" : "999999";
+    const tried = slack.posted.length;
+    for (let i = 0; i < 6; i++)
+      slack.event({
+        type: "message",
+        channel_type: "im",
+        user: "UCAL",
+        channel: "D2",
+        ts: `500.${i}`,
+        text: i < 5 ? wrongCode : calCode,
+      });
+    await until(() => slack.posted.length === tried + 6);
+    assert.equal(await team.linkedName(office.id, cal.person.id), undefined);
+
     // Another relay process on the same database follows what this one connected.
     const other = new TeamSlack(relay, db, key, {
       fetch: slack.fetch,
