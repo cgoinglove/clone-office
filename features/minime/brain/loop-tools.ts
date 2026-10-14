@@ -7,7 +7,6 @@
 
 import { createReadStream, realpathSync } from "node:fs";
 import {
-  glob,
   mkdir,
   open,
   readdir,
@@ -275,6 +274,36 @@ async function readLines(
   }`;
 }
 
+// A glob pattern (two stars for any folders, one for a name's part, braces for choices) as a regular
+// expression over a path with slashes.
+export function globPattern(glob: string): RegExp {
+  let out = "";
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === "*" && glob[i + 1] === "*") {
+      const slash = glob[i + 2] === "/";
+      out += slash ? "(?:.*/)?" : ".*";
+      i += slash ? 2 : 1;
+    } else if (c === "*") out += "[^/]*";
+    else if (c === "?") out += "[^/]";
+    else if (c === "{") {
+      const end = glob.indexOf("}", i);
+      if (end < 0) out += "\\{";
+      else {
+        out += `(?:${glob
+          .slice(i + 1, end)
+          .split(",")
+          .map((part) =>
+            part.replace(/[.+^${}()|[\]\\]/g, "\\$&").replaceAll("*", "[^/]*"),
+          )
+          .join("|")})`;
+        i = end;
+      }
+    } else out += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  }
+  return new RegExp(`^${out}$`);
+}
+
 async function globTool(
   input: Record<string, unknown>,
   context: LocalContext = { chars: READ_CHARS },
@@ -290,18 +319,38 @@ async function globTool(
     return "A pattern stays inside its folder: give the folder as path instead.";
   const inside = realPath(base);
   const excludes = loadExcludes();
+  const matches = globPattern(pattern);
   const found: string[] = [];
-  for await (const entry of glob(pattern, {
-    cwd: base,
-    exclude: (name: string) => SKIPPED.has(name.split(/[\\/]/).at(-1) ?? ""),
-  })) {
-    const path = join(base, String(entry));
-    const real = realPath(path);
-    if (!within(real, inside)) continue;
-    if (isExcluded(path, excludes) || isExcluded(real, excludes)) continue;
-    if (context.secretsOut && (secretFile(path) || secretFile(real))) continue;
-    found.push(path);
-    if (found.length >= FOUND_MAX) break;
+  // Walked by hand, a folder at a time, never through a link (Node's own glob is experimental,
+  // and on 22 it fails on a folder holding one); bounded as Grep's walk is.
+  const folders = [""];
+  const until = Date.now() + GREP_MS;
+  let seen = 0;
+  while (
+    folders.length &&
+    found.length < FOUND_MAX &&
+    seen < GREP_FILES &&
+    Date.now() < until
+  ) {
+    const rel = folders.shift() as string;
+    const entries = await readdir(join(base, rel), {
+      withFileTypes: true,
+    }).catch(() => []);
+    for (const entry of entries) {
+      seen++;
+      const relPath = rel ? `${rel}/${entry.name}` : entry.name;
+      const path = join(base, relPath);
+      if (SKIPPED.has(entry.name) || isExcluded(path, excludes)) continue;
+      if (entry.isDirectory()) folders.push(relPath);
+      if (!matches.test(relPath)) continue;
+      if (!entry.isDirectory() && !entry.isFile()) continue;
+      const real = realPath(path);
+      if (!within(real, inside) || isExcluded(real, excludes)) continue;
+      if (context.secretsOut && (secretFile(path) || secretFile(real)))
+        continue;
+      found.push(path);
+      if (found.length >= FOUND_MAX) break;
+    }
   }
   return found.length
     ? `${found.join("\n")}${found.length >= FOUND_MAX ? `\n… stopped at ${FOUND_MAX}` : ""}`

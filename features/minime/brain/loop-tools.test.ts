@@ -388,3 +388,16 @@ test("a link is read where it leads, and a pattern never leaves its folder", asy
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("a glob pattern reads as people write them", async () => {
+  const { globPattern } = await import("./loop-tools.ts");
+  const md = globPattern("**/*.md");
+  assert.ok(md.test("README.md"));
+  assert.ok(md.test("docs/a/b.md"));
+  assert.ok(!md.test("docs/a/b.mdx"));
+  const ts = globPattern("src/*.{ts,tsx}");
+  assert.ok(ts.test("src/app.tsx"));
+  assert.ok(!ts.test("src/deep/app.ts"));
+  assert.ok(globPattern("**/*").test("a/b/c"));
+  assert.ok(globPattern("file?.txt").test("file1.txt"));
+});
