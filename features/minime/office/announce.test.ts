@@ -29,9 +29,11 @@ test("what a colleague's request may now read is said once, and services connect
   );
   const chats = await listChats(10);
   assert.equal(chats.length, 1);
-  const said = (await readChat(chats[0].id)).messages.map((m) => m.text);
+  const said = ((await readChat(chats[0].id))?.messages ?? []).map(
+    (m) => m.text,
+  );
   assert.match(said.join("\n"), /read the folders where your work lives/);
   // Once only.
   await announceColleagueReads();
-  assert.equal((await readChat(chats[0].id)).messages.length, said.length);
+  assert.equal((await readChat(chats[0].id))?.messages.length, said.length);
 });
