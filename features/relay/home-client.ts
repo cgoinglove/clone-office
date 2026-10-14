@@ -28,6 +28,55 @@ for (const menu of document.querySelectorAll(".band details")) {
   });
 }
 
+// ---- the requests page: it looks again on its own while in sight, never under someone's typing ----
+const refresh = document.querySelector("[data-refresh]");
+if (refresh) {
+  let seen = "";
+  const fields = (main) =>
+    main.querySelectorAll("textarea, select, input:not([type=hidden])");
+  // what each field held as the page came, so what the person wrote or picked since is known
+  const first = new WeakMap();
+  const note = (main) => {
+    for (const field of fields(main)) first.set(field, field.value);
+  };
+  // Something being written or picked, or a control in use, waits for the person.
+  const busy = (main) =>
+    [...fields(main)].some(
+      (field) =>
+        field === document.activeElement || field.value !== first.get(field),
+    );
+  const again = async () => {
+    const main = document.querySelector("main");
+    if (!main || document.hidden || busy(main)) return;
+    const url = new URL(location.href);
+    url.searchParams.delete("done");
+    url.searchParams.delete("error");
+    const answer = await fetch(url, { headers: { accept: "text/html" } });
+    if (!answer.ok) return;
+    const html = await answer.text();
+    if (html === seen || busy(main)) return;
+    seen = html;
+    const page = new DOMParser().parseFromString(html, "text/html");
+    const fresh = page.querySelector("main");
+    if (!fresh) return;
+    main.innerHTML = fresh.innerHTML;
+    note(main);
+    for (const link of main.querySelectorAll("[data-refresh]")) link.hidden = true;
+    // the tab's count and the window's title say what waits, as a new load would
+    const tabs = document.querySelector(".tabs");
+    const freshTabs = page.querySelector(".tabs");
+    if (tabs && freshTabs) tabs.innerHTML = freshTabs.innerHTML;
+    if (page.title) document.title = page.title;
+  };
+  refresh.hidden = true;
+  const main = document.querySelector("main");
+  if (main) note(main);
+  setInterval(() => again().catch(() => {}), 15000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) again().catch(() => {});
+  });
+}
+
 // ---- talking to one's own clone ----
 const thread = document.getElementById("thread");
 const decide = document.getElementById("decide");

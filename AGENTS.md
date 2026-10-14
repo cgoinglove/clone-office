@@ -492,7 +492,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   link and stays its operator's; someone with no computer connected takes part on the web
   (`relay.ts` `joinWeb`, `members.on_web`: their place in the office with no clone, seen by clones
   as `onWeb`; `requestsPage` at `/home/requests`, what was asked of them answered there as their
-  own, asking a colleague, what they asked; a computer connected later takes the place over,
+  own, asking a colleague, what they asked, looked at again on its own while in sight and never
+  under what the person is writing, `home-client.ts`; a computer connected later takes the place over,
   `joinAs`), and makes a computer's setup code (hashed in
   `setup_codes`, ten minutes, used once). `POST /pair/claim` turns it into that computer's own
   member token under the person's account (`members.user_id`; one person, one clone:

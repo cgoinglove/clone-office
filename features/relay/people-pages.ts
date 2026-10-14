@@ -2542,7 +2542,7 @@ ${
 <h2>${say(lang, "youAsked")}</h2>
 ${sent ? `<ul class="rows requests">${sent}</ul>` : `<p class="note">${say(lang, "youAskedNone")}</p>`}
 </section>
-<p class="links"><a href="/home/requests?${at}">${say(lang, "refresh")}</a></p>`,
+<p class="links" data-refresh><a href="/home/requests?${at}">${say(lang, "refresh")}</a></p>`,
     undefined,
     input.band
       ? {
