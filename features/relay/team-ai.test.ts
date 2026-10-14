@@ -257,9 +257,8 @@ test("a relay given another sealing key than its database's is told, rather than
     const [kept] = await db.query<{ value: string }>(
       "SELECT value FROM server_settings WHERE name = 'seal-key'",
     );
-    assert.doesNotMatch(
-      kept.value,
-      new RegExp(other.toString("base64")),
+    assert.ok(
+      !kept.value.includes(other.toString("base64")),
       "never the key itself",
     );
   } finally {

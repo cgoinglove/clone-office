@@ -86,7 +86,11 @@ function allowed(
   // the system's own separator is no character of a name
   const plain = sep === "\\" ? path.replaceAll("\\", "/") : path;
   if (!inside(path, home) || UNRULY.test(plain)) return false;
-  const parts = relative(folded(home), folded(path)).split(sep).filter(Boolean);
+  // the names compared without case everywhere: "desktop" is Desktop on any disk that has one
+  const parts = relative(folded(home), folded(path))
+    .split(sep)
+    .filter(Boolean)
+    .map((part) => part.toLowerCase());
   if (!parts.length) return false;
   if (parts.some((part) => part.startsWith(".") || NEVER.has(part)))
     return false;
