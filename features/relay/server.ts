@@ -19,6 +19,7 @@ import { Accounts } from "./accounts.ts";
 import { openDatabase } from "./db.ts";
 import { relayHandler } from "./handler.ts";
 import { Relay } from "./relay.ts";
+import { TeamSlack } from "./slack.ts";
 import {
   DAILY_CALLS,
   relaySealKey,
@@ -85,6 +86,9 @@ const teamAi = new TeamAi(
   Number.isFinite(daily) && daily >= 0 ? daily : DAILY_CALLS,
 );
 const accounts = await Accounts.open(db, relay, { publicUrl, sealKey });
+// The team's Slack, for the offices whose owner connected one (slack.ts).
+const slack = new TeamSlack(relay, db, sealKey);
+await slack.start();
 
 const server = createServer(
   relayHandler(relay, {
@@ -95,6 +99,7 @@ const server = createServer(
     // Started by someone's app: the office lives on their computer, reached on their network.
     onComputer: process.env.RELAY_WITH_PARENT === "1",
     teamAi,
+    slack,
   }),
 );
 

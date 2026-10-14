@@ -418,7 +418,19 @@ These words help discussion. They do not mandate separate services, tables or UI
   contextId, as Hermes Agent's a2a tools go on; checked with the official `a2a-sdk` and with Hermes
   Agent's own tools). The clones' meetings were taken out on 10-14 (the user: for fun, not why
   anyone uses it); the relay's `meetings` tables stay as made, what they held let go after its 60
-  days by `tidy`, and a `meeting` event still in an inbox is passed over. Members
+  days by `tidy`, and a `meeting` event still in an inbox is passed over. The team's Slack
+  (`slack.ts`, `TeamSlack`, 10-14: people keep the chat they use): an owner connects one Slack app
+  per office on the Office tab (`SLACK_MANIFEST` filled into Slack's own create link; the bot and
+  app-level tokens checked with Slack, then sealed under the relay's key in `office_slack`; owners
+  only, `/home/office/slack`), and its Socket Mode connection hears only `app_mention` and
+  `message.im`: "@Clone Office @Minsu …" sends the request to that colleague as from the one who
+  asked, both found by the email their Slack account and their account here share (a web place made
+  for an account without one; the colleague by exact name failing that, never a guess), marked
+  `by: "person"` and told whether it was asked in a channel; `slack_threads` keeps each thread's
+  request and how many answers were posted, claimed in a transaction so relays sharing a database
+  post each once (`poll` every 3 s), named as the colleague's clone (`chat:write.customize`) in the
+  asker's Slack language; a mention later in the thread goes on with it (a new request in the same
+  contextId once it was done). Members
   share skills with their office (`skills.ts`, `/skills`): one per name per office, its files whole
   as base64 (256 KB, 50 files, 200 skills an office), its description from SKILL.md and its hash
   made by the relay; only the one who shared it updates it, and they or an owner of the office take

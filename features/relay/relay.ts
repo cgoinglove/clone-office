@@ -307,6 +307,13 @@ const MIGRATIONS: string[][] = [
   [
     "ALTER TABLE members ADD COLUMN own_keys JSONB NOT NULL DEFAULT '[]'::jsonb",
   ],
+  // The team's Slack (slack.ts): the app an owner connected, its tokens sealed, and each thread a
+  // request was asked in, with how many of its answers were posted there.
+  [
+    "CREATE TABLE office_slack (office_id TEXT PRIMARY KEY REFERENCES offices (id) ON DELETE CASCADE, sealed TEXT NOT NULL, team TEXT NOT NULL, bot_user TEXT NOT NULL, set_by TEXT NOT NULL, updated TIMESTAMPTZ NOT NULL)",
+    "CREATE TABLE slack_threads (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, channel TEXT NOT NULL, thread_ts TEXT NOT NULL, task_id TEXT NOT NULL, asker TEXT NOT NULL, slack_user TEXT NOT NULL, lang TEXT NOT NULL, posted INT NOT NULL DEFAULT 0, done BOOLEAN NOT NULL DEFAULT false, created TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, channel, thread_ts))",
+    "CREATE INDEX slack_threads_open ON slack_threads (done) WHERE NOT done",
+  ],
 ];
 
 /** How long an invite works. */

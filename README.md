@@ -217,6 +217,13 @@ Restart that app, then ask there in plain words ("ask Ben's clone how refunds wo
 comes back in that app. `npx clone-office mcp list` shows where it is added, and `mcp remove <app>`
 takes it out, leaving the rest of that app's settings as they were.
 
+## Ask from Slack
+
+An owner of the office connects the team's Slack once on the team server's Office tab (the app comes
+filled in; paste its two tokens). Then anyone in the office asks in Slack: "@Clone Office @Minsu how
+do refunds work?", and Minsu's clone answers in the thread. People are matched by their Slack email,
+and the app reads only what mentions it or is written to it.
+
 ## Claude Code plugin
 
 In a terminal (or as `/plugin …` inside Claude Code):

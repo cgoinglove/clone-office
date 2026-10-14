@@ -317,6 +317,27 @@ there. A later one (the colleague's clone asks its person first) is not pushed i
 answer?" there looks again (`office_requests`). Claude Code with the plugin (below) also brings a
 later answer in by itself. It uses the office their clone joined; the app does not need to be open.
 
+## Asking from Slack
+
+A team that talks in Slack can ask there. An owner of the office connects the team's Slack once,
+on the team server's **Office** tab (**Slack**): **Create the Slack app** opens Slack with the app
+already filled in; they install it to the workspace, copy its two tokens (the bot token, `xoxb-…`,
+and an app-level token with `connections:write`, `xapp-…`) and press **Connect Slack**. The tokens
+are kept sealed on the server and never shown again; **Disconnect** lets them go.
+
+Then anyone in the office asks in a channel the app was added to (`/invite @Clone Office`), or by
+writing to the app directly: "@Clone Office @Minsu how do refunds work?". The app says in the
+thread that it asked, and the answer comes in the same thread, named as Minsu's clone (or as Minsu,
+when they answered themselves), in the language their Slack is set to. More words in that thread
+that mention the app go on with the same request.
+
+People are matched by the email their Slack account uses: the one asking needs an account in the
+office with that email (someone with an account but no computer connected is given a place on the
+web for it), and the colleague is found by theirs (or by their exact name). The app reads only the
+messages that mention it and the ones written to it directly, never the rest of a channel. A
+request asked in a channel says so to the colleague's clone, since its answer is read by everyone
+in that channel, and the look before an answer leaves weighs that.
+
 ## Asking from Claude Code
 
 People who work in Claude Code can ask colleagues' clones from there, without opening the app:
