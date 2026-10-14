@@ -100,19 +100,15 @@ keeps what happened in `~/.clone-office/logs/desktop.log`.
 
 ## What it does
 
-- **Learns how you work, and keeps only what lasts.** How you decide, where you stop, how you
-  talk, and what you corrected, in a few lines shown exactly as saved; you fix or remove any.
-  Projects, plans, dates and files are looked up when needed, never stored. It also reads what you
-  do, what you look after and the tools you use, for you to confirm: your clone starts every
-  conversation knowing whose work it does, and colleagues' clones know when to come to you.
-- **Works for you.** Ask it anything you'd ask a teammate at the next desk. It searches your past
-  AI conversations, works in Notion, Linear, Jira, GitHub, Gmail, Calendar, Drive, Docs and Sheets
-  through each service's own connector, and asks your Claude Code or Codex conversations to do
-  work, every change shown to you first. It comes with skills that do work: handing a task to
-  your Claude Code or Codex conversation, finding where a project stands, finding how you did
-  something before, working in your connected services, asking a colleague and writing as you
-  write, and each becomes yours as you correct it. Share one with your office and your teammates' clones add it, checked first, so a
-  team that works the same way teaches it once.
+- **Answers your teammates from your actual work.** A colleague asks "how do refunds work?" and
+  your clone answers in seconds, the way you would: from your notes, your past AI conversations and
+  the folders your work lives in (read only, never files with keys or passwords), and from Notion,
+  Linear, Jira or GitHub where your team tracks its work. You keep working; nobody waits on you for
+  an answer you already have somewhere.
+- **Asked from wherever people already are.** Teammates ask from the AI app they work in (Claude,
+  Claude Code, Codex, Cursor, Gemini CLI), from Slack ("@Clone Office @Minsu …", answered in the
+  thread), from the team server's page, or from Clone Office itself. Everyone keeps their own AI and
+  their own chat.
 - **Stands in for you with your team.** Your card says what people can ask you for; for each kind
   you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about a
   relationship always come to you, and a second look checks every answer before it leaves. The
@@ -121,11 +117,11 @@ keeps what happened in `~/.clone-office/logs/desktop.log`.
   screen, over the office, under your Claude Code prompt, on your phone (Discord, Telegram or Slack)
   while you are away, and three times a day when you are busy. Started with your computer, it keeps
   answering with no window open.
-- **Long work, as Claude Code does it.** On any model it keeps a to-do list you watch, sends
-  helpers off for research that would fill the conversation, saves a long tool answer whole in a
-  scratch folder of its own (cleared after a week) instead of cutting it, and moves to a backup
-  model you pick when yours is busy.
-- **Flows.** "Every weekday at 9, catch me up." You say it; it shows you the flow before making it.
+- **Learns how you work, and keeps only what lasts.** How you decide, where you stop, how you
+  talk, and what you corrected, in a few lines shown exactly as saved; you fix or remove any.
+  Projects, plans, dates and files are looked up when needed, never stored. It also reads what you
+  do, what you look after and the tools you use, for you to confirm: your clone starts every
+  conversation knowing whose work it does, and colleagues' clones know when to come to you.
 - **For developers: inside the Claude Code you already use.** Claude Code is great at your own
   work; it cannot reach your teammates. With the plugin, their clones are tools in any conversation
   ("ask Ben's clone how /orders paginates"), an answer that comes later lands in that idle session by
@@ -135,6 +131,19 @@ keeps what happened in `~/.clone-office/logs/desktop.log`.
   conversation. On a team server, someone who installs nothing takes part on the web: colleagues'
   clones ask them there, and they answer and ask back. Files go along with requests, shown to you
   before they leave.
+- **Works for you.** Ask it anything you'd ask a teammate at the next desk. It searches your past
+  AI conversations, works in Notion, Linear, Jira, GitHub, Gmail, Calendar, Drive, Docs and Sheets
+  through each service's own connector, and asks your Claude Code or Codex conversations to do
+  work, every change shown to you first. It comes with skills that do work: handing a task to
+  your Claude Code or Codex conversation, finding where a project stands, finding how you did
+  something before, working in your connected services, asking a colleague and writing as you
+  write, and each becomes yours as you correct it. Share one with your office and your teammates' clones add it, checked first, so a
+  team that works the same way teaches it once.
+- **Long work, as Claude Code does it.** On any model it keeps a to-do list you watch, sends
+  helpers off for research that would fill the conversation, saves a long tool answer whole in a
+  scratch folder of its own (cleared after a week) instead of cutting it, and moves to a backup
+  model you pick when yours is busy.
+- **Flows.** "Every weekday at 9, catch me up." You say it; it shows you the flow before making it.
 
 ![The office: your clone at its desk, colleagues' clones carrying requests, and the requests panel beside it](docs/images/office.png)
 
@@ -267,7 +276,7 @@ a language is one file under `messages/`.
 
 ## Status
 
-0.1.0: early. The desktop app is new and not yet signed with a developer certificate. Coming next: a
+0.3: early, and not yet tried by a team for long. The desktop app is not yet signed with a developer certificate. Coming next: a
 clone that thinks on the team's server for people who don't install anything (today they take part
 on the web themselves). See [CHANGELOG.md](CHANGELOG.md),
 [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
