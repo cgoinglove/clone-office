@@ -19,7 +19,7 @@ import {
 
 const root = join(import.meta.dirname, "..");
 
-test("the office's tools are added to an AI app's own file, leaving everything else as it was", () => {
+test("the office's tools are added to an AI app's own file, leaving everything else as it was", async () => {
   const home = mkdtempSync(join(tmpdir(), "ai-apps-"));
   try {
     const appHome = join(home, ".clone-office");
@@ -61,7 +61,16 @@ test("the office's tools are added to an AI app's own file, leaving everything e
     );
     assert.match(kept.mcpServers["clone-office"].args[0], /server/);
 
+    // a settings file kept private stays private, and a link stays a link
+    const { chmodSync, lstatSync, statSync, symlinkSync, renameSync } =
+      await import("node:fs");
+    const codexFile = join(home, ".codex", "config.toml");
+    renameSync(codexFile, join(home, "codex-real.toml"));
+    symlinkSync(join(home, "codex-real.toml"), codexFile);
+    chmodSync(join(home, "codex-real.toml"), 0o600);
     assert.equal(addApp("codex", { root, appHome, ...at }).ok, true);
+    assert.ok(lstatSync(codexFile).isSymbolicLink());
+    assert.equal(statSync(codexFile).mode & 0o777, 0o600);
     // added twice, it is there once
     assert.equal(addApp("codex", { root, appHome, ...at }).ok, true);
     const toml = readFileSync(join(home, ".codex", "config.toml"), "utf8");

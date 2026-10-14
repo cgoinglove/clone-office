@@ -11,11 +11,14 @@
 
 import { execFileSync } from "node:child_process";
 import {
+  chmodSync,
   copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   renameSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
@@ -89,34 +92,82 @@ function readJson(file) {
   return value;
 }
 
-/** Writes a file whole or not at all. */
+/**
+ * Writes a file whole or not at all, where it really is (a dotfile kept as a link stays a link)
+ * and as private as it was: a settings file holding other servers' keys keeps its 0600.
+ */
 function writeWhole(file, text) {
   mkdirSync(dirname(file), { recursive: true });
-  const next = `${file}.${process.pid}.tmp`;
-  writeFileSync(next, text);
-  renameSync(next, file);
+  let target = file;
+  let mode = 0o600;
+  try {
+    target = realpathSync(file);
+    mode = statSync(target).mode & 0o777;
+  } catch {
+    // a new file: for its person alone
+  }
+  const next = `${target}.${process.pid}.tmp`;
+  writeFileSync(next, text, { mode });
+  chmodSync(next, mode);
+  renameSync(next, target);
+}
+
+/** Runs the claude command, which on Windows npm puts in as a .cmd only a shell starts. */
+function claude(args) {
+  const windows = process.platform === "win32";
+  const quoted = (arg) => `"${String(arg).replace(/"/g, '""')}"`;
+  execFileSync(
+    windows ? "claude.cmd" : "claude",
+    windows ? args.map(quoted) : args,
+    {
+      stdio: "ignore",
+      timeout: 20_000,
+      shell: windows,
+    },
+  );
 }
 
 /** The table Codex reads the server from, as a TOML section's header. */
-const TOML_HEADER = /^\s*\[\s*mcp_servers\s*\.\s*"?clone-office"?\s*\]\s*$/;
+const TOML_HEADER =
+  /^\s*\[\s*mcp_servers\s*\.\s*"?clone-office"?\s*\]\s*(#.*)?$/;
+/** It, or a table of its own (`[mcp_servers.clone-office.env]`), which goes with it. */
+const TOML_OURS =
+  /^\s*\[\s*mcp_servers\s*\.\s*"?clone-office"?\s*(\.[^\]]*)?\]\s*(#.*)?$/;
 
 /** A config.toml without the clone-office section (its header to the next table's). */
 export function withoutTomlServer(text) {
   const lines = text.split("\n");
   const out = [];
   let skipping = false;
+  // comments and blank lines met while skipping: they belong to whatever table comes next
+  let held = [];
   for (const line of lines) {
-    if (TOML_HEADER.test(line)) {
+    if (TOML_OURS.test(line)) {
       skipping = true;
+      held = [];
       continue;
     }
-    if (skipping && /^\s*\[/.test(line)) skipping = false;
+    if (skipping && /^\s*\[/.test(line)) {
+      skipping = false;
+      out.push(...held);
+      held = [];
+    }
     if (!skipping) out.push(line);
+    else if (/^\s*(#.*)?$/.test(line)) held.push(line);
+    else held = [];
   }
   return out.join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
-const tomlString = (value) => JSON.stringify(String(value));
+/** A TOML basic string: JSON's escapes, and the delete character too, which TOML forbids bare. */
+const tomlString = (value) => {
+  const text = String(value);
+  if (
+    /[\uD800-\uDFFF]/.test(text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ""))
+  )
+    throw new Error("not-text");
+  return JSON.stringify(text).replace(/\u007f/g, "\\u007F");
+};
 
 /** The clone-office section Codex reads. */
 export function tomlServer(server) {
@@ -192,7 +243,12 @@ export function serverEntry({ root, appHome }) {
     copyFileSync(bundled, file);
   }
   return {
-    command: process.execPath,
+    // The desktop app's own executable as Node; an AppImage's from where it lies, not where it
+    // was mounted this time, which is gone once the app quits.
+    command:
+      process.versions.electron && process.env.APPIMAGE
+        ? process.env.APPIMAGE
+        : process.execPath,
     args: [file],
     env: {
       CLONE_OFFICE_HOME: appHome,
@@ -213,32 +269,28 @@ export function addApp(
   try {
     if (id === "claude-code") {
       if (!onPath("claude")) return { ok: false, message: "app-missing" };
+      // The name before -e, which takes every value after it.
+      const add = [
+        "mcp",
+        "add",
+        "--scope",
+        "user",
+        NAME,
+        ...Object.entries(server.env).flatMap(([key, value]) => [
+          "-e",
+          `${key}=${value}`,
+        ]),
+        "--",
+        server.command,
+        ...server.args,
+      ];
       try {
-        execFileSync("claude", ["mcp", "remove", "--scope", "user", NAME], {
-          stdio: "ignore",
-          timeout: 20_000,
-        });
+        claude(add);
       } catch {
-        // not there yet
+        // there already: taken out only now, so a failure never leaves it with none
+        claude(["mcp", "remove", "--scope", "user", NAME]);
+        claude(add);
       }
-      execFileSync(
-        "claude",
-        [
-          "mcp",
-          "add",
-          "--scope",
-          "user",
-          ...Object.entries(server.env).flatMap(([key, value]) => [
-            "-e",
-            `${key}=${value}`,
-          ]),
-          NAME,
-          "--",
-          server.command,
-          ...server.args,
-        ],
-        { stdio: "ignore", timeout: 20_000 },
-      );
       return { ok: true, message: "added" };
     }
     if (id === "codex") {
@@ -280,11 +332,7 @@ export function removeApp(
   const at = places(home, platform)[id];
   try {
     if (id === "claude-code") {
-      if (onPath("claude"))
-        execFileSync("claude", ["mcp", "remove", "--scope", "user", NAME], {
-          stdio: "ignore",
-          timeout: 20_000,
-        });
+      if (onPath("claude")) claude(["mcp", "remove", "--scope", "user", NAME]);
       return { ok: true, message: "removed" };
     }
     if (!existsSync(at.file)) return { ok: true, message: "removed" };

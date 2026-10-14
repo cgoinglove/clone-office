@@ -119,6 +119,13 @@ if (args[0] === "relay") {
   if (!action) {
     // The server itself, on stdin and stdout, as an app starts it.
     const bundled = join(root, "dist", "office-mcp.mjs");
+    // A checkout runs the TypeScript itself, which Node reads as it is from 22.18.
+    if (!existsSync(bundled) && major === 22 && minor < 18) {
+      console.error(
+        `The office's tools from a checkout need Node.js 22.18 or later; this is ${process.versions.node}.`,
+      );
+      process.exit(1);
+    }
     await import(
       existsSync(bundled) ? bundled : join(root, "plugin", "server", "main.ts")
     );

@@ -151,6 +151,8 @@ export function HomeScreen() {
       })),
   ].sort((a, b) => b.at.localeCompare(a.at));
 
+  // The flows that run on a clock (not paused, not waiting for a colleague's request).
+  const timed = flows.filter((flow) => !flow.paused && flow.next);
   // Today, still to come: the flows due.
   const coming = flows
     .filter(
@@ -389,12 +391,12 @@ export function HomeScreen() {
                     </span>
                   </li>
                 ))}
-                {!coming.length && flows.length > 0 && (
+                {!coming.length && timed.length > 0 && (
                   <li className="text-[13px] leading-relaxed text-muted-foreground">
-                    {t("noFlowToday", { count: flows.length })}
+                    {t("noFlowToday", { count: timed.length })}
                   </li>
                 )}
-                {!coming.length && !flows.length && (
+                {!coming.length && !timed.length && (
                   <li>
                     <button
                       type="button"
