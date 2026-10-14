@@ -3,6 +3,17 @@
 Versions after 0.1.0 are written here by release-please from the commits on main
 (CONTRIBUTING.md, "Releasing").
 
+## [0.5.0](https://github.com/cgoinglove/clone-office/compare/v0.4.0...v0.5.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* take the team's Slack out
+
+### Under the hood
+
+* take the team's Slack out ([5232d46](https://github.com/cgoinglove/clone-office/commit/5232d46ba9c4e05507ca16b94e4e0959c8b8eb6d))
+
 ## [0.4.0](https://github.com/cgoinglove/clone-office/compare/v0.3.0...v0.4.0) (2026-10-14)
 
 
