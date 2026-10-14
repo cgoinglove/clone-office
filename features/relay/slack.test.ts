@@ -253,3 +253,111 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
     await db.close();
   }
 });
+
+test("an owner connects the team's Slack on the Office tab; nobody else can", async () => {
+  const { createServer } = await import("node:http");
+  const { relayHandler } = await import("./handler.ts");
+  const db = await openDatabase("memory");
+  const relay = await Relay.open(db);
+  const key = randomBytes(32);
+  const accounts = await Accounts.open(db, relay, { sealKey: key });
+  const office = await relay.office();
+  const slack = fakeSlack();
+  const team = new TeamSlack(relay, db, key, {
+    fetch: slack.fetch,
+    open: slack.open,
+    api: "https://slack.test/api",
+  });
+  const server = createServer(relayHandler(relay, { accounts, slack: team }));
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
+  const cookieOf = (cookies: string[]) =>
+    cookies.map((cookie) => cookie.split(";")[0]).join("; ");
+  try {
+    const ana = await accounts.signUp(office.key, {
+      name: "Ana",
+      email: "ana@example.com",
+      password: "ana's long password",
+    });
+    const ben = await accounts.signUp(office.key, {
+      name: "Ben",
+      email: "ben@example.com",
+      password: "ben's long password",
+    });
+    const post = (
+      cookie: string,
+      path: string,
+      fields: Record<string, string>,
+    ) =>
+      fetch(`${base}${path}`, {
+        method: "POST",
+        headers: {
+          cookie,
+          "sec-fetch-site": "same-origin",
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ office: office.id, ...fields }),
+        redirect: "manual",
+      });
+    const tab = async (cookie: string) =>
+      (
+        await fetch(`${base}/home/office?office=${office.id}`, {
+          headers: { cookie },
+        })
+      ).text();
+    const anaCookie = cookieOf(ana.cookies);
+    const benCookie = cookieOf(ben.cookies);
+    // Only an owner sees it, and only an owner connects it.
+    assert.match(await tab(anaCookie), /id="slack"[\s\S]*Create the Slack app/);
+    assert.doesNotMatch(await tab(benCookie), /id="slack"/);
+    const refused = await post(benCookie, "/home/office/slack", {
+      bot: "xoxb-good-1234567890",
+      app: "xapp-good-1234567890",
+    });
+    assert.match(refused.headers.get("location") ?? "", /error=not-owner/);
+    assert.equal((await team.status(office.id)).on, false);
+    // Tokens Slack refuses say so on the tab.
+    const wrong = await post(anaCookie, "/home/office/slack", {
+      bot: "xoxb-bad-1234567890",
+      app: "xapp-good-1234567890",
+    });
+    assert.match(
+      wrong.headers.get("location") ?? "",
+      /error=slack-token-wrong/,
+    );
+    const shown = await fetch(`${base}${wrong.headers.get("location")}`, {
+      headers: { cookie: anaCookie },
+    });
+    assert.match(await shown.text(), /Slack didn’t accept those tokens/);
+    // A form from another site is refused.
+    const forged = await fetch(`${base}/home/office/slack`, {
+      method: "POST",
+      headers: {
+        cookie: anaCookie,
+        "sec-fetch-site": "cross-site",
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        office: office.id,
+        bot: "xoxb-good-1234567890",
+        app: "xapp-good-1234567890",
+      }),
+      redirect: "manual",
+    });
+    assert.equal(forged.status, 403);
+    assert.equal((await team.status(office.id)).on, false);
+    // The owner's own form connects it, and the tab says where.
+    await post(anaCookie, "/home/office/slack", {
+      bot: "xoxb-good-1234567890",
+      app: "xapp-good-1234567890",
+    });
+    assert.match(await tab(anaCookie), /Connected to Momo Lab by Ana/);
+    assert.doesNotMatch(await tab(anaCookie), /xoxb-good|xapp-good/);
+    await post(anaCookie, "/home/office/slack/remove", {});
+    assert.equal((await team.status(office.id)).on, false);
+  } finally {
+    team.stop();
+    server.close();
+    await db.close();
+  }
+});
