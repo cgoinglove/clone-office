@@ -64,9 +64,12 @@ import {
 } from "./accounts.ts";
 import { HOME_CLIENT } from "./home-client.ts";
 import {
+  INSTALL_SCRIPT,
+  INSTALL_SCRIPT_PATH,
   isPrivateHost,
   joinCommand,
   type Local,
+  nodeInstallers,
   osOf,
   PACKAGE_PATH,
   servedPackage,
@@ -119,9 +122,18 @@ const PAGE_HEADERS = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "no-store",
   "content-security-policy":
-    "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
+    "default-src 'none'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'",
   "referrer-policy": "same-origin",
   "x-content-type-options": "nosniff",
+};
+
+/**
+ * An invite's page: the same, with this server's own Copy button script (install.ts).
+ */
+const INVITE_HEADERS = {
+  ...PAGE_HEADERS,
+  "content-security-policy":
+    "default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; img-src data:; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
 };
 
 /**
@@ -397,6 +409,7 @@ export function relayHandler(
         os: osOf(request.headers["user-agent"]),
         command: joinCommand({ base: at, key, from: who }),
         local: where(at),
+        installers: nodeInstallers(),
       };
     };
     /**
@@ -628,6 +641,8 @@ export function relayHandler(
               ...(url.searchParams.has("account") ? { openAccount: true } : {}),
               ...(accountMade ? { accountMade } : {}),
             }),
+            [],
+            INVITE_HEADERS,
           );
           return true;
         }
@@ -657,6 +672,8 @@ export function relayHandler(
               email: filled.email,
               ...(accountMade ? { accountMade } : {}),
             }),
+            [],
+            INVITE_HEADERS,
           );
         }
         return true;
@@ -1687,6 +1704,16 @@ export function relayHandler(
         );
         return;
       }
+      // The Copy button on an invite's page (install.ts).
+      if (request.method === "GET" && path === INSTALL_SCRIPT_PATH) {
+        response.writeHead(200, {
+          "content-type": "text/javascript; charset=utf-8",
+          "cache-control": "no-cache",
+          "x-content-type-options": "nosniff",
+        });
+        response.end(INSTALL_SCRIPT);
+        return;
+      }
       // The signed-in pages' own script (home-client.ts).
       if (request.method === "GET" && path === "/assets/home.mjs") {
         response.writeHead(200, {
@@ -1728,7 +1755,7 @@ export function relayHandler(
           String(request.headers["x-forwarded-proto"] ?? "").split(",")[0] ||
           "http";
         const origin = `${proto === "https" ? "https" : "http"}://${host}`;
-        response.writeHead(200, PAGE_HEADERS);
+        response.writeHead(200, INVITE_HEADERS);
         response.end(
           invitePage({
             lang,
@@ -1741,6 +1768,7 @@ export function relayHandler(
               from: who || undefined,
             }),
             local: where(origin),
+            installers: nodeInstallers(),
           }),
         );
         return;

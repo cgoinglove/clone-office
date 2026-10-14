@@ -18,7 +18,7 @@ In the first steps (**You and your team**, 나와 우리 팀), or any time under
   sleeps or the app is closed, and teammates cannot reach it then; it opens again at the same
   address, with the same key, when the app is back. On another network the address can change,
   and teammates need a new link. Teammates who are not on the same network need a relay the team
-  runs on a server (the README says how).
+  runs on a server (`team-server.md`).
 - **Join with an invite link** (초대 링크로 들어가기): paste the link a teammate sent. **Join with
   an address and key instead** (주소와 오피스 키로 들어가기) is for a relay someone runs by hand: its
   address and the **Office key** (오피스 키) they shared.
@@ -39,18 +39,27 @@ be someone else. The office's key itself is never in a link; it stays with whoev
 
 ### From the invite link, in a browser
 
-Opened in a browser, the invite link shows **Set up your clone** (내 클론 만들기): the steps for the
-computer it was opened on (Mac, Windows or Linux; the others under **On another kind of
-computer?**, 다른 컴퓨터인가요?), about five minutes and no coding.
+Opened in a browser, the invite link shows **Set up your clone** (내 클론 만들기), about five
+minutes and no coding, with a tab for each kind of computer (**Mac**, **Windows**, **Linux**), the
+one it was opened on picked first. Each step says which keys to press.
 
-1. **Install Node.js** (Node.js 설치), with the button to nodejs.org; skipped when they have
-   Node.js 22.13 or later.
+1. **Install Node.js** (Node.js 설치): **Download Node.js** (Node.js 받기) gets Node.js's own
+   installer for a Mac or Windows; they open it and click Continue (or Next) to the end. On Linux
+   it links nodejs.org's instructions. Skipped when they have Node.js 22.13 or later.
 2. **Open Terminal** (터미널 열기; Command Prompt, 명령 프롬프트, on Windows).
-3. Paste one line, `npx -y clone-office join "<the invite link>"`, and press Enter. The first time
-   takes a minute or two.
+3. **Paste this line** (이 한 줄 붙여 넣기): `npx -y clone-office join "<the invite link>"`, with
+   **Copy** (복사) beside it, then Return or Enter. The first time takes a minute or two. Below it,
+   what the terminal shows once it worked (**Your clone is at http://127.0.0.1:4417**).
 4. Their browser opens Clone Office. The first steps already say who invited them, and their clone
    joins that office at the end. Someone set up already finds Settings › Office open with the link
    in place.
+
+Under the steps: keep the terminal window open, since closing it puts the clone to rest (or turn on
+Settings › General › **Start with this computer**); and **If it does not work** (안 될 때), the usual
+messages with what to do: `command not found: npx` (a terminal opened before Node.js was
+installed), an older Node.js, a line pasted into PowerShell instead of Command Prompt, the Mac asking
+whether node may read a folder, and last, `npx -y clone-office doctor` to run and send to whoever
+invited them.
 
 Someone who uses an AI that works on their computer (Claude Code, Codex and the like) can open
 **Use an AI that works on your computer?** (내 컴퓨터에서 일하는 AI를 쓰나요?) below the steps and

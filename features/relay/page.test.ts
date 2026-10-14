@@ -1,6 +1,16 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { isPrivateHost, joinCommand, osOf, servedPackage } from "./install";
+import {
+  askingNodeNow,
+  forgetNodeLts,
+  INSTALL_SCRIPT_PATH,
+  isPrivateHost,
+  joinCommand,
+  latestLts,
+  nodeInstallers,
+  osOf,
+  servedPackage,
+} from "./install";
 import { escape, invitePage, pageLanguage, replyPage } from "./page";
 
 test("the link page is in the reader's language when it is written in it, else English", () => {
@@ -76,9 +86,85 @@ test("the invite page names who invites, escaped, and guides the setup with one 
   assert.equal(
     page.split("npx -y clone-office join &quot;http://office.example.com/i/key")
       .length,
-    3,
-    "the line to run, and again in the words for the AI",
+    5,
+    "the line to run on each kind of computer, and again in the words for the AI",
   );
+  // The computer it was opened on is the tab picked; the others are a tap away, with no script.
+  assert.match(page, /id="computer-windows" class="pick-windows" checked/);
+  assert.doesNotMatch(page, /id="computer-mac" class="pick-mac" checked/);
+  assert.ok(page.includes("<kbd>Ctrl</kbd>+<kbd>V</kbd>"));
+  // What goes wrong, answered, with the same app's own check to run.
+  assert.ok(page.includes("안 될 때"));
+  assert.ok(page.includes("<code>npx -y clone-office doctor</code>"));
+  // The Copy button is the only script, from this server.
+  assert.ok(
+    page.includes(`<script type="module" src="${INSTALL_SCRIPT_PATH}">`),
+  );
+  assert.ok(page.includes('data-copy="line-windows"'));
+});
+
+test("the guide links Node.js's own installers once they are known, else its download page", () => {
+  const page = (installers?: { mac: string; windows: string }) =>
+    invitePage({
+      lang: "en",
+      link: "https://office.example.com/i/k1",
+      os: "mac",
+      command: joinCommand({ base: "https://office.example.com", key: "k1" }),
+      ...(installers ? { installers } : {}),
+    });
+  assert.ok(page().includes('href="https://nodejs.org/en/download"'));
+  const known = page({
+    mac: "https://nodejs.org/dist/v24.21.0/node-v24.21.0.pkg",
+    windows: "https://nodejs.org/dist/v24.21.0/node-v24.21.0-x64.msi",
+  });
+  assert.ok(
+    known.includes('href="https://nodejs.org/dist/v24.21.0/node-v24.21.0.pkg"'),
+  );
+  assert.ok(
+    known.includes(
+      'href="https://nodejs.org/dist/v24.21.0/node-v24.21.0-x64.msi"',
+    ),
+  );
+});
+
+test("the current LTS comes from Node.js's release list, asked in the background", async () => {
+  const list = (releases: unknown, ok = true) =>
+    (async () =>
+      new Response(JSON.stringify(releases), {
+        status: ok ? 200 : 500,
+      })) as unknown as typeof fetch;
+  const releases = [
+    { version: "v26.11.1", lts: false, files: ["osx-x64-pkg", "win-x64-msi"] },
+    {
+      version: "v24.21.0",
+      lts: "Krypton",
+      files: ["osx-x64-pkg", "win-x64-msi"],
+    },
+  ];
+  assert.equal(await latestLts(list(releases)), "v24.21.0");
+  assert.equal(await latestLts(list(releases, false)), undefined);
+  // anything but a version never goes into an address
+  assert.equal(
+    await latestLts(
+      list([
+        { version: "v1/../x", lts: "x", files: ["osx-x64-pkg", "win-x64-msi"] },
+      ]),
+    ),
+    undefined,
+  );
+  forgetNodeLts();
+  const first = nodeInstallers(0, list(releases));
+  assert.equal(
+    first.mac,
+    "https://nodejs.org/en/download",
+    "not known yet: the page",
+  );
+  await askingNodeNow();
+  assert.deepEqual(nodeInstallers(1, list([])), {
+    mac: "https://nodejs.org/dist/v24.21.0/node-v24.21.0.pkg",
+    windows: "https://nodejs.org/dist/v24.21.0/node-v24.21.0-x64.msi",
+  });
+  forgetNodeLts();
 });
 
 test("the join line quotes the link and encodes what a shell would act on", () => {

@@ -4,7 +4,12 @@
 // escaped before it is shown. Node runs this file as it is, like the rest of the relay.
 
 import type { AllInSync } from "../../i18n/sync.ts";
-import { installGuide, type Local, type Os } from "./install.ts";
+import {
+  type Installers,
+  installGuide,
+  type Local,
+  type Os,
+} from "./install.ts";
 
 const WORDS = {
   en: {
@@ -191,14 +196,61 @@ details:not(.account)[open] > summary::after { transform: rotate(45deg); }
 .inline { display: flex; gap: .5rem; align-items: flex-start; }
 .inline input { margin: 0; flex: 1; }
 :lang(ko) { word-break: keep-all; overflow-wrap: anywhere; }
-.guide { gap: .75rem; }
+.guide { gap: .9rem; }
 .guide p { margin: 0; }
-ol.steps { list-style: none; counter-reset: step; margin: .25rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 1.1rem; }
-ol.steps > li { counter-increment: step; position: relative; padding-left: 2.4rem; display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; }
-ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 1.6rem; height: 1.6rem; border-radius: 8px; background: var(--fg); color: var(--bg); font-weight: 600; font-size: .85rem; display: grid; place-items: center; }
-ol.steps > li > pre { align-self: stretch; }
-ol.steps small, .others { color: var(--muted); font-size: .85rem; }
-.others { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .4rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.chips span { font-size: .85rem; background: var(--soft); border-radius: 999px; padding: .15rem .7rem; }
+/* the three kinds of computer as tabs, with no script: a radio each, the one this page was opened on picked */
+.computers { display: flex; flex-direction: column; gap: 1.25rem; }
+.computers > input { position: absolute; opacity: 0; pointer-events: none; }
+.tabs { display: inline-flex; align-self: flex-start; gap: .25rem; background: var(--soft); border-radius: 10px; padding: .25rem; }
+.tabs label { margin: 0; cursor: pointer; font-size: .9rem; color: var(--muted); padding: .3rem .9rem; border-radius: 8px; }
+.pick-mac:checked ~ .tabs [for="computer-mac"], .pick-windows:checked ~ .tabs [for="computer-windows"], .pick-linux:checked ~ .tabs [for="computer-linux"] { background: var(--bg); color: var(--fg); box-shadow: 0 0 0 1px var(--line); }
+.pick-mac:focus-visible ~ .tabs [for="computer-mac"], .pick-windows:focus-visible ~ .tabs [for="computer-windows"], .pick-linux:focus-visible ~ .tabs [for="computer-linux"] { outline: 2px solid var(--brand); outline-offset: 2px; }
+.computers > ol.steps { display: none; }
+.pick-mac:checked ~ .on-mac, .pick-windows:checked ~ .on-windows, .pick-linux:checked ~ .on-linux { display: flex; }
+/* the steps on a numbered rail */
+ol.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: flex; flex-direction: column; }
+ol.steps > li { counter-increment: step; position: relative; padding: 0 0 1.6rem 2.6rem; display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; min-width: 0; }
+ol.steps > li:last-child { padding-bottom: 0; }
+ol.steps > li::before { content: counter(step); position: absolute; left: 0; top: 0; width: 1.75rem; height: 1.75rem; border-radius: 999px; background: var(--fg); color: var(--bg); font-weight: 600; font-size: .85rem; display: grid; place-items: center; }
+ol.steps > li:not(:last-child)::after { content: ""; position: absolute; left: calc(.875rem - 1px); top: 2.1rem; bottom: .35rem; width: 2px; border-radius: 2px; background: var(--line); }
+ol.steps > li > b { line-height: 1.75rem; }
+ol.steps > li > .term, ol.steps > li > .seen { align-self: stretch; }
+ol.steps small { color: var(--muted); font-size: .85rem; }
+ol.steps a.button small { color: inherit; font-size: .8rem; font-weight: 500; opacity: .85; margin-left: .25rem; }
+kbd { font-family: inherit; font-weight: 600; font-size: .82rem; line-height: 1.4; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: .05rem .45rem; }
+code { font: .85em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--soft); border-radius: 6px; padding: .05rem .35rem; overflow-wrap: anywhere; }
+.keys { line-height: 2; }
+/* a line to copy, drawn as a terminal draws it: dark in both themes */
+.term { background: #16181c; color: #e8eaed; border-radius: 14px; overflow: hidden; }
+.term-bar { display: flex; align-items: center; justify-content: space-between; gap: .5rem; min-height: 2.2rem; padding: .35rem .45rem .35rem .85rem; }
+.dots { display: flex; gap: .35rem; }
+.dots i { display: block; width: .55rem; height: .55rem; border-radius: 50%; background: rgba(255,255,255,.2); }
+.term pre { border: 0; border-radius: 0; padding: 0 .9rem .9rem; color: inherit; }
+button.copy { margin: 0; font-size: .8rem; color: #e8eaed; background: rgba(255,255,255,.12); border-radius: 8px; padding: .3rem .75rem; }
+button.copy:hover { background: rgba(255,255,255,.2); }
+button.copy[data-done] { color: #7fd3a0; }
+/* what the terminal shows once it worked */
+.seen { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.seen span { font-size: .8rem; font-weight: 600; color: var(--muted); padding: .5rem .9rem 0; }
+.seen pre { border: 0; color: var(--muted); font-size: .8rem; padding: .3rem .9rem .8rem; user-select: text; -webkit-user-select: text; }
+.seen pre b { color: var(--fg); font-weight: 600; }
+.keep { display: flex; align-items: flex-start; gap: .75rem; border: 1px solid var(--line); border-radius: 14px; padding: .85rem 1rem; }
+.keep svg { flex: none; width: 1.2rem; height: 1.2rem; margin-top: .2rem; }
+.keep div { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.keep .note { font-size: .9rem; }
+/* the folds under the steps: rows that open, a hairline above each as at a pane's edge */
+.folds { display: flex; flex-direction: column; }
+details.fold { border-top: 1px solid var(--line); padding: .35rem 0; }
+details.fold:last-child { border-bottom: 1px solid var(--line); }
+details.fold > summary { display: flex; justify-content: space-between; color: var(--fg); font-size: .95rem; font-weight: 600; min-height: 2.5rem; }
+details.fold[open] { padding-bottom: .9rem; }
+details.fold > .note { margin-bottom: .6rem; }
+.trouble { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1rem; font-size: .92rem; }
+.trouble li { display: flex; flex-direction: column; gap: .3rem; }
+.said { display: flex; flex-wrap: wrap; gap: .3rem; }
+.said code { font-size: .78rem; }
 a.button { display: inline-block; color: #fff; background: var(--brand-fill); text-decoration: none; font-weight: 600; border-radius: 999px; padding: .45rem 1rem; }
 .inline button { margin: 0; }
 .small { font-size: .85rem; }
@@ -353,6 +405,7 @@ export function invitePage(input: {
   os: Os;
   command: string;
   local?: Local;
+  installers?: Installers;
 }): string {
   const head = inviteHead(input.lang, input.from);
   return shell(

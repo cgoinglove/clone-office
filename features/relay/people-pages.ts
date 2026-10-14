@@ -7,7 +7,13 @@
 
 import type { AllInSync } from "../../i18n/sync.ts";
 import type { SignInMethods, SignInSettings, SignInWays } from "./accounts.ts";
-import { installGuide, type Local, npxLine, type Os } from "./install.ts";
+import {
+  type Installers,
+  installGuide,
+  type Local,
+  npxLine,
+  type Os,
+} from "./install.ts";
 import { escape, MARK, type PageLanguage, shell } from "./page.ts";
 import type { OwnMessage } from "./relay.ts";
 
@@ -2273,6 +2279,7 @@ export function signUpPage(input: {
   os: Os;
   command: string;
   local?: Local;
+  installers?: Installers;
   /** The ways the server lets people in. */
   methods: SignInMethods;
   error?: string;
