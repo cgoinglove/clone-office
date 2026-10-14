@@ -331,12 +331,19 @@ thread that it asked, and the answer comes in the same thread, named as Minsu's 
 when they answered themselves), in the language their Slack is set to. More words in that thread
 that mention the app go on with the same request.
 
-People are matched by the email their Slack account uses: the one asking needs an account in the
-office with that email (someone with an account but no computer connected is given a place on the
-web for it), and the colleague is found by theirs (or by their exact name). The app reads only the
-messages that mention it and the ones written to it directly, never the rest of a channel. A
-request asked in a channel says so to the colleague's clone, since its answer is read by everyone
-in that channel, and the look before an answer leaves weighs that.
+Each person links their Slack once, so nobody asks or answers as someone else: on their account
+page on the team server, **Link Slack** (슬랙 연결) shows a six-digit code, which they send to the app
+in a direct message in Slack within ten minutes (**Unlink**, 연결 끊기, lets it go). Someone whose
+account here signs in with Google is known by that email without a code. Someone not linked who
+asks is told how; a colleague not linked yet cannot be asked from Slack until they do. Someone with
+an account but no computer connected is given a place on the web when they ask.
+
+The app reads only the messages that mention it and the ones written to it directly, never the rest
+of a channel. It does not answer in a channel shared with another company. A request asked in a
+channel carries that with it: the colleague's clone reads nothing alone for it (no work folders, no
+connected services), since everyone in the channel reads the answer, and the look before an answer
+leaves weighs that. An answer Slack refuses for a moment is posted on the next try; a request is
+followed in Slack for two weeks.
 
 ## Asking from Claude Code
 

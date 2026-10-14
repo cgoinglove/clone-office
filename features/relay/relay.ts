@@ -112,8 +112,20 @@ export interface Message {
    * `by: "person"`: the member's person wrote it themselves (or a guest answering by a link), not
    * their clone; it travels to A2A clients in the message's metadata as it is.
    */
-  metadata: { from: string; at: string; by?: "person" };
+  metadata: {
+    from: string;
+    at: string;
+    by?: "person";
+    /**
+     * Where its words were written, when not in Clone Office itself: a Slack channel (the answer
+     * is read by everyone in it) or a direct message with the team's Slack app (slack.ts).
+     */
+    via?: Via;
+  };
 }
+
+/** Where a message was written, when not in Clone Office itself. */
+export type Via = "slack-channel" | "slack-dm";
 
 export interface Task {
   id: string;
@@ -307,14 +319,20 @@ const MIGRATIONS: string[][] = [
   [
     "ALTER TABLE members ADD COLUMN own_keys JSONB NOT NULL DEFAULT '[]'::jsonb",
   ],
-  // The team's Slack (slack.ts): the app an owner connected, its tokens sealed, and each thread a
-  // request was asked in, with how many of its answers were posted there. The meetings' news, which
-  // nothing reads any more, goes.
+  // The team's Slack (slack.ts): the app an owner connected, its tokens sealed; each request asked
+  // from it, its thread and how many of its answers were posted there; whose Slack is whose, linked
+  // once by a code from their page; and where a message was written (`via`). The meetings' news,
+  // which nothing reads any more, goes.
   [
     "DELETE FROM events WHERE type = 'meeting'",
+    "ALTER TABLE messages ADD COLUMN via TEXT",
     "CREATE TABLE office_slack (office_id TEXT PRIMARY KEY REFERENCES offices (id) ON DELETE CASCADE, sealed TEXT NOT NULL, team TEXT NOT NULL, bot_user TEXT NOT NULL, set_by TEXT NOT NULL, updated TIMESTAMPTZ NOT NULL)",
-    "CREATE TABLE slack_threads (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, channel TEXT NOT NULL, thread_ts TEXT NOT NULL, task_id TEXT NOT NULL, asker TEXT NOT NULL, slack_user TEXT NOT NULL, lang TEXT NOT NULL, posted INT NOT NULL DEFAULT 0, done BOOLEAN NOT NULL DEFAULT false, created TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, channel, thread_ts))",
-    "CREATE INDEX slack_threads_open ON slack_threads (done) WHERE NOT done",
+    "CREATE TABLE slack_threads (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, task_id TEXT NOT NULL, channel TEXT NOT NULL, thread_ts TEXT NOT NULL, asker TEXT NOT NULL, slack_user TEXT NOT NULL, lang TEXT NOT NULL, posted INT NOT NULL DEFAULT 0, done BOOLEAN NOT NULL DEFAULT false, created TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, task_id))",
+    "CREATE INDEX slack_threads_thread ON slack_threads (office_id, channel, thread_ts, created DESC)",
+    "CREATE INDEX slack_threads_open ON slack_threads (office_id, created) WHERE NOT done",
+    "CREATE TABLE slack_people (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, slack_user TEXT NOT NULL, user_id TEXT NOT NULL, name TEXT NOT NULL, linked TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, slack_user))",
+    "CREATE UNIQUE INDEX slack_people_user ON slack_people (office_id, user_id)",
+    "CREATE TABLE slack_codes (code_hash TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, user_id TEXT NOT NULL, expires TIMESTAMPTZ NOT NULL)",
   ],
 ];
 
@@ -941,6 +959,8 @@ export class Relay {
     contextId?: string,
     /** Written by the member's person themselves, not their clone. */
     by?: "person",
+    /** Where its words were written, when not in Clone Office itself. */
+    via?: Via,
   ): Promise<Task> {
     if (from.id === to)
       throw new RelayError(400, "A clone does not ask itself.", "bad-request");
@@ -975,6 +995,7 @@ export class Relay {
         now,
         await attach(tx, from, id, files, now),
         by === "person",
+        via,
       );
       await notify(tx, to, "task", id, now);
     });
@@ -1544,8 +1565,9 @@ export class Relay {
         files: FileRef[] | string | null;
         at: unknown;
         by_person: boolean | null;
+        via: Via | null;
       }>(
-        "SELECT task_id, id, role, from_member, text, files, at, by_person FROM messages WHERE task_id = ANY($1::text[]) ORDER BY seq",
+        "SELECT task_id, id, role, from_member, text, files, at, by_person, via FROM messages WHERE task_id = ANY($1::text[]) ORDER BY seq",
         [ids],
       ),
       this.db.query<{ task_id: string; name: string; token: string }>(
@@ -1576,6 +1598,7 @@ export class Relay {
             from: m.from_member,
             at: iso(m.at),
             ...(m.by_person ? { by: "person" as const } : {}),
+            ...(m.via ? { via: m.via } : {}),
           },
         };
       });
@@ -2116,9 +2139,10 @@ async function addMessage(
   at: string,
   files: FileRef[] = [],
   byPerson = false,
+  via?: Via,
 ): Promise<void> {
   await tx.query(
-    "INSERT INTO messages (id, task_id, role, from_member, text, files, at, by_person) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)",
+    "INSERT INTO messages (id, task_id, role, from_member, text, files, at, by_person, via) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)",
     [
       randomUUID(),
       task,
@@ -2128,6 +2152,7 @@ async function addMessage(
       JSON.stringify(files),
       at,
       byPerson,
+      via ?? null,
     ],
   );
 }

@@ -801,7 +801,9 @@ export function relayHandler(
         (path === "/home/pair" && post) ||
         (path === "/home/invite" && post) ||
         (path === "/home/invite/cancel" && post) ||
-        (path === "/home/web" && post)
+        (path === "/home/web" && post) ||
+        (path === "/home/slack/link" && post) ||
+        (path === "/home/slack/unlink" && post)
       ) {
         const person = await accounts.person(cookie);
         if (!person) {
@@ -816,6 +818,14 @@ export function relayHandler(
           ? fields.get("office")
           : url.searchParams.get("office");
         const place = placeOf(places, chosen);
+        // Linking one's Slack: let go here; the code to send the app is shown on the page below.
+        if (path === "/home/slack/unlink") {
+          if (place) await options.slack?.unlink(place.office, person.id);
+          redirect(
+            `/home/account${place ? `?office=${encodeURIComponent(place.office)}` : ""}#slack`,
+          );
+          return true;
+        }
         if (path === "/home/invite/cancel") {
           // an owner stops one of the office's invites
           if (place?.role === "owner")
@@ -906,11 +916,33 @@ export function relayHandler(
               path === "/home/office"
                 ? "office"
                 : path === "/home/account" ||
+                    path === "/home/slack/link" ||
                     (path === "/home/pair" && fields?.get("tab") === "account")
                   ? "account"
                   : "clone",
             me: person.id,
             owner,
+            // one's own Slack, once the office has its Slack: linked, or a code to link it
+            ...(place &&
+            options.slack &&
+            (await options.slack.status(place.office)).on
+              ? {
+                  slackLink: {
+                    linked: await options.slack.linkedName(
+                      place.office,
+                      person.id,
+                    ),
+                    ...(path === "/home/slack/link"
+                      ? {
+                          code: await options.slack.linkCode(
+                            place.office,
+                            person.id,
+                          ),
+                        }
+                      : {}),
+                  },
+                }
+              : {}),
             // the team's Slack, for its owners to connect on the Office tab
             ...(owner && place && path === "/home/office"
               ? {

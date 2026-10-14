@@ -29,6 +29,8 @@ test("a Slack message is read as its mentions and its words", () => {
 function fakeSlack() {
   const posted: Record<string, string>[] = [];
   const acked: string[] = [];
+  let refuseNextPost = false;
+  let opened = 0;
   const users: Record<
     string,
     { email?: string; name: string; locale?: string }
@@ -36,7 +38,7 @@ function fakeSlack() {
     UANA: { email: "ana@example.com", name: "Ana", locale: "ko-KR" },
     UBEN: { email: "ben@example.com", name: "Ben" },
     UZED: { email: "zed@elsewhere.com", name: "Zed" },
-    UCAL: { name: "Cal Unknown" },
+    UCAL: { email: "cal@example.com", name: "Cal" },
   };
   const listeners = new Map<string, (event: { data?: unknown }) => void>();
   const socket: SlackSocket = {
@@ -54,10 +56,12 @@ function fakeSlack() {
       return auth.includes("xoxb-good")
         ? ok({ team: "Momo Lab", user_id: "UBOT" })
         : Response.json({ ok: false, error: "invalid_auth" });
-    if (method === "apps.connections.open")
-      return auth.includes("xapp-good")
-        ? ok({ url: "wss://slack.test/socket" })
-        : Response.json({ ok: false, error: "invalid_auth" });
+    if (method === "apps.connections.open") {
+      if (!auth.includes("xapp-good"))
+        return Response.json({ ok: false, error: "invalid_auth" });
+      opened += 1;
+      return ok({ url: "wss://slack.test/socket" });
+    }
     if (method === "users.info") {
       const found = users[body.user];
       return ok({
@@ -68,7 +72,15 @@ function fakeSlack() {
         },
       });
     }
+    if (method === "conversations.info")
+      return ok({
+        channel: { id: body.channel, is_ext_shared: body.channel === "CX" },
+      });
     if (method === "chat.postMessage") {
+      if (refuseNextPost) {
+        refuseNextPost = false;
+        return Response.json({ ok: false, error: "fatal_error" });
+      }
       posted.push(body);
       return ok({ ts: String(posted.length) });
     }
@@ -83,7 +95,17 @@ function fakeSlack() {
         payload: { event: data },
       }),
     });
-  return { posted, acked, fetch, open: () => socket, event };
+  return {
+    posted,
+    acked,
+    fetch,
+    open: () => socket,
+    event,
+    refuseNextPost: () => {
+      refuseNextPost = true;
+    },
+    opened: () => opened,
+  };
 }
 
 const until = async (check: () => boolean | Promise<boolean>, ms = 3000) => {
@@ -110,6 +132,11 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
       name: "Ben",
       email: "ben@example.com",
       password: "ben's long password",
+    });
+    const cal = await accounts.signUp(office.key, {
+      name: "Cal",
+      email: "cal@example.com",
+      password: "cal's long password",
     });
     // Ben's clone, with his account's place
     const benClone = await relay.joinWeb(office.id, ben.person.id, {
@@ -150,6 +177,44 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
     );
     assert.doesNotMatch(kept.sealed, /xoxb|xapp/);
 
+    // An email typed when signing up is not proof: Ana has to link her Slack first.
+    slack.event({
+      type: "app_mention",
+      user: "UANA",
+      channel: "C1",
+      ts: "90.1",
+      text: "<@UBOT> <@UBEN> hi",
+    });
+    await until(() => slack.posted.length === 1);
+    assert.match(slack.posted[0].text, /계정 페이지에서 "슬랙 연결"/);
+    // Her code from her page, sent directly: linked. A wrong one is refused.
+    const code = await team.linkCode(office.id, ana.person.id);
+    slack.event({
+      type: "message",
+      channel_type: "im",
+      user: "UANA",
+      channel: "D1",
+      ts: "91.1",
+      text: "000000" === code ? "111111" : "000000",
+    });
+    slack.event({
+      type: "message",
+      channel_type: "im",
+      user: "UANA",
+      channel: "D1",
+      ts: "91.2",
+      text: code,
+    });
+    await until(() => slack.posted.length === 3);
+    assert.match(slack.posted[1].text, /코드는 쓸 수 없어요/);
+    assert.match(slack.posted[2].text, /Ana 님이에요/);
+    assert.equal(await team.linkedName(office.id, ana.person.id), "Ana");
+    // Ben's email is one Google checked: that is enough for him.
+    await db.query(
+      `UPDATE auth_users SET "emailVerified" = true WHERE id = $1`,
+      [ben.person.id],
+    );
+
     slack.event({
       type: "app_mention",
       user: "UANA",
@@ -157,30 +222,33 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
       ts: "100.1",
       text: "<@UBOT> <@UBEN> how do refunds work?",
     });
-    await until(() => slack.posted.length === 1);
-    assert.equal(slack.acked[0], "e1", "the envelope is taken at once");
-    assert.equal(slack.posted[0].thread_ts, "100.1");
-    assert.match(slack.posted[0].text, /Ben의 클론에게 물었어요/);
+    await until(() => slack.posted.length === 4);
+    assert.match(slack.posted[3].text, /Ben의 클론에게 물었어요/);
+    assert.equal(slack.posted[3].thread_ts, "100.1");
     // The request reached Ben's clone, from Ana's place (made on the web for her account).
     const asked = await relay.tasks(benClone);
     assert.equal(asked.length, 1);
     const anaPlace = await relay.memberOf(office.id, ana.person.id);
     assert.equal(asked[0].metadata.from, anaPlace?.id);
-    assert.match(asked[0].history[0].parts[0].text, /^how do refunds work\?/);
-    assert.match(asked[0].history[0].parts[0].text, /in a channel/);
-    assert.equal(asked[0].history[0].metadata.by, "person");
+    const first = asked[0].history[0];
+    assert.match(first.parts[0].text, /^how do refunds work\?/);
+    assert.equal(first.metadata.by, "person");
+    assert.equal(first.metadata.via, "slack-channel");
 
-    // Ben's clone answers: posted once, named as his clone.
+    // Ben's clone answers: posted once, named as his clone; a refusal is tried again.
     await relay.update(benClone, asked[0].id, {
       text: "Refunds go through **Stripe**, within 5 days.",
       state: "COMPLETED",
     });
+    slack.refuseNextPost();
+    await team.poll();
+    assert.equal(slack.posted.length, 4, "Slack refused it once");
     await team.poll();
     await team.poll();
-    assert.equal(slack.posted.length, 2);
-    assert.equal(slack.posted[1].username, "Ben의 클론");
+    assert.equal(slack.posted.length, 5);
+    assert.equal(slack.posted[4].username, "Ben의 클론");
     assert.equal(
-      slack.posted[1].text,
+      slack.posted[4].text,
       "Refunds go through *Stripe*, within 5 days.",
     );
 
@@ -194,10 +262,10 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
       text: "<@UBOT> and partial refunds?",
     });
     await until(async () => (await relay.tasks(benClone)).length === 2);
-    const both = await relay.tasks(benClone);
-    const later = both.find((task) => task.id !== asked[0].id);
+    const later = (await relay.tasks(benClone)).find(
+      (task) => task.id !== asked[0].id,
+    );
     assert.equal(later?.contextId, asked[0].contextId);
-    // Ben answers it himself: named as Ben.
     await relay.update(benClone, later?.id as string, {
       text: "Partial ones too.",
       state: "COMPLETED",
@@ -206,7 +274,16 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
     await team.poll();
     assert.equal(slack.posted.at(-1)?.username, "Ben");
 
-    // Someone with no account in the office, a message naming nobody, an unknown colleague.
+    // A channel shared with another company, someone with no account here, a message naming
+    // nobody, a colleague who never linked.
+    const before = slack.posted.length;
+    slack.event({
+      type: "app_mention",
+      user: "UANA",
+      channel: "CX",
+      ts: "150.1",
+      text: "<@UBOT> <@UBEN> hi",
+    });
     slack.event({
       type: "app_mention",
       user: "UZED",
@@ -229,11 +306,13 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
       ts: "400.1",
       text: "<@UBOT> <@UCAL> hi",
     });
-    await until(() => slack.posted.length === 6);
-    const said = slack.posted.slice(3).map((post) => post.text);
-    assert.ok(said.some((text) => /invite you with the email/.test(text)));
+    await until(() => slack.posted.length === before + 4);
+    const said = slack.posted.slice(before).map((post) => post.text);
+    assert.ok(said.some((text) => /다른 회사와 함께 쓰는 채널/.test(text)));
+    assert.ok(said.some((text) => /Link your Slack/.test(text)));
     assert.ok(said.some((text) => /누구에게 물을까요/.test(text)));
-    assert.ok(said.some((text) => /Cal Unknown 님은 아직/.test(text)));
+    assert.ok(said.some((text) => /Cal 님이 누구인지/.test(text)));
+    assert.equal(await team.linkedName(office.id, cal.person.id), undefined);
     // the same event twice is taken once
     slack.event({
       type: "app_mention",
@@ -243,12 +322,24 @@ test("asked from Slack, a colleague's clone answers in the thread, as its clone,
       text: "<@UBOT> <@UCAL> hi",
     });
     await new Promise((resolve) => setTimeout(resolve, 100));
-    assert.equal(slack.posted.length, 6);
+    assert.equal(slack.posted.length, before + 4);
 
-    // Let go: the tokens are gone.
+    // Another relay process on the same database follows what this one connected.
+    const other = new TeamSlack(relay, db, key, {
+      fetch: slack.fetch,
+      open: slack.open,
+      api: "https://slack.test/api",
+    });
+    const opened = slack.opened();
+    await other.sync();
+    assert.ok(slack.opened() > opened, "the other process connects too");
+
+    // Let go: the tokens and what was followed are gone, there and here.
     await team.set(office.id, ana.person.id, null);
     assert.equal((await team.status(office.id)).on, false);
+    assert.deepEqual(await db.query("SELECT 1 FROM slack_threads"), []);
     team.stop();
+    other.stop();
   } finally {
     await db.close();
   }
@@ -353,6 +444,15 @@ test("an owner connects the team's Slack on the Office tab; nobody else can", as
     });
     assert.match(await tab(anaCookie), /Connected to Momo Lab by Ana/);
     assert.doesNotMatch(await tab(anaCookie), /xoxb-good|xapp-good/);
+    // Anyone in the office links their own Slack from their account page with a code.
+    const account = await (
+      await fetch(`${base}/home/account?office=${office.id}`, {
+        headers: { cookie: benCookie },
+      })
+    ).text();
+    assert.match(account, /action="\/home\/slack\/link"/);
+    const linking = await post(benCookie, "/home/slack/link", {});
+    assert.match(await linking.text(), /<pre class="pair-code">\d{6}<\/pre>/);
     await post(anaCookie, "/home/office/slack/remove", {});
     assert.equal((await team.status(office.id)).on, false);
   } finally {

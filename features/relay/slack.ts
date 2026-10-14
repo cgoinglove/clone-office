@@ -3,19 +3,27 @@
 // the team server's Office tab, and from then on anyone in the office asks a colleague's clone from
 // Slack: they mention the app and the colleague ("@Clone Office @Minsu how do refunds work?") in a
 // channel the app was added to, or write to the app directly. The request goes to that colleague's
-// clone as from the one who asked: their place in the office, found by the email their Slack
-// account and their account here share (one with an account but no place yet is given one on the
-// web, as the pages give it). What comes back is posted in the thread, named as whoever wrote it
-// ("Minsu's clone", or Minsu), in the language the asker's Slack speaks; a reply in the thread that
-// mentions the app again goes on with the same request. The app reads only what mentions it and
-// what is written to it directly, never a channel's other messages.
+// clone as from the one who asked, and what comes back is posted in the thread, named as whoever
+// wrote it ("Minsu's clone", or Minsu), in the language the asker's Slack speaks; a mention later in
+// the thread goes on with the same request. The app reads only what mentions it and what is written
+// to it directly, never a channel's other messages.
+//
+// Who is who: a Slack account is someone's place in the office once they linked it (a six-digit
+// code from their page on the team server, sent to the app), or when its email is one Google
+// checked for their account here; an email anyone could type when signing up is never enough, so
+// nobody asks or answers as someone else. Someone with an account but no place yet is given one on
+// the web, as the pages give it. A channel shared with another company gets no answer at all, and a
+// request asked in a channel says so in its message (`via`), so the colleague's clone reads nothing
+// it would otherwise read alone, since everyone in the channel reads the answer.
 //
 // Socket Mode, as the clone's own Slack is (../minime/messenger/slack.ts): the app-level token opens
 // a WebSocket Slack sends events down, so nothing has to reach this server from outside, and the
 // bot token speaks through the Web API. Both are sealed under the relay's key, as team keys are,
-// and never shown again. Answers are posted by whichever relay process claims them first in the
-// database, so relays sharing one database never post one twice.
+// and never shown again. Each process looks at what is connected every minute, so relays sharing a
+// database follow a change one of them made; answers are claimed in the database before they are
+// posted (and given back when Slack refuses one), so none is posted twice or lost.
 
+import { createHash, randomInt } from "node:crypto";
 import type { AllInSync } from "../../i18n/sync.ts";
 import { openWith, sealWith } from "../../lib/seal.ts";
 import { pieces, slackMrkdwn } from "../minime/messenger/text.ts";
@@ -32,6 +40,12 @@ import {
 const API = "https://slack.com/api";
 /** How often answers are looked for to post. */
 const POLL_MS = 3000;
+/** How often what is connected is looked at again, for a change another process made. */
+const SYNC_MS = 60_000;
+/** A request asked from Slack is followed this long, then let go. */
+const FOLLOW_DAYS = 14;
+/** How long a code to link one's Slack works. */
+const CODE_MINUTES = 10;
 /** Waits between tries after trouble, growing to the last. */
 const BACKOFF_MS = [1000, 2000, 5000, 10_000, 30_000, 60_000];
 /** Slack's cap on one message's text, with room to spare. */
@@ -45,6 +59,17 @@ const REFUSED = new Set([
   "token_expired",
   "not_allowed_token_type",
   "missing_scope",
+]);
+
+/** Answers that mean a thread will never take another message. */
+const GONE = new Set([
+  "channel_not_found",
+  "is_archived",
+  "not_in_channel",
+  "thread_not_found",
+  "message_not_found",
+  "restricted_action",
+  ...REFUSED,
 ]);
 
 /** The app as Slack makes it from this, with exactly what it uses. */
@@ -66,6 +91,8 @@ export const SLACK_MANIFEST = {
     scopes: {
       bot: [
         "app_mentions:read",
+        "channels:read",
+        "groups:read",
         "chat:write",
         "chat:write.customize",
         "im:history",
@@ -93,10 +120,16 @@ const WORDS = {
     asked: "Asked {name}'s clone. The answer comes in this thread.",
     whom: "Whom should I ask? Mention them with your question: @Clone Office @name …",
     what: "What should I ask {name}'s clone?",
-    unknown: "{name} has no place in this office yet.",
+    unknown:
+      "I can't tell who {name} is in the office yet: they link their Slack once, from their page on the team server.",
     self: "That's you: mention the colleague to ask.",
     stranger:
-      "You have no place in this office yet. Ask an owner to invite you with the email your Slack account uses.",
+      "Link your Slack to your place in the office first: on the team server, open your account page, press Link Slack and send me the code it shows, here in a direct message.",
+    shared:
+      "I don't answer in a channel shared with another company. Ask me in a direct message or in one of your own channels.",
+    linked: "Linked: in this office you are {name}.",
+    codeWrong:
+      "That code doesn't work: it may have ended. Make a new one on your account page.",
     failed: "{name}'s clone could not answer this time.",
     files: "Files came with it: open them in Clone Office.",
   },
@@ -105,10 +138,16 @@ const WORDS = {
     asked: "{name}의 클론에게 물었어요. 답은 이 스레드에 와요.",
     whom: "누구에게 물을까요? 질문과 함께 그 사람을 불러 주세요: @Clone Office @이름 …",
     what: "{name}의 클론에게 무엇을 물을까요?",
-    unknown: "{name} 님은 아직 이 오피스에 없어요.",
+    unknown:
+      "아직 오피스에서 {name} 님이 누구인지 알 수 없어요. 그분이 팀 서버의 내 페이지에서 슬랙을 한 번 연결하면 돼요.",
     self: "본인이에요. 물을 동료를 불러 주세요.",
     stranger:
-      "아직 이 오피스에 자리가 없어요. 슬랙과 같은 이메일로 초대해 달라고 오피스 주인에게 말해 주세요.",
+      '먼저 내 슬랙을 오피스 자리와 연결해 주세요. 팀 서버의 내 계정 페이지에서 "슬랙 연결"을 누르고, 나오는 코드를 여기 DM으로 보내 주세요.',
+    shared:
+      "다른 회사와 함께 쓰는 채널에서는 답하지 않아요. DM이나 우리 회사 채널에서 물어 주세요.",
+    linked: "연결했어요. 이 오피스에서 {name} 님이에요.",
+    codeWrong:
+      "그 코드는 쓸 수 없어요. 시간이 지났을 수 있어요. 계정 페이지에서 새로 만들어 주세요.",
     failed: "{name}의 클론이 이번에는 답하지 못했어요.",
     files: "파일이 함께 왔어요. Clone Office에서 열어 보세요.",
   },
@@ -117,10 +156,15 @@ const WORDS = {
     asked: "已经问了{name}的分身。回答会出现在这个话题里。",
     whom: "要问谁？请在问题里提到对方：@Clone Office @名字 …",
     what: "要问{name}的分身什么？",
-    unknown: "{name}还不在这个办公室里。",
+    unknown:
+      "我还不知道{name}在办公室里是谁：对方需要在团队服务器的个人页面上连接一次 Slack。",
     self: "这是你自己。请提到你要问的同事。",
     stranger:
-      "你在这个办公室里还没有位置。请让办公室的所有者用你 Slack 账号的邮箱邀请你。",
+      "请先把你的 Slack 连接到你在办公室的位置：在团队服务器打开你的账户页面，点“连接 Slack”，然后把显示的代码私信发给我。",
+    shared:
+      "我不在与其他公司共享的频道里回答。请私信我，或在你们自己的频道里问。",
+    linked: "已连接：你在这个办公室里是{name}。",
+    codeWrong: "这个代码不能用了，可能已过期。请在账户页面重新生成。",
     failed: "{name}的分身这次没能回答。",
     files: "附带了文件，请在 Clone Office 中打开。",
   },
@@ -129,10 +173,16 @@ const WORDS = {
     asked: "{name}のクローンに聞きました。答えはこのスレッドに届きます。",
     whom: "誰に聞きますか？質問と一緒にその人をメンションしてください：@Clone Office @名前 …",
     what: "{name}のクローンに何を聞きますか？",
-    unknown: "{name}さんはまだこのオフィスにいません。",
+    unknown:
+      "オフィスで{name}さんが誰なのかまだ分かりません。チームサーバーの自分のページでSlackを一度連携してもらえば大丈夫です。",
     self: "それはあなたです。聞きたい同僚をメンションしてください。",
     stranger:
-      "まだこのオフィスに席がありません。Slackと同じメールアドレスで招待してもらうよう、オフィスのオーナーに頼んでください。",
+      "まずSlackをオフィスの席と連携してください。チームサーバーのアカウントページで「Slackを連携」を押し、表示されたコードをここにDMで送ってください。",
+    shared:
+      "他社と共有しているチャンネルでは答えません。DMか自社のチャンネルで聞いてください。",
+    linked: "連携しました。このオフィスでは{name}さんです。",
+    codeWrong:
+      "そのコードは使えません。期限が切れたかもしれません。アカウントページで作り直してください。",
     failed: "{name}のクローンは今回答えられませんでした。",
     files: "ファイルが届いています。Clone Officeで開いてください。",
   },
@@ -141,10 +191,16 @@ const WORDS = {
     asked: "Le pregunté al clon de {name}. La respuesta llega en este hilo.",
     whom: "¿A quién pregunto? Menciónalo con tu pregunta: @Clone Office @nombre …",
     what: "¿Qué le pregunto al clon de {name}?",
-    unknown: "{name} todavía no está en esta oficina.",
+    unknown:
+      "Todavía no sé quién es {name} en la oficina: debe vincular su Slack una vez, desde su página en el servidor del equipo.",
     self: "Ese eres tú: menciona al compañero a quien quieres preguntar.",
     stranger:
-      "Todavía no tienes sitio en esta oficina. Pide a quien la administra que te invite con el correo de tu cuenta de Slack.",
+      "Primero vincula tu Slack con tu lugar en la oficina: en el servidor del equipo abre la página de tu cuenta, pulsa Vincular Slack y envíame aquí por mensaje directo el código que aparece.",
+    shared:
+      "No respondo en canales compartidos con otra empresa. Pregúntame por mensaje directo o en uno de tus canales.",
+    linked: "Vinculado: en esta oficina eres {name}.",
+    codeWrong:
+      "Ese código no funciona: puede que haya caducado. Crea uno nuevo en la página de tu cuenta.",
     failed: "El clon de {name} no pudo responder esta vez.",
     files: "Llegaron archivos: ábrelos en Clone Office.",
   },
@@ -153,10 +209,16 @@ const WORDS = {
     asked: "Perguntei ao clone de {name}. A resposta chega nesta conversa.",
     whom: "Para quem pergunto? Mencione a pessoa junto com a pergunta: @Clone Office @nome …",
     what: "O que pergunto ao clone de {name}?",
-    unknown: "{name} ainda não está neste escritório.",
+    unknown:
+      "Ainda não sei quem é {name} no escritório: a pessoa precisa vincular o Slack uma vez, pela página dela no servidor da equipe.",
     self: "Esse é você: mencione o colega a quem quer perguntar.",
     stranger:
-      "Você ainda não tem lugar neste escritório. Peça a quem o administra para convidar você com o e-mail da sua conta do Slack.",
+      "Primeiro vincule seu Slack ao seu lugar no escritório: no servidor da equipe, abra a página da sua conta, toque em Vincular Slack e me envie aqui por mensagem direta o código que aparecer.",
+    shared:
+      "Não respondo em canais compartilhados com outra empresa. Pergunte por mensagem direta ou em um dos seus canais.",
+    linked: "Vinculado: neste escritório você é {name}.",
+    codeWrong:
+      "Esse código não funciona: pode ter expirado. Crie um novo na página da sua conta.",
     failed: "O clone de {name} não conseguiu responder desta vez.",
     files: "Chegaram arquivos: abra-os no Clone Office.",
   },
@@ -200,6 +262,9 @@ export function plainWords(text: string): string {
     .trim();
 }
 
+const hashCode = (code: string) =>
+  createHash("sha256").update(`slack-link:${code}`).digest("hex");
+
 // ---- The connection ----
 
 /** The socket Slack sends events down (Node's own WebSocket, or a test's). */
@@ -231,6 +296,7 @@ interface Tokens {
 
 interface Link {
   office: string;
+  sealed: string;
   tokens: Tokens;
   bot: string;
   socket?: SlackSocket;
@@ -246,9 +312,9 @@ interface SlackPerson {
 
 interface ThreadRow {
   office_id: string;
+  task_id: string;
   channel: string;
   thread_ts: string;
-  task_id: string;
   asker: string;
   slack_user: string;
   lang: string;
@@ -282,6 +348,7 @@ export class TeamSlack {
   private seen = new Map<string, number>();
   private timer?: ReturnType<typeof setInterval>;
   private polling = false;
+  private synced = 0;
 
   constructor(
     relay: Relay,
@@ -306,13 +373,7 @@ export class TeamSlack {
   /** Connects every office that has its Slack, and looks for answers to post from then on. */
   async start(): Promise<void> {
     if (!this.key) return;
-    const rows = await this.db.query<{
-      office_id: string;
-      sealed: string;
-      bot_user: string;
-    }>("SELECT office_id, sealed, bot_user FROM office_slack");
-    for (const row of rows)
-      this.connect(row.office_id, row.sealed, row.bot_user);
+    await this.sync();
     this.timer ??= setInterval(() => void this.poll(), POLL_MS);
     this.timer.unref?.();
   }
@@ -322,6 +383,32 @@ export class TeamSlack {
     this.timer = undefined;
     for (const link of this.links.values()) this.disconnect(link);
     this.links.clear();
+  }
+
+  /**
+   * What this process holds, brought in line with what is connected: an office connected or its
+   * tokens changed by another process is connected (again) here, one let go is let go here too.
+   */
+  async sync(): Promise<void> {
+    if (!this.key) return;
+    this.synced = Date.now();
+    const rows = await this.db.query<{
+      office_id: string;
+      sealed: string;
+      bot_user: string;
+    }>("SELECT office_id, sealed, bot_user FROM office_slack");
+    const now = new Set(rows.map((row) => row.office_id));
+    for (const [office, link] of this.links)
+      if (!now.has(office)) {
+        this.disconnect(link);
+        this.links.delete(office);
+      }
+    for (const row of rows) {
+      const held = this.links.get(row.office_id);
+      if (held?.sealed === row.sealed) continue;
+      if (held) this.disconnect(held);
+      this.connect(row.office_id, row.sealed, row.bot_user);
+    }
   }
 
   /** The office's Slack as its page shows it: connected, to which workspace, by whom. */
@@ -348,7 +435,8 @@ export class TeamSlack {
 
   /**
    * Connects the office's Slack with its two tokens after Slack says both work, or lets it go
-   * (null). Only an owner of the office comes here (the handler asks the accounts first).
+   * (null), with what was being followed there. Only an owner of the office comes here (the
+   * handler asks the accounts first).
    */
   async set(
     office: string,
@@ -359,9 +447,10 @@ export class TeamSlack {
       await this.db.query("DELETE FROM office_slack WHERE office_id = $1", [
         office,
       ]);
-      const link = this.links.get(office);
-      if (link) this.disconnect(link);
-      this.links.delete(office);
+      await this.db.query("DELETE FROM slack_threads WHERE office_id = $1", [
+        office,
+      ]);
+      await this.sync();
       return;
     }
     if (!this.key)
@@ -399,13 +488,84 @@ export class TeamSlack {
         new Date().toISOString(),
       ],
     );
-    const old = this.links.get(office);
-    if (old) this.disconnect(old);
-    this.links.delete(office);
-    this.connect(office, sealed, String(me.user_id ?? ""));
+    await this.sync();
     this.timer ??= setInterval(() => void this.poll(), POLL_MS);
     this.timer.unref?.();
   }
+
+  // ---- Linking one's Slack, from one's page ----
+
+  /** A code for one's page: sent to the app in Slack, it links that Slack account to them. */
+  async linkCode(office: string, user: string): Promise<string> {
+    const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
+    await this.db.query(
+      "DELETE FROM slack_codes WHERE (office_id = $1 AND user_id = $2) OR expires < $3",
+      [office, user, new Date().toISOString()],
+    );
+    await this.db.query(
+      "INSERT INTO slack_codes (code_hash, office_id, user_id, expires) VALUES ($1, $2, $3, $4) ON CONFLICT (code_hash) DO UPDATE SET office_id = $2, user_id = $3, expires = $4",
+      [
+        hashCode(`${office}:${code}`),
+        office,
+        user,
+        new Date(Date.now() + CODE_MINUTES * 60_000).toISOString(),
+      ],
+    );
+    return code;
+  }
+
+  /** The Slack name linked to someone in the office, if any. */
+  async linkedName(office: string, user: string): Promise<string | undefined> {
+    const [row] = await this.db.query<{ name: string }>(
+      "SELECT name FROM slack_people WHERE office_id = $1 AND user_id = $2",
+      [office, user],
+    );
+    return row?.name;
+  }
+
+  async unlink(office: string, user: string): Promise<void> {
+    await this.db.query(
+      "DELETE FROM slack_people WHERE office_id = $1 AND user_id = $2",
+      [office, user],
+    );
+  }
+
+  /** A code sent to the app: links the Slack account that sent it, the code used up. */
+  private async takeCode(
+    office: string,
+    code: string,
+    slackUser: string,
+    name: string,
+  ): Promise<string | undefined> {
+    return this.db.transaction(async (tx) => {
+      const [row] = await tx.query<{ user_id: string }>(
+        "DELETE FROM slack_codes WHERE code_hash = $1 AND office_id = $2 AND expires > $3 RETURNING user_id",
+        [hashCode(`${office}:${code}`), office, new Date().toISOString()],
+      );
+      if (!row) return undefined;
+      await tx.query(
+        "DELETE FROM slack_people WHERE office_id = $1 AND (user_id = $2 OR slack_user = $3)",
+        [office, row.user_id, slackUser],
+      );
+      await tx.query(
+        "INSERT INTO slack_people (office_id, slack_user, user_id, name, linked) VALUES ($1, $2, $3, $4, $5)",
+        [
+          office,
+          slackUser,
+          row.user_id,
+          name.slice(0, 80),
+          new Date().toISOString(),
+        ],
+      );
+      const [account] = await tx.query<{ name: string }>(
+        "SELECT name FROM auth_users WHERE id = $1",
+        [row.user_id],
+      );
+      return account?.name ?? name;
+    });
+  }
+
+  // ---- The connection ----
 
   private connect(office: string, sealed: string, bot: string): void {
     if (!this.key) return;
@@ -415,7 +575,14 @@ export class TeamSlack {
     } catch {
       return;
     }
-    const link: Link = { office, tokens, bot, stopped: false, tries: 0 };
+    const link: Link = {
+      office,
+      sealed,
+      tokens,
+      bot,
+      stopped: false,
+      tries: 0,
+    };
     this.links.set(office, link);
     void this.openSocket(link);
   }
@@ -507,30 +674,42 @@ export class TeamSlack {
     socket.addEventListener("error", () => {});
   }
 
-  /** One mention or direct message: a new request, or more words for the thread's request. */
+  /** One mention or direct message: a code, a new request, or more words for the thread's. */
   async take(link: Link, event: SlackEvent): Promise<void> {
     const office = link.office;
     const channel = event.channel as string;
     const user = event.user as string;
     const thread = event.thread_ts ?? (event.ts as string);
     const text = event.text ?? "";
+    const direct = event.channel_type === "im";
     const asker = await this.person(link, user);
     const lang = slackLang(asker.locale);
     const reply = (words: string) =>
       this.post(link, channel, thread, words).catch(() => {});
-    // The one asking: their place in the office, by the email Slack and this server share.
-    const caller = await this.callerFor(office, asker);
+    // A code from one's page, sent directly: this Slack account is them from now on.
+    const code = /^\s*(\d{6})\s*$/.exec(plainWords(text))?.[1];
+    if (direct && code) {
+      const name = await this.takeCode(office, code, user, asker.name);
+      return reply(
+        name ? words(lang, "linked", name) : words(lang, "codeWrong"),
+      );
+    }
+    // Never where another company reads along.
+    if (!direct && !(await this.ownChannel(link, channel)))
+      return reply(words(lang, "shared"));
+    const caller = await this.callerFor(office, user, asker);
     if (!caller) return reply(words(lang, "stranger"));
     const others = mentioned(text, link.bot);
     const said = plainWords(text);
     const [kept] = event.thread_ts
       ? await this.db.query<ThreadRow>(
-          "SELECT * FROM slack_threads WHERE office_id = $1 AND channel = $2 AND thread_ts = $3",
-          [office, channel, event.thread_ts],
+          "SELECT * FROM slack_threads WHERE office_id = $1 AND channel = $2 AND thread_ts = $3 AND slack_user = $4 ORDER BY created DESC LIMIT 1",
+          [office, channel, event.thread_ts, user],
         )
       : [];
-    // More words in a thread a request was asked in, by the one who asked it.
-    if (kept && kept.slack_user === user && others.length === 0) {
+    const via = direct ? "slack-dm" : "slack-channel";
+    // More words in a thread they asked in.
+    if (kept && others.length === 0) {
       if (!said) return;
       const task = await this.relay
         .taskFor(caller, kept.task_id)
@@ -546,8 +725,8 @@ export class TeamSlack {
           thread,
           user,
           lang,
+          via,
           context: task.contextId,
-          direct: event.channel_type === "im",
         });
         return;
       }
@@ -567,9 +746,21 @@ export class TeamSlack {
       thread,
       user,
       lang,
-      direct: event.channel_type === "im",
+      via,
     });
     await reply(words(lang, "asked", target.card.name));
+  }
+
+  /** Whether a channel is the workspace's own, not shared with another company; unsure is no. */
+  private async ownChannel(link: Link, channel: string): Promise<boolean> {
+    try {
+      const { channel: found } = await this.call<{
+        channel?: { is_ext_shared?: boolean; is_shared?: boolean };
+      }>("conversations.info", { channel }, link.tokens.bot);
+      return Boolean(found) && !found?.is_ext_shared && !found?.is_shared;
+    } catch {
+      return false;
+    }
   }
 
   /** Sends the request and remembers the thread it is answered in. */
@@ -583,14 +774,15 @@ export class TeamSlack {
       thread: string;
       user: string;
       lang: Lang;
+      via: "slack-channel" | "slack-dm";
       context?: string;
-      direct: boolean;
     },
   ): Promise<Task> {
     // Where the answer goes, for the clone and the look before it leaves to weigh.
-    const where = at.direct
-      ? "(Asked from Slack, in a direct message: the answer goes back to them alone.)"
-      : "(Asked from Slack, in a channel: the answer is posted in its thread, for everyone in that channel to read.)";
+    const where =
+      at.via === "slack-dm"
+        ? "(Asked from Slack, in a direct message: the answer goes back to them alone.)"
+        : "(Asked from Slack, in a channel: the answer is posted in its thread, for everyone in that channel to read.)";
     const task = await this.relay.send(
       caller,
       to,
@@ -598,14 +790,15 @@ export class TeamSlack {
       [],
       at.context,
       "person",
+      at.via,
     );
     await this.db.query(
-      "INSERT INTO slack_threads (office_id, channel, thread_ts, task_id, asker, slack_user, lang, posted, done, created) VALUES ($1, $2, $3, $4, $5, $6, $7, 0, false, $8) ON CONFLICT (office_id, channel, thread_ts) DO UPDATE SET task_id = $4, asker = $5, slack_user = $6, lang = $7, posted = 0, done = false",
+      "INSERT INTO slack_threads (office_id, task_id, channel, thread_ts, asker, slack_user, lang, posted, done, created) VALUES ($1, $2, $3, $4, $5, $6, $7, 0, false, $8)",
       [
         at.link.office,
+        task.id,
         at.channel,
         at.thread,
-        task.id,
         caller.id,
         at.user,
         at.lang,
@@ -615,18 +808,34 @@ export class TeamSlack {
     return task;
   }
 
-  /** The asker's place in the office: theirs, or one on the web made for an account here. */
-  private async callerFor(
+  /** The account a Slack account is: linked with a code, or by an email Google checked for it. */
+  private async accountFor(
     office: string,
+    slackUser: string,
     person: SlackPerson,
-  ): Promise<Caller | undefined> {
+  ): Promise<{ id: string; name: string } | undefined> {
+    const [linked] = await this.db.query<{ id: string; name: string }>(
+      "SELECT u.id, u.name FROM slack_people s JOIN auth_users u ON u.id = s.user_id JOIN office_people p ON p.user_id = u.id AND p.office_id = s.office_id WHERE s.office_id = $1 AND s.slack_user = $2",
+      [office, slackUser],
+    );
+    if (linked) return linked;
     if (!person.email) return undefined;
-    const [account] = await this.db
+    const [checked] = await this.db
       .query<{ id: string; name: string }>(
-        "SELECT u.id, u.name FROM auth_users u JOIN office_people p ON p.user_id = u.id WHERE p.office_id = $1 AND lower(u.email) = lower($2)",
+        `SELECT u.id, u.name FROM auth_users u JOIN office_people p ON p.user_id = u.id WHERE p.office_id = $1 AND lower(u.email) = lower($2) AND u."emailVerified" = true`,
         [office, person.email],
       )
       .catch(() => []);
+    return checked;
+  }
+
+  /** The asker's place in the office: theirs, or one on the web made for their account. */
+  private async callerFor(
+    office: string,
+    slackUser: string,
+    person: SlackPerson,
+  ): Promise<Caller | undefined> {
+    const account = await this.accountFor(office, slackUser, person);
     if (!account) return undefined;
     return (
       (await this.relay.callerFor(office, account.id)) ??
@@ -637,34 +846,18 @@ export class TeamSlack {
     );
   }
 
-  /** A colleague mentioned in Slack, as a member of the office: by email, else by exact name. */
+  /** A colleague mentioned in Slack, as a member of the office: linked or Google-checked, never a guess. */
   private async colleague(
     link: Link,
     office: string,
     user: string,
   ): Promise<Member | undefined> {
     const them = await this.person(link, user);
-    if (them.email) {
-      const [account] = await this.db
-        .query<{ id: string }>(
-          "SELECT u.id FROM auth_users u JOIN office_people p ON p.user_id = u.id WHERE p.office_id = $1 AND lower(u.email) = lower($2)",
-          [office, them.email],
-        )
-        .catch(() => []);
-      const member = account
-        ? await this.relay.memberOf(office, account.id)
-        : undefined;
-      if (member) return member;
-    }
-    const name = them.name.trim().toLowerCase();
-    const same = (await this.relay.members(office)).filter(
-      (member) => member.card.name.trim().toLowerCase() === name,
-    );
-    // never a guess: one exact name, or nobody
-    return same.length === 1 ? same[0] : undefined;
+    const account = await this.accountFor(office, user, them);
+    return account ? this.relay.memberOf(office, account.id) : undefined;
   }
 
-  /** A Slack user as the app may read them, asked once each. */
+  /** A Slack user as the app may read them, asked once each for a while. */
   private person(link: Link, user: string): Promise<SlackPerson> {
     const key = `${link.office}:${user}`;
     let known = this.people.get(key);
@@ -703,11 +896,24 @@ export class TeamSlack {
 
   /** Posts what came back on the requests asked from Slack, each answer once. */
   async poll(): Promise<void> {
-    if (this.polling || !this.links.size) return;
+    if (this.polling) return;
     this.polling = true;
     try {
+      if (Date.now() - this.synced > SYNC_MS) await this.sync().catch(() => {});
+      if (!this.links.size) return;
+      // Followed this long, a request is let go.
+      await this.db.query(
+        "UPDATE slack_threads SET done = true WHERE NOT done AND created < $1",
+        [
+          new Date(
+            Date.now() - FOLLOW_DAYS * 24 * 60 * 60 * 1000,
+          ).toISOString(),
+        ],
+      );
+      // Only the offices this process holds a connection for, the oldest first, each its share.
       const rows = await this.db.query<ThreadRow>(
-        "SELECT * FROM slack_threads WHERE NOT done ORDER BY created LIMIT 200",
+        "SELECT * FROM slack_threads WHERE NOT done AND office_id = ANY($1::text[]) ORDER BY created LIMIT 500",
+        [[...this.links.keys()]],
       );
       for (const row of rows) {
         const link = this.links.get(row.office_id);
@@ -725,13 +931,13 @@ export class TeamSlack {
       office: row.office_id,
       card: { name: "", description: "" },
     };
-    const task = await this.relay.taskFor(caller, row.task_id).catch(() => {
-      return undefined;
-    });
-    const where = [row.office_id, row.channel, row.thread_ts, row.task_id];
+    const where = [row.office_id, row.task_id];
+    const task = await this.relay
+      .taskFor(caller, row.task_id)
+      .catch(() => undefined);
     if (!task) {
       await this.db.query(
-        "UPDATE slack_threads SET done = true WHERE office_id = $1 AND channel = $2 AND thread_ts = $3 AND task_id = $4",
+        "UPDATE slack_threads SET done = true WHERE office_id = $1 AND task_id = $2",
         where,
       );
       return;
@@ -741,14 +947,14 @@ export class TeamSlack {
     // Claimed in the database first: of relays sharing it, one posts each answer.
     const from = await this.db.transaction(async (tx) => {
       const [now] = await tx.query<{ posted: number }>(
-        "SELECT posted FROM slack_threads WHERE office_id = $1 AND channel = $2 AND thread_ts = $3 AND task_id = $4 FOR UPDATE",
+        "SELECT posted FROM slack_threads WHERE office_id = $1 AND task_id = $2 AND NOT done FOR UPDATE",
         where,
       );
       if (!now) return undefined;
       const posted = Number(now.posted);
       if (posted >= answers.length && !final) return undefined;
       await tx.query(
-        "UPDATE slack_threads SET posted = $5, done = $6 WHERE office_id = $1 AND channel = $2 AND thread_ts = $3 AND task_id = $4",
+        "UPDATE slack_threads SET posted = $3, done = $4 WHERE office_id = $1 AND task_id = $2",
         [...where, Math.max(posted, answers.length), final],
       );
       return posted;
@@ -759,31 +965,45 @@ export class TeamSlack {
       (member) => member.id === task.metadata.to,
     );
     const name = target?.card.name ?? "";
-    for (const answer of answers.slice(from)) {
-      const text = answer.parts
-        .map((part) => part.text)
-        .join("\n")
-        .trim();
-      const files = answer.files?.length ? `\n\n_${words(lang, "files")}_` : "";
-      await this.post(
-        link,
-        row.channel,
-        row.thread_ts,
-        `${slackMrkdwn(text)}${files}`,
-        answer.metadata?.by === "person" ? name : words(lang, "clone", name),
+    let sent = from;
+    try {
+      for (const answer of answers.slice(from)) {
+        const text = answer.parts
+          .map((part) => part.text)
+          .join("\n")
+          .trim();
+        const files = answer.files?.length
+          ? `\n\n_${words(lang, "files")}_`
+          : "";
+        await this.post(
+          link,
+          row.channel,
+          row.thread_ts,
+          `${slackMrkdwn(text)}${files}`,
+          answer.metadata?.by === "person" ? name : words(lang, "clone", name),
+        );
+        sent += 1;
+      }
+      if (
+        final &&
+        !answers.length &&
+        (task.status.state === "FAILED" || task.status.state === "REJECTED")
+      )
+        await this.post(
+          link,
+          row.channel,
+          row.thread_ts,
+          words(lang, "failed", name),
+        );
+    } catch (error) {
+      // A thread that is gone for good (the channel archived, the app taken out) is let go.
+      if (error instanceof SlackRefused && GONE.has(error.code)) return;
+      // What Slack did not take is given back, to be posted on the next look.
+      await this.db.query(
+        "UPDATE slack_threads SET posted = $3, done = false WHERE office_id = $1 AND task_id = $2 AND posted = $4",
+        [...where, sent, Math.max(from, answers.length)],
       );
     }
-    if (
-      final &&
-      !answers.length &&
-      (task.status.state === "FAILED" || task.status.state === "REJECTED")
-    )
-      await this.post(
-        link,
-        row.channel,
-        row.thread_ts,
-        words(lang, "failed", name),
-      );
   }
 
   /** A message in the thread, as the app or named as the one who answered. */

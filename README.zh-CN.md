@@ -130,7 +130,7 @@ npx clone-office mcp add claude-desktop   # 或 claude-code、codex、cursor、g
 
 ## 在 Slack 里提问
 
-办公室的所有者在团队服务器的"办公室"标签页里连接一次团队的 Slack（应用已预先填好，只需粘贴两个令牌）。之后办公室里的任何人都可以在 Slack 里问："@Clone Office @Minsu 退款是怎么处理的？"，Minsu 的分身会在话题里回答。按 Slack 邮箱匹配成员，应用只读取提到它的消息和直接发给它的消息。
+办公室的所有者在团队服务器的"办公室"标签页里连接一次团队的 Slack（应用已预先填好，只需粘贴两个令牌）。之后办公室里的任何人都可以在 Slack 里问："@Clone Office @Minsu 退款是怎么处理的？"，Minsu 的分身会在话题里回答。每个人用自己页面上的代码连接一次 Slack；应用只读取提到它的消息和直接发给它的消息，也不在与其他公司共享的频道里回答。
 
 ## Claude Code 插件
 

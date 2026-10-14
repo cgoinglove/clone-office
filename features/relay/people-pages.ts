@@ -186,9 +186,16 @@ const WORDS = {
     newLinkWhat:
       "Links made with the office key stop working. Invites, and everyone already in, are not affected.",
     officeName: "Office name",
+    slackLinkWhat:
+      "Link your Slack account once, so colleagues can ask your clone from Slack and you can ask theirs.",
+    slackLinkCta: "Link Slack",
+    slackLinkCode:
+      "Send this code to @Clone Office in a direct message in Slack, within 10 minutes:",
+    slackLinked: "Linked to {name} in Slack.",
+    slackUnlink: "Unlink",
     slackTitle: "Slack",
     slackWhat:
-      "Let your team ask each other’s clones from Slack: mention the app and a colleague with the question, and the answer comes in the thread. People are matched by the email their Slack account uses.",
+      "Let your team ask each other’s clones from Slack: mention the app and a colleague with the question, and the answer comes in the thread. Each person links their Slack once, from their account page.",
     slackOn: "Connected to {team}.",
     slackOnBy: "Connected to {team} by {name}.",
     slackOff: "Disconnect",
@@ -571,9 +578,16 @@ const WORDS = {
     newLinkWhat:
       "오피스 키로 만든 링크는 더 쓸 수 없어요. 초대 링크와 이미 들어온 사람은 그대로예요.",
     officeName: "오피스 이름",
+    slackLinkWhat:
+      "슬랙 계정을 한 번 연결하면, 동료가 슬랙에서 내 클론에게 묻고 나도 동료의 클론에게 물을 수 있어요.",
+    slackLinkCta: "슬랙 연결",
+    slackLinkCode:
+      "10분 안에 슬랙에서 @Clone Office에게 이 코드를 DM으로 보내 주세요:",
+    slackLinked: "슬랙의 {name} 님과 연결되어 있어요.",
+    slackUnlink: "연결 끊기",
     slackTitle: "슬랙",
     slackWhat:
-      "팀이 슬랙에서 서로의 클론에게 물을 수 있게 해요. 앱과 동료를 함께 부르며 물으면 답이 그 스레드에 와요. 사람은 슬랙 계정의 이메일로 찾아요.",
+      "팀이 슬랙에서 서로의 클론에게 물을 수 있게 해요. 앱과 동료를 함께 부르며 물으면 답이 그 스레드에 와요. 각자 계정 페이지에서 슬랙을 한 번 연결해요.",
     slackOn: "{team}에 연결되어 있어요.",
     slackOnBy: "{name} 님이 {team}에 연결했어요.",
     slackOff: "연결 끊기",
@@ -946,9 +960,16 @@ const WORDS = {
     newLinkWhat:
       "用办公室密钥生成的链接将无法再使用。邀请链接和已经加入的人不受影响。",
     officeName: "办公室名称",
+    slackLinkWhat:
+      "连接一次你的 Slack 账号，同事就能在 Slack 里问你的分身，你也能问他们的分身。",
+    slackLinkCta: "连接 Slack",
+    slackLinkCode:
+      "请在 10 分钟内，在 Slack 里把这个代码私信发给 @Clone Office：",
+    slackLinked: "已连接到 Slack 里的 {name}。",
+    slackUnlink: "断开",
     slackTitle: "Slack",
     slackWhat:
-      "让团队在 Slack 里向彼此的分身提问：提到这个应用和一位同事并写下问题，回答会出现在该话题里。按 Slack 账号的邮箱匹配成员。",
+      "让团队在 Slack 里向彼此的分身提问：提到这个应用和一位同事并写下问题，回答会出现在该话题里。每个人在自己的账户页面连接一次 Slack。",
     slackOn: "已连接到 {team}。",
     slackOnBy: "{name} 已连接到 {team}。",
     slackOff: "断开连接",
@@ -1310,9 +1331,16 @@ const WORDS = {
     newLinkWhat:
       "オフィスキーで作ったリンクは使えなくなります。招待リンクと、すでに参加している人はそのままです。",
     officeName: "オフィス名",
+    slackLinkWhat:
+      "Slackアカウントを一度連携すると、同僚がSlackからあなたのクローンに聞けて、あなたも同僚のクローンに聞けます。",
+    slackLinkCta: "Slackを連携",
+    slackLinkCode:
+      "10分以内に、Slackで@Clone OfficeにこのコードをDMで送ってください：",
+    slackLinked: "Slackの{name}さんと連携しています。",
+    slackUnlink: "連携を解除",
     slackTitle: "Slack",
     slackWhat:
-      "チームがSlackからお互いのクローンに聞けるようにします。アプリと同僚をメンションして質問すると、答えはそのスレッドに届きます。人はSlackアカウントのメールアドレスで照合します。",
+      "チームがSlackからお互いのクローンに聞けるようにします。アプリと同僚をメンションして質問すると、答えはそのスレッドに届きます。各自がアカウントページからSlackを一度連携します。",
     slackOn: "{team}に接続しています。",
     slackOnBy: "{name}さんが{team}に接続しました。",
     slackOff: "接続を解除",
@@ -1715,9 +1743,16 @@ const WORDS = {
     newLinkWhat:
       "Los enlaces hechos con la clave de la oficina dejan de funcionar. Las invitaciones y quienes ya están dentro no se ven afectados.",
     officeName: "Nombre de la oficina",
+    slackLinkWhat:
+      "Vincula tu cuenta de Slack una vez, para que tus compañeros pregunten a tu clon desde Slack y tú puedas preguntar a los suyos.",
+    slackLinkCta: "Vincular Slack",
+    slackLinkCode:
+      "Envía este código a @Clone Office por mensaje directo en Slack, en los próximos 10 minutos:",
+    slackLinked: "Vinculado a {name} en Slack.",
+    slackUnlink: "Desvincular",
     slackTitle: "Slack",
     slackWhat:
-      "Permite que tu equipo pregunte a los clones de los demás desde Slack: menciona la app y a un compañero con la pregunta, y la respuesta llega en el hilo. Las personas se reconocen por el correo de su cuenta de Slack.",
+      "Permite que tu equipo pregunte a los clones de los demás desde Slack: menciona la app y a un compañero con la pregunta, y la respuesta llega en el hilo. Cada persona vincula su Slack una vez, desde la página de su cuenta.",
     slackOn: "Conectado a {team}.",
     slackOnBy: "{name} lo conectó a {team}.",
     slackOff: "Desconectar",
@@ -2114,9 +2149,16 @@ const WORDS = {
     newLinkWhat:
       "Os links feitos com a chave do escritório param de funcionar. Os convites e quem já está dentro não são afetados.",
     officeName: "Nome do escritório",
+    slackLinkWhat:
+      "Vincule sua conta do Slack uma vez, para que os colegas perguntem ao seu clone pelo Slack e você possa perguntar aos deles.",
+    slackLinkCta: "Vincular Slack",
+    slackLinkCode:
+      "Envie este código para @Clone Office por mensagem direta no Slack, em até 10 minutos:",
+    slackLinked: "Vinculado a {name} no Slack.",
+    slackUnlink: "Desvincular",
     slackTitle: "Slack",
     slackWhat:
-      "Deixe sua equipe perguntar aos clones uns dos outros pelo Slack: mencione o app e um colega com a pergunta, e a resposta chega na conversa. As pessoas são reconhecidas pelo e-mail da conta do Slack.",
+      "Deixe sua equipe perguntar aos clones uns dos outros pelo Slack: mencione o app e um colega com a pergunta, e a resposta chega na conversa. Cada pessoa vincula o Slack uma vez, pela página da sua conta.",
     slackOn: "Conectado a {team}.",
     slackOnBy: "{name} conectou a {team}.",
     slackOff: "Desconectar",
@@ -3101,6 +3143,8 @@ export function homePage(input: {
   admin?: boolean;
   /** The team's Slack, for an owner to connect (slack.ts). */
   slack?: { on: boolean; team?: string; by?: string; sealing: boolean };
+  /** One's own Slack once the office has its Slack: whom it is linked to, or a code to link it. */
+  slackLink?: { linked?: string; code?: string };
   /** How the reader signs in, and the ways the server offers. */
   ways?: SignInWays;
   methods?: SignInMethods;
@@ -3214,6 +3258,7 @@ ${
     : `<form method="post" action="/home/pair">${officeField}<button type="submit" class="quiet">${say(lang, input.computer ? "moveComputer" : "connectCta")}</button></form>`
 }
 </section>
+${input.slackLink ? slackLinkSection(lang, input.slackLink, officeField) : ""}
 ${signIn}`);
   }
 
@@ -3344,6 +3389,27 @@ ${connect}
 ${connect}
 ${input.command ? "" : `<form method="post" action="/home/web">${officeField}<button type="submit" class="quiet">${say(lang, "webCta")}</button></form>`}
 </section>`);
+}
+
+/** One's own Slack on the account tab: linked to whom, or a code to send the app. */
+function slackLinkSection(
+  lang: PageLanguage,
+  link: { linked?: string; code?: string },
+  officeField: string,
+): string {
+  return `<section id="slack">
+<h2>${say(lang, "slackTitle")}</h2>
+${
+  link.code
+    ? `<p>${say(lang, "slackLinkCode")}</p>
+<pre class="pair-code">${escape(link.code)}</pre>`
+    : link.linked
+      ? `<p class="done">${say(lang, "slackLinked", { name: link.linked })}</p>
+<form method="post" action="/home/slack/unlink">${officeField}<button type="submit" class="ghost small">${say(lang, "slackUnlink")}</button></form>`
+      : `<p>${say(lang, "slackLinkWhat")}</p>
+<form method="post" action="/home/slack/link">${officeField}<button type="submit" class="quiet">${say(lang, "slackLinkCta")}</button></form>`
+}
+</section>`;
 }
 
 /** The team's Slack on the Office tab: how to connect it, or where it is connected. */

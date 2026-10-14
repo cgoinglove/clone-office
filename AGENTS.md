@@ -426,13 +426,20 @@ These words help discussion. They do not mandate separate services, tables or UI
   app-level tokens checked with Slack, then sealed under the relay's key in `office_slack`; owners
   only, `/home/office/slack`), and its Socket Mode connection hears only `app_mention` and
   `message.im`: "@Clone Office @Minsu …" sends the request to that colleague as from the one who
-  asked, both found by the email their Slack account and their account here share (a web place made
-  for an account without one; the colleague by exact name failing that, never a guess), marked
-  `by: "person"` and told whether it was asked in a channel; `slack_threads` keeps each thread's
-  request and how many answers were posted, claimed in a transaction so relays sharing a database
-  post each once (`poll` every 3 s), named as the colleague's clone (`chat:write.customize`) in the
-  asker's Slack language; a mention later in the thread goes on with it (a new request in the same
-  contextId once it was done). Members
+  asked, each Slack account someone's only once linked (`slack_people`: a six-digit code made on
+  one's account page, `/home/slack/link`, hashed in `slack_codes` for ten minutes, sent to the app
+  directly) or by an email Google checked for their account (`emailVerified`), never one typed at
+  sign-up nor a name (a web place made for an account without one); never in a channel shared with
+  another company (`conversations.info`, unsure is no); marked `by: "person"` and `via`
+  (`slack-channel` or `slack-dm`, a message column), so the clone reads nothing alone for a channel's
+  request (`handle.ts` `inChannel`: no work folders, `noServices`); `slack_threads` keeps one row per
+  request (its thread, asker, how many answers were posted), claimed in a transaction so relays
+  sharing a database post each once and given back when Slack refuses one (a thread gone for good is
+  let go), only for the offices the process holds, followed two weeks, deleted with the office's
+  Slack (`poll` every 3 s, `sync` every minute brings each process in line with `office_slack`);
+  posted as the colleague's clone (`chat:write.customize`) in the asker's Slack language; a mention
+  later in the thread by the same asker goes on with it (a new request in the same contextId once it
+  was done). Members
   share skills with their office (`skills.ts`, `/skills`): one per name per office, its files whole
   as base64 (256 KB, 50 files, 200 skills an office), its description from SKILL.md and its hash
   made by the relay; only the one who shared it updates it, and they or an owner of the office take

@@ -440,10 +440,16 @@ async function answer(options: {
   const ways = (await listFlows()).filter(
     (flow) => flow.when.kind === "request" && !flow.paused,
   );
+  // Asked in a Slack channel: everyone there reads the answer, so nothing is read alone for it.
+  const inChannel = task.history.some(
+    (message) =>
+      message.role === "user" && message.metadata.via === "slack-channel",
+  );
   // Where their work lives, read without asking while answering, unless they turned that off.
-  const folders = (await readPreferences()).answerFromWork
-    ? await workFolders().catch(() => [])
-    : [];
+  const folders =
+    (await readPreferences()).answerFromWork && !inChannel
+      ? await workFolders().catch(() => [])
+      : [];
   const shown = folders.map(shownFolder);
   const gate: SessionGate = {
     url: gateUrl,
@@ -556,6 +562,7 @@ async function answer(options: {
         purpose: "request",
         gate,
         colleagueReads: true,
+        ...(inChannel ? { noServices: true } : {}),
       });
     let result = await run();
     // The brain no longer has the session (deleted, another brain, or past its window): go on from
@@ -584,6 +591,7 @@ async function answer(options: {
         purpose: "request",
         gate,
         colleagueReads: true,
+        ...(inChannel ? { noServices: true } : {}),
       });
       if (again.ok) result = again;
       else {
