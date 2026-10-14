@@ -1,7 +1,9 @@
 # On their phone: the clone in Discord, Telegram or Slack
 
 They can talk with their clone from Discord, Telegram or Slack on their phone, the same as on its
-page. It answers while the app runs on their computer; what they say there goes into a conversation
+page: their own line to their own clone, as Hermes Agent's gateway is to its agent. Asking a
+colleague works there too ("ask Minsu's clone how refunds work"): their clone asks, and the answer
+comes back in the same chat. It answers while the app runs on their computer; what they say there goes into a conversation
 they also see on the page. The words go through that messenger. One messenger at a time: to change,
 they disconnect and set up the other.
 

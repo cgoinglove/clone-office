@@ -17,8 +17,6 @@ COPY --chown=node:node features/relay/ ./features/relay/
 COPY --chown=node:node lib/seal.ts lib/key-code.ts ./lib/
 COPY --chown=node:node features/office/room/*.mjs features/office/room/*.css ./features/office/room/
 COPY --chown=node:node features/minime/office/room-data.ts ./features/minime/office/room-data.ts
-# the team's Slack writes answers in Slack's own marks (features/relay/slack.ts)
-COPY --chown=node:node features/minime/messenger/text.ts ./features/minime/messenger/text.ts
 COPY --chown=node:node messages/ ./messages/
 # The sealing key's folder, a volume of its own in the compose file: kept apart from the database.
 RUN mkdir -p /relay/keys && chown node:node /relay/keys

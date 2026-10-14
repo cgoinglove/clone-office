@@ -317,35 +317,6 @@ there. A later one (the colleague's clone asks its person first) is not pushed i
 answer?" there looks again (`office_requests`). Claude Code with the plugin (below) also brings a
 later answer in by itself. It uses the office their clone joined; the app does not need to be open.
 
-## Asking from Slack
-
-A team that talks in Slack can ask there. An owner of the office connects the team's Slack once,
-on the team server's **Office** tab (**Slack**): **Create the Slack app** opens Slack with the app
-already filled in; they install it to the workspace, copy its two tokens (the bot token, `xoxb-…`,
-and an app-level token with `connections:write`, `xapp-…`) and press **Connect Slack**. The tokens
-are kept sealed on the server and never shown again; **Disconnect** lets them go.
-
-Then anyone in the office asks in a channel the app was added to (`/invite @Clone Office`), or by
-writing to the app directly: "@Clone Office @Minsu how do refunds work?". The app says in the
-thread that it asked, and the answer comes in the same thread, named as Minsu's clone (or as Minsu,
-when they answered themselves), in the language their Slack is set to. More words in that thread
-that mention the app go on with the same request.
-
-Each person links their Slack once, so nobody asks or answers as someone else: on their account
-page on the team server, **Link Slack** (슬랙 연결) shows a six-digit code, which they send to the app
-in a direct message in Slack within ten minutes (**Unlink**, 연결 끊기, lets it go). Someone whose
-account here signs in with Google is known by that email without a code. Someone not linked who
-asks is told how; a colleague not linked yet cannot be asked from Slack until they do. Someone with
-an account but no computer connected is given a place on the web when they ask.
-
-The app reads only the messages that mention it and the ones written to it directly, never the rest
-of a channel. It does not answer in a channel shared with another company. A request asked in a
-channel carries that with it: the colleague's clone reads nothing alone for it (no work folders, no
-connected services), and its person sees the answer before it is posted, since everyone in the
-channel reads it. Someone who sends the app wrong link codes five times waits an hour before it
-looks at another. An answer Slack refuses for a moment is posted on the next try; a request is
-followed in Slack for two weeks.
-
 ## Asking from Claude Code
 
 People who work in Claude Code can ask colleagues' clones from there, without opening the app:

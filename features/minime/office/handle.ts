@@ -440,16 +440,10 @@ async function answer(options: {
   const ways = (await listFlows()).filter(
     (flow) => flow.when.kind === "request" && !flow.paused,
   );
-  // Asked in a Slack channel: everyone there reads the answer, so nothing is read alone for it.
-  const inChannel = task.history.some(
-    (message) =>
-      message.role === "user" && message.metadata.via === "slack-channel",
-  );
   // Where their work lives, read without asking while answering, unless they turned that off.
-  const folders =
-    (await readPreferences()).answerFromWork && !inChannel
-      ? await workFolders().catch(() => [])
-      : [];
+  const folders = (await readPreferences()).answerFromWork
+    ? await workFolders().catch(() => [])
+    : [];
   const shown = folders.map(shownFolder);
   const gate: SessionGate = {
     url: gateUrl,
@@ -562,7 +556,6 @@ async function answer(options: {
         purpose: "request",
         gate,
         colleagueReads: true,
-        ...(inChannel ? { noServices: true } : {}),
       });
     let result = await run();
     // The brain no longer has the session (deleted, another brain, or past its window): go on from
@@ -591,7 +584,6 @@ async function answer(options: {
         purpose: "request",
         gate,
         colleagueReads: true,
-        ...(inChannel ? { noServices: true } : {}),
       });
       if (again.ok) result = again;
       else {
@@ -711,8 +703,7 @@ async function answer(options: {
       // "Ask me first": the person sees the answer before it goes, whatever the check finds,
       // unless they already gave it themselves while it was made. Files always, and an answer
       // their step-in could not be worked into.
-      // And always an answer that goes to a Slack channel, which everyone there reads.
-      approve: approving || files.length > 0 || showFirst || inChannel,
+      approve: approving || files.length > 0 || showFirst,
       from: from?.name,
       byPerson: first?.metadata.by === "person",
       files,
@@ -730,7 +721,7 @@ async function answer(options: {
       ...forKind.filter((flow) => outcome.about?.includes(flow.id)),
     ];
     trust = heldTo(kind.trust, followed);
-    approving = (trust === "ask" && said.length === 0) || inChannel;
+    approving = trust === "ask" && said.length === 0;
     for (const flow of followed)
       await changeFlow(flow.id, (f) => ({
         ...f,

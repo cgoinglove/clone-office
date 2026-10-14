@@ -223,11 +223,6 @@ export interface SessionOptions {
    */
   colleagueReads?: boolean;
   /**
-   * A colleague's request whose answer many will read (asked in a Slack channel): no service is
-   * read for it at all, what the files say kept to what the person allowed one by one.
-   */
-  noServices?: boolean;
-  /**
    * What the person wrote while the session works, read before its next step (chat/steer.ts). The
    * app's own loop takes it between steps; Claude Code, run whole, leaves it for the next turn.
    */
@@ -556,7 +551,7 @@ export async function runSession(
   ];
   // A colleague's request reads in the services let for it, and changes nothing there.
   const colleague =
-    options.colleagueReads && actor === "minime" && !options.noServices
+    options.colleagueReads && actor === "minime"
       ? await colleagueServices()
       : [];
   const colleagueRule = await colleagueRules(colleague);

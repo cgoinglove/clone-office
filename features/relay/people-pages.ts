@@ -10,7 +10,6 @@ import type { SignInMethods, SignInSettings, SignInWays } from "./accounts.ts";
 import { installGuide, type Local, npxLine, type Os } from "./install.ts";
 import { escape, MARK, type PageLanguage, shell } from "./page.ts";
 import type { OwnMessage } from "./relay.ts";
-import { SLACK_CREATE } from "./slack.ts";
 
 const WORDS = {
   en: {
@@ -186,31 +185,6 @@ const WORDS = {
     newLinkWhat:
       "Links made with the office key stop working. Invites, and everyone already in, are not affected.",
     officeName: "Office name",
-    slackLinkWhat:
-      "Link your Slack account once, so colleagues can ask your clone from Slack and you can ask theirs.",
-    slackLinkCta: "Link Slack",
-    slackLinkCode:
-      "Send this code to @Clone Office in a direct message in Slack, within 10 minutes:",
-    slackLinked: "Linked to {name} in Slack.",
-    slackUnlink: "Unlink",
-    slackTitle: "Slack",
-    slackWhat:
-      "Let your team ask each other’s clones from Slack: mention the app and a colleague with the question, and the answer comes in the thread. Each person links their Slack once, from their account page.",
-    slackOn: "Connected to {team}.",
-    slackOnBy: "Connected to {team} by {name}.",
-    slackOff: "Disconnect",
-    slackStep1:
-      "Create the app in Slack. Everything it needs is already filled in.",
-    slackCreate: "Create the Slack app",
-    slackStep2:
-      "Install it to your workspace. Then copy the Bot User OAuth Token from OAuth & Permissions (it starts with xoxb-).",
-    slackStep3:
-      "Under Basic Information › App-Level Tokens, make a token with connections:write and copy it (it starts with xapp-).",
-    slackBot: "Bot token (xoxb-…)",
-    slackApp: "App-level token (xapp-…)",
-    slackConnect: "Connect Slack",
-    slackUse:
-      "In Slack, add the app to a channel (/invite @Clone Office), then write: @Clone Office @Minsu how do refunds work?",
     save: "Save",
     cancel: "Cancel",
     continueGoogle: "Continue with Google",
@@ -359,11 +333,6 @@ const WORDS = {
       "not-in-office": "You are not in this office.",
       "account-failed": "That did not work. Try again.",
       "not-owner": "Only an owner of this office can do that.",
-      "slack-token-wrong":
-        "Slack didn’t accept those tokens. Check that the first starts with xoxb- and the second with xapp-, and that the app is installed.",
-      "slack-unreachable": "Slack didn’t answer. Try again in a moment.",
-      "slack-unsealed":
-        "This server can’t keep Slack’s tokens safely yet: its admin needs to set RELAY_ENCRYPTION_KEY.",
       "not-yourself": "You can't remove yourself.",
       "password-off":
         "Signing in with a password is turned off on this server. Use Google instead.",
@@ -578,30 +547,6 @@ const WORDS = {
     newLinkWhat:
       "오피스 키로 만든 링크는 더 쓸 수 없어요. 초대 링크와 이미 들어온 사람은 그대로예요.",
     officeName: "오피스 이름",
-    slackLinkWhat:
-      "슬랙 계정을 한 번 연결하면, 동료가 슬랙에서 내 클론에게 묻고 나도 동료의 클론에게 물을 수 있어요.",
-    slackLinkCta: "슬랙 연결",
-    slackLinkCode:
-      "10분 안에 슬랙에서 @Clone Office에게 이 코드를 DM으로 보내 주세요:",
-    slackLinked: "슬랙의 {name} 님과 연결되어 있어요.",
-    slackUnlink: "연결 끊기",
-    slackTitle: "슬랙",
-    slackWhat:
-      "팀이 슬랙에서 서로의 클론에게 물을 수 있게 해요. 앱과 동료를 함께 부르며 물으면 답이 그 스레드에 와요. 각자 계정 페이지에서 슬랙을 한 번 연결해요.",
-    slackOn: "{team}에 연결되어 있어요.",
-    slackOnBy: "{name} 님이 {team}에 연결했어요.",
-    slackOff: "연결 끊기",
-    slackStep1: "슬랙에서 앱을 만들어요. 필요한 것은 이미 다 채워져 있어요.",
-    slackCreate: "슬랙 앱 만들기",
-    slackStep2:
-      "워크스페이스에 설치한 뒤, OAuth & Permissions에서 Bot User OAuth Token을 복사해요(xoxb-로 시작해요).",
-    slackStep3:
-      "Basic Information › App-Level Tokens에서 connections:write 권한으로 토큰을 만들어 복사해요(xapp-로 시작해요).",
-    slackBot: "봇 토큰 (xoxb-…)",
-    slackApp: "앱 토큰 (xapp-…)",
-    slackConnect: "슬랙 연결",
-    slackUse:
-      "슬랙에서 앱을 채널에 넣고(/invite @Clone Office) 이렇게 써요: @Clone Office @민수 환불은 어떻게 돼요?",
     save: "저장",
     cancel: "취소",
     continueGoogle: "Google 계정으로 계속하기",
@@ -748,11 +693,6 @@ const WORDS = {
       "not-in-office": "이 오피스에 들어와 있지 않아요.",
       "account-failed": "되지 않았어요. 다시 해 주세요.",
       "not-owner": "이 오피스의 주인만 할 수 있어요.",
-      "slack-token-wrong":
-        "슬랙이 그 토큰을 받지 않았어요. 첫째는 xoxb-, 둘째는 xapp-로 시작하는지, 앱을 설치했는지 확인해 주세요.",
-      "slack-unreachable": "슬랙이 답하지 않았어요. 잠시 뒤 다시 해 주세요.",
-      "slack-unsealed":
-        "이 서버는 아직 슬랙 토큰을 안전하게 보관할 수 없어요. 서버 관리자가 RELAY_ENCRYPTION_KEY를 설정해야 해요.",
       "not-yourself": "나 자신은 내보낼 수 없어요.",
       "password-off":
         "이 서버에서는 비밀번호 로그인이 꺼져 있어요. Google로 로그인해 주세요.",
@@ -960,30 +900,6 @@ const WORDS = {
     newLinkWhat:
       "用办公室密钥生成的链接将无法再使用。邀请链接和已经加入的人不受影响。",
     officeName: "办公室名称",
-    slackLinkWhat:
-      "连接一次你的 Slack 账号，同事就能在 Slack 里问你的分身，你也能问他们的分身。",
-    slackLinkCta: "连接 Slack",
-    slackLinkCode:
-      "请在 10 分钟内，在 Slack 里把这个代码私信发给 @Clone Office：",
-    slackLinked: "已连接到 Slack 里的 {name}。",
-    slackUnlink: "断开",
-    slackTitle: "Slack",
-    slackWhat:
-      "让团队在 Slack 里向彼此的分身提问：提到这个应用和一位同事并写下问题，回答会出现在该话题里。每个人在自己的账户页面连接一次 Slack。",
-    slackOn: "已连接到 {team}。",
-    slackOnBy: "{name} 已连接到 {team}。",
-    slackOff: "断开连接",
-    slackStep1: "在 Slack 中创建应用，所需内容都已填好。",
-    slackCreate: "创建 Slack 应用",
-    slackStep2:
-      "安装到你的工作区，然后在 OAuth & Permissions 中复制 Bot User OAuth Token（以 xoxb- 开头）。",
-    slackStep3:
-      "在 Basic Information › App-Level Tokens 中创建一个带 connections:write 的令牌并复制（以 xapp- 开头）。",
-    slackBot: "机器人令牌 (xoxb-…)",
-    slackApp: "应用级令牌 (xapp-…)",
-    slackConnect: "连接 Slack",
-    slackUse:
-      "在 Slack 中把应用加入频道（/invite @Clone Office），然后这样写：@Clone Office @Minsu 退款是怎么处理的？",
     save: "保存",
     cancel: "取消",
     continueGoogle: "使用 Google 账号继续",
@@ -1115,11 +1031,6 @@ const WORDS = {
       "not-in-office": "你不在这个办公室里。",
       "account-failed": "没有成功。请重试。",
       "not-owner": "只有这个办公室的所有者才能这样做。",
-      "slack-token-wrong":
-        "Slack 没有接受这些令牌。请确认第一个以 xoxb- 开头、第二个以 xapp- 开头，并且应用已安装。",
-      "slack-unreachable": "Slack 没有回应。请稍后再试。",
-      "slack-unsealed":
-        "这台服务器还不能安全保存 Slack 的令牌：管理员需要设置 RELAY_ENCRYPTION_KEY。",
       "not-yourself": "你不能移除自己。",
       "password-off": "这台服务器已关闭密码登录。请改用 Google 登录。",
       "google-off": "这台服务器已关闭 Google 登录。",
@@ -1331,30 +1242,6 @@ const WORDS = {
     newLinkWhat:
       "オフィスキーで作ったリンクは使えなくなります。招待リンクと、すでに参加している人はそのままです。",
     officeName: "オフィス名",
-    slackLinkWhat:
-      "Slackアカウントを一度連携すると、同僚がSlackからあなたのクローンに聞けて、あなたも同僚のクローンに聞けます。",
-    slackLinkCta: "Slackを連携",
-    slackLinkCode:
-      "10分以内に、Slackで@Clone OfficeにこのコードをDMで送ってください：",
-    slackLinked: "Slackの{name}さんと連携しています。",
-    slackUnlink: "連携を解除",
-    slackTitle: "Slack",
-    slackWhat:
-      "チームがSlackからお互いのクローンに聞けるようにします。アプリと同僚をメンションして質問すると、答えはそのスレッドに届きます。各自がアカウントページからSlackを一度連携します。",
-    slackOn: "{team}に接続しています。",
-    slackOnBy: "{name}さんが{team}に接続しました。",
-    slackOff: "接続を解除",
-    slackStep1: "Slackでアプリを作成します。必要な設定はすべて入力済みです。",
-    slackCreate: "Slackアプリを作成",
-    slackStep2:
-      "ワークスペースにインストールし、OAuth & PermissionsからBot User OAuth Tokenをコピーします（xoxb-で始まります）。",
-    slackStep3:
-      "Basic Information › App-Level Tokensでconnections:writeのトークンを作成してコピーします（xapp-で始まります）。",
-    slackBot: "ボットトークン (xoxb-…)",
-    slackApp: "アプリレベルトークン (xapp-…)",
-    slackConnect: "Slackを接続",
-    slackUse:
-      "Slackでアプリをチャンネルに追加し（/invite @Clone Office）、こう書きます：@Clone Office @Minsu 返金はどうなっていますか？",
     save: "保存",
     cancel: "キャンセル",
     continueGoogle: "Google で続行",
@@ -1511,12 +1398,6 @@ const WORDS = {
       "not-in-office": "このオフィスに参加していません。",
       "account-failed": "うまくいきませんでした。もう一度お試しください。",
       "not-owner": "このオフィスのオーナーだけができる操作です。",
-      "slack-token-wrong":
-        "Slackがそのトークンを受け付けませんでした。1つ目がxoxb-、2つ目がxapp-で始まるか、アプリがインストールされているか確認してください。",
-      "slack-unreachable":
-        "Slackから応答がありませんでした。少ししてからもう一度お試しください。",
-      "slack-unsealed":
-        "このサーバーはまだSlackのトークンを安全に保管できません。管理者がRELAY_ENCRYPTION_KEYを設定する必要があります。",
       "not-yourself": "自分自身は外せません。",
       "password-off":
         "このサーバーではパスワードでのサインインがオフになっています。Google でサインインしてください。",
@@ -1743,30 +1624,6 @@ const WORDS = {
     newLinkWhat:
       "Los enlaces hechos con la clave de la oficina dejan de funcionar. Las invitaciones y quienes ya están dentro no se ven afectados.",
     officeName: "Nombre de la oficina",
-    slackLinkWhat:
-      "Vincula tu cuenta de Slack una vez, para que tus compañeros pregunten a tu clon desde Slack y tú puedas preguntar a los suyos.",
-    slackLinkCta: "Vincular Slack",
-    slackLinkCode:
-      "Envía este código a @Clone Office por mensaje directo en Slack, en los próximos 10 minutos:",
-    slackLinked: "Vinculado a {name} en Slack.",
-    slackUnlink: "Desvincular",
-    slackTitle: "Slack",
-    slackWhat:
-      "Permite que tu equipo pregunte a los clones de los demás desde Slack: menciona la app y a un compañero con la pregunta, y la respuesta llega en el hilo. Cada persona vincula su Slack una vez, desde la página de su cuenta.",
-    slackOn: "Conectado a {team}.",
-    slackOnBy: "{name} lo conectó a {team}.",
-    slackOff: "Desconectar",
-    slackStep1: "Crea la app en Slack. Todo lo que necesita ya está rellenado.",
-    slackCreate: "Crear la app de Slack",
-    slackStep2:
-      "Instálala en tu espacio de trabajo y copia el Bot User OAuth Token de OAuth & Permissions (empieza por xoxb-).",
-    slackStep3:
-      "En Basic Information › App-Level Tokens, crea un token con connections:write y cópialo (empieza por xapp-).",
-    slackBot: "Token del bot (xoxb-…)",
-    slackApp: "Token de la app (xapp-…)",
-    slackConnect: "Conectar Slack",
-    slackUse:
-      "En Slack, añade la app a un canal (/invite @Clone Office) y escribe: @Clone Office @Minsu ¿cómo funcionan los reembolsos?",
     save: "Guardar",
     cancel: "Cancelar",
     continueGoogle: "Continuar con Google",
@@ -1920,12 +1777,6 @@ const WORDS = {
       "not-in-office": "No estás en esta oficina.",
       "account-failed": "No funcionó. Inténtalo de nuevo.",
       "not-owner": "Solo un dueño de esta oficina puede hacer eso.",
-      "slack-token-wrong":
-        "Slack no aceptó esos tokens. Comprueba que el primero empiece por xoxb- y el segundo por xapp-, y que la app esté instalada.",
-      "slack-unreachable":
-        "Slack no respondió. Inténtalo de nuevo en un momento.",
-      "slack-unsealed":
-        "Este servidor todavía no puede guardar los tokens de Slack de forma segura: quien lo administra debe configurar RELAY_ENCRYPTION_KEY.",
       "not-yourself": "No puedes quitar tu propia cuenta.",
       "password-off":
         "El inicio de sesión con contraseña está desactivado en este servidor. Usa Google.",
@@ -2149,31 +2000,6 @@ const WORDS = {
     newLinkWhat:
       "Os links feitos com a chave do escritório param de funcionar. Os convites e quem já está dentro não são afetados.",
     officeName: "Nome do escritório",
-    slackLinkWhat:
-      "Vincule sua conta do Slack uma vez, para que os colegas perguntem ao seu clone pelo Slack e você possa perguntar aos deles.",
-    slackLinkCta: "Vincular Slack",
-    slackLinkCode:
-      "Envie este código para @Clone Office por mensagem direta no Slack, em até 10 minutos:",
-    slackLinked: "Vinculado a {name} no Slack.",
-    slackUnlink: "Desvincular",
-    slackTitle: "Slack",
-    slackWhat:
-      "Deixe sua equipe perguntar aos clones uns dos outros pelo Slack: mencione o app e um colega com a pergunta, e a resposta chega na conversa. Cada pessoa vincula o Slack uma vez, pela página da sua conta.",
-    slackOn: "Conectado a {team}.",
-    slackOnBy: "{name} conectou a {team}.",
-    slackOff: "Desconectar",
-    slackStep1:
-      "Crie o app no Slack. Tudo de que ele precisa já está preenchido.",
-    slackCreate: "Criar o app do Slack",
-    slackStep2:
-      "Instale-o no seu workspace e copie o Bot User OAuth Token em OAuth & Permissions (começa com xoxb-).",
-    slackStep3:
-      "Em Basic Information › App-Level Tokens, crie um token com connections:write e copie-o (começa com xapp-).",
-    slackBot: "Token do bot (xoxb-…)",
-    slackApp: "Token do app (xapp-…)",
-    slackConnect: "Conectar o Slack",
-    slackUse:
-      "No Slack, adicione o app a um canal (/invite @Clone Office) e escreva: @Clone Office @Minsu como funcionam os reembolsos?",
     save: "Salvar",
     cancel: "Cancelar",
     continueGoogle: "Continuar com o Google",
@@ -2327,11 +2153,6 @@ const WORDS = {
       "not-in-office": "Você não está neste escritório.",
       "account-failed": "Não deu certo. Tente de novo.",
       "not-owner": "Só um dono deste escritório pode fazer isso.",
-      "slack-token-wrong":
-        "O Slack não aceitou esses tokens. Confira se o primeiro começa com xoxb- e o segundo com xapp-, e se o app está instalado.",
-      "slack-unreachable": "O Slack não respondeu. Tente de novo em instantes.",
-      "slack-unsealed":
-        "Este servidor ainda não consegue guardar os tokens do Slack com segurança: quem o administra precisa definir RELAY_ENCRYPTION_KEY.",
       "not-yourself": "Você não pode remover a própria conta.",
       "password-off":
         "O login com senha está desativado neste servidor. Use o Google.",
@@ -3141,10 +2962,6 @@ export function homePage(input: {
   clones?: HomeClone[];
   /** Whether the reader sets how people sign in to the server. */
   admin?: boolean;
-  /** The team's Slack, for an owner to connect (slack.ts). */
-  slack?: { on: boolean; team?: string; by?: string; sealing: boolean };
-  /** One's own Slack once the office has its Slack: whom it is linked to, or a code to link it. */
-  slackLink?: { linked?: string; code?: string };
   /** How the reader signs in, and the ways the server offers. */
   ways?: SignInWays;
   methods?: SignInMethods;
@@ -3258,7 +3075,6 @@ ${
     : `<form method="post" action="/home/pair">${officeField}<button type="submit" class="quiet">${say(lang, input.computer ? "moveComputer" : "connectCta")}</button></form>`
 }
 </section>
-${input.slackLink ? slackLinkSection(lang, input.slackLink, officeField) : ""}
 ${signIn}`);
   }
 
@@ -3343,7 +3159,6 @@ ${
 </section>`
     : ""
 }
-${owner && input.slack ? slackSection(lang, input.slack, officeField, input.error) : ""}
 </div>`,
       "wide",
     );
@@ -3389,64 +3204,6 @@ ${connect}
 ${connect}
 ${input.command ? "" : `<form method="post" action="/home/web">${officeField}<button type="submit" class="quiet">${say(lang, "webCta")}</button></form>`}
 </section>`);
-}
-
-/** One's own Slack on the account tab: linked to whom, or a code to send the app. */
-function slackLinkSection(
-  lang: PageLanguage,
-  link: { linked?: string; code?: string },
-  officeField: string,
-): string {
-  return `<section id="slack">
-<h2>${say(lang, "slackTitle")}</h2>
-${
-  link.code
-    ? `<p>${say(lang, "slackLinkCode")}</p>
-<pre class="pair-code">${escape(link.code)}</pre>`
-    : link.linked
-      ? `<p class="done">${say(lang, "slackLinked", { name: link.linked })}</p>
-<form method="post" action="/home/slack/unlink">${officeField}<button type="submit" class="ghost small">${say(lang, "slackUnlink")}</button></form>`
-      : `<p>${say(lang, "slackLinkWhat")}</p>
-<form method="post" action="/home/slack/link">${officeField}<button type="submit" class="quiet">${say(lang, "slackLinkCta")}</button></form>`
-}
-</section>`;
-}
-
-/** The team's Slack on the Office tab: how to connect it, or where it is connected. */
-function slackSection(
-  lang: PageLanguage,
-  slack: { on: boolean; team?: string; by?: string; sealing: boolean },
-  officeField: string,
-  error?: string,
-): string {
-  const failed = error?.startsWith("slack-") ? problem(lang, error) : "";
-  if (slack.on)
-    return `<section id="slack">
-<h2>${say(lang, "slackTitle")}</h2>
-${failed}
-<p class="done">${
-      slack.by
-        ? say(lang, "slackOnBy", { team: slack.team ?? "", name: slack.by })
-        : say(lang, "slackOn", { team: slack.team ?? "" })
-    }</p>
-<p>${say(lang, "slackUse")}</p>
-<form method="post" action="/home/office/slack/remove">${officeField}<button type="submit" class="ghost small">${say(lang, "slackOff")}</button></form>
-</section>`;
-  return `<section id="slack">
-<h2>${say(lang, "slackTitle")}</h2>
-${failed}
-<p>${say(lang, "slackWhat")}</p>
-${
-  slack.sealing
-    ? `<ol class="steps">
-<li>${say(lang, "slackStep1")}<a class="button quiet" href="${escape(SLACK_CREATE)}" target="_blank" rel="noopener noreferrer">${say(lang, "slackCreate")}</a></li>
-<li>${say(lang, "slackStep2")}</li>
-<li>${say(lang, "slackStep3")}</li>
-</ol>
-<form method="post" action="/home/office/slack">${officeField}<label for="slack-bot">${say(lang, "slackBot")}</label><input id="slack-bot" name="bot" required autocomplete="off" spellcheck="false" pattern="xoxb-.+"><label for="slack-app">${say(lang, "slackApp")}</label><input id="slack-app" name="app" required autocomplete="off" spellcheck="false" pattern="xapp-.+"><button type="submit">${say(lang, "slackConnect")}</button></form>`
-    : `<p class="note">${errorWords(lang, "slack-unsealed")}</p>`
-}
-</section>`;
 }
 
 /** A count of people said with its own sentence, in the singular for one; nothing for none. */

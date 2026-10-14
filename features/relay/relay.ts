@@ -116,16 +116,8 @@ export interface Message {
     from: string;
     at: string;
     by?: "person";
-    /**
-     * Where its words were written, when not in Clone Office itself: a Slack channel (the answer
-     * is read by everyone in it) or a direct message with the team's Slack app (slack.ts).
-     */
-    via?: Via;
   };
 }
-
-/** Where a message was written, when not in Clone Office itself. */
-export type Via = "slack-channel" | "slack-dm";
 
 export interface Task {
   id: string;
@@ -333,6 +325,16 @@ const MIGRATIONS: string[][] = [
     "CREATE TABLE slack_people (office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, slack_user TEXT NOT NULL, user_id TEXT NOT NULL, name TEXT NOT NULL, linked TIMESTAMPTZ NOT NULL, PRIMARY KEY (office_id, slack_user))",
     "CREATE UNIQUE INDEX slack_people_user ON slack_people (office_id, user_id)",
     "CREATE TABLE slack_codes (code_hash TEXT PRIMARY KEY, office_id TEXT NOT NULL REFERENCES offices (id) ON DELETE CASCADE, user_id TEXT NOT NULL, expires TIMESTAMPTZ NOT NULL)",
+  ],
+  // The team's Slack taken out again (10-14: a messenger is for reaching one's own clone, as Hermes
+  // Agent's gateway is, and the clones already ask each other here): its tables go, sealed tokens
+  // with them, and where a message was written.
+  [
+    "DROP TABLE IF EXISTS slack_codes",
+    "DROP TABLE IF EXISTS slack_people",
+    "DROP TABLE IF EXISTS slack_threads",
+    "DROP TABLE IF EXISTS office_slack",
+    "ALTER TABLE messages DROP COLUMN IF EXISTS via",
   ],
 ];
 
@@ -959,8 +961,6 @@ export class Relay {
     contextId?: string,
     /** Written by the member's person themselves, not their clone. */
     by?: "person",
-    /** Where its words were written, when not in Clone Office itself. */
-    via?: Via,
   ): Promise<Task> {
     if (from.id === to)
       throw new RelayError(400, "A clone does not ask itself.", "bad-request");
@@ -995,7 +995,6 @@ export class Relay {
         now,
         await attach(tx, from, id, files, now),
         by === "person",
-        via,
       );
       await notify(tx, to, "task", id, now);
     });
@@ -1565,9 +1564,8 @@ export class Relay {
         files: FileRef[] | string | null;
         at: unknown;
         by_person: boolean | null;
-        via: Via | null;
       }>(
-        "SELECT task_id, id, role, from_member, text, files, at, by_person, via FROM messages WHERE task_id = ANY($1::text[]) ORDER BY seq",
+        "SELECT task_id, id, role, from_member, text, files, at, by_person FROM messages WHERE task_id = ANY($1::text[]) ORDER BY seq",
         [ids],
       ),
       this.db.query<{ task_id: string; name: string; token: string }>(
@@ -1598,7 +1596,6 @@ export class Relay {
             from: m.from_member,
             at: iso(m.at),
             ...(m.by_person ? { by: "person" as const } : {}),
-            ...(m.via ? { via: m.via } : {}),
           },
         };
       });
@@ -2139,10 +2136,9 @@ async function addMessage(
   at: string,
   files: FileRef[] = [],
   byPerson = false,
-  via?: Via,
 ): Promise<void> {
   await tx.query(
-    "INSERT INTO messages (id, task_id, role, from_member, text, files, at, by_person, via) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)",
+    "INSERT INTO messages (id, task_id, role, from_member, text, files, at, by_person) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8)",
     [
       randomUUID(),
       task,
@@ -2152,7 +2148,6 @@ async function addMessage(
       JSON.stringify(files),
       at,
       byPerson,
-      via ?? null,
     ],
   );
 }

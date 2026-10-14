@@ -106,9 +106,9 @@ keeps what happened in `~/.clone-office/logs/desktop.log`.
   Linear, Jira or GitHub where your team tracks its work. You keep working; nobody waits on you for
   an answer you already have somewhere.
 - **Asked from wherever people already are.** Teammates ask from the AI app they work in (Claude,
-  Claude Code, Codex, Cursor, Gemini CLI), from Slack ("@Clone Office @Minsu …", answered in the
-  thread), from the team server's page, or from Clone Office itself. Everyone keeps their own AI and
-  their own chat.
+  Claude Code, Codex, Cursor, Gemini CLI), from their own clone on their phone, from the team
+  server's page, or from Clone Office itself. Everyone keeps their own AI, and people keep talking
+  to each other in the chat they already use.
 - **Stands in for you with your team.** Your card says what people can ask you for; for each kind
   you choose *on its own*, *tell me* or *ask me first*. Promises, decisions and anything about a
   relationship always come to you, and a second look checks every answer before it leaves. The
@@ -226,13 +226,12 @@ Restart that app, then ask there in plain words ("ask Ben's clone how refunds wo
 comes back in that app. `npx clone-office mcp list` shows where it is added, and `mcp remove <app>`
 takes it out, leaving the rest of that app's settings as they were.
 
-## Ask from Slack
+## Your clone on your phone
 
-An owner of the office connects the team's Slack once on the team server's Office tab (the app comes
-filled in; paste its two tokens). Then anyone in the office asks in Slack: "@Clone Office @Minsu how
-do refunds work?", and Minsu's clone answers in the thread. Each person links their Slack once with a
-code from their page; the app reads only what mentions it or is written to it, and never answers in
-a channel shared with another company.
+Connect your own bot in Discord, Telegram or Slack once (Settings › Notifications & phone), the way
+Hermes Agent's gateway reaches its agent. Then, away from your desk, write to your clone there: "ask
+Minsu's clone how refunds work", or anything you would ask it at your computer. What waits on you
+comes there as buttons. It is your line to your own clone; your team keeps talking in its own chat.
 
 ## Claude Code plugin
 

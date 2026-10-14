@@ -106,7 +106,6 @@ import {
   type TaskState,
 } from "./relay.ts";
 import { officeRoomHtml, roomRoutes } from "./room-page.ts";
-import type { TeamSlack } from "./slack.ts";
 import { isTeamProvider, type TeamAi } from "./team-ai.ts";
 
 /** How long an inbox call waits for news before answering with none. */
@@ -273,8 +272,6 @@ export function relayHandler(
     onComputer?: boolean;
     /** The office's team keys and the calls made with them (team-ai.ts). */
     teamAi?: TeamAi;
-    /** The team's Slack, where colleagues' clones are asked from (slack.ts). */
-    slack?: TeamSlack;
   } = {},
 ) {
   const accounts = options.accounts;
@@ -801,9 +798,7 @@ export function relayHandler(
         (path === "/home/pair" && post) ||
         (path === "/home/invite" && post) ||
         (path === "/home/invite/cancel" && post) ||
-        (path === "/home/web" && post) ||
-        (path === "/home/slack/link" && post) ||
-        (path === "/home/slack/unlink" && post)
+        (path === "/home/web" && post)
       ) {
         const person = await accounts.person(cookie);
         if (!person) {
@@ -818,14 +813,6 @@ export function relayHandler(
           ? fields.get("office")
           : url.searchParams.get("office");
         const place = placeOf(places, chosen);
-        // Linking one's Slack: let go here; the code to send the app is shown on the page below.
-        if (path === "/home/slack/unlink") {
-          if (place) await options.slack?.unlink(place.office, person.id);
-          redirect(
-            `/home/account${place ? `?office=${encodeURIComponent(place.office)}` : ""}#slack`,
-          );
-          return true;
-        }
         if (path === "/home/invite/cancel") {
           // an owner stops one of the office's invites
           if (place?.role === "owner")
@@ -916,41 +903,11 @@ export function relayHandler(
               path === "/home/office"
                 ? "office"
                 : path === "/home/account" ||
-                    path === "/home/slack/link" ||
                     (path === "/home/pair" && fields?.get("tab") === "account")
                   ? "account"
                   : "clone",
             me: person.id,
             owner,
-            // one's own Slack, once the office has its Slack: linked, or a code to link it
-            ...(place &&
-            options.slack &&
-            (await options.slack.status(place.office)).on
-              ? {
-                  slackLink: {
-                    linked: await options.slack.linkedName(
-                      place.office,
-                      person.id,
-                    ),
-                    ...(path === "/home/slack/link"
-                      ? {
-                          code: await options.slack.linkCode(
-                            place.office,
-                            person.id,
-                          ),
-                        }
-                      : {}),
-                  },
-                }
-              : {}),
-            // the team's Slack, for its owners to connect on the Office tab
-            ...(owner && place && path === "/home/office"
-              ? {
-                  slack: options.slack
-                    ? await options.slack.status(place.office)
-                    : { on: false, sealing: false },
-                }
-              : {}),
             admin: await accounts.isAdmin(person.id),
             ways: await accounts.ways(person.id),
             methods,
@@ -1555,7 +1512,7 @@ export function relayHandler(
       }
       // An owner's changes to their office: a look first (GET), then the change itself (POST).
       const admin =
-        /^\/home\/(people\/remove|people\/owner|clones\/remove|invite\/new|office\/name|office\/slack|office\/slack\/remove)$/.exec(
+        /^\/home\/(people\/remove|people\/owner|clones\/remove|invite\/new|office\/name)$/.exec(
           path,
         );
       if (admin && (request.method === "GET" || post)) {
@@ -1590,7 +1547,7 @@ export function relayHandler(
               : (await accounts.people(place.office)).find(
                   (one) => one.id === user,
                 )?.name;
-          if (what.startsWith("office/") || (what !== "invite/new" && !name)) {
+          if (what === "office/name" || (what !== "invite/new" && !name)) {
             redirect(home);
             return true;
           }
@@ -1642,26 +1599,7 @@ export function relayHandler(
             );
           else if (what === "invite/new")
             await accounts.newInvite(person.id, place.office);
-          else if (what === "office/slack" || what === "office/slack/remove") {
-            // the team's Slack, an owner's to connect or let go (slack.ts)
-            const role = (await accounts.people(place.office)).find(
-              (one) => one.id === person.id,
-            )?.role;
-            if (role !== "owner") throw new AccountError("not-owner");
-            if (!options.slack) throw new AccountError("slack-unsealed");
-            await options.slack.set(
-              place.office,
-              person.id,
-              what === "office/slack"
-                ? {
-                    bot: fields.get("bot") ?? "",
-                    app: fields.get("app") ?? "",
-                  }
-                : null,
-            );
-            redirect(`${home}#slack`);
-            return true;
-          } else
+          else
             await accounts.renameOffice(
               person.id,
               place.office,
@@ -1670,12 +1608,8 @@ export function relayHandler(
           redirect(home);
         } catch (error) {
           const code =
-            error instanceof AccountError || error instanceof RelayError
-              ? error.code
-              : "account-failed";
-          redirect(
-            `${home}&error=${encodeURIComponent(code)}${what.startsWith("office/slack") ? "#slack" : ""}`,
-          );
+            error instanceof AccountError ? error.code : "account-failed";
+          redirect(`${home}&error=${encodeURIComponent(code)}`);
         }
         return true;
       }

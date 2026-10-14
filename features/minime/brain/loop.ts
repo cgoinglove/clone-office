@@ -545,10 +545,7 @@ export async function runLoop(
     };
     // A colleague's request reads in the services let for it, and changes nothing there.
     const colleague =
-      options.colleagueReads &&
-      actor === "minime" &&
-      !helping &&
-      !options.noServices
+      options.colleagueReads && actor === "minime" && !helping
         ? await colleagueServices()
         : [];
     const colleagueRule = await colleagueRules(colleague);
