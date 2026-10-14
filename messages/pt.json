@@ -673,7 +673,9 @@
     "toolsPlaceholder": "ex.: Figma, Notion, Claude Code",
     "leaveTitle": "Sair do escritório?",
     "closeTitle": "Fechar o escritório neste computador?",
-    "laterNote": "{name} vai te responder sobre isso."
+    "laterNote": "{name} vai te responder sobre isso.",
+    "noticeTitle": "O que mudou no Clone Office",
+    "answerFromWorkNotice": "Agora, quando um colega pergunta, leio as pastas onde fica o seu trabalho para responder a partir do próprio trabalho: só leitura, nunca arquivos com chaves ou senhas, e cada resposta continua sendo revisada antes de sair. Se preferir que eu não faça isso, desative Configurações › Permissões › Responder aos colegas a partir destas pastas."
   },
   "files": {
     "title": "Todos os arquivos que guardo",

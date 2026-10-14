@@ -386,6 +386,8 @@ files as they are now. It changes nothing there, and never opens a file named li
 keys or passwords (`.env`, a `.pem` key, an SSH key, a credentials file). They turn this off under
 Settings › Permissions › **Answer colleagues from these folders** (동료에게 답할 때도 이 폴더를
 봐요). It reads in the services they connected where a team tracks its work too (`connectors.md`).
+The first time their office runs on this version, their clone says so once in their latest
+conversation, with where to turn it off.
 
 What only they can give — a promise (a date,
 money, scope), a decision they answer for, anything about a relationship, a check of work in their

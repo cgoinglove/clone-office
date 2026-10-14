@@ -8,9 +8,10 @@ signed in as them. It works there in their conversations with it and in their fl
 For a colleague's request it may **read** there too, never change anything: only the tools a
 service marks as reading are offered then, and every other one is refused. Each connected service
 has **Read here for colleagues' requests too** (동료 부탁에도 읽기), shown once they are in an
-office. Where a team tracks its work (Notion, Linear, Jira and Confluence, GitHub) it starts on,
-since answering from there is what a colleague asks a clone for; Google's (mail, calendar, their
-own files) starts off. Either way it is theirs to turn on or off. Only the
+office. Where a team tracks its work (Notion, Linear, Jira and Confluence, GitHub) it starts on when
+connected, since answering from there is what a colleague asks a clone for; Google's (mail, calendar,
+their own files) starts off. A service connected before this came stays as it was, off. Either way
+it is theirs to turn on or off. Only the
 tools a service marks as reading in its latest list are offered; a new or unknown one is refused.
 Whatever the answer says still passes the look before it leaves (`office.md`).
 

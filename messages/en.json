@@ -673,7 +673,9 @@
     "toolsPlaceholder": "e.g. Figma, Notion, Claude Code",
     "leaveTitle": "Leave the office?",
     "closeTitle": "Close the office on this computer?",
-    "laterNote": "{name} will get back to you on this."
+    "laterNote": "{name} will get back to you on this.",
+    "noticeTitle": "What changed in Clone Office",
+    "answerFromWorkNotice": "When a colleague asks, I now read the folders where your work lives, so I answer from the work itself: read only, never a file with keys or passwords, and every answer is still looked at before it goes. If you would rather I didn’t, turn off Settings › Permissions › Answer colleagues from these folders."
   },
   "files": {
     "title": "All files I keep",

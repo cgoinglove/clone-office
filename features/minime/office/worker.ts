@@ -5,6 +5,7 @@
 // they leave it.
 
 import { appendMessage } from "../chat/store.ts";
+import { announceColleagueReads } from "./announce.ts";
 import {
   type Card,
   findTask,
@@ -51,6 +52,8 @@ export function startOffice(gateUrl: string, language?: string): void {
   }
   const worker: Worker = { running: true, gateUrl, language, busy: new Set() };
   holder.__minimeOffice = worker;
+  // What changed in what a colleague's request may read, said once (announce.ts).
+  void announceColleagueReads().catch(() => {});
   // Once per process, however often the office is left and joined again.
   if (!holder.__minimeOfficeSignals) {
     holder.__minimeOfficeSignals = true;

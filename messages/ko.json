@@ -673,7 +673,9 @@
     "toolsPlaceholder": "예: Figma, Notion, Claude Code",
     "leaveTitle": "오피스에서 나갈까요?",
     "closeTitle": "이 컴퓨터에서 연 오피스를 닫을까요?",
-    "laterNote": "{name} 님이 확인하고 다시 알려 드릴게요."
+    "laterNote": "{name} 님이 확인하고 다시 알려 드릴게요.",
+    "noticeTitle": "Clone Office에서 바뀐 것",
+    "answerFromWorkNotice": "이제 동료가 물으면 내 작업 폴더를 읽어서 실제 작업을 보고 답해요. 읽기만 하고, 열쇠·비밀번호가 든 파일은 열지 않으며, 나가는 답은 여전히 한 번 더 봐요. 원하지 않으면 설정 › 권한 › “동료에게 답할 때도 이 폴더를 봐요”를 꺼 주세요."
   },
   "files": {
     "title": "클론이 저장한 파일",

@@ -673,7 +673,9 @@
     "toolsPlaceholder": "例如：Figma、Notion、Claude Code",
     "leaveTitle": "要离开办公室吗？",
     "closeTitle": "要关闭这台电脑上的办公室吗？",
-    "laterNote": "{name} 确认后会再回复你。"
+    "laterNote": "{name} 确认后会再回复你。",
+    "noticeTitle": "Clone Office 的变化",
+    "answerFromWorkNotice": "现在同事提问时，我会读取你工作所在的文件夹，根据实际工作来回答：只读，从不打开存有密钥或密码的文件，每个回答发出前仍会再检查一次。如果你不希望这样，请关闭“设置 › 权限 › 回答同事时也看这些文件夹”。"
   },
   "files": {
     "title": "我保存的所有文件",

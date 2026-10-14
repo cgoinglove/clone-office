@@ -235,7 +235,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   each conversation (`review.ts` skips when off), the lobby, background work on the brain's lighter
   model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), quiet
   hours for the phone (`quietFor`), and answering colleagues from the folders where the work lives
-  (`answerFromWork`, on at first, 10-14: what a colleague asks a clone for is the work itself).
+  (`answerFromWork`, on at first, 10-14: what a colleague asks a clone for is the work itself; said
+  once in the person's latest conversation the first time the office runs on that version,
+  `office/announce.ts`, which also keeps services connected before it off for colleagues).
   Every other default keeps the app as careful as before.
 - `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded,update,skills}`, which
   answer only this app's pages; they take the person's language tag and tell the clone that
@@ -755,7 +757,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   person's own work (`runSession` `connectors`: conversations and flows; a colleague's request,
   `colleagueReads`, gets only the services the person turned on for it, `colleagues.ts`, settings.json
   `connectors.forColleagues`, where a team tracks its work (Notion, Linear, Atlassian, GitHub) on
-  at first and Google's off, 10-14; their listed reading tools are allowed and every
+  when connected and Google's off, 10-14 (connected before that, off: `office/announce.ts`); their listed reading tools are allowed and every
   other one refused, fail closed: the loop offers those alone, `readsOnly`, and Claude Code's
   prompt refuses the rest outright, MINIME_READS_ONLY): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
   (`dist/connector-headers.mjs` in the package) for a fresh token, so no token is in the

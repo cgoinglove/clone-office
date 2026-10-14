@@ -673,7 +673,9 @@
     "toolsPlaceholder": "例：Figma、Notion、Claude Code",
     "leaveTitle": "オフィスを退出しますか？",
     "closeTitle": "このコンピューターで開いたオフィスを閉じますか？",
-    "laterNote": "{name}さんが確認して、あとでお返事します。"
+    "laterNote": "{name}さんが確認して、あとでお返事します。",
+    "noticeTitle": "Clone Officeで変わったこと",
+    "answerFromWorkNotice": "同僚に聞かれたとき、あなたの作業フォルダを読んで実際の作業をもとに答えるようになりました。読むだけで、鍵やパスワードの入ったファイルは開かず、送る前の確認もこれまで通りです。望まない場合は、設定 › 権限 ›「同僚への返事にもこのフォルダを使う」をオフにしてください。"
   },
   "files": {
     "title": "保存しているすべてのファイル",
