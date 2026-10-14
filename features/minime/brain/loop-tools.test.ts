@@ -304,3 +304,44 @@ test("Electron's run-as-Node flag reaches only a program started on the app's ow
     else process.env.ELECTRON_RUN_AS_NODE = was;
   }
 });
+
+test("answering a colleague, files named like keys and passwords are neither read nor searched", async () => {
+  const folder = mkdtempSync(join(tmpdir(), "minime-loop-secrets-"));
+  try {
+    writeFileSync(join(folder, ".env"), "API_TOKEN=sk-live-1234\n");
+    writeFileSync(join(folder, "config.ts"), "export const API_TOKEN = env;\n");
+    const allow = [`Read(//${folder.slice(1)}/**)`];
+    const none = { clients: [], close: async () => {} };
+    const colleague = await loopTools({
+      servers: none,
+      guard: { allow, deny: [], secretsOut: true },
+      reads: true,
+    });
+    assert.equal(
+      await run(colleague, "Read", { file_path: join(folder, ".env") }),
+      REFUSED.secret,
+    );
+    const found = await run(colleague, "Grep", {
+      pattern: "API_TOKEN",
+      path: folder,
+    });
+    assert.match(found, /config\.ts:1:/);
+    assert.doesNotMatch(found, /sk-live|\.env/);
+    assert.doesNotMatch(
+      await run(colleague, "Glob", { pattern: "**/*", path: folder }),
+      /\.env/,
+    );
+    // The person's own work reads it, as they asked.
+    const own = await loopTools({
+      servers: none,
+      guard: { allow, deny: [] },
+      reads: true,
+    });
+    assert.match(
+      await run(own, "Read", { file_path: join(folder, ".env") }),
+      /sk-live-1234/,
+    );
+  } finally {
+    rmSync(folder, { recursive: true, force: true });
+  }
+});

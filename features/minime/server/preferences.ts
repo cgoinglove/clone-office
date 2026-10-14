@@ -45,6 +45,14 @@ export interface Preferences {
    * the person turns it on.
    */
   webChat: boolean;
+  /**
+   * Answering a colleague, read the folders where the person's work lives without asking
+   * (office/work-folders.ts): the code, documents and plans the answer is often in. Nothing there
+   * is changed, files that hold keys and passwords are never read, and what the answer says still
+   * passes the look before it leaves. On until the person turns it off: answering from the work
+   * itself is what a colleague asks a clone for (10-14).
+   */
+  answerFromWork: boolean;
 }
 
 /** The work that may go to the lighter model when the person wants it. */
@@ -64,6 +72,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   lightBackground: false,
   quiet: { on: false, from: 22, to: 7 },
   webChat: false,
+  answerFromWork: true,
 };
 
 const hourOf = (value: unknown, fallback: number) =>
@@ -116,6 +125,10 @@ export function cleanPreferences(input: unknown): Preferences {
         to: hourOf(quiet.to, DEFAULT_PREFERENCES.quiet.to),
       };
     })(),
+    answerFromWork:
+      typeof raw.answerFromWork === "boolean"
+        ? raw.answerFromWork
+        : DEFAULT_PREFERENCES.answerFromWork,
     webChat:
       typeof raw.webChat === "boolean"
         ? raw.webChat

@@ -1147,7 +1147,9 @@
     },
     "permissions": {
       "folders": "Folders it reads",
-      "foldersHint": "It reads only the ticked folders. One left out is never read or searched, in any AI tool's records."
+      "foldersHint": "It reads only the ticked folders. One left out is never read or searched, in any AI tool's records.",
+      "answerFromWork": "Answer colleagues from these folders",
+      "answerFromWorkHint": "When a colleague asks, your clone reads here without asking you, so the answer comes from the work itself. It changes nothing and never opens files that hold keys or passwords."
     },
     "files": {
       "loading": "Loading…",

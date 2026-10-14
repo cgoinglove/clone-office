@@ -8,7 +8,7 @@ const root = mkdtempSync(join(tmpdir(), "minime-colleague-reads-"));
 process.env.CLONE_OFFICE_HOME = root;
 after(() => rmSync(root, { recursive: true, force: true }));
 
-test("a colleague's request reads only where the person let it, only with listed reading tools", async () => {
+test("a colleague's request reads where the person lets it, only with listed reading tools", async () => {
   const { changeKept } = await import("./store.ts");
   const { colleagueRules, colleagueServices, setForColleagues } = await import(
     "./colleagues.ts"
@@ -31,8 +31,13 @@ test("a colleague's request reads only where the person let it, only with listed
 
   const ids = async () =>
     (await colleagueServices()).map((entry) => entry.id).sort();
-  assert.deepEqual(await ids(), [], "nothing until the person turns it on");
-
+  assert.deepEqual(
+    await ids(),
+    ["notion"],
+    "where the team tracks its work at first, never mail until turned on",
+  );
+  await setForColleagues("notion", false);
+  assert.deepEqual(await ids(), [], "and nothing once turned off");
   await setForColleagues("notion", true);
   assert.deepEqual(await ids(), ["notion"]);
   const rules = await colleagueRules(await colleagueServices());

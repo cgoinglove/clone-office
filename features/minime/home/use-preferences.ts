@@ -19,6 +19,8 @@ export interface Preferences {
   quiet: { on: boolean; from: number; to: number };
   /** Talk to the clone from the team server's page (server/preferences.ts). */
   webChat: boolean;
+  /** Answer colleagues from the folders where the work lives (server/preferences.ts). */
+  answerFromWork: boolean;
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -30,6 +32,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   lightBackground: false,
   quiet: { on: false, from: 22, to: 7 },
   webChat: false,
+  answerFromWork: true,
 };
 
 export function usePreferences() {

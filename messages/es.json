@@ -1147,7 +1147,9 @@
     },
     "permissions": {
       "folders": "Carpetas que lee",
-      "foldersHint": "Solo lee las carpetas marcadas. Una excluida nunca se lee ni se busca, en los registros de ninguna herramienta de IA."
+      "foldersHint": "Solo lee las carpetas marcadas. Una excluida nunca se lee ni se busca, en los registros de ninguna herramienta de IA.",
+      "answerFromWork": "Responder a tus compañeros desde estas carpetas",
+      "answerFromWorkHint": "Cuando un compañero pregunta, tu clon lee aquí sin preguntarte, para responder desde el trabajo mismo. No cambia nada y nunca abre archivos con claves o contraseñas."
     },
     "files": {
       "loading": "Cargando…",

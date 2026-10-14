@@ -234,7 +234,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   asked), where new kinds of request start, when kept questions come (`batchHours`), learning after
   each conversation (`review.ts` skips when off), the lobby, background work on the brain's lighter
   model (`BACKGROUND_PURPOSES`, `providers.ts` `lighterModel`, Haiku on Claude Code), quiet
-  hours for the phone (`quietFor`). Every default keeps the app as careful as before.
+  hours for the phone (`quietFor`), and answering colleagues from the folders where the work lives
+  (`answerFromWork`, on at first, 10-14: what a colleague asks a clone for is the work itself).
+  Every other default keeps the app as careful as before.
 - `features/minime/`: the person's clone. Its routes are `app/api/me/{learn,sources,import,memory,files,chats,gate,office,fix,task,reset,ping,flows,messenger,presence,connectors,trust,brain,profile,preferences,onboarded,update,skills}`, which
   answer only this app's pages; they take the person's language tag and tell the clone that
   language by name, keeping the last one for work that runs with no page open
@@ -534,9 +536,14 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`publicRelay`); the relay stops with the app through its stdin, `RELAY_WITH_PARENT`, and is
   started again when the page next asks about the office), `worker.ts` (one loop per server
   process: waits at the inbox, answers requests that come in, puts answers to sent requests back
-  into their conversations), `handle.ts` (answers a request with the brain from what it knows,
-  asking its person through the gate for what only they can give; a busy AI service is retried
-  before failing), `check.ts` (a separate look before an answer leaves, product 2.8a: what it
+  into their conversations), `handle.ts` (answers a request with the brain from what it knows and
+  from the work itself, `work-folders.ts`: the folders on the work map and those worked in with AI
+  in the last month, real folders under home below its top, never hidden, broad (Desktop,
+  Documents), kept out or the clone's own, read without asking while `answerFromWork` is on;
+  answering a colleague, files named like keys and passwords are never read nor searched on either
+  brain, `gate/secrets.ts`: `secretFile` for the loop's Read, Glob and Grep, `Guard.secretsOut`,
+  and `SECRET_READ_RULES` denied to Claude Code; asking its person through the gate for what only
+  they can give; a busy AI service is retried before failing), `check.ts` (a separate look before an answer leaves, product 2.8a: what it
   holds back goes to the person as a card: send, send a fixed answer, or hold), questions about a
   request the person does not answer within two minutes are kept in `state.ts` (`later`) and the
   colleague hears they will get back to them; answering one later goes on with the request
@@ -726,7 +733,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`settings.json` `connectors.clients`). A session reaches the connected services only for the
   person's own work (`runSession` `connectors`: conversations and flows; a colleague's request,
   `colleagueReads`, gets only the services the person turned on for it, `colleagues.ts`, settings.json
-  `connectors.forColleagues`, each off at first; their listed reading tools are allowed and every
+  `connectors.forColleagues`, where a team tracks its work (Notion, Linear, Atlassian, GitHub) on
+  at first and Google's off, 10-14; their listed reading tools are allowed and every
   other one refused, fail closed: the loop offers those alone, `readsOnly`, and Claude Code's
   prompt refuses the rest outright, MINIME_READS_ONLY): each is an `http` server in its `--mcp-config` whose `headersHelper` runs `headers.ts`
   (`dist/connector-headers.mjs` in the package) for a fresh token, so no token is in the

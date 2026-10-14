@@ -2,9 +2,10 @@
 // needs (where a ticket stands, what a page says), and never change anything there: only the tools
 // a service marks as reading (MCP's readOnlyHint) in its last list are offered; every other one,
 // a new one included, is refused (fail closed). Per service, in settings.json
-// `connectors.forColleagues`, each off until the person turns it on: what a colleague's clone may
-// get read for it is theirs to decide. What the answer then says still passes the look before it
-// leaves (office/check.ts).
+// `connectors.forColleagues`, the person's to decide. Where a team tracks its work (Notion, Linear,
+// Jira and Confluence, GitHub) starts on, since answering from it is what a colleague asks a clone
+// for (10-14); Google's (mail, calendar, a person's own files) starts off. What the answer then
+// says still passes the look before it leaves (office/check.ts).
 
 import { readFile } from "node:fs/promises";
 import { withLock } from "../memory/files.ts";
@@ -30,11 +31,14 @@ async function decided(): Promise<Record<string, boolean>> {
   return connectors?.forColleagues ?? {};
 }
 
+/** The services where a team tracks its work: read for colleagues' requests unless turned off. */
+const TEAM_WORK = new Set(["notion", "linear", "atlassian", "github"]);
+
 /** Whether a colleague's request reads in this service. */
 export const readsForColleagues = (
   id: string,
   kept: Record<string, boolean>,
-): boolean => kept[id] === true;
+): boolean => kept[id] ?? TEAM_WORK.has(id);
 
 /** Each service's setting as the page shows it. */
 export async function forColleagues(ids: string[]) {

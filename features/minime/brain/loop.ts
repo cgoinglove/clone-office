@@ -550,6 +550,8 @@ export async function runLoop(
         : [];
     const colleagueRule = await colleagueRules(colleague);
     if (!helping) guard.allow.push(...colleagueRule.allow);
+    // Answering a colleague, files that hold keys and passwords are never read, wherever they are.
+    if (options.colleagueReads) guard.secretsOut = true;
     // The person's own work: their conversation (watched) or one of their flows.
     const own =
       options.connectors &&

@@ -3,8 +3,10 @@
 // Settings › Permissions: what the person let their clone do without asking (each "Don't ask
 // again" they ticked on a card, which they can take back), and the folders it reads, the same
 // field and list as the first steps (folder-list.tsx), the list a page of this section rather than a
-// dialog over Settings: a folder left out is never read or searched.
+// dialog over Settings: a folder left out is never read or searched. Under it, whether a colleague's
+// request is answered from the folders where the work lives (preferences `answerFromWork`).
 
+import { FolderSearch } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FolderField, FolderPage, useFolders } from "../folder-list";
@@ -12,7 +14,7 @@ import type { Preferences } from "../home/use-preferences";
 import { TrustPanel } from "../trust-panel";
 import { SettingsBack } from "./back";
 import { Group, Groups } from "./parts";
-import { PreferencesSection } from "./preferences-section";
+import { PreferencesSection, Toggle } from "./preferences-section";
 
 export function PermissionsSection({
   preferences,
@@ -71,6 +73,17 @@ export function PermissionsSection({
         </Group>
         <Group title={t("folders")} hint={t("foldersHint")}>
           <FolderField folders={folders} onOpen={() => setPaged(true)} />
+          {preferences && (
+            <Toggle
+              icon={<FolderSearch className="size-4" />}
+              title={t("answerFromWork")}
+              body={t("answerFromWorkHint")}
+              checked={preferences.answerFromWork}
+              onChange={(answerFromWork) =>
+                void onPreferences({ answerFromWork })
+              }
+            />
+          )}
         </Group>
       </Groups>
     </div>

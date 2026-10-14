@@ -41,7 +41,8 @@ unticking it leaves all of them out at once. What changed elsewhere goes to the 
 it, and a downloads folder of loose files is one folder. A folder's name or path typed at the bottom
 leaves out any other.
 
-Later, the same field is under Settings › Permissions, at any time. What the clone had gathered from
+Later, the same field is under Settings › Permissions, at any time, with **Answer colleagues from
+these folders** under it (`office.md`). What the clone had gathered from
 a folder for searching is removed as soon as it is left out. Lines it already remembers stay in its
 memory, where they can remove any of them. They can also just tell the clone ("don't look at my
 client work"): it asks first, with the folder shown, and leaves it out. Bringing a folder back is

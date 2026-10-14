@@ -1147,7 +1147,9 @@
     },
     "permissions": {
       "folders": "Pastas que ele lê",
-      "foldersHint": "Ele só lê as pastas marcadas. Uma deixada de fora nunca é lida nem pesquisada, nos registros de nenhuma ferramenta de IA."
+      "foldersHint": "Ele só lê as pastas marcadas. Uma deixada de fora nunca é lida nem pesquisada, nos registros de nenhuma ferramenta de IA.",
+      "answerFromWork": "Responder aos colegas a partir destas pastas",
+      "answerFromWorkHint": "Quando um colega pergunta, seu clone lê aqui sem perguntar a você, para responder a partir do próprio trabalho. Não muda nada e nunca abre arquivos com chaves ou senhas."
     },
     "files": {
       "loading": "Carregando…",

@@ -29,6 +29,7 @@ const Body = z.object({
     })
     .optional(),
   webChat: z.boolean().optional(),
+  answerFromWork: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {

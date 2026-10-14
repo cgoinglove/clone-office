@@ -17,6 +17,7 @@ import { connectedConnectors } from "../connectors/oauth.ts";
 import { sessionRules } from "../connectors/tools.ts";
 import { ownModeRules } from "../gate/autonomy.ts";
 import { ASKABLE_TOOLS, TRUSTED_FROM_START } from "../gate/rules.ts";
+import { SECRET_READ_RULES } from "../gate/secrets.ts";
 import { BROWSER, BROWSER_NEVER, browserServer } from "../hands/browser.ts";
 import { maybeRunCurator, noteActivity } from "../memory/curator.ts";
 import { NoteStore, WORK_MAP } from "../memory/notes.ts";
@@ -565,6 +566,8 @@ export async function runSession(
   const deny = [
     ...((gate ?? standing)?.deny ?? []),
     ...colleagueRule.deny,
+    // Answering a colleague, files that hold keys and passwords are never read, wherever they are.
+    ...(options.colleagueReads ? SECRET_READ_RULES : []),
     ...(own
       ? [...BROWSER_NEVER].map((tool) => `mcp__${BROWSER}__${tool}`)
       : []),

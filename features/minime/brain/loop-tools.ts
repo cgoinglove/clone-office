@@ -16,7 +16,7 @@ import {
   stat,
 } from "node:fs/promises";
 import { homedir } from "node:os";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { basename, isAbsolute, join, relative, resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -25,6 +25,7 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { dynamicTool, jsonSchema, type ToolSet } from "ai";
 import type { Connector } from "../connectors/catalog.ts";
 import { accessToken } from "../connectors/oauth.ts";
+import { secretFile } from "../gate/secrets.ts";
 import { BROWSER, BROWSER_NEVER } from "../hands/browser.ts";
 import { isExcluded, loadExcludes } from "../server/exclude.ts";
 import { workspaceDir } from "../server/paths.ts";
@@ -128,6 +129,8 @@ const READ_CHARS = 60_000;
 /** What a local tool is told of its session: how long one answer of it may be. */
 interface LocalContext {
   chars: number;
+  /** Answering a colleague: files named like keys and passwords are not searched (gate/secrets.ts). */
+  secretsOut?: boolean;
 }
 
 /** Whether a file is text, from its first bytes. */
@@ -224,7 +227,10 @@ async function readLines(
   }`;
 }
 
-async function globTool(input: Record<string, unknown>): Promise<string> {
+async function globTool(
+  input: Record<string, unknown>,
+  context: LocalContext = { chars: READ_CHARS },
+): Promise<string> {
   const base = fullPath(input.path);
   const pattern = String(input.pattern ?? "**/*");
   const excludes = loadExcludes();
@@ -235,6 +241,7 @@ async function globTool(input: Record<string, unknown>): Promise<string> {
   })) {
     const path = join(base, String(entry));
     if (isExcluded(path, excludes)) continue;
+    if (context.secretsOut && secretFile(basename(path))) continue;
     found.push(path);
     if (found.length >= FOUND_MAX) break;
   }
@@ -243,7 +250,10 @@ async function globTool(input: Record<string, unknown>): Promise<string> {
     : `Nothing matches ${pattern} under ${base}.`;
 }
 
-async function grepTool(input: Record<string, unknown>): Promise<string> {
+async function grepTool(
+  input: Record<string, unknown>,
+  context: LocalContext = { chars: READ_CHARS },
+): Promise<string> {
   const base = fullPath(input.path);
   let pattern: RegExp;
   try {
@@ -305,7 +315,8 @@ async function grepTool(input: Record<string, unknown>): Promise<string> {
       stream.destroy();
     }
   };
-  if (one?.isFile()) await lookThrough(base, one.size);
+  if (one?.isFile() && !(context.secretsOut && secretFile(basename(base))))
+    await lookThrough(base, one.size);
   while (
     folders.length &&
     matches.length < GREP_MATCHES &&
@@ -319,6 +330,7 @@ async function grepTool(input: Record<string, unknown>): Promise<string> {
     for (const entry of entries) {
       const path = join(folder, entry.name);
       if (SKIPPED.has(entry.name) || isExcluded(path, excludes)) continue;
+      if (context.secretsOut && secretFile(entry.name)) continue;
       if (entry.isDirectory()) folders.push(path);
       else if (entry.isFile() && (!nameMatch || nameMatch.test(entry.name))) {
         files++;
@@ -646,6 +658,8 @@ export const REFUSED = {
   alone:
     "Not done: your person has not let you do this without asking, and nobody is here to ask. Say plainly what you could not do.",
   out: "Not done: that is in a folder your person keeps out of everything. Do not look for another way in.",
+  secret:
+    "Not done: a file named like one that holds keys or passwords is never read while answering a colleague. Do not look for another way in.",
 } as const;
 
 export interface Guard {
@@ -655,6 +669,8 @@ export interface Guard {
   deny: string[];
   /** Asks the person; without it, what is not allowed is refused. */
   gate?: LoopGate;
+  /** Answering a colleague: files named like keys and passwords are never read (gate/secrets.ts). */
+  secretsOut?: boolean;
 }
 
 /** Runs a call as the person's rules allow it: alone, after asking them, or not at all. */
@@ -665,6 +681,12 @@ export async function guarded(
   run: () => Promise<string>,
 ): Promise<string> {
   if (keptOut(guard.deny, tool, input)) return REFUSED.out;
+  if (
+    guard.secretsOut &&
+    tool === "Read" &&
+    secretFile(basename(fullPath(input.file_path)))
+  )
+    return REFUSED.secret;
   if (!ruleAllows(guard.allow, tool, input)) {
     if (!guard.gate) return REFUSED.alone;
     const answer = await askGate(guard.gate, {
@@ -926,6 +948,7 @@ export async function loopTools(options: {
     Object.assign(tools, servicePair(services, options));
   const context: LocalContext = {
     chars: options.spill?.resultLimit ?? READ_CHARS,
+    ...(options.guard.secretsOut ? { secretsOut: true } : {}),
   };
   if (options.reads)
     for (const [name, local] of Object.entries(LOCAL_TOOLS))

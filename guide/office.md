@@ -341,7 +341,16 @@ answered is a dim line in the conversation, which Claude Code itself does not re
 
 ## When a colleague asks them
 
-Their clone answers from what it knows of them. What only they can give — a promise (a date,
+Their clone answers from what it knows of them and from the work itself. Without asking them it
+reads the folders where their work lives (the ones on the map of their work, and the ones they
+worked in with an AI tool in the last month: never their home folder as a whole, a hidden folder,
+or a folder they keep out), so a question about their code, a plan or a sheet is answered from the
+files as they are now. It changes nothing there, and never opens a file named like one that holds
+keys or passwords (`.env`, a `.pem` key, an SSH key, a credentials file). They turn this off under
+Settings › Permissions › **Answer colleagues from these folders** (동료에게 답할 때도 이 폴더를
+봐요). It reads in the services they connected where a team tracks its work too (`connectors.md`).
+
+What only they can give — a promise (a date,
 money, scope), a decision they answer for, anything about a relationship, a check of work in their
 field — it asks them first, with a card under **Office** ("A request needs your answer", 부탁에
 내 답이 필요해요), and answers with what they said. Meanwhile the colleague sees **Working**.
