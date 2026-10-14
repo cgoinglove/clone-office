@@ -1356,7 +1356,8 @@
           "alone": "自行回复了 {name}",
           "told": "回复了 {name} 并告诉了你",
           "as-is": "按你看过的原样回复了 {name}",
-          "changed": "按你修改后的内容回复了 {name}"
+          "changed": "按你修改后的内容回复了 {name}",
+          "decided": "按你的决定回复了{name}"
         },
         "held": "拦下了给 {name} 的回复，现在由你处理",
         "asked": "向 {name} 的分身发了请求",
@@ -1535,7 +1536,8 @@
       "summaryQuiet": "目前很安静，分身在帮你看着。",
       "didShort": "分身做了什么",
       "coming": "接下来",
-      "colleagues": "同事"
+      "colleagues": "同事",
+      "noFlowToday": "今天没有安排。你的 {count} 个自动流程会在设定的日子运行。"
     },
     "trouble": {
       "open": "办公室设置",

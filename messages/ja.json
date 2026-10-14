@@ -1356,7 +1356,8 @@
           "alone": "{name}さんにおまかせで返事",
           "told": "{name}さんに返事してお知らせ",
           "as-is": "{name}さんに確認したとおり返事",
-          "changed": "{name}さんに直してもらったとおり返事"
+          "changed": "{name}さんに直してもらったとおり返事",
+          "decided": "{name}さんに決めてもらったとおり返事"
         },
         "held": "{name}さんへの返事を止めました（今はあなたの番）",
         "asked": "{name}さんのクローンに依頼",
@@ -1535,7 +1536,8 @@
       "summaryQuiet": "今のところ静かです。クローンが見守っています。",
       "didShort": "クローンがしたこと",
       "coming": "このあと",
-      "colleagues": "同僚"
+      "colleagues": "同僚",
+      "noFlowToday": "今日の予定はありません。{count}件のフローは決めた日に動きます。"
     },
     "trouble": {
       "open": "オフィスの設定",

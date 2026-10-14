@@ -1356,7 +1356,8 @@
           "alone": "{name} 님에게 알아서 답함",
           "told": "{name} 님에게 답하고 알려 드림",
           "as-is": "{name} 님에게 보여 드린 그대로 답함",
-          "changed": "{name} 님에게 고쳐 주신 대로 답함"
+          "changed": "{name} 님에게 고쳐 주신 대로 답함",
+          "decided": "{name} 님에게 정해 주신 대로 답함"
         },
         "held": "{name} 님에게 갈 답을 붙잡음, 이제 내 몫",
         "asked": "{name} 님의 클론에게 부탁함",
@@ -1535,7 +1536,8 @@
       "summaryQuiet": "아직 조용해요. 클론이 지켜보고 있어요.",
       "didShort": "클론이 한 일",
       "coming": "남은 일정",
-      "colleagues": "동료"
+      "colleagues": "동료",
+      "noFlowToday": "오늘 정해진 일은 없어요. 플로우 {count}개는 정해 둔 날에 돌아요."
     },
     "trouble": {
       "open": "오피스 설정",

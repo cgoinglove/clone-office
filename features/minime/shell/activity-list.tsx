@@ -28,7 +28,7 @@ type Logged = { at: string } & (
       task: string;
       to?: string;
       text: string;
-      how: "alone" | "told" | "as-is" | "changed";
+      how: "alone" | "told" | "as-is" | "changed" | "decided";
       files?: string[];
     }
   | { kind: "held"; task: string; to?: string }

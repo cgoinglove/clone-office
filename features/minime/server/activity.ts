@@ -15,8 +15,11 @@ export type Activity =
       task: string;
       to?: string;
       text: string;
-      /** On its own, telling them after, or after they saw it (as it was, or changed). */
-      how: "alone" | "told" | "as-is" | "changed";
+      /**
+       * On its own, telling them after, after they saw it (as it was, or changed), or with what they
+       * decided when it asked them (a date, a yes or no) and no look after.
+       */
+      how: "alone" | "told" | "as-is" | "changed" | "decided";
       files?: string[];
     }
   | { kind: "held"; task: string; to?: string }

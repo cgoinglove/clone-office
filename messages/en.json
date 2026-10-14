@@ -1356,7 +1356,8 @@
           "alone": "Answered {name} on its own",
           "told": "Answered {name} and told you",
           "as-is": "Answered {name}, as you saw it",
-          "changed": "Answered {name}, as you changed it"
+          "changed": "Answered {name}, as you changed it",
+          "decided": "Answered {name} as you decided"
         },
         "held": "Held back an answer to {name}; it is yours now",
         "asked": "Asked {name}'s clone",
@@ -1535,7 +1536,8 @@
       "summaryQuiet": "Quiet so far. Your clone is keeping watch.",
       "didShort": "What your clone did",
       "coming": "Still to come",
-      "colleagues": "Colleagues"
+      "colleagues": "Colleagues",
+      "noFlowToday": "Nothing set for today. {count, plural, one {Your flow runs} other {Your # flows run}} on {count, plural, one {its} other {their}} own days."
     },
     "trouble": {
       "open": "Office settings",

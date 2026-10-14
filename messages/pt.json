@@ -1356,7 +1356,8 @@
           "alone": "Respondeu a {name} por conta própria",
           "told": "Respondeu a {name} e te avisou",
           "as-is": "Respondeu a {name} como você viu",
-          "changed": "Respondeu a {name} com as suas mudanças"
+          "changed": "Respondeu a {name} com as suas mudanças",
+          "decided": "Respondeu a {name} como você decidiu"
         },
         "held": "Segurou uma resposta para {name}; agora é com você",
         "asked": "Fez um pedido ao clone de {name}",
@@ -1535,7 +1536,8 @@
       "summaryQuiet": "Tudo calmo por enquanto. Seu clone está de olho.",
       "didShort": "O que seu clone fez",
       "coming": "O que vem",
-      "colleagues": "Colegas"
+      "colleagues": "Colegas",
+      "noFlowToday": "Nada marcado para hoje. {count, plural, one {Sua rotina roda} other {Suas # rotinas rodam}} {count, plural, one {no dia dela} other {nos dias delas}}."
     },
     "trouble": {
       "open": "Configurar escritório",

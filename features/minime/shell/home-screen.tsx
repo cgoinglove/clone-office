@@ -389,7 +389,12 @@ export function HomeScreen() {
                     </span>
                   </li>
                 ))}
-                {!coming.length && (
+                {!coming.length && flows.length > 0 && (
+                  <li className="text-[13px] leading-relaxed text-muted-foreground">
+                    {t("noFlowToday", { count: flows.length })}
+                  </li>
+                )}
+                {!coming.length && !flows.length && (
                   <li>
                     <button
                       type="button"
