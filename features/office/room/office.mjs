@@ -2,7 +2,7 @@
 // a desk with their clone, named over its head with what it is on. A request walks from the asker's
 // desk to the asked one's (or flies there, folded into a plane, when the desk is far), sits on their
 // pile until their clone takes it up, and comes back answered with a DONE stamp. What waits on the
-// viewer shows in ember. The clock on the left wall tells the time and who is in.
+// viewer shows in ember. The clock, standing apart behind the left wall, tells the time and who is in.
 //
 // Only what means something moves: a request on its way, a clone coming in or going home, a clone at
 // work, the one asking its person. Nothing wanders for show. The drawing is split over sheets so that
@@ -260,8 +260,18 @@ export function createOffice(
     oacc = 0,
     meMark = null;
   const refs = { clock: null, doors: null, marks: null };
-  /** The clock's plane on the left wall: across toward the back, down the wall, a tenth of a unit each. */
-  const clockM = plane([0.08, CLOCK.y, CLOCK.z], [0, -0.1, 0], [0, 0, -0.1]);
+  /** The clock's plane behind the left wall: across toward the back, down, a tenth of a unit each. */
+  const clockM = plane([CLOCK.x, CLOCK.y, CLOCK.z], [0, -0.1, 0], [0, 0, -0.1]);
+  /** Where the clock stands, in plan units, so the floor's frame takes it in. */
+  const CLOCK_BOX = [
+    CLOCK.x - 0.5,
+    CLOCK.y - CLOCK.w / 10,
+    CLOCK.x + 0.5,
+    CLOCK.y,
+    // down to the posts' feet
+    CLOCK.z - (CLOCK.h - 8 + CLOCK.post) / 10,
+    CLOCK.z,
+  ];
   const timers = [],
     fliers = [],
     bubbles = new Map(),
@@ -500,13 +510,16 @@ export function createOffice(
     hatchP.setAttribute("height", r2(hs));
     hatchL.setAttribute("y2", r2(hs));
     hatchL.setAttribute("stroke-width", r2(0.7 / s));
-    gFloor.innerHTML = merged(floorSvg(plan));
+    // the clock stands behind the left wall, so it is drawn before the walls
+    gFloor.innerHTML =
+      `<g class="clock" transform="${clockM}" data-clock></g>` +
+      merged(floorSvg(plan));
     gWalls.innerHTML = merged(wallSvg(plan));
     gUnder.innerHTML =
       `<g data-liftdoors>${merged(liftDoors(LIFT_X, easeInOut(liftOpen), liftH(WALL_H)))}</g>` +
-      `<g class="clock" transform="${clockM}" data-clock></g><g data-marks></g>`;
+      `<g data-marks></g>`;
     refs.doors = gUnder.querySelector("[data-liftdoors]");
-    refs.clock = gUnder.querySelector("[data-clock]");
+    refs.clock = gFloor.querySelector("[data-clock]");
     refs.marks = gUnder.querySelector("[data-marks]");
     clockKey = "";
     const c2 = toward || cam,
@@ -1525,7 +1538,9 @@ export function createOffice(
           : { t: 120, b: 96, l: 56 + insetL, r: 56 + insetR },
         1.7,
       );
-    const bounds = screenBounds([-6, -6, plan.W + 4, plan.D + 4, -2.6, WALL_H]);
+    // the floor and its walls, and the clock standing behind them where it is shown
+    const room = screenBounds([-6, -6, plan.W + 4, plan.D + 4, -2.6, WALL_H]),
+      bounds = mini || example ? room : union(room, screenBounds(CLOCK_BOX));
     // a glimpse beside the chat: the whole floor, with room for the line laid along its foot
     if (mini) return fitRect(bounds, { t: 8, b: 54, l: 8, r: 8 });
     // a phone; a narrow pane beside the page's own panel keeps clear of it as a wide one does

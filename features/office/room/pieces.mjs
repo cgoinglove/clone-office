@@ -609,13 +609,14 @@ const emsOf = (text, narrow = 0.7) =>
 export const fitSize = (text, max, width) =>
   r1(Math.min(max, width / Math.max(1, emsOf(text))));
 /**
- * The office's clock on the left wall, an LED panel big enough to read from across the floor: the time
- * in seven segments (with AM or PM where the language keeps a twelve-hour day), and beside it who is in
- * out of everyone, each of them as their clone's face, lit while in and an outline while not. Drawn in
- * its own plane, a tenth of a plan unit to a unit, from the panel's front top corner (`y` along the
- * wall, `z` up it); nothing on the floor stands tall enough to hide it.
+ * The office's clock, an LED panel big enough to read from across the floor: the time in seven
+ * segments (with AM or PM where the language keeps a twelve-hour day), and beside it who is in out of
+ * everyone, each of them as their clone's face, lit while in and an outline while not. It stands apart
+ * from the room, behind the left wall and above it, where the board stood (the user, 10-09). Drawn in
+ * its own plane, a tenth of a plan unit to a unit, from the panel's front top corner (`x` behind the
+ * wall, `y` along it, `z` up), clear of the wall's top so nothing in the room hides it.
  */
-export const CLOCK = { w: 800, h: 216, y: 89, z: 27 };
+export const CLOCK = { w: 800, h: 216, x: -9, y: 89, z: 53, post: 150 };
 export function clockFace(now, crew, words) {
   const h = now.getHours(),
     // a twelve-hour day shows its hour as it is said (9, not 09); a twenty-four-hour one keeps two digits
@@ -623,7 +624,9 @@ export function clockFace(now, crew, words) {
     hm = `${hh}:${String(now.getMinutes()).padStart(2, "0")}`,
     sg = segments(hm, 120),
     inNow = crew.filter((c) => c.in).length;
-  let s = `<rect class="ck-frame" x="0" y="0" width="${CLOCK.w}" height="${CLOCK.h}" rx="18"/>`;
+  // on two posts going down behind the wall, as the board stood
+  let s = `<rect class="ck-post" x="110" y="${CLOCK.h - 8}" width="4" height="${CLOCK.post}"/><rect class="ck-post" x="${CLOCK.w - 114}" y="${CLOCK.h - 8}" width="4" height="${CLOCK.post}"/>`;
+  s += `<rect class="ck-frame" x="0" y="0" width="${CLOCK.w}" height="${CLOCK.h}" rx="18"/>`;
   // the half of the day beside the digits, where the language puts it (PM after, 오후 before)
   const period = words.twelve && words.period ? words.period : "",
     ps = 38,

@@ -425,8 +425,8 @@ over its head with what it is on (**on Mina's request** Mina 님 부탁 처리 �
 nothing when it is at ease). Their own clone is the black (in dark mode, white)
 one, its desk on a rug; each colleague's has a colour of its own. A colleague whose computer is
 off is not in: their desk is empty with its laptop shut and their name marked **off** (퇴근), and
-their clone comes in through the lift when the computer is back on. On the left wall a big clock
-tells the time, the day, and who is in out of everyone, with each of them as their clone's face,
+their clone comes in through the lift when the computer is back on. Behind the left wall, standing
+apart from the room on two posts, a big clock tells the time and who is in out of everyone, with each of them as their clone's face,
 lit while they are in.
 
 What happens to their requests plays out on it. A request walks from the asker's desk to the

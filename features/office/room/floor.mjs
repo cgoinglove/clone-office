@@ -87,9 +87,9 @@ export function planFloor(teams, fi) {
     a.y0 = rowY[a.r];
   }
 
-  // the commons, in the lane by the lift: clear of the left wall's clock, low enough not to hide it
+  // the commons, in the lane by the lift
   fl.things.push({ kind: "tea", x: 12, y: 18 });
-  // the nook stands off the wall, so the clones meeting round its table never stand before the clock
+  // the nook stands off the wall, so the clones meeting round its table have room
   const rx = 22,
     ry = 46;
   fl.floorArt.push({ kind: "rug", x0: rx, y0: ry, x1: rx + 36, y1: ry + 30 });

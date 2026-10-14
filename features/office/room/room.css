@@ -287,7 +287,11 @@
   vector-effect: non-scaling-stroke;
 }
 
-/* the clock on the left wall: an LED panel, the time lit in seven segments, who is in as their faces */
+/* the clock behind the left wall: an LED panel on two posts, the time lit in seven segments, who is
+   in as their faces */
+.of-wrap .ck-post {
+  fill: var(--ink-30);
+}
 .of-wrap .ck-frame {
   fill: var(--screen);
 }

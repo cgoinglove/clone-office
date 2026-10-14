@@ -587,7 +587,7 @@ These words help discussion. They do not mandate separate services, tables or UI
   v13) as simplified on 10-09 (the user: nothing that moves for show, the board unreadable, a big
   clock and who is in instead). Plain ES modules that build SVG as strings: `core.mjs` (the clone
   mark, the hand-drawn line, the plan projection, one frame loop), `pieces.mjs` (desks, commons,
-  lift, the clock on the left wall, `clockFace`: the time in seven segments, who is in out of
+  lift, the clock standing apart behind the left wall on two posts, where the board stood, `clockFace`: the time in seven segments, who is in out of
   everyone and their faces), `floor.mjs` (the plan: desk areas split evenly, the commons in the lane
   by the lift, a floor no larger than its desks need; walking on a grid), `office.mjs`
   (`createOffice`: sheets, scenes, camera, panel, and the lobby with its lift ride, once a day: the
