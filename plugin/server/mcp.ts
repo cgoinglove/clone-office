@@ -12,6 +12,13 @@ export interface Tool {
   outputSchema?: Record<string, unknown>;
   /** MCP's own place for more: `anthropic/alwaysLoad` keeps a tool out of Claude Code's tool search. */
   _meta?: Record<string, unknown>;
+  /** MCP's hints for an app deciding whether to ask first: what a tool reads, sends or changes. */
+  annotations?: {
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+    openWorldHint?: boolean;
+  };
 }
 
 export interface ToolResult {

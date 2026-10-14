@@ -6,7 +6,7 @@
 // an answer leaves (office/check.ts) is not the only thing in the way.
 
 /** Names (any folder) and paths (their last folders) of such files, `*` within one name. */
-const SECRETS = [
+export const SECRETS = [
   ".env",
   ".env.*",
   ".envrc",

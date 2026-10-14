@@ -123,3 +123,32 @@ test("work folders become reading rules, and team trackers are read for colleagu
   assert.equal(readsForColleagues("linear", { linear: false }), false);
   assert.equal(readsForColleagues("gmail", { gmail: true }), true);
 });
+
+test("the office tools an AI app runs keep the clone's list of secret files, and refuse them", async () => {
+  const { SECRETS } = await import("../gate/secrets.ts");
+  const leaving = await import("../../../plugin/server/leaving.ts");
+  assert.deepEqual(leaving.SECRETS, SECRETS, "the same list in both places");
+  const home = mkdtempSync(join(tmpdir(), "leaving-"));
+  try {
+    const clone = join(home, ".clone-office");
+    mkdirSync(join(clone, "brain"), { recursive: true });
+    mkdirSync(join(home, "proj"));
+    mkdirSync(join(home, "client-x"));
+    for (const file of ["proj/.env", "proj/plan.md", "client-x/deal.md"])
+      writeFileSync(join(home, file), "x");
+    writeFileSync(join(clone, "secret.key"), "x");
+    symlinkSync(join(clone, "secret.key"), join(home, "proj", "notes.md"));
+    const why = (file: string) =>
+      leaving.mayNotLeave(join(home, file), file, clone, ["client-*"]);
+    assert.equal(await why("proj/plan.md"), undefined);
+    assert.match((await why("proj/.env")) ?? "", /keys or passwords/);
+    assert.match(
+      (await why("proj/notes.md")) ?? "",
+      /keys or passwords|clone's own/,
+    );
+    assert.match((await why(".clone-office/brain")) ?? "", /clone's own/);
+    assert.match((await why("client-x/deal.md")) ?? "", /keeps out/);
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});

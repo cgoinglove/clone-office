@@ -37,6 +37,7 @@ import {
   type Task,
   type TaskState,
 } from "../lib/news.ts";
+import { mayNotLeave } from "./leaving.ts";
 import { type Progress, type Tool, type ToolResult, text } from "./mcp.ts";
 
 /** A later answer comes into the conversation by itself (the plugin's mod), or is looked up. */
@@ -84,6 +85,7 @@ const TYPES: Record<string, string> = {
 export const TOOLS: Tool[] = [
   {
     name: "colleagues",
+    annotations: { readOnlyHint: true, openWorldHint: true },
     description:
       "Who is in your person's office: each colleague's clone, with what that colleague does, what they look after (ask whoever looks after the thing in question), the kinds of request they take, how they like to be worked with (follow it when asking them), their status, and whether their clone is around now. Look here before asking someone.",
     inputSchema: { type: "object", properties: {} },
@@ -93,6 +95,12 @@ export const TOOLS: Tool[] = [
   },
   {
     name: "ask_colleague",
+    // sends to the office, or only reads it: an app that asks before such tools asks here
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: true,
+    },
     description: `Ask a colleague's clone something that is theirs to know, check or decide: how their part works, whether they can take something on, a review, their go-ahead. It answers from what it knows of its person and their work, and asks its person what only they can give. Write the request so it stands on its own: what you need, by when, and why, with only what they need from this conversation. A quick answer comes back here; ${LATE}.`,
     inputSchema: {
       type: "object",
@@ -113,6 +121,11 @@ export const TOOLS: Tool[] = [
   },
   {
     name: "answer_colleague",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: true,
+    },
     description:
       "Answer a colleague's clone that asked something back about a request your person sent, or add to such a request. Only what your person would share.",
     inputSchema: {
@@ -127,6 +140,11 @@ export const TOOLS: Tool[] = [
   },
   {
     name: "office_file",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: true,
+    },
     description:
       "Take a file a colleague's clone sent on a request onto this computer, to read or use it. Returns where it is.",
     inputSchema: {
@@ -143,6 +161,7 @@ export const TOOLS: Tool[] = [
   },
   {
     name: "office_requests",
+    annotations: { readOnlyHint: true, openWorldHint: true },
     description:
       "Requests between your person's clone and colleagues: the recent ones with where each stands, or one request's whole thread by its id. Look here when your person asks whether an answer came.",
     inputSchema: {
@@ -217,11 +236,22 @@ async function putFiles(
   paths: string[],
 ): Promise<string[] | string> {
   if (paths.length > 10) return "Up to ten files go with one message.";
+  // the folders the person keeps out, as the app keeps them
+  const exclude = await readFile(join(minimeHome(), "settings.json"), "utf8")
+    .then((raw) => JSON.parse(raw).exclude)
+    .then((list) =>
+      Array.isArray(list)
+        ? list.filter((item): item is string => typeof item === "string")
+        : [],
+    )
+    .catch(() => [] as string[]);
   const ids: string[] = [];
   for (const given of paths) {
     const path = resolve(
       given.startsWith("~/") ? join(homedir(), given.slice(2)) : given,
     );
+    const refused = await mayNotLeave(path, given, minimeHome(), exclude);
+    if (refused) return refused;
     const info = await stat(path).catch(() => undefined);
     if (!info?.isFile()) return `No such file: ${given}`;
     if (info.size > FILE_BYTES)
