@@ -44,6 +44,8 @@ export interface ChatMessage {
   files?: string[];
   /** A colleague's line they wrote themselves, not their clone. */
   person?: boolean;
+  /** Whose answer it is (an "office" line), its text starting with "<from>: " as kept. */
+  from?: string;
   /**
    * Kept without telling anyone: a flow's run with nothing new for the person. It goes to no
    * phone and does not bring its conversation up the list.
@@ -84,6 +86,7 @@ type Line =
       at: string;
       files?: string[];
       person?: boolean;
+      from?: string;
       quiet?: boolean;
     }
   | { type: "session"; session: string; context?: number; at: string }
@@ -193,16 +196,18 @@ export async function appendMessage(
   id: string,
   role: ChatRole,
   text: string,
-  files: string[] = [],
-  /** A colleague's line they wrote themselves, not their clone. */
-  person = false,
-  /** Kept without telling anyone (`ChatMessage.quiet`). */
-  quiet = false,
+  {
+    files = [],
+    person = false,
+    from,
+    quiet = false,
+  }: Pick<ChatMessage, "files" | "person" | "from" | "quiet"> = {},
 ): Promise<void> {
   const at = new Date().toISOString();
   const more = {
     ...(files.length ? { files } : {}),
     ...(person ? { person: true } : {}),
+    ...(from ? { from } : {}),
     ...(quiet ? { quiet: true } : {}),
   };
   await append(id, { type: "message", role, text, at, ...more });
@@ -289,6 +294,7 @@ function parse(raw: string): {
         at: line.at,
         ...(line.files?.length ? { files: line.files } : {}),
         ...(line.person ? { person: true } : {}),
+        ...(line.from ? { from: line.from } : {}),
         ...(line.quiet ? { quiet: true } : {}),
       });
       if (line.role === "me") info.turns += 1;

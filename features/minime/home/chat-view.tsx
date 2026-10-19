@@ -269,28 +269,40 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
       );
     case "office":
     case "told":
-    case "meeting":
+    case "meeting": {
+      // A colleague's answer is kept as "<name>: <text>": the name heads it, the rest is theirs,
+      // drawn as the clone's own answers are.
+      const from =
+        turn.kind === "office" &&
+        turn.from &&
+        turn.text.startsWith(`${turn.from}: `)
+          ? turn.from
+          : undefined;
+      const text = from ? turn.text.slice(from.length + 2) : turn.text;
       return (
-        <li className="flex flex-col gap-1.5 rounded-xl border border-border bg-background px-3.5 py-3 text-[14.5px]">
+        <li className="flex min-w-0 flex-col gap-1.5 rounded-xl border border-border bg-background px-3.5 py-3 text-[14.5px] leading-relaxed">
           <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             {turn.kind === "office" ? (
-              <Users className="size-3.5" />
+              <Users className="size-3.5 shrink-0" />
             ) : turn.kind === "meeting" ? (
-              <MessagesSquare className="size-3.5" />
+              <MessagesSquare className="size-3.5 shrink-0" />
             ) : (
-              <CornerDownRight className="size-3.5" />
+              <CornerDownRight className="size-3.5 shrink-0" />
             )}
+            {from && (
+              <span className="min-w-0 truncate text-foreground">{from}</span>
+            )}
+            {from && <span aria-hidden>·</span>}
             {turn.kind === "office"
               ? tChat(turn.person ? "fromColleagueThemselves" : "fromColleague")
               : turn.kind === "meeting"
                 ? tChat("fromMeeting")
                 : tChat("told")}
           </span>
-          <span className="whitespace-pre-wrap wrap-break-word">
-            {turn.text}
-          </span>
+          <Markdown>{text}</Markdown>
         </li>
       );
+    }
     case "flow":
       return (
         <li className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">

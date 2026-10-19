@@ -252,8 +252,11 @@ function onEvent(
       chat,
       "office",
       `${name}: ${latest.parts.map((p) => p.text).join("\n")}${files}`,
-      (taken ?? []).map((one) => one.path),
-      byPerson,
+      {
+        files: (taken ?? []).map((one) => one.path),
+        person: byPerson,
+        from: name,
+      },
     );
   });
 }

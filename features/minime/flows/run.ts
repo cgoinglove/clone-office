@@ -147,7 +147,7 @@ export async function runFlow(
   if (ok) {
     // Run by the person, it is theirs to read whatever it says; at its time, only news is told.
     const quiet = shaped.notify === false && !options.gateUrl;
-    await appendMessage(chat, "minime", text, [], false, quiet);
+    await appendMessage(chat, "minime", text, { quiet });
     if (result.sessionId)
       await setSession(chat, result.sessionId, result.context);
   } else
