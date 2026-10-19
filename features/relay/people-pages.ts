@@ -49,6 +49,8 @@ const WORDS = {
     stateCloneOn: "Your clone is on it",
     stateAwaiting: "Waiting for an answer",
     stateAnswered: "Answered",
+    stateYouAnswered: "You answered",
+    stateCloneAnswered: "Your clone answered",
     stateClosed: "Closed",
     cloneHandles:
       "Your clone answers what is asked of you on your computer; what it needs from you comes under My clone here, in the app or on your phone.",
@@ -414,6 +416,8 @@ const WORDS = {
     stateCloneOn: "클론이 답하는 중",
     stateAwaiting: "답을 기다리는 중",
     stateAnswered: "답 옴",
+    stateYouAnswered: "답함",
+    stateCloneAnswered: "클론이 답함",
     stateClosed: "끝남",
     cloneHandles:
       "나에게 온 부탁은 내 컴퓨터의 클론이 답해요. 클론이 나에게 물을 것은 여기 '내 클론'과 앱, 휴대폰으로 와요.",
@@ -775,6 +779,8 @@ const WORDS = {
     stateCloneOn: "分身在回答",
     stateAwaiting: "等待回答",
     stateAnswered: "已回答",
+    stateYouAnswered: "你已回答",
+    stateCloneAnswered: "分身已回答",
     stateClosed: "已结束",
     cloneHandles:
       "发给你的请求由你电脑上的分身回答；它需要你决定的事会出现在应用或手机上。",
@@ -1107,6 +1113,8 @@ const WORDS = {
     stateCloneOn: "クローンが対応中",
     stateAwaiting: "答え待ち",
     stateAnswered: "回答あり",
+    stateYouAnswered: "回答済み",
+    stateCloneAnswered: "クローンが回答済み",
     stateClosed: "終了",
     cloneHandles:
       "あなたへの依頼は、あなたのコンピューターのクローンが答えます。クローンがあなたに聞きたいことは、アプリかスマートフォンに届きます。",
@@ -1486,6 +1494,8 @@ const WORDS = {
     stateCloneOn: "Tu clon lo atiende",
     stateAwaiting: "Esperando respuesta",
     stateAnswered: "Respondida",
+    stateYouAnswered: "Respondiste",
+    stateCloneAnswered: "Tu clon respondió",
     stateClosed: "Cerrada",
     cloneHandles:
       "Tu clon responde lo que te piden desde tu computadora; lo que necesita de ti llega a la app o a tu teléfono.",
@@ -1863,6 +1873,8 @@ const WORDS = {
     stateCloneOn: "Seu clone está cuidando",
     stateAwaiting: "Esperando resposta",
     stateAnswered: "Respondido",
+    stateYouAnswered: "Você respondeu",
+    stateCloneAnswered: "Seu clone respondeu",
     stateClosed: "Encerrado",
     cloneHandles:
       "Seu clone responde no seu computador o que pedem a você; o que ele precisar de você chega pelo app ou pelo celular.",
@@ -2465,12 +2477,17 @@ export function requestsPage(input: {
   const title = say(lang, "requestsTitle");
   const at = `office=${encodeURIComponent(input.office.id)}`;
   const officeField = `<input type="hidden" name="office" value="${escape(input.office.id)}">`;
-  // who it waits on: the person here on the web, their clone, or the one asked
+  // who it waits on: the person here on the web, their clone, or the one asked; once answered,
+  // who answered: the one asked, or, for what was asked of them, they or their clone
   const state = (one: WebRequest, mine: boolean) =>
     `<span class="tag">${say(
       lang,
       one.state === "answered"
-        ? "stateAnswered"
+        ? mine
+          ? "stateAnswered"
+          : one.byPerson || input.web
+            ? "stateYouAnswered"
+            : "stateCloneAnswered"
         : one.state === "closed"
           ? "stateClosed"
           : mine
