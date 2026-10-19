@@ -380,7 +380,11 @@
       "done": "Un ayudante terminó: {description}",
       "failed": "Un ayudante se detuvo: {description}"
     },
-    "fallback": "Tu modelo estaba ocupado, así que {model} terminó esta respuesta."
+    "fallback": "Tu modelo estaba ocupado, así que {model} terminó esta respuesta.",
+    "saidClone": "El clon de {name}",
+    "saidThemselves": "{name}, en persona",
+    "todosAllDone": "Hizo los {total} pasos",
+    "todosFold": "Plegar la lista"
   },
   "ask": {
     "needsYou": "Te necesita",
@@ -1282,7 +1286,7 @@
       "byLink": "Alguien sin clon (por enlace)",
       "linkStarter": "Crea un enlace de respuesta y pregunta: ",
       "askSomeone": "Preguntar a alguien",
-      "everyTime": "Cada cierto tiempo",
+      "everyTime": "Repetirlo",
       "flowStarter": "De lunes a viernes a las 9, ",
       "asksNext": "Tu clon se pondrá con esto en un chat nuevo en cuanto termine esta respuesta."
     },

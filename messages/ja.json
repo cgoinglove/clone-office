@@ -380,7 +380,11 @@
       "done": "ヘルパーが終えました：{description}",
       "failed": "ヘルパーが止まりました：{description}"
     },
-    "fallback": "いつものモデルが混み合っていたため、{model}でこの返答を仕上げました。"
+    "fallback": "いつものモデルが混み合っていたため、{model}でこの返答を仕上げました。",
+    "saidClone": "{name}さんのクローン",
+    "saidThemselves": "{name}さん本人",
+    "todosAllDone": "{total}件のステップをすべて終えました",
+    "todosFold": "リストをたたむ"
   },
   "ask": {
     "needsYou": "要対応",
@@ -1282,7 +1286,7 @@
       "byLink": "クローンのいない人（リンクで）",
       "linkStarter": "返信リンクを作って聞いて：",
       "askSomeone": "誰かに聞く",
-      "everyTime": "定期的に",
+      "everyTime": "繰り返し任せる",
       "flowStarter": "平日の朝9時に、",
       "asksNext": "いまの答えが終わったら、新しいチャットですぐに取りかかります。"
     },

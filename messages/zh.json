@@ -380,7 +380,11 @@
       "done": "助手已完成：{description}",
       "failed": "助手停下了：{description}"
     },
-    "fallback": "常用模型繁忙，这次由 {model} 完成了回答。"
+    "fallback": "常用模型繁忙，这次由 {model} 完成了回答。",
+    "saidClone": "{name} 的分身",
+    "saidThemselves": "{name} 本人",
+    "todosAllDone": "{total} 个步骤都完成了",
+    "todosFold": "收起列表"
   },
   "ask": {
     "needsYou": "需要你",
@@ -1282,7 +1286,7 @@
       "byLink": "没有分身的人（通过链接）",
       "linkStarter": "生成回复链接，然后问：",
       "askSomeone": "问别人",
-      "everyTime": "定期做",
+      "everyTime": "定期交给它",
       "flowStarter": "每个工作日上午 9 点，",
       "asksNext": "分身答完这一条，就会在新对话里接着做。"
     },

@@ -380,7 +380,11 @@
       "done": "A helper finished: {description}",
       "failed": "A helper stopped: {description}"
     },
-    "fallback": "Your model was busy, so {model} finished this answer."
+    "fallback": "Your model was busy, so {model} finished this answer.",
+    "saidClone": "{name}’s clone",
+    "saidThemselves": "{name}, in person",
+    "todosAllDone": "Did all {total} steps",
+    "todosFold": "Fold the list"
   },
   "ask": {
     "needsYou": "Needs you",
@@ -1282,7 +1286,7 @@
       "byLink": "Someone without a clone (by link)",
       "linkStarter": "Make a reply link and ask: ",
       "askSomeone": "Ask someone",
-      "everyTime": "Every so often",
+      "everyTime": "Repeat it",
       "flowStarter": "Every weekday at 9am, ",
       "asksNext": "Your clone will take this up in a new chat as soon as it finishes this answer."
     },

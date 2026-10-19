@@ -5,7 +5,7 @@
 // helpers put the words that hand a request to a colleague's clone or make a flow, so neither has
 // to be known to be used. "/" goes to the box.
 
-import { CalendarClock, ChevronDown, PanelRight, Users } from "lucide-react";
+import { ChevronDown, PanelRight, Repeat, Users } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
@@ -204,7 +204,7 @@ function Helpers({ insert }: { insert: (text: string) => void }) {
         className={chip}
         onClick={() => insert(t("flowStarter"))}
       >
-        <CalendarClock className="size-3.5" />
+        <Repeat className="size-3.5" />
         {t("everyTime")}
       </button>
     </>

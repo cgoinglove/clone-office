@@ -380,7 +380,11 @@
       "done": "Um ajudante terminou: {description}",
       "failed": "Um ajudante parou: {description}"
     },
-    "fallback": "Seu modelo estava ocupado, então {model} terminou esta resposta."
+    "fallback": "Seu modelo estava ocupado, então {model} terminou esta resposta.",
+    "saidClone": "O clone de {name}",
+    "saidThemselves": "{name}, pessoalmente",
+    "todosAllDone": "Fez os {total} passos",
+    "todosFold": "Recolher a lista"
   },
   "ask": {
     "needsYou": "Precisa de você",
@@ -1282,7 +1286,7 @@
       "byLink": "Alguém sem clone (por link)",
       "linkStarter": "Crie um link de resposta e pergunte: ",
       "askSomeone": "Perguntar a alguém",
-      "everyTime": "De tempos em tempos",
+      "everyTime": "Repetir",
       "flowStarter": "De segunda a sexta às 9, ",
       "asksNext": "Seu clone vai cuidar disso numa conversa nova assim que terminar esta resposta."
     },

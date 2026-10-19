@@ -4,15 +4,24 @@
 // in it; the requests on their way between clones; and today's flows. Alone in an office, it says
 // how to ask someone anyway (a reply link, nothing to install) and how to bring the team in.
 
-import { CalendarClock, Check, Clock, Link2, UserPlus } from "lucide-react";
+import {
+  CalendarClock,
+  Check,
+  ChevronRight,
+  Clock,
+  Link2,
+  UserPlus,
+} from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Tip } from "@/components/ui/tooltip";
 import { OfficeRoom } from "@/features/office/room/office-room";
+import { cn } from "@/lib/utils";
 import { HEADERS, type Task } from "../home/use-office";
 import { useApp } from "./app-state";
-import { Flap, Mark, PhaseChip, phaseOf } from "./parts";
+import { RequestLine, useRequestWords, useWhen } from "./parts";
 
 interface FlowLine {
   id: string;
@@ -32,16 +41,18 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
   const members = data?.members ?? [];
   const alone = !app.joined || members.length < 2;
   const clock = (iso: string) =>
-    format.dateTime(new Date(iso), {
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-    });
+    format.dateTime(new Date(iso), { hour: "numeric", minute: "2-digit" });
+  const when = useWhen();
+  const words = useRequestWords();
 
   const yours = app.tasksToDecide;
+  // on their way, and not waiting on the person: those are in the column's To decide
   const moving = (data?.tasks ?? [])
-    .filter((task) =>
-      ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
+    .filter(
+      (task) =>
+        ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(
+          task.status.state,
+        ) && !yours.has(task.id),
     )
     .sort((a, b) => b.status.timestamp.localeCompare(a.status.timestamp))
     .slice(0, 4);
@@ -84,22 +95,24 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
   return (
     <aside
       aria-label={t("label")}
-      className="flex w-[300px] shrink-0 flex-col gap-6 overflow-y-auto border-l border-border/60 bg-muted/25 px-4 pt-4 pb-5 max-[1180px]:hidden"
+      className="flex w-[300px] shrink-0 flex-col gap-6 overflow-y-auto border-l border-border/60 bg-background px-4 pt-4 pb-5 max-[1180px]:hidden"
     >
       <section aria-labelledby="r-office" className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <h2
-            id="r-office"
-            className="text-xs font-semibold text-muted-foreground"
-          >
+          <h2 id="r-office" className="text-[13.5px] font-semibold">
             {t("office")}
           </h2>
-          <Link
-            href="/office"
-            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {t("open")}
-          </Link>
+          <Tip label={t("open")}>
+            <Link
+              href="/office"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                "text-muted-foreground",
+              )}
+            >
+              <ChevronRight className="size-4" />
+            </Link>
+          </Tip>
         </div>
         <Link
           href="/office"
@@ -153,72 +166,59 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
         <section aria-labelledby="r-moving" className="flex flex-col">
           <h2
             id="r-moving"
-            className="flex items-center gap-2 pb-2 text-xs font-semibold text-muted-foreground"
+            className="flex items-center gap-2 pb-1.5 text-[13.5px] font-semibold"
           >
             {t("moving")}
-            <span className="font-mono font-normal tabular-nums">
-              {moving.length}
-            </span>
+            {moving.length > 0 && (
+              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-foreground/[0.07] px-1.5 text-[11px] font-semibold text-muted-foreground tabular-nums">
+                {moving.length}
+              </span>
+            )}
           </h2>
           {moving.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
               {t("noneMoving")}
             </p>
           ) : (
-            moving.map((task) => {
-              const other =
-                task.metadata.from === me
-                  ? task.metadata.to
-                  : task.metadata.from;
-              const text =
-                task.history[0]?.parts.map((part) => part.text).join(" ") ?? "";
-              return (
-                <Link
-                  key={task.id}
-                  href={`/requests/${encodeURIComponent(task.id)}`}
-                  className="-mx-2 flex flex-col gap-1.5 rounded-lg border-t border-border/50 px-2 py-2.5 transition-colors first-of-type:border-t-0 hover:bg-background"
-                >
-                  <span className="flex items-center gap-2">
-                    <Mark id={other} index={indexOf(other)} size={18} />
-                    <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">
-                      {text}
-                    </span>
-                    <Flap
-                      value={clock(task.status.timestamp)}
-                      label={clock(task.status.timestamp)}
-                    />
-                  </span>
-                  <span className="flex items-center gap-2 pl-[26px]">
-                    <PhaseChip
-                      phase={phaseOf(task.status.state, yours.has(task.id))}
-                    />
-                    <span className="truncate text-xs text-muted-foreground">
-                      {task.metadata.from === me
-                        ? t("to", { name: nameOf(task) })
-                        : t("from", { name: nameOf(task) })}
-                    </span>
-                  </span>
-                </Link>
-              );
-            })
+            <ul className="-mx-2 flex flex-col">
+              {moving.map((task) => {
+                const sent = task.metadata.from === me;
+                const other = sent ? task.metadata.to : task.metadata.from;
+                const name = nameOf(task);
+                return (
+                  <RequestLine
+                    key={task.id}
+                    size="sm"
+                    task={task}
+                    me={me}
+                    name={name}
+                    index={indexOf(other)}
+                    words={words(task, sent, name)}
+                    when={when(task.status.timestamp)}
+                  />
+                );
+              })}
+            </ul>
           )}
         </section>
       )}
 
       <section aria-labelledby="r-flows" className="flex flex-col gap-1">
         <div className="flex items-center justify-between pb-1">
-          <h2
-            id="r-flows"
-            className="text-xs font-semibold text-muted-foreground"
-          >
+          <h2 id="r-flows" className="text-[13.5px] font-semibold">
             {t("flows")}
           </h2>
-          <Link
-            href="/clone?tab=flows"
-            className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-          >
-            {t("all")}
-          </Link>
+          <Tip label={t("all")}>
+            <Link
+              href="/clone?tab=flows"
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                "text-muted-foreground",
+              )}
+            >
+              <ChevronRight className="size-4" />
+            </Link>
+          </Tip>
         </div>
         {flows && todays.length === 0 ? (
           <button
@@ -244,7 +244,7 @@ export function OfficeRail({ onInsert }: { onInsert: (text: string) => void }) {
                   <Clock className="size-3.5 shrink-0 text-muted-foreground" />
                 )}
                 <span className="min-w-0 flex-1 truncate">{flow.name}</span>
-                <span className="font-mono text-[11.5px] text-muted-foreground tabular-nums">
+                <span className="text-xs text-muted-foreground tabular-nums">
                   {ran && flow.last
                     ? clock(flow.last.at)
                     : flow.next

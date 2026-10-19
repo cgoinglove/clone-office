@@ -380,7 +380,11 @@
       "done": "도우미가 끝냈어요: {description}",
       "failed": "도우미가 멈췄어요: {description}"
     },
-    "fallback": "쓰던 모델이 바빠서 이번 답은 {model} 모델이 마무리했어요."
+    "fallback": "쓰던 모델이 바빠서 이번 답은 {model} 모델이 마무리했어요.",
+    "saidClone": "{name} 님의 클론",
+    "saidThemselves": "{name} 님이 직접",
+    "todosAllDone": "할 일 {total}개를 다 했어요",
+    "todosFold": "목록 접기"
   },
   "ask": {
     "needsYou": "답이 필요해요",
@@ -1282,7 +1286,7 @@
       "byLink": "클론이 없는 사람 (링크로)",
       "linkStarter": "답장 링크를 만들어서 물어봐 줘: ",
       "askSomeone": "다른 사람에게 묻기",
-      "everyTime": "정해진 때마다",
+      "everyTime": "반복해서 맡기기",
       "flowStarter": "평일 아침 9시마다 ",
       "asksNext": "지금 답을 마치면 새 대화에서 바로 할게요."
     },

@@ -9,11 +9,11 @@ import {
   ArrowUp,
   BookmarkCheck,
   Check,
+  ChevronDown,
   Circle,
   CircleAlert,
   CircleDot,
   Clock,
-  CornerDownRight,
   ListChecks,
   Loader2,
   MessageSquare,
@@ -36,6 +36,8 @@ import { cn } from "@/lib/utils";
 import { AskCard } from "../ask-card";
 import type { Todo } from "../brain/todos";
 import { type Routine, routineNow } from "../routine";
+import { useApp } from "../shell/app-state";
+import { Mark } from "../shell/parts";
 import type { Chat, Turn } from "./use-chat";
 
 export function ChatView({
@@ -197,6 +199,48 @@ function Empty({
   );
 }
 
+/**
+ * A colleague's answer to a request sent from this conversation, said by that colleague's clone:
+ * its face and name, then its words drawn as the clone's own are (10-19: they were plain text, so a
+ * colleague's ** and ` showed as they were typed). The line is kept as "Name: words".
+ */
+function ColleagueSaid({ text, person }: { text: string; person?: boolean }) {
+  const tChat = useTranslations("chat");
+  const { office } = useApp();
+  const cut = text.indexOf(": ");
+  const name = cut > 0 && cut <= 80 ? text.slice(0, cut) : "";
+  const words = name ? text.slice(cut + 2) : text;
+  const member = name
+    ? office.office?.members?.find((entry) => entry.card.name === name)
+    : undefined;
+  return (
+    <li className="flex gap-3">
+      {member ? (
+        <Mark id={member.id} index={office.indexOf(member.id)} size={26} />
+      ) : (
+        <span className="grid size-[26px] shrink-0 place-items-center rounded-full bg-muted">
+          <Users className="size-3.5 text-muted-foreground" />
+        </span>
+      )}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <p className="flex flex-wrap items-baseline gap-x-2 text-[13px] font-semibold">
+          {name
+            ? tChat(person ? "saidThemselves" : "saidClone", { name })
+            : tChat(person ? "fromColleagueThemselves" : "fromColleague")}
+          {name && (
+            <span className="text-xs font-normal text-muted-foreground">
+              {tChat("fromColleague")}
+            </span>
+          )}
+        </p>
+        <div className="min-w-0 text-[14.5px] leading-relaxed">
+          <Markdown>{words}</Markdown>
+        </div>
+      </div>
+    </li>
+  );
+}
+
 function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
   const t = useTranslations("home");
   const tChat = useTranslations("chat");
@@ -268,27 +312,27 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
         </li>
       );
     case "office":
+      return <ColleagueSaid text={turn.text} person={turn.person} />;
     case "told":
     case "meeting":
+      // what the clone answered a colleague for the person, told to them (or an old meeting's line)
       return (
-        <li className="flex flex-col gap-1.5 rounded-xl border border-border bg-background px-3.5 py-3 text-[14.5px]">
-          <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-            {turn.kind === "office" ? (
-              <Users className="size-3.5" />
-            ) : turn.kind === "meeting" ? (
-              <MessagesSquare className="size-3.5" />
-            ) : (
-              <CornerDownRight className="size-3.5" />
-            )}
-            {turn.kind === "office"
-              ? tChat(turn.person ? "fromColleagueThemselves" : "fromColleague")
-              : turn.kind === "meeting"
-                ? tChat("fromMeeting")
-                : tChat("told")}
-          </span>
-          <span className="whitespace-pre-wrap wrap-break-word">
-            {turn.text}
-          </span>
+        <li className="flex gap-3">
+          {turn.kind === "told" ? (
+            <Bot size={26} mood="idle" still mine className="shrink-0" />
+          ) : (
+            <span className="grid size-[26px] shrink-0 place-items-center rounded-full bg-muted">
+              <MessagesSquare className="size-3.5 text-muted-foreground" />
+            </span>
+          )}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <p className="text-[13px] font-semibold">
+              {turn.kind === "told" ? tChat("told") : tChat("fromMeeting")}
+            </p>
+            <div className="min-w-0 text-[14.5px] leading-relaxed">
+              <Markdown>{turn.text}</Markdown>
+            </div>
+          </div>
         </li>
       );
     case "flow":
@@ -368,13 +412,32 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
  * step ticked when done, the one under way turning while the clone works and named as it is being
  * done, the rest waiting. The words of each status are there for a screen reader.
  */
+/**
+ * The clone's to-do list, one card above its answer: open while it works; once every step is done
+ * it folds to one line that opens again (Claude.ai's tool blocks, 10-19 redesign).
+ */
 function TodoCard({ todos, live }: { todos: Todo[]; live: boolean }) {
   const t = useTranslations("chat");
   const done = todos.filter((todo) => todo.status === "completed").length;
+  const finished = done === todos.length && !live;
+  const [open, setOpen] = useState(!finished);
+  if (finished && !open)
+    return (
+      <button
+        type="button"
+        aria-expanded={false}
+        onClick={() => setOpen(true)}
+        className="flex h-8 w-fit items-center gap-2 rounded-[10px] bg-muted/70 px-3 text-[13px] text-foreground/80 transition-colors hover:bg-muted"
+      >
+        <ListChecks className="size-3.5 text-muted-foreground" />
+        {t("todosAllDone", { total: todos.length })}
+        <ChevronDown className="size-3.5 text-muted-foreground" />
+      </button>
+    );
   return (
     <section
       aria-label={t("todos")}
-      className="flex w-full max-w-md flex-col gap-2 rounded-xl border border-border bg-background px-3.5 py-3"
+      className="flex w-full max-w-md flex-col gap-2 rounded-xl bg-muted/50 px-3.5 py-3"
     >
       <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
         <ListChecks className="size-3.5" />
@@ -382,6 +445,17 @@ function TodoCard({ todos, live }: { todos: Todo[]; live: boolean }) {
         <span className="font-normal">
           · {t("todosDone", { done, total: todos.length })}
         </span>
+        {finished && (
+          <button
+            type="button"
+            aria-expanded
+            onClick={() => setOpen(false)}
+            className="ml-auto rounded-md p-0.5 hover:bg-muted hover:text-foreground"
+            aria-label={t("todosFold")}
+          >
+            <ChevronDown className="size-3.5 rotate-180" />
+          </button>
+        )}
       </span>
       <ol className="flex flex-col gap-1.5 text-[13.5px] leading-snug">
         {todos.map((todo, at) => {
