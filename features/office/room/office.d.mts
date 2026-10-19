@@ -18,6 +18,8 @@ export interface RoomPerson {
   ways?: string[];
   /** The kinds of request they take. */
   menu?: string[];
+  /** What they look after, which colleagues come to them for. */
+  owns?: string[];
 }
 
 export type RoomState =
@@ -125,9 +127,11 @@ export interface RoomWords {
     away: string;
     needsYou: string;
     waitingOn: Name;
-    onDesk: string;
-    doneToday: string;
-    asked: string;
+    /** The button on a colleague's panel that asks their clone something. */
+    askThem: Name;
+    owns: string;
+    /** The requests between the viewer and the one in the panel. */
+    between: Name;
     now: string;
     workingOn: (what: string) => string;
     waitingFor: Name;
@@ -165,6 +169,10 @@ export function createOffice(
     onAnswer?: () => void;
     /** Hands a request to the viewer's mini-me; the box over the office shows only with it. */
     onAsk?: (text: string) => void;
+    /** Asks one colleague's clone something: the button on their panel, shown only with it. */
+    onAskOf?: (id: string) => void;
+    /** Opens a request from a person's panel: its rows are buttons only with it. */
+    onRequest?: (id: string) => void;
     /** Opens at the lobby: the building and a card to clock in, then the lift up. */
     lobby?: boolean;
     /** Clocked in at the lobby (its button or Enter): called as the ride starts. */

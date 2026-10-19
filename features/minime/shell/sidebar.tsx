@@ -22,7 +22,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { memo, type ReactNode, useState } from "react";
+import { memo, type ReactNode } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,7 +34,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { say } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
 import { APP_NAME, LogoMark } from "@/features/brand/logo";
 import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
@@ -42,11 +41,11 @@ import { Bot } from "@/features/office";
 import { useCommandKeys } from "@/hooks/use-hotkey";
 import { cn, notAfter } from "@/lib/utils";
 import { focusChatBox } from "../home/chat-view";
-import { HEADERS } from "../home/use-office";
 import { STATUSES, statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
 import { Asking, Mark, StatusDot } from "./parts";
 import { RecentChats } from "./recent-chats";
+import { useInvite } from "./use-invite";
 import { askLine, turnHref } from "./your-turn";
 
 /** The places, in the order a day goes through them. */
@@ -340,34 +339,7 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
   const name = app.name ?? t("me.you");
   const role = app.profile.role?.trim();
   const line = joined ? tOffice(`status.${status}`) : role;
-  // An invite is for one person, so one is made only when asked for: the click copies it as it
-  // comes (a clipboard item that waits for it), else Settings › Office shows it, or why not.
-  const [making, setMaking] = useState(false);
-  const copyInvite = () => {
-    const shown = () => app.setSettings("office");
-    if (
-      !joined ||
-      !navigator.clipboard?.write ||
-      typeof ClipboardItem === "undefined"
-    )
-      return shown();
-    setMaking(true);
-    const made = fetch("/api/me/office", {
-      method: "POST",
-      headers: HEADERS,
-      body: JSON.stringify({ action: "invite" }),
-    })
-      .then((response) => response.json())
-      .then((answer) => {
-        if (typeof answer?.url !== "string") throw new Error("no invite");
-        return new Blob([answer.url], { type: "text/plain" });
-      });
-    void navigator.clipboard
-      .write([new ClipboardItem({ "text/plain": made })])
-      .then(() => say(t("me.invited")))
-      .catch(shown)
-      .finally(() => setMaking(false));
-  };
+  const { copy: copyInvite, making } = useInvite();
 
   return (
     <DropdownMenu>

@@ -39,6 +39,8 @@ export function OfficeRoom({
   onEnter,
   onAnswer,
   onAsk,
+  onAskOf,
+  onRequest,
   onPanel,
   className,
   ref,
@@ -77,6 +79,10 @@ export function OfficeRoom({
   onAnswer?: () => void;
   /** Hands a request to the viewer's mini-me; without it the office has no box to ask in. */
   onAsk?: (text: string) => void;
+  /** Asks one colleague's clone: the button on their panel, which shows only with it. Read once. */
+  onAskOf?: (id: string) => void;
+  /** Opens a request from a person's panel; without it the panel's requests are only read. Read once. */
+  onRequest?: (id: string) => void;
   className?: string;
 }) {
   const t = useTranslations("office");
@@ -154,9 +160,9 @@ export function OfficeRoom({
         away: t("room.panel.away"),
         needsYou: t("room.panel.needsYou"),
         waitingOn: (name) => t("room.panel.waitingOn", { name }),
-        onDesk: t("room.panel.onDesk"),
-        doneToday: t("room.panel.doneToday"),
-        asked: t("room.panel.asked"),
+        askThem: (name) => t("room.panel.askThem", { name }),
+        owns: t("room.panel.owns"),
+        between: (name) => t("room.panel.between", { name }),
         now: t("room.panel.now"),
         workingOn: (what) => t("room.panel.workingOn", { what }),
         waitingFor: (name) => t("room.panel.waitingFor", { name }),
@@ -176,8 +182,24 @@ export function OfficeRoom({
   const room = useRef<Room | null>(null);
   const latest = useRef(data);
   latest.current = data;
-  const handlers = useRef({ onAnswer, onAsk, onClockIn, onEnter, onPanel });
-  handlers.current = { onAnswer, onAsk, onClockIn, onEnter, onPanel };
+  const handlers = useRef({
+    onAnswer,
+    onAsk,
+    onAskOf,
+    onRequest,
+    onClockIn,
+    onEnter,
+    onPanel,
+  });
+  handlers.current = {
+    onAnswer,
+    onAsk,
+    onAskOf,
+    onRequest,
+    onClockIn,
+    onEnter,
+    onPanel,
+  };
   const insetNow = useRef<[number, number, number]>([
     inset,
     insetLeft,
@@ -192,6 +214,8 @@ export function OfficeRoom({
   const asExample = useRef(example).current;
   const turnElsewhere = useRef(turnShown).current;
   const asks = !!onAsk;
+  const asksOf = useRef(!!onAskOf).current;
+  const opens = useRef(!!onRequest).current;
 
   useEffect(() => {
     let alive = true;
@@ -204,6 +228,8 @@ export function OfficeRoom({
         locale,
         onAnswer: () => handlers.current.onAnswer?.(),
         onAsk: asks ? (text) => handlers.current.onAsk?.(text) : undefined,
+        onAskOf: asksOf ? (id) => handlers.current.onAskOf?.(id) : undefined,
+        onRequest: opens ? (id) => handlers.current.onRequest?.(id) : undefined,
         lobby: atLobby,
         example: asExample,
         turnShown: turnElsewhere,
@@ -225,7 +251,17 @@ export function OfficeRoom({
       made?.destroy();
       room.current = null;
     };
-  }, [words, locale, asks, atLobby, asExample, turnElsewhere, fps]);
+  }, [
+    words,
+    locale,
+    asks,
+    asksOf,
+    opens,
+    atLobby,
+    asExample,
+    turnElsewhere,
+    fps,
+  ]);
 
   useEffect(() => {
     room.current?.update(data);

@@ -94,7 +94,8 @@ export function RequestsScreen() {
   const [side, setSide] = useState<Side>("all");
   // a colleague's page or panel sends here to ask them (?ask=<member>)
   const params = useSearchParams();
-  const [asking, setAsking] = useState(Boolean(params.get("ask")));
+  const askOf = params.get("ask");
+  const [asking, setAsking] = useState(Boolean(askOf));
   const [find, setFind] = useState("");
   const words = useRequestWords();
   const handledBy = useHandled();
@@ -305,6 +306,7 @@ export function RequestsScreen() {
                 member={member}
                 index={index}
                 busy={office.busy}
+                open={member.id === askOf}
                 onSend={async (text, files) => {
                   const ok = await office.post({
                     action: "send",

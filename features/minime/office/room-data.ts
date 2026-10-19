@@ -51,6 +51,7 @@ export interface OfficeLook {
       status?: string;
       skills?: { name: string }[];
       howToWork?: string[];
+      owns?: string[];
     };
   }[];
   tasks?: {
@@ -99,6 +100,7 @@ export function roomData(
         ...(status === "meeting" && !gone ? { inMeeting: true } : {}),
         ...(status === "web" ? { onWeb: true } : {}),
         ways: member.card.howToWork ?? [],
+        owns: member.card.owns ?? [],
         menu: member.card.skills?.map((skill) => skill.name) ?? [],
       };
     }),

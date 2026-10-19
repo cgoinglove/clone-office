@@ -98,6 +98,8 @@ const clip = (s, n) => {
 };
 
 const ICON = {
+  plane:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>',
   minus:
     '<svg viewBox="0 0 14 14"><path d="M2.5 7h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
   plus: '<svg viewBox="0 0 14 14"><path d="M2.5 7h9M7 2.5v9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
@@ -151,6 +153,8 @@ export function createOffice(
     locale,
     onAnswer,
     onAsk,
+    onAskOf,
+    onRequest,
     lobby = false,
     onClockIn,
     onEnter,
@@ -1487,7 +1491,7 @@ export function createOffice(
         mood: p.bot.mood,
         phase: p.bot.phase,
       },
-      52,
+      44,
     );
     panelRec.follow = p;
     panel.querySelector(".x").addEventListener("click", () => closeFocus());
@@ -1534,11 +1538,6 @@ export function createOffice(
     const p = focus;
     if (!p || panel.hidden) return;
     let body = "";
-    if (asking(p))
-      body += p.mine
-        ? `<div class="decide"><small>${esc(W.panel.needsYou)}</small><p>${esc(decision?.text || "")}</p><div class="acts"><button type="button" class="btn solid" data-pa="answer">${esc(W.answer)}</button></div></div>`
-        : `<div class="decide other"><small>${esc(W.panel.waitingOn(p.name))}</small></div>`;
-    body += `<div class="stats"><div><b>${p.stack}</b><span>${esc(W.panel.onDesk)}</span></div><div><b>${p.doneToday || 0}</b><span>${esc(W.panel.doneToday)}</span></div><div><b>${p.out || 0}</b><span>${esc(W.panel.asked)}</span></div></div>`;
     const d = p.doing,
       now =
         d && (d.kind === "ask" || d.kind === "answer")
@@ -1549,36 +1548,77 @@ export function createOffice(
               ? p.waitOnMe
                 ? W.panel.waitingForYou
                 : W.panel.waitingFor(p.waitOn)
-              : "";
-    body += `<div class="pblock"><small>${esc(W.panel.now)}</small><ul class="rows">${now ? `<li><i></i>${esc(now)}</li>` : `<li class="none">${esc(p.status === "offline" ? W.panel.notIn(p.name) : p.status === "away" ? statusWord(p) : W.panel.free)}</li>`}</ul></div>`;
-    if (!p.mine && p.ways?.length)
-      body += `<div class="pblock"><small>${esc(W.panel.ways(p.name))}</small><ul class="rows">${p.ways
-        .slice(0, 4)
-        .map((w) => `<li><i class="past"></i>${esc(clip(w, 140))}</li>`)
-        .join("")}</ul></div>`;
-    if (p.menu?.length)
-      body += `<div class="pblock"><small>${esc(p.mine ? W.panel.myMenu : W.panel.menu(p.name))}</small><div class="tags">${p.menu
+              : p.status === "offline"
+                ? W.panel.notIn(p.name)
+                : p.status === "away"
+                  ? ""
+                  : W.panel.free;
+    // what they are on, in a line under their name (10-19 redesign): no counts to read
+    if (now) body += `<p class="pnow">${esc(now)}</p>`;
+    if (asking(p))
+      body += p.mine
+        ? `<div class="decide"><small>${esc(W.panel.needsYou)}</small><p>${esc(decision?.text || "")}</p><div class="acts"><button type="button" class="btn solid" data-pa="answer">${esc(W.answer)}</button></div></div>`
+        : `<div class="decide other"><small>${esc(W.panel.waitingOn(p.name))}</small></div>`;
+    if (!p.mine && onAskOf)
+      body += `<button type="button" class="btn brand pask" data-pa="ask">${ICON.plane}${esc(W.panel.askThem(p.name))}</button>`;
+    // what they look after, else the kinds of request they take: what a colleague comes to them for
+    const owns = p.owns?.length ? p.owns : p.menu || [];
+    if (owns.length)
+      body += `<div class="pblock"><small>${esc(p.owns?.length ? W.panel.owns : p.mine ? W.panel.myMenu : W.panel.menu(p.name))}</small><div class="tags">${owns
         .slice(0, 6)
         .map((m) => `<span>${esc(clip(m, 60))}</span>`)
         .join("")}</div></div>`;
+    if (!p.mine && p.ways?.length)
+      body += `<div class="pblock"><small>${esc(W.panel.ways(p.name))}</small><ul class="ways">${p.ways
+        .slice(0, 4)
+        .map((w) => `<li>${esc(clip(w, 140))}</li>`)
+        .join("")}</ul></div>`;
     const past = (data?.requests || [])
       .filter((r) => r.from === p.id || r.to === p.id)
       .slice(0, 4);
-    body += `<div class="pblock"><small>${esc(W.panel.earlier)}</small><ul class="rows">${past.length ? past.map((r) => `<li><i class="past"></i><span>${esc(clip(r.text, 80))}<em>${esc(`${nameOf(r.from)} → ${nameOf(r.to)} · ${pastState(r)}`)}</em></span></li>`).join("") : `<li class="none">${esc(W.panel.nothingYet)}</li>`}</ul></div>`;
+    const glyph = (r) =>
+      OPEN.has(r.state) || r.state === "INPUT_REQUIRED"
+        ? r.held || r.state === "INPUT_REQUIRED"
+          ? '<i class="wait"></i>'
+          : "<i></i>"
+        : '<i class="past"></i>';
+    const row = (r) =>
+      `${glyph(r)}<span>${esc(clip(r.text, 80))}<em>${esc(`${nameOf(r.from)} → ${nameOf(r.to)} · ${pastState(r)}`)}</em></span>`;
+    body += `<div class="pblock"><small>${esc(p.mine ? W.panel.earlier : W.panel.between(p.name))}</small><ul class="rows">${
+      past.length
+        ? past
+            .map((r) =>
+              onRequest
+                ? `<li><button type="button" data-pr="${esc(r.id)}">${row(r)}</button></li>`
+                : `<li>${row(r)}</li>`,
+            )
+            .join("")
+        : `<li class="none">${esc(W.panel.nothingYet)}</li>`
+    }</ul></div>`;
     const key = p.id + body + p.status;
     if (key === panelKey) return;
     panelKey = key;
-    panel.querySelector("header b").textContent = p.botName;
+    // a colleague by their own name (it is their clone the panel is about, as its mark shows)
+    panel.querySelector("header b").textContent = p.mine ? p.botName : p.name;
     // the viewer's own panel names them; a colleague's says what they do and where they are
-    panel.querySelector("header div span").textContent = (
-      p.mine ? [p.name, p.role] : [p.role, statusWord(p)]
-    )
-      .filter(Boolean)
-      .join(" · ");
+    const where = panel.querySelector("header div span");
+    where.textContent = "";
+    if (p.mine)
+      where.textContent = [p.name, p.role].filter(Boolean).join(" · ");
+    else {
+      if (p.role) where.append(`${p.role} · `);
+      const dot = document.createElement("i");
+      dot.className = `st ${p.status}`;
+      where.append(dot, statusWord(p));
+    }
     panel.querySelector(".pbody").innerHTML = body;
   }
   on(panel, "click", (e) => {
-    if (e.target.closest("[data-pa]")) onAnswer?.();
+    const act = e.target.closest("[data-pa]")?.dataset.pa;
+    if (act === "answer") onAnswer?.();
+    else if (act === "ask" && focus) onAskOf?.(focus.id);
+    const req = e.target.closest("[data-pr]")?.dataset.pr;
+    if (req) onRequest?.(req);
   });
   on(panel, "pointerdown", (e) => e.stopPropagation());
   function focusOn(id) {
@@ -2516,14 +2556,13 @@ export function createOffice(
     if (!data) return;
     const reqs = data.requests;
     const byId = new Map(data.people.map((r) => [r.id, r]));
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     for (const p of people.values()) {
       const r = byId.get(p.id);
       if (!r) continue;
       p.name = r.name;
       p.role = r.role || "";
       p.ways = r.ways || [];
+      p.owns = r.owns || [];
       p.menu = r.menu || [];
       p.botName = p.mine ? W.yourMiniMe : W.miniMe(p.name);
       const to = reqs.filter((q) => q.to === p.id),
@@ -2540,15 +2579,8 @@ export function createOffice(
       const waiting = from.find((q) => OPEN.has(q.state));
       p.waitOn = waiting ? nameOf(waiting.to) : "";
       p.waitOnMe = !!waiting && waiting.to === me?.id;
-      // asked and not yet settled, a question back to them included
-      p.out = from.filter(
-        (q) => OPEN.has(q.state) || q.state === "INPUT_REQUIRED",
-      ).length;
       p.inMeeting = !!r.inMeeting;
       p.onWeb = !!r.onWeb;
-      p.doneToday = to.filter(
-        (q) => q.state === "COMPLETED" && q.at >= today.getTime(),
-      ).length;
       const was = p.status;
       p.status = r.status;
       // comings and goings play out when it settles, below

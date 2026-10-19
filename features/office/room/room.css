@@ -788,13 +788,15 @@
 .of-wrap .box {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   background: var(--paper);
-  border-radius: 14px;
-  padding: 5px 5px 5px 10px;
+  /* a box that is typed in is a pill at one line, as the app's ask box (10-19 redesign) */
+  border-radius: 26px;
+  padding: 7px 7px 7px 14px;
+  /* the app's field: one hairline, as its other boxes, and the soft lift of what floats over the floor */
   box-shadow:
     0 0 0 1px var(--ink-12),
-    0 10px 30px var(--ink-08);
+    0 8px 24px -12px var(--ink-20);
   transition: box-shadow 0.15s;
 }
 /* typing in it shows, as the app's own boxes show it */
@@ -802,7 +804,7 @@
   box-shadow:
     0 0 0 1px var(--ink-20),
     0 0 0 4px var(--ink-05),
-    0 10px 30px var(--ink-08);
+    0 8px 24px -12px var(--ink-20);
 }
 /* and rings as every focus does when the keyboard brought it there (`data-keys`, the app's frame) */
 :root[data-keys] .of-wrap .box:focus-within {
@@ -837,9 +839,9 @@
 .of-wrap .box .send {
   appearance: none;
   border: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   background: var(--ink);
   color: var(--paper);
   display: grid;
@@ -848,8 +850,8 @@
   flex: none;
 }
 .of-wrap .box .send svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 /* narrower, the box starts after the views and zoom at the bottom left; narrower still, above them */
 @container (max-width: 1000px) {
@@ -908,8 +910,8 @@
   gap: 12px;
 }
 .of-wrap .panel .pb svg {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   overflow: visible;
   display: block;
 }
@@ -958,26 +960,62 @@
   color: var(--muted);
   letter-spacing: 0.01em;
 }
-.of-wrap .stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-}
-.of-wrap .stats div {
-  background: var(--paper-2);
-  border-radius: 10px;
-  padding: 9px 10px;
-  display: grid;
-  gap: 2px;
-}
-.of-wrap .stats b {
-  font-size: 18px;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-.of-wrap .stats span {
-  font-size: 12px;
+/* what they are on, in a line under the header */
+.of-wrap .pnow {
+  margin: -8px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
   color: var(--muted);
+}
+/* where they are: the dot as the app's lists draw it, in the brand colour at the desk */
+.of-wrap .panel header i.st {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--brand);
+  vertical-align: 1px;
+}
+.of-wrap .panel header i.st.away {
+  background: var(--ink-45);
+}
+.of-wrap .panel header i.st.offline {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.2px var(--ink-45);
+}
+.of-wrap .btn.brand.pask {
+  background: var(--brand-fill);
+  color: var(--brand-foreground);
+  box-shadow: none;
+  font-weight: 600;
+  transition: background-color 0.15s;
+  width: 100%;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+}
+.of-wrap .btn.brand.pask:hover {
+  background: color-mix(in oklab, var(--brand-fill), black 14%);
+}
+.of-wrap .btn.brand.pask:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.of-wrap .btn.brand.pask svg {
+  width: 15px;
+  height: 15px;
+}
+.of-wrap .ways {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  display: grid;
+  gap: 4px;
 }
 .of-wrap .decide {
   background: var(--waiting-soft);
@@ -1047,6 +1085,34 @@
 .of-wrap .rows li i.past {
   background: transparent;
   box-shadow: inset 0 0 0 1.2px var(--ink-45);
+}
+.of-wrap .rows li i.wait {
+  background: var(--waiting);
+}
+/* a request that opens: the whole row, as the app's request lines */
+.of-wrap .rows li button {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  width: calc(100% + 16px);
+  min-width: 0;
+  margin: -6px -8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.of-wrap .rows li button:hover {
+  background: var(--paper-2);
+}
+.of-wrap .rows li button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
 }
 .of-wrap .rows li span {
   display: grid;
@@ -1479,6 +1545,15 @@
   top: 66px;
   right: 16px;
   bottom: 16px;
+}
+/* The office as its own screen: the box starts after the views and zoom at the bottom left, as the
+   10-19 redesign lays it, so what stands at the right (the board, a person's panel) keeps clear. */
+@container (min-width: 1001px) {
+  .of-wrap.of-full.of-pane .composer {
+    left: 232px;
+    transform: none;
+    width: min(520px, calc(100% - 232px - 400px));
+  }
 }
 /* While the page's side panel is open, the conversation is typed there. */
 [data-side="open"] .of-wrap.of-full .composer {

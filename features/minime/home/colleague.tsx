@@ -26,14 +26,17 @@ export function Colleague({
   member,
   index,
   busy,
+  open = false,
   onSend,
 }: {
   member: Member;
   index: number;
   busy: boolean;
+  /** Opens with the box to ask them already out (a colleague's panel sent here to ask them). */
+  open?: boolean;
   onSend: (text: string, files: string[]) => Promise<boolean>;
 }) {
-  const [asking, setAsking] = useState(false);
+  const [asking, setAsking] = useState(open);
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);

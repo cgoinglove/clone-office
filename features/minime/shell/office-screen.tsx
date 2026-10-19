@@ -4,7 +4,7 @@
 // in. What waits on the person hangs over it as the office's own board, and the simple ones are
 // answered right there (yes or no, allow or not); anything longer opens where it belongs.
 
-import { ChevronDown, ChevronUp, UserPlus } from "lucide-react";
+import { ChevronDown, ChevronUp, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { useApp } from "./app-state";
 import { OfficeTrouble } from "./office-trouble";
 import { TurnRows } from "./turn-rows";
+import { useInvite } from "./use-invite";
 import { type TurnItem, turnHref } from "./your-turn";
 
 // The office opens at its lobby once a day: the day it was last done is kept in this browser.
@@ -51,10 +52,11 @@ function useSmall() {
 }
 
 /** The board's width, which the office keeps clear at its right. */
-const BOARD = 340;
+const BOARD = 360;
 
 export function OfficeScreen() {
   const t = useTranslations("shell.office");
+  const tHome = useTranslations("shell.home");
   const app = useApp();
   const router = useRouter();
   const { office, preferences } = app;
@@ -79,6 +81,10 @@ export function OfficeScreen() {
   const moving = (data?.tasks ?? []).filter((task) =>
     ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
   ).length;
+  const everyone = office.room?.people.length ?? 0;
+  const inNow =
+    office.room?.people.filter((p) => p.status !== "offline").length ?? 0;
+  const invite = useInvite();
   // how far down the board over the office reaches: the floor may pass beneath it
   const [boardHeight, setBoardHeight] = useState(0);
   // the office's own panel about one person and the board take turns at the right
@@ -101,36 +107,41 @@ export function OfficeScreen() {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <header className="flex shrink-0 flex-wrap items-center gap-4 border-b border-border/60 px-6 py-3">
-        <div className="flex min-w-0 flex-col">
-          <h1
-            id="office-title"
-            tabIndex={-1}
-            className="-mx-1 rounded-sm px-1 text-[17px] leading-tight font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-          >
-            {t("title")}
-          </h1>
-          <p className="text-[13px] text-muted-foreground">
-            {app.joined ? t("line", { moving }) : t("alone")}
-            {/* who is in is drawn on the clock; a screen reader hears it here */}
-            {app.joined && (
-              <span className="sr-only">
-                {" · "}
-                {t("inNow", {
-                  count:
-                    office.room?.people.filter((p) => p.status !== "offline")
-                      .length ?? 0,
-                  all: office.room?.people.length ?? 0,
-                })}
-              </span>
-            )}
-          </p>
-        </div>
-        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+      <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-border/60 px-6 py-2.5">
+        <h1
+          id="office-title"
+          tabIndex={-1}
+          className="-mx-1 rounded-sm px-1 text-[17px] leading-tight font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        >
+          {t("title")}
+        </h1>
+        <p className="min-w-0 truncate text-[13px] text-muted-foreground">
+          {app.joined
+            ? [
+                data?.name,
+                tHome("inOf", { count: inNow, all: everyone }),
+                t("line", { moving }),
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : t("alone")}
+        </p>
+        <div className="ml-auto flex items-center gap-1.5">
+          {app.joined && everyone > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => app.setSettings("office")}
+            >
+              <Users />
+              {t("people", { count: everyone })}
+            </Button>
+          )}
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => app.setSettings("office")}
+            loading={invite.making}
+            onClick={app.joined ? invite.copy : () => app.setSettings("office")}
           >
             <UserPlus />
             {app.joined ? t("invite") : t("setUp")}
@@ -162,6 +173,12 @@ export function OfficeScreen() {
             }}
             onAsk={(text) =>
               router.push(`/chat?say=${encodeURIComponent(text)}`)
+            }
+            onAskOf={(id) =>
+              router.push(`/requests?ask=${encodeURIComponent(id)}`)
+            }
+            onRequest={(id) =>
+              router.push(`/requests/${encodeURIComponent(id)}`)
             }
           />
         )}
@@ -255,27 +272,24 @@ function Board({
       style={{ width: BOARD }}
       className={cn(
         unseen && "invisible",
-        "absolute top-4 right-4 z-10 flex max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-[14px] bg-background/97 shadow-[0_0_0_1px_var(--alpha-08),0_18px_40px_-20px_var(--alpha-20)]",
+        // the cards lie on the floor as they are, under their heading: no board around them
+        "absolute top-4 right-4 z-10 flex max-h-[calc(100%-2rem)] max-w-[calc(100%-2rem)] flex-col gap-2.5",
       )}
     >
-      <div className="flex items-center gap-2 px-4 pt-3.5 pb-2.5">
+      <div className="flex h-8 w-fit max-w-full items-center gap-2 self-start rounded-[10px] bg-background/92 px-2.5">
+        <span className="size-2 shrink-0 rounded-full bg-waiting" aria-hidden />
         <h2
           id="o-turn"
           tabIndex={-1}
-          className="-mx-1 rounded-sm px-1 text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="-mx-1 rounded-sm px-1 text-[13.5px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           {t("yourTurn")}
         </h2>
         {/* only while something still waits: answers on their way are not counted */}
         {count > 0 && (
-          <>
-            <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-              {count}
-            </span>
-            <span className="ml-auto text-xs text-muted-foreground">
-              {t("answerHere")}
-            </span>
-          </>
+          <span className="text-[13px] font-semibold text-waiting-ink tabular-nums">
+            {count}
+          </span>
         )}
         {onFold && (
           <Tip label={t("fold")}>
@@ -286,8 +300,7 @@ function Board({
               onClick={onFold}
               className={cn(
                 buttonVariants({ variant: "ghost", size: "icon-sm" }),
-                "-mr-1.5 text-muted-foreground",
-                count === 0 && "ml-auto",
+                "-mr-1.5 ml-1 text-muted-foreground",
               )}
             >
               <ChevronUp className="size-4" />
@@ -299,7 +312,8 @@ function Board({
       <TurnRows
         turns={turns}
         heading="office-title"
-        className="overflow-y-auto"
+        size="sm"
+        className="min-h-0 overflow-y-auto p-px"
       />
     </section>
   );
