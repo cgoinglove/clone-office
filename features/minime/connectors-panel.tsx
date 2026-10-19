@@ -20,7 +20,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { useProblem } from "@/i18n/client";
-import { cn } from "@/lib/utils";
 import { CONNECTORS } from "./connectors/catalog";
 
 interface Row {
@@ -186,11 +185,7 @@ export function ConnectorsPanel() {
   const row = (entry: Row, blocked = false) => (
     <li
       key={entry.id}
-      className={cn(
-        "flex flex-col gap-2.5 rounded-[14px] bg-background p-3.5 shadow-[0_0_0_1px_var(--alpha-10)]",
-        // a token is pasted on a line of its own: the card takes the row
-        entry.kind === "token" && !entry.connected && "sm:col-span-2",
-      )}
+      className="flex flex-col gap-2.5 rounded-[14px] bg-background p-3.5 shadow-[0_0_0_1px_var(--alpha-10)]"
     >
       <div className="flex items-center justify-between gap-3">
         {entry.id in CONNECTOR_MARKS && (

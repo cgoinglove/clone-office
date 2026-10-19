@@ -630,7 +630,8 @@
         "menu": "{name} 님이 부탁받을 일",
         "earlier": "부탁",
         "nothingYet": "아직 없어요",
-        "waitingForYou": "내 답을 기다리는 중"
+        "waitingForYou": "내 답을 기다리는 중",
+        "waitsOnYou": "{name} 님이 내 답을 기다려요"
       },
       "lobby": {
         "late": "늦게까지 일하시네요, {name} 님",
@@ -1099,7 +1100,11 @@
         "topics": "주제",
         "map": "일하는 곳 지도",
         "more": "{count}개 더"
-      }
+      },
+      "roleShort": "하는 일",
+      "ownsShort": "맡은 일",
+      "toolsShort": "쓰는 도구",
+      "saveFailed": "저장하지 못했어요. 잠시 뒤 다시 해 주세요."
     },
     "skills": {
       "title": "스킬",
@@ -1154,7 +1159,8 @@
       "mine": "내 것",
       "fromAppShort": "앱 기본",
       "officeMore": "오피스 스킬 {count}개",
-      "officeNew": "새것 {count}개"
+      "officeNew": "새것 {count}개",
+      "loadFailed": "스킬을 불러오지 못했어요. 잠시 뒤 이 화면을 다시 열어 주세요."
     },
     "office": {
       "thisOffice": "이 오피스",
@@ -1379,8 +1385,11 @@
       "answerToClone": "내 클론에게 “{choice}”",
       "sentFor": "{name} 님 부탁에 “{choice}”라고 내 클론에게 전했어요. 클론이 이어서 답해요.",
       "sentToClone": "내 클론에게 “{choice}”라고 전했어요.",
-      "ownAnswer": "직접 답하기",
-      "myClone": "내 클론"
+      "ownAnswer": "내 말로 답하기",
+      "myClone": "내 클론",
+      "ownAnswerLabel": "내 답",
+      "ownAnswerPlaceholder": "내 말로 답하기",
+      "ownAnswerSend": "답하기"
     },
     "clone": {
       "title": "내 클론",
@@ -1399,11 +1408,11 @@
         "answered": {
           "alone": "{name} 님에게 알아서 답함",
           "told": "{name} 님에게 답하고 알려 드림",
-          "as-is": "{name} 님에게 보여 드린 그대로 답함",
-          "changed": "{name} 님에게 고쳐 주신 대로 답함",
-          "decided": "{name} 님에게 정해 주신 대로 답함"
+          "as-is": "{name} 님에게 답함 · 확인한 그대로",
+          "changed": "{name} 님에게 답함 · 고쳐 주신 대로",
+          "decided": "{name} 님에게 답함 · 정해 주신 대로"
         },
-        "held": "{name} 님에게 갈 답을 붙잡음, 이제 내 몫",
+        "held": "{name} 님에게 보낼 답을 멈추고 정할 것으로 넘김",
         "asked": "{name} 님의 클론에게 부탁함",
         "ruleAdded": "앞으로 묻지 않고 함: {rule}",
         "ruleRemoved": "다시 먼저 물음: {rule}",
@@ -1554,7 +1563,7 @@
       "decideNote": "고르면 내 클론이 그 뜻대로 {name} 님 클론에게 답해요. 몇 초 동안 되돌릴 수 있어요.",
       "askThem": "{name} 님 클론에게 부탁하기",
       "why": "왜 나에게 왔나요",
-      "whyKind": "이 부탁은 <b>{kind}</b>예요. 이 종류는 <b>{trust}</b>으로 정해 뒀어요.",
+      "whyKind": "부탁 종류: <b>{kind}</b> · 정해 둔 단계: <b>{trust}</b>",
       "menuLink": "부탁받을 일",
       "stepAsked": "부탁",
       "stepAdded": "덧붙임",

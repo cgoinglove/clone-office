@@ -630,7 +630,8 @@
         "menu": "What {name} takes on",
         "earlier": "Requests",
         "nothingYet": "None yet",
-        "waitingForYou": "Waiting for your answer"
+        "waitingForYou": "Waiting for your answer",
+        "waitsOnYou": "{name} is waiting on your answer"
       },
       "lobby": {
         "late": "Working late, {name}",
@@ -1099,7 +1100,11 @@
         "topics": "Topics",
         "map": "Where your work lives",
         "more": "{count} more"
-      }
+      },
+      "roleShort": "What you do",
+      "ownsShort": "Looks after",
+      "toolsShort": "Tools",
+      "saveFailed": "Not saved. Try again in a moment."
     },
     "skills": {
       "title": "Skills",
@@ -1154,7 +1159,8 @@
       "mine": "Yours",
       "fromAppShort": "Built in",
       "officeMore": "{count, plural, one {# office skill} other {# office skills}}",
-      "officeNew": "{count} new"
+      "officeNew": "{count} new",
+      "loadFailed": "Your skills could not be read. Open this screen again in a moment."
     },
     "office": {
       "thisOffice": "This office",
@@ -1379,8 +1385,11 @@
       "answerToClone": "“{choice}” to your clone",
       "sentFor": "Told your clone “{choice}” for {name}'s request; it answers them.",
       "sentToClone": "Told your clone “{choice}”.",
-      "ownAnswer": "Answer it yourself",
-      "myClone": "My clone"
+      "ownAnswer": "Answer in my words",
+      "myClone": "My clone",
+      "ownAnswerLabel": "Your answer",
+      "ownAnswerPlaceholder": "Answer in your own words",
+      "ownAnswerSend": "Answer"
     },
     "clone": {
       "title": "Your clone",

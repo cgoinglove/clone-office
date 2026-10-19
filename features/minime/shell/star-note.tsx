@@ -8,14 +8,17 @@ import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { notify } from "@/components/ui/toast";
+import { useApp } from "./app-state";
 
 const STAR = "clone-office:star";
 export const REPO_URL = "https://github.com/cgoinglove/clone-office";
 
 export function StarNote({ ready }: { ready: boolean }) {
   const t = useTranslations("shell.home.star");
+  // never over the settings: it waits until they are closed
+  const { settings } = useApp();
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || settings !== null) return;
     try {
       if (localStorage.getItem(STAR) === "1") return;
       localStorage.setItem(STAR, "1");
@@ -31,6 +34,6 @@ export function StarNote({ ready }: { ready: boolean }) {
       closeLabel: t("close"),
       timeout: 20_000,
     });
-  }, [ready, t]);
+  }, [ready, settings, t]);
   return null;
 }

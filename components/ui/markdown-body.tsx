@@ -88,16 +88,38 @@ function Picture({
   return <img {...rest} alt={rest.alt ?? ""} loading="lazy" decoding="async" />;
 }
 
-function PureMarkdown(props: ComponentProps<typeof Streamdown>) {
+/**
+ * An image in words someone else wrote (a colleague's clone): never fetched, as fetching it would
+ * tell whoever serves it that it was read, and from where. What it is called stays.
+ */
+function Withheld({ alt }: ComponentProps<"img"> & { node?: unknown }) {
+  return <span className="text-muted-foreground">[{alt || "…"}]</span>;
+}
+
+/** What words from someone else are drawn with: no diagrams run from them, no images fetched. */
+const UNTRUSTED_PLUGINS = { code, math, cjk };
+
+function PureMarkdown({
+  untrusted = false,
+  ...props
+}: ComponentProps<typeof Streamdown> & {
+  /** Someone else's words (a colleague's clone's answer): images and diagrams are left out. */
+  untrusted?: boolean;
+}) {
   const theme = useIsDark() ? "dark" : "light";
   return (
     // Streamdown's memo ignores a changed `mermaid` prop, so a new theme remounts it
     <Streamdown
       key={theme}
       {...defaultProps}
+      {...(untrusted ? { plugins: UNTRUSTED_PLUGINS } : {})}
       mermaid={MERMAID_THEME[theme]}
       {...props}
-      components={{ p: Paragraph, img: Picture, ...props.components }}
+      components={{
+        p: Paragraph,
+        img: untrusted ? Withheld : Picture,
+        ...props.components,
+      }}
     />
   );
 }

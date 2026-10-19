@@ -190,7 +190,7 @@ export function HomeScreen() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[67rem] flex-col gap-8 px-8 pt-11 pb-16">
+      <div className="mx-auto flex w-full max-w-[67rem] flex-col gap-8 px-4 pt-6 pb-16 max-sm:gap-6 sm:px-8 sm:pt-11">
         <OfficeTrouble />
         <header className="flex flex-col gap-1.5">
           <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.025em] text-balance">
@@ -343,7 +343,7 @@ export function HomeScreen() {
                 <span className="flex-1">{t("did")}</span>
                 <Tip label={t("allDid")}>
                   <Link
-                    href="/clone?tab=activity"
+                    href="/clone?tab=history"
                     className={cn(
                       buttonVariants({ variant: "ghost", size: "icon-sm" }),
                       "-my-1 text-muted-foreground",
@@ -499,7 +499,8 @@ function AskBox({
           </Button>
         </Tip>
       </form>
-      <div className="flex flex-wrap gap-2">
+      {/* on a phone the decisions come first: the box stays, its suggestions give way */}
+      <div className="flex flex-wrap gap-2 max-sm:hidden">
         {suggestions.map((suggestion) => (
           <button
             key={suggestion}

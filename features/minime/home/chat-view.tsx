@@ -234,7 +234,7 @@ function ColleagueSaid({ text, person }: { text: string; person?: boolean }) {
           )}
         </p>
         <div className="min-w-0 text-[14.5px] leading-relaxed">
-          <Markdown>{words}</Markdown>
+          <Markdown untrusted>{words}</Markdown>
         </div>
       </div>
     </li>
@@ -330,7 +330,7 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
               {turn.kind === "told" ? tChat("told") : tChat("fromMeeting")}
             </p>
             <div className="min-w-0 text-[14.5px] leading-relaxed">
-              <Markdown>{turn.text}</Markdown>
+              <Markdown untrusted>{turn.text}</Markdown>
             </div>
           </div>
         </li>

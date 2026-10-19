@@ -384,8 +384,25 @@ export function useWhen(): (iso: string) => string {
   const now = useNow({ updateInterval: 30_000 });
   const t = useTranslations("shell.line");
   return (iso: string) => {
-    const at = Math.min(Date.parse(iso), now.getTime());
-    if (Number.isNaN(at)) return "";
+    const when = Date.parse(iso);
+    if (Number.isNaN(when)) return "";
+    // a time still to come (a flow's next run) by its clock, or its day; never "just now"
+    if (when > now.getTime() + 60_000) {
+      const end = new Date(now);
+      end.setHours(24, 0, 0, 0);
+      return when < end.getTime()
+        ? format.dateTime(new Date(when), {
+            hour: "numeric",
+            minute: "2-digit",
+          })
+        : format.dateTime(new Date(when), {
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          });
+    }
+    const at = Math.min(when, now.getTime());
     const ago = now.getTime() - at;
     if (ago < 60_000) return t("justNow");
     if (ago < 60 * 60_000)
@@ -397,7 +414,9 @@ export function useWhen(): (iso: string) => string {
         hour: "numeric",
         minute: "2-digit",
       });
-    if (at >= day.getTime() - 24 * 60 * 60_000) return t("yesterday");
+    const yesterday = new Date(day);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (at >= yesterday.getTime()) return t("yesterday");
     return format.dateTime(new Date(at), { month: "short", day: "numeric" });
   };
 }

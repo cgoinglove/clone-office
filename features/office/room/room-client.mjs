@@ -161,6 +161,7 @@ function roomWords(raw, lang) {
       workingOn: (what) => t("room.panel.workingOn", { what }),
       waitingFor: (name) => t("room.panel.waitingFor", { name }),
       waitingForYou: t("room.panel.waitingForYou"),
+      waitsOnYou: (name) => t("room.panel.waitsOnYou", { name }),
       free: t("room.panel.free"),
       notIn: (name) => t("room.panel.notIn", { name }),
       ways: (name) => t("room.panel.ways", { name }),

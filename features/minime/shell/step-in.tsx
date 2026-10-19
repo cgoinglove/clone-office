@@ -52,10 +52,16 @@ export function StepIn({
   const [keepOpen, setKeepOpen] = useState(yours);
   const box = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
-    if (start === "self") box.current?.focus();
+    if (start !== "self") return;
+    setMode("self");
+    box.current?.focus();
   }, [start]);
+  // taken over (from the page's menu, or elsewhere): their words are their own answer, and the
+  // request stays open for the next, as it does when the page opens on it
   useEffect(() => {
-    if (yours) setMode("self");
+    if (!yours) return;
+    setMode("self");
+    setKeepOpen(true);
   }, [yours]);
 
   const post = async (body: Record<string, unknown>) => {

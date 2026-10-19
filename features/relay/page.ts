@@ -294,7 +294,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* signing in: one narrow card, the mark over its title */
 main.auth { max-width: 25rem; padding-top: 4rem; }
 main.auth h1 { text-align: center; font-size: 1.5rem; }
-main.auth > .note { text-align: center; }
+main.auth > .note { text-align: center; word-break: keep-all; text-wrap: balance; }
 .auth-mark { display: flex; justify-content: center; }
 .auth-mark .mark { width: 2.5rem; height: 2.5rem; color: var(--fg); }
 .auth-mark .mark .eye { fill: var(--bg); }
@@ -304,7 +304,9 @@ main.auth > .note { text-align: center; }
 .reply form { margin: 0; }
 .reply form button { margin-top: .75rem; }
 .asker { display: flex; align-items: center; gap: .65rem; margin: 0; }
-.asker .avatar { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--soft); display: grid; place-items: center; font-weight: 700; }
+.asker .avatar { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; flex: none; }
+.asker .mark { width: 2rem; height: 2rem; color: var(--fg); }
+.asker .mark .eye { fill: var(--bg); }
 .ask-text { margin: 0; font-size: 1.2rem; font-weight: 650; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; letter-spacing: -.01em; }
 `;
 
@@ -476,13 +478,12 @@ export function replyPage(input: {
 <textarea id="answer" name="answer" required maxlength="8000"></textarea>
 <button type="submit">${say(lang, "send")}</button>
 </form>`;
-  const initial = escape(Array.from(asker.trim())[0] ?? "·");
   return shell(
     lang,
     title,
     // the question as one card, who asks over it, the answer under it (10-19 redesign)
     `<section class="reply">
-<div class="asker"><span class="avatar" aria-hidden="true">${initial}</span><h1>${title}</h1></div>
+<div class="asker"><span class="avatar" aria-hidden="true">${MARK}</span><h1>${title}</h1></div>
 <p class="ask-text">${escape(input.request)}</p>
 ${answered}
 </section>

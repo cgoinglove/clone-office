@@ -21,7 +21,6 @@ import {
   Undo2,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -55,7 +54,6 @@ export function RequestScreen({ id }: { id: string }) {
   const tStep = useTranslations("shell.stepIn");
   const undo = useTranslations("common")("undo");
   const when = useWhen();
-  const params = useSearchParams();
   const app = useApp();
   const { office } = app;
   const data = office.office;
@@ -143,14 +141,16 @@ export function RequestScreen({ id }: { id: string }) {
           app.announce(
             tTurn("sentFor", { name, choice: clip(shown, ANSWER_CHARS) }),
           );
-          // where the request stands now, else its title
+          // where the request stands now, when it is in sight (a narrow window folds the side
+          // away), else its title, which always is
           if (here)
-            requestAnimationFrame(() =>
-              (
-                document.getElementById("request-state") ??
-                document.getElementById("request-title")
-              )?.focus(),
-            );
+            requestAnimationFrame(() => {
+              const state = document.getElementById("request-state");
+              (state?.offsetParent
+                ? state
+                : document.getElementById("request-title")
+              )?.focus();
+            });
           return true;
         },
         undo: () => {
@@ -363,7 +363,8 @@ export function RequestScreen({ id }: { id: string }) {
                 />
                 {t("yourTurn")}
               </h2>
-              <TurnRows turns={cards} heading="request-decide" />
+              {/* answered, the last card goes with its heading: the keyboard lands on the title */}
+              <TurnRows turns={cards} heading="request-title" />
               <p className="px-1 text-xs text-muted-foreground">
                 {t("decideNote", { name })}
               </p>
@@ -424,13 +425,7 @@ export function RequestScreen({ id }: { id: string }) {
           })}
 
           {canStep && (moving || Boolean(steps?.notes.length)) && (
-            <StepIn
-              task={task.id}
-              name={name}
-              steps={steps}
-              closed={!moving}
-              mode={params.get("answer") === "own" ? "self" : "tell"}
-            />
+            <StepIn task={task.id} name={name} steps={steps} closed={!moving} />
           )}
 
           {sent && moving && (

@@ -932,7 +932,6 @@ export class Relay {
     };
   }
 
-  /** The members of an office, in the order they joined. */
   /** The office's name, as its owners set it (empty until then). */
   async officeName(office: string): Promise<string> {
     const [row] = await this.db.query<{ name: string }>(
@@ -942,6 +941,7 @@ export class Relay {
     return row?.name ?? "";
   }
 
+  /** The members of an office, in the order they joined. */
   async members(office: string): Promise<Member[]> {
     const rows = await this.db.query<{
       id: string;

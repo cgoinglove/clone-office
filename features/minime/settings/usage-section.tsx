@@ -37,9 +37,10 @@ export function UsageSection() {
     };
   }, []);
   if (!lines) return null;
-  // shares by what was sent and read, when the log knows it; by how many times, when it does not
+  // shares by what was sent and read when the log knows it for every use (a model on this computer
+  // may count none), else by how many times
   const tokens = lines.reduce((sum, line) => sum + line.tokens, 0);
-  const byTokens = tokens > 0;
+  const byTokens = lines.every((line) => line.tokens > 0 || line.runs === 0);
   const whole = byTokens
     ? tokens
     : lines.reduce((sum, line) => sum + line.runs, 0);

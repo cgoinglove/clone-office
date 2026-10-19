@@ -150,8 +150,8 @@ export function CloneScreen() {
 
 /**
  * Three numbers on how the clone stands in for its person: of the answers it showed them first,
- * how many went as they were (30 days); what it answered colleagues on its own this week, and to
- * how many; and what it brought to them before anything went.
+ * how many went as they were (30 days); what it answered colleagues this week, and to how many;
+ * and what it brought to them before anything went.
  */
 function Numbers({ lines }: { lines: Logged[] | null }) {
   const t = useTranslations("shell.clone.stats");
@@ -159,10 +159,8 @@ function Numbers({ lines }: { lines: Logged[] | null }) {
   const like = app.office.office?.likeMe;
   const since = Date.now() - WEEK;
   const week = (lines ?? []).filter((line) => Date.parse(line.at) >= since);
-  const alone = week.filter(
-    (line) =>
-      line.kind === "answered" && (line.how === "alone" || line.how === "told"),
-  );
+  // every answer that went to a colleague in the person's name this week, as the list below has it
+  const alone = week.filter((line) => line.kind === "answered");
   const people = new Set(
     alone.map((line) => ("to" in line ? line.to : undefined)).filter(Boolean),
   ).size;
@@ -199,19 +197,22 @@ function Numbers({ lines }: { lines: Logged[] | null }) {
     },
   ];
   return (
-    <ul className="grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-3">
+    // three across at any width; on a phone each is its number and name, the line under it set aside
+    <ul className="grid grid-cols-3 gap-2 sm:gap-2.5">
       {items.map((item) => (
         <li
           key={item.key}
-          className="flex flex-col gap-0.5 rounded-[14px] bg-background px-4 py-3.5 shadow-[0_0_0_1px_var(--alpha-10)]"
+          className="flex min-w-0 flex-col gap-0.5 rounded-[14px] bg-background px-3 py-3 shadow-[0_0_0_1px_var(--alpha-10)] sm:px-4 sm:py-3.5"
         >
-          <span className="flex items-baseline gap-2">
-            <span className="text-[22px] leading-none font-semibold tracking-tight tabular-nums">
+          <span className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-2">
+            <span className="text-[19px] leading-none font-semibold tracking-tight tabular-nums sm:text-[22px]">
               {item.value}
             </span>
-            <span className="text-[13px] font-semibold">{item.label}</span>
+            <span className="text-[12px] font-semibold sm:text-[13px]">
+              {item.label}
+            </span>
           </span>
-          <span className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          <span className="mt-1 text-xs leading-relaxed text-muted-foreground max-sm:hidden">
             {item.hint}
           </span>
         </li>

@@ -7,10 +7,10 @@
 
 import {
   BookOpen,
+  CalendarClock,
   Check,
   ChevronRight,
   Hand,
-  Repeat,
   Send,
   ShieldCheck,
 } from "lucide-react";
@@ -49,7 +49,7 @@ const ICONS = {
   held: Hand,
   asked: Send,
   rule: ShieldCheck,
-  flow: Repeat,
+  flow: CalendarClock,
   skill: BookOpen,
 } as const;
 
@@ -58,7 +58,8 @@ export function useActivity(): Logged[] | null {
   const [lines, setLines] = useState<Logged[] | null>(null);
   useEffect(() => {
     let live = true;
-    fetch("/api/me/activity", { headers: HEADERS })
+    // enough lines for this week's numbers even with a flow that runs every half hour
+    fetch("/api/me/activity?limit=1000", { headers: HEADERS })
       .then((response) => (response.ok ? response.json() : null))
       .then((body: { activity?: Logged[] } | null) => {
         if (live) setLines(body?.activity ?? []);
@@ -107,8 +108,14 @@ export function ActivityList({ lines }: { lines: Logged[] | null }) {
   const memberOf = (name?: string) =>
     name ? members.find((member) => member.card.name === name) : undefined;
   const today = dayOf(new Date().toISOString());
+  // the day before by the calendar, which a change of the clocks does not move
+  const before = new Date(today);
+  before.setDate(before.getDate() - 1);
+  const yesterday = before.getTime();
   const days: { day: number; lines: Logged[] }[] = [];
-  for (const line of lines) {
+  // latest first, whatever order the log kept them in
+  const sorted = [...lines].sort((a, b) => b.at.localeCompare(a.at));
+  for (const line of sorted) {
     const day = dayOf(line.at);
     const last = days.at(-1);
     if (last?.day === day) last.lines.push(line);
@@ -121,7 +128,7 @@ export function ActivityList({ lines }: { lines: Logged[] | null }) {
           <h2 className="px-1 text-[13px] font-semibold text-muted-foreground">
             {day === today
               ? t("today")
-              : day === today - 86_400_000
+              : day === yesterday
                 ? t("yesterday")
                 : format.dateTime(new Date(day), {
                     month: "long",

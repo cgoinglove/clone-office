@@ -62,13 +62,15 @@ export function SkillsSection({ compact = false }: { compact?: boolean }) {
   const [data, setData] = useState<Skills | null>(null);
   const [busy, setBusy] = useState<string>();
   const [problem, setProblem] = useState<string | null>(null);
+  // the list could not be read: said, rather than an empty card
+  const [failed, setFailed] = useState(false);
 
   const load = useCallback(
     () =>
       fetch("/api/me/skills", { headers: HEADERS })
         .then((r) => r.json())
         .then((next: Skills) => setData(next))
-        .catch(() => {}),
+        .catch(() => setFailed(true)),
     [],
   );
   useEffect(() => {
@@ -98,7 +100,9 @@ export function SkillsSection({ compact = false }: { compact?: boolean }) {
       <SkillsCard
         data={data}
         busy={busy}
-        problem={problem ? problemText(problem) : null}
+        problem={
+          failed ? t("loadFailed") : problem ? problemText(problem) : null
+        }
         onAct={act}
       />
     );
@@ -170,7 +174,10 @@ function SkillsCard({
   const problemText = useProblem();
   const [open, setOpen] = useState<string | null>(null);
   const [officeOpen, setOfficeOpen] = useState(false);
-  if (!data) return null;
+  if (!data)
+    return problem ? (
+      <p className="px-1 text-[13px] text-destructive">{problem}</p>
+    ) : null;
   const office = data.office;
   const fresh = office?.skills.filter((skill) => skill.here === "new").length;
   return (

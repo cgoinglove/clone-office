@@ -42,7 +42,7 @@ import { EXPORT_PROMPT } from "../learn/export-prompt";
 import { ListField } from "../list-field";
 import { PROFILE_LIMITS } from "../profile-limits";
 import { stream } from "../stream";
-import { Empty, Group } from "./parts";
+import { Empty } from "./parts";
 import { SkillsSection } from "./skills-section";
 
 /** Where a line came from (memory/store.ts Source), as the route words it. */
@@ -381,6 +381,7 @@ function AboutYou({
   const [tools, setTools] = useState<string[]>(toolsNow);
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
   // read as the card is; corrected in place (nothing written yet opens it to write)
   const empty = !role.trim() && owns.length === 0 && tools.length === 0;
   const [editing, setEditing] = useState(false);
@@ -426,6 +427,7 @@ function AboutYou({
 
   const save = async () => {
     setBusy(true);
+    setProblem(null);
     try {
       const response = await fetch("/api/me/profile", {
         method: "POST",
@@ -437,10 +439,17 @@ function AboutYou({
           tools,
         }),
       });
-      if (response.ok) onProfile(await response.json());
-      // In an office, the card colleagues see changes with it.
-      if (card && name.trim())
-        await office.post({
+      if (!response.ok) {
+        // nothing said as saved that was not: the form stays open with what they wrote
+        setProblem(t("saveFailed"));
+        return;
+      }
+      onProfile(await response.json());
+      // In an office, the card colleagues see changes with it; one that did not go says so.
+      if (
+        card &&
+        name.trim() &&
+        !(await office.post({
           action: "card",
           card: {
             ...card,
@@ -448,7 +457,11 @@ function AboutYou({
             description: role.trim(),
             owns,
           },
-        });
+        }))
+      ) {
+        setProblem(t("saveFailed"));
+        return;
+      }
       setEditing(false);
       say(t("saved"));
     } finally {
@@ -573,6 +586,11 @@ function AboutYou({
             <Button type="submit" disabled={busy || !changed} loading={busy}>
               {t("save")}
             </Button>
+            {problem && (
+              <span role="alert" className="text-[13px] text-destructive">
+                {problem}
+              </span>
+            )}
             {!empty && (
               <Button
                 type="button"
@@ -592,9 +610,9 @@ function AboutYou({
         </form>
       ) : (
         <div className="flex flex-col gap-2.5 rounded-[14px] bg-background px-4.5 py-4 shadow-[0_0_0_1px_var(--alpha-10)]">
-          {line(tOffice("role"), <span className="text-[14px]">{role}</span>)}
-          {owns.length > 0 && line(tOffice("owns"), pills(owns))}
-          {tools.length > 0 && line(tOffice("tools"), pills(tools, true))}
+          {line(t("roleShort"), <span className="text-[14px]">{role}</span>)}
+          {owns.length > 0 && line(t("ownsShort"), pills(owns))}
+          {tools.length > 0 && line(t("toolsShort"), pills(tools, true))}
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             {card ? t("aboutInOffice") : t("aboutHint")}
           </p>
@@ -949,27 +967,30 @@ function StartOver() {
     }
     router.push("/start");
   };
+  // at the foot, quiet: a line saying what it does and a button that asks once before it goes
   return (
-    <Group title={t("startOver")} hint={t("startOverHint")} tone="danger">
-      <div>
-        <Button
-          variant="secondary"
-          className="text-destructive hover:text-destructive"
-          loading={checking}
-          onClick={() => {
-            setChecking(true);
-            setProblem(null);
-            void fetch("/api/me/reset", { headers: HEADERS })
-              .then((r) => r.json())
-              .then((data) => setSure(data?.onlyRead ? "clear" : "backup"))
-              .catch(() => setSure("backup"))
-              .finally(() => setChecking(false));
-          }}
-        >
-          <RotateCcw />
-          {tRun("startOver")}
-        </Button>
-      </div>
+    <section className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2">
+      <p className="min-w-0 flex-1 basis-64 text-[13px] leading-relaxed text-muted-foreground">
+        {t("startOverHint")}
+      </p>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground hover:text-destructive"
+        loading={checking}
+        onClick={() => {
+          setChecking(true);
+          setProblem(null);
+          void fetch("/api/me/reset", { headers: HEADERS })
+            .then((r) => r.json())
+            .then((data) => setSure(data?.onlyRead ? "clear" : "backup"))
+            .catch(() => setSure("backup"))
+            .finally(() => setChecking(false));
+        }}
+      >
+        <RotateCcw />
+        {tRun("startOver")}
+      </Button>
       <ConfirmDialog
         open={Boolean(sure)}
         onOpenChange={(open) => !open && setSure(false)}
@@ -984,6 +1005,6 @@ function StartOver() {
         error={problem ? problemText(problem) : undefined}
         onConfirm={() => void go()}
       />
-    </Group>
+    </section>
   );
 }

@@ -630,7 +630,8 @@
         "menu": "{name}さんが受ける依頼",
         "earlier": "依頼",
         "nothingYet": "まだありません",
-        "waitingForYou": "あなたの返事を待っています"
+        "waitingForYou": "あなたの返事を待っています",
+        "waitsOnYou": "{name}さんがあなたの返事を待っています"
       },
       "lobby": {
         "late": "遅くまでお疲れさまです、{name}さん",
@@ -1099,7 +1100,11 @@
         "topics": "トピック",
         "map": "仕事の場所の地図",
         "more": "あと{count}件"
-      }
+      },
+      "roleShort": "仕事",
+      "ownsShort": "担当",
+      "toolsShort": "使う道具",
+      "saveFailed": "保存できませんでした。少しあとでもう一度どうぞ。"
     },
     "skills": {
       "title": "スキル",
@@ -1154,7 +1159,8 @@
       "mine": "自分の",
       "fromAppShort": "標準",
       "officeMore": "オフィスのスキル {count}件",
-      "officeNew": "新しいもの {count}件"
+      "officeNew": "新しいもの {count}件",
+      "loadFailed": "スキルを読み込めませんでした。少しあとでこの画面を開き直してください。"
     },
     "office": {
       "thisOffice": "このオフィス",
@@ -1379,8 +1385,11 @@
       "answerToClone": "自分のクローンに「{choice}」",
       "sentFor": "{name}さんの依頼に「{choice}」と自分のクローンに伝えました。クローンが続けて答えます。",
       "sentToClone": "自分のクローンに「{choice}」と伝えました。",
-      "ownAnswer": "自分で答える",
-      "myClone": "自分のクローン"
+      "ownAnswer": "自分の言葉で答える",
+      "myClone": "自分のクローン",
+      "ownAnswerLabel": "あなたの答え",
+      "ownAnswerPlaceholder": "自分の言葉で答える",
+      "ownAnswerSend": "答える"
     },
     "clone": {
       "title": "あなたのクローン",

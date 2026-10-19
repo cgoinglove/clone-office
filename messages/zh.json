@@ -630,7 +630,8 @@
         "menu": "{name}接的请求",
         "earlier": "请求",
         "nothingYet": "还没有",
-        "waitingForYou": "等待你的答复"
+        "waitingForYou": "等待你的答复",
+        "waitsOnYou": "{name} 在等你的回答"
       },
       "lobby": {
         "late": "{name}，这么晚还在忙",
@@ -1099,7 +1100,11 @@
         "topics": "主题",
         "map": "工作所在的地图",
         "more": "还有 {count} 个"
-      }
+      },
+      "roleShort": "做什么",
+      "ownsShort": "负责",
+      "toolsShort": "常用工具",
+      "saveFailed": "没有保存。请稍后再试。"
     },
     "skills": {
       "title": "技能",
@@ -1154,7 +1159,8 @@
       "mine": "你的",
       "fromAppShort": "内置",
       "officeMore": "办公室技能 {count} 个",
-      "officeNew": "新的 {count} 个"
+      "officeNew": "新的 {count} 个",
+      "loadFailed": "无法读取技能。请稍后重新打开此页面。"
     },
     "office": {
       "thisOffice": "这个办公室",
@@ -1379,8 +1385,11 @@
       "answerToClone": "告诉你的分身：“{choice}”",
       "sentFor": "已把“{choice}”告诉你的分身，它会接着回复{name}的请求。",
       "sentToClone": "已告诉你的分身：“{choice}”。",
-      "ownAnswer": "自己回答",
-      "myClone": "我的分身"
+      "ownAnswer": "用自己的话回答",
+      "myClone": "我的分身",
+      "ownAnswerLabel": "你的回答",
+      "ownAnswerPlaceholder": "用自己的话回答",
+      "ownAnswerSend": "回答"
     },
     "clone": {
       "title": "你的分身",

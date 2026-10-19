@@ -136,6 +136,8 @@ export interface RoomWords {
     workingOn: (what: string) => string;
     waitingFor: Name;
     waitingForYou: string;
+    /** A colleague waits on the viewer's answer. */
+    waitsOnYou: Name;
     free: string;
     notIn: Name;
     ways: Name;

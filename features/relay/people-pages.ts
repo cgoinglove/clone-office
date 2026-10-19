@@ -23,7 +23,7 @@ const WORDS = {
     onWebPerson: "On the web, no computer connected",
     answerFrom: "Answer from {name}",
     answerFromClone: "Answer from {name}'s clone",
-    requestsWaiting: "Requests · {count} waiting",
+    requestsWaiting: "{count} requests waiting",
     inviteFor: "For whom (optional)",
     inviteOnce: "Copy it now: it is shown only once.",
     webTitle: "No computer connected?",
@@ -388,7 +388,7 @@ const WORDS = {
     onWebPerson: "웹에서 함께해요 (연결된 컴퓨터 없음)",
     answerFrom: "{name} 님의 답",
     answerFromClone: "{name} 님 클론의 답",
-    requestsWaiting: "부탁 · {count}개 기다려요",
+    requestsWaiting: "기다리는 부탁 {count}개",
     inviteFor: "누구에게 보내나요 (선택)",
     inviteOnce: "지금 복사해 두세요. 한 번만 보여요.",
     webTitle: "연결된 컴퓨터가 없나요?",
@@ -2496,8 +2496,8 @@ export function requestsPage(input: {
         input.web && one.state === "waiting"
           ? `<form method="post" action="/home/requests/answer">${officeField}<input type="hidden" name="task" value="${escape(one.id)}">
 <label for="answer-${escape(one.id)}">${say(lang, "answerLabel")}</label>
-<textarea id="answer-${escape(one.id)}" name="text" required maxlength="8000"></textarea>
-<button type="submit">${say(lang, "answerSend")}</button>
+<textarea id="answer-${escape(one.id)}" name="text" required maxlength="8000" rows="2"></textarea>
+<button type="submit" class="quiet">${say(lang, "answerSend")}</button>
 </form>`
           : ""
       }</li>`,
@@ -2659,7 +2659,6 @@ export function homeBand(lang: PageLanguage, band: Band): string {
           )
           .join("")}</ul></details>`
       : "";
-  const initial = escape(Array.from(band.name.trim())[0] ?? "·");
   const tab = (id: HomeTab, href: string, words: string) =>
     `<a href="${href}"${band.tab === id ? ' aria-current="page"' : ""}>${words}</a>`;
   // One white row (10-19 redesign): the office, its tabs underlined where one is, the person's menu.
@@ -2674,7 +2673,7 @@ ${
       )}${tab("office", `/home/office${at}`, say(lang, "tabOffice"))}</nav>`
     : ""
 }
-<details class="me"><summary aria-label="${say(lang, "menuLabel")}"><span class="avatar" aria-hidden="true">${initial}</span><span class="me-name" aria-hidden="true">${escape(band.name)}</span></summary><div class="menu">
+<details class="me"><summary aria-label="${say(lang, "menuLabel")}"><span class="avatar" aria-hidden="true">${MARK}</span><span class="me-name" aria-hidden="true">${escape(band.name)}</span></summary><div class="menu">
 <p class="menu-name">${escape(band.name)}</p>
 <a href="/home/account${at}">${say(lang, "accountTitle")}</a>
 ${band.admin ? `<a href="/home/admin">${say(lang, "adminLink")}</a>` : ""}
@@ -2854,7 +2853,9 @@ body { min-height: 100vh; display: flex; flex-direction: column; }
 .band details.me > summary::after { border-color: var(--muted); transform: rotate(45deg); margin-top: -.2rem; }
 .band details.pick { margin-left: -1.4rem; }
 .band details.pick > summary::after { border-color: var(--fg); margin-left: 0; }
-.avatar { width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--soft); color: var(--fg); display: grid; place-items: center; font-weight: 700; font-size: .8rem; }
+/* the person's own clone at rest, as the app marks them, never a letter */
+.avatar { width: 1.75rem; height: 1.75rem; display: grid; place-items: center; }
+.band .avatar .mark { width: 1.45rem; height: 1.45rem; }
 .band .menu { position: absolute; right: 0; top: calc(100% + .25rem); z-index: 5; min-width: 13rem; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; padding: .4rem; box-shadow: 0 12px 32px rgba(0,0,0,.18); display: flex; flex-direction: column; gap: .1rem; list-style: none; margin: 0; }
 .band details.pick .menu { left: 0; right: auto; }
 .band .menu a, .band .menu button { display: flex; align-items: center; min-height: 2.5rem; padding: 0 .6rem; border-radius: 8px; color: var(--fg); text-decoration: none; width: 100%; margin: 0; font-weight: 500; justify-content: flex-start; }
@@ -2920,6 +2921,7 @@ button.chip:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); 
 .decide-acts button:hover:not(:disabled) { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 /* a request waiting on the person's own answer, on the Requests tab: the same card */
 .rows.requests li.waits { border: 1px solid var(--line); border-radius: 14px; padding: .9rem 1rem; margin: 0 0 .6rem; }
+.rows.requests li textarea { min-height: 4.5rem; resize: vertical; }
 .rows.requests li.waits .who b::before { content: ""; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--waiting); margin-right: .45rem; vertical-align: .1em; }
 .dock { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0 1rem; }
 .compose { margin: 0; }
@@ -2953,7 +2955,7 @@ h3 { font-size: .95rem; margin: .5rem 0 0; color: var(--muted); }
 .side-card .rows li { padding: .45rem 0; }
 .count-soft { font-size: .75rem; font-weight: 600; color: var(--muted); }
 .office-more { display: grid; gap: 2rem 3rem; align-items: start; margin-top: 2rem; }
-.office-more:empty { display: none; }
+.office-more:not(:has(section)) { display: none; }
 .office-more > section { min-width: 0; }
 @media (min-width: 60rem) { .office-more { grid-template-columns: 1fr 1fr; } }
 .room-slot { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-height: 18rem; display: grid; place-items: center; color: var(--muted); }

@@ -2,8 +2,8 @@
 
 // What waits on the person, as one card each answered in place (after Paperclip's Decisions and
 // Superhuman's instant replies): who asks and how long ago, the question, what the clone checked
-// that bears on it, and the answers of equal weight beside writing one's own; the chevron goes to
-// where it was asked. Home, the office's board and a request's page draw the same card, `size`
+// that bears on it, and the answers of equal weight beside writing one's own (in the card, sent to
+// the clone as a choice is, with the same Undo); the chevron goes to where it was asked. Home, the office's board and a request's page draw the same card, `size`
 // only making it smaller (10-19 redesign).
 //
 // An answer is a call made in the person's name, so a stray tap must not make it: the choices
@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Tip } from "@/components/ui/tooltip";
 import { Bot } from "@/features/office";
 import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
@@ -69,14 +70,6 @@ export function PendingAnswer({
   );
 }
 
-/** Where writing one's own answer happens: the request's page opens on it. */
-function ownAnswerHref(item: TurnItem): string {
-  const href = turnHref(item);
-  return item.where.kind === "request" && item.where.task
-    ? `${href}?answer=own`
-    : href;
-}
-
 export function TurnRows({
   turns,
   heading,
@@ -95,11 +88,16 @@ export function TurnRows({
   const now = useNow({ updateInterval: 30_000 });
   const small = size === "sm";
   const tAsk = useTranslations("ask");
-  const undo = useTranslations("common")("undo");
+  const common = useTranslations("common");
+  const undo = common("undo");
+  const cancel = common("cancel");
   const app = useApp();
   // The answers chosen and waiting out their Undo, by row: the row shows the choice meanwhile.
   const sending = useUndoableRemoval(undo);
   const [chosen, setChosen] = useState<Record<string, string>>({});
+  // the card whose question is being answered in the person's own words, and what they wrote
+  const [writing, setWriting] = useState<string | null>(null);
+  const [own, setOwn] = useState("");
   const keys = turns.map((item) => item.key).join("|");
   const movedAt = useRef(0);
   useEffect(() => {
@@ -114,7 +112,7 @@ export function TurnRows({
     <ol ref={list} className={cn("flex flex-col gap-2.5", className)}>
       {turns.map((item) => {
         const ask = item.ask;
-        // A permission is allowed or not; a question offers its first few choices.
+        // A permission is allowed or not; a question offers its choices (ask_me gives four at most).
         const options =
           ask.kind === "permission"
             ? [
@@ -123,7 +121,7 @@ export function TurnRows({
               ]
             : ask.kind === "question"
               ? (ask.choices ?? [])
-                  .slice(0, 3)
+                  .slice(0, 4)
                   .map((choice) => ({ reply: choice, label: choice }))
               : [];
         const from = item.from;
@@ -325,7 +323,8 @@ export function TurnRows({
                       data-choice={option.reply}
                       variant="secondary"
                       className={cn(
-                        "rounded-[10px] px-3.5",
+                        // on a phone the choices take the width, easy to tap
+                        "rounded-[10px] px-3.5 max-sm:h-10 max-sm:flex-1",
                         small ? "h-8 text-[13px]" : "h-9 text-[13.5px]",
                       )}
                       onClick={() => choose(option)}
@@ -333,18 +332,75 @@ export function TurnRows({
                       {option.label}
                     </Button>
                   ))}
-                  {ask.kind === "question" && (
-                    <Link
-                      href={ownAnswerHref(item)}
+                  {ask.kind === "question" && writing !== item.key && (
+                    <Button
+                      variant="ghost"
+                      aria-expanded={false}
                       className={cn(
-                        buttonVariants({ variant: "ghost" }),
-                        "rounded-[10px] px-2.5 text-muted-foreground",
+                        "rounded-[10px] px-2.5 text-muted-foreground max-sm:w-full",
                         small ? "h-8 text-[13px]" : "h-9 text-[13.5px]",
                       )}
+                      onClick={() => {
+                        setWriting(item.key);
+                        setOwn("");
+                      }}
                     >
                       <PenLine />
                       {t("ownAnswer")}
-                    </Link>
+                    </Button>
+                  )}
+                  {/* an answer in their own words goes to their clone as a choice does, with its Undo */}
+                  {ask.kind === "question" && writing === item.key && (
+                    <form
+                      className="flex w-full items-end gap-2"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        const words = own.trim();
+                        if (!words) return;
+                        setWriting(null);
+                        choose({ reply: words, label: words });
+                      }}
+                    >
+                      <Textarea
+                        autoFocus
+                        value={own}
+                        rows={1}
+                        maxLength={4000}
+                        aria-label={t("ownAnswerLabel")}
+                        placeholder={t("ownAnswerPlaceholder")}
+                        onChange={(event) => setOwn(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.nativeEvent.isComposing) return;
+                          if (event.key === "Escape") {
+                            event.stopPropagation();
+                            setWriting(null);
+                          } else if (
+                            event.key === "Enter" &&
+                            (event.metaKey || event.ctrlKey)
+                          ) {
+                            event.preventDefault();
+                            event.currentTarget.form?.requestSubmit();
+                          }
+                        }}
+                        className="field-sizing-content max-h-40 min-h-9 flex-1 resize-none rounded-[10px] py-1.5 text-[13.5px]"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-9 rounded-[10px]"
+                        onClick={() => setWriting(null)}
+                      >
+                        {cancel}
+                      </Button>
+                      <Button
+                        type="submit"
+                        variant="secondary"
+                        className="h-9 rounded-[10px]"
+                        disabled={!own.trim()}
+                      >
+                        {t("ownAnswerSend")}
+                      </Button>
+                    </form>
                   )}
                 </div>
               )}

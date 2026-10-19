@@ -289,7 +289,7 @@ export function FlowsPanel({
         </ul>
       </section>
       <aside className="flex min-w-0 flex-col gap-3.5">
-        <MakeOne onAsk={onAsk} />
+        <MakeOne onAsk={onAsk} made={new Set(shown.map((flow) => flow.name))} />
         <p className="px-1 text-xs leading-relaxed text-muted-foreground">
           {t("alone")}
         </p>
@@ -299,8 +299,16 @@ export function FlowsPanel({
 }
 
 /** A flow is made by saying it to the clone: a box that says it, and a few to start from. */
-function MakeOne({ onAsk }: { onAsk: (text: string) => void }) {
+function MakeOne({
+  onAsk,
+  made,
+}: {
+  onAsk: (text: string) => void;
+  /** The flows there are, by name: a suggestion already made is not offered again. */
+  made: Set<string>;
+}) {
   const t = useTranslations("flows");
+  const ideas = SUGGESTIONS.filter((kind) => !made.has(t(`suggest.${kind}`)));
   const [text, setText] = useState("");
   const words = text.trim();
   return (
@@ -337,8 +345,8 @@ function MakeOne({ onAsk }: { onAsk: (text: string) => void }) {
           </Button>
         </Tip>
       </form>
-      <div className="flex flex-wrap gap-1.5">
-        {SUGGESTIONS.map((kind) => (
+      <div className="flex flex-wrap gap-1.5 empty:hidden">
+        {ideas.map((kind) => (
           <button
             key={kind}
             type="button"

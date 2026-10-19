@@ -67,7 +67,7 @@ Two things hold everywhere:
   about it. One box at the top asks their clone anything (name a colleague, and it asks theirs),
   with a few things to try under it; **Getting started** (시작하기) while the app is new; **Decide
   now** (정할 것), one card each (which clone asks and when, the question, why it asks, the choices,
-  and **Answer it yourself**, 직접 답하기), answered right there: the answer stays on its card as what is about to go, with
+  and **Answer in my words**, 내 말로 답하기, which opens a box in the card), answered right there: the answer stays on its card as what is about to go, with
   **Undo** (되돌리기) beside it and in the note at the bottom, and goes after a few seconds (or when
   they leave the screen), so a stray tap is never a decision made in their name; meanwhile it no
   longer counts as waiting, and the keyboard moves on to the next question once it is sent; **Requests on their way** (오가는 부탁),

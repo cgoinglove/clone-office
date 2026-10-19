@@ -208,7 +208,7 @@ function Menu({
               return (
                 <li
                   key={item.id ?? item.name}
-                  className="flex flex-col gap-3 rounded-[14px] bg-background px-4.5 py-4 shadow-[0_0_0_1px_var(--alpha-10)] sm:flex-row sm:items-start"
+                  className="group flex flex-col gap-3 rounded-[14px] bg-background px-4.5 py-4 shadow-[0_0_0_1px_var(--alpha-10)] sm:flex-row sm:items-start"
                 >
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span className="text-[14.5px] font-semibold">
@@ -248,7 +248,8 @@ function Menu({
                         <Button
                           size="icon-sm"
                           variant="ghost"
-                          className="text-muted-foreground"
+                          // shown while the card is pointed at or reached by the keyboard
+                          className="text-muted-foreground [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-hover:opacity-100"
                           disabled={busy}
                           onClick={() =>
                             void onSave(menu.filter((_, i) => i !== index))

@@ -630,7 +630,8 @@
         "menu": "O que {name} aceita",
         "earlier": "Pedidos",
         "nothingYet": "Nada ainda",
-        "waitingForYou": "Esperando sua resposta"
+        "waitingForYou": "Esperando sua resposta",
+        "waitsOnYou": "{name} está esperando sua resposta"
       },
       "lobby": {
         "late": "Trabalhando até tarde, {name}",
@@ -1099,7 +1100,11 @@
         "topics": "Temas",
         "map": "Onde fica seu trabalho",
         "more": "mais {count}"
-      }
+      },
+      "roleShort": "O que você faz",
+      "ownsShort": "Cuida de",
+      "toolsShort": "Ferramentas",
+      "saveFailed": "Não foi salvo. Tente de novo em instantes."
     },
     "skills": {
       "title": "Habilidades",
@@ -1154,7 +1159,8 @@
       "mine": "Sua",
       "fromAppShort": "Incluída",
       "officeMore": "{count, plural, one {# habilidade do escritório} other {# habilidades do escritório}}",
-      "officeNew": "{count} novas"
+      "officeNew": "{count} novas",
+      "loadFailed": "Não foi possível ler suas habilidades. Abra esta tela de novo em instantes."
     },
     "office": {
       "thisOffice": "Este escritório",
@@ -1379,8 +1385,11 @@
       "answerToClone": "“{choice}” ao seu clone",
       "sentFor": "Você disse “{choice}” ao seu clone para o pedido de {name}; ele responde.",
       "sentToClone": "Você disse “{choice}” ao seu clone.",
-      "ownAnswer": "Responder você",
-      "myClone": "Meu clone"
+      "ownAnswer": "Responder com minhas palavras",
+      "myClone": "Meu clone",
+      "ownAnswerLabel": "Sua resposta",
+      "ownAnswerPlaceholder": "Responda com suas palavras",
+      "ownAnswerSend": "Responder"
     },
     "clone": {
       "title": "Seu clone",

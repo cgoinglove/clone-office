@@ -78,8 +78,11 @@ export function OfficeScreen() {
   );
   const [clocked, setClocked] = useState(false);
   const atLobby = lobby && Boolean(preferences?.lobby) && !clocked;
-  const moving = (data?.tasks ?? []).filter((task) =>
-    ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
+  // on their way as Home counts them: what waits on the person is on the cards, not here
+  const moving = (data?.tasks ?? []).filter(
+    (task) =>
+      ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state) &&
+      !app.tasksToDecide.has(task.id),
   ).length;
   const everyone = office.room?.people.length ?? 0;
   const inNow =

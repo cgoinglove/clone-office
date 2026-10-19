@@ -1546,7 +1546,8 @@ export function createOffice(
             ? W.panel.workingOn(p.taskFull)
             : p.waitOn
               ? p.waitOnMe
-                ? W.panel.waitingForYou
+                ? // a colleague's panel says who waits on the viewer: them
+                  W.panel.waitsOnYou(p.name)
                 : W.panel.waitingFor(p.waitOn)
               : p.status === "offline"
                 ? W.panel.notIn(p.name)
