@@ -167,7 +167,8 @@ a { color: var(--brand); }
 .quiet:hover, .ghost:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); }
 .note, footer { color: var(--muted); }
 footer { font-size: .85rem; border-top: 1px solid var(--line); padding-top: 1rem; }
-.brand { display: flex; align-items: center; gap: .5rem; max-width: 34rem; margin: 0 auto; padding: 1.25rem 1rem 0; font-weight: 600; font-size: .95rem; letter-spacing: -.01em; }
+/* the pages before signing in share the signed-in pages' white row (10-19 redesign): the app's mark and name */
+.brand { display: flex; align-items: center; gap: .55rem; min-height: 3.5rem; margin: 0; padding: 0 max(1rem, calc((100% - 60.5rem) / 2)); box-shadow: inset 0 -1px 0 var(--line); font-weight: 650; font-size: .95rem; letter-spacing: -.01em; }
 .mark { width: 1.5rem; height: 1.5rem; color: var(--fg); }
 .mark .eye { fill: var(--bg); }
 /* a short list's rows are split by space, never by lines between them */

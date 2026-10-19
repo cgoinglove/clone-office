@@ -1359,6 +1359,8 @@ export function createOffice(
   }
   // the same edge as the stylesheet's container query (max-width: 760px), so card and camera agree
   const narrow = () => cw <= 760;
+  /** As wide as a phone: the whole floor is too small to read, so it opens on the viewer's desk. */
+  const PHONE = 600;
   /**
    * An example's frame (the first steps): the desks of those in it, near enough to read what goes
    * on between them, or nothing before anyone sits.
@@ -2533,8 +2535,10 @@ export function createOffice(
     const lift = via === "lift" && !REDUCED;
     // the whole floor at once, the doors opening on it; the camera does not fly in from the lift.
     // On a phone the whole floor is too small to read: the doors open on the viewer's own desk,
-    // and it stays the view (`atDesk`) through a resize until they pick the whole office.
-    atDesk = narrow() && Boolean(me);
+    // and it stays the view (`atDesk`) through a resize until they pick the whole office. A pane
+    // narrower than the full screen but no phone (the team server's page, beside its side) shows
+    // the whole floor, as the app does.
+    atDesk = cw <= PHONE && Boolean(me);
     const near = atDesk ? deskView(me) : null;
     const view = near ?? floorView();
     setCam(view);
