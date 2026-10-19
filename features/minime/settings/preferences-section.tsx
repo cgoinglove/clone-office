@@ -12,11 +12,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import type { Autonomy, Preferences, Trust } from "../home/use-preferences";
+import type { Autonomy, Preferences } from "../home/use-preferences";
 import { Group, Groups } from "./parts";
 
 const MODES: Autonomy[] = ["ask", "auto"];
@@ -54,7 +53,6 @@ const HOURS = Array.from({ length: 15 }, (_, i) => i + 7);
 /** The groups of preferences, each shown where it belongs (settings, the clone's screen). */
 export type PreferencePart =
   | "autonomy"
-  | "trust"
   | "batch"
   | "learning"
   | "models"
@@ -73,7 +71,6 @@ export function PreferencesSection({
 }) {
   const show = (part: PreferencePart) => !parts || parts.includes(part);
   const t = useTranslations("settings.preferences");
-  const tOffice = useTranslations("office");
   const format = useFormatter();
   if (!preferences)
     return <ShinyText className="text-sm" text={t("loading")} />;
@@ -90,21 +87,6 @@ export function PreferencesSection({
           <p className="text-xs leading-relaxed text-muted-foreground">
             {t("always")}
           </p>
-        </Group>
-      )}
-
-      {show("trust") && (
-        <Group title={t("trust")} hint={t("trustHint")}>
-          <Segmented<Trust>
-            aria-label={t("trust")}
-            options={(["auto", "tell", "ask"] as const).map((trust) => ({
-              value: trust,
-              label: tOffice(`menu.trust.${trust}`),
-              title: tOffice(`menu.trustHint.${trust}`),
-            }))}
-            value={preferences.defaultTrust}
-            onChange={(trust) => void onChange({ defaultTrust: trust })}
-          />
         </Group>
       )}
 

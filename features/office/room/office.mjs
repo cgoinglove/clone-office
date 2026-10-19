@@ -1461,6 +1461,20 @@ export function createOffice(
       return p1 <= r0 || r1 <= p0;
     });
   }
+  /**
+   * Narrow, a person's panel lies across the floor (at the top of a full screen, at the foot of a
+   * framed one): the space left clear of where it actually is, above or below it.
+   */
+  const clearOfPanel = () => {
+    if (!panelShown) return { b: Math.round(ch * 0.56) + 20 };
+    const box = panel.getBoundingClientRect(),
+      frame = root.getBoundingClientRect(),
+      top = box.top - frame.top,
+      bottom = box.bottom - frame.top;
+    return top < ch / 2
+      ? { t: Math.round(bottom) + 20, b: onAsk ? 150 : 90 }
+      : { b: Math.round(ch - top) + 20 };
+  };
   const deskView = (p) => {
     const d = p.desk;
     return viewFor(
@@ -1470,7 +1484,7 @@ export function createOffice(
         : insetR
           ? // a narrow pane beside the page's own panel: the desk in what is left of it
             { r: insetR + 24, t: 70, b: onAsk ? 150 : 110 }
-          : { b: Math.round(ch * 0.56) + 20 },
+          : clearOfPanel(),
       1.5,
     );
   };
@@ -1600,7 +1614,10 @@ export function createOffice(
             .join("")
         : `<li class="none">${esc(W.panel.nothingYet)}</li>`
     }</ul></div>`;
-    const key = p.id + body + p.status;
+    // what the header shows is part of it too: a card's new name or role is drawn again
+    const key = [p.id, p.status, p.name, p.role, p.botName, body].join(
+      "\u0000",
+    );
     if (key === panelKey) return;
     panelKey = key;
     // a colleague by their own name (it is their clone the panel is about, as its mark shows)
@@ -1632,17 +1649,22 @@ export function createOffice(
     const fi = p.inLift ? p.home : p.floor;
     if (fi !== plan.index) switchFloor(fi);
     focus = p;
-    setViewSeg(p.mine ? "desk" : "");
+    setViewSeg(focusSeg(p));
     openPanel(p);
     userMoved = true;
     glide(focusView(p), 850);
   }
   /**
-   * The view while one person's panel is open: the whole floor beside it (10-19 redesign), or on a
-   * phone, where the panel lies over the floor, their desk.
+   * The view while one person's panel is open: the whole floor beside it (10-19 redesign), or where
+   * the panel takes its narrow place over the floor (the same 760px its layout switches at), their
+   * desk clear of it.
    */
   function focusView(p) {
-    return cw <= PHONE ? deskView(p) : floorView();
+    return narrow() ? deskView(p) : floorView();
+  }
+  /** What the view switch says while that panel is open: the floor beside a wide one, else the desk (the viewer's own is "my desk"; a colleague's is neither). */
+  function focusSeg(p) {
+    return narrow() ? (p.mine ? "desk" : "") : "office";
   }
   function setViewSeg(v) {
     for (const b of viewSeg.children)
@@ -2797,6 +2819,7 @@ export function createOffice(
       return;
     }
     anim = null;
+    if (focus) setViewSeg(focusSeg(focus));
     setCam(
       focus
         ? focusView(focus)

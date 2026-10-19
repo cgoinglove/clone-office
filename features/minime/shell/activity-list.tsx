@@ -28,12 +28,22 @@ export type Logged = { at: string } & (
       kind: "answered";
       task: string;
       to?: string;
+      /** The colleague's member id, kept since 10-20. */
+      member?: string;
       text: string;
       how: "alone" | "told" | "as-is" | "changed" | "decided";
       files?: string[];
     }
-  | { kind: "held"; task: string; to?: string }
-  | { kind: "asked"; task: string; to: string; text: string; files?: number }
+  | { kind: "held"; task: string; to?: string; member?: string }
+  | {
+      kind: "asked";
+      task: string;
+      to: string;
+      /** The colleague's member id, kept since 10-20, so the line is theirs whatever their name. */
+      member?: string;
+      text: string;
+      files?: number;
+    }
   | { kind: "rule"; rule: string; added: boolean }
   | { kind: "flow"; name: string; ok: boolean; quiet?: boolean }
   | {
@@ -103,10 +113,18 @@ export function ActivityList({ lines }: { lines: Logged[] | null }) {
       name: line.name,
     });
   };
-  // the colleague a line was with, by the name it kept, so it is led by their clone's mark
+  // the colleague a line was with: by the member id it kept, else (a line from before) by its name
+  // when exactly one member has it, so two of the same name never share a mark
   const members = app.office.office?.members ?? [];
-  const memberOf = (name?: string) =>
-    name ? members.find((member) => member.card.name === name) : undefined;
+  const memberOf = (line: Logged) => {
+    if ("member" in line && line.member)
+      return members.find((member) => member.id === line.member);
+    const name = "to" in line ? line.to : undefined;
+    const named = name
+      ? members.filter((member) => member.card.name === name)
+      : [];
+    return named.length === 1 ? named[0] : undefined;
+  };
   const today = dayOf(new Date().toISOString());
   // the day before by the calendar, which a change of the clocks does not move
   const before = new Date(today);
@@ -147,7 +165,7 @@ export function ActivityList({ lines }: { lines: Logged[] | null }) {
                 line.kind === "answered" || line.kind === "asked"
                   ? line.text
                   : undefined;
-              const member = memberOf("to" in line ? line.to : undefined);
+              const member = memberOf(line);
               const row = (
                 <>
                   {member ? (

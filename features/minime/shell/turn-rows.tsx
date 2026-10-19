@@ -172,6 +172,9 @@ export function TurnRows({
               else if (item.chatAsk)
                 await app.answerChatAsk(item.chatAsk.id, option.reply);
               app.markAnswering(item.key, false);
+              // gone with its answer: a question asked again opens on an empty box
+              if (option.written)
+                setDrafts(({ [item.key]: _sent, ...rest }) => rest);
               app.announce(
                 last
                   ? `${gone(option.label)} ${t("noneLeft")}`
@@ -349,9 +352,10 @@ export function TurnRows({
                     </Button>
                   ))}
                   {ask.kind === "question" && writing !== item.key && (
+                    // it gives way to the box it opens, which takes the keyboard and is named for
+                    // what it holds: no expanded state to keep, as the button itself goes
                     <Button
                       variant="ghost"
-                      aria-expanded={false}
                       className={cn(
                         "rounded-[10px] px-2.5 text-muted-foreground max-sm:w-full",
                         small ? "h-8 text-[13px]" : "h-9 text-[13.5px]",

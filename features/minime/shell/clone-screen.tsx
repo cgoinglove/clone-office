@@ -33,14 +33,17 @@ type Tab = "memory" | "menu" | "flows" | "history";
 
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
-/** The model it thinks with, by its own name ("Claude Sonnet"), once the app has said which. */
+/**
+ * The model it thinks with, by its own name ("Claude Sonnet"), once the app has said which: the
+ * choice alone (`?only=choice`), never the probes of what this computer offers.
+ */
 function useModelName(): string | undefined {
   const [name, setName] = useState<string>();
   useEffect(() => {
     let live = true;
-    fetch("/api/me/brain", { headers: HEADERS })
+    fetch("/api/me/brain?only=choice", { headers: HEADERS })
       .then((response) => (response.ok ? response.json() : null))
-      .then((state: BrainState | null) => {
+      .then((state: Pick<BrainState, "choice" | "chatgpt"> | null) => {
         if (!live || !state?.choice) return;
         const label = brainLabel(state, "Claude Code");
         setName(label.split(" · ").slice(1).join(" · ") || label);
@@ -150,8 +153,8 @@ export function CloneScreen() {
 
 /**
  * Three numbers on how the clone stands in for its person: of the answers it showed them first,
- * how many went as they were (30 days); what it answered colleagues this week, and to how many;
- * and what it brought to them before anything went.
+ * how many went as they were (30 days); what it answered colleagues on its own this week, and to
+ * how many; and what it brought to them before anything went. No answer is in both of the last two.
  */
 function Numbers({ lines }: { lines: Logged[] | null }) {
   const t = useTranslations("shell.clone.stats");
@@ -159,10 +162,22 @@ function Numbers({ lines }: { lines: Logged[] | null }) {
   const like = app.office.office?.likeMe;
   const since = Date.now() - WEEK;
   const week = (lines ?? []).filter((line) => Date.parse(line.at) >= since);
-  // every answer that went to a colleague in the person's name this week, as the list below has it
-  const alone = week.filter((line) => line.kind === "answered");
+  // two numbers that never count one answer twice: what went on its own (alone, or telling the
+  // person after), and what the person saw or decided before it went (or held back)
+  const alone = week.filter(
+    (line) =>
+      line.kind === "answered" && (line.how === "alone" || line.how === "told"),
+  );
   const people = new Set(
-    alone.map((line) => ("to" in line ? line.to : undefined)).filter(Boolean),
+    alone
+      .map((line) =>
+        "member" in line && line.member
+          ? line.member
+          : "to" in line
+            ? line.to
+            : undefined,
+      )
+      .filter(Boolean),
   ).size;
   const first = week.filter(
     (line) =>

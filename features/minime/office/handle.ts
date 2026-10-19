@@ -834,7 +834,12 @@ async function finish(
       ? (await loadMenu()).find((m) => m.id === sending.menu)
       : undefined;
   if ("hold" in outcome) {
-    await logActivity({ kind: "held", task: task.id, to: sending.from });
+    await logActivity({
+      kind: "held",
+      task: task.id,
+      to: sending.from,
+      member: task.metadata.from,
+    });
     if (sending.approving) await recordOutcome(sending.menu, "held");
     if (sending.approving && item) await countApproval(item, false);
     // Held: the request stays open and becomes the person's to answer themselves.
@@ -857,6 +862,7 @@ async function finish(
     kind: "answered",
     task: task.id,
     to: sending.from,
+    member: task.metadata.from,
     text: outcome.send,
     how: sending.approving
       ? outcome.send === sending.reply

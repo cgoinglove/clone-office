@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import * as z from "zod";
+import { AskSchema } from "@/features/minime/gate/ask-schema";
 import { alreadyAllowed, enrichAsk } from "@/features/minime/gate/enrich";
 import {
   askPerson,
@@ -16,18 +17,7 @@ import { refuse } from "@/features/minime/server/guard";
 /** How long one request waits for the answer; the tool server asks again until the question times out. */
 const HOLD_MS = 240_000;
 
-const Ask = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("question"),
-    question: z.string().min(1).max(2000),
-    choices: z.array(z.string().min(1).max(200)).max(4).optional(),
-  }),
-  z.object({
-    kind: z.literal("permission"),
-    tool: z.string().min(1).max(100),
-    input: z.record(z.string(), z.unknown()),
-  }),
-]);
+const Ask = AskSchema;
 
 const Body = z.union([
   z.object({ chat: z.string().max(64).optional(), ask: Ask }),

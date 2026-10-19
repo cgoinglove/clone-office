@@ -1,8 +1,8 @@
 "use client";
 
 // Your clone › What it knows: its skills (how it does one kind of task the person's way), and in an
-// office the skills colleagues shared; `compact`, one card beside the memory, each row opening what
-// it is and its share, the office's under a row of their own (10-19 redesign). A skill of the person's own is shared with the office from
+// office the skills colleagues shared, as one card beside the memory, each row opening what it is
+// and its share, the office's under a row of their own (10-19 redesign). A skill of the person's own is shared with the office from
 // here after they see the files that would go; one a colleague shared is added, or updated while
 // it is as it came. Their press is their say: the clone's own tool asks on a card instead.
 
@@ -11,11 +11,9 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ShinyText } from "@/components/ui/shiny-text";
 import { useProblem } from "@/i18n/client";
 import { cn } from "@/lib/utils";
 import { HEADERS } from "../home/use-office";
-import { Empty, Group, Rows } from "./parts";
 
 interface OwnSkill {
   name: string;
@@ -56,7 +54,7 @@ interface Skills {
   office: { skills: OfficeSkill[]; me: string; problem?: string } | null;
 }
 
-export function SkillsSection({ compact = false }: { compact?: boolean }) {
+export function SkillsSection() {
   const t = useTranslations("settings.skills");
   const problemText = useProblem();
   const [data, setData] = useState<Skills | null>(null);
@@ -94,67 +92,13 @@ export function SkillsSection({ compact = false }: { compact?: boolean }) {
     }
   };
 
-  const office = data?.office;
-  if (compact)
-    return (
-      <SkillsCard
-        data={data}
-        busy={busy}
-        problem={
-          failed ? t("loadFailed") : problem ? problemText(problem) : null
-        }
-        onAct={act}
-      />
-    );
   return (
-    <>
-      <Group title={t("title")} hint={t("hint")}>
-        {!data ? (
-          <ShinyText className="text-sm" text={t("loading")} />
-        ) : data.skills.length === 0 ? (
-          <Empty>{t("none")}</Empty>
-        ) : (
-          <Rows>
-            {data.skills.map((skill) => (
-              <OwnRow
-                key={skill.name}
-                skill={skill}
-                inOffice={Boolean(office)}
-                busy={busy === `share:${skill.name}`}
-                onShare={() => act("share", skill.name)}
-              />
-            ))}
-          </Rows>
-        )}
-        {problem && !office && (
-          <p className="text-destructive">{problemText(problem)}</p>
-        )}
-      </Group>
-
-      {office && (
-        <Group title={t("officeTitle")} hint={t("officeHint")}>
-          {office.problem ? (
-            <p className="text-destructive">{problemText(office.problem)}</p>
-          ) : office.skills.length === 0 ? (
-            <Empty>{t("officeNone")}</Empty>
-          ) : (
-            <Rows>
-              {office.skills.map((skill) => (
-                <OfficeRow
-                  key={skill.name}
-                  skill={skill}
-                  busy={busy}
-                  onAct={(action) => act(action, skill.name)}
-                />
-              ))}
-            </Rows>
-          )}
-          {problem && (
-            <p className="text-destructive">{problemText(problem)}</p>
-          )}
-        </Group>
-      )}
-    </>
+    <SkillsCard
+      data={data}
+      busy={busy}
+      problem={failed ? t("loadFailed") : problem ? problemText(problem) : null}
+      onAct={act}
+    />
   );
 }
 
@@ -197,7 +141,6 @@ function SkillsCard({
           {data.skills.map((skill) => (
             <OwnRow
               key={skill.name}
-              compact
               open={open === skill.name}
               onOpen={() => setOpen(open === skill.name ? null : skill.name)}
               skill={skill}
@@ -237,7 +180,6 @@ function SkillsCard({
                 {office.skills.map((skill) => (
                   <OfficeRow
                     key={skill.name}
-                    compact
                     skill={skill}
                     busy={busy}
                     onAct={(action) => onAct(action, skill.name)}
@@ -263,23 +205,21 @@ function Done({ children }: { children: string }) {
   );
 }
 
+/** A row of the card: its name and where it came from, opening what it is and its share. */
 function OwnRow({
   skill,
   inOffice,
   busy,
   onShare,
-  compact = false,
-  open = true,
+  open,
   onOpen,
 }: {
   skill: OwnSkill;
   inOffice: boolean;
   busy: boolean;
   onShare: () => Promise<void>;
-  /** A row of the card: its name and where it came from, opening what it is. */
-  compact?: boolean;
-  open?: boolean;
-  onOpen?: () => void;
+  open: boolean;
+  onOpen: () => void;
 }) {
   const t = useTranslations("settings.skills");
   const cancel = useTranslations("common")("cancel");
@@ -309,82 +249,47 @@ function OwnRow({
         {skill.shared === "changed" ? t("shareChanges") : t("share")}
       </Button>
     ) : null);
-  if (compact)
-    return (
-      <li className="flex flex-col">
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={onOpen}
-          className="flex h-9 items-center gap-2.5 rounded-lg px-2 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <BookOpen className="size-4 shrink-0 text-muted-foreground" />
-          <span className="min-w-0 flex-1 truncate text-[13.5px]">
-            {named.title}
-          </span>
-          <span className="shrink-0 text-xs text-muted-foreground">
-            {skill.from === "own"
-              ? t("mine")
-              : skill.from === "app"
-                ? t("fromAppShort")
-                : (skill.by ?? "")}
-          </span>
-        </button>
-        {open && (
-          <div className="mb-1.5 ml-8 flex flex-col gap-2 pr-2">
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              {named.body}
-            </p>
-            {shareable && !skill.files && skill.problem && (
-              <p className="text-xs text-muted-foreground">
-                {t("cantShare")} · {problemText(skill.problem)}
-              </p>
-            )}
-            {share && <div>{share}</div>}
-            {sure && skill.files && (
-              <ShareSure
-                files={skill.files}
-                busy={busy}
-                onYes={() => void onShare().finally(() => setSure(false))}
-                onNo={() => setSure(false)}
-                cancel={cancel}
-              />
-            )}
-          </div>
-        )}
-      </li>
-    );
   return (
-    <li className="flex flex-col gap-2 px-3.5 py-3">
-      <div className="flex items-start gap-3">
-        <span className="min-w-0 flex-1">
-          <span className="font-medium">{named.title}</span>
-          {skill.from !== "own" && (
-            <span className="ml-2 text-xs text-muted-foreground">
-              {skill.from === "app"
-                ? t("fromApp")
-                : t("fromOffice", { name: skill.by ?? "?" })}
-            </span>
-          )}
-          <span className="block text-xs leading-relaxed text-muted-foreground">
-            {named.body}
-          </span>
-          {shareable && !skill.files && skill.problem && (
-            <span className="block text-xs text-muted-foreground">
-              {t("cantShare")} · {problemText(skill.problem)}
-            </span>
-          )}
+    <li className="flex flex-col">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={onOpen}
+        className="flex h-9 items-center gap-2.5 rounded-lg px-2 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <BookOpen className="size-4 shrink-0 text-muted-foreground" />
+        <span className="min-w-0 flex-1 truncate text-[13.5px]">
+          {named.title}
         </span>
-        {share}
-      </div>
-      {sure && skill.files && (
-        <ShareSure
-          files={skill.files}
-          busy={busy}
-          onYes={() => void onShare().finally(() => setSure(false))}
-          onNo={() => setSure(false)}
-          cancel={cancel}
-        />
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {skill.from === "own"
+            ? t("mine")
+            : skill.from === "app"
+              ? t("fromAppShort")
+              : (skill.by ?? "")}
+        </span>
+      </button>
+      {open && (
+        <div className="mb-1.5 ml-8 flex flex-col gap-2 pr-2">
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {named.body}
+          </p>
+          {shareable && !skill.files && skill.problem && (
+            <p className="text-xs text-muted-foreground">
+              {t("cantShare")} · {problemText(skill.problem)}
+            </p>
+          )}
+          {share && <div>{share}</div>}
+          {sure && skill.files && (
+            <ShareSure
+              files={skill.files}
+              busy={busy}
+              onYes={() => void onShare().finally(() => setSure(false))}
+              onNo={() => setSure(false)}
+              cancel={cancel}
+            />
+          )}
+        </div>
       )}
     </li>
   );
@@ -431,13 +336,10 @@ function OfficeRow({
   skill,
   busy,
   onAct,
-  compact = false,
 }: {
   skill: OfficeSkill;
   busy?: string;
   onAct: (action: "add" | "unshare") => Promise<void>;
-  /** In the card: tighter, as its other rows. */
-  compact?: boolean;
 }) {
   const t = useTranslations("settings.skills");
   const cancel = useTranslations("common")("cancel");
@@ -446,12 +348,7 @@ function OfficeRow({
   const adding = busy === `add:${skill.name}`;
   const removing = busy === `unshare:${skill.name}`;
   return (
-    <li
-      className={cn(
-        "flex flex-col gap-2",
-        compact ? "px-2 py-2 text-[13px]" : "px-3.5 py-3",
-      )}
-    >
+    <li className="flex flex-col gap-2 px-2 py-2 text-[13px]">
       <div className="flex items-start gap-3">
         <span className="min-w-0 flex-1">
           <span className="font-medium">{skill.name}</span>

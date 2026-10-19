@@ -358,6 +358,8 @@ export function RequestLine({
             <span className="shrink-0">{way}</span>
             <span aria-hidden>·</span>
             <span className="min-w-0 truncate">{small ? when : words}</span>
+            {/* drawn small, how it stands is the glyph alone: a screen reader hears it in words */}
+            {small && words && <span className="sr-only">, {words}</span>}
           </span>
         </span>
         {!small && handled && (

@@ -96,6 +96,15 @@ export function RequestsScreen() {
   const params = useSearchParams();
   const askOf = params.get("ask");
   const [asking, setAsking] = useState(Boolean(askOf));
+  // the colleague a link asked for, whose box opens once; the address forgets it at once, so
+  // the dialog opened again later starts with every box closed
+  const [askFor, setAskFor] = useState(askOf);
+  useEffect(() => {
+    if (!askOf) return;
+    setAskFor(askOf);
+    setAsking(true);
+    router.replace("/requests", { scroll: false });
+  }, [askOf, router]);
   const [find, setFind] = useState("");
   const words = useRequestWords();
   const handledBy = useHandled();
@@ -295,7 +304,13 @@ export function RequestsScreen() {
         )}
       </div>
 
-      <Dialog open={asking} onOpenChange={setAsking}>
+      <Dialog
+        open={asking}
+        onOpenChange={(open) => {
+          setAsking(open);
+          if (!open) setAskFor(null);
+        }}
+      >
         <DialogContent className="max-h-[min(44rem,calc(100vh-4rem))] overflow-y-auto sm:max-w-lg">
           <DialogTitle>{t("askTitle")}</DialogTitle>
           <DialogDescription>{t("askHint")}</DialogDescription>
@@ -306,7 +321,7 @@ export function RequestsScreen() {
                 member={member}
                 index={index}
                 busy={office.busy}
-                open={member.id === askOf}
+                open={member.id === askFor}
                 onSend={async (text, files) => {
                   const ok = await office.post({
                     action: "send",
@@ -314,7 +329,10 @@ export function RequestsScreen() {
                     text,
                     files,
                   });
-                  if (ok) setAsking(false);
+                  if (ok) {
+                    setAsking(false);
+                    setAskFor(null);
+                  }
                   return ok;
                 }}
               />

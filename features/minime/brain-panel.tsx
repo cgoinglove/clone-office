@@ -121,7 +121,7 @@ export function brainReady(state: BrainState | null): boolean {
 
 /** The brain in use (or another choice), as the person reads it: the vendor and model, or their Claude Code. */
 export function brainLabel(
-  state: BrainState,
+  state: Pick<BrainState, "choice" | "chatgpt">,
   claudeCode: string,
   choice: Choice = state.choice,
 ): string {

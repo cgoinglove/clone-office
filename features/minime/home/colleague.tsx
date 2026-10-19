@@ -5,7 +5,7 @@
 
 import { FileText, Paperclip, Send, X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot } from "@/features/office";
@@ -37,6 +37,10 @@ export function Colleague({
   onSend: (text: string, files: string[]) => Promise<boolean>;
 }) {
   const [asking, setAsking] = useState(open);
+  // asked for again while it is drawn (another link to the same colleague): its box opens
+  useEffect(() => {
+    if (open) setAsking(true);
+  }, [open]);
   const [text, setText] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);

@@ -109,6 +109,7 @@ export async function POST(request: Request) {
       kind: "asked",
       task: task.id,
       to: to.card.name,
+      member: to.id,
       text: input.text,
       ...(files.length ? { files: files.length } : {}),
     });

@@ -77,7 +77,7 @@ export const ASK_COLLEAGUE_TOOL = {
   },
 };
 
-/** The longest reason a question carries under it; one sentence, not a report. */
+/** The longest reason a question carries under it; one sentence, not a report (as gate/ask-schema.ts lets through). */
 const WHY_CHARS = 280;
 
 export const ASK_TOOL = {

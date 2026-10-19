@@ -22,6 +22,7 @@ test("what was done in the person's name is kept, latest first, long words cut",
     kind: "answered",
     task: "t2",
     to: "Cleo",
+    member: "m-cleo",
     text: "x".repeat(1000),
     how: "as-is",
   });
@@ -38,5 +39,7 @@ test("what was done in the person's name is kept, latest first, long words cut",
   );
   const answered = lines[1];
   assert.ok(answered?.kind === "answered" && answered.text.length === 400);
+  // the colleague by id, so the line is theirs whatever name they go by later
+  assert.ok(answered?.kind === "answered" && answered.member === "m-cleo");
   assert.ok(lines.every((line) => !Number.isNaN(Date.parse(line.at))));
 });

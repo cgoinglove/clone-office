@@ -58,6 +58,8 @@ export function FlowsPanel({
   // Removed flows are hidden at once and removed when their toast goes without Undo.
   const removal = useUndoableRemoval(undo);
   const [running, setRunning] = useState<Set<string>>(new Set());
+  // flows switched on or off whose change is on its way, by id, and where they were switched
+  const [turning, setTurning] = useState<Record<string, boolean>>({});
   const watching = useRef<ReturnType<typeof setInterval>>(undefined);
 
   const load = () =>
@@ -276,12 +278,17 @@ export function FlowsPanel({
                   </div>
                 </div>
                 <Switch
-                  checked={!flow.paused}
+                  // where it was turned, until the list read again says so; no second turn meanwhile
+                  checked={turning[flow.id] ?? !flow.paused}
+                  disabled={flow.id in turning}
                   aria-label={t("onLabel", { name: flow.name })}
                   className="mt-1"
-                  onCheckedChange={(checked) =>
-                    void act(checked ? "resume" : "pause", flow)
-                  }
+                  onCheckedChange={(checked) => {
+                    setTurning((all) => ({ ...all, [flow.id]: checked }));
+                    void act(checked ? "resume" : "pause", flow).finally(() =>
+                      setTurning(({ [flow.id]: _done, ...rest }) => rest),
+                    );
+                  }}
                 />
               </li>
             );

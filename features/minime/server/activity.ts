@@ -14,6 +14,8 @@ export type Activity =
       kind: "answered";
       task: string;
       to?: string;
+      /** The colleague's member id, kept since 10-20. */
+      member?: string;
       text: string;
       /**
        * On its own, telling them after, after they saw it (as it was, or changed), or with what they
@@ -22,8 +24,16 @@ export type Activity =
       how: "alone" | "told" | "as-is" | "changed" | "decided";
       files?: string[];
     }
-  | { kind: "held"; task: string; to?: string }
-  | { kind: "asked"; task: string; to: string; text: string; files?: number }
+  | { kind: "held"; task: string; to?: string; member?: string }
+  | {
+      kind: "asked";
+      task: string;
+      to: string;
+      /** The colleague's member id, kept since 10-20, so the line is theirs whatever their name. */
+      member?: string;
+      text: string;
+      files?: number;
+    }
   | { kind: "rule"; rule: string; added: boolean }
   | { kind: "flow"; name: string; ok: boolean; quiet?: boolean }
   /** A skill shared with the office, taken out of it, or one a colleague shared added here. */

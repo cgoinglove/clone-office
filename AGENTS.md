@@ -177,7 +177,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   starts that conversation (`/chat?send=`), the first steps while the app is new (`welcome.tsx`
   `FirstSteps`; they tick off from what is there, folded to one card once the day has more), what
   to decide now as one card each (10-19 redesign: who asks and when, the question, why, the choices
-  of equal weight as soft fills, "answer it yourself"), answered in place, an answer kept on its
+  of equal weight as soft fills, and "answer in my words", a box in the card whose words go to
+  the clone as a choice does, never to the colleague directly), answered in place, an answer kept on its
   card with Undo before it goes and a tap just after the cards moved not taken
   (`turn-rows.tsx`, shared with the office and a request's page, a pill on a phone), the requests on
   their way as one request line each (`parts.tsx` `RequestLine`, the same everywhere a request is
@@ -399,7 +400,8 @@ These words help discussion. They do not mandate separate services, tables or UI
   through the gate's `permission_prompt` tool before anything the person has not allowed
   (`--permission-prompt-tool`); `ask_me` is its own question to them (Claude Code's
   AskUserQuestion for a session without a terminal). `gate.ts` holds the waiting questions in the
-  server process; `tools.ts` is the tool server's side (it reaches the app's `gate` route with a
+  server process (what the route lets through, a question's reason `why` with it, is
+  `ask-schema.ts`); `tools.ts` is the tool server's side (it reaches the app's `gate` route with a
   per-process secret); `rules.ts` turns "from now on" into Claude Code permission rules in
   `settings.json` (`trust.allow`) and the folders kept out into deny rules; `enrich.ts` works out
   what a permission card shows besides the tool's input as it is asked (whether "from now on" can be

@@ -72,10 +72,13 @@ async function teamState() {
 
 // What the person's clone thinks with, and what this computer offers: Claude Code installed, a
 // ChatGPT plan signed in to (and the models it lists), Ollama or LM Studio running, the office's
-// team keys. The keys never come back to the page; it hears only which vendors have one.
+// team keys. The keys never come back to the page; it hears only which vendors have one. With
+// `?only=choice`, the choice alone, read from this computer, for a screen that only names it.
 export async function GET(request: Request) {
   const refused = refuse(request);
   if (refused) return refused;
+  if (new URL(request.url).searchParams.get("only") === "choice")
+    return Response.json({ choice: await brainChoice(), chatgpt: null });
   const [account, ollama, lmstudio, team] = await Promise.all([
     chatGptAccount(),
     answers("http://127.0.0.1:11434/v1/models"),
