@@ -230,7 +230,7 @@ export function HomeScreen() {
           )}
         />
 
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div className="flex min-w-0 flex-col gap-9">
             {quiet && (
               <FirstSteps

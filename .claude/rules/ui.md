@@ -59,13 +59,14 @@ the getting-started list `welcome.tsx` `FirstSteps`), `/chat` (`chat-screen.tsx`
 office's live column `office-rail.tsx`; the turns are `home/chat-view.tsx` `TurnRow`, the clone's
 to-do list one card above its answer, `TodoCard`, and a helper or a move to the backup model a
 quiet line), `/requests` and
-`/requests/[id]`, `/office` (the floor with the person's turn over it at the right), `/clone` (what it knows,
-the requests it takes, flows), and `/files/<path>` (what the clone made in its workspace, opened by the
+`/requests/[id]`, `/office` (the floor with the person's turn over it at the right), `/clone` (three numbers and the card colleagues see over what it knows,
+the requests it takes, flows and what it did, each in two columns), and `/files/<path>` (what the clone made in its workspace, opened by the
 link in its answer, `file-screen.tsx`; a page runs in a frame without the app's origin). Home, Requests and Office open with one line when the office cannot be reached, saying what to
 do (`office-trouble.tsx`), so an empty office never passes for a quiet one. What the screens share
 lives in `app-state.tsx` (`useApp`); the
 shared parts of these screens are `parts.tsx` (`PageHeader`, `Mark`, `PhaseChip`, `DoneStamp`,
-`Flap`). Settings is one dialog of six sections (`features/minime/settings/settings.tsx`). The
+`Flap`, `Asking`; `RequestLine`, a request as one line wherever requests are listed; `useWhen`, one
+way of saying when), and a decision is one card wherever it is answered (`turn-rows.tsx`). Settings is one dialog of six sections (`features/minime/settings/settings.tsx`). The
 first steps are `app/start`. A new feature finds its place in one of these before it asks for a
 screen of its own, and the left column stays short.
 

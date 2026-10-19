@@ -175,25 +175,38 @@ These words help discussion. They do not mandate separate services, tables or UI
   (`home-screen.tsx`: what is happening, what waits on the person and what to do about it, after
   Paperclip's rule and the agent apps that left a chat as home: one box that asks the clone and
   starts that conversation (`/chat?send=`), the first steps while the app is new (`welcome.tsx`
-  `FirstSteps`; they tick off from what is there), one line asking for a star on GitHub once the
-  clone has answered a colleague (`star-note.tsx`, once per browser, after Orca's timing), what to
-  decide now answered in place, the choices of equal weight, an answer kept on its row with Undo
-  before it goes and a tap just after the rows moved not taken
-  (`turn-rows.tsx`, shared with the office's board, a pill on a phone), the requests on their way, and beside them the
-  day in one panel: what the clone did, today's flows, and colleagues; an empty part is
-  one line, never an empty box); `/chat` (`chat-screen.tsx`: one
+  `FirstSteps`; they tick off from what is there, folded to one card once the day has more), what
+  to decide now as one card each (10-19 redesign: who asks and when, the question, why, the choices
+  of equal weight as soft fills, "answer it yourself"), answered in place, an answer kept on its
+  card with Undo before it goes and a tap just after the cards moved not taken
+  (`turn-rows.tsx`, shared with the office and a request's page, a pill on a phone), the requests on
+  their way as one request line each (`parts.tsx` `RequestLine`, the same everywhere a request is
+  listed), and beside them what the clone did, today's next flow and colleagues; an empty part is
+  one line, never an empty box; asking for a star on GitHub once the clone has answered a colleague
+  is a news card, once per browser (`star-note.tsx`, after Orca's timing)); `/chat` (`chat-screen.tsx`: one
   conversation, `home/chat-view.tsx` and `use-chat.ts`, with the clone's hello and things to try
   when it is new, helpers under the box that start a sentence, and on a wide screen the office
-  live beside it (`office-rail.tsx`: the floor small, requests in motion, today's flows));
-  `/requests` (`requests-screen.tsx`: grouped by whose turn it is, from the A2A states) and
-  `/requests/[id]` (`request-screen.tsx`: the clones' exchange, the person's turn answered in
-  place, held with Undo as Home's rows hold it, `turn-rows.tsx` `PendingAnswer`, files, the
-  colleague); `/office` (`office-screen.tsx`: the floor, its lobby once a day,
-  with the person's turn laid over it to answer there); `/clone` (`clone-screen.tsx`: what it
-  knows, the requests it takes, flows, and what it did in their name any day, `activity-list.tsx`
-  from `server/activity.ts`'s `logs/activity.jsonl`: answers sent and how, held back, requests sent,
-  "from now on" made or taken back, flows run). `parts.tsx` holds the screens' own marks (`PhaseChip`,
-  `DoneStamp`, the split-flap `Flap`). `use-office.ts` is the office as the screens read it;
+  live beside it (`office-rail.tsx`: the floor small, requests in motion, today's flows); a
+  colleague's answer said by their clone, `ColleagueSaid`, and a to-do list folded once done);
+  `/requests` (`requests-screen.tsx`: grouped by whose turn it is, from the A2A states, found by
+  words, `?ask=<member>` opening that colleague's box) and
+  `/requests/[id]` (`request-screen.tsx`: one card and one box, the clones' exchange, the person's
+  turn answered in place, held with Undo as Home's cards hold it, `turn-rows.tsx` `PendingAnswer`,
+  one box to tell the clone or answer it themselves, `step-in.tsx`, taking over and handing back in
+  its menu; beside it the colleague, why it came to them and its steps, files);
+  `/office` (`office-screen.tsx`: the floor, its lobby once a day, its header naming the office,
+  who is in and what moves, with people and an invite copied at once, `use-invite.ts`; the person's
+  decisions as cards over it to answer there; a colleague's panel says what they are on, asks their
+  clone, `onAskOf`, lists what they look after and the requests between them, `onRequest`);
+  `/clone` (`clone-screen.tsx`: three numbers (like-me, answered alone this week, brought to them
+  first), the card colleagues see, then what it knows (about them read as a card and corrected in
+  place, the memory with where each line came from, and beside them its notes, skills and more to
+  teach), the requests it takes as cards with their trust level and like-me, flows as cards with a
+  switch and a box to make one by saying it, and what it did in their name by day,
+  `activity-list.tsx` from `server/activity.ts`'s `logs/activity.jsonl`: answers sent and how, held
+  back, requests sent, "from now on" made or taken back, flows run). `parts.tsx` holds the screens' own marks (`PhaseChip`,
+  `DoneStamp`, the split-flap `Flap`, the asking clone's red dot `Asking`), one request line
+  (`RequestLine`) and one way of saying when (`useWhen`). `use-office.ts` is the office as the screens read it;
   `home/colleague.tsx` asks a colleague with files. `use-learn.ts` follows a reading wherever it
   started. Settings is one dialog of six sections (`features/minime/settings/`, after
   Thursday's, marked as the column marks its places; an ember dot where something wants the
@@ -522,8 +535,9 @@ These words help discussion. They do not mandate separate services, tables or UI
   make others owners, make a new invite link (the office key changes; those in stay) and name the
   office (`Accounts` `removePerson`, `removeClone`, `makeOwner`, `newInvite`, `renameOffice`),
   each looked at once on its own page first (`confirmPage`); the invite's page folds the account
-  away below the guide. The signed-in pages share a band in the brand's colour with the office,
-  three tabs (My clone at `/home`, Requests, Office at `/home/office`) and the person's menu
+  away below the guide. The signed-in pages share one white band (10-19, the user's pick) with the
+  office, three tabs underlined in the brand's colour where one is (My clone at `/home`, Requests,
+  Office at `/home/office`, its drawing with inviting and the people beside it) and the person's menu
   (`/home/account`), drawn by `people-pages.ts` `homeBand`, sent with `HOME_HEADERS` (scripts from
   this server alone: the page's own `home-client.ts` at `/assets/home.mjs`). My clone is a
   conversation with one's own clone (`own_messages`, a day at most; `/home/clone/thread`, `/say`,

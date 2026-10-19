@@ -71,10 +71,10 @@ export function CloneScreen() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[62.5rem] flex-col gap-6 px-8 pt-9 pb-14">
+      <div className="mx-auto flex w-full max-w-[62.5rem] flex-col gap-6 px-4 pt-6 pb-14 sm:px-8 sm:pt-9">
         <header className="flex flex-wrap items-center gap-4.5">
           <Bot size={60} mood={app.mood} label={t("title")} />
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
             <h1 className="text-[24px] leading-tight font-semibold tracking-tight">
               {app.name ? t("of", { name: app.name }) : t("title")}
             </h1>
@@ -199,7 +199,7 @@ function Numbers({ lines }: { lines: Logged[] | null }) {
     },
   ];
   return (
-    <ul className="grid gap-2.5 sm:grid-cols-3">
+    <ul className="grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-3">
       {items.map((item) => (
         <li
           key={item.key}

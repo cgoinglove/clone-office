@@ -6,7 +6,7 @@ consider alternatives when the actual workflow calls for them. Respect a design 
 chooses within its scope, and ask before a major visual change. Keep this list short.
 
 - **Office**: the design to build is the one in `docs/office-room.local.d/` (sign-in lobby, lift ride, the office); the user approved it for development. (10-06) Nothing moves for show (no tea runs, vacuum, hearts or smiling eyes, no sketching in on open); the board's content gave way to a big LED clock with who is in; each clone is named over its head with what it is on. The user chose this. (10-09) The clock stands apart from the room, behind the left wall on two posts, where the board stood: the user liked the board outside the room and asked for the clock there. (10-09, done 10-14)
-- **Colour**: black and white; the brand colour only for buttons and a few points (in the office: your floor, the sign-in button); what waits on the person is the ember (`--waiting`); red only for deleting and the dot badge on a mini-me's mark. The office room adds no colours of its own (no warm lamps, dusk, tinted floors); the mini-mes keep their own colours. The user chose this. (10-06)
+- **Colour**: black and white; the brand colour only for buttons and a few points (in the office: your floor, the sign-in button); what waits on the person is the ember (`--waiting`, orange, its words in the darker `--waiting-ink`; the user kept it orange, 10-19); red only for deleting and the dot badge on a mini-me's mark. The office room adds no colours of its own (no warm lamps, dusk, tinted floors); the mini-mes keep their own colours. The user chose this. (10-06)
 - **New shapes**: start from this app's own screens, not from generic UI (a dark theme, letter avatars, red badges). (09-17)
 - **Corners**: mixed as Thursday mixes them: the brand button (the one thing a screen asks for) and short suggestion chips are round (`rounded-full`); every other button and control is the same rounded rectangle (10px, small sizes 8px; large panels 14px); a box that grows with what is typed (the ask box, the chat box) takes a large radius in pixels (26px), a pill at one line that stays sound at five, as ChatGPT's does. The user chose this. (10-08, replacing 10-04's one corner for all)
 - **Buttons side by side**: share one shape and size, never a round one beside square ones (beside
@@ -29,6 +29,7 @@ chooses within its scope, and ask before a major visual change. Keep this list s
   (10-10, after the outside review found a double tap answering the next colleague)
 - **Focus**: a 2px ring in the brand colour, the one the lobby's button had; grey text at 4.5:1 on
   the column's off-white, a switch's off state at 3:1. (10-10)
+- **Team server's band**: white, one row: the office, its tabs underlined in the brand colour where one is, the person's menu. The user chose this over the brand-coloured band. (10-19)
 - **Moving pictures**: the lobby's building stands as it is and the lift is a plain pair of doors;
   nothing grows, rises or streaks for show anywhere. The user chose this. (10-10)
 - **No shadows on buttons**: a button, a segmented pick or a field is flat: a fill or a hairline ring, never a drop shadow; only what floats (a popover, a menu, a toast, a dialog) casts one. The user chose this. (10-08)

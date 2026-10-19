@@ -66,14 +66,15 @@ Two things hold everywhere:
 - **Home** (홈) is where the app opens: what is happening, what waits on them, and what to do
   about it. One box at the top asks their clone anything (name a colleague, and it asks theirs),
   with a few things to try under it; **Getting started** (시작하기) while the app is new; **Decide
-  now** (정할 것), answered right there: the answer stays on its row as what is about to go, with
+  now** (정할 것), one card each (which clone asks and when, the question, why it asks, the choices,
+  and **Answer it yourself**, 직접 답하기), answered right there: the answer stays on its card as what is about to go, with
   **Undo** (되돌리기) beside it and in the note at the bottom, and goes after a few seconds (or when
   they leave the screen), so a stray tap is never a decision made in their name; meanwhile it no
-  longer counts as waiting, and the keyboard moves on to the next question once it is sent; **Requests on their way** (오가는 부탁), those waiting on
-  them first; and beside them, **Today** (오늘), the day in one panel: **What your clone did**
-  (클론이 한 일: whom it answered for them, flows it ran), **Still to
-  come** (남은 일정: today's flows) and their **Colleagues** (동료). A part with
-  nothing in it says so in one line.
+  longer counts as waiting, and the keyboard moves on to the next question once it is sent; **Requests on their way** (오가는 부탁),
+  each one line (who asks whom, what, how it stands, when); and beside them **What your clone did**
+  (클론이 한 일: whom it answered for them, flows it ran), the next flow and their **Colleagues**
+  (동료). A part with nothing in it says so in one line. Once the clone has answered a colleague
+  for them, a card at the bottom right asks once for a star on GitHub.
 - **Chat** (대화): the conversation with their clone, and the box, **Ask your clone anything**
   (클론에게 무엇이든 부탁해 보세요). A new chat starts with the clone's hello and things to try.
   While the clone is answering, what they write still goes: it shows **Waits for its next step**
@@ -89,11 +90,17 @@ Two things hold everywhere:
   for them. On a wide screen the right side shows **The office now** (지금 오피스): the office, live;
   the requests in motion; today's flows. The button at the top folds it away.
 - **Requests** (부탁): what they and their colleagues asked each other, grouped as **To decide**,
-  **On its way**, **Waiting on them** and **Done** (정할 것, 진행 중, 답 기다리는 중, 완료), with **All**,
-  **Received** and **Sent** (모두, 받은 부탁, 보낸 부탁), and **Ask a colleague** (동료에게
+  **On its way** and **Done** (정할 것, 진행 중, 끝남), with **All**, **Received** and **Sent** (모두,
+  받은 부탁, 보낸 부탁), a box to find one by its words, and **Ask a colleague** (동료에게
   부탁하기) at the top. A request opens on its own page: the clones' exchange, what waits on them
-  (answered right there, with **Undo** for a few seconds as on Home), its files, and who it is with.
-- **Office** (오피스): the office floor (`office.md`), with what waits on them laid over it to
+  as one card (answered right there, with **Undo** for a few seconds as on Home), and one box under
+  it: **Tell my clone** (클론에게 알려 주기, read before its next step) or **Answer it yourself**
+  (직접 답하기, sent as their own words). Its **⋯** menu takes it over or hands it back. Beside it:
+  the colleague, why it came to them (the kind of request and its trust level), its steps, and files.
+- **Office** (오피스): the office floor (`office.md`), its header naming the office, who is in and
+  what moves, with **People** (사람) and **Invite a teammate** (동료 초대하기, the link copied at
+  once). Pressing a colleague opens their panel: what they are on, **Ask …'s clone** (… 님 클론에게
+  부탁하기), what they look after, how to work with them and the requests between you. What waits on them is laid over it as cards to
   answer right there.
 - **Your clone** (내 클론): three numbers on how it stands in for them (how like them its answers
   are, what it answered alone this week, what it brought to them first), the card colleagues see

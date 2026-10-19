@@ -153,7 +153,7 @@ export function CloneSection({
   };
 
   return (
-    <div className="grid items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
       <div className="flex min-w-0 flex-col gap-8">
         <AboutYou
           profile={profile}

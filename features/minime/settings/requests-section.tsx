@@ -57,7 +57,7 @@ export function RequestsSection({
     );
   const card = data.me?.card;
   return (
-    <div className="grid items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
       <Menu
         menu={data.menu ?? []}
         likeMe={data.likeMe}

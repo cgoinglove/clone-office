@@ -75,10 +75,11 @@ Below the steps, **Or make an account on this office's server** (또는 이 오�
 makes an account there instead: with **Continue with Google** (Google 계정으로 계속하기) where the
 server's admin turned Google on, or with a name, an email and a password of 8 characters or more,
 or signs in with one they have (**Sign in**, 로그인, at `/login`; the server's own address leads
-there, or to their page once signed in). Their page on the server has the office's name on a band
-in the app's colour, three tabs, **My clone** (내 클론), **Requests** (부탁) and **Office**
-(오피스), and a round button with their initial for **Your account** (내 계정), the server's sign-in
-settings for its admin, and **Sign out** (로그아웃).
+there, or to their page once signed in). Their page on the server has one white row at its top:
+the office's name, three tabs, **My clone** (내 클론), **Requests** (부탁) and **Office** (오피스),
+the open one underlined, and their initial and name for **Your account** (내 계정), the server's
+sign-in settings for its admin, and **Sign out** (로그아웃). The Office tab shows the office's
+drawing with inviting and the people beside it.
 
 - **My clone** (내 클론), the first tab: with no clone yet, **Connect your computer** (내 컴퓨터
   연결하기) gives one line, `npx clone-office connect <link>`, to run once in a terminal on the

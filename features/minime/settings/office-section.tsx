@@ -83,7 +83,12 @@ export function OfficeSection({
   return (
     <Groups>
       {/* inviting, and the team server's own pages, side by side (10-19 redesign) */}
-      <div className={cn("grid gap-2.5", server && "sm:grid-cols-2")}>
+      <div
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)] gap-2.5",
+          server && "sm:grid-cols-2",
+        )}
+      >
         <Card
           icon={<UserPlus className="size-4" />}
           title={data.here ? tS("thisOffice") : tS("inviteTitle")}

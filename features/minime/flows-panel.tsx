@@ -168,7 +168,7 @@ export function FlowsPanel({
   const shown = (flows ?? []).filter((flow) => !removal.hidden.has(flow.id));
   const on = shown.filter((flow) => !flow.paused).length;
   return (
-    <div className="grid items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
       <section className="flex min-w-0 flex-col gap-2.5">
         <div className="flex min-h-8 items-center gap-2.5">
           <h2 className="text-[15px] font-semibold tracking-tight">

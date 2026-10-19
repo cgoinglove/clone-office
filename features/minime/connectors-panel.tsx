@@ -316,7 +316,7 @@ export function ConnectorsPanel() {
   return (
     <div className="flex flex-col gap-4 text-sm">
       <div className="flex flex-col gap-4">
-        <ul className="grid gap-2.5 sm:grid-cols-2">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2">
           {others.map((entry) => row(entry))}
         </ul>
         {google.length > 0 && (
@@ -521,7 +521,7 @@ export function ConnectorsPanel() {
                 )}
               </div>
             )}
-            <ul className="grid gap-2.5 sm:grid-cols-2">
+            <ul className="grid grid-cols-[minmax(0,1fr)] gap-2.5 sm:grid-cols-2">
               {google.map((entry) => row(entry, !googleClient))}
             </ul>
           </section>
