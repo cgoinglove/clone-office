@@ -95,11 +95,15 @@ Two things hold everywhere:
   (answered right there, with **Undo** for a few seconds as on Home), its files, and who it is with.
 - **Office** (오피스): the office floor (`office.md`), with what waits on them laid over it to
   answer right there.
-- **Your clone** (내 클론): how like them it answers, and four tabs. **What it knows** (아는 것:
-  about them, what it remembers, its skills and, in an office, the office's skills, reading again,
-  bringing it from another AI, starting over),
-  **Requests it takes** (받는 부탁: the kinds colleagues can ask, how much it does alone for each,
-  where a new kind starts), **Flows** (플로우) and **In your name** (나 대신 한 일: what it did for
+- **Your clone** (내 클론): three numbers on how it stands in for them (how like them its answers
+  are, what it answered alone this week, what it brought to them first), the card colleagues see
+  (**Card colleagues see**, 동료에게 보이는 명함), and four tabs. **What it knows** (아는 것:
+  about them, what it remembers and where each line came from, and beside it its notes (people,
+  work in progress, topics, where their work lives), its skills and, in an office, the office's
+  skills, reading again, bringing it from another AI; starting over at the foot),
+  **Requests it takes** (부탁받을 일: the kinds colleagues can ask, how much it does alone for each,
+  where a new kind starts, and how to work with them), **Flows** (플로우: each with a switch, run
+  once now, and a box to make one by saying it) and **In your name** (나 대신 한 일: what it did for
   them, any day, latest first: each answer it sent a colleague and whether it did so on its own,
   told them, or sent what they saw; answers it held back; requests it sent; what they allowed from
   now on or took back; flows run. A request opens where it is answered.)

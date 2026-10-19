@@ -271,7 +271,7 @@ everything it changed on one card before any of it reaches their files (`index.m
 
 ## How to work with them (ME.md)
 
-Under **Your clone** (내 클론) › **Requests it takes** (받는 부탁), **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
+Under **Your clone** (내 클론) › **Requests it takes** (부탁받을 일), **How to work with me** (나와 일하는 법) holds a few lines colleagues and their
 clones read: how they like to be asked, when to expect an answer, what to bring them early.
 **Draft it for me** (초안 만들기) has the clone write a few from what it knows of them, leaving out
 anything private; a line goes on the card only when they press **Add** (더하기), and **Remove**
@@ -281,7 +281,7 @@ Colleagues' cards show theirs the same way, and the clone follows them when it a
 
 ## Requests they take, and how much their clone does alone
 
-**Your clone** (내 클론) › **Requests it takes** (받는 부탁) lists the kinds of request colleagues' clones can bring
+**Your clone** (내 클론) › **Requests it takes** (부탁받을 일) lists the kinds of request colleagues' clones can bring
 them, each with how much their clone does alone (a new kind starts where the same tab
 says, **Tell me** unless they changed it):
 

@@ -518,12 +518,9 @@
     "needsYou": "Te necesita",
     "menu": {
       "title": "Solicitudes que acepto",
-      "intro": "Lo que los clones de tus colegas pueden traerte, y cuánto hace tu clon por su cuenta en cada caso. Tus colegas ven los tipos, nunca cuánto hace solo.",
       "none": "Nada configurado todavía. Cuando definas qué aceptas, los clones de tus colegas sabrán qué traerte, y tú decides para cada tipo si tu clon responde solo o te pregunta antes.",
       "free": "Una solicitud que no encaja en ninguno: tu clon la responde y te avisa.",
-      "likeMe": "<b>Como tú: {percent}%</b>. En los últimos 30 días enviaste tal cual {asIs} de las {total} respuestas que te mostré primero.",
-      "likeMeFew": "En los últimos 30 días enviaste tal cual {asIs} de {total, plural, one {la # respuesta} other {las # respuestas}} que te mostré primero.",
-      "itemLikeMe": "{asIs} de {total} enviadas tal cual",
+      "itemLikeMe": "Como tú · {asIs} de {total} tal cual",
       "trust": {
         "auto": "Por su cuenta",
         "tell": "Avísame",
@@ -556,13 +553,13 @@
       "onDesk": "{count} en el escritorio"
     },
     "ways": {
-      "title": "Cómo trabajar conmigo (ME.md) · tus colegas ven estas líneas",
       "none": "Nada todavía. Escríbelo por mí redacta unas líneas con lo que sé de ti; solo las líneas que agregues van a tu tarjeta.",
       "drafted": "Según lo que sé de ti. Agrega las líneas que sean correctas:",
       "add": "Agregar",
       "skip": "Omitir",
       "placeholder": "Una línea, como tú la dirías",
-      "theirs": "Cómo trabajar con {name}:"
+      "short": "Cómo trabajar conmigo",
+      "onCard": "Estas líneas van en tu tarjeta."
     },
     "byLink": "{name} (por enlace)",
     "copyLink": "Copiar enlace",
@@ -740,7 +737,20 @@
     },
     "onRequest": "Se sigue cuando llega una solicitud así",
     "tooLong": "Es demasiado largo para guardarlo: el nombre puede tener 80 caracteres y las instrucciones, 4000.",
-    "removed": "Se quitó el flujo «{name}»"
+    "removed": "Se quitó el flujo «{name}»",
+    "heading": "Cuando pase esto, haz esto",
+    "counts": "{count} · {on} activos",
+    "quoted": "«{what}»",
+    "runOnce": "Ejecutar una vez ahora",
+    "onLabel": "{name} activo",
+    "alone": "Un flujo solo hace por su cuenta lo que ya permitiste. Permite lo nuevo con Ejecutar una vez ahora.",
+    "make": {
+      "title": "Crea uno diciéndolo",
+      "hint": "Di «cada día laborable a las 9…» y tu clon te lo muestra en una tarjeta antes de crearlo.",
+      "placeholder": "Cada viernes a las 5…",
+      "ask": "Crea un flujo: {what}",
+      "send": "Díselo a tu clon"
+    }
   },
   "brain": {
     "title": "Modelo de IA",
@@ -1041,12 +1051,9 @@
     "nav": "Secciones",
     "clone": {
       "remembers": "Lo que recuerda",
-      "remembersHint": "Solo lo que sigue siendo cierto: cómo trabajas, decides y hablas. Corrige o quita cualquier línea.",
-      "lines": "{count, plural, =0 {Sin líneas} one {# línea} other {# líneas}}",
       "loading": "Cargando…",
       "nothingYet": "Nada todavía. Deja que lea tus registros de IA aquí abajo, o trae lo que tu IA de siempre recuerda de ti.",
       "where": "Guardado en {dir}.",
-      "andMore": "Además, {skills} habilidades y {notes} notas.",
       "learnMore": "Enséñale más",
       "learnMoreHint": "También sigue aprendiendo mientras hablas con él.",
       "readAgain": "Volver a leer mis registros de IA",
@@ -1075,7 +1082,21 @@
       },
       "startOverTitle": "¿Empezar de nuevo?",
       "startOverBody": "Lo que recuerda tu clon pasa a una copia de seguridad y empiezas de nuevo desde los primeros pasos. No se borra nada.",
-      "startOverBodyClear": "Todo lo que recuerda salió de leer tus registros, así que se vacía en lugar de guardarse; leerlos de nuevo lo trae de vuelta."
+      "startOverBodyClear": "Todo lo que recuerda salió de leer tus registros, así que se vacía en lugar de guardarse; leerlos de nuevo lo trae de vuelta.",
+      "remembersMeta": "Solo lo que perdura · {count, plural, =0 {nada} one {# línea} other {# líneas}}",
+      "add": "Añadir",
+      "teachStarter": "Recuerda esto a partir de ahora: ",
+      "edit": "Editar",
+      "notes": {
+        "title": "Notas",
+        "hint": "Se abren cuando hacen falta",
+        "none": "Ninguna aún. Se guarda una página por cada persona y trabajo que aparezca.",
+        "people": "Con quién trabajas",
+        "projects": "Trabajo en curso",
+        "topics": "Temas",
+        "map": "Dónde vive tu trabajo",
+        "more": "{count} más"
+      }
     },
     "skills": {
       "title": "Habilidades",
@@ -1125,7 +1146,12 @@
         }
       },
       "removeTitle": "¿Quitarla de la oficina?",
-      "removeBody": "Las copias que ya añadieron tus colegas siguen siendo suyas."
+      "removeBody": "Las copias que ya añadieron tus colegas siguen siendo suyas.",
+      "count": "{count, plural, one {# forma de trabajar} other {# formas de trabajar}}",
+      "mine": "Tuya",
+      "fromAppShort": "Incluida",
+      "officeMore": "{count, plural, one {# habilidad de la oficina} other {# habilidades de la oficina}}",
+      "officeNew": "{count} nuevas"
     },
     "office": {
       "thisOffice": "Esta oficina",
@@ -1163,9 +1189,13 @@
     "requests": {
       "toOffice": "Configura tu oficina",
       "notInOffice": "Cuando estés en una oficina, los clones de tus colegas podrán pedirle cosas al tuyo. Aquí eliges qué pueden pedir y cuánto hace tu clon por su cuenta.",
-      "likeMe": "Parecido a ti",
-      "likeMeBody": "De las últimas {total} respuestas que te mostró primero, enviaste {asIs} tal cual.",
-      "emptyMenu": "Nada en la lista todavía. Deja que tu clon proponga lo que sueles aceptar, o agrega uno."
+      "emptyMenu": "Nada en la lista todavía. Deja que tu clon proponga lo que sueles aceptar, o agrega uno.",
+      "levels": "Tres niveles",
+      "always": "Las promesas y las decisiones siempre llegan a ti, sea cual sea el nivel.",
+      "meta": "Los clones de tus colegas los leen para pedir",
+      "example": "p. ej., «{text}»",
+      "likeNone": "Como tú · aún nada",
+      "startsAt": "Los tipos nuevos empiezan en"
     },
     "permissions": {
       "folders": "Carpetas que lee",
@@ -1351,7 +1381,6 @@
       "title": "Tu clon",
       "of": "Clon de {name}",
       "hint": "Trabaja como tú",
-      "likeMe": "como tú, últimos 30 días",
       "views": "Vistas de tu clon",
       "tabs": {
         "memory": "Lo que sabe",
@@ -1382,7 +1411,30 @@
           "unshared": "Quitó la habilidad «{name}» de la oficina",
           "added": "Añadió la habilidad «{name}» de {from}",
           "updated": "Actualizó la habilidad «{name}» de {from}"
-        }
+        },
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "quoted": "«{text}»"
+      },
+      "model": "Piensa con {model}",
+      "card": {
+        "open": "La tarjeta que ven tus colegas",
+        "title": "La tarjeta que ven tus colegas",
+        "hint": "Tus colegas y sus clones leen esta tarjeta para elegir a quién pedir. La cambias en esta pantalla.",
+        "notJoined": "Cuando te unas a una oficina, tus colegas verán esto.",
+        "you": "Tu clon",
+        "owns": "Se encarga de",
+        "takes": "Solicitudes que acepta",
+        "ways": "Cómo trabajar conmigo"
+      },
+      "stats": {
+        "likeMe": "Como tú",
+        "likeMeHint": "{asIs} de las {total} respuestas que te mostró antes salieron tal cual",
+        "likeMeNone": "Se cuenta cuando te muestre respuestas antes",
+        "alone": "Respondidas esta semana",
+        "aloneHint": "{count, plural, =0 {Ninguna aún} one {A # colega} other {A # colegas}}",
+        "first": "Te las pasó",
+        "firstHint": "Esta semana, antes de enviar nada"
       }
     },
     "newChat": "Nuevo chat",

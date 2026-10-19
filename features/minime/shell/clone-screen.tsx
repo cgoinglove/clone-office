@@ -1,22 +1,57 @@
 "use client";
 
-// The person's clone, on its own screen: who it is and how like them it answers, then four
-// views. What it knows about them (the memory as saved, each line correctable), the requests it
-// takes from colleagues with how much it does alone, its flows: the things it does on its own at
-// set times, and what it did in their name, any day (activity-list.tsx). How it thinks and connects (brain, tools, phone) stays in settings.
+// The person's clone, on its own screen (10-19 redesign): who it is, what it thinks with, and three
+// numbers on how it stands in for them (how like them its answers are, what it answered alone this
+// week, what it brought to them first), then four views. What it knows about them (the memory as
+// saved, each line correctable, with its notes and skills beside it), the kinds of request it takes
+// from colleagues with how much it does alone, its flows, and what it did in their name, any day
+// (activity-list.tsx). The card colleagues see opens from the header. How it thinks and connects
+// (model, tools, phone) stays in settings.
 
+import { Eye } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Segmented } from "@/components/ui/segmented";
 import { Bot } from "@/features/office";
+import { type BrainState, brainLabel } from "../brain-panel";
 import { FlowsPanel } from "../flows-panel";
+import { HEADERS } from "../home/use-office";
 import { CloneSection } from "../settings/clone-section";
-import { PreferencesSection } from "../settings/preferences-section";
 import { RequestsSection } from "../settings/requests-section";
-import { ActivityList } from "./activity-list";
+import { ActivityList, type Logged, useActivity } from "./activity-list";
 import { useApp } from "./app-state";
 
 type Tab = "memory" | "menu" | "flows" | "history";
+
+const WEEK = 7 * 24 * 60 * 60 * 1000;
+
+/** The model it thinks with, by its own name ("Claude Sonnet"), once the app has said which. */
+function useModelName(): string | undefined {
+  const [name, setName] = useState<string>();
+  useEffect(() => {
+    let live = true;
+    fetch("/api/me/brain", { headers: HEADERS })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((state: BrainState | null) => {
+        if (!live || !state?.choice) return;
+        const label = brainLabel(state, "Claude Code");
+        setName(label.split(" · ").slice(1).join(" · ") || label);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  return name;
+}
 
 export function CloneScreen() {
   const t = useTranslations("shell.clone");
@@ -28,37 +63,34 @@ export function CloneScreen() {
     asked === "menu" || asked === "flows" || asked === "history"
       ? asked
       : "memory";
-  const like = app.office.office?.likeMe;
-  const percent = like?.total
-    ? Math.round((like.asIs / like.total) * 100)
-    : undefined;
+  const activity = useActivity();
+  const model = useModelName();
+  const [cardOpen, setCardOpen] = useState(false);
   const role =
     app.office.office?.me?.card.description ?? app.profile.role ?? "";
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-7 px-8 pt-9 pb-14">
-        <header className="flex flex-wrap items-center gap-4">
-          <Bot size={56} mood={app.mood} label={t("title")} />
+      <div className="mx-auto flex w-full max-w-[62.5rem] flex-col gap-6 px-8 pt-9 pb-14">
+        <header className="flex flex-wrap items-center gap-4.5">
+          <Bot size={60} mood={app.mood} label={t("title")} />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <h1 className="text-[22px] leading-tight font-semibold tracking-tight">
+            <h1 className="text-[24px] leading-tight font-semibold tracking-tight">
               {app.name ? t("of", { name: app.name }) : t("title")}
             </h1>
-            <p className="truncate text-sm text-muted-foreground">
-              {role || t("hint")}
+            <p className="truncate text-[13.5px] text-muted-foreground">
+              {[role || t("hint"), model && t("model", { model })]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           </div>
-          {percent !== undefined && (
-            <div className="flex flex-col items-end">
-              <span className="text-[26px] leading-none font-semibold tabular-nums">
-                {percent}%
-              </span>
-              <span className="mt-1 text-xs text-muted-foreground">
-                {t("likeMe")}
-              </span>
-            </div>
-          )}
+          <Button variant="secondary" onClick={() => setCardOpen(true)}>
+            <Eye />
+            {t("card.open")}
+          </Button>
         </header>
+
+        <Numbers lines={activity} />
 
         <Segmented<Tab>
           view
@@ -87,19 +119,13 @@ export function CloneScreen() {
             />
           )}
           {tab === "menu" && (
-            <div className="flex flex-col gap-8">
-              <RequestsSection
-                lang={app.lang}
-                office={app.office}
-                defaultTrust={app.preferences?.defaultTrust ?? "tell"}
-                onOpenOffice={() => app.setSettings("office")}
-              />
-              <PreferencesSection
-                preferences={app.preferences}
-                onChange={app.changePreferences}
-                parts={["trust"]}
-              />
-            </div>
+            <RequestsSection
+              lang={app.lang}
+              office={app.office}
+              preferences={app.preferences}
+              onPreferences={app.changePreferences}
+              onOpenOffice={() => app.setSettings("office")}
+            />
           )}
           {tab === "flows" && (
             <FlowsPanel
@@ -114,9 +140,158 @@ export function CloneScreen() {
               }}
             />
           )}
-          {tab === "history" && <ActivityList />}
+          {tab === "history" && <ActivityList lines={activity} />}
         </div>
       </div>
+      <CardPreview open={cardOpen} onOpenChange={setCardOpen} />
     </div>
+  );
+}
+
+/**
+ * Three numbers on how the clone stands in for its person: of the answers it showed them first,
+ * how many went as they were (30 days); what it answered colleagues on its own this week, and to
+ * how many; and what it brought to them before anything went.
+ */
+function Numbers({ lines }: { lines: Logged[] | null }) {
+  const t = useTranslations("shell.clone.stats");
+  const app = useApp();
+  const like = app.office.office?.likeMe;
+  const since = Date.now() - WEEK;
+  const week = (lines ?? []).filter((line) => Date.parse(line.at) >= since);
+  const alone = week.filter(
+    (line) =>
+      line.kind === "answered" && (line.how === "alone" || line.how === "told"),
+  );
+  const people = new Set(
+    alone.map((line) => ("to" in line ? line.to : undefined)).filter(Boolean),
+  ).size;
+  const first = week.filter(
+    (line) =>
+      line.kind === "held" ||
+      (line.kind === "answered" &&
+        (line.how === "as-is" ||
+          line.how === "changed" ||
+          line.how === "decided")),
+  ).length;
+  const items = [
+    {
+      key: "like",
+      value: like?.total
+        ? `${Math.round((like.asIs / like.total) * 100)}%`
+        : "–",
+      label: t("likeMe"),
+      hint: like?.total
+        ? t("likeMeHint", { total: like.total, asIs: like.asIs })
+        : t("likeMeNone"),
+    },
+    {
+      key: "alone",
+      value: lines ? String(alone.length) : "–",
+      label: t("alone"),
+      hint: t("aloneHint", { count: people }),
+    },
+    {
+      key: "first",
+      value: lines ? String(first) : "–",
+      label: t("first"),
+      hint: t("firstHint"),
+    },
+  ];
+  return (
+    <ul className="grid gap-2.5 sm:grid-cols-3">
+      {items.map((item) => (
+        <li
+          key={item.key}
+          className="flex flex-col gap-0.5 rounded-[14px] bg-background px-4 py-3.5 shadow-[0_0_0_1px_var(--alpha-10)]"
+        >
+          <span className="flex items-baseline gap-2">
+            <span className="text-[22px] leading-none font-semibold tracking-tight tabular-nums">
+              {item.value}
+            </span>
+            <span className="text-[13px] font-semibold">{item.label}</span>
+          </span>
+          <span className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {item.hint}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** The card colleagues and their clones see, as they see it: what they route by. */
+function CardPreview({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations("shell.clone.card");
+  const tOffice = useTranslations("office");
+  const app = useApp();
+  const office = app.office.office;
+  const card = office?.joined ? office.me?.card : undefined;
+  const name = card?.name ?? app.name ?? "";
+  const role = card?.description ?? app.profile.role ?? "";
+  const owns = card?.owns ?? app.profile.owns ?? [];
+  const takes = (card?.skills ?? office?.menu ?? []).map((kind) => kind.name);
+  const ways = card?.howToWork ?? [];
+  const block = (title: string, children: React.ReactNode) => (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-xs font-semibold text-muted-foreground">
+        {title}
+      </span>
+      {children}
+    </div>
+  );
+  const pills = (items: string[]) => (
+    <span className="flex flex-wrap gap-1.5">
+      {items.map((item) => (
+        <span
+          key={item}
+          className="inline-flex h-7 items-center rounded-lg bg-muted px-2.5 text-[13px]"
+        >
+          {item}
+        </span>
+      ))}
+    </span>
+  );
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogTitle>{t("title")}</DialogTitle>
+        <DialogDescription>
+          {card ? t("hint") : t("notJoined")}
+        </DialogDescription>
+        <div className="flex flex-col gap-4 rounded-[14px] p-4 shadow-[0_0_0_1px_var(--alpha-10)]">
+          <div className="flex items-center gap-3">
+            <Bot size={40} mood="idle" still />
+            <div className="flex min-w-0 flex-col">
+              <span className="text-[15px] font-semibold">
+                {name ? tOffice("miniMe", { name }) : t("you")}
+              </span>
+              {role && (
+                <span className="truncate text-[13px] text-muted-foreground">
+                  {role}
+                </span>
+              )}
+            </div>
+          </div>
+          {owns.length > 0 && block(t("owns"), pills(owns))}
+          {takes.length > 0 && block(t("takes"), pills(takes))}
+          {ways.length > 0 &&
+            block(
+              t("ways"),
+              <ul className="flex list-disc flex-col gap-1 pl-4.5 text-[13.5px] leading-relaxed">
+                {ways.map((way) => (
+                  <li key={way}>{way}</li>
+                ))}
+              </ul>,
+            )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

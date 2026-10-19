@@ -1,17 +1,19 @@
 "use client";
 
 // Your clone › What it knows: its skills (how it does one kind of task the person's way), and in an
-// office the skills colleagues shared. A skill of the person's own is shared with the office from
+// office the skills colleagues shared; `compact`, one card beside the memory, each row opening what
+// it is and its share, the office's under a row of their own (10-19 redesign). A skill of the person's own is shared with the office from
 // here after they see the files that would go; one a colleague shared is added, or updated while
 // it is as it came. Their press is their say: the clone's own tool asks on a card instead.
 
-import { Check } from "lucide-react";
+import { BookOpen, Check, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { useProblem } from "@/i18n/client";
+import { cn } from "@/lib/utils";
 import { HEADERS } from "../home/use-office";
 import { Empty, Group, Rows } from "./parts";
 
@@ -54,7 +56,7 @@ interface Skills {
   office: { skills: OfficeSkill[]; me: string; problem?: string } | null;
 }
 
-export function SkillsSection() {
+export function SkillsSection({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("settings.skills");
   const problemText = useProblem();
   const [data, setData] = useState<Skills | null>(null);
@@ -91,6 +93,15 @@ export function SkillsSection() {
   };
 
   const office = data?.office;
+  if (compact)
+    return (
+      <SkillsCard
+        data={data}
+        busy={busy}
+        problem={problem ? problemText(problem) : null}
+        onAct={act}
+      />
+    );
   return (
     <>
       <Group title={t("title")} hint={t("hint")}>
@@ -143,6 +154,99 @@ export function SkillsSection() {
   );
 }
 
+/** The skills as one card beside the memory: a row each, opening what it is (and its share). */
+function SkillsCard({
+  data,
+  busy,
+  problem,
+  onAct,
+}: {
+  data: Skills | null;
+  busy?: string;
+  problem: string | null;
+  onAct: (action: "share" | "unshare" | "add", name: string) => Promise<void>;
+}) {
+  const t = useTranslations("settings.skills");
+  const problemText = useProblem();
+  const [open, setOpen] = useState<string | null>(null);
+  const [officeOpen, setOfficeOpen] = useState(false);
+  if (!data) return null;
+  const office = data.office;
+  const fresh = office?.skills.filter((skill) => skill.here === "new").length;
+  return (
+    <section className="flex flex-col rounded-[14px] bg-background px-4 py-3.5 shadow-[0_0_0_1px_var(--alpha-10)]">
+      <div className="mb-1 flex items-baseline gap-2">
+        <h3 className="flex-1 text-[14px] font-semibold">{t("title")}</h3>
+        <span className="text-xs text-muted-foreground">
+          {t("count", { count: data.skills.length })}
+        </span>
+      </div>
+      {data.skills.length === 0 ? (
+        <p className="py-1 text-[13px] leading-relaxed text-muted-foreground">
+          {t("none")}
+        </p>
+      ) : (
+        <ul className="-mx-2 flex flex-col">
+          {data.skills.map((skill) => (
+            <OwnRow
+              key={skill.name}
+              compact
+              open={open === skill.name}
+              onOpen={() => setOpen(open === skill.name ? null : skill.name)}
+              skill={skill}
+              inOffice={Boolean(office)}
+              busy={busy === `share:${skill.name}`}
+              onShare={() => onAct("share", skill.name)}
+            />
+          ))}
+        </ul>
+      )}
+      {office && (office.skills.length > 0 || office.problem) && (
+        <>
+          <button
+            type="button"
+            aria-expanded={officeOpen}
+            onClick={() => setOfficeOpen(!officeOpen)}
+            className="-mx-2 mt-1 flex h-9 items-center gap-1.5 rounded-lg px-2 text-left text-[13px] text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="flex-1">
+              {t("officeMore", { count: office.skills.length })}
+              {fresh ? ` · ${t("officeNew", { count: fresh })}` : ""}
+            </span>
+            <ChevronRight
+              className={cn(
+                "size-3.5 shrink-0 transition-transform",
+                officeOpen && "rotate-90",
+              )}
+            />
+          </button>
+          {officeOpen &&
+            (office.problem ? (
+              <p className="text-[13px] text-destructive">
+                {problemText(office.problem)}
+              </p>
+            ) : (
+              <ul className="-mx-2 flex flex-col">
+                {office.skills.map((skill) => (
+                  <OfficeRow
+                    key={skill.name}
+                    compact
+                    skill={skill}
+                    busy={busy}
+                    onAct={(action) => onAct(action, skill.name)}
+                  />
+                ))}
+              </ul>
+            ))}
+        </>
+      )}
+      {problem && (
+        <p className="mt-1 text-[13px] text-destructive">{problem}</p>
+      )}
+    </section>
+  );
+}
+
 function Done({ children }: { children: string }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-1 text-xs text-muted-foreground">
@@ -157,11 +261,18 @@ function OwnRow({
   inOffice,
   busy,
   onShare,
+  compact = false,
+  open = true,
+  onOpen,
 }: {
   skill: OwnSkill;
   inOffice: boolean;
   busy: boolean;
   onShare: () => Promise<void>;
+  /** A row of the card: its name and where it came from, opening what it is. */
+  compact?: boolean;
+  open?: boolean;
+  onOpen?: () => void;
 }) {
   const t = useTranslations("settings.skills");
   const cancel = useTranslations("common")("cancel");
@@ -176,6 +287,66 @@ function OwnRow({
           body: t(`shipped.${skill.name}.body` as never),
         }
       : { title: skill.name, body: skill.description };
+  const share =
+    shareable &&
+    !sure &&
+    (skill.shared === "yes" ? (
+      <Done>{t("shared")}</Done>
+    ) : skill.files ? (
+      <Button
+        size="xs"
+        variant="secondary"
+        className="shrink-0"
+        onClick={() => setSure(true)}
+      >
+        {skill.shared === "changed" ? t("shareChanges") : t("share")}
+      </Button>
+    ) : null);
+  if (compact)
+    return (
+      <li className="flex flex-col">
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={onOpen}
+          className="flex h-9 items-center gap-2.5 rounded-lg px-2 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <BookOpen className="size-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate text-[13.5px]">
+            {named.title}
+          </span>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {skill.from === "own"
+              ? t("mine")
+              : skill.from === "app"
+                ? t("fromAppShort")
+                : (skill.by ?? "")}
+          </span>
+        </button>
+        {open && (
+          <div className="mb-1.5 ml-8 flex flex-col gap-2 pr-2">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {named.body}
+            </p>
+            {shareable && !skill.files && skill.problem && (
+              <p className="text-xs text-muted-foreground">
+                {t("cantShare")} · {problemText(skill.problem)}
+              </p>
+            )}
+            {share && <div>{share}</div>}
+            {sure && skill.files && (
+              <ShareSure
+                files={skill.files}
+                busy={busy}
+                onYes={() => void onShare().finally(() => setSure(false))}
+                onNo={() => setSure(false)}
+                cancel={cancel}
+              />
+            )}
+          </div>
+        )}
+      </li>
+    );
   return (
     <li className="flex flex-col gap-2 px-3.5 py-3">
       <div className="flex items-start gap-3">
@@ -197,45 +368,55 @@ function OwnRow({
             </span>
           )}
         </span>
-        {shareable &&
-          !sure &&
-          (skill.shared === "yes" ? (
-            <Done>{t("shared")}</Done>
-          ) : skill.files ? (
-            <Button
-              size="xs"
-              variant="secondary"
-              className="shrink-0"
-              onClick={() => setSure(true)}
-            >
-              {skill.shared === "changed" ? t("shareChanges") : t("share")}
-            </Button>
-          ) : null)}
+        {share}
       </div>
       {sure && skill.files && (
-        <div className="flex flex-col gap-2 rounded-lg bg-muted px-3 py-2.5">
-          <span className="text-xs">{t("shareSure")}</span>
-          <ul className="flex flex-col gap-0.5 font-mono text-xs text-muted-foreground">
-            {skill.files.map((file) => (
-              <li key={file}>{file}</li>
-            ))}
-          </ul>
-          <span className="flex gap-2">
-            <Button
-              size="xs"
-              disabled={busy}
-              loading={busy}
-              onClick={() => void onShare().finally(() => setSure(false))}
-            >
-              {t("shareYes")}
-            </Button>
-            <Button size="xs" variant="ghost" onClick={() => setSure(false)}>
-              {cancel}
-            </Button>
-          </span>
-        </div>
+        <ShareSure
+          files={skill.files}
+          busy={busy}
+          onYes={() => void onShare().finally(() => setSure(false))}
+          onNo={() => setSure(false)}
+          cancel={cancel}
+        />
       )}
     </li>
+  );
+}
+
+/** The files sharing a skill would send, looked at before they go. */
+function ShareSure({
+  files,
+  busy,
+  onYes,
+  onNo,
+  cancel,
+}: {
+  files: string[];
+  busy: boolean;
+  onYes: () => void;
+  onNo: () => void;
+  cancel: string;
+}) {
+  const t = useTranslations("settings.skills");
+  return (
+    <div className="flex flex-col gap-2 rounded-lg bg-muted px-3 py-2.5">
+      <span className="text-xs">{t("shareSure")}</span>
+      <ul className="flex flex-col gap-0.5 font-mono text-xs text-muted-foreground">
+        {files.map((file) => (
+          <li key={file} className="break-all">
+            {file}
+          </li>
+        ))}
+      </ul>
+      <span className="flex gap-2">
+        <Button size="xs" disabled={busy} loading={busy} onClick={onYes}>
+          {t("shareYes")}
+        </Button>
+        <Button size="xs" variant="ghost" onClick={onNo}>
+          {cancel}
+        </Button>
+      </span>
+    </div>
   );
 }
 
@@ -243,10 +424,13 @@ function OfficeRow({
   skill,
   busy,
   onAct,
+  compact = false,
 }: {
   skill: OfficeSkill;
   busy?: string;
   onAct: (action: "add" | "unshare") => Promise<void>;
+  /** In the card: tighter, as its other rows. */
+  compact?: boolean;
 }) {
   const t = useTranslations("settings.skills");
   const cancel = useTranslations("common")("cancel");
@@ -255,7 +439,12 @@ function OfficeRow({
   const adding = busy === `add:${skill.name}`;
   const removing = busy === `unshare:${skill.name}`;
   return (
-    <li className="flex flex-col gap-2 px-3.5 py-3">
+    <li
+      className={cn(
+        "flex flex-col gap-2",
+        compact ? "px-2 py-2 text-[13px]" : "px-3.5 py-3",
+      )}
+    >
       <div className="flex items-start gap-3">
         <span className="min-w-0 flex-1">
           <span className="font-medium">{skill.name}</span>

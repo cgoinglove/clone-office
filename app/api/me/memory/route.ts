@@ -60,6 +60,13 @@ async function snapshot() {
     },
     skills: skills.length,
     notes: notes.length,
+    // the note pages by name, for the clone's screen to list (their bodies open by path elsewhere)
+    pages: notes.slice(0, 300).map(({ path, title, summary, updated }) => ({
+      path,
+      title,
+      summary,
+      updated,
+    })),
     dir: memoryDir().startsWith(home)
       ? `~${memoryDir().slice(home.length)}`
       : memoryDir(),

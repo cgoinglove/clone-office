@@ -518,12 +518,9 @@
     "needsYou": "需要你",
     "menu": {
       "title": "我接的请求",
-      "intro": "同事的分身可以找你办哪些事，以及每类事你的分身自己处理到什么程度。同事只看得到类别，看不到它自己处理到什么程度。",
       "none": "还没设置。设置好你接哪些请求后，同事的分身就知道该找你办什么，你也能为每一类决定分身是自己回答还是先问你。",
       "free": "不属于以上任何一类的请求：你的分身会回答，然后告诉你。",
-      "likeMe": "<b>像你：{percent}%</b>。最近 30 天，我先给你看的 {total} 个回答中，你原样发送了 {asIs} 个。",
-      "likeMeFew": "最近 30 天，我先给你看的{total, plural, other { # 个回答}}中，你原样发送了 {asIs} 个。",
-      "itemLikeMe": "{total} 个中 {asIs} 个原样发送",
+      "itemLikeMe": "像你 · {total} 个中 {asIs} 个原样",
       "trust": {
         "auto": "自行处理",
         "tell": "告诉我",
@@ -556,13 +553,13 @@
       "onDesk": "桌上 {count} 件"
     },
     "ways": {
-      "title": "和我合作的方式（ME.md）· 同事看得到这些内容",
       "none": "还没有。“帮我起草”会根据我对你的了解写几条；只有你添加的才会放到名片上。",
       "drafted": "根据我对你的了解。把说得对的加上：",
       "add": "添加",
       "skip": "跳过",
       "placeholder": "一句话，用你自己的说法",
-      "theirs": "和{name}合作的方式："
+      "short": "和我合作的方式",
+      "onCard": "这些内容会显示在你的名片上。"
     },
     "byLink": "{name}（通过链接）",
     "copyLink": "复制链接",
@@ -740,7 +737,20 @@
     },
     "onRequest": "这类请求进来时照此执行",
     "tooLong": "太长了，存不下：名称最多 80 个字，内容最多 4,000 个字。",
-    "removed": "已删除流程“{name}”"
+    "removed": "已删除流程“{name}”",
+    "heading": "遇到这种情况就这样做",
+    "counts": "{count} 个 · 开着 {on} 个",
+    "quoted": "“{what}”",
+    "runOnce": "现在运行一次",
+    "onLabel": "开启 {name}",
+    "alone": "流程只会自己做你已允许的事。新的工具请在“现在运行一次”时允许。",
+    "make": {
+      "title": "用一句话新建流程",
+      "hint": "说“每个工作日 9 点……”，分身会先用卡片确认再创建。",
+      "placeholder": "每周五 5 点……",
+      "ask": "帮我建一个流程：{what}",
+      "send": "告诉分身"
+    }
   },
   "brain": {
     "title": "AI 模型",
@@ -1041,12 +1051,9 @@
     "nav": "分区",
     "clone": {
       "remembers": "它记得的",
-      "remembersHint": "只记长期成立的：你怎么工作、做决定、说话。每一条都可以修改或删除。",
-      "lines": "{count, plural, =0 {没有内容} other {# 条}}",
       "loading": "加载中…",
       "nothingYet": "还没有。让它读一下下面你的 AI 记录，或者把你常用的 AI 记得的关于你的内容带过来。",
       "where": "保存在 {dir}。",
-      "andMore": "另外还有 {skills} 个技能和 {notes} 篇笔记。",
       "learnMore": "多教它一些",
       "learnMoreHint": "你和它聊天时，它也会一直学习。",
       "readAgain": "重新读取我的 AI 记录",
@@ -1075,7 +1082,21 @@
       },
       "startOverTitle": "要重新开始吗？",
       "startOverBody": "克隆记住的内容会移入备份，然后从第一步重新开始。不会删除任何内容。",
-      "startOverBodyClear": "它记住的内容都来自读取你的记录，所以会直接清空而不备份；再次读取即可恢复。"
+      "startOverBodyClear": "它记住的内容都来自读取你的记录，所以会直接清空而不备份；再次读取即可恢复。",
+      "remembersMeta": "只记长期不变的 · {count, plural, =0 {无} other {# 行}}",
+      "add": "添加",
+      "teachStarter": "以后记住：",
+      "edit": "修改",
+      "notes": {
+        "title": "笔记",
+        "hint": "需要时才打开",
+        "none": "还没有。遇到合作的人和进行中的工作时，会各记一页。",
+        "people": "合作的人",
+        "projects": "进行中的工作",
+        "topics": "主题",
+        "map": "工作所在的地图",
+        "more": "还有 {count} 个"
+      }
     },
     "skills": {
       "title": "技能",
@@ -1125,7 +1146,12 @@
         }
       },
       "removeTitle": "从办公室撤下它？",
-      "removeBody": "同事已添加的副本仍归他们。"
+      "removeBody": "同事已添加的副本仍归他们。",
+      "count": "{count} 种做事方法",
+      "mine": "你的",
+      "fromAppShort": "内置",
+      "officeMore": "办公室技能 {count} 个",
+      "officeNew": "新的 {count} 个"
     },
     "office": {
       "thisOffice": "这个办公室",
@@ -1163,9 +1189,13 @@
     "requests": {
       "toOffice": "设置你的办公室",
       "notInOffice": "加入办公室后，同事的分身就能找你的分身办事。在这里选择他们可以找你办什么，以及你的分身自己处理到什么程度。",
-      "likeMe": "像你指数",
-      "likeMeBody": "它先给你看的最近 {total} 个回答中，你原样发送了 {asIs} 个。",
-      "emptyMenu": "还没有列出。让你的分身起草你通常接的请求，或者自己添加一类。"
+      "emptyMenu": "还没有列出。让你的分身起草你通常接的请求，或者自己添加一类。",
+      "levels": "三个等级",
+      "always": "无论哪个等级，承诺和决定总会交给你。",
+      "meta": "同事的分身看这些来提请求",
+      "example": "例如：“{text}”",
+      "likeNone": "像你 · 还没有",
+      "startsAt": "新加的种类从这里开始"
     },
     "permissions": {
       "folders": "要读取的文件夹",
@@ -1351,11 +1381,10 @@
       "title": "你的分身",
       "of": "{name}的分身",
       "hint": "按你的方式工作",
-      "likeMe": "像你，最近 30 天",
       "views": "你的分身的视图",
       "tabs": {
         "memory": "它知道的",
-        "menu": "它接的请求",
+        "menu": "接的请求",
         "flows": "自动流程",
         "history": "以你的名义"
       },
@@ -1382,7 +1411,30 @@
           "unshared": "把技能“{name}”从办公室撤下",
           "added": "添加了 {from} 的技能“{name}”",
           "updated": "更新了 {from} 的技能“{name}”"
-        }
+        },
+        "today": "今天",
+        "yesterday": "昨天",
+        "quoted": "“{text}”"
+      },
+      "model": "用 {model} 思考",
+      "card": {
+        "open": "同事看到的名片",
+        "title": "同事看到的名片",
+        "hint": "同事和他们的分身会看这张名片来决定找谁。可以在这个页面修改。",
+        "notJoined": "加入办公室后，同事会看到这张名片。",
+        "you": "你的分身",
+        "owns": "负责",
+        "takes": "接的请求",
+        "ways": "和我合作的方式"
+      },
+      "stats": {
+        "likeMe": "像你",
+        "likeMeHint": "先给你看的 {total} 个回答中，{asIs} 个原样发出",
+        "likeMeNone": "有先给你看的回答后开始统计",
+        "alone": "本周代答",
+        "aloneHint": "{count, plural, =0 {还没有} other {给 # 位同事}}",
+        "first": "交给你决定",
+        "firstHint": "本周，发出之前先问了你"
       }
     },
     "newChat": "新对话",

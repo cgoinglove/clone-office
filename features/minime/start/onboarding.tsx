@@ -57,6 +57,7 @@ import {
 import { ShinyText } from "@/components/ui/shiny-text";
 import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { APP_NAME, LogoMark } from "@/features/brand/logo";
+import { markOf } from "@/features/brand/tool-mark";
 import { Bot } from "@/features/office";
 import { OfficeRoom } from "@/features/office/room/office-room";
 import { personTag, useProblem } from "@/i18n/client";
@@ -1522,33 +1523,6 @@ function KnownDialog({
 
 /** How many of a kind's names a summary shows before "+N". */
 const SUMMARY_NAMES = 3;
-
-/** A tool's own mark, when the app draws that service's: matched by its name, any spelling. */
-const TOOL_MARK: Record<string, MarkId> = {
-  claudecode: "claudecode",
-  claude: "claude",
-  codex: "codex",
-  cursor: "cursor",
-  chatgpt: "openai",
-  openai: "openai",
-  gemini: "gemini",
-  hermes: "hermes",
-  hermesagent: "hermes",
-  notion: "notion",
-  github: "github",
-  linear: "linear",
-  jira: "jira",
-  confluence: "atlassian",
-  gmail: "gmail",
-  googlecalendar: "googlecalendar",
-  googledrive: "googledrive",
-  googledocs: "googledocs",
-  googlesheets: "googlesheets",
-  discord: "discord",
-  telegram: "telegram",
-};
-const markOf = (tool: string): MarkId | undefined =>
-  TOOL_MARK[tool.toLowerCase().replace(/[^a-z]/g, "")];
 
 /**
  * What the reading understood, short enough to take in at a glance: what they do in a line, then

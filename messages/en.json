@@ -518,12 +518,9 @@
     "needsYou": "Needs you",
     "menu": {
       "title": "Requests I take",
-      "intro": "What colleagues' clones can bring you, and how much your clone does alone for each. Colleagues see the kinds, never how much it does alone.",
       "none": "Nothing set yet. Once you set what you take, colleagues' clones know what to bring you, and you decide for each kind whether your clone answers alone or asks you first.",
       "free": "A request that fits none of these: your clone answers it and tells you.",
-      "likeMe": "<b>Like you: {percent}%</b>. In the last 30 days you sent {asIs} of the {total} answers I showed you first as they were.",
-      "likeMeFew": "In the last 30 days you sent {asIs} of the {total, plural, one {# answer} other {# answers}} I showed you first as {total, plural, one {it was} other {they were}}.",
-      "itemLikeMe": "{asIs} of {total} sent as they were",
+      "itemLikeMe": "Like you · {asIs} of {total} as they were",
       "trust": {
         "auto": "On its own",
         "tell": "Tell me",
@@ -556,13 +553,13 @@
       "onDesk": "{count} on the desk"
     },
     "ways": {
-      "title": "How to work with me (ME.md) · colleagues see these lines",
       "none": "Nothing yet. Draft it for me writes a few lines from what I know of you; only the lines you add go on your card.",
       "drafted": "From what I know of you. Add the lines that are right:",
       "add": "Add",
       "skip": "Skip",
       "placeholder": "A line, as you would say it",
-      "theirs": "How to work with {name}:"
+      "short": "How to work with me",
+      "onCard": "These lines go on your card."
     },
     "byLink": "{name} (by link)",
     "copyLink": "Copy link",
@@ -740,7 +737,20 @@
     },
     "onRequest": "Followed when such a request comes in",
     "tooLong": "Too long to save: a name can be 80 characters, the request 4,000.",
-    "removed": "Removed the flow “{name}”"
+    "removed": "Removed the flow “{name}”",
+    "heading": "When this happens, do this",
+    "counts": "{count} · {on} on",
+    "quoted": "“{what}”",
+    "runOnce": "Run once now",
+    "onLabel": "{name} on",
+    "alone": "A flow does on its own only what you already allowed. Allow anything new with Run once now.",
+    "make": {
+      "title": "Make one by saying it",
+      "hint": "Say “every weekday at 9…” and your clone shows it on a card before making it.",
+      "placeholder": "Every Friday at 5…",
+      "ask": "Make a flow: {what}",
+      "send": "Say it to your clone"
+    }
   },
   "brain": {
     "title": "AI model",
@@ -1041,12 +1051,9 @@
     "nav": "Sections",
     "clone": {
       "remembers": "What it remembers",
-      "remembersHint": "Only what stays true: how you work, decide and talk. Fix or remove any line.",
-      "lines": "{count, plural, =0 {No lines} one {# line} other {# lines}}",
       "loading": "Loading…",
       "nothingYet": "Nothing yet. Let it read your AI records below, or bring what your usual AI remembers about you.",
       "where": "Kept in {dir}.",
-      "andMore": "Besides, {skills} skills and {notes} notes.",
       "learnMore": "Teach it more",
       "learnMoreHint": "It also keeps learning as you talk with it.",
       "readAgain": "Read my AI records again",
@@ -1075,7 +1082,21 @@
       },
       "startOverTitle": "Start over?",
       "startOverBody": "What your clone remembers moves into a backup, and you begin again from the first steps. Nothing is deleted.",
-      "startOverBodyClear": "Everything it remembers came from reading your records, so it is cleared rather than backed up; reading them again brings it back."
+      "startOverBodyClear": "Everything it remembers came from reading your records, so it is cleared rather than backed up; reading them again brings it back.",
+      "remembersMeta": "Only what lasts · {count, plural, =0 {none} one {# line} other {# lines}}",
+      "add": "Add",
+      "teachStarter": "Remember this from now on: ",
+      "edit": "Edit",
+      "notes": {
+        "title": "Notes",
+        "hint": "Opened when they come up",
+        "none": "None yet. A page is kept for each person and piece of work that comes up.",
+        "people": "People you work with",
+        "projects": "Work in progress",
+        "topics": "Topics",
+        "map": "Where your work lives",
+        "more": "{count} more"
+      }
     },
     "skills": {
       "title": "Skills",
@@ -1125,7 +1146,12 @@
         }
       },
       "removeTitle": "Take it out of the office?",
-      "removeBody": "Copies colleagues already added stay theirs."
+      "removeBody": "Copies colleagues already added stay theirs.",
+      "count": "{count, plural, one {# way of working} other {# ways of working}}",
+      "mine": "Yours",
+      "fromAppShort": "Built in",
+      "officeMore": "{count, plural, one {# office skill} other {# office skills}}",
+      "officeNew": "{count} new"
     },
     "office": {
       "thisOffice": "This office",
@@ -1163,9 +1189,13 @@
     "requests": {
       "toOffice": "Set up your office",
       "notInOffice": "Once you're in an office, colleagues' clones can ask yours for things. Here you choose what they can ask, and how much your clone does on its own.",
-      "likeMe": "Like-me score",
-      "likeMeBody": "Of the last {total} answers it showed you first, you sent {asIs} as they were.",
-      "emptyMenu": "Nothing listed yet. Let your clone draft what you usually take, or add one."
+      "emptyMenu": "Nothing listed yet. Let your clone draft what you usually take, or add one.",
+      "levels": "Three levels",
+      "always": "Promises and decisions always come to you, whatever the level.",
+      "meta": "Colleagues' clones read these to ask",
+      "example": "e.g. “{text}”",
+      "likeNone": "Like you · none yet",
+      "startsAt": "New kinds start at"
     },
     "permissions": {
       "folders": "Folders it reads",
@@ -1351,7 +1381,6 @@
       "title": "Your clone",
       "of": "{name}'s clone",
       "hint": "Works the way you do",
-      "likeMe": "like you, last 30 days",
       "views": "Views of your clone",
       "tabs": {
         "memory": "What it knows",
@@ -1382,7 +1411,30 @@
           "unshared": "Took the skill “{name}” out of the office",
           "added": "Added {from}'s skill “{name}”",
           "updated": "Updated {from}'s skill “{name}”"
-        }
+        },
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "quoted": "“{text}”"
+      },
+      "model": "Thinks with {model}",
+      "card": {
+        "open": "Card colleagues see",
+        "title": "Card colleagues see",
+        "hint": "Colleagues and their clones read this card to pick whom to ask. You change it on this screen.",
+        "notJoined": "Once you join an office, colleagues see this.",
+        "you": "Your clone",
+        "owns": "Looks after",
+        "takes": "Requests it takes",
+        "ways": "How to work with me"
+      },
+      "stats": {
+        "likeMe": "Like you",
+        "likeMeHint": "{asIs} of the {total} answers it showed you first went as they were",
+        "likeMeNone": "Counted once it shows you answers first",
+        "alone": "Answered this week",
+        "aloneHint": "{count, plural, =0 {None yet} one {To # colleague} other {To # colleagues}}",
+        "first": "Brought to you",
+        "firstHint": "This week, before anything went"
       }
     },
     "newChat": "New chat",

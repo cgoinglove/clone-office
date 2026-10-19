@@ -1,37 +1,48 @@
 "use client";
 
-// Settings › Your clone: who the person is to their clone (what to call them, what they do), what
-// it remembers about them exactly as kept (each line correctable or removable), its skills and the
-// office's (skills-section.tsx), reading their records again or bringing what their usual AI
-// remembers, and starting over.
+// Your clone › What it knows (10-19 redesign, two columns): who the person is to their clone (what
+// they do, look after and work in, read as their card is and corrected in place), what it remembers
+// about them exactly as kept (each line correctable or removable, with where it came from), and
+// beside them its notes, its skills and the office's (skills-section.tsx), reading their records
+// again or bringing what their usual AI remembers; starting over at the foot.
 
 import {
   BookOpen,
   Check,
+  ChevronRight,
   ClipboardCopy,
   Download,
+  Folder,
+  Globe,
+  Hash,
   Pencil,
+  Plus,
   RotateCcw,
   Trash2,
+  Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
+import { say } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
+import { BrandMark } from "@/features/brand/brand-mark";
+import { markOf } from "@/features/brand/tool-mark";
 import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
 import { useProblem } from "@/i18n/client";
+import { cn } from "@/lib/utils";
 import type { Learn } from "../home/use-learn";
 import { HEADERS, type OfficeState, type Profile } from "../home/use-office";
 import { EXPORT_PROMPT } from "../learn/export-prompt";
 import { ListField } from "../list-field";
 import { PROFILE_LIMITS } from "../profile-limits";
 import { stream } from "../stream";
-import { Empty, Group, Groups, Rows } from "./parts";
+import { Empty, Group } from "./parts";
 import { SkillsSection } from "./skills-section";
 
 /** Where a line came from (memory/store.ts Source), as the route words it. */
@@ -41,12 +52,20 @@ interface Source {
   title?: string;
 }
 
+interface NotePage {
+  path: string;
+  title: string;
+  summary: string;
+  updated: string;
+}
+
 interface Memory {
   user: string[];
   memory: string[];
   sources?: { user: Record<string, Source>; memory: Record<string, Source> };
   skills: number;
   notes: number;
+  pages?: NotePage[];
   dir: string;
 }
 
@@ -67,6 +86,7 @@ export function CloneSection({
 }) {
   const t = useTranslations("settings.clone");
   const problemText = useProblem();
+  const router = useRouter();
   const [memory, setMemory] = useState<Memory | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -133,69 +153,204 @@ export function CloneSection({
   };
 
   return (
-    <Groups>
-      <AboutYou
-        profile={profile}
-        onProfile={onProfile}
-        office={office}
-        lang={lang}
-      />
+    <div className="grid items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
+      <div className="flex min-w-0 flex-col gap-8">
+        <AboutYou
+          profile={profile}
+          onProfile={onProfile}
+          office={office}
+          lang={lang}
+        />
 
-      <Group
-        title={t("remembers")}
-        hint={t("remembersHint")}
-        action={
-          memory && (
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {t("lines", { count: shown.length })}
-            </span>
-          )
-        }
-      >
-        {!memory ? (
-          <ShinyText className="text-sm" text={t("loading")} />
-        ) : shown.length === 0 ? (
-          <Empty icon={<BookOpen className="size-5" />}>
-            {t("nothingYet")}
-          </Empty>
-        ) : (
-          <Rows>
-            {shown.map((entry, index) => (
-              <MemoryRow
-                key={keyOf(entry)}
-                index={index}
-                entry={entry}
-                source={memory.sources?.[entry.target]?.[entry.text]}
-                fresh={learn.kept.includes(entry.text)}
-                onFix={(fixed) => fix(entry, fixed)}
-                onRemove={() =>
-                  removal.remove(keyOf(entry), words("memory.removed"), {
-                    commit: () => remove(entry),
-                  })
+        <section className="flex flex-col gap-2.5">
+          <Head
+            title={t("remembers")}
+            meta={
+              memory ? t("remembersMeta", { count: shown.length }) : undefined
+            }
+            action={
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  router.push(
+                    `/chat?say=${encodeURIComponent(t("teachStarter"))}`,
+                  )
                 }
-              />
-            ))}
-          </Rows>
-        )}
+              >
+                <Plus />
+                {t("add")}
+              </Button>
+            }
+          />
+          {!memory ? (
+            <ShinyText className="text-sm" text={t("loading")} />
+          ) : shown.length === 0 ? (
+            <Empty icon={<BookOpen className="size-5" />}>
+              {t("nothingYet")}
+            </Empty>
+          ) : (
+            <ul className="-mx-3 flex flex-col gap-0.5">
+              {shown.map((entry) => (
+                <MemoryRow
+                  key={keyOf(entry)}
+                  entry={entry}
+                  source={memory.sources?.[entry.target]?.[entry.text]}
+                  fresh={learn.kept.includes(entry.text)}
+                  onFix={(fixed) => fix(entry, fixed)}
+                  onRemove={() =>
+                    removal.remove(keyOf(entry), words("memory.removed"), {
+                      commit: () => remove(entry),
+                    })
+                  }
+                />
+              ))}
+            </ul>
+          )}
+          {problem && (
+            <p className="text-destructive">{problemText(problem)}</p>
+          )}
+        </section>
+
+        <StartOver />
+      </div>
+
+      <aside className="flex min-w-0 flex-col gap-3.5">
+        <NotesCard pages={memory?.pages} />
+        <SkillsSection compact />
+        <div className="flex flex-col gap-3 rounded-[14px] bg-foreground/[0.035] p-4">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="text-[14px] font-semibold">{t("learnMore")}</h3>
+            <p className="text-[13px] leading-relaxed text-muted-foreground">
+              {t("learnMoreHint")}
+            </p>
+          </div>
+          <ReadAgain learn={learn} />
+          <BringFromAnotherAi
+            lang={lang}
+            frame="plain"
+            onDone={() => void loadMemory()}
+          />
+        </div>
         {memory && (
-          <p className="text-xs text-muted-foreground">
+          <p className="px-1 text-xs leading-relaxed text-muted-foreground">
             {t("where", { dir: memory.dir })}
-            {memory.skills + memory.notes > 0 &&
-              ` ${t("andMore", { skills: memory.skills, notes: memory.notes })}`}
           </p>
         )}
-        {problem && <p className="text-destructive">{problemText(problem)}</p>}
-      </Group>
+      </aside>
+    </div>
+  );
+}
 
-      <SkillsSection />
+/** A part's heading on the clone's screen: its name, a dim line beside it, a quiet action at the end. */
+function Head({
+  title,
+  meta,
+  action,
+}: {
+  title: string;
+  meta?: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex min-h-8 items-center gap-2.5">
+      <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
+      {meta && (
+        <span className="truncate text-[13px] text-muted-foreground">
+          {meta}
+        </span>
+      )}
+      {action && <div className="ml-auto shrink-0">{action}</div>}
+    </div>
+  );
+}
 
-      <Group title={t("learnMore")} hint={t("learnMoreHint")}>
-        <ReadAgain learn={learn} />
-        <BringFromAnotherAi lang={lang} onDone={() => void loadMemory()} />
-      </Group>
+const NOTE_KINDS = ["people", "projects", "topics"] as const;
+/** The page of where the work lives (memory/notes.ts `WORK_MAP`), named apart from the topics. */
+const WORK_MAP = "topics/where-work-lives";
 
-      <StartOver />
-    </Groups>
+/**
+ * The clone's note pages, by kind: a row each with how many, opening the names and what each is
+ * about. The map of where the work lives is a row of its own.
+ */
+function NotesCard({ pages }: { pages?: NotePage[] }) {
+  const t = useTranslations("settings.clone.notes");
+  const [open, setOpen] = useState<string | null>(null);
+  if (!pages) return null;
+  const map = pages.find((page) => page.path === WORK_MAP);
+  const groups = [
+    ...NOTE_KINDS.map((kind) => ({
+      key: kind as string,
+      icon: kind === "people" ? Users : kind === "projects" ? Folder : Hash,
+      list: pages.filter(
+        (page) => page.path.startsWith(`${kind}/`) && page !== map,
+      ),
+    })),
+    ...(map ? [{ key: "map", icon: Globe, list: [map] }] : []),
+  ].filter((group) => group.list.length > 0);
+  return (
+    <section className="flex flex-col rounded-[14px] bg-background px-4 py-3.5 shadow-[0_0_0_1px_var(--alpha-10)]">
+      <div className="mb-1 flex items-baseline gap-2">
+        <h3 className="flex-1 text-[14px] font-semibold">{t("title")}</h3>
+        <span className="text-xs text-muted-foreground">{t("hint")}</span>
+      </div>
+      {groups.length === 0 ? (
+        <p className="py-1 text-[13px] text-muted-foreground">{t("none")}</p>
+      ) : (
+        <ul className="-mx-2 flex flex-col">
+          {groups.map(({ key, icon: Icon, list }) => {
+            const shown = open === key;
+            return (
+              <li key={key} className="flex flex-col">
+                <button
+                  type="button"
+                  aria-expanded={shown}
+                  onClick={() => setOpen(shown ? null : key)}
+                  className="flex h-9 items-center gap-2.5 rounded-lg px-2 text-left outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Icon className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="flex-1 text-[13.5px]">
+                    {t(key as never)}
+                  </span>
+                  {key !== "map" && (
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {list.length}
+                    </span>
+                  )}
+                  <ChevronRight
+                    className={cn(
+                      "size-3.5 shrink-0 text-muted-foreground/70 transition-transform",
+                      shown && "rotate-90",
+                    )}
+                  />
+                </button>
+                {shown && (
+                  <ul className="mb-1 ml-8 flex flex-col gap-1.5 py-1 pr-2">
+                    {list.slice(0, 20).map((page) => (
+                      <li key={page.path} className="flex flex-col">
+                        <span className="text-[13px] font-medium">
+                          {page.title}
+                        </span>
+                        {page.summary && (
+                          <span className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                            {page.summary}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                    {list.length > 20 && (
+                      <li className="text-xs text-muted-foreground">
+                        {t("more", { count: list.length - 20 })}
+                      </li>
+                    )}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
 
@@ -213,6 +368,7 @@ function AboutYou({
 }) {
   const t = useTranslations("settings.clone");
   const tOffice = useTranslations("office");
+  const common = useTranslations("common");
   const card = office.office?.joined ? office.office.me?.card : undefined;
   const [name, setName] = useState(card?.name ?? profile.name ?? "");
   const [role, setRole] = useState(card?.description || profile.role || "");
@@ -223,9 +379,11 @@ function AboutYou({
   const toolsKey = JSON.stringify(toolsNow);
   const [owns, setOwns] = useState<string[]>(ownsNow);
   const [tools, setTools] = useState<string[]>(toolsNow);
-  const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [drafting, setDrafting] = useState(false);
+  // read as the card is; corrected in place (nothing written yet opens it to write)
+  const empty = !role.trim() && owns.length === 0 && tools.length === 0;
+  const [editing, setEditing] = useState(false);
   useEffect(() => {
     setName(card?.name ?? profile.name ?? "");
     setRole(card?.description || profile.role || "");
@@ -291,93 +449,158 @@ function AboutYou({
             owns,
           },
         });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setEditing(false);
+      say(t("saved"));
     } finally {
       setBusy(false);
     }
   };
 
+  const pills = (items: string[], marks = false) => (
+    <span className="flex min-w-0 flex-wrap gap-1.5">
+      {items.map((item) => {
+        const mark = marks ? markOf(item) : undefined;
+        return (
+          <span
+            key={item}
+            className="inline-flex h-7 items-center gap-1.5 rounded-lg bg-muted px-2.5 text-[13px]"
+          >
+            {mark && <BrandMark id={mark} className="size-3.5" />}
+            {item}
+          </span>
+        );
+      })}
+    </span>
+  );
+  const line = (label: string, value: ReactNode) => (
+    <div className="flex items-baseline gap-3.5">
+      <span className="w-20 shrink-0 text-[13px] text-muted-foreground">
+        {label}
+      </span>
+      {value}
+    </div>
+  );
   return (
-    <Group title={t("about")} hint={card ? t("aboutInOffice") : t("aboutHint")}>
-      <form
-        className="grid gap-3 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void save();
-        }}
-      >
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted-foreground">
-            {tOffice("name")}
-          </span>
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            maxLength={80}
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs text-muted-foreground">
-            {tOffice("role")}
-          </span>
-          <div className="flex gap-2">
-            <Input
-              value={role}
-              maxLength={200}
-              className="min-w-0 flex-1"
-              placeholder={
-                drafting ? tOffice("drafting") : tOffice("rolePlaceholder")
-              }
-              disabled={drafting}
-              onChange={(e) => setRole(e.target.value)}
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={drafting}
-              loading={drafting}
-              onClick={() => void draft()}
-            >
-              {!drafting && <Pencil />}
-              {tOffice("draft")}
-            </Button>
-          </div>
-        </label>
-        <label className="flex flex-col gap-1.5 sm:col-span-2">
-          <span className="text-xs text-muted-foreground">
-            {tOffice("owns")}
-          </span>
-          <ListField
-            values={owns}
-            onChange={setOwns}
-            max={PROFILE_LIMITS.owns}
-            maxItem={PROFILE_LIMITS.own}
-            placeholder={tOffice("ownsPlaceholder")}
-            disabled={drafting}
-          />
-        </label>
-        <label className="flex flex-col gap-1.5 sm:col-span-2">
-          <span className="text-xs text-muted-foreground">
-            {tOffice("tools")}
-          </span>
-          <ListField
-            values={tools}
-            onChange={setTools}
-            max={PROFILE_LIMITS.tools}
-            maxItem={PROFILE_LIMITS.tool}
-            placeholder={tOffice("toolsPlaceholder")}
-            disabled={drafting}
-          />
-        </label>
-        <div className="flex items-center gap-2 sm:col-span-2">
-          <Button type="submit" disabled={busy || !changed} loading={busy}>
-            {saved ? <Check /> : null}
-            {saved ? t("saved") : t("save")}
+    <section className="flex flex-col gap-2.5">
+      <div className="flex min-h-8 items-center gap-2.5">
+        <h2 className="text-[15px] font-semibold tracking-tight">
+          {t("about")}
+        </h2>
+        {!(editing || empty) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            onClick={() => setEditing(true)}
+          >
+            <Pencil />
+            {t("edit")}
           </Button>
+        )}
+      </div>
+      {editing || empty ? (
+        <form
+          className="grid gap-3 rounded-[14px] bg-background p-4 shadow-[0_0_0_1px_var(--alpha-10)] sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void save();
+          }}
+        >
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted-foreground">
+              {tOffice("name")}
+            </span>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={80}
+            />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs text-muted-foreground">
+              {tOffice("role")}
+            </span>
+            <div className="flex gap-2">
+              <Input
+                value={role}
+                maxLength={200}
+                className="min-w-0 flex-1"
+                placeholder={
+                  drafting ? tOffice("drafting") : tOffice("rolePlaceholder")
+                }
+                disabled={drafting}
+                onChange={(e) => setRole(e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                disabled={drafting}
+                loading={drafting}
+                onClick={() => void draft()}
+              >
+                {!drafting && <Pencil />}
+                {tOffice("draft")}
+              </Button>
+            </div>
+          </label>
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-xs text-muted-foreground">
+              {tOffice("owns")}
+            </span>
+            <ListField
+              values={owns}
+              onChange={setOwns}
+              max={PROFILE_LIMITS.owns}
+              maxItem={PROFILE_LIMITS.own}
+              placeholder={tOffice("ownsPlaceholder")}
+              disabled={drafting}
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-xs text-muted-foreground">
+              {tOffice("tools")}
+            </span>
+            <ListField
+              values={tools}
+              onChange={setTools}
+              max={PROFILE_LIMITS.tools}
+              maxItem={PROFILE_LIMITS.tool}
+              placeholder={tOffice("toolsPlaceholder")}
+              disabled={drafting}
+            />
+          </label>
+          <div className="flex items-center gap-2 sm:col-span-2">
+            <Button type="submit" disabled={busy || !changed} loading={busy}>
+              {t("save")}
+            </Button>
+            {!empty && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setName(card?.name ?? profile.name ?? "");
+                  setRole(card?.description || profile.role || "");
+                  setOwns(JSON.parse(ownsKey));
+                  setTools(JSON.parse(toolsKey));
+                  setEditing(false);
+                }}
+              >
+                {common("cancel")}
+              </Button>
+            )}
+          </div>
+        </form>
+      ) : (
+        <div className="flex flex-col gap-2.5 rounded-[14px] bg-background px-4.5 py-4 shadow-[0_0_0_1px_var(--alpha-10)]">
+          {line(tOffice("role"), <span className="text-[14px]">{role}</span>)}
+          {owns.length > 0 && line(tOffice("owns"), pills(owns))}
+          {tools.length > 0 && line(tOffice("tools"), pills(tools, true))}
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {card ? t("aboutInOffice") : t("aboutHint")}
+          </p>
         </div>
-      </form>
-    </Group>
+      )}
+    </section>
   );
 }
 
@@ -394,9 +617,9 @@ function ReadAgain({ learn }: { learn: Learn }) {
       : tRun(`phase.${learn.progress.phase}`)
     : "";
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted">
+        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-background">
           <RotateCcw className="size-4" />
         </span>
         <span className="min-w-0 flex-1">
@@ -459,9 +682,12 @@ function ReadAgain({ learn }: { learn: Learn }) {
 export function BringFromAnotherAi({
   lang,
   onDone,
+  frame = "box",
 }: {
   lang: string;
   onDone: () => void;
+  /** Its own framed box (the first steps), or plain inside what holds it (the clone's screen). */
+  frame?: "box" | "plain";
 }) {
   const t = useTranslations();
   const tClone = useTranslations("settings.clone");
@@ -494,9 +720,19 @@ export function BringFromAnotherAi({
   };
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
+    <div
+      className={cn(
+        "flex flex-col gap-3",
+        frame === "box" && "rounded-xl border border-border p-4",
+      )}
+    >
       <div className="flex flex-wrap items-center gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-muted">
+        <span
+          className={cn(
+            "grid size-9 shrink-0 place-items-center rounded-lg",
+            frame === "box" ? "bg-muted" : "bg-background",
+          )}
+        >
           <Download className="size-4" />
         </span>
         <span className="min-w-0 flex-1">
@@ -606,14 +842,12 @@ function SourceLine({ source }: { source: Source }) {
 }
 
 function MemoryRow({
-  index,
   entry,
   source,
   fresh,
   onFix,
   onRemove,
 }: {
-  index: number;
   entry: Entry;
   source?: Source;
   fresh: boolean;
@@ -625,13 +859,10 @@ function MemoryRow({
   const [text, setText] = useState(entry.text);
   const t = useTranslations();
   return (
-    <li className="group flex flex-col gap-2 px-3.5 py-3">
+    <li className="group flex flex-col gap-2 rounded-[10px] px-3 py-2.5 transition-colors hover:bg-foreground/[0.035] focus-within:bg-foreground/[0.035]">
       <div className="flex items-start gap-3">
-        <span className="mt-px w-4 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-          {index + 1}
-        </span>
-        <span className="min-w-0 flex-1 leading-relaxed">
-          {entry.text}
+        <span className="min-w-0 flex-1">
+          <span className="text-[14px] leading-relaxed">{entry.text}</span>
           {fresh && (
             <span className="ml-2 inline-block rounded-md bg-brand/10 px-1.5 py-0.5 align-middle text-[11px] font-medium whitespace-nowrap text-brand">
               {t("memory.isNew")}
@@ -640,7 +871,8 @@ function MemoryRow({
           {source && <SourceLine source={source} />}
         </span>
         {state === "open" && (
-          <span className="flex shrink-0 gap-0.5 opacity-60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          // shown while pointed at or reached by the keyboard; always where nothing points
+          <span className="flex shrink-0 gap-0.5 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100">
             <Tip label={t("memory.fix")}>
               <Button
                 size="icon-sm"
@@ -664,7 +896,7 @@ function MemoryRow({
         )}
       </div>
       {state === "fixing" && (
-        <span className="ml-7 flex flex-col gap-2">
+        <span className="flex flex-col gap-2">
           <Textarea
             autoFocus
             value={text}

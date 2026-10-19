@@ -1,11 +1,11 @@
 "use client";
 
-// Settings › Requests: what colleagues' clones may ask the person's clone, each kind with how much
-// it does alone (on its own, then tell them, or ask them first), how often its answers were sent as
-// they were, and how to work with them (their ME.md): the lines colleagues and their clones read on
-// their card.
+// Your clone › Requests it takes (10-19 redesign): what colleagues' clones may ask the person's
+// clone, each kind a card with how much it does alone (on its own, then tell them, or ask them
+// first) and how often its answers were sent as they were; beside them the three levels said once,
+// and how to work with them (their ME.md): the lines colleagues and their clones read on their card.
 
-import { Building2, Inbox, Pencil, PenLine, Plus, X } from "lucide-react";
+import { Building2, Inbox, PenLine, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,8 @@ import {
   type Trust,
 } from "../home/use-office";
 import type { LikeMe } from "../office/likeme";
-import { Empty, Group, Groups, Rows } from "./parts";
+import type { Preferences } from "../server/preferences";
+import { Empty } from "./parts";
 
 const TRUSTS: Trust[] = ["auto", "tell", "ask"];
 
@@ -31,13 +32,15 @@ const stricter = (a: Trust | undefined, b: Trust): Trust =>
 export function RequestsSection({
   lang,
   office,
-  defaultTrust,
+  preferences,
+  onPreferences,
   onOpenOffice,
 }: {
   lang: string;
   office: OfficeState;
-  /** Where a kind added here starts (Settings › Preferences). */
-  defaultTrust: Trust;
+  /** Where a kind added here starts (`defaultTrust`), picked at the foot of the list. */
+  preferences: Preferences | null;
+  onPreferences: (next: Partial<Preferences>) => Promise<boolean>;
   onOpenOffice: () => void;
 }) {
   const t = useTranslations("settings.requests");
@@ -54,26 +57,56 @@ export function RequestsSection({
     );
   const card = data.me?.card;
   return (
-    <Groups>
+    <div className="grid items-start gap-x-9 gap-y-8 text-sm lg:grid-cols-[minmax(0,1fr)_21.5rem]">
       <Menu
         menu={data.menu ?? []}
         likeMe={data.likeMe}
         lang={lang}
         busy={office.busy}
-        defaultTrust={defaultTrust}
+        defaultTrust={preferences?.defaultTrust ?? "tell"}
+        onDefaultTrust={(defaultTrust) => void onPreferences({ defaultTrust })}
         onSave={(menu) => office.post({ action: "menu", menu })}
       />
-      {card && (
-        <Ways
-          lines={card.howToWork ?? []}
-          lang={lang}
-          busy={office.busy}
-          onSave={(howToWork) =>
-            office.post({ action: "card", card: { ...card, howToWork } })
-          }
-        />
-      )}
-    </Groups>
+      <aside className="flex min-w-0 flex-col gap-3.5">
+        <Levels />
+        {card && (
+          <Ways
+            lines={card.howToWork ?? []}
+            lang={lang}
+            busy={office.busy}
+            onSave={(howToWork) =>
+              office.post({ action: "card", card: { ...card, howToWork } })
+            }
+          />
+        )}
+      </aside>
+    </div>
+  );
+}
+
+/** The three levels, said once beside the kinds rather than under every one. */
+function Levels() {
+  const t = useTranslations("office.menu");
+  const tS = useTranslations("settings.requests");
+  return (
+    <section className="flex flex-col gap-2.5 rounded-[14px] bg-foreground/[0.035] p-4">
+      <h3 className="text-[14px] font-semibold">{tS("levels")}</h3>
+      <dl className="flex flex-col gap-2">
+        {TRUSTS.map((trust) => (
+          <div key={trust} className="flex items-baseline gap-2.5">
+            <dt className="w-[4.5rem] shrink-0 text-[13px] font-semibold">
+              {t(`trust.${trust}`)}
+            </dt>
+            <dd className="text-[13px] leading-relaxed text-muted-foreground">
+              {t(`trustHint.${trust}`)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        {tS("always")}
+      </p>
+    </section>
   );
 }
 
@@ -87,6 +120,7 @@ function Menu({
   lang,
   busy,
   defaultTrust,
+  onDefaultTrust,
   onSave,
 }: {
   menu: MenuItem[];
@@ -94,6 +128,7 @@ function Menu({
   lang: string;
   busy: boolean;
   defaultTrust: Trust;
+  onDefaultTrust: (trust: Trust) => void;
   onSave: (menu: MenuItem[]) => Promise<boolean>;
 }) {
   const t = useTranslations("office");
@@ -136,20 +171,17 @@ function Menu({
     }
   };
 
-  const percent =
-    likeMe && likeMe.total >= 5
-      ? Math.round((100 * likeMe.asIs) / likeMe.total)
-      : null;
-
   return (
-    <Group
-      title={t("menu.title")}
-      hint={menu.length ? t("menu.intro") : t("menu.none")}
-      action={
-        <div className="flex gap-1.5">
+    <section className="flex min-w-0 flex-col gap-2.5">
+      <div className="flex min-h-8 flex-wrap items-center gap-x-2.5 gap-y-1">
+        <h2 className="text-[15px] font-semibold tracking-tight">
+          {t("menu.title")}
+        </h2>
+        <span className="text-[13px] text-muted-foreground">{tS("meta")}</span>
+        <div className="ml-auto flex gap-1">
           <Button
             size="sm"
-            variant="secondary"
+            variant="ghost"
             disabled={drafting || busy}
             loading={drafting}
             onClick={() => void draft()}
@@ -164,87 +196,102 @@ function Menu({
             </Button>
           )}
         </div>
-      }
-    >
-      {likeMe && likeMe.total > 0 && (
-        <div className="flex items-center gap-4 rounded-xl border border-border px-4 py-3">
-          <span className="text-2xl font-semibold tabular-nums">
-            {percent !== null
-              ? `${percent}%`
-              : `${likeMe.asIs}/${likeMe.total}`}
-          </span>
-          <span className="min-w-0 text-[13px] leading-relaxed text-muted-foreground">
-            <span className="block font-medium text-foreground">
-              {tS("likeMe")}
-            </span>
-            {percent !== null
-              ? tS("likeMeBody", { asIs: likeMe.asIs, total: likeMe.total })
-              : t("menu.likeMeFew", { asIs: likeMe.asIs, total: likeMe.total })}
-          </span>
-        </div>
-      )}
+      </div>
       {menu.length === 0 && !adding ? (
         <Empty icon={<Inbox className="size-5" />}>{tS("emptyMenu")}</Empty>
       ) : (
         menu.length > 0 && (
-          <Rows>
-            {menu.map((item, index) => (
-              <li
-                key={item.id ?? item.name}
-                className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3.5 py-3"
-              >
-                <span className="min-w-0 flex-1 basis-48">
-                  <span className="font-medium">{item.name}</span>
-                  {item.description && (
-                    <span className="block text-xs leading-relaxed text-muted-foreground">
-                      {item.description}
+          <ul className="flex flex-col gap-2.5">
+            {menu.map((item, index) => {
+              const like = item.id ? likeMe?.byMenu[item.id] : undefined;
+              const example = item.examples?.[0];
+              return (
+                <li
+                  key={item.id ?? item.name}
+                  className="flex flex-col gap-3 rounded-[14px] bg-background px-4.5 py-4 shadow-[0_0_0_1px_var(--alpha-10)] sm:flex-row sm:items-start"
+                >
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="text-[14.5px] font-semibold">
+                      {item.name}
                     </span>
-                  )}
-                  {item.id && likeMe?.byMenu[item.id] && (
-                    <span className="block text-xs text-muted-foreground tabular-nums">
-                      {t("menu.itemLikeMe", likeMe.byMenu[item.id])}
+                    {item.description && (
+                      <span className="text-[13px] leading-relaxed text-muted-foreground">
+                        {item.description}
+                      </span>
+                    )}
+                    {example && (
+                      <span className="mt-1 text-xs text-muted-foreground">
+                        {tS("example", { text: example })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                    <div className="flex items-center gap-1">
+                      <Segmented<Trust>
+                        size="sm"
+                        aria-label={item.name}
+                        options={TRUSTS.map((trust) => ({
+                          value: trust,
+                          label: t(`menu.trust.${trust}`),
+                          title: t(`menu.trustHint.${trust}`),
+                        }))}
+                        value={item.trust}
+                        onChange={(trust) =>
+                          void onSave(
+                            menu.map((m, i) =>
+                              i === index ? { ...m, trust } : m,
+                            ),
+                          )
+                        }
+                      />
+                      <Tip label={t("menu.remove")}>
+                        <Button
+                          size="icon-sm"
+                          variant="ghost"
+                          className="text-muted-foreground"
+                          disabled={busy}
+                          onClick={() =>
+                            void onSave(menu.filter((_, i) => i !== index))
+                          }
+                        >
+                          <X />
+                        </Button>
+                      </Tip>
+                    </div>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {like ? t("menu.itemLikeMe", like) : tS("likeNone")}
                     </span>
-                  )}
-                </span>
-                <Segmented<Trust>
-                  size="sm"
-                  aria-label={item.name}
-                  options={TRUSTS.map((trust) => ({
-                    value: trust,
-                    label: t(`menu.trust.${trust}`),
-                    title: t(`menu.trustHint.${trust}`),
-                  }))}
-                  value={item.trust}
-                  onChange={(trust) =>
-                    void onSave(
-                      menu.map((m, i) => (i === index ? { ...m, trust } : m)),
-                    )
-                  }
-                />
-                <Tip label={t("menu.remove")}>
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    className="text-muted-foreground"
-                    disabled={busy}
-                    onClick={() =>
-                      void onSave(menu.filter((_, i) => i !== index))
-                    }
-                  >
-                    <X />
-                  </Button>
-                </Tip>
-              </li>
-            ))}
-          </Rows>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )
       )}
-      {menu.length > 0 && (
-        <p className="text-xs text-muted-foreground">{t("menu.free")}</p>
-      )}
+      <div className="flex flex-col gap-2 px-0.5 pt-1">
+        {menu.length > 0 && (
+          <p className="text-[13px] text-muted-foreground">{t("menu.free")}</p>
+        )}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="text-[13px] text-muted-foreground">
+            {tS("startsAt")}
+          </span>
+          <Segmented<Trust>
+            size="sm"
+            aria-label={tS("startsAt")}
+            options={TRUSTS.map((trust) => ({
+              value: trust,
+              label: t(`menu.trust.${trust}`),
+              title: t(`menu.trustHint.${trust}`),
+            }))}
+            value={defaultTrust}
+            onChange={onDefaultTrust}
+          />
+        </div>
+      </div>
       {adding && (
         <form
-          className="flex flex-col gap-3 rounded-xl border border-border p-4"
+          className="flex flex-col gap-3 rounded-[14px] bg-background p-4 shadow-[0_0_0_1px_var(--alpha-10)]"
           onSubmit={(event) => {
             event.preventDefault();
             void onSave([
@@ -294,7 +341,7 @@ function Menu({
         </form>
       )}
       {problem && <p className="text-destructive">{problemText(problem)}</p>}
-    </Group>
+    </section>
   );
 }
 
@@ -352,32 +399,39 @@ function Ways({
   };
 
   return (
-    <Group
-      title={t("ways.title")}
-      hint={t("ways.none")}
-      action={
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={drafting || busy}
-          loading={drafting}
-          onClick={() => void draft()}
-        >
-          {!drafting && <Pencil />}
-          {drafting ? t("drafting") : t("draft")}
-        </Button>
-      }
-    >
-      {mine.length > 0 && (
-        <Rows>
+    <section className="flex flex-col gap-2.5 rounded-[14px] bg-background px-4 py-3.5 shadow-[0_0_0_1px_var(--alpha-10)]">
+      <div className="flex items-center gap-2">
+        <h3 className="flex-1 text-[14px] font-semibold">{t("ways.short")}</h3>
+        <span className="text-xs text-muted-foreground">ME.md</span>
+        <Tip label={t("draft")}>
+          <Button
+            size="icon-sm"
+            variant="ghost"
+            className="-mr-1.5 text-muted-foreground"
+            disabled={drafting || busy}
+            loading={drafting}
+            onClick={() => void draft()}
+          >
+            {!drafting && <PenLine />}
+          </Button>
+        </Tip>
+      </div>
+      {mine.length > 0 ? (
+        <ul className="-mx-2 flex flex-col">
           {mine.map((line) => (
-            <li key={line} className="flex items-start gap-3 px-3.5 py-2.5">
-              <span className="min-w-0 flex-1 leading-relaxed">{line}</span>
+            <li
+              key={line}
+              className="group flex items-start gap-2 rounded-lg px-2 py-1.5 hover:bg-foreground/[0.035]"
+            >
+              <span className="mt-[0.55rem] size-1 shrink-0 rounded-full bg-foreground/60" />
+              <span className="min-w-0 flex-1 text-[13.5px] leading-relaxed">
+                {line}
+              </span>
               <Tip label={t("menu.remove")}>
                 <Button
-                  size="icon-sm"
+                  size="icon-xs"
                   variant="ghost"
-                  className="shrink-0 text-muted-foreground"
+                  className="shrink-0 text-muted-foreground [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
                   disabled={busy}
                   onClick={() => save(mine.filter((l) => l !== line))}
                 >
@@ -386,17 +440,23 @@ function Ways({
               </Tip>
             </li>
           ))}
-        </Rows>
+        </ul>
+      ) : (
+        drafted.length === 0 && (
+          <p className="text-[13px] leading-relaxed text-muted-foreground">
+            {t("ways.none")}
+          </p>
+        )
       )}
       {drafted.length > 0 && (
-        <div className="flex flex-col gap-2 rounded-xl border border-dashed border-border p-3.5">
+        <div className="flex flex-col gap-2 rounded-lg bg-foreground/[0.035] p-3">
           <span className="text-xs text-muted-foreground">
             {t("ways.drafted")}
           </span>
           {drafted.map((line) => (
-            <div key={line} className="flex items-start gap-2">
-              <span className="min-w-0 flex-1 leading-relaxed">{line}</span>
-              <span className="flex shrink-0 gap-1">
+            <div key={line} className="flex flex-col gap-1.5">
+              <span className="text-[13px] leading-relaxed">{line}</span>
+              <span className="flex gap-1">
                 <Button
                   size="xs"
                   variant="secondary"
@@ -424,7 +484,7 @@ function Ways({
         </div>
       )}
       <form
-        className="flex gap-2"
+        className="flex gap-1.5"
         onSubmit={(event) => {
           event.preventDefault();
           const line = typed.trim();
@@ -437,18 +497,23 @@ function Ways({
           value={typed}
           placeholder={t("ways.placeholder")}
           aria-label={t("ways.placeholder")}
+          className="h-8 text-[13px]"
           onChange={(event) => setTyped(event.target.value)}
         />
-        <Button
-          variant="secondary"
-          type="submit"
-          disabled={busy || !typed.trim()}
-        >
-          <Plus />
-          {t("ways.add")}
-        </Button>
+        <Tip label={t("ways.add")}>
+          <Button
+            size="icon-sm"
+            variant="secondary"
+            type="submit"
+            className="size-8"
+            disabled={busy || !typed.trim()}
+          >
+            <Plus />
+          </Button>
+        </Tip>
       </form>
+      <p className="text-xs text-muted-foreground">{t("ways.onCard")}</p>
       {problem && <p className="text-destructive">{problemText(problem)}</p>}
-    </Group>
+    </section>
   );
 }
