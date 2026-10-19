@@ -354,7 +354,7 @@ function Ways({
   return (
     <Group
       title={t("ways.title")}
-      hint={t("ways.none")}
+      hint={mine.length ? undefined : t("ways.none")}
       action={
         <Button
           size="sm"
