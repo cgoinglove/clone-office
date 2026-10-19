@@ -2495,8 +2495,8 @@ export function requestsPage(input: {
       }${
         input.web && one.state === "waiting"
           ? `<form method="post" action="/home/requests/answer">${officeField}<input type="hidden" name="task" value="${escape(one.id)}">
-<label for="answer-${escape(one.id)}">${say(lang, "answerLabel")}</label>
-<textarea id="answer-${escape(one.id)}" name="text" required maxlength="8000" rows="2"></textarea>
+<label for="answer-${escape(one.id)}" class="visually-hidden">${say(lang, "answerLabel")}</label>
+<textarea id="answer-${escape(one.id)}" name="text" required maxlength="8000" rows="2" placeholder="${say(lang, "answerLabel")}"></textarea>
 <button type="submit" class="quiet">${say(lang, "answerSend")}</button>
 </form>`
           : ""

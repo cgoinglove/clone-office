@@ -95,9 +95,10 @@ export function TurnRows({
   // The answers chosen and waiting out their Undo, by row: the row shows the choice meanwhile.
   const sending = useUndoableRemoval(undo);
   const [chosen, setChosen] = useState<Record<string, string>>({});
-  // the card whose question is being answered in the person's own words, and what they wrote
+  // the card whose question is being answered in the person's own words, and what they wrote on
+  // each card (kept when another is opened, and given back when an answer written is undone)
   const [writing, setWriting] = useState<string | null>(null);
-  const [own, setOwn] = useState("");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const keys = turns.map((item) => item.key).join("|");
   const movedAt = useRef(0);
   useEffect(() => {
@@ -145,8 +146,14 @@ export function TurnRows({
               })
             : t("sentToClone", { choice: clip(choice, ANSWER_CHARS) });
         const question = `q-${item.key}`;
-        const choose = (option: { reply: string; label: string }) => {
-          if (performance.now() - movedAt.current < SETTLE_MS) return;
+        /** Takes an answer, unless it landed just as the cards moved; says which. */
+        const choose = (option: {
+          reply: string;
+          label: string;
+          /** Written in the person's own words, rather than a choice tapped. */
+          written?: boolean;
+        }): boolean => {
+          if (performance.now() - movedAt.current < SETTLE_MS) return false;
           // nor is a second tap (or Enter) just after, now on the next question
           movedAt.current = performance.now();
           setChosen((all) => ({ ...all, [item.key]: option.label }));
@@ -186,13 +193,20 @@ export function TurnRows({
             undo: () => {
               app.markAnswering(item.key, false);
               app.announce(t("undone"));
-              // back on the choice it was, when the keyboard was on this row's Undo
+              // words written come back in their box, open; a choice is where it was
+              if (option.written) {
+                setDrafts((all) => ({ ...all, [item.key]: option.label }));
+                setWriting(item.key);
+              }
+              // back on what was chosen, when the keyboard was on this row's Undo
               const row = rowOf(item.key);
               if (row?.contains(document.activeElement))
                 requestAnimationFrame(() =>
                   rowOf(item.key)
                     ?.querySelector<HTMLElement>(
-                      `[data-choice="${CSS.escape(option.reply)}"]`,
+                      option.written
+                        ? "[data-own]"
+                        : `[data-choice="${CSS.escape(option.reply)}"]`,
                     )
                     ?.focus(),
                 );
@@ -202,7 +216,9 @@ export function TurnRows({
           requestAnimationFrame(() =>
             rowOf(item.key)?.querySelector<HTMLElement>("[data-undo]")?.focus(),
           );
+          return true;
         };
+        const own = drafts[item.key] ?? "";
         const ago = item.since
           ? format.relativeTime(
               Math.min(Date.parse(item.since), now.getTime()),
@@ -340,10 +356,7 @@ export function TurnRows({
                         "rounded-[10px] px-2.5 text-muted-foreground max-sm:w-full",
                         small ? "h-8 text-[13px]" : "h-9 text-[13.5px]",
                       )}
-                      onClick={() => {
-                        setWriting(item.key);
-                        setOwn("");
-                      }}
+                      onClick={() => setWriting(item.key)}
                     >
                       <PenLine />
                       {t("ownAnswer")}
@@ -357,18 +370,25 @@ export function TurnRows({
                         event.preventDefault();
                         const words = own.trim();
                         if (!words) return;
-                        setWriting(null);
-                        choose({ reply: words, label: words });
+                        // landed as the cards moved: the box and its words stay for another press
+                        if (
+                          choose({ reply: words, label: words, written: true })
+                        )
+                          setWriting(null);
                       }}
                     >
                       <Textarea
                         autoFocus
+                        data-own
                         value={own}
                         rows={1}
                         maxLength={4000}
                         aria-label={t("ownAnswerLabel")}
                         placeholder={t("ownAnswerPlaceholder")}
-                        onChange={(event) => setOwn(event.target.value)}
+                        onChange={(event) => {
+                          const text = event.target.value;
+                          setDrafts((all) => ({ ...all, [item.key]: text }));
+                        }}
                         onKeyDown={(event) => {
                           if (event.nativeEvent.isComposing) return;
                           if (event.key === "Escape") {

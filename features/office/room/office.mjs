@@ -1394,13 +1394,15 @@ export function createOffice(
     // a phone; a narrow pane beside the page's own panel keeps clear of it as a wide one does
     if (narrow() && !insetR)
       return fitRect(bounds, { t: 48, b: onAsk ? 140 : 70, l: 10, r: 10 });
+    // a person's panel open at the right: the floor is framed in what is left beside it
+    const open = panelShown && !narrow() ? panel.offsetWidth + 16 : 0;
     const ins = {
       t: 44,
       b: narrow() && onAsk ? 140 : 84,
       l: 16 + insetL,
-      r: 16 + insetR,
+      r: 16 + Math.max(insetR, open),
     };
-    if (!insetR || !insetH) return fitRect(bounds, ins);
+    if (open || !insetR || !insetH) return fitRect(bounds, ins);
     // A panel at the right that ends partway down covers only the empty corner above the floor's
     // right end: the floor takes as much of the width as keeps it clear of the panel.
     const panelRect = [cw - insetR, 0, cw, insetH + 12];
@@ -1633,7 +1635,14 @@ export function createOffice(
     setViewSeg(p.mine ? "desk" : "");
     openPanel(p);
     userMoved = true;
-    glide(deskView(p), 850);
+    glide(focusView(p), 850);
+  }
+  /**
+   * The view while one person's panel is open: the whole floor beside it (10-19 redesign), or on a
+   * phone, where the panel lies over the floor, their desk.
+   */
+  function focusView(p) {
+    return cw <= PHONE ? deskView(p) : floorView();
   }
   function setViewSeg(v) {
     for (const b of viewSeg.children)
@@ -2790,7 +2799,7 @@ export function createOffice(
     anim = null;
     setCam(
       focus
-        ? deskView(focus)
+        ? focusView(focus)
         : userMoved
           ? { ...cam, w: cw / sc, h: ch / sc }
           : atDesk && me
@@ -2845,7 +2854,7 @@ export function createOffice(
       // the person's own framing stays where they moved or zoomed it; a desk in view stays in view
       if (userMoved && !focus) return;
       glide(
-        focus ? deskView(focus) : atDesk && me ? deskView(me) : floorView(),
+        focus ? focusView(focus) : atDesk && me ? deskView(me) : floorView(),
         650,
       );
     },

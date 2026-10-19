@@ -46,7 +46,7 @@ function useHandled(): Map<string, Handled> {
   const [handled, setHandled] = useState(new Map<string, Handled>());
   useEffect(() => {
     let live = true;
-    void fetch("/api/me/activity", { headers: HEADERS })
+    void fetch("/api/me/activity?limit=1000", { headers: HEADERS })
       .then((r) => r.json())
       .then(
         (body: {

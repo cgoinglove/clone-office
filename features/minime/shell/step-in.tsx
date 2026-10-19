@@ -57,11 +57,18 @@ export function StepIn({
     box.current?.focus();
   }, [start]);
   // taken over (from the page's menu, or elsewhere): their words are their own answer, and the
-  // request stays open for the next, as it does when the page opens on it
+  // request stays open for the next, as it does when the page opens on it;
+  // handed back to the clone: what they write is for their clone again, and nothing stays theirs
+  const wasYours = useRef(yours);
   useEffect(() => {
-    if (!yours) return;
-    setMode("self");
-    setKeepOpen(true);
+    if (yours) {
+      setMode("self");
+      setKeepOpen(true);
+    } else if (wasYours.current) {
+      setMode("tell");
+      setKeepOpen(false);
+    }
+    wasYours.current = yours;
   }, [yours]);
 
   const post = async (body: Record<string, unknown>) => {
