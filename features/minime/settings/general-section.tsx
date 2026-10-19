@@ -12,7 +12,6 @@ import {
   Copy,
   Monitor,
   Moon,
-  Power,
   Sun,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -30,7 +29,6 @@ import type { Theme } from "@/lib/theme";
 import { useApp } from "../shell/app-state";
 import { Group, Groups, Rows } from "./parts";
 import { Toggle } from "./preferences-section";
-import { APP_VERSION } from "./settings";
 
 const THEME_ICONS = { system: Monitor, light: Sun, dark: Moon } as const;
 
@@ -272,7 +270,6 @@ export function GeneralSection() {
         <Group title={t("start")}>
           {start.state.available ? (
             <Toggle
-              icon={<Power className="size-4" />}
               title={t("start")}
               body={t("startBody")}
               checked={start.state.on}
@@ -292,15 +289,9 @@ export function GeneralSection() {
       )}
       <ArchivedChats />
       <Group title={t("about")}>
-        <div className="flex flex-col gap-3 rounded-xl border border-border p-4">
-          <div className="flex items-center justify-between gap-3">
-            <Logo />
-            {APP_VERSION && (
-              <span className="font-mono text-xs text-muted-foreground">
-                v{APP_VERSION}
-              </span>
-            )}
-          </div>
+        {/* the version is said once, at the foot of the sections (10-19 redesign) */}
+        <div className="flex flex-col gap-3 rounded-[14px] p-4 shadow-[0_0_0_1px_var(--alpha-10)]">
+          <Logo />
           <p className="text-[13px] leading-relaxed text-muted-foreground">
             {t("aboutBody")}
           </p>

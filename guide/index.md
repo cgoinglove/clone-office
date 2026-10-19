@@ -148,7 +148,7 @@ after and the tools they work in, filled in from what it read for them to correc
 as colleagues will see it laid over the office as they write) and whether a team is in it
 (`office.md`; started from an invite, this comes first, with the office they were invited to picked
 already, so the team's models are there when they pick one); then how much their clone does on its
-own in their own work (**Ask me first**, 수동, or **On its own**, 자동, each explained under its
+own in their own work (**Ask me first**, 먼저 묻기, or **On its own**, 알아서 하기, each explained under its
 name), and each part as it stands, a chevron on one that can still be changed; then Home. At the
 bottom, **Back** (이전) goes back, and **Skip** (건너뛰기) beside the step's own button passes over
 the step on screen only. The screen's language is one button at the top
@@ -169,8 +169,8 @@ the same steps with the one line that also joins their office (`office.md`).
 ## Settings in more detail
 
 - **How much it does on its own** (혼자 할 수 있는 범위, Settings › Permissions), one of two: **Ask me
-  first** (수동, the default) asks before reading a file, opening a web page, running a command,
-  using its browser or a connected service; **On its own** (자동) does all of that without asking
+  first** (먼저 묻기, the default) asks before reading a file, opening a web page, running a command,
+  using its browser or a connected service; **On its own** (알아서 하기) does all of that without asking
   (reading files never in folders left out, commands only inside its sandbox, never uploading a file
   or running code in a web page) and shows what it did in the conversation. In both, files leaving
   the computer, flows, adding a skill, and work in their Claude Code or Codex conversations are

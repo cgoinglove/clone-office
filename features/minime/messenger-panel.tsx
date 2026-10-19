@@ -20,6 +20,10 @@ import { SLACK_MANIFEST } from "./messenger/manifest";
 
 type Service = "discord" | "telegram" | "slack";
 
+/** A numbered step: its number in a dark circle, as the setup guides number theirs. */
+const STEP =
+  "relative min-h-6 pt-0.5 pl-9 leading-relaxed [counter-increment:step] before:absolute before:top-0 before:left-0 before:grid before:size-6 before:place-items-center before:rounded-full before:bg-foreground before:text-xs before:font-semibold before:text-background before:content-[counter(step)]";
+
 interface Status {
   configured: boolean;
   service?: Service;
@@ -88,7 +92,8 @@ export function MessengerPanel() {
   // Shown in settings: it looks again while someone waits to be let in.
   const open = true;
   const [token, setToken] = useState("");
-  const [service, setService] = useState<Service>("discord");
+  // Telegram first: a bot is one chat with @BotFather and a token (10-19 redesign)
+  const [service, setService] = useState<Service>("telegram");
   const [appToken, setAppToken] = useState("");
   // Copying the manifest: done, or not allowed here, when it is shown to select by hand.
   const [manifest, setManifest] = useState<"copied" | "shown" | null>(null);
@@ -166,7 +171,7 @@ export function MessengerPanel() {
                 setService(next);
                 setError(null);
               }}
-              options={(["discord", "telegram", "slack"] as const).map(
+              options={(["telegram", "discord", "slack"] as const).map(
                 (value) => ({
                   value,
                   label: (
@@ -178,8 +183,8 @@ export function MessengerPanel() {
                 }),
               )}
             />
-            <ol className="flex list-decimal flex-col gap-2 pl-5">
-              <li>
+            <ol className="flex flex-col gap-3 [counter-reset:step]">
+              <li className={STEP}>
                 {t(`${service}.step1`)}{" "}
                 <a
                   href={SERVICES[service].portal}
@@ -217,11 +222,11 @@ export function MessengerPanel() {
               </li>
               {service === "slack" ? (
                 <>
-                  <li>{t("slack.step2")}</li>
-                  <li>{t("slack.step3")}</li>
+                  <li className={STEP}>{t("slack.step2")}</li>
+                  <li className={STEP}>{t("slack.step3")}</li>
                 </>
               ) : (
-                <li>{t("step2")}</li>
+                <li className={STEP}>{t("step2")}</li>
               )}
             </ol>
             {service === "slack" && (

@@ -3,7 +3,6 @@
 // Settings › Notifications & phone: notices from this browser while the app's tab is not in view
 // (shell/turn-notices.ts). Turning it on asks the browser's leave; it is kept in this browser.
 
-import { Bell } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { NOTIFY_KEY } from "../shell/turn-notices";
@@ -50,7 +49,6 @@ export function BrowserNotices() {
   return (
     <Group title={t("title")}>
       <Toggle
-        icon={<Bell className="size-4" />}
         title={t("toggle")}
         body={state === "blocked" ? t("blocked") : t("body")}
         checked={state === "on"}

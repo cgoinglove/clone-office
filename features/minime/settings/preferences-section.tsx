@@ -4,9 +4,14 @@
 // on its own (after Claude Code's permission modes), where a new kind of request starts, when the
 // questions it kept for later come, whether it learns after each conversation, and the lobby.
 
-import { BookOpen, Feather, Moon } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
+import { buttonVariants } from "@/components/ui/button";
 import { ChoiceList } from "@/components/ui/choice-list";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Segmented } from "@/components/ui/segmented";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Switch } from "@/components/ui/switch";
@@ -69,6 +74,7 @@ export function PreferencesSection({
   const show = (part: PreferencePart) => !parts || parts.includes(part);
   const t = useTranslations("settings.preferences");
   const tOffice = useTranslations("office");
+  const format = useFormatter();
   if (!preferences)
     return <ShinyText className="text-sm" text={t("loading")} />;
   const hours = preferences.batchHours;
@@ -103,41 +109,63 @@ export function PreferencesSection({
       )}
 
       {show("batch") && (
-        <Group
-          title={t("batch")}
-          hint={t("batchHint", { hours: hours.map(at).join(", ") })}
-        >
-          <div
-            className="flex flex-wrap gap-1.5"
-            role="group"
-            aria-label={t("batch")}
-          >
-            {HOURS.map((hour) => {
-              const on = hours.includes(hour);
-              return (
-                <button
-                  key={hour}
-                  type="button"
-                  aria-pressed={on}
-                  disabled={on ? hours.length <= 1 : hours.length >= 6}
-                  onClick={() =>
-                    void onChange({
-                      batchHours: on
-                        ? hours.filter((h) => h !== hour)
-                        : [...hours, hour].sort((a, b) => a - b),
-                    })
-                  }
-                  className={cn(
-                    "h-8 min-w-14 rounded-lg border px-2 text-xs tabular-nums transition-colors disabled:cursor-not-allowed",
-                    on
-                      ? "border-transparent bg-foreground text-background"
-                      : "border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40",
-                  )}
+        <Group title={t("batch")} hint={t("batchHintShort")}>
+          {/* the hours in a line, changed in a popover at the line, so the section never grows */}
+          <div className="flex items-center gap-3">
+            <span className="min-w-0 flex-1 text-[14px] font-medium tabular-nums">
+              {hours
+                .map((hour) =>
+                  format.dateTime(new Date(2000, 0, 1, hour), {
+                    hour: "numeric",
+                    minute: "2-digit",
+                  }),
+                )
+                .join(" · ")}
+            </span>
+            <Popover>
+              <PopoverTrigger
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "sm" }),
+                  "shrink-0",
+                )}
+              >
+                {t("batchChange")}
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-auto p-3">
+                <div
+                  className="grid grid-cols-5 gap-1.5"
+                  role="group"
+                  aria-label={t("batch")}
                 >
-                  {at(hour)}
-                </button>
-              );
-            })}
+                  {HOURS.map((hour) => {
+                    const on = hours.includes(hour);
+                    return (
+                      <button
+                        key={hour}
+                        type="button"
+                        aria-pressed={on}
+                        disabled={on ? hours.length <= 1 : hours.length >= 6}
+                        onClick={() =>
+                          void onChange({
+                            batchHours: on
+                              ? hours.filter((h) => h !== hour)
+                              : [...hours, hour].sort((a, b) => a - b),
+                          })
+                        }
+                        className={cn(
+                          "h-8 min-w-14 rounded-lg border px-2 text-xs tabular-nums transition-colors disabled:cursor-not-allowed",
+                          on
+                            ? "border-transparent bg-foreground text-background"
+                            : "border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-40",
+                        )}
+                      >
+                        {at(hour)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </Group>
       )}
@@ -145,7 +173,6 @@ export function PreferencesSection({
       {show("learning") && (
         <Group title={t("learning")}>
           <Toggle
-            icon={<BookOpen className="size-4" />}
             title={t("review")}
             body={t("reviewHint")}
             checked={preferences.review}
@@ -157,7 +184,6 @@ export function PreferencesSection({
       {show("models") && (
         <Group title={t("models")}>
           <Toggle
-            icon={<Feather className="size-4" />}
             title={t("light")}
             body={t("lightHint")}
             checked={preferences.lightBackground}
@@ -169,7 +195,6 @@ export function PreferencesSection({
       {show("phone") && (
         <Group title={t("phone")}>
           <Toggle
-            icon={<Moon className="size-4" />}
             title={t("quiet")}
             body={t("quietHint")}
             checked={preferences.quiet.on}
@@ -214,28 +239,22 @@ export function PreferencesSection({
   );
 }
 
+/** A setting that is on or off: its name and what it does, the switch at the end; no frame (10-19). */
 export function Toggle({
-  icon,
   title,
   body,
   checked,
   onChange,
 }: {
-  icon?: React.ReactNode;
   title: string;
   body: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border px-4 py-3">
-      {icon && (
-        <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-muted">
-          {icon}
-        </span>
-      )}
+    <label className="flex cursor-pointer items-start gap-4 py-1.5">
       <span className="min-w-0 flex-1">
-        <span className="block font-medium">{title}</span>
+        <span className="block text-[14px] font-medium">{title}</span>
         <span className="mt-0.5 block text-[13px] leading-relaxed text-muted-foreground">
           {body}
         </span>

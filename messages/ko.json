@@ -415,7 +415,9 @@
       "mcp__minime__leave_out_folder": "앞으로 이 폴더는 읽지 않기",
       "mcp__minime__ask_by_link": "클론이 없는 사람에게 물을 링크 만들기",
       "bash": "샌드박스에서 명령 실행",
-      "bashOutside": "내 컴퓨터에서 명령 실행 (여기는 샌드박스가 없어요)"
+      "bashOutside": "내 컴퓨터에서 명령 실행 (여기는 샌드박스가 없어요)",
+      "mcp__minime__conversation_search": "내 AI 대화 찾아보기",
+      "mcp__minime__conversation_read": "내 AI 대화 읽기"
     },
     "ruleTitle": "앞으로도 이렇게 할까요?",
     "rule": "‘{menu}’에 대한 제 답을 최근 세 번 그대로 보내셨어요. 앞으로는 제가 답하고 알려 드릴까요?",
@@ -933,7 +935,8 @@
       "byTeam": "{name} 님이 오피스용으로 등록했어요.",
       "byTeamNoName": "오피스용으로 등록돼 있어요.",
       "own": "내가 직접 등록했어요.",
-      "forget": "클라이언트 삭제"
+      "forget": "클라이언트 삭제",
+      "teamFirst": "팀에서 먼저 등록"
     },
     "callback": {
       "done": "{name}에 연결됐어요. 이제 클론이 {name}에서 일할 수 있어요.",
@@ -1023,7 +1026,7 @@
       },
       "phone": {
         "label": "알림·휴대폰",
-        "hint": "나를 기다리는 일을 Discord, Telegram, Slack으로 받고, 언제 받을지 정해요."
+        "hint": "나를 기다리는 일을 Telegram, Discord, Slack으로 받고, 언제 받을지 정해요."
       },
       "permissions": {
         "label": "권한",
@@ -1184,7 +1187,8 @@
         "added": "{name}에 붙였어요. 그 앱을 다시 켜면 물을 수 있어요.",
         "removed": "{name}에서 뗐어요.",
         "none": "함께 쓸 수 있는 AI 앱(Claude, Claude Code, Codex, Cursor, Gemini CLI)이 이 컴퓨터에 없어요."
-      }
+      },
+      "inviteTitle": "동료 초대하기"
     },
     "requests": {
       "toOffice": "오피스 준비하기",
@@ -1242,11 +1246,11 @@
       "autonomyHint": "내 일에만 적용돼요. 클론과의 대화와 내 플로우예요.",
       "modes": {
         "ask": {
-          "title": "수동",
+          "title": "먼저 묻기",
           "body": "파일 읽기, 웹 열기, 명령 실행, 내 서비스 쓰기 전에 물어요. 한 번 ‘앞으로 묻지 않기’를 고른 일은 다시 묻지 않아요."
         },
         "auto": {
-          "title": "자동",
+          "title": "알아서 하기",
           "body": "읽기, 연결한 서비스에서 일하기, 안전하게 막힌 공간에서 명령 실행, 동료에게 부탁까지 묻지 않고 해요. 한 일은 모두 대화에 남아요."
         }
       },
@@ -1254,21 +1258,22 @@
       "trust": "새 부탁 종류의 시작 단계",
       "trustHint": "부탁 종류를 직접 추가하거나 클론이 초안을 쓸 때 처음 정해지는 단계예요. 약속과 결정은 언제나 나에게 와요.",
       "batch": "미뤄 둔 질문 받는 시간",
-      "batchHint": "바쁘거나 자리에 없을 때 동료 부탁에 대한 질문은 모아 뒀다가 {hours}에 한꺼번에 보내 드려요.",
       "learning": "배우기",
       "review": "대화가 끝날 때마다 배우기",
       "reviewHint": "대화를 한 번 더 읽고, 내가 일하는 방식 중 오래 변하지 않는 것만 남겨요. 끄면 기억하라고 말한 것만 배워요.",
       "office": "오피스",
       "lobby": "로비에서 출근하기",
       "lobbyHint": "하루에 처음 오피스를 열면 건물 로비에서 시작해요. 끄면 바로 내 자리에서 열려요.",
-      "models": "모델",
+      "models": "뒤에서 하는 일",
       "light": "뒤에서 하는 일은 가벼운 모델로",
       "lightHint": "대화 뒤 돌아보기, 요약, 초안은 같은 회사의 더 작은 모델(Claude 구독이면 Claude Haiku)로 해서 요금제나 API 키를 덜 써요. 나와의 대화, 플로우, 동료에게 가는 모든 답은 고른 모델을 그대로 써요.",
       "phone": "휴대폰",
       "quiet": "방해 금지 시간",
       "quietHint": "이 시간에는 휴대폰으로 아무것도 보내지 않아요. 기다리는 일은 모아 뒀다가 끝나면 보내요. 휴대폰에서 먼저 보낸 말에 대한 답은 그대로 와요.",
       "quietFrom": "시작",
-      "quietTo": "끝"
+      "quietTo": "끝",
+      "batchHintShort": "급하지 않은 질문은 모아 뒀다가 이 시간에 한 번에 보내 드려요.",
+      "batchChange": "바꾸기"
     },
     "usage": {
       "title": "지난 30일",

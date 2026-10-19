@@ -50,13 +50,13 @@ export function TrustPanel() {
           {rules.length === 0 ? (
             <p className="text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ul className="flex flex-col">
+            <ul className="flex flex-col gap-0.5">
               {rules.map((rule) => (
                 <li
                   key={rule}
-                  className="flex items-center justify-between gap-2 border-b border-border py-2 last:border-b-0"
+                  className="flex items-center justify-between gap-2 py-1"
                 >
-                  <span className="min-w-0 break-words">
+                  <span className="min-w-0 text-[14px] break-words">
                     {ruleText(words, rule)}
                   </span>
                   <Button

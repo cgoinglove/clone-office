@@ -4,7 +4,8 @@
 // vendor wants. A service that registers this app itself is one press and an approval in a new
 // tab; GitHub takes a personal token; Google wants an OAuth client registered for the team first,
 // which anyone on the team does once here (for the whole office), then each person connects their
-// own account. What is connected stays on this computer; the clone asks before using it.
+// own account. What is connected stays on this computer; the clone asks before using it. Each
+// service is a card in a grid of two (10-19 redesign).
 
 import { useTranslations } from "next-intl";
 import {
@@ -19,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { BrandMark, type MarkId } from "@/features/brand/brand-mark";
 import { useProblem } from "@/i18n/client";
+import { cn } from "@/lib/utils";
 import { CONNECTORS } from "./connectors/catalog";
 
 interface Row {
@@ -184,38 +186,39 @@ export function ConnectorsPanel() {
   const row = (entry: Row, blocked = false) => (
     <li
       key={entry.id}
-      className="flex flex-col gap-2 border-b border-border py-2 last:border-b-0"
+      className={cn(
+        "flex flex-col gap-2.5 rounded-[14px] bg-background p-3.5 shadow-[0_0_0_1px_var(--alpha-10)]",
+        // a token is pasted on a line of its own: the card takes the row
+        entry.kind === "token" && !entry.connected && "sm:col-span-2",
+      )}
     >
       <div className="flex items-center justify-between gap-3">
         {entry.id in CONNECTOR_MARKS && (
-          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-border bg-background">
+          <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-background shadow-[0_0_0_1px_var(--alpha-08)]">
             <BrandMark
               id={CONNECTOR_MARKS[entry.id as keyof typeof CONNECTOR_MARKS]}
               className="size-5"
             />
           </span>
         )}
-        <span className="min-w-0 flex-1">
-          <span className="font-medium">{entry.name}</span>
-          <span className="block text-muted-foreground">
+        <span className="min-w-0 flex-1 leading-snug">
+          <span className="block truncate text-[14px] font-semibold">
+            {entry.name}
+          </span>
+          <span className="block truncate text-xs text-muted-foreground">
             {t(`does.${entry.id}` as Parameters<typeof t>[0])}
           </span>
         </span>
         {entry.connected ? (
-          <span className="flex shrink-0 items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {t("connected")}
-            </span>
-            <Button
-              size="sm"
-              variant="ghost"
-              disabled={busy}
-              onClick={() => void post({ action: "disconnect", id: entry.id })}
-            >
-              {t("disconnect")}
-            </Button>
+          <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+            <span className="size-1.5 rounded-full bg-brand" aria-hidden />
+            {t("connected")}
           </span>
-        ) : entry.kind === "token" ? null : (
+        ) : entry.kind === "token" ? null : blocked ? (
+          <span className="shrink-0 text-xs text-muted-foreground">
+            {t("google.teamFirst")}
+          </span>
+        ) : (
           <Button
             size="sm"
             variant="secondary"
@@ -231,10 +234,25 @@ export function ConnectorsPanel() {
       {waiting === entry.id && (
         <p className="text-muted-foreground">{t("connecting")}</p>
       )}
+      {entry.connected && (
+        <div className="-mt-1 flex justify-end">
+          <Button
+            size="xs"
+            variant="ghost"
+            className="text-muted-foreground"
+            disabled={busy}
+            onClick={() => void post({ action: "disconnect", id: entry.id })}
+          >
+            {t("disconnect")}
+          </Button>
+        </div>
+      )}
       {entry.connected && state?.inOffice && (
-        <label className="flex items-start justify-between gap-3 pl-12 text-muted-foreground">
+        <label className="flex items-start justify-between gap-3 text-muted-foreground">
           <span className="min-w-0">
-            <span className="text-foreground">{t("forColleagues")}</span>
+            <span className="text-[13px] text-foreground">
+              {t("forColleagues")}
+            </span>
             <span className="block text-xs">{t("forColleaguesHint")}</span>
           </span>
           <Switch
@@ -298,10 +316,15 @@ export function ConnectorsPanel() {
   return (
     <div className="flex flex-col gap-4 text-sm">
       <div className="flex flex-col gap-4">
-        <ul className="flex flex-col">{others.map((entry) => row(entry))}</ul>
+        <ul className="grid gap-2.5 sm:grid-cols-2">
+          {others.map((entry) => row(entry))}
+        </ul>
         {google.length > 0 && (
-          <section className="flex flex-col gap-2">
-            <h3 className="font-medium">{t("google.title")}</h3>
+          <section className="mt-2 flex flex-col gap-2.5">
+            <h3 className="flex items-center gap-2 text-[14px] font-semibold">
+              <BrandMark id="google" className="size-4" />
+              {t("google.title")}
+            </h3>
             {googleClient ? (
               <p className="text-muted-foreground">
                 {googleClient.from === "team"
@@ -498,7 +521,7 @@ export function ConnectorsPanel() {
                 )}
               </div>
             )}
-            <ul className="flex flex-col">
+            <ul className="grid gap-2.5 sm:grid-cols-2">
               {google.map((entry) => row(entry, !googleClient))}
             </ul>
           </section>

@@ -6,7 +6,6 @@
 // dialog over Settings: a folder left out is never read or searched. Under it, whether a colleague's
 // request is answered from the folders where the work lives (preferences `answerFromWork`).
 
-import { FolderSearch } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { FolderField, FolderPage, useFolders } from "../folder-list";
@@ -75,7 +74,6 @@ export function PermissionsSection({
           <FolderField folders={folders} onOpen={() => setPaged(true)} />
           {preferences && (
             <Toggle
-              icon={<FolderSearch className="size-4" />}
               title={t("answerFromWork")}
               body={t("answerFromWorkHint")}
               checked={preferences.answerFromWork}

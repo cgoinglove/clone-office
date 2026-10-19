@@ -11,17 +11,17 @@ import {
   Check,
   Copy,
   ExternalLink,
+  Globe,
   Link2,
   Loader2,
   LogOut,
-  MessageSquare,
   Pencil,
   UserPlus,
   Wifi,
   WifiOff,
 } from "lucide-react";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ import { parseInvite } from "../office/invite";
 import { statusCode } from "../office/room-data";
 import { useApp } from "../shell/app-state";
 import { AiApps } from "./ai-apps";
-import { Group, Groups, Rows } from "./parts";
+import { Group, Groups } from "./parts";
 import { Toggle } from "./preferences-section";
 
 export function OfficeSection({
@@ -79,22 +79,34 @@ export function OfficeSection({
     );
 
   const members = data.members ?? [];
+  const server = Boolean(data.relay && /^https?:\/\//.test(data.relay));
   return (
     <Groups>
-      <Group
-        title={tS("thisOffice")}
-        hint={data.here ? tS("hereHint") : tS("joinedHint")}
-      >
-        {data.here ? <Here here={data.here} /> : <Invite busy={office.busy} />}
-      </Group>
-
-      {data.relay && /^https?:\/\//.test(data.relay) && (
-        // The team server's own pages: one's account, the people, and, for whoever looks after
-        // the server (for an office open here, this computer's person), how people sign in.
-        <Group title={tS("server")} hint={tS("serverHint")}>
-          <ServerLink />
-        </Group>
-      )}
+      {/* inviting, and the team server's own pages, side by side (10-19 redesign) */}
+      <div className={cn("grid gap-2.5", server && "sm:grid-cols-2")}>
+        <Card
+          icon={<UserPlus className="size-4" />}
+          title={data.here ? tS("thisOffice") : tS("inviteTitle")}
+          hint={data.here ? tS("hereHint") : tS("joinedHint")}
+        >
+          {data.here ? (
+            <Here here={data.here} />
+          ) : (
+            <Invite busy={office.busy} />
+          )}
+        </Card>
+        {server && (
+          // The team server's own pages: one's account, the people, and, for whoever looks after
+          // the server (for an office open here, this computer's person), how people sign in.
+          <Card
+            icon={<Globe className="size-4" />}
+            title={tS("server")}
+            hint={tS("serverHint")}
+          >
+            <ServerLink />
+          </Card>
+        )}
+      </div>
 
       <Group
         title={tS("people")}
@@ -104,7 +116,7 @@ export function OfficeSection({
           </span>
         }
       >
-        <Rows>
+        <ul className="flex flex-col gap-0.5 rounded-[14px] p-1.5 shadow-[0_0_0_1px_var(--alpha-10)]">
           {members.map((member, index) => {
             const mine = member.id === data.me?.id;
             const look = looksOf({ id: member.id, mine }, index);
@@ -118,7 +130,7 @@ export function OfficeSection({
             return (
               <li
                 key={member.id}
-                className="flex items-center gap-3 px-3.5 py-2.5"
+                className="flex items-center gap-3 rounded-[10px] px-2.5 py-2"
               >
                 <Bot
                   size={30}
@@ -158,7 +170,7 @@ export function OfficeSection({
               </li>
             );
           })}
-        </Rows>
+        </ul>
       </Group>
 
       <AiApps />
@@ -185,6 +197,34 @@ export function OfficeSection({
         onLeave={() => void office.post({ action: "leave" })}
       />
     </Groups>
+  );
+}
+
+/** One part of the office's settings as a card: its mark and name, a line on what it is for. */
+function Card({
+  icon,
+  title,
+  hint,
+  children,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-2 rounded-[14px] bg-background p-4 shadow-[0_0_0_1px_var(--alpha-10)]">
+      <h3 className="flex items-center gap-2 text-[14px] font-semibold">
+        {icon}
+        {title}
+      </h3>
+      {hint && (
+        <p className="-mt-1 text-[13px] leading-relaxed text-muted-foreground">
+          {hint}
+        </p>
+      )}
+      <div className="mt-1">{children}</div>
+    </section>
   );
 }
 
@@ -480,7 +520,7 @@ function InviteMaker({ busy: away }: { busy: boolean }) {
         <CopyLink url={url} label={t("copyInvite")} />
       ) : (
         <div>
-          <Button disabled={busy || away} onClick={make}>
+          <Button variant="brand" disabled={busy || away} onClick={make}>
             {busy ? <Loader2 className="animate-spin" /> : <UserPlus />}
             {t("makeInvite")}
           </Button>
@@ -651,7 +691,6 @@ function WebChat({
   return (
     <Group title={t("title")} hint={t("hint")}>
       <Toggle
-        icon={<MessageSquare className="size-4" />}
         title={t("take")}
         body={t("takeHint")}
         checked={on}

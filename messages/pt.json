@@ -415,7 +415,9 @@
       "mcp__minime__leave_out_folder": "Ignorar uma pasta daqui em diante",
       "mcp__minime__ask_by_link": "Criar um link para perguntar a alguém sem clone",
       "bash": "Executar um comando na área isolada",
-      "bashOutside": "Executar um comando no seu computador (aqui não há área isolada)"
+      "bashOutside": "Executar um comando no seu computador (aqui não há área isolada)",
+      "mcp__minime__conversation_search": "Buscar nas suas conversas com IA",
+      "mcp__minime__conversation_read": "Ler uma das suas conversas com IA"
     },
     "ruleTitle": "Virar regra?",
     "rule": "Você enviou minhas três últimas respostas a “{menu}” do jeito que estavam. Daqui em diante, eu mesmo respondo esses pedidos e aviso você?",
@@ -933,7 +935,8 @@
       "byTeam": "Registrado para o escritório por {name}",
       "byTeamNoName": "Registrado para o escritório",
       "own": "Seu próprio cliente",
-      "forget": "Remover o cliente"
+      "forget": "Remover o cliente",
+      "teamFirst": "Registre primeiro para a equipe"
     },
     "callback": {
       "done": "{name} está conectado. Seu clone já pode trabalhar lá.",
@@ -1023,7 +1026,7 @@
       },
       "phone": {
         "label": "Notificações e celular",
-        "hint": "Receba o que espera por você no Discord, Telegram ou Slack, e escolha quando chega."
+        "hint": "Receba o que espera por você no Telegram, Discord ou Slack, e escolha quando chega."
       },
       "permissions": {
         "label": "Permissões",
@@ -1184,7 +1187,8 @@
         "added": "Adicionado ao {name}. Reinicie o {name} para começar a perguntar.",
         "removed": "Removido do {name}.",
         "none": "Nenhum app de IA compatível está neste computador: Claude, Claude Code, Codex, Cursor ou Gemini CLI."
-      }
+      },
+      "inviteTitle": "Convidar um colega"
     },
     "requests": {
       "toOffice": "Configurar seu escritório",
@@ -1254,21 +1258,22 @@
       "trust": "Novos tipos de pedido começam em",
       "trustHint": "Onde um tipo de pedido começa quando você o adiciona ou seu clone o sugere. Promessas e decisões sempre chegam a você.",
       "batch": "Quando chegam as perguntas guardadas",
-      "batchHint": "Enquanto você está ocupado ou ausente, as perguntas sobre pedidos de colegas esperam e chegam juntas às {hours}.",
       "learning": "Aprendizado",
       "review": "Aprender depois de cada conversa",
       "reviewHint": "Ele relê a conversa e guarda só o que continua valendo sobre como você trabalha. Desligado, ele só aprende o que você pedir para lembrar.",
       "office": "Escritório",
       "lobby": "Bater ponto no saguão",
       "lobbyHint": "Na primeira vez que você abre o escritório no dia, ele começa no saguão do prédio. Desligado, ele abre direto na sua mesa.",
-      "models": "Modelos",
+      "models": "Trabalho em segundo plano",
       "light": "Modelo mais leve para tarefas em segundo plano",
       "lightHint": "A revisão depois de uma conversa, os resumos e os rascunhos usam um modelo menor do mesmo serviço (Claude Haiku na sua assinatura do Claude), gastando menos do seu plano ou da sua chave. Suas conversas, suas rotinas e todas as respostas aos colegas continuam no modelo que você escolheu.",
       "phone": "Celular",
       "quiet": "Horário de silêncio",
       "quietHint": "Nesse horário nada vai para o seu celular; o que estiver esperando fica guardado e chega quando ele acabar. Respostas ao que você escreve pelo celular continuam chegando.",
       "quietFrom": "Das",
-      "quietTo": "às"
+      "quietTo": "às",
+      "batchHintShort": "As perguntas que podem esperar ficam guardadas e chegam juntas nestes horários.",
+      "batchChange": "Mudar"
     },
     "usage": {
       "title": "Últimos 30 dias",

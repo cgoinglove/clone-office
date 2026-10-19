@@ -75,7 +75,10 @@ export function describe(
       tool: service.tool,
     });
   const key = `doing.${tool}` as Parameters<AskWords>[0];
-  const what = t.has(key) ? t(key) : tool;
+  // a tool with no words of its own reads by its name, without the server's prefix
+  const what = t.has(key)
+    ? t(key)
+    : tool.replace(/^mcp__[^_]+(?:_[^_]+)*?__/, "").replaceAll("_", " ");
   const on =
     input.file_path ??
     input.url ??

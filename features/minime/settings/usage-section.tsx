@@ -1,11 +1,12 @@
 "use client";
 
 // Settings › AI model: what the clone used its AI for in the last 30 days, from its run log, so the
-// person sees where their plan or key went (after OpenClaw's 30-day usage and Paperclip's costs).
+// person sees where their plan or key went (after OpenClaw's 30-day usage and Paperclip's costs):
+// each use's share as a bar (by tokens, else by runs), its numbers beneath (10-19 redesign).
 
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { Group, Rows } from "./parts";
+import { Group } from "./parts";
 
 interface UseLine {
   group: "conversations" | "colleagues" | "flows" | "learning" | "other";
@@ -36,6 +37,12 @@ export function UsageSection() {
     };
   }, []);
   if (!lines) return null;
+  // shares by what was sent and read, when the log knows it; by how many times, when it does not
+  const tokens = lines.reduce((sum, line) => sum + line.tokens, 0);
+  const byTokens = tokens > 0;
+  const whole = byTokens
+    ? tokens
+    : lines.reduce((sum, line) => sum + line.runs, 0);
   const cost = lines.reduce<number | undefined>(
     (sum, line) => (line.cost === undefined ? sum : (sum ?? 0) + line.cost),
     undefined,
@@ -45,29 +52,50 @@ export function UsageSection() {
       {lines.length === 0 ? (
         <p className="text-[13px] text-muted-foreground">{t("none")}</p>
       ) : (
-        <Rows>
-          {lines.map((line) => (
-            <li
-              key={line.group}
-              className="flex items-baseline justify-between gap-4 px-3.5 py-2.5 text-sm"
-            >
-              <span className="min-w-0">{t(`groups.${line.group}`)}</span>
-              <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                {t("runs", { count: line.runs })}
-                {line.failed > 0 && ` · ${t("failed", { count: line.failed })}`}
-                {line.tokens > 0 &&
-                  ` · ${t("tokens", {
-                    tokens: format.number(line.tokens, { notation: "compact" }),
-                  })}`}
-                {line.cached > 0 &&
-                  line.sent > 0 &&
-                  ` · ${t("cached", {
-                    percent: Math.round((line.cached / line.sent) * 100),
-                  })}`}
-              </span>
-            </li>
-          ))}
-        </Rows>
+        <ul className="flex flex-col gap-2.5">
+          {lines.map((line) => {
+            const share = Math.round(
+              (100 * (byTokens ? line.tokens : line.runs)) / (whole || 1),
+            );
+            return (
+              <li key={line.group} className="flex flex-col gap-1">
+                <span className="flex items-center gap-3">
+                  <span className="min-w-0 flex-1 text-[13.5px]">
+                    {t(`groups.${line.group}`)}
+                  </span>
+                  <span
+                    className="h-1.5 w-[min(14rem,40%)] shrink-0 overflow-hidden rounded-full bg-muted"
+                    aria-hidden
+                  >
+                    <span
+                      className="block h-full rounded-full bg-foreground"
+                      style={{ width: `${share}%` }}
+                    />
+                  </span>
+                  <span className="w-10 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+                    {share}%
+                  </span>
+                </span>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {t("runs", { count: line.runs })}
+                  {line.failed > 0 &&
+                    ` · ${t("failed", { count: line.failed })}`}
+                  {line.tokens > 0 &&
+                    ` · ${t("tokens", {
+                      tokens: format.number(line.tokens, {
+                        notation: "compact",
+                      }),
+                    })}`}
+                  {line.cached > 0 &&
+                    line.sent > 0 &&
+                    ` · ${t("cached", {
+                      percent: Math.round((line.cached / line.sent) * 100),
+                    })}`}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
       )}
       {cost !== undefined && cost > 0 && (
         <p className="text-[13px] text-muted-foreground">

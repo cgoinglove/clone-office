@@ -415,7 +415,9 @@
       "mcp__minime__leave_out_folder": "Leave a folder out from now on",
       "mcp__minime__ask_by_link": "Make a link to ask someone without a clone",
       "bash": "Run a command in its sandbox",
-      "bashOutside": "Run a command on your computer (no sandbox here)"
+      "bashOutside": "Run a command on your computer (no sandbox here)",
+      "mcp__minime__conversation_search": "Search your AI conversations",
+      "mcp__minime__conversation_read": "Read one of your AI conversations"
     },
     "ruleTitle": "Make it a rule?",
     "rule": "You sent my last three answers to “{menu}” as they were. From now on, shall I answer these myself and tell you?",
@@ -933,7 +935,8 @@
       "byTeam": "Registered for the office by {name}",
       "byTeamNoName": "Registered for the office",
       "own": "Your own client",
-      "forget": "Remove the client"
+      "forget": "Remove the client",
+      "teamFirst": "Register for the team first"
     },
     "callback": {
       "done": "{name} is connected. Your clone can work there now.",
@@ -1023,7 +1026,7 @@
       },
       "phone": {
         "label": "Notifications & phone",
-        "hint": "Get what waits on you on Discord, Telegram or Slack, and choose when it comes."
+        "hint": "Get what waits on you on Telegram, Discord or Slack, and choose when it comes."
       },
       "permissions": {
         "label": "Permissions",
@@ -1184,7 +1187,8 @@
         "added": "Added to {name}. Restart {name} to start asking.",
         "removed": "Removed from {name}.",
         "none": "None of the AI apps it works with are on this computer: Claude, Claude Code, Codex, Cursor or Gemini CLI."
-      }
+      },
+      "inviteTitle": "Invite a teammate"
     },
     "requests": {
       "toOffice": "Set up your office",
@@ -1254,21 +1258,22 @@
       "trust": "New kinds of request start at",
       "trustHint": "Where a kind of request starts when you add it or your clone drafts it. Promises and decisions always come to you.",
       "batch": "When kept questions come",
-      "batchHint": "While you're busy or away, questions about colleagues' requests wait and come together at {hours}.",
       "learning": "Learning",
       "review": "Learn after each conversation",
       "reviewHint": "It reads the conversation once more and keeps only what stays true about how you work. Off, it learns only what you tell it to remember.",
       "office": "Office",
       "lobby": "Clock in at the lobby",
       "lobbyHint": "The first time you open the office each day, it starts at the building's lobby. Off, it opens straight at your desk.",
-      "models": "Models",
+      "models": "Background work",
       "light": "Lighter model for background work",
       "lightHint": "Looking back after a conversation, summaries and drafts run on a smaller model from the same service (Claude Haiku on your Claude subscription), using less of your plan or key. Your conversations, your flows and every answer to colleagues stay on the model you picked.",
       "phone": "Phone",
       "quiet": "Quiet hours",
       "quietHint": "Nothing goes to your phone in these hours; what waits is kept and comes when they end. Replies to what you write from your phone still come.",
       "quietFrom": "From",
-      "quietTo": "to"
+      "quietTo": "to",
+      "batchHintShort": "Questions that can wait are kept and come together at these times.",
+      "batchChange": "Change"
     },
     "usage": {
       "title": "Last 30 days",
