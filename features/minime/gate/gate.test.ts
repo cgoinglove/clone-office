@@ -138,6 +138,19 @@ test("what was allowed from now on reads as the person would say it, and can be 
     "Send a request to a colleague's clone",
   );
   assert.equal(
+    ruleText(t, "mcp__minime__conversation_search"),
+    "Search your past AI conversations",
+  );
+  // A tool with no words of its own never shows as the id a session gives it.
+  assert.equal(
+    ruleText(t, "mcp__minime__some_new_tool"),
+    "Use one of its tools: some new tool",
+  );
+  assert.equal(
+    ruleText(t, "mcp__claude_ai_Drive__list_files"),
+    "Use claude_ai_Drive: list files",
+  );
+  assert.equal(
     ruleText(t, "mcp__notion__notion-search"),
     "Use Notion: notion-search",
   );

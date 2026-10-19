@@ -75,7 +75,7 @@ export function describe(
       tool: service.tool,
     });
   const key = `doing.${tool}` as Parameters<AskWords>[0];
-  const what = t.has(key) ? t(key) : tool;
+  const what = t.has(key) ? t(key) : unnamed(t, tool);
   const on =
     input.file_path ??
     input.url ??
@@ -99,6 +99,20 @@ export function describe(
       ? on.replace(/^\/Users\/[^/]+|^\/home\/[^/]+/, "~")
       : "";
   return shown ? `${what}: ${shown}` : what;
+}
+
+/**
+ * A tool with no words of its own: an MCP tool reads by its own name in words, its server's
+ * when it is not the clone's, never as the id a session gives it; anything else as it is.
+ */
+function unnamed(t: AskWords, tool: string): string {
+  const found = /^mcp__(.+?)__(.+)$/.exec(tool);
+  if (!found) return tool;
+  const [, server, name] = found;
+  const words = name.replace(/[_-]+/g, " ").trim();
+  return server === "minime"
+    ? t("doing.other", { tool: words })
+    : t("connector", { service: server, tool: words });
 }
 
 /** What "from now on" would keep for a card, in words, on the page and the phone alike. */
