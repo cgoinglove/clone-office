@@ -84,10 +84,8 @@ export async function GET(request: Request) {
     ? { relay, network: Boolean(networkAddress()), problem: hostProblem() }
     : undefined;
   try {
-    const [{ members: everyone }, { tasks: requests }] = await Promise.all([
-      members(office),
-      tasks(office),
-    ]);
+    const [{ members: everyone, office: about }, { tasks: requests }] =
+      await Promise.all([members(office), tasks(office)]);
     return Response.json({
       joined: true,
       relay,
@@ -96,6 +94,8 @@ export async function GET(request: Request) {
       menu,
       likeMe: like,
       members: everyone,
+      // the office's name, set by its owners; a relay before 10-19 does not send it
+      ...(about?.name ? { name: about.name } : {}),
       tasks: requests,
       // the browsers the person paired to talk to their clone from the team server's page
       webKeys: (await pairedKeys()).length,
@@ -115,7 +115,10 @@ export async function GET(request: Request) {
             kind: "question",
             question: entry.question,
             ...(entry.choices?.length ? { choices: entry.choices } : {}),
+            ...(entry.why ? { why: entry.why } : {}),
           },
+          // the kind of request it is, so the screen can say why it came to the person
+          ...(entry.menu ? { menu: entry.menu } : {}),
         }),
       ),
       // Requests colleagues sent that the person stepped into: their notes to the clone, and the

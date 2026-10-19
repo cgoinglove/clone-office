@@ -81,6 +81,8 @@ export interface Office {
   joined: boolean;
   /** An invite the launcher kept for joining, while the person is in no office. */
   invite?: { link: string; from?: string };
+  /** The office's name, as its owners set it on the team server. */
+  name?: string;
   /** The relay's address as others reach it, for the links it makes. */
   relay?: string;
   /** The office is open on this computer: where teammates reach it, and what keeps it from opening. */
@@ -106,6 +108,8 @@ export interface Office {
     ask: GateAsk;
     /** The person's to answer themselves: what they write goes as their own words. */
     self?: boolean;
+    /** The kind of request it is (a menu id), when the clone named one. */
+    menu?: string;
   }[];
   /** Requests colleagues sent that the person stepped into, by request. */
   steps?: Record<string, Steps>;
@@ -143,6 +147,8 @@ export type Waiting = {
   task?: string;
   /** The person's to answer themselves: what they write goes as their own words. */
   self?: boolean;
+  /** The kind of request it is (a menu id), for a kept one whose kind the clone named. */
+  menu?: string;
 };
 
 /** What the person told the app about themselves; their clone starts every session with it. */

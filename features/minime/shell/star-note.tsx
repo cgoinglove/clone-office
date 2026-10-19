@@ -1,54 +1,36 @@
 "use client";
 
-// One quiet line asking for a star on GitHub, once the app has shown what it is for: the clone has
-// answered a colleague for its person (after Orca's timing, at the moment of value rather than on
-// first launch). Followed or closed, it never comes back on this browser.
+// Asking for a star on GitHub once, as news at the bottom right, when the app has shown what it is
+// for: the clone has answered a colleague for its person (after Orca's timing, at the moment of
+// value rather than on first launch). Shown once on this browser, never as a band on Home (10-19).
 
-import { Star, X } from "lucide-react";
+import { Star } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { notify } from "@/components/ui/toast";
 
 const STAR = "clone-office:star";
 export const REPO_URL = "https://github.com/cgoinglove/clone-office";
 
 export function StarNote({ ready }: { ready: boolean }) {
   const t = useTranslations("shell.home.star");
-  const [done, setDone] = useState(true);
   useEffect(() => {
+    if (!ready) return;
     try {
-      setDone(localStorage.getItem(STAR) === "1");
-    } catch {
-      setDone(false);
-    }
-  }, []);
-  if (!ready || done) return null;
-  const close = () => {
-    setDone(true);
-    try {
+      if (localStorage.getItem(STAR) === "1") return;
       localStorage.setItem(STAR, "1");
-    } catch {}
-  };
-  return (
-    <div className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm shadow-[inset_0_0_0_1px_var(--alpha-10)]">
-      <Star className="size-4 shrink-0 text-muted-foreground" />
-      <span className="min-w-0 flex-1 text-pretty">{t("text")}</span>
-      <a
-        href={REPO_URL}
-        target="_blank"
-        rel="noreferrer"
-        onClick={close}
-        className="shrink-0 rounded-lg px-2.5 py-1 text-sm font-medium shadow-[inset_0_0_0_1px_var(--alpha-15)] transition-colors hover:bg-muted/60"
-      >
-        {t("action")}
-      </a>
-      <button
-        type="button"
-        onClick={close}
-        aria-label={t("close")}
-        className="shrink-0 rounded-lg p-1 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-      >
-        <X className="size-4" />
-      </button>
-    </div>
-  );
+    } catch {
+      return;
+    }
+    notify(t("title"), t("text"), {
+      lead: <Star className="size-4 text-muted-foreground" />,
+      open: {
+        label: t("action"),
+        run: () => window.open(REPO_URL, "_blank", "noreferrer"),
+      },
+      closeLabel: t("close"),
+      timeout: 20_000,
+    });
+  }, [ready, t]);
+  return null;
 }

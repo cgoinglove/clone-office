@@ -1299,7 +1299,8 @@
         "yours": "決めること",
         "working": "進行中",
         "waiting": "相手待ち",
-        "done": "完了"
+        "done": "完了",
+        "moving": "進行中"
       },
       "noAnswerYet": "まだ返事がありません",
       "notAnsweredYet": "クローンが対応中",
@@ -1315,7 +1316,9 @@
         "byLink": "リンクで聞く",
         "ask": "同僚に聞く",
         "invite": "同僚を招待"
-      }
+      },
+      "find": "依頼を探す",
+      "noneFound": "一致する依頼はありません。"
     },
     "office": {
       "title": "オフィス",
@@ -1337,7 +1340,9 @@
       "answerFor": "{name}さんの依頼に「{choice}」",
       "answerToClone": "自分のクローンに「{choice}」",
       "sentFor": "{name}さんの依頼に「{choice}」と自分のクローンに伝えました。クローンが続けて答えます。",
-      "sentToClone": "自分のクローンに「{choice}」と伝えました。"
+      "sentToClone": "自分のクローンに「{choice}」と伝えました。",
+      "ownAnswer": "自分で答える",
+      "myClone": "自分のクローン"
     },
     "clone": {
       "title": "あなたのクローン",
@@ -1531,15 +1536,23 @@
       "in": "出勤",
       "off": "退勤",
       "star": {
-        "text": "クローンがあなたの代わりに同僚に答えました。Clone Office が役に立ったら、GitHub のスターが他の人に見つけてもらう助けになります。",
+        "text": "Clone Office が役に立ったら、GitHub のスターがほかの人に見つけてもらう助けになります。",
         "action": "GitHub でスター",
-        "close": "今はしない"
+        "close": "今はしない",
+        "title": "クローンが代わりに同僚に答えました"
       },
       "summaryQuiet": "今のところ静かです。クローンが見守っています。",
       "didShort": "クローンがしたこと",
       "coming": "このあと",
       "colleagues": "同僚",
-      "noFlowToday": "今日の予定はありません。{count}件のフローは決めた日に動きます。"
+      "noFlowToday": "今日の予定はありません。{count}件のフローは決めた日に動きます。",
+      "summaryAnswered": "{count, plural, =0 {今日はまだクローンが代わりに答えた同僚はいません。} other {今日はクローンが同僚#人に代わりに答えました。}}",
+      "summaryDecide": "{count, plural, =0 {決めることはありません。} other {残りは<b>決めること#件</b>だけです。}}",
+      "decideHint": "クローンだけでは決められないことだけが届きます",
+      "quoted": "「{text}」",
+      "allDid": "代わりにしたことをすべて見る",
+      "next": "次：{name} · {at}",
+      "inOf": "{all}人中{count}人が出社"
     },
     "trouble": {
       "open": "オフィスの設定",
@@ -1628,7 +1641,26 @@
       "answered": "{name} さんが依頼に答えました"
     },
     "skip": "本文へスキップ",
-    "closeMenu": "メニューを閉じる"
+    "closeMenu": "メニューを閉じる",
+    "line": {
+      "me": "自分",
+      "way": "{from} → {to}",
+      "asking": "自分のクローンが質問中：「{question}」",
+      "askingPlain": "自分のクローンがあなたに質問中",
+      "mineWorking": "自分のクローンが回答中",
+      "theirsWorking": "{name}さんのクローンが回答中",
+      "theirsAsking": "{name}さんの判断待ち",
+      "quote": "「{text}」",
+      "done": "完了",
+      "failed": "完了しませんでした",
+      "handled": {
+        "alone": "おまかせ",
+        "told": "あとで報告",
+        "asked": "先に確認",
+        "self": "自分で回答"
+      }
+    },
+    "inNow": "{count}人出社"
   },
   "page": {
     "notFound": {

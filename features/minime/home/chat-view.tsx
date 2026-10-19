@@ -164,7 +164,7 @@ function Empty({
             onClick={() => void chat.ask(routine.label)}
             className="group flex items-start gap-2.5 rounded-xl border border-waiting/30 bg-waiting/5 px-3 py-2.5 text-left text-sm transition-colors hover:bg-waiting/10 disabled:opacity-50"
           >
-            <Clock className="mt-0.5 size-4 shrink-0 text-waiting" />
+            <Clock className="mt-0.5 size-4 shrink-0 text-waiting-ink" />
             <span className="min-w-0">
               <span className="block font-medium">{routine.label}</span>
               <span className="block text-xs text-muted-foreground">
@@ -486,7 +486,7 @@ export function Composer({
       <div
         data-ask-box
         className={cn(
-          "flex gap-2 rounded-[26px] bg-background shadow-[0_0_0_1px_var(--alpha-12),0_6px_20px_var(--alpha-05)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--alpha-20),0_6px_20px_var(--alpha-08)]",
+          "flex gap-2 rounded-[26px] bg-background shadow-[0_0_0_1px_var(--field)] transition-shadow focus-within:shadow-[0_0_0_1px_var(--field),0_0_0_4px_var(--alpha-05)]",
           tools
             ? "flex-wrap items-center px-5 pt-3.5 pb-2.5"
             : "items-end py-2 pr-2 pl-4.5",

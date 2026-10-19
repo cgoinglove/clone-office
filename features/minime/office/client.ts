@@ -178,7 +178,7 @@ export async function leaveOffice(): Promise<void> {
 export function members(
   office: OfficeConfig,
   signal?: AbortSignal,
-): Promise<{ members: Member[] }> {
+): Promise<{ members: Member[]; office?: { name?: string } }> {
   return call(office.relay, "/members", { token: office.token, signal });
 }
 

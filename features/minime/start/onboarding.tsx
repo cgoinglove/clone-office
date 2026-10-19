@@ -1106,7 +1106,7 @@ function Answered({
       role="alert"
       className="mt-3 flex flex-col gap-1.5 rounded-xl bg-waiting/6 px-4 py-3 shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--waiting)_20%,transparent)]"
     >
-      <p className="text-sm text-waiting">
+      <p className="text-sm text-waiting-ink">
         {problemText(probe.problem ?? "brain-no-answer")}
       </p>
       {probe.detail && (

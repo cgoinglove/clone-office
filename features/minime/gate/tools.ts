@@ -77,6 +77,9 @@ export const ASK_COLLEAGUE_TOOL = {
   },
 };
 
+/** The longest reason a question carries under it; one sentence, not a report. */
+const WHY_CHARS = 280;
+
 export const ASK_TOOL = {
   name: "ask_me",
   description:
@@ -86,6 +89,11 @@ export const ASK_TOOL = {
     properties: {
       question: { type: "string" },
       choices: { type: "array", items: { type: "string" }, maxItems: 4 },
+      why: {
+        type: "string",
+        description:
+          "One short sentence on what you checked that bears on the answer (the calendar is free after 2pm Thursday, the tests passed), shown under the question so they can decide at once. Leave it out when you checked nothing.",
+      },
     },
     required: ["question"],
   },
@@ -268,10 +276,13 @@ export async function callGateTool(
       const choices = Array.isArray(args.choices)
         ? args.choices.map(String).slice(0, 4)
         : undefined;
+      const why =
+        typeof args.why === "string" ? args.why.trim().slice(0, WHY_CHARS) : "";
       const answer = await ask({
         kind: "question",
         question: String(args.question ?? ""),
         ...(choices?.length ? { choices } : {}),
+        ...(why ? { why } : {}),
       });
       return {
         result: answer.answered

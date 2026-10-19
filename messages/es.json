@@ -1299,7 +1299,8 @@
         "yours": "Por decidir",
         "working": "En camino",
         "waiting": "Esperando a otros",
-        "done": "Terminadas"
+        "done": "Terminadas",
+        "moving": "En curso"
       },
       "noAnswerYet": "Aún sin respuesta",
       "notAnsweredYet": "Tu clon está en eso",
@@ -1315,7 +1316,9 @@
         "byLink": "Preguntar por enlace",
         "ask": "Preguntar a un colega",
         "invite": "Invitar a un colega"
-      }
+      },
+      "find": "Buscar una petición",
+      "noneFound": "Ninguna petición coincide."
     },
     "office": {
       "title": "Oficina",
@@ -1337,7 +1340,9 @@
       "answerFor": "«{choice}» para la petición de {name}",
       "answerToClone": "«{choice}» a tu clon",
       "sentFor": "Le dijiste «{choice}» a tu clon para la petición de {name}; él responde.",
-      "sentToClone": "Le dijiste «{choice}» a tu clon."
+      "sentToClone": "Le dijiste «{choice}» a tu clon.",
+      "ownAnswer": "Responder tú",
+      "myClone": "Mi clon"
     },
     "clone": {
       "title": "Tu clon",
@@ -1531,15 +1536,23 @@
       "in": "En línea",
       "off": "Fuera",
       "star": {
-        "text": "Tu clon ya respondió a un colega por ti. Si Clone Office te ayuda, una estrella en GitHub ayuda a que otros lo encuentren.",
+        "text": "Si Clone Office te ayuda, una estrella en GitHub ayuda a que otros lo encuentren.",
         "action": "Estrella en GitHub",
-        "close": "Ahora no"
+        "close": "Ahora no",
+        "title": "Tu clon respondió a un compañero por ti"
       },
       "summaryQuiet": "Todo tranquilo por ahora. Tu clon está atento.",
       "didShort": "Lo que hizo tu clon",
       "coming": "Lo que viene",
       "colleagues": "Compañeros",
-      "noFlowToday": "Nada programado para hoy. {count, plural, one {Tu rutina se ejecuta} other {Tus # rutinas se ejecutan}} en {count, plural, one {su día} other {sus días}}."
+      "noFlowToday": "Nada programado para hoy. {count, plural, one {Tu rutina se ejecuta} other {Tus # rutinas se ejecutan}} en {count, plural, one {su día} other {sus días}}.",
+      "summaryAnswered": "{count, plural, =0 {Hoy tu clon aún no ha respondido a nadie por ti.} one {Hoy tu clon respondió a un compañero por ti.} other {Hoy tu clon respondió a # compañeros por ti.}}",
+      "summaryDecide": "{count, plural, =0 {Nada espera por ti.} one {Solo queda <b>una cosa por decidir</b>.} other {Solo quedan <b># cosas por decidir</b>.}}",
+      "decideHint": "Aquí solo llega lo que tu clon no puede decidir solo",
+      "quoted": "“{text}”",
+      "allDid": "Todo lo que hizo por ti",
+      "next": "Siguiente: {name} · {at}",
+      "inOf": "{count} de {all} conectados"
     },
     "trouble": {
       "open": "Configurar oficina",
@@ -1628,7 +1641,26 @@
       "answered": "{name} respondió a tu petición"
     },
     "skip": "Saltar al contenido",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "line": {
+      "me": "Yo",
+      "way": "{from} → {to}",
+      "asking": "Tu clon pregunta: “{question}”",
+      "askingPlain": "Tu clon te está preguntando",
+      "mineWorking": "Tu clon está respondiendo",
+      "theirsWorking": "El clon de {name} está respondiendo",
+      "theirsAsking": "Esperando a {name}",
+      "quote": "“{text}”",
+      "done": "Hecho",
+      "failed": "No terminó",
+      "handled": {
+        "alone": "Por su cuenta",
+        "told": "Avísame",
+        "asked": "Pregúntame antes",
+        "self": "Respondiste tú"
+      }
+    },
+    "inNow": "{count} conectados"
   },
   "page": {
     "notFound": {

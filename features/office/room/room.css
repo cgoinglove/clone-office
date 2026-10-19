@@ -445,7 +445,7 @@
   cursor: pointer;
   will-change: transform;
 }
-/* the one dot a tag carries: what waits on the viewer, in ember */
+/* the one dot a tag carries: what waits on the viewer, in its orange */
 .of-wrap .plate i {
   width: 6px;
   height: 6px;
@@ -469,22 +469,12 @@
 .of-wrap .plate.off b {
   font-weight: 500;
 }
-.of-wrap .plate.mine {
-  box-shadow:
-    0 0 0 1px var(--waiting-line),
-    0 3px 10px var(--ink-05);
-}
 .of-wrap .plate.mine span {
-  color: var(--waiting);
+  color: var(--waiting-ink);
 }
 .of-wrap .plate.you {
   box-shadow:
     0 0 0 1.5px var(--ink),
-    0 3px 10px var(--ink-05);
-}
-.of-wrap .plate.you.mine {
-  box-shadow:
-    0 0 0 1.5px var(--waiting),
     0 3px 10px var(--ink-05);
 }
 .of-wrap .bub {
@@ -555,7 +545,7 @@
   box-shadow: 1.5px 1.5px 0 0 var(--waiting);
 }
 .of-wrap .bub.mine .who {
-  color: var(--waiting);
+  color: var(--waiting-ink);
 }
 .of-wrap .bub .acts {
   display: flex;
@@ -629,7 +619,7 @@
 }
 .of-wrap .chip.need {
   cursor: pointer;
-  color: var(--waiting);
+  color: var(--waiting-ink);
   background: var(--waiting-soft);
   box-shadow: none;
   font-weight: 500;
@@ -998,7 +988,7 @@
 }
 .of-wrap .decide small {
   font: 600 11.5px var(--font-sans);
-  color: var(--waiting);
+  color: var(--waiting-ink);
   letter-spacing: 0.01em;
 }
 .of-wrap .decide.other {
@@ -1297,7 +1287,7 @@
   margin-right: 4px;
 }
 .of-wrap .lb-facts .hot {
-  color: var(--waiting);
+  color: var(--waiting-ink);
 }
 .of-wrap .lb-facts .hot i {
   width: 7px;

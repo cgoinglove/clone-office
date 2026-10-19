@@ -1299,7 +1299,8 @@
         "yours": "待你决定",
         "working": "进行中",
         "waiting": "等对方",
-        "done": "完成"
+        "done": "已结束",
+        "moving": "进行中"
       },
       "noAnswerYet": "还没有回复",
       "notAnsweredYet": "你的分身正在处理",
@@ -1315,7 +1316,9 @@
         "byLink": "通过链接提问",
         "ask": "问同事",
         "invite": "邀请同事"
-      }
+      },
+      "find": "查找请求",
+      "noneFound": "没有匹配的请求。"
     },
     "office": {
       "title": "办公室",
@@ -1337,7 +1340,9 @@
       "answerFor": "{name}的请求：“{choice}”",
       "answerToClone": "告诉你的分身：“{choice}”",
       "sentFor": "已把“{choice}”告诉你的分身，它会接着回复{name}的请求。",
-      "sentToClone": "已告诉你的分身：“{choice}”。"
+      "sentToClone": "已告诉你的分身：“{choice}”。",
+      "ownAnswer": "自己回答",
+      "myClone": "我的分身"
     },
     "clone": {
       "title": "你的分身",
@@ -1531,15 +1536,23 @@
       "in": "在岗",
       "off": "已下班",
       "star": {
-        "text": "你的克隆已经替你回答了同事。如果 Clone Office 对你有帮助，在 GitHub 上点个星能让更多人找到它。",
+        "text": "如果 Clone Office 对你有帮助，在 GitHub 上点个星能让更多人找到它。",
         "action": "在 GitHub 上加星",
-        "close": "以后再说"
+        "close": "以后再说",
+        "title": "你的分身替你回答了同事"
       },
       "summaryQuiet": "目前很安静，分身在帮你看着。",
       "didShort": "分身做了什么",
       "coming": "接下来",
       "colleagues": "同事",
-      "noFlowToday": "今天没有安排。你的 {count} 个自动流程会在设定的日子运行。"
+      "noFlowToday": "今天没有安排。你的 {count} 个自动流程会在设定的日子运行。",
+      "summaryAnswered": "{count, plural, =0 {今天分身还没有替你回答同事。} other {今天分身替你回答了 # 位同事。}}",
+      "summaryDecide": "{count, plural, =0 {没有需要你决定的事。} other {只剩 <b># 件待决定</b>。}}",
+      "decideHint": "只有分身无法独自决定的事才会来这里",
+      "quoted": "“{text}”",
+      "allDid": "查看它替你做的所有事",
+      "next": "下一个：{name} · {at}",
+      "inOf": "{all} 人中 {count} 人在岗"
     },
     "trouble": {
       "open": "办公室设置",
@@ -1628,7 +1641,26 @@
       "answered": "{name} 回复了你的请求"
     },
     "skip": "跳到正文",
-    "closeMenu": "关闭菜单"
+    "closeMenu": "关闭菜单",
+    "line": {
+      "me": "我",
+      "way": "{from} → {to}",
+      "asking": "你的分身在问：“{question}”",
+      "askingPlain": "你的分身在问你",
+      "mineWorking": "你的分身正在回答",
+      "theirsWorking": "{name} 的分身正在回答",
+      "theirsAsking": "等 {name} 决定",
+      "quote": "“{text}”",
+      "done": "已完成",
+      "failed": "没有完成",
+      "handled": {
+        "alone": "自行处理",
+        "told": "告诉我",
+        "asked": "先问我",
+        "self": "你亲自回答"
+      }
+    },
+    "inNow": "{count} 人在岗"
   },
   "page": {
     "notFound": {

@@ -1,20 +1,16 @@
 "use client";
 
-// The requests between the person's clone and their colleagues', as one list: those waiting on the
-// person first, then those on their way, then those finished (stamped DONE). Each opens on its own
-// page. Asking a colleague starts here too; with nobody to ask yet, the screen says how to begin.
+// The requests between the person's clone and their colleagues', as one list (after Linear's inbox):
+// those waiting on the person first, then those on their way, then those finished, each group's
+// heading saying the state so its lines need not. A line is the same everywhere (`RequestLine`): the
+// other side's clone, what was asked, who asks whom and what goes on, and when; a finished one says
+// how the clone answered (alone, telling the person, after asking them, or the person's own words).
+// Each opens on its own page. Asking a colleague starts here too.
 
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  Link2,
-  Plus,
-  UserPlus,
-} from "lucide-react";
-import Link from "next/link";
+import { Link2, Plus, Search, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFormatter, useNow, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,17 +20,61 @@ import {
 } from "@/components/ui/dialog";
 import { Segmented } from "@/components/ui/segmented";
 import { Bot } from "@/features/office";
-import { cn, notAfter } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { Colleague } from "../home/colleague";
-import type { Task } from "../home/use-office";
+import { HEADERS, type Task } from "../home/use-office";
 import { useApp } from "./app-state";
 import { OfficeTrouble } from "./office-trouble";
-import { Mark, PageHeader, type Phase, PhaseChip, phaseOf } from "./parts";
+import {
+  type Handled,
+  PageHeader,
+  RequestLine,
+  useRequestWords,
+} from "./parts";
 import { askLine } from "./your-turn";
 
 type Side = "all" | "received" | "sent";
 
-const GROUPS: Phase[] = ["yours", "working", "waiting", "done"];
+/** The three groups a list is read in: what waits on the person, what is on its way, what ended. */
+type Group = "yours" | "moving" | "done";
+const GROUPS: Group[] = ["yours", "moving", "done"];
+const FINISHED = ["COMPLETED", "FAILED", "REJECTED", "CANCELED"];
+
+/** How the clone's answer went, from its own record of what it did in the person's name. */
+function useHandled(): Map<string, Handled> {
+  const [handled, setHandled] = useState(new Map<string, Handled>());
+  useEffect(() => {
+    let live = true;
+    void fetch("/api/me/activity", { headers: HEADERS })
+      .then((r) => r.json())
+      .then(
+        (body: {
+          activity?: { kind: string; task?: string; how?: string }[];
+        }) => {
+          if (!live) return;
+          const map = new Map<string, Handled>();
+          for (const line of body.activity ?? []) {
+            if (line.kind !== "answered" || !line.task || map.has(line.task))
+              continue;
+            map.set(
+              line.task,
+              line.how === "alone"
+                ? "alone"
+                : line.how === "told"
+                  ? "told"
+                  : "asked",
+            );
+          }
+          setHandled(map);
+        },
+      )
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, []);
+  return handled;
+}
 
 /** A request's first words: what was asked. */
 export const askedText = (task: Task) =>
@@ -54,6 +94,23 @@ export function RequestsScreen() {
   const members = data?.members ?? [];
   const [side, setSide] = useState<Side>("all");
   const [asking, setAsking] = useState(false);
+  const [find, setFind] = useState("");
+  const words = useRequestWords();
+  const handledBy = useHandled();
+  // within the hour "n minutes ago", today the clock, before that the day (one rule everywhere)
+  const when = (iso: string) => {
+    const at = Math.min(Date.parse(iso), now.getTime());
+    const day = new Date(now);
+    day.setHours(0, 0, 0, 0);
+    if (now.getTime() - at < 60 * 60 * 1000)
+      return format.relativeTime(at, now);
+    if (at >= day.getTime())
+      return format.dateTime(new Date(at), {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    return format.relativeTime(at, { now, unit: "day" });
+  };
 
   const yours = app.tasksToDecide;
   // what the clone asks the person about each request waiting on them, said on its row
@@ -64,7 +121,19 @@ export function RequestsScreen() {
         : [],
     ),
   );
-  const tasks = (data?.tasks ?? [])
+  const nameOf = (task: Task) => {
+    const other =
+      task.metadata.from === me ? task.metadata.to : task.metadata.from;
+    return (
+      office.names.get(other) ??
+      (task.metadata.guest
+        ? tOffice("byLink", { name: task.metadata.guest })
+        : other)
+    );
+  };
+  const needle = find.trim().toLowerCase();
+  const all = data?.tasks ?? [];
+  const tasks = all
     .filter((task) =>
       side === "all"
         ? true
@@ -72,21 +141,35 @@ export function RequestsScreen() {
           ? task.metadata.from === me
           : task.metadata.from !== me,
     )
+    .filter(
+      (task) =>
+        !needle ||
+        `${askedText(task)} ${nameOf(task)}`.toLowerCase().includes(needle),
+    )
     .sort((a, b) => b.status.timestamp.localeCompare(a.status.timestamp));
-  const received = (data?.tasks ?? []).filter(
-    (task) => task.metadata.from !== me,
-  );
-  // Finished by the clone: not one its person answered themselves (here, or on the web).
-  const handled = received.filter(
-    (task) =>
-      task.status.state === "COMPLETED" &&
-      !yours.has(task.id) &&
-      !task.history.some(
+  const groupOf = (task: Task): Group =>
+    yours.has(task.id)
+      ? "yours"
+      : FINISHED.includes(task.status.state)
+        ? "done"
+        : "moving";
+  // how a finished request a colleague sent was answered: the person's own words, or the clone's way
+  const handledOf = (task: Task): Handled | undefined => {
+    if (task.metadata.from === me || task.status.state !== "COMPLETED")
+      return undefined;
+    if (
+      task.history.some(
         (message) =>
           message.role === "agent" &&
           (message.metadata as { by?: string } | undefined)?.by === "person",
-      ),
-  ).length;
+      )
+    )
+      return "self";
+    return handledBy.get(task.id);
+  };
+  const received = (data?.tasks ?? []).filter(
+    (task) => task.metadata.from !== me,
+  );
   const { indexOf } = office;
   const colleagues = members
     .map((member, index) => ({ member, index }))
@@ -97,9 +180,15 @@ export function RequestsScreen() {
     else router.push(`/chat?say=${encodeURIComponent(t("linkStarter"))}`);
   };
 
+  // Finished by the clone on its own: alone, or telling the person after (not asked, not theirs).
+  const handled = received.filter((task) => {
+    const how = handledOf(task);
+    return how === "alone" || how === "told";
+  }).length;
+
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-8 pt-8 pb-12">
+      <div className="mx-auto flex w-full max-w-[53rem] flex-col gap-6 px-8 pt-10 pb-12">
         <OfficeTrouble />
         <PageHeader
           title={t("title")}
@@ -124,130 +213,94 @@ export function RequestsScreen() {
           />
         ) : (
           <>
-            <Segmented<Side>
-              view
-              aria-label={t("side")}
-              options={[
-                { value: "all", label: t("all") },
-                { value: "received", label: t("received") },
-                { value: "sent", label: t("sent") },
-              ]}
-              value={side}
-              onChange={setSide}
-              className="self-start"
-            />
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <Segmented<Side>
+                view
+                aria-label={t("side")}
+                options={[
+                  { value: "all", label: t("all") },
+                  { value: "received", label: t("received") },
+                  { value: "sent", label: t("sent") },
+                ]}
+                value={side}
+                onChange={setSide}
+              />
+              <label className="ml-auto flex h-8.5 w-56 items-center gap-2 rounded-[10px] px-3 shadow-[inset_0_0_0_1px_var(--field)] focus-within:shadow-[inset_0_0_0_1px_var(--field),0_0_0_3px_var(--alpha-05)] max-sm:w-full">
+                <Search className="size-4 shrink-0 text-muted-foreground" />
+                <input
+                  value={find}
+                  onChange={(event) => setFind(event.target.value)}
+                  placeholder={t("find")}
+                  aria-label={t("find")}
+                  className="min-w-0 flex-1 bg-transparent text-[13.5px] outline-none placeholder:text-muted-foreground"
+                />
+              </label>
+            </div>
+            <div className="flex flex-col gap-7">
               {GROUPS.map((group) => {
-                const rows = tasks.filter(
-                  (task) =>
-                    phaseOf(task.status.state, yours.has(task.id)) === group,
-                );
+                const rows = tasks.filter((task) => groupOf(task) === group);
                 if (!rows.length) return null;
                 return (
                   <section key={group} aria-labelledby={`g-${group}`}>
                     <h2
                       id={`g-${group}`}
-                      // a heading and its plain count, as the column writes "To decide"
-                      className={cn(
-                        "flex items-center gap-2 px-3 pb-2 text-[13px] font-semibold",
-                        group === "yours"
-                          ? "text-foreground"
-                          : "text-muted-foreground",
-                      )}
+                      className="flex items-center gap-2 px-3 pb-2 text-[14.5px] font-semibold"
                     >
+                      {group === "yours" && (
+                        <span
+                          aria-hidden
+                          className="size-1.5 rounded-full bg-waiting"
+                        />
+                      )}
                       {t(`groups.${group}`)}
-                      <span className="font-mono text-xs font-normal text-muted-foreground tabular-nums">
+                      <span
+                        className={cn(
+                          "inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[11.5px] font-semibold tabular-nums",
+                          group === "yours"
+                            ? "bg-waiting/14 text-waiting-ink"
+                            : "bg-foreground/[0.07] text-muted-foreground",
+                        )}
+                      >
                         {rows.length}
                       </span>
                     </h2>
-                    <ul className="flex flex-col border-t border-border/60">
+                    <ul className="flex flex-col gap-px">
                       {rows.map((task) => {
                         const sent = task.metadata.from === me;
                         const other = sent
                           ? task.metadata.to
                           : task.metadata.from;
-                        const name =
-                          office.names.get(other) ??
-                          (task.metadata.guest
-                            ? tOffice("byLink", { name: task.metadata.guest })
-                            : other);
-                        const answer = [...task.history]
-                          .reverse()
-                          .find((message) => message.role === "agent")
-                          ?.parts.map((part) => part.text)
-                          .join(" ");
-                        const failed = [
-                          "FAILED",
-                          "REJECTED",
-                          "CANCELED",
-                        ].includes(task.status.state);
+                        const name = nameOf(task);
                         return (
-                          <li
+                          <RequestLine
                             key={task.id}
-                            className="border-b border-border/60"
-                          >
-                            <Link
-                              href={`/requests/${encodeURIComponent(task.id)}`}
-                              className="grid grid-cols-[minmax(0,1fr)_150px_112px_76px] items-center gap-4 rounded-lg px-3 py-3 transition-colors hover:bg-muted/50 max-md:grid-cols-[minmax(0,1fr)_auto]"
-                            >
-                              <span className="flex min-w-0 flex-col gap-0.5">
-                                <span
-                                  className={cn(
-                                    "truncate text-[14.5px]",
-                                    group === "done"
-                                      ? "text-foreground/80"
-                                      : "font-medium",
-                                  )}
-                                >
-                                  {askedText(task)}
-                                </span>
-                                <span className="truncate text-[13px] text-muted-foreground">
-                                  {(group === "yours" &&
-                                    questions.get(task.id)) ||
-                                    answer ||
-                                    t(sent ? "noAnswerYet" : "notAnsweredYet")}
-                                </span>
-                              </span>
-                              <span className="flex min-w-0 items-center gap-1.5 text-[13px] text-foreground/85 max-md:hidden">
-                                {sent ? (
-                                  <ArrowUpRight
-                                    aria-label={t("sentTo")}
-                                    className="size-3.5 shrink-0 text-muted-foreground"
-                                  />
-                                ) : (
-                                  <ArrowDownLeft
-                                    aria-label={t("receivedFrom")}
-                                    className="size-3.5 shrink-0 text-muted-foreground"
-                                  />
-                                )}
-                                {task.metadata.guest ? (
-                                  <Link2 className="size-4 shrink-0 text-muted-foreground" />
-                                ) : (
-                                  <Mark
-                                    id={other}
-                                    index={indexOf(other)}
-                                    size={18}
-                                  />
-                                )}
-                                <span className="truncate">{name}</span>
-                              </span>
-                              <span>
-                                <PhaseChip phase={group} failed={failed} />
-                              </span>
-                              <span className="text-right text-xs whitespace-nowrap text-muted-foreground tabular-nums max-md:hidden">
-                                {format.relativeTime(
-                                  notAfter(task.status.timestamp, now),
-                                  now,
-                                )}
-                              </span>
-                            </Link>
-                          </li>
+                            task={task}
+                            me={me}
+                            yours={group === "yours"}
+                            name={name}
+                            index={indexOf(other)}
+                            words={words(
+                              task,
+                              sent,
+                              name,
+                              group === "yours"
+                                ? questions.get(task.id)
+                                : undefined,
+                            )}
+                            when={when(task.status.timestamp)}
+                            handled={handledOf(task)}
+                          />
                         );
                       })}
                     </ul>
                   </section>
                 );
               })}
+              {!tasks.length && (
+                <p className="px-3 text-[14px] text-muted-foreground">
+                  {t("noneFound")}
+                </p>
+              )}
             </div>
           </>
         )}

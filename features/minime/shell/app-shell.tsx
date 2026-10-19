@@ -276,7 +276,7 @@ function Frame({ children }: { children: ReactNode }) {
             {waiting > 0 && (
               <Link
                 href="/home"
-                className="mr-1 flex h-7 items-center gap-1.5 rounded-lg px-2 text-[12.5px] font-semibold text-waiting outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                className="mr-1 flex h-7 items-center gap-1.5 rounded-lg px-2 text-[12.5px] font-semibold text-waiting-ink outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {t("yourTurn")}
                 <span className="tabular-nums">{waiting}</span>

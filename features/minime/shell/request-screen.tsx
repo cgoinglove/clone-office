@@ -284,7 +284,7 @@ export function RequestScreen({ id }: { id: string }) {
                 id={`answer-${entry.id}`}
                 className="flex flex-col gap-2"
               >
-                <p className="flex items-center gap-2 text-[13px] font-semibold text-waiting">
+                <p className="flex items-center gap-2 text-[13px] font-semibold text-waiting-ink">
                   <span
                     aria-hidden
                     className="size-1.5 rounded-full bg-waiting"

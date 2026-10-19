@@ -2,7 +2,7 @@
 // one's own can mount the same handler. Every call but the
 // link and invite pages carries the member's own token (Authorization: Bearer). Routes:
 //   POST /join          {key, card} -> {id, token}; with a token, updates the card
-//   GET  /members       -> {members}                    the members of one's office
+//   GET  /members       -> {members, office: {name}}    the members of one's office, and its name
 //   POST /tasks         {to, text, files?} -> {task}    a request to another member
 //   POST /tasks/:id     {state?, text?, files?} -> {task}  a message and the request's new state
 //   POST /files         the file's bytes, its name in X-File-Name -> {file}  to name on a message
@@ -1865,7 +1865,12 @@ export function relayHandler(
       }
       if (request.method === "GET" && path === "/members") {
         const me = await member(request);
-        return send(200, { members: await relay.members(me.office) });
+        const [list, name] = await Promise.all([
+          relay.members(me.office),
+          relay.officeName(me.office),
+        ]);
+        // the office's name beside its people, for the column of each clone's app
+        return send(200, { members: list, office: { name } });
       }
       if (request.method === "POST" && path === "/tasks") {
         const me = await member(request);

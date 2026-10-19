@@ -185,4 +185,4 @@ export const PromiseChain = () => {
  * success, connected and enabled carry none. Blue is no status: it is the brand
  * (`bg-brand`), the one thing a screen asks for.
  */
-export const WAITING_INK = "text-waiting";
+export const WAITING_INK = "text-waiting-ink";

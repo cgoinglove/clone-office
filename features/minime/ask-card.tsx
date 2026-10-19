@@ -19,7 +19,13 @@ import {
 export { changeOf, describe };
 
 export type GateAsk =
-  | { kind: "question"; question: string; choices?: string[] }
+  | {
+      kind: "question";
+      question: string;
+      choices?: string[];
+      /** What the clone checked that bears on it, in one short sentence. */
+      why?: string;
+    }
   | ({
       kind: "permission";
       tool: string;
@@ -54,7 +60,7 @@ export function AskCard({
   if (ask.kind === "rule")
     return (
       <div className="flex max-w-full flex-col gap-3 self-start rounded-xl border border-waiting/40 bg-waiting/5 p-4 text-[15px]">
-        <span className="text-xs font-medium text-waiting">
+        <span className="text-xs font-medium text-waiting-ink">
           {t("ruleTitle")}
         </span>
         <p>{t("rule", { menu: ask.menu })}</p>
@@ -80,7 +86,7 @@ export function AskCard({
     );
   return (
     <div className="flex max-w-full flex-col gap-3 self-start rounded-xl border border-waiting/40 bg-waiting/5 p-4 text-[15px]">
-      <span className="text-xs font-medium text-waiting">
+      <span className="text-xs font-medium text-waiting-ink">
         {ask.kind === "question" ? t("needsYou") : t("mayI")}
       </span>
       {ask.kind === "question" ? (

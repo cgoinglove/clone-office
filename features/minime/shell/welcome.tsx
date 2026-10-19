@@ -63,7 +63,7 @@ export function Welcome() {
               onClick={() => void chat.ask(now.label)}
               className="flex items-center gap-3 rounded-xl bg-waiting/5 px-4 py-3 text-left text-sm shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--waiting)_30%,transparent)] transition-colors hover:bg-waiting/10 disabled:opacity-50"
             >
-              <Clock className="size-4 shrink-0 text-waiting" />
+              <Clock className="size-4 shrink-0 text-waiting-ink" />
               <span className="min-w-0 flex-1">{now.label}</span>
               <span className="text-xs text-muted-foreground">
                 {tHome("routineHint")}
@@ -97,7 +97,14 @@ export function Welcome() {
  * The first steps with the app, after the getting-started lists of Linear and Notion: each says
  * why it matters and has one way to do it, and is ticked from what the app keeps.
  */
-export function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
+export function FirstSteps({
+  onWrite,
+  compact = false,
+}: {
+  onWrite: (text?: string) => void;
+  /** One card naming the next step, beside a Home that has something going on. */
+  compact?: boolean;
+}) {
   const t = useTranslations("shell.welcome.steps");
   const app = useApp();
   const [hidden, setHidden] = useState(true);
@@ -142,41 +149,63 @@ export function FirstSteps({ onWrite }: { onWrite: (text?: string) => void }) {
     menu: (data?.menu?.length ?? 0) > 0,
     phone: Boolean(facts?.phone),
   };
-  const steps: { id: StepId; action: React.ReactNode }[] = [
-    {
-      id: "ask",
-      action: <StepButton onClick={() => onWrite()}>{t("ask.do")}</StepButton>,
-    },
-    {
-      id: "me",
-      action: (
-        <StepButton onClick={() => onWrite(t("me.starter"))}>
-          {t("me.do")}
-        </StepButton>
-      ),
-    },
-    {
-      id: "team",
-      action: (
-        <StepButton onClick={() => app.setSettings("office")}>
-          {t("team.do")}
-        </StepButton>
-      ),
-    },
-    { id: "menu", action: <StepLink href="/clone">{t("menu.do")}</StepLink> },
-    {
-      id: "phone",
-      action: (
-        <StepButton onClick={() => app.setSettings("phone")}>
-          {t("phone.do")}
-        </StepButton>
-      ),
-    },
-  ];
+  const go: Record<StepId, (() => void) | string> = {
+    ask: () => onWrite(),
+    me: () => onWrite(t("me.starter")),
+    team: () => app.setSettings("office"),
+    menu: "/clone?tab=menu",
+    phone: () => app.setSettings("phone"),
+  };
+  const steps: { id: StepId; action: React.ReactNode }[] = (
+    ["ask", "me", "team", "menu", "phone"] as const
+  ).map((id) => {
+    const to = go[id];
+    return {
+      id,
+      action:
+        typeof to === "string" ? (
+          <StepLink href={to}>{t(`${id}.do`)}</StepLink>
+        ) : (
+          <StepButton onClick={to}>{t(`${id}.do`)}</StepButton>
+        ),
+    };
+  });
   const count = steps.filter((step) => done[step.id]).length;
   if (hidden || !facts || count === steps.length) return null;
   const next = steps.find((step) => !done[step.id])?.id;
   const finished = steps.filter((step) => done[step.id]);
+
+  if (compact && next) {
+    const to = go[next];
+    const inner = (
+      <>
+        <span
+          aria-hidden
+          className="grid size-8 shrink-0 place-items-center rounded-full bg-background text-xs font-semibold tabular-nums"
+        >
+          {count}/{steps.length}
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col leading-snug">
+          <span className="text-[13px] font-semibold">{t("title")}</span>
+          <span className="truncate text-[12.5px] text-muted-foreground">
+            {t(`${next}.title`)}
+          </span>
+        </span>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+      </>
+    );
+    const card =
+      "flex items-center gap-3 rounded-[14px] bg-muted/60 px-3.5 py-3 text-left transition-colors hover:bg-muted";
+    return typeof to === "string" ? (
+      <Link href={to} className={card}>
+        {inner}
+      </Link>
+    ) : (
+      <button type="button" onClick={to} className={card}>
+        {inner}
+      </button>
+    );
+  }
 
   // What is left, each with why and one way to do it; what is done, folded into one line under it.
   return (

@@ -27,7 +27,13 @@ export interface AskShown {
 }
 
 export type Ask =
-  | { kind: "question"; question: string; choices?: string[] }
+  | {
+      kind: "question";
+      question: string;
+      choices?: string[];
+      /** What the clone checked that bears on it, in one short sentence, so the person answers at once. */
+      why?: string;
+    }
   | ({
       kind: "permission";
       tool: string;

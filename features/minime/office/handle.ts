@@ -464,7 +464,7 @@ async function answer(options: {
   const said: Said[] = [...(resume?.said ?? []), ...notesSaid(notes)];
   const asked = new Map<
     string,
-    { question: string; choices?: string[]; answered: boolean }
+    { question: string; choices?: string[]; why?: string; answered: boolean }
   >();
   const stop = onAsk((pending) => {
     if (pending.chat !== gate.chat) return;
@@ -478,6 +478,7 @@ async function answer(options: {
       asked.set(pending.id, {
         question,
         choices: pending.ask.choices,
+        ...(pending.ask.why ? { why: pending.ask.why } : {}),
         answered: false,
       });
     void waitFor(pending.id)?.then((answer) => {
@@ -624,6 +625,7 @@ async function answer(options: {
         kind: "question",
         question: last?.question ?? answer.note?.trim() ?? userText(task),
         ...(last?.choices?.length ? { choices: last.choices } : {}),
+        ...(last?.why ? { why: last.why } : {}),
         ...(ask ? { ask } : {}),
         session: result.sessionId,
         from: from?.name,

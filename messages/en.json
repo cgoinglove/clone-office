@@ -1299,7 +1299,8 @@
         "yours": "To decide",
         "working": "On its way",
         "waiting": "Waiting on them",
-        "done": "Done"
+        "done": "Done",
+        "moving": "On their way"
       },
       "noAnswerYet": "No answer yet",
       "notAnsweredYet": "Your clone is on it",
@@ -1315,7 +1316,9 @@
         "byLink": "Ask by a link",
         "ask": "Ask a colleague",
         "invite": "Invite a colleague"
-      }
+      },
+      "find": "Find a request",
+      "noneFound": "No request matches."
     },
     "office": {
       "title": "Office",
@@ -1337,7 +1340,9 @@
       "answerFor": "“{choice}” for {name}'s request",
       "answerToClone": "“{choice}” to your clone",
       "sentFor": "Told your clone “{choice}” for {name}'s request; it answers them.",
-      "sentToClone": "Told your clone “{choice}”."
+      "sentToClone": "Told your clone “{choice}”.",
+      "ownAnswer": "Answer it yourself",
+      "myClone": "My clone"
     },
     "clone": {
       "title": "Your clone",
@@ -1531,15 +1536,23 @@
       "in": "In",
       "off": "Off",
       "star": {
-        "text": "Your clone has answered a colleague for you. If Clone Office helps, a star on GitHub helps others find it.",
+        "text": "If Clone Office helps, a star on GitHub helps others find it.",
         "action": "Star on GitHub",
-        "close": "Not now"
+        "close": "Not now",
+        "title": "Your clone answered a colleague for you"
       },
       "summaryQuiet": "Quiet so far. Your clone is keeping watch.",
       "didShort": "What your clone did",
       "coming": "Still to come",
       "colleagues": "Colleagues",
-      "noFlowToday": "Nothing set for today. {count, plural, one {Your flow runs} other {Your # flows run}} on {count, plural, one {its} other {their}} own days."
+      "noFlowToday": "Nothing set for today. {count, plural, one {Your flow runs} other {Your # flows run}} on {count, plural, one {its} other {their}} own days.",
+      "summaryAnswered": "{count, plural, =0 {Your clone hasn’t answered anyone for you yet today.} one {Today your clone answered one colleague for you.} other {Today your clone answered # colleagues for you.}}",
+      "summaryDecide": "{count, plural, =0 {Nothing waits on you.} one {<b>One thing to decide</b> is left.} other {<b># things to decide</b> are left.}}",
+      "decideHint": "Only what your clone can’t decide alone comes here",
+      "quoted": "“{text}”",
+      "allDid": "Everything it did for you",
+      "next": "Next: {name} · {at}",
+      "inOf": "{count} of {all} in"
     },
     "trouble": {
       "open": "Office settings",
@@ -1628,7 +1641,26 @@
       "answered": "{name} answered your request"
     },
     "skip": "Skip to content",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "line": {
+      "me": "Me",
+      "way": "{from} → {to}",
+      "asking": "Your clone asks: “{question}”",
+      "askingPlain": "Your clone is asking you",
+      "mineWorking": "Your clone is answering",
+      "theirsWorking": "{name}’s clone is answering",
+      "theirsAsking": "Waiting on {name}",
+      "quote": "“{text}”",
+      "done": "Done",
+      "failed": "Didn’t finish",
+      "handled": {
+        "alone": "On its own",
+        "told": "Tell me",
+        "asked": "Ask me first",
+        "self": "You answered"
+      }
+    },
+    "inNow": "{count} in"
   },
   "page": {
     "notFound": {

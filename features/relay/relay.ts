@@ -933,6 +933,15 @@ export class Relay {
   }
 
   /** The members of an office, in the order they joined. */
+  /** The office's name, as its owners set it (empty until then). */
+  async officeName(office: string): Promise<string> {
+    const [row] = await this.db.query<{ name: string }>(
+      "SELECT name FROM offices WHERE id = $1",
+      [office],
+    );
+    return row?.name ?? "";
+  }
+
   async members(office: string): Promise<Member[]> {
     const rows = await this.db.query<{
       id: string;

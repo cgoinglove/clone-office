@@ -76,6 +76,8 @@ export interface Later {
   kind: "question" | "check" | "self";
   question: string;
   choices?: string[];
+  /** question: what the clone checked that bears on it, shown under it. */
+  why?: string;
   /** The question as it was first put to the person, live: an answer to that one still counts. */
   ask?: string;
   /** When it went to the person's phone, so it goes once. */

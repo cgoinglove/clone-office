@@ -4,9 +4,9 @@ import { type ReactNode, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Single-value radiogroup styled as the tabs are; one option is always selected, filled blue
- * like everything else that is picked. A switch between views of one thing sets nothing,
- * so `view` raises the one shown as a white tab instead. Pass `w-full *:flex-1` in
+ * Single-value radiogroup styled as the tabs are; one option is always selected, raised as a white
+ * chip on the grey track. Every pick in the app looks the same, a value or a view (10-19: the blue
+ * fill read as a button, and two looks for one part read as two parts). Pass `w-full *:flex-1` in
  * `className` to stretch the buttons.
  *
  * The keyboard is a radio group's (WAI-ARIA APG, Radio Group): Tab enters at the one picked
@@ -18,7 +18,7 @@ export function Segmented<T extends string>({
   options,
   value,
   onChange,
-  view = false,
+  view: _view = false,
   size = "default",
   className,
   ...rest
@@ -26,7 +26,7 @@ export function Segmented<T extends string>({
   options: readonly { value: T; label: ReactNode; title?: string }[];
   value: T;
   onChange: (value: T) => void;
-  /** The options are views of one thing, not values to pick. */
+  /** The options are views of one thing, not values to pick: drawn the same, kept for callers. */
   view?: boolean;
   /** `sm` stands as tall as a header's small buttons (size-7). */
   size?: "default" | "sm";
@@ -85,9 +85,7 @@ export function Segmented<T extends string>({
                 : "h-7 px-3 text-[12.5px]",
               !picked && "text-muted-foreground hover:text-foreground",
               picked &&
-                (view
-                  ? "bg-background font-medium text-foreground ring-1 ring-foreground/8 dark:bg-input/60"
-                  : "bg-brand-fill font-medium text-brand-foreground"),
+                "bg-background font-medium text-foreground ring-1 ring-foreground/10 dark:bg-input/60",
             )}
           >
             {option.label}

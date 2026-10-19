@@ -2895,7 +2895,7 @@ button.chip:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); 
 .decide-list { display: flex; flex-direction: column; gap: .5rem; max-height: 45vh; overflow-y: auto; margin-bottom: .5rem; }
 .decide-list:empty { display: none; }
 .decide { margin: 0; padding: .75rem .9rem; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--waiting) 45%, transparent); background: color-mix(in srgb, var(--waiting) 7%, var(--bg)); display: flex; flex-direction: column; gap: .4rem; }
-.decide-head { margin: 0; font-weight: 700; font-size: .85rem; color: var(--waiting); }
+.decide-head { margin: 0; font-weight: 700; font-size: .85rem; color: var(--waiting-ink); }
 .decide-text { margin: 0; white-space: pre-wrap; font-size: .95rem; }
 .decide-acts { display: flex; flex-wrap: wrap; gap: .4rem; }
 .decide-acts button { margin: 0; border-radius: 999px; min-height: 2.5rem; padding: .4rem 1rem; background: var(--bg); color: var(--fg); border: 1px solid var(--field); font-weight: 600; }

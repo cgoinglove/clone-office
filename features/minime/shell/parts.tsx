@@ -4,13 +4,14 @@
 // screen's heading, a colleague's clone, the four states a request can be in, and the office's own
 // marks (the departures board's flap digits, the DONE stamp) carried out of the drawing.
 
-import { Clock, LoaderCircle } from "lucide-react";
+import { Check, Clock, Link2, LoaderCircle, X } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Bot, type BotShape, type Mood } from "@/features/office";
 import { looksOf } from "@/features/office/room/looks.mjs";
 import { cn } from "@/lib/utils";
-import type { State } from "../home/use-office";
+import type { State, Task } from "../home/use-office";
 
 /** A screen's heading: what it is, a line saying what it is for, and its own actions. */
 export function PageHeader({
@@ -116,7 +117,7 @@ export function PhaseChip({
       className={cn(
         "inline-flex h-6 items-center gap-1.5 rounded-md px-2 text-xs",
         phase === "yours"
-          ? "bg-waiting/8 font-semibold text-waiting"
+          ? "bg-waiting/8 font-semibold text-waiting-ink"
           : "bg-muted text-foreground/80",
       )}
     >
@@ -196,6 +197,19 @@ export function Flap({
   );
 }
 
+/** The asking clone wears a red dot while its question waits on the person. */
+export function Asking({ children }: { children: ReactNode }) {
+  return (
+    <span className="relative inline-flex shrink-0 self-start">
+      {children}
+      <span
+        aria-hidden
+        className="absolute -top-px -right-0.5 size-[28%] min-h-[7px] min-w-[7px] rounded-full bg-destructive ring-[1.5px] ring-background"
+      />
+    </span>
+  );
+}
+
 /** A person's office status as a dot: the brand while working, a ring when gone home. */
 export function StatusDot({
   status,
@@ -217,5 +231,146 @@ export function StatusDot({
             : "bg-muted-foreground/60",
       )}
     />
+  );
+}
+
+/** How the clone's answer to a colleague went: alone, telling the person after, after they saw it, or theirs. */
+export type Handled = "alone" | "told" | "asked" | "self";
+
+/** A request's last words, from either side. */
+export const lastWords = (task: Task) =>
+  [...task.history]
+    .reverse()
+    .find((message) => message.role === "agent")
+    ?.parts.map((part) => part.text)
+    .join(" ");
+
+/**
+ * The line under a request's title, in the person's words: who asks whom, then what is happening
+ * now (the clone answering, a colleague's clone answering, what the clone asks the person) or how
+ * it ended (the last answer, quoted).
+ */
+export function useRequestWords() {
+  const t = useTranslations("shell.line");
+  return (task: Task, sent: boolean, name: string, question?: string) => {
+    const state = task.status.state;
+    if (question) return t("asking", { question });
+    if (["FAILED", "REJECTED", "CANCELED"].includes(state)) return t("failed");
+    const answer = lastWords(task);
+    if (state === "COMPLETED")
+      return answer ? t("quote", { text: answer }) : t("done");
+    if (state === "INPUT_REQUIRED")
+      return sent ? t("theirsAsking", { name }) : t("askingPlain");
+    return sent ? t("theirsWorking", { name }) : t("mineWorking");
+  };
+}
+
+/**
+ * One request in a list, the same everywhere a request is listed (Home, Requests, a conversation's
+ * side, a colleague's panel): the other side's clone (wearing its dot while the request waits on
+ * the person), what was asked, who asks whom and what goes on now, and when. `sm` keeps the first
+ * line and who asks whom with the time, for narrow sides.
+ */
+export function RequestLine({
+  task,
+  me,
+  yours = false,
+  name,
+  index,
+  words,
+  when,
+  handled,
+  size = "md",
+}: {
+  task: Task;
+  me?: string;
+  /** It waits on the person. */
+  yours?: boolean;
+  /** The other side's name (or the guest's, asked by a link). */
+  name: string;
+  index: number;
+  words?: string;
+  when: string;
+  handled?: Handled;
+  size?: "md" | "sm";
+}) {
+  const t = useTranslations("shell.line");
+  const sent = task.metadata.from === me;
+  const other = sent ? task.metadata.to : task.metadata.from;
+  const small = size === "sm";
+  const state = task.status.state;
+  const failed = ["FAILED", "REJECTED", "CANCELED"].includes(state);
+  const glyph = yours ? (
+    <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-waiting" />
+  ) : failed ? (
+    <X aria-hidden className="size-3 shrink-0 text-destructive" />
+  ) : state === "COMPLETED" ? (
+    <Check aria-hidden className="size-3 shrink-0" />
+  ) : state === "INPUT_REQUIRED" ? (
+    <Clock aria-hidden className="size-3 shrink-0" />
+  ) : (
+    <LoaderCircle
+      aria-hidden
+      className="size-3 shrink-0 animate-spin motion-reduce:animate-none"
+    />
+  );
+  const face = task.metadata.guest ? (
+    <span
+      className={cn(
+        "grid shrink-0 place-items-center rounded-full bg-muted text-muted-foreground",
+        small ? "size-[22px]" : "size-7",
+      )}
+    >
+      <Link2 className="size-3.5" />
+    </span>
+  ) : (
+    <Mark id={other} index={index} size={small ? 22 : 28} />
+  );
+  const way = sent
+    ? t("way", { from: t("me"), to: name })
+    : t("way", { from: name, to: t("me") });
+  return (
+    <li>
+      <Link
+        href={`/requests/${encodeURIComponent(task.id)}`}
+        className={cn(
+          "flex items-center rounded-xl transition-colors hover:bg-foreground/[0.04] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+          small ? "gap-2.5 px-2 py-1.5" : "gap-3.5 px-3 py-2.5",
+        )}
+      >
+        {yours ? <Asking>{face}</Asking> : face}
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span
+            className={cn(
+              "truncate font-medium",
+              small ? "text-[13.5px]" : "text-[14.5px]",
+            )}
+          >
+            {task.history[0]?.parts.map((part) => part.text).join(" ")}
+          </span>
+          <span
+            className={cn(
+              "flex min-w-0 items-center gap-1.5 text-muted-foreground",
+              small ? "text-xs" : "text-[13px]",
+            )}
+          >
+            {glyph}
+            <span className="shrink-0">{way}</span>
+            <span aria-hidden>·</span>
+            <span className="min-w-0 truncate">{small ? when : words}</span>
+          </span>
+        </span>
+        {!small && handled && (
+          <span className="inline-flex h-[21px] shrink-0 items-center rounded-full bg-muted px-2 text-[11.5px] font-medium text-foreground/75 max-sm:hidden">
+            {t(`handled.${handled}`)}
+          </span>
+        )}
+        {!small && (
+          <span className="w-16 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
+            {when}
+          </span>
+        )}
+      </Link>
+    </li>
   );
 }

@@ -13,13 +13,13 @@ const TONES = {
     band: "text-foreground",
   },
   waiting: {
-    under: "text-waiting/70",
-    band: "text-waiting/30",
+    under: "text-waiting-ink/70",
+    band: "text-waiting-ink/30",
   },
   /** Words the user is meant to read rather than watch: full ink, and the warm only passes over. */
   reading: {
     under: "text-foreground",
-    band: "text-waiting/80",
+    band: "text-waiting-ink/80",
   },
 } as const;
 

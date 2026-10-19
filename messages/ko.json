@@ -1299,7 +1299,8 @@
         "yours": "정할 것",
         "working": "진행 중",
         "waiting": "답 기다리는 중",
-        "done": "완료"
+        "done": "끝남",
+        "moving": "진행 중"
       },
       "noAnswerYet": "아직 답이 없어요",
       "notAnsweredYet": "클론이 처리하는 중이에요",
@@ -1315,7 +1316,9 @@
         "byLink": "링크로 묻기",
         "ask": "동료에게 부탁하기",
         "invite": "동료 초대하기"
-      }
+      },
+      "find": "부탁 찾기",
+      "noneFound": "맞는 부탁이 없어요."
     },
     "office": {
       "title": "오피스",
@@ -1337,7 +1340,9 @@
       "answerFor": "{name} 님 부탁에 “{choice}”",
       "answerToClone": "내 클론에게 “{choice}”",
       "sentFor": "{name} 님 부탁에 “{choice}”라고 내 클론에게 전했어요. 클론이 이어서 답해요.",
-      "sentToClone": "내 클론에게 “{choice}”라고 전했어요."
+      "sentToClone": "내 클론에게 “{choice}”라고 전했어요.",
+      "ownAnswer": "직접 답하기",
+      "myClone": "내 클론"
     },
     "clone": {
       "title": "내 클론",
@@ -1531,15 +1536,23 @@
       "in": "출근",
       "off": "퇴근",
       "star": {
-        "text": "클론이 나 대신 동료에게 답했어요. Clone Office가 도움이 된다면 GitHub 별 하나가 다른 사람들이 찾는 데 도움이 돼요.",
+        "text": "Clone Office가 도움이 된다면 GitHub 별 하나가 다른 사람들이 찾는 데 도움이 돼요.",
         "action": "GitHub에 별 주기",
-        "close": "나중에"
+        "close": "나중에",
+        "title": "클론이 나 대신 동료에게 답했어요"
       },
       "summaryQuiet": "아직 조용해요. 클론이 지켜보고 있어요.",
       "didShort": "클론이 한 일",
       "coming": "남은 일정",
       "colleagues": "동료",
-      "noFlowToday": "오늘 정해진 일은 없어요. 플로우 {count}개는 정해 둔 날에 돌아요."
+      "noFlowToday": "오늘 정해진 일은 없어요. 플로우 {count}개는 정해 둔 날에 돌아요.",
+      "summaryAnswered": "{count, plural, =0 {오늘은 아직 클론이 대신 답한 동료가 없어요.} other {오늘 클론이 동료 #명에게 대신 답했어요.}}",
+      "summaryDecide": "{count, plural, =0 {정할 것은 없어요.} other {<b>정할 것 #개</b>만 남았어요.}}",
+      "decideHint": "클론이 혼자 정할 수 없는 것만 와요",
+      "quoted": "“{text}”",
+      "allDid": "나 대신 한 일 모두 보기",
+      "next": "다음: {name} · {at}",
+      "inOf": "{all}명 중 {count}명 출근"
     },
     "trouble": {
       "open": "오피스 설정",
@@ -1628,7 +1641,26 @@
       "answered": "{name} 님이 부탁에 답했어요"
     },
     "skip": "본문으로 건너뛰기",
-    "closeMenu": "메뉴 닫기"
+    "closeMenu": "메뉴 닫기",
+    "line": {
+      "me": "나",
+      "way": "{from} → {to}",
+      "asking": "내 클론이 묻는 중: “{question}”",
+      "askingPlain": "내 클론이 나에게 묻는 중",
+      "mineWorking": "내 클론이 답하는 중",
+      "theirsWorking": "{name} 님 클론이 답하는 중",
+      "theirsAsking": "{name} 님이 정하는 중",
+      "quote": "“{text}”",
+      "done": "끝남",
+      "failed": "끝나지 못했어요",
+      "handled": {
+        "alone": "알아서",
+        "told": "하고 알림",
+        "asked": "묻고 함",
+        "self": "직접 답함"
+      }
+    },
+    "inNow": "{count}명 출근"
   },
   "page": {
     "notFound": {

@@ -34,6 +34,8 @@
   --color-brand: var(--brand);
   --color-brand-fill: var(--brand-fill);
   --color-waiting: var(--waiting);
+  --color-waiting-ink: var(--waiting-ink);
+  --color-field: var(--field);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -149,6 +151,8 @@
   --secondary-foreground: var(--gray-900);
   --accent-foreground: var(--gray-900);
   --border: var(--alpha-10);
+  /* the edge of a field one types in, at the 3:1 a part of a control needs on either paper */
+  --field: var(--alpha-45);
 
   --radius: 0.625rem;
 }
@@ -176,7 +180,10 @@
   --brand-fill: var(--brand);
   --brand-foreground: #ffffff;
   --destructive: #dc2626; /* Tailwind red-600 */
-  --waiting: #c43d18; /* ember: red-600 and orange-700, halfway */
+  /* what waits on the person: an orange of its own, for dots, rings and soft fills (3.56:1, a
+     part of a control's 3:1), and its words a deep brown-orange that reads at 4.5:1 and more */
+  --waiting: #ea580c; /* Tailwind orange-600 */
+  --waiting-ink: #9a3412; /* orange-800 */
 }
 
 .dark,
@@ -195,14 +202,16 @@
   --brand-fill: #0060df;
   --brand-foreground: #ffffff;
   --destructive: #ef4444; /* Tailwind red-500 */
-  --waiting: #ff7a55; /* the same ember, at the step this paper needs */
+  --waiting: #fb923c; /* orange-400, the same orange at the step this paper needs */
+  --waiting-ink: #fdba74; /* orange-300 */
 }
 
 /*
- * What waits on the user is a warm of its own: an ember, at the step each theme needs for small
- * text to clear 4.5:1. It is told from what failed by hue and by shape: the warm is a count, a
- * word with its glyph, YOUR TURN on the office floor; red is an error's own words, a delete, and
- * the badge dot on a mini-me's mark. Written per theme beside the brand.
+ * What waits on the user is an orange of its own (10-19: the ember read as the delete red): the
+ * orange marks it, a dot, a count's soft fill, a ring, and its words are the deep brown-orange
+ * (`waiting-ink`) at 4.5:1 or more, so the orange itself never carries small text. Red is an
+ * error's own words, a delete, and the badge dot on the asking clone's mark. Written per theme
+ * beside the brand.
  */
 
 @layer base {

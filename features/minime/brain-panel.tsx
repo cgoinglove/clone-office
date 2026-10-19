@@ -500,7 +500,7 @@ function WaySetup({ choice }: { choice: BrainChoice }) {
   const line = "px-1 text-xs leading-relaxed text-muted-foreground";
   if (way.kind === "claude-code")
     return state.claudeCode ? null : (
-      <p className="flex items-start gap-2 rounded-lg bg-waiting/8 px-2.5 py-2 text-xs leading-relaxed text-waiting">
+      <p className="flex items-start gap-2 rounded-lg bg-waiting/8 px-2.5 py-2 text-xs leading-relaxed text-waiting-ink">
         <CircleAlert className="mt-px size-3.5 shrink-0" />
         <span>
           {t("claudeMissing")}{" "}

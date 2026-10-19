@@ -1,8 +1,10 @@
 "use client";
 
-// What waits on the person, as rows answered in place (after Paperclip's Decisions): a permission
-// or a question with a few choices takes its answer right on the row, and the chevron at its end
-// goes to where it was asked. The office's board and Home show the same rows.
+// What waits on the person, as one card each answered in place (after Paperclip's Decisions and
+// Superhuman's instant replies): who asks and how long ago, the question, what the clone checked
+// that bears on it, and the answers of equal weight beside writing one's own; the chevron goes to
+// where it was asked. Home, the office's board and a request's page draw the same card, `size`
+// only making it smaller (10-19 redesign).
 //
 // An answer is a call made in the person's name, so a stray tap must not make it: the choices
 // weigh the same, the row answered stays where it was (saying what goes, with its own Undo, which
@@ -12,9 +14,9 @@
 // another question's choice: once the answer goes it moves to the next question (or the heading,
 // `heading`, when none is left), once undone back to the choice, and either is said aloud.
 
-import { ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight, Loader2, PenLine } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
@@ -22,7 +24,7 @@ import { Bot } from "@/features/office";
 import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
 import { clip, cn } from "@/lib/utils";
 import { useApp } from "./app-state";
-import { Mark } from "./parts";
+import { Asking, Mark } from "./parts";
 import { askLine, type TurnItem, turnHref } from "./your-turn";
 
 /** How long rows that just moved ignore a tap: what was under the pointer is not there any more. */
@@ -67,17 +69,31 @@ export function PendingAnswer({
   );
 }
 
+/** Where writing one's own answer happens: the request's page opens on it. */
+function ownAnswerHref(item: TurnItem): string {
+  const href = turnHref(item);
+  return item.where.kind === "request" && item.where.task
+    ? `${href}?answer=own`
+    : href;
+}
+
 export function TurnRows({
   turns,
   heading,
   className,
+  size = "md",
 }: {
   turns: TurnItem[];
   /** The heading over the rows, which takes the keyboard when the last one is answered. */
   heading?: string;
   className?: string;
+  /** "sm" where it lies over the office's floor. */
+  size?: "md" | "sm";
 }) {
   const t = useTranslations("shell.office");
+  const format = useFormatter();
+  const now = useNow({ updateInterval: 30_000 });
+  const small = size === "sm";
   const tAsk = useTranslations("ask");
   const undo = useTranslations("common")("undo");
   const app = useApp();
@@ -95,7 +111,7 @@ export function TurnRows({
     list.current?.querySelector<HTMLElement>(`[data-row="${CSS.escape(key)}"]`);
 
   return (
-    <ol ref={list} className={cn("flex flex-col", className)}>
+    <ol ref={list} className={cn("flex flex-col gap-2.5", className)}>
       {turns.map((item) => {
         const ask = item.ask;
         // A permission is allowed or not; a question offers its first few choices.
@@ -189,48 +205,101 @@ export function TurnRows({
             rowOf(item.key)?.querySelector<HTMLElement>("[data-undo]")?.focus(),
           );
         };
+        const ago = item.since
+          ? format.relativeTime(
+              Math.min(Date.parse(item.since), now.getTime()),
+              { now },
+            )
+          : undefined;
+        const why = ask.kind === "question" ? ask.why : undefined;
         return (
           <li
             key={item.key}
             data-row={item.key}
-            className="flex items-center gap-3 px-4 py-3"
-          >
-            {from ? (
-              <Mark
-                id={from}
-                index={app.office.indexOf(from)}
-                size={22}
-                className="self-start"
-              />
-            ) : (
-              <Bot
-                size={22}
-                mood="asking"
-                still
-                className="shrink-0 self-start"
-              />
+            className={cn(
+              "flex gap-3.5 rounded-[14px] bg-background shadow-[0_0_0_1px_var(--alpha-10)]",
+              small ? "flex-col gap-2 px-4 py-3.5" : "px-4.5 py-4",
             )}
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <span className="text-xs text-muted-foreground">
-                {from
-                  ? t(
-                      app.office.onWeb.has(from)
-                        ? "fromPerson"
-                        : "fromColleague",
-                      {
-                        name: fromName,
-                      },
-                    )
-                  : t("fromClone")}
-              </span>
+          >
+            {!small && (
+              <Asking>
+                {from ? (
+                  <Mark id={from} index={app.office.indexOf(from)} size={30} />
+                ) : (
+                  <Bot
+                    size={30}
+                    mood="asking"
+                    still
+                    mine
+                    className="shrink-0"
+                  />
+                )}
+              </Asking>
+            )}
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <div className="flex min-w-0 items-center gap-2">
+                {small && (
+                  <Asking>
+                    {from ? (
+                      <Mark
+                        id={from}
+                        index={app.office.indexOf(from)}
+                        size={22}
+                      />
+                    ) : (
+                      <Bot
+                        size={22}
+                        mood="asking"
+                        still
+                        mine
+                        className="shrink-0"
+                      />
+                    )}
+                  </Asking>
+                )}
+                <span className="min-w-0 truncate text-[12.5px] font-semibold">
+                  {from
+                    ? t(
+                        app.office.onWeb.has(from)
+                          ? "fromPerson"
+                          : "fromColleague",
+                        { name: fromName },
+                      )
+                    : t("fromClone")}
+                </span>
+                {ago && (
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    · {ago}
+                  </span>
+                )}
+                <Tip label={t("open")}>
+                  <Link
+                    href={turnHref(item)}
+                    className={cn(
+                      buttonVariants({ variant: "ghost", size: "icon-sm" }),
+                      "-my-1 ml-auto text-muted-foreground",
+                    )}
+                  >
+                    <ChevronRight className="size-4" />
+                  </Link>
+                </Tip>
+              </div>
               <span
                 id={question}
                 data-question
                 tabIndex={-1}
-                className="-mx-1 rounded-sm px-1 text-[13.5px] leading-snug font-semibold outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                className={cn(
+                  "-mx-1 rounded-sm px-1 leading-snug font-semibold tracking-[-0.01em] text-pretty outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                  small ? "text-[14.5px]" : "text-[16px]",
+                )}
               >
                 {askLine(tAsk, ask)}
               </span>
+              {why && (
+                <p className="text-[13px] leading-relaxed text-muted-foreground text-pretty">
+                  {why}
+                </p>
+              )}
               {sent !== undefined ? (
                 <PendingAnswer
                   choice={sent}
@@ -245,38 +314,41 @@ export function TurnRows({
                   }}
                 />
               ) : (
-                options.length > 0 && (
-                  <div
-                    role="group"
-                    aria-labelledby={question}
-                    className="mt-1.5 flex flex-wrap gap-1.5"
-                  >
-                    {options.map((option) => (
-                      <Button
-                        key={option.reply}
-                        data-choice={option.reply}
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => choose(option)}
-                      >
-                        {option.label}
-                      </Button>
-                    ))}
-                  </div>
-                )
+                <div
+                  role="group"
+                  aria-labelledby={question}
+                  className="mt-1 flex flex-wrap items-center gap-2"
+                >
+                  {options.map((option) => (
+                    <Button
+                      key={option.reply}
+                      data-choice={option.reply}
+                      variant="secondary"
+                      className={cn(
+                        "rounded-[10px] px-3.5",
+                        small ? "h-8 text-[13px]" : "h-9 text-[13.5px]",
+                      )}
+                      onClick={() => choose(option)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                  {ask.kind === "question" && (
+                    <Link
+                      href={ownAnswerHref(item)}
+                      className={cn(
+                        buttonVariants({ variant: "ghost" }),
+                        "rounded-[10px] px-2.5 text-muted-foreground",
+                        small ? "h-8 text-[13px]" : "h-9 text-[13.5px]",
+                      )}
+                    >
+                      <PenLine />
+                      {t("ownAnswer")}
+                    </Link>
+                  )}
+                </div>
               )}
             </div>
-            <Tip label={t("open")}>
-              <Link
-                href={turnHref(item)}
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "icon" }),
-                  "text-muted-foreground",
-                )}
-              >
-                <ChevronRight className="size-4" />
-              </Link>
-            </Tip>
           </li>
         );
       })}

@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { say } from "@/components/ui/toast";
 import { Tip } from "@/components/ui/tooltip";
-import { APP_NAME } from "@/features/brand/logo";
+import { APP_NAME, LogoMark } from "@/features/brand/logo";
 import { NavIcon, type NavIconName } from "@/features/brand/nav-icons";
 import { Bot } from "@/features/office";
 import { useCommandKeys } from "@/hooks/use-hotkey";
@@ -45,7 +45,7 @@ import { focusChatBox } from "../home/chat-view";
 import { HEADERS } from "../home/use-office";
 import { STATUSES, statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
-import { Mark, StatusDot } from "./parts";
+import { Asking, Mark, StatusDot } from "./parts";
 import { RecentChats } from "./recent-chats";
 import { askLine, turnHref } from "./your-turn";
 
@@ -108,22 +108,23 @@ export function Sidebar({
   const data = office.office;
   // what still waits: an answer on its way (its Undo open) is not listed here
   const turns = app.toDecide;
-  const open = (data?.tasks ?? []).filter((task) =>
-    ["SUBMITTED", "WORKING", "INPUT_REQUIRED"].includes(task.status.state),
-  ).length;
   const { indexOf } = office;
   const active = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
   const reading = app.learn.stage === "learning";
 
+  // who is in now: not gone home, and heard from lately (one on the web is always in)
+  const members = data?.members ?? [];
+  const inNow = members.filter((member) => {
+    const code = statusCode(member.card.status);
+    return (
+      code !== "off" &&
+      (code === "web" || Date.now() - Date.parse(member.seen) <= 120_000)
+    );
+  }).length;
+
   /** What a place says beside its name: what goes on there now, or nothing. */
   const aside = (key: (typeof PLACES)[number]["key"]): ReactNode => {
-    if (key === "requests" && open > 0)
-      return (
-        <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
-          {open}
-        </span>
-      );
     if (key === "clone" && reading)
       return (
         <span className="flex items-center gap-1 text-[11px] text-muted-foreground tabular-nums">
@@ -143,12 +144,27 @@ export function Sidebar({
         className,
       )}
     >
-      <div className="flex h-[52px] shrink-0 items-center justify-between pr-0.5 pl-2.5">
+      <div className="flex h-14 shrink-0 items-center gap-1 pr-0.5">
+        {/* the office it works in, and who is in: Linear's and Slack's workspace at the top */}
         <Link
           href="/home"
-          className="truncate rounded-md text-[15px] font-semibold tracking-[-0.01em] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {APP_NAME}
+          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-background shadow-[0_0_0_1px_var(--alpha-08)]">
+            <LogoMark className="size-[17px]" />
+          </span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate text-[14px] font-semibold tracking-[-0.01em]">
+              {data?.name || APP_NAME}
+            </span>
+            {data?.joined && members.length > 0 && (
+              <span className="truncate text-[11.5px] text-muted-foreground">
+                {data?.name
+                  ? `${APP_NAME} · ${t("inNow", { count: inNow })}`
+                  : t("inNow", { count: inNow })}
+              </span>
+            )}
+          </span>
         </Link>
         <Tip
           label={drawer ? t("closeMenu") : t("fold")}
@@ -230,8 +246,9 @@ export function Sidebar({
               aria-label={t("yourTurnCount", { count: turns.length })}
               className="flex h-7 items-center gap-2 px-2.5 text-xs font-semibold"
             >
+              <span aria-hidden className="size-1.5 rounded-full bg-waiting" />
               {t("yourTurn")}
-              <span className="font-mono text-[11px] font-normal text-muted-foreground tabular-nums">
+              <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-waiting/14 px-1 text-[10.5px] font-semibold text-waiting-ink tabular-nums">
                 {turns.length}
               </span>
             </h2>
@@ -249,6 +266,11 @@ export function Sidebar({
                         { name: office.names.get(item.from) ?? "" },
                       )
                     : t("office.fromClone")
+                }
+                name={
+                  item.from
+                    ? (office.names.get(item.from) ?? "")
+                    : t("office.myClone")
                 }
                 line={askLine(tAsk, item.ask)}
                 index={indexOf(item.from)}
@@ -471,23 +493,12 @@ function MeMenu({ onShortcuts }: { onShortcuts: () => void }) {
 }
 
 /** A clone's mark with the red dot the office gives a clone that is asking its person. */
-function Asking({ children }: { children: ReactNode }) {
-  return (
-    <span className="relative inline-flex shrink-0">
-      {children}
-      <span
-        aria-hidden
-        className="absolute -top-px -right-0.5 size-[7px] rounded-full bg-destructive ring-[1.5px] ring-background"
-      />
-    </span>
-  );
-}
-
 /** One thing to decide: the asking clone with its dot, the question, how long it has waited. */
 const TurnLink = memo(function TurnLink({
   href,
   from,
   who,
+  name,
   line,
   index,
   ago,
@@ -497,33 +508,46 @@ const TurnLink = memo(function TurnLink({
   from?: string;
   /** Who asks, for a screen reader: the face says it to the eye. */
   who: string;
+  /** Who asks, short, above the question: the colleague's name, or "my clone". */
+  name: string;
   line: string;
   index: number;
   ago?: string;
   active: boolean;
 }) {
+  // two lines, so the question is read and not cut at its first words: who and when, then what
   return (
     <Link
       href={href}
       aria-current={active ? "page" : undefined}
-      className={cn(row(active), "text-[13.5px]")}
+      className={cn(row(active), "h-12 items-center text-[13px]")}
     >
       <Asking>
         {from ? (
-          <Mark id={from} index={index} size={16} />
+          <Mark id={from} index={index} size={20} />
         ) : (
-          <Bot size={16} mood="idle" still mine className="shrink-0" />
+          <Bot size={20} mood="idle" still mine className="shrink-0" />
         )}
       </Asking>
-      <span className="min-w-0 flex-1 truncate">
-        <span className="sr-only">{who}: </span>
-        {line}
-      </span>
-      {ago && (
-        <span className="shrink-0 text-[11px] text-muted-foreground tabular-nums">
-          {ago}
+      <span className="flex min-w-0 flex-1 flex-col leading-tight">
+        <span className="flex items-baseline gap-2">
+          <span
+            aria-hidden
+            className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-foreground"
+          >
+            {name}
+          </span>
+          {ago && (
+            <span className="shrink-0 text-[11px] font-normal text-muted-foreground tabular-nums">
+              {ago}
+            </span>
+          )}
         </span>
-      )}
+        <span className="truncate text-foreground/80">
+          <span className="sr-only">{who}: </span>
+          {line}
+        </span>
+      </span>
     </Link>
   );
 });

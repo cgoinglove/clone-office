@@ -201,7 +201,7 @@ export function OfficeScreen() {
                   ?.focus(),
               );
             }}
-            className="absolute top-4 right-4 z-10 flex h-8 items-center gap-1.5 rounded-full bg-background px-3 text-[13px] font-semibold text-waiting shadow-[0_0_0_1px_var(--alpha-08),0_8px_24px_-12px_var(--alpha-20)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute top-4 right-4 z-10 flex h-8 items-center gap-1.5 rounded-full bg-background px-3 text-[13px] font-semibold text-waiting-ink shadow-[0_0_0_1px_var(--alpha-08),0_8px_24px_-12px_var(--alpha-20)] outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("yourTurn")}
             <span className="tabular-nums">{app.toDecide.length}</span>
