@@ -2352,7 +2352,9 @@ export function signInPage(input: {
   return shell(
     lang,
     title,
-    `<h1>${title}</h1>
+    // one narrow card, the app's mark over its title (10-19 redesign)
+    `<div class="auth-mark">${MARK}</div>
+<h1>${title}</h1>
 ${problem(lang, input.error)}
 ${input.done ? `<p class="done" role="status">${say(lang, input.done === "reset" ? "resetDone" : "adminMade")}</p>` : ""}
 ${googleWay(lang, input.methods, `/login/google${input.key ? `?key=${encodeURIComponent(input.key)}` : ""}`)}
@@ -2374,6 +2376,8 @@ ${input.key ? `<input type="hidden" name="key" value="${escape(input.key)}">` : 
         ? `${say(lang, "noAccountInvite")} <a href="/i/${encodeURIComponent(input.key)}?account#account">${say(lang, "makeFromInvite")}</a>`
         : say(lang, "noAccount")
     }</p>`,
+    undefined,
+    { main: "auth" },
   );
 }
 
@@ -2483,7 +2487,7 @@ export function requestsPage(input: {
     .map(
       (
         one,
-      ) => `<li><span class="who"><b>${say(lang, "fromWho", { name: one.other })}</b>${state(one, false)}<small>${escape(one.when)}</small></span>
+      ) => `<li${input.web && one.state === "waiting" ? ' class="waits"' : ""}><span class="who"><b>${say(lang, "fromWho", { name: one.other })}</b>${state(one, false)}<small>${escape(one.when)}</small></span>
 <p class="request">${escape(one.text)}</p>${
         one.answer
           ? `<p class="note"><b>${say(lang, "answerLabel")}</b><br>${escape(one.answer)}</p>`
@@ -2658,14 +2662,9 @@ export function homeBand(lang: PageLanguage, band: Band): string {
   const initial = escape(Array.from(band.name.trim())[0] ?? "·");
   const tab = (id: HomeTab, href: string, words: string) =>
     `<a href="${href}"${band.tab === id ? ' aria-current="page"' : ""}>${words}</a>`;
+  // One white row (10-19 redesign): the office, its tabs underlined where one is, the person's menu.
   return `<header class="band">
 <div class="band-row"><a class="band-office" href="/home${at}">${MARK}<span>${officeName}</span></a>${switcher}
-<details class="me"><summary aria-label="${say(lang, "menuLabel")}"><span class="avatar" aria-hidden="true">${initial}</span></summary><div class="menu">
-<p class="menu-name">${escape(band.name)}</p>
-<a href="/home/account${at}">${say(lang, "accountTitle")}</a>
-${band.admin ? `<a href="/home/admin">${say(lang, "adminLink")}</a>` : ""}
-<form method="post" action="/logout"><button type="submit" class="ghost">${say(lang, "signOut")}</button></form>
-</div></details></div>
 ${
   office
     ? `<nav class="tabs" aria-label="${officeName}">${tab("clone", `/home${at}`, say(lang, band.web ? "tabHome" : "tabClone"))}${tab(
@@ -2675,6 +2674,12 @@ ${
       )}${tab("office", `/home/office${at}`, say(lang, "tabOffice"))}</nav>`
     : ""
 }
+<details class="me"><summary aria-label="${say(lang, "menuLabel")}"><span class="avatar" aria-hidden="true">${initial}</span><span class="me-name" aria-hidden="true">${escape(band.name)}</span></summary><div class="menu">
+<p class="menu-name">${escape(band.name)}</p>
+<a href="/home/account${at}">${say(lang, "accountTitle")}</a>
+${band.admin ? `<a href="/home/admin">${say(lang, "adminLink")}</a>` : ""}
+<form method="post" action="/logout"><button type="submit" class="ghost">${say(lang, "signOut")}</button></form>
+</div></details></div>
 </header>`;
 }
 
@@ -2836,18 +2841,20 @@ export function chatThread(
 /** What the signed-in pages add to the server's own style: the band, tabs and the conversation. */
 export const HOME_STYLE = `
 body { min-height: 100vh; display: flex; flex-direction: column; }
-.band { background: var(--brand-fill); color: #fff; }
-.band-row { max-width: 72rem; margin: 0 auto; padding: .7rem 1rem .4rem; display: flex; align-items: center; gap: .5rem; }
-.band-office { display: flex; align-items: center; gap: .5rem; color: inherit; text-decoration: none; font-weight: 600; min-width: 0; flex: 0 1 auto; }
+.band { background: var(--bg); color: var(--fg); box-shadow: inset 0 -1px 0 var(--line); }
+.band-row { max-width: 62.5rem; margin: 0 auto; padding: 0 1rem; min-height: 3.5rem; display: flex; align-items: center; gap: 1.75rem; }
+.band-office { display: flex; align-items: center; gap: .55rem; color: inherit; text-decoration: none; font-weight: 650; min-width: 0; flex: 0 1 auto; }
 .band-office span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.band .mark { width: 1.4rem; height: 1.4rem; color: #fff; flex: none; }
-.band .mark .eye { fill: var(--brand-fill); }
+.band .mark { width: 1.4rem; height: 1.4rem; color: var(--fg); flex: none; }
+.band .mark .eye { fill: var(--bg); }
 .band details { position: relative; }
-.band details > summary { color: inherit; font-size: 1rem; min-height: 2.75rem; min-width: 2.75rem; justify-content: center; }
+.band details > summary { color: inherit; font-size: .9rem; min-height: 2.75rem; min-width: 2.75rem; justify-content: center; }
 .band details.me { margin-left: auto; }
-.band details.me > summary::after { display: none; }
-.band details.pick > summary::after { border-color: #fff; margin-left: 0; }
-.avatar { width: 2rem; height: 2rem; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; font-weight: 700; font-size: .9rem; }
+.band details.me > summary { gap: .5rem; font-weight: 500; }
+.band details.me > summary::after { border-color: var(--muted); transform: rotate(45deg); margin-top: -.2rem; }
+.band details.pick { margin-left: -1.4rem; }
+.band details.pick > summary::after { border-color: var(--fg); margin-left: 0; }
+.avatar { width: 1.75rem; height: 1.75rem; border-radius: 50%; background: var(--soft); color: var(--fg); display: grid; place-items: center; font-weight: 700; font-size: .8rem; }
 .band .menu { position: absolute; right: 0; top: calc(100% + .25rem); z-index: 5; min-width: 13rem; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 14px; padding: .4rem; box-shadow: 0 12px 32px rgba(0,0,0,.18); display: flex; flex-direction: column; gap: .1rem; list-style: none; margin: 0; }
 .band details.pick .menu { left: 0; right: auto; }
 .band .menu a, .band .menu button { display: flex; align-items: center; min-height: 2.5rem; padding: 0 .6rem; border-radius: 8px; color: var(--fg); text-decoration: none; width: 100%; margin: 0; font-weight: 500; justify-content: flex-start; }
@@ -2855,15 +2862,23 @@ body { min-height: 100vh; display: flex; flex-direction: column; }
 .band .menu a[aria-current="page"] { font-weight: 700; }
 .band .menu form { margin: 0; }
 .menu-name { margin: .2rem .6rem .3rem; font-size: .85rem; color: var(--muted); }
-.tabs { max-width: 72rem; margin: 0 auto; padding: 0 .6rem .55rem; display: flex; gap: .25rem; overflow-x: auto; }
-.tabs a { color: rgba(255,255,255,.94); text-decoration: none; font-weight: 600; font-size: .95rem; padding: .45rem .85rem; border-radius: 999px; white-space: nowrap; display: inline-flex; align-items: center; gap: .35rem; min-height: 2.5rem; }
-.tabs a:hover { color: #fff; background: rgba(255,255,255,.12); }
-.tabs a[aria-current="page"] { color: #fff; background: rgba(255,255,255,.22); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: .35em; }
-/* what waits, on the band: the ember dark on white, readable in either theme */
-.tabs .count { background: #fff; color: #a8340f; border-radius: 999px; font-size: .75rem; font-weight: 700; padding: 0 .45rem; line-height: 1.5; }
-.band :focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+/* the tabs in the row, the one open underlined in the brand colour */
+.band .tabs { align-self: stretch; display: flex; gap: 1.35rem; overflow-x: auto; scrollbar-width: none; background: none; border-radius: 0; padding: 0; }
+.tabs a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: .9rem; padding: 0 .2rem; white-space: nowrap; display: inline-flex; align-items: center; gap: .4rem; min-height: 2.75rem; }
+.tabs a:hover { color: var(--fg); }
+.tabs a[aria-current="page"] { color: var(--fg); font-weight: 650; box-shadow: inset 0 -2px 0 var(--brand); }
+/* what waits: the ember's ink on its soft fill, as the app counts it */
+.tabs .count { background: color-mix(in srgb, var(--waiting) 14%, transparent); color: var(--waiting-ink); border-radius: 999px; font-size: .72rem; font-weight: 700; padding: 0 .45rem; line-height: 1.55; }
+.band :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+/* narrow, the tabs take a row of their own under the office and the menu */
+@media (max-width: 40rem) {
+  .band-row { flex-wrap: wrap; gap: 0 1rem; }
+  .band .me-name { display: none; }
+  .tabs { order: 3; flex-basis: 100%; }
+}
 main { width: 100%; max-width: 46rem; }
-main.wide { max-width: 72rem; }
+/* the office's tab: the drawing and a side, in the band's own width */
+main.wide { max-width: 62.5rem; }
 main.chat { flex: 1; display: flex; flex-direction: column; gap: 0; padding-top: 0; padding-bottom: 0; }
 .status { display: flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; margin: 0; padding: .9rem 0 .2rem; }
 .status i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--muted); flex: none; }
@@ -2894,12 +2909,18 @@ button.chip:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); 
 @media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
 .decide-list { display: flex; flex-direction: column; gap: .5rem; max-height: 45vh; overflow-y: auto; margin-bottom: .5rem; }
 .decide-list:empty { display: none; }
-.decide { margin: 0; padding: .75rem .9rem; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--waiting) 45%, transparent); background: color-mix(in srgb, var(--waiting) 7%, var(--bg)); display: flex; flex-direction: column; gap: .4rem; }
-.decide-head { margin: 0; font-weight: 700; font-size: .85rem; color: var(--waiting-ink); }
-.decide-text { margin: 0; white-space: pre-wrap; font-size: .95rem; }
-.decide-acts { display: flex; flex-wrap: wrap; gap: .4rem; }
-.decide-acts button { margin: 0; border-radius: 999px; min-height: 2.5rem; padding: .4rem 1rem; background: var(--bg); color: var(--fg); border: 1px solid var(--field); font-weight: 600; }
-.decide-acts button:hover:not(:disabled) { background: var(--soft); }
+/* a decision as the app draws one (10-19 redesign): a card, its asker's line with the ember dot,
+   the question, and choices of one weight as soft fills */
+.decide { margin: 0; padding: .9rem 1rem; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); display: flex; flex-direction: column; gap: .45rem; }
+.decide-head { margin: 0; font-weight: 600; font-size: .82rem; color: var(--muted); display: flex; align-items: center; gap: .45rem; }
+.decide-head::before { content: ""; width: .5rem; height: .5rem; border-radius: 50%; background: var(--waiting); flex: none; }
+.decide-text { margin: 0; white-space: pre-wrap; font-size: 1rem; font-weight: 600; }
+.decide-acts { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .15rem; }
+.decide-acts button { margin: 0; border-radius: 10px; min-height: 2.25rem; padding: .35rem .9rem; background: var(--soft); color: var(--fg); border: 0; font-weight: 600; }
+.decide-acts button:hover:not(:disabled) { background: color-mix(in srgb, var(--fg) 10%, transparent); }
+/* a request waiting on the person's own answer, on the Requests tab: the same card */
+.rows.requests li.waits { border: 1px solid var(--line); border-radius: 14px; padding: .9rem 1rem; margin: 0 0 .6rem; }
+.rows.requests li.waits .who b::before { content: ""; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--waiting); margin-right: .45rem; vertical-align: .1em; }
 .dock { position: sticky; bottom: 0; background: var(--bg); padding: .6rem 0 1rem; }
 .compose { margin: 0; }
 .compose-box { display: flex; align-items: flex-end; gap: .5rem; border: 1px solid var(--field); border-radius: 26px; padding: .35rem .35rem .35rem 1rem; background: var(--bg); }
@@ -2919,9 +2940,22 @@ button.chip:hover { background: color-mix(in srgb, var(--fg) 10%, transparent); 
 .pair button { margin: 0; }
 .pair-code { font: 600 1.35rem/1.3 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
 h3 { font-size: .95rem; margin: .5rem 0 0; color: var(--muted); }
-.office-cols { display: grid; gap: 2rem 3rem; align-items: start; }
-.office-cols > section { min-width: 0; }
-@media (min-width: 60rem) { .office-cols { grid-template-columns: 1fr 1fr; } }
+/* the office's tab (10-19 redesign): the drawing, and beside it inviting and the people as cards */
+.office-grid { display: grid; gap: 1.5rem; align-items: start; }
+.office-main, .office-side { min-width: 0; }
+.office-side { display: flex; flex-direction: column; gap: .9rem; }
+@media (min-width: 60rem) { .office-grid { grid-template-columns: minmax(0, 1fr) 18.5rem; } }
+.side-card { border: 1px solid var(--line); border-radius: 14px; padding: 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.side-card h2 { font-size: .95rem; margin: 0; display: flex; align-items: center; gap: .4rem; }
+.side-card p { margin: 0; font-size: .88rem; }
+.side-card form { margin: 0; display: flex; flex-direction: column; gap: .45rem; }
+.side-card form button { width: 100%; }
+.side-card .rows li { padding: .45rem 0; }
+.count-soft { font-size: .75rem; font-weight: 600; color: var(--muted); }
+.office-more { display: grid; gap: 2rem 3rem; align-items: start; margin-top: 2rem; }
+.office-more:empty { display: none; }
+.office-more > section { min-width: 0; }
+@media (min-width: 60rem) { .office-more { grid-template-columns: 1fr 1fr; } }
 .room-slot { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; min-height: 18rem; display: grid; place-items: center; color: var(--muted); }
 `;
 
@@ -3108,9 +3142,10 @@ ${signIn}`);
     return page(
       `${top}
 <h1 class="visually-hidden">${say(lang, "officeTitle")}</h1>
-${input.room ?? ""}
-<div class="office-cols">
-<section id="invite">
+<div class="office-grid">
+<div class="office-main">${input.room ?? ""}</div>
+<aside class="office-side">
+<section id="invite" class="side-card">
 <h2>${say(lang, "inviteTeam")}</h2>
 ${INVITE_ERRORS.has(input.error ?? "") ? problem(lang, input.error) : ""}
 <p>${say(lang, "inviteWhat", { days: String(input.invited?.days ?? 7) })}</p>
@@ -3121,7 +3156,7 @@ ${
 <p class="note">${say(lang, "inviteOnce")}</p>`
     : ""
 }
-<form method="post" action="/home/invite">${officeField}<label for="invite-note">${say(lang, "inviteFor")}</label><input id="invite-note" name="note" maxlength="80" autocomplete="off"><button type="submit" class="quiet">${say(lang, "inviteMake")}</button></form>
+<form method="post" action="/home/invite">${officeField}<label for="invite-note">${say(lang, "inviteFor")}</label><input id="invite-note" name="note" maxlength="80" autocomplete="off"><button type="submit">${say(lang, "inviteMake")}</button></form>
 ${
   owner && input.invites?.length
     ? `<h3>${say(lang, "invitesTitle")}</h3>
@@ -3136,13 +3171,16 @@ ${
 </section>
 ${
   people.length
-    ? `<section>
-<h2>${say(lang, "people")}</h2>
+    ? `<section class="side-card">
+<h2>${say(lang, "people")} <span class="count-soft">${people.length}</span></h2>
 ${owner ? `<p class="note">${say(lang, "peopleOwner")}</p>` : ""}
 <ul class="rows">${people.map(personRow).join("")}</ul>
 </section>`
     : ""
 }
+</aside>
+</div>
+<div class="office-more">
 ${
   clones.length
     ? `<section>

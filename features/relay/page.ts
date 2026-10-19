@@ -291,6 +291,21 @@ select { width: 100%; font: inherit; color: inherit; background: var(--bg); bord
 .alert { display: flex; flex-direction: column; align-items: flex-start; gap: .6rem; margin: 0; border: 1px solid var(--waiting); border-radius: 14px; padding: .9rem 1rem; }
 .alert p { margin: 0; }
 button:disabled { opacity: .5; cursor: not-allowed; }
+/* signing in: one narrow card, the mark over its title */
+main.auth { max-width: 25rem; padding-top: 4rem; }
+main.auth h1 { text-align: center; font-size: 1.5rem; }
+main.auth > .note { text-align: center; }
+.auth-mark { display: flex; justify-content: center; }
+.auth-mark .mark { width: 2.5rem; height: 2.5rem; color: var(--fg); }
+.auth-mark .mark .eye { fill: var(--bg); }
+/* a question by link: the card, who asks over it */
+.reply { border: 1px solid var(--line); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+.reply h1 { font-size: 1rem; font-weight: 650; }
+.reply form { margin: 0; }
+.reply form button { margin-top: .75rem; }
+.asker { display: flex; align-items: center; gap: .65rem; margin: 0; }
+.asker .avatar { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: var(--soft); display: grid; place-items: center; font-weight: 700; }
+.ask-text { margin: 0; font-size: 1.2rem; font-weight: 650; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; letter-spacing: -.01em; }
 `;
 
 /** The app's mark (app/icon.svg): your own clone at rest, in the page's ink. */
@@ -461,12 +476,16 @@ export function replyPage(input: {
 <textarea id="answer" name="answer" required maxlength="8000"></textarea>
 <button type="submit">${say(lang, "send")}</button>
 </form>`;
+  const initial = escape(Array.from(asker.trim())[0] ?? "·");
   return shell(
     lang,
     title,
-    `<h1>${title}</h1>
-<p class="request">${escape(input.request)}</p>
+    // the question as one card, who asks over it, the answer under it (10-19 redesign)
+    `<section class="reply">
+<div class="asker"><span class="avatar" aria-hidden="true">${initial}</span><h1>${title}</h1></div>
+<p class="ask-text">${escape(input.request)}</p>
 ${answered}
+</section>
 <footer>${say(lang, "footer", { asker })}</footer>`,
     // Who asks and with what, never what they asked.
     say(lang, "footer", { asker }),
