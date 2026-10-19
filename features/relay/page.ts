@@ -201,8 +201,9 @@ details:not(.account)[open] > summary::after { transform: rotate(45deg); }
 .chips { display: flex; flex-wrap: wrap; gap: .4rem; }
 .chips span { font-size: .85rem; background: var(--soft); border-radius: 999px; padding: .15rem .7rem; }
 /* the three kinds of computer as tabs, with no script: a radio each, the one this page was opened on picked */
-.computers { display: flex; flex-direction: column; gap: 1.25rem; }
-.computers > input { position: absolute; opacity: 0; pointer-events: none; }
+.computers { position: relative; display: flex; flex-direction: column; gap: 1.25rem; }
+/* out of sight and out of the layout: the page's own input rule would give each the window's width */
+.computers > input { position: absolute; top: 0; left: 0; width: 1px; height: 1px; margin: 0; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); opacity: 0; pointer-events: none; }
 .tabs { display: inline-flex; align-self: flex-start; gap: .25rem; background: var(--soft); border-radius: 10px; padding: .25rem; }
 .tabs label { margin: 0; cursor: pointer; font-size: .9rem; color: var(--muted); padding: .3rem .9rem; border-radius: 8px; }
 .pick-mac:checked ~ .tabs [for="computer-mac"], .pick-windows:checked ~ .tabs [for="computer-windows"], .pick-linux:checked ~ .tabs [for="computer-linux"] { background: var(--bg); color: var(--fg); box-shadow: 0 0 0 1px var(--line); }
