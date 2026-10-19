@@ -3,6 +3,44 @@
 Versions after 0.1.0 are written here by release-please from the commits on main
 (CONTRIBUTING.md, "Releasing").
 
+## [0.5.0](https://github.com/cgoinglove/clone-office/compare/v0.4.0...v0.5.0) (2026-10-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* take the team's Slack out
+
+### Features
+
+* **relay:** a team server with HTTPS from one docker compose line, and a guide for setting one up ([279fa5c](https://github.com/cgoinglove/clone-office/commit/279fa5c895b9331baa274e1070893b8a530aad38))
+* **relay:** the invite's setup guide walks someone who never opened a terminal through it ([15f6fdf](https://github.com/cgoinglove/clone-office/commit/15f6fdfe167c033317425cc563402fb323c5593f))
+* **relay:** the team server's pages under one white band, the office's drawing with its side, decisions as cards, sign-in and a reply link as one card (redesign, part 7) ([3ac0524](https://github.com/cgoinglove/clone-office/commit/3ac0524ee7624380750f1cf16db3921bd3995e0a))
+* **ui:** a colleague's answer said by their clone, the conversation's side in request lines (redesign, part 3) ([f833687](https://github.com/cgoinglove/clone-office/commit/f8336871c292f7dffd076a8740fabac44d928d8c))
+* **ui:** a request's page as one card and one box (redesign, part 2) ([62feafe](https://github.com/cgoinglove/clone-office/commit/62feafe6aa7f04d9e3046e2e139b6b5b78a7f88c))
+* **ui:** decisions first, one card and one request line everywhere (redesign, part 1) ([2ad8611](https://github.com/cgoinglove/clone-office/commit/2ad86114e00eb3d6312f694a14c87677bab49604))
+* **ui:** settings rows without frames, usage as shares, connectors as a grid, Telegram first, the office's invite and server side by side (redesign, part 6) ([b82a34c](https://github.com/cgoinglove/clone-office/commit/b82a34cce6d3cfd23497e6765fb48485fa3a04d6))
+* **ui:** the office's header, its decisions as cards on the floor, and a colleague's panel that asks them (redesign, part 4) ([1139ce7](https://github.com/cgoinglove/clone-office/commit/1139ce7ca76f3aab91c49e1ef4332690ff6a7667))
+* **ui:** your clone's screen in two columns, with its numbers, its card, kinds and flows as cards, and what it did by day (redesign, part 5) ([11f67ef](https://github.com/cgoinglove/clone-office/commit/11f67efee6d85ca8f861111a3cb7c4f54891c5bd))
+
+
+### Fixes
+
+* **chat:** a colleague's answer is drawn as markdown, their name heading it ([4a55bab](https://github.com/cgoinglove/clone-office/commit/4a55bab0928f2594e06612a7c2f0e1e0333a1675))
+* **clone:** the ME.md section says it is empty only when it is ([808c537](https://github.com/cgoinglove/clone-office/commit/808c5374cd6ba6845cfd033ec4d214aa6a0b83e0))
+* **gate:** every tool the clone keeps a rule for reads in plain words ([d07942b](https://github.com/cgoinglove/clone-office/commit/d07942b4381eca59b10a2accee623f3d8f08a52f))
+* **relay:** a request answered on the web says who answered it ([1000523](https://github.com/cgoinglove/clone-office/commit/1000523b366065e64f10bbb1c932aa6216b4b1ac))
+* **relay:** the invite page no longer runs wider than the window ([4c661ab](https://github.com/cgoinglove/clone-office/commit/4c661ab3aa59554075e73f0cf820df58d0edb396))
+* **relay:** the pages before sign-in share the white row, and the office's drawing opens on the whole floor beside its side ([3389da5](https://github.com/cgoinglove/clone-office/commit/3389da50f42535225fc646ec7e3025802b92a8ab))
+* **ui:** a question answered in one's own words in its card, all its choices shown; the numbers and the phone as the outside reviews asked ([ed711ce](https://github.com/cgoinglove/clone-office/commit/ed711ce66385e0f41e7c57c7772b5b2dd8fab8b8))
+* **ui:** an answer written in a card is never lost, comes back on Undo, and each card keeps its own; the floor stays whole beside a colleague's panel ([5f4efdc](https://github.com/cgoinglove/clone-office/commit/5f4efdc8aeafc326bade8ed8e757138c0c7af3c9))
+* **ui:** two-column screens hold a phone's width; the code map, rules and guide say what the redesign changed ([55a2ab6](https://github.com/cgoinglove/clone-office/commit/55a2ab6692b820ad88e3d4aa7309a96073efcf3b))
+* **ui:** what the review found: a question's reason kept through the gate, the office's panel framing at every width, links and lines that stay true ([54c21db](https://github.com/cgoinglove/clone-office/commit/54c21db498cd3875946b5b1e5d3fb2a3419547d7))
+
+
+### Under the hood
+
+* take the team's Slack out ([5232d46](https://github.com/cgoinglove/clone-office/commit/5232d46ba9c4e05507ca16b94e4e0959c8b8eb6d))
+
 ## [0.4.0](https://github.com/cgoinglove/clone-office/compare/v0.3.0...v0.4.0) (2026-10-14)
 
 
