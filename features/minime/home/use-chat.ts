@@ -28,7 +28,14 @@ export type Turn =
   | { id: number; kind: "minime"; text: string; live: boolean }
   | { id: number; kind: "saved"; text: string }
   | { id: number; kind: "note"; text: string }
-  | { id: number; kind: "office"; text: string; person?: boolean }
+  | {
+      id: number;
+      kind: "office";
+      text: string;
+      person?: boolean;
+      /** Whose answer it is, when the line says (chat/store.ts `from`). */
+      from?: string;
+    }
   | { id: number; kind: "told"; text: string }
   | { id: number; kind: "meeting"; text: string }
   | { id: number; kind: "flow"; text: string; at: string }
@@ -119,7 +126,13 @@ export function useChat(lang: string) {
     const data = (await response.json()) as {
       id: string;
       title?: string;
-      messages: { role: string; text: string; at: string; person?: boolean }[];
+      messages: {
+        role: string;
+        text: string;
+        at: string;
+        person?: boolean;
+        from?: string;
+      }[];
       /** The clone's to-do list as it last stood, after this many messages. */
       todos?: Todo[];
       todosAt?: number;
@@ -142,7 +155,13 @@ export function useChat(lang: string) {
         return { id, kind: "minime", text: m.text, live: false };
       if (m.role === "saved") return { id, kind: "saved", text: m.text };
       if (m.role === "office")
-        return { id, kind: "office", text: m.text, person: m.person };
+        return {
+          id,
+          kind: "office",
+          text: m.text,
+          person: m.person,
+          from: m.from,
+        };
       if (m.role === "told") return { id, kind: "told", text: m.text };
       if (m.role === "meeting") return { id, kind: "meeting", text: m.text };
       if (m.role === "flow")

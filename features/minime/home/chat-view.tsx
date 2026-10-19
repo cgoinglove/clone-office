@@ -204,12 +204,25 @@ function Empty({
  * its face and name, then its words drawn as the clone's own are (10-19: they were plain text, so a
  * colleague's ** and ` showed as they were typed). The line is kept as "Name: words".
  */
-function ColleagueSaid({ text, person }: { text: string; person?: boolean }) {
+function ColleagueSaid({
+  text,
+  person,
+  from,
+}: {
+  text: string;
+  person?: boolean;
+  /** Who answered, as the conversation's line keeps it (`chat/store.ts` `from`). */
+  from?: string;
+}) {
   const tChat = useTranslations("chat");
   const { office } = useApp();
+  // the line is kept as "<name>: <text>"; the name it was kept with says where it ends, and a
+  // line from before that was kept is read by its first ": "
+  const kept = from && text.startsWith(`${from}: `) ? from : undefined;
   const cut = text.indexOf(": ");
-  const name = cut > 0 && cut <= 80 ? text.slice(0, cut) : "";
-  const words = name ? text.slice(cut + 2) : text;
+  const name =
+    kept ?? (!from && cut > 0 && cut <= 80 ? text.slice(0, cut) : "");
+  const words = name ? text.slice(name.length + 2) : text;
   const member = name
     ? office.office?.members?.find((entry) => entry.card.name === name)
     : undefined;
@@ -312,7 +325,9 @@ function TurnRow({ turn, chat }: { turn: Turn; chat: Chat }) {
         </li>
       );
     case "office":
-      return <ColleagueSaid text={turn.text} person={turn.person} />;
+      return (
+        <ColleagueSaid text={turn.text} person={turn.person} from={turn.from} />
+      );
     case "told":
     case "meeting":
       // what the clone answered a colleague for the person, told to them (or an old meeting's line)

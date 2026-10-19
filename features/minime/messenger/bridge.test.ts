@@ -616,7 +616,7 @@ test("files from the person's phone are kept for the mini-me to read; a stranger
     settings.messenger.chat,
     "office",
     "Ben: Fixed it.",
-    [attached],
+    { files: [attached], from: "Ben" },
   );
   await until(() => bot.files.length === 1);
   assert.deepEqual(bot.files[0], {
