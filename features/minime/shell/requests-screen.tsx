@@ -8,8 +8,8 @@
 // Each opens on its own page. Asking a colleague starts here too.
 
 import { Link2, Plus, Search, UserPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useFormatter, useNow, useTranslations } from "next-intl";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +30,7 @@ import {
   PageHeader,
   RequestLine,
   useRequestWords,
+  useWhen,
 } from "./parts";
 import { askLine } from "./your-turn";
 
@@ -84,8 +85,6 @@ export function RequestsScreen() {
   const t = useTranslations("shell.requests");
   const tOffice = useTranslations("office");
   const tAsk = useTranslations("ask");
-  const format = useFormatter();
-  const now = useNow({ updateInterval: 60_000 });
   const app = useApp();
   const router = useRouter();
   const { office } = app;
@@ -93,24 +92,13 @@ export function RequestsScreen() {
   const me = data?.me?.id;
   const members = data?.members ?? [];
   const [side, setSide] = useState<Side>("all");
-  const [asking, setAsking] = useState(false);
+  // a colleague's page or panel sends here to ask them (?ask=<member>)
+  const params = useSearchParams();
+  const [asking, setAsking] = useState(Boolean(params.get("ask")));
   const [find, setFind] = useState("");
   const words = useRequestWords();
   const handledBy = useHandled();
-  // within the hour "n minutes ago", today the clock, before that the day (one rule everywhere)
-  const when = (iso: string) => {
-    const at = Math.min(Date.parse(iso), now.getTime());
-    const day = new Date(now);
-    day.setHours(0, 0, 0, 0);
-    if (now.getTime() - at < 60 * 60 * 1000)
-      return format.relativeTime(at, now);
-    if (at >= day.getTime())
-      return format.dateTime(new Date(at), {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    return format.relativeTime(at, { now, unit: "day" });
-  };
+  const when = useWhen();
 
   const yours = app.tasksToDecide;
   // what the clone asks the person about each request waiting on them, said on its row

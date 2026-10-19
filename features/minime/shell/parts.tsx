@@ -6,7 +6,7 @@
 
 import { Check, Clock, Link2, LoaderCircle, X } from "lucide-react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useFormatter, useNow, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Bot, type BotShape, type Mood } from "@/features/office";
 import { looksOf } from "@/features/office/room/looks.mjs";
@@ -373,4 +373,31 @@ export function RequestLine({
       </Link>
     </li>
   );
+}
+
+/**
+ * When something happened, by one rule on every screen (10-19): within a minute "just now", within
+ * the hour "n minutes ago", earlier today the clock, yesterday "yesterday", before that the day.
+ */
+export function useWhen(): (iso: string) => string {
+  const format = useFormatter();
+  const now = useNow({ updateInterval: 30_000 });
+  const t = useTranslations("shell.line");
+  return (iso: string) => {
+    const at = Math.min(Date.parse(iso), now.getTime());
+    if (Number.isNaN(at)) return "";
+    const ago = now.getTime() - at;
+    if (ago < 60_000) return t("justNow");
+    if (ago < 60 * 60_000)
+      return format.relativeTime(at, { now, unit: "minute" });
+    const day = new Date(now);
+    day.setHours(0, 0, 0, 0);
+    if (at >= day.getTime())
+      return format.dateTime(new Date(at), {
+        hour: "numeric",
+        minute: "2-digit",
+      });
+    if (at >= day.getTime() - 24 * 60 * 60_000) return t("yesterday");
+    return format.dateTime(new Date(at), { month: "short", day: "numeric" });
+  };
 }

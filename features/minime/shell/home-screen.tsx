@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useFormatter, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useEffect, useState } from "react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tip } from "@/components/ui/tooltip";
@@ -29,7 +29,13 @@ import { HEADERS } from "../home/use-office";
 import { statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
 import { OfficeTrouble } from "./office-trouble";
-import { lastWords, Mark, RequestLine, useRequestWords } from "./parts";
+import {
+  lastWords,
+  Mark,
+  RequestLine,
+  useRequestWords,
+  useWhen,
+} from "./parts";
 import { askedText } from "./requests-screen";
 import { StarNote } from "./star-note";
 import { TurnRows } from "./turn-rows";
@@ -54,7 +60,6 @@ function startOfDay(now = new Date()): number {
 
 export function HomeScreen() {
   const t = useTranslations("shell.home");
-  const format = useFormatter();
   const router = useRouter();
   const app = useApp();
   const { office } = app;
@@ -70,19 +75,7 @@ export function HomeScreen() {
   const open = app.toDecide.length;
   const tasks = data?.tasks ?? [];
   const yours = app.tasksToDecide;
-  const now = Date.now();
-  // within the hour "n minutes ago", today the clock, before that the day (one rule everywhere)
-  const when = (iso: string) => {
-    const at = Date.parse(iso);
-    if (now - at < 60 * 60 * 1000)
-      return format.relativeTime(Math.min(at, now), now);
-    if (at >= startOfDay())
-      return format.dateTime(new Date(at), {
-        hour: "numeric",
-        minute: "2-digit",
-      });
-    return format.relativeTime(at, { now, unit: "day" });
-  };
+  const when = useWhen();
 
   const [flows, setFlows] = useState<FlowLine[]>([]);
   useEffect(() => {

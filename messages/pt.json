@@ -1489,7 +1489,18 @@
       "myself": "Você",
       "themselves": "{name}",
       "selfWaiting": "{name} escreveu de novo. Responda você:",
-      "waitsFor": "Esperando {name} responder."
+      "waitsFor": "Esperando {name} responder.",
+      "more": "Mais",
+      "decideNote": "Seu clone responde ao clone de {name} como você escolher. Dá para desfazer por alguns segundos.",
+      "askThem": "Pedir ao clone de {name}",
+      "why": "Por que veio para você",
+      "whyKind": "É <b>{kind}</b>. Para este tipo você escolheu <b>{trust}</b>.",
+      "menuLink": "O que você aceita",
+      "stepAsked": "Pediu",
+      "stepAdded": "Acrescentou",
+      "stepAnswered": "Respondeu",
+      "stepYours": "Sua vez de decidir",
+      "now": "agora"
     },
     "home": {
       "hello": {
@@ -1561,7 +1572,7 @@
     "stepIn": {
       "title": "Intervir",
       "placeholder": "O que seu clone precisa saber? Ele lê isto antes do próximo passo.",
-      "tell": "Dizer ao meu clone",
+      "tell": "Contar ao meu clone",
       "answer": "Eu respondo",
       "waits": "Aguardando o próximo passo",
       "read": "Lida",
@@ -1572,7 +1583,11 @@
       "sendOpen": "Enviar e manter aberto",
       "handBack": "Devolver ao meu clone",
       "takeOver": "Assumir",
-      "answerClose": "Enviar minha resposta a {name} e encerrar"
+      "answerClose": "Enviar minha resposta a {name} e encerrar",
+      "tellLabel": "Algo que seu clone deve saber",
+      "way": "Como enviar",
+      "keepOpen": "Manter o pedido aberto",
+      "sendSelf": "Enviar a {name} como sua resposta"
     },
     "file": {
       "where": "Na área de trabalho do seu clone · {path}",
@@ -1658,7 +1673,9 @@
         "told": "Me avise",
         "asked": "Me pergunte antes",
         "self": "Você respondeu"
-      }
+      },
+      "justNow": "agora mesmo",
+      "yesterday": "ontem"
     },
     "inNow": "{count} presentes"
   },

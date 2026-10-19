@@ -1489,7 +1489,18 @@
       "myself": "あなた",
       "themselves": "{name}",
       "selfWaiting": "{name}さんからまた届きました。ご自身で答えてください：",
-      "waitsFor": "{name}さんの回答を待っています。"
+      "waitsFor": "{name}さんの回答を待っています。",
+      "more": "その他",
+      "decideNote": "選ぶと、自分のクローンがその通りに{name}さんのクローンへ答えます。数秒間は取り消せます。",
+      "askThem": "{name}さんのクローンに依頼する",
+      "why": "なぜ自分に来たのか",
+      "whyKind": "この依頼は<b>{kind}</b>です。この種類は<b>{trust}</b>にしています。",
+      "menuLink": "受ける依頼",
+      "stepAsked": "依頼",
+      "stepAdded": "補足",
+      "stepAnswered": "回答",
+      "stepYours": "自分が決める番",
+      "now": "今"
     },
     "home": {
       "hello": {
@@ -1561,7 +1572,7 @@
     "stepIn": {
       "title": "介入する",
       "placeholder": "クローンに知っておいてほしいことは？次のステップの前に読みます。",
-      "tell": "自分のクローンに伝える",
+      "tell": "クローンに伝える",
       "answer": "自分で答える",
       "waits": "次のステップを待っています",
       "read": "既読",
@@ -1572,7 +1583,11 @@
       "sendOpen": "送って続ける",
       "handBack": "クローンに戻す",
       "takeOver": "自分が引き取る",
-      "answerClose": "{name}さんに自分の答えを送って終える"
+      "answerClose": "{name}さんに自分の答えを送って終える",
+      "tellLabel": "クローンに知らせること",
+      "way": "送り方",
+      "keepOpen": "依頼を開いたままにする",
+      "sendSelf": "自分の答えとして{name}さんに送る"
     },
     "file": {
       "where": "クローンの作業フォルダー · {path}",
@@ -1658,7 +1673,9 @@
         "told": "あとで報告",
         "asked": "先に確認",
         "self": "自分で回答"
-      }
+      },
+      "justNow": "たった今",
+      "yesterday": "昨日"
     },
     "inNow": "{count}人出社"
   },

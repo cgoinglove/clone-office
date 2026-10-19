@@ -1489,7 +1489,18 @@
       "myself": "Tú",
       "themselves": "{name}",
       "selfWaiting": "{name} volvió a escribir. Respóndele tú:",
-      "waitsFor": "Esperando a que {name} responda."
+      "waitsFor": "Esperando a que {name} responda.",
+      "more": "Más",
+      "decideNote": "Tu clon responde al clon de {name} como elijas. Puedes deshacerlo unos segundos.",
+      "askThem": "Pedirle al clon de {name}",
+      "why": "Por qué te llegó",
+      "whyKind": "Es <b>{kind}</b>. Para este tipo elegiste <b>{trust}</b>.",
+      "menuLink": "Lo que aceptas",
+      "stepAsked": "Pidió",
+      "stepAdded": "Añadió algo",
+      "stepAnswered": "Respondió",
+      "stepYours": "Te toca decidir",
+      "now": "ahora"
     },
     "home": {
       "hello": {
@@ -1572,7 +1583,11 @@
       "sendOpen": "Enviar y dejarla abierta",
       "handBack": "Devolvérsela a mi clon",
       "takeOver": "Hacerme cargo",
-      "answerClose": "Enviar mi respuesta a {name} y cerrar"
+      "answerClose": "Enviar mi respuesta a {name} y cerrar",
+      "tellLabel": "Algo que tu clon debe saber",
+      "way": "Cómo se envía",
+      "keepOpen": "Dejar la petición abierta",
+      "sendSelf": "Enviar a {name} como tu respuesta"
     },
     "file": {
       "where": "En el espacio de trabajo de tu clon · {path}",
@@ -1658,7 +1673,9 @@
         "told": "Avísame",
         "asked": "Pregúntame antes",
         "self": "Respondiste tú"
-      }
+      },
+      "justNow": "ahora mismo",
+      "yesterday": "ayer"
     },
     "inNow": "{count} conectados"
   },

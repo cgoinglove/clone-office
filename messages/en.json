@@ -1489,7 +1489,18 @@
       "myself": "You",
       "themselves": "{name}",
       "selfWaiting": "{name} wrote again. Answer it yourself:",
-      "waitsFor": "Waiting for {name} to answer."
+      "waitsFor": "Waiting for {name} to answer.",
+      "more": "More",
+      "decideNote": "Your clone answers {name}’s clone the way you pick. You can undo it for a few seconds.",
+      "askThem": "Ask {name}’s clone",
+      "why": "Why it came to you",
+      "whyKind": "This is <b>{kind}</b>. For this kind you chose <b>{trust}</b>.",
+      "menuLink": "What you take",
+      "stepAsked": "Asked",
+      "stepAdded": "Added a note",
+      "stepAnswered": "Answered",
+      "stepYours": "Yours to decide",
+      "now": "now"
     },
     "home": {
       "hello": {
@@ -1572,7 +1583,11 @@
       "sendOpen": "Send, keep it open",
       "handBack": "Hand it back to my clone",
       "takeOver": "Take it over",
-      "answerClose": "Send my answer to {name} and close"
+      "answerClose": "Send my answer to {name} and close",
+      "tellLabel": "Something for your clone to know",
+      "way": "How it goes",
+      "keepOpen": "Keep the request open",
+      "sendSelf": "Send to {name} as your own answer"
     },
     "file": {
       "where": "In your clone's workspace · {path}",
@@ -1658,7 +1673,9 @@
         "told": "Tell me",
         "asked": "Ask me first",
         "self": "You answered"
-      }
+      },
+      "justNow": "just now",
+      "yesterday": "yesterday"
     },
     "inNow": "{count} in"
   },

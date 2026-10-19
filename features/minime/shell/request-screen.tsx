@@ -1,40 +1,61 @@
 "use client";
 
 // One request between two clones, on its own page: what was asked and every answer, the files that
-// went with it, and, when the person's turn has come, the question waiting on them in place (the
-// answer their clone drafted, a promise only they can make, a permission). Beside it: who it is
-// with, what they take, and how far it has come. An answer here is a call in the person's name, as
-// on Home's rows: it stays in place, saying what goes, with Undo, and goes when that runs out or
-// the page goes; then the keyboard lands on where the request stands, and that is said aloud.
+// went with it, and, when the person's turn has come, the question waiting on them as the same card
+// Home shows (`TurnRows`; a permission or a rule as its own card). Under it one box tells the clone
+// something or answers the colleague as the person (`StepIn`); taking the request over or handing
+// it back is in the menu. Beside it: who it is with and what they look after, why it came to the
+// person (the kind of request and how much the clone does alone for it), and how it went.
+// An answer here is a call in the person's name, as on Home: it stays in place, saying what goes,
+// with Undo, and goes when that runs out or the page goes.
 
-import { ChevronLeft, Copy, FileText, Link2, Send } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Ellipsis,
+  FileText,
+  Hand,
+  Link2,
+  Send,
+  Undo2,
+} from "lucide-react";
 import Link from "next/link";
-import { useFormatter, useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ShinyText } from "@/components/ui/shiny-text";
 import { Textarea } from "@/components/ui/textarea";
+import { Tip } from "@/components/ui/tooltip";
 import { Bot } from "@/features/office";
 import { useUndoableRemoval } from "@/hooks/use-undoable-removal";
-import { clip } from "@/lib/utils";
+import { clip, cn } from "@/lib/utils";
 import { AskCard } from "../ask-card";
 import { saveFile, statusText, type Waiting } from "../home/use-office";
 import { statusCode } from "../office/room-data";
 import { useApp } from "./app-state";
-import { Mark, PhaseChip, phaseOf, StatusDot } from "./parts";
+import { Mark, PhaseChip, phaseOf, StatusDot, useWhen } from "./parts";
 import { askedText } from "./requests-screen";
 import { StepIn } from "./step-in";
-import { ANSWER_CHARS, PendingAnswer, SETTLE_MS } from "./turn-rows";
-import { taskOf, turnKey } from "./your-turn";
+import { ANSWER_CHARS, PendingAnswer, SETTLE_MS, TurnRows } from "./turn-rows";
+import { type TurnItem, taskOf, turnKey } from "./your-turn";
 
 export function RequestScreen({ id }: { id: string }) {
   const t = useTranslations("shell.request");
   const tOffice = useTranslations("office");
-  const tPhase = useTranslations("shell.phase");
   const tTurn = useTranslations("shell.office");
   const tAsk = useTranslations("ask");
+  const tStep = useTranslations("shell.stepIn");
   const undo = useTranslations("common")("undo");
-  const format = useFormatter();
+  const when = useWhen();
+  const params = useSearchParams();
   const app = useApp();
   const { office } = app;
   const data = office.office;
@@ -158,18 +179,33 @@ export function RequestScreen({ id }: { id: string }) {
         ?.focus(),
     );
   };
-  const time = (iso: string) =>
-    format.dateTime(new Date(iso), {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  // a question waits as the same card Home shows; a permission or a rule keeps its own card
+  const cards: TurnItem[] = waiting
+    .filter((entry) => !entry.self && entry.ask.kind === "question")
+    .map((entry) => ({
+      key: turnKey(entry),
+      ask: entry.ask,
+      where: { kind: "request", task: task.id },
+      from: sent ? undefined : task.metadata.from,
+      waiting: entry,
+      since: entry.at ?? task.status.timestamp,
+    }));
+  const others = waiting.filter(
+    (entry) => entry.self || entry.ask.kind !== "question",
+  );
+  // why it came to the person: the kind of request the clone named, and how much it does alone for it
+  const kindId = waiting.find((entry) => entry.menu)?.menu;
+  const kind = kindId
+    ? data.menu?.find((item) => (item.id ?? item.name) === kindId)
+    : undefined;
+  const steps = data.steps?.[task.id];
+  const theirs = Boolean(steps?.person);
+  const canStep = !sent && !task.metadata.guest;
 
   return (
     <div className="flex h-full min-h-0">
       <section className="flex min-w-0 flex-1 flex-col overflow-y-auto">
-        <header className="flex flex-col gap-2 border-b border-border/60 px-8 pt-5 pb-5">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/60 px-6">
           <Link
             href="/requests"
             className="flex w-fit items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
@@ -177,30 +213,82 @@ export function RequestScreen({ id }: { id: string }) {
             <ChevronLeft className="size-3.5" />
             {t("back")}
           </Link>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1
-              id="request-title"
-              tabIndex={-1}
-              className="-mx-1 min-w-0 rounded-sm px-1 text-xl font-semibold tracking-tight text-balance outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
-            >
-              {askedText(task)}
-            </h1>
-            <PhaseChip
-              phase={phase}
-              failed={["FAILED", "REJECTED", "CANCELED"].includes(
-                task.status.state,
-              )}
-            />
-          </div>
-          <p className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-            {sent ? t("sentTo", { name }) : t("from", { name })}
-            <span aria-hidden>·</span>
-            {time(task.metadata.created)}
-          </p>
+          {canStep && moving && (
+            <DropdownMenu>
+              <Tip label={t("more")}>
+                <DropdownMenuTrigger
+                  render={
+                    <button
+                      type="button"
+                      className={cn(
+                        buttonVariants({ variant: "ghost", size: "icon" }),
+                        "ml-auto text-muted-foreground",
+                      )}
+                    />
+                  }
+                >
+                  <Ellipsis className="size-4" />
+                </DropdownMenuTrigger>
+              </Tip>
+              <DropdownMenuContent align="end" className="w-56">
+                {theirs ? (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      void office.post({ action: "hand-back", id: task.id })
+                    }
+                  >
+                    <Undo2 className="text-muted-foreground" />
+                    {tStep("handBack")}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    onClick={() =>
+                      void office.post({ action: "take-over", id: task.id })
+                    }
+                  >
+                    <Hand className="text-muted-foreground" />
+                    {tStep("takeOver")}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </header>
 
-        <div className="mx-auto flex w-full max-w-180 flex-col gap-6 px-8 py-7">
-          <ol className="flex flex-col gap-6">
+        <div className="mx-auto flex w-full max-w-[44rem] flex-col gap-5 px-8 pt-7">
+          <div className="flex flex-col gap-2">
+            <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
+              {task.metadata.guest ? (
+                <Link2 className="size-4" />
+              ) : (
+                <Mark id={other} index={index} size={20} />
+              )}
+              {sent ? t("sentTo", { name }) : t("from", { name })}
+              <span aria-hidden>·</span>
+              {when(task.metadata.created)}
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1
+                id="request-title"
+                tabIndex={-1}
+                className="-mx-1 min-w-0 rounded-sm px-1 text-[22px] leading-snug font-semibold tracking-[-0.02em] text-balance outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+              >
+                {askedText(task)}
+              </h1>
+              {phase !== "yours" && (
+                <PhaseChip
+                  phase={phase}
+                  failed={["FAILED", "REJECTED", "CANCELED"].includes(
+                    task.status.state,
+                  )}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto flex w-full max-w-[44rem] flex-col gap-6 px-8 pt-6 pb-8">
+          <ol className="flex flex-col gap-5">
             {task.history.map((message, at) => {
               const author =
                 message.role === "user" ? task.metadata.from : task.metadata.to;
@@ -217,7 +305,7 @@ export function RequestScreen({ id }: { id: string }) {
                     />
                   )}
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <p className="text-[13px] font-semibold">
+                    <p className="flex items-baseline gap-2 text-[13px] font-semibold">
                       {message.metadata?.by === "person"
                         ? mine
                           ? t("myself")
@@ -229,6 +317,11 @@ export function RequestScreen({ id }: { id: string }) {
                           : t("theirClone", {
                               name: office.names.get(author) ?? name,
                             })}
+                      {message.metadata?.at && (
+                        <span className="text-xs font-normal text-muted-foreground">
+                          {when(message.metadata.at)}
+                        </span>
+                      )}
                     </p>
                     <p className="text-[15px] leading-relaxed whitespace-pre-wrap wrap-break-word">
                       {message.parts.map((part) => part.text).join("\n")}
@@ -254,25 +347,30 @@ export function RequestScreen({ id }: { id: string }) {
             })}
           </ol>
 
-          {moving && waiting.length === 0 && (
-            <p
-              id="request-state"
-              tabIndex={-1}
-              className="-mx-1 flex items-center gap-2 rounded-sm px-1 text-[13px] text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          {cards.length > 0 && (
+            <section
+              aria-labelledby="request-decide"
+              className="flex flex-col gap-2"
             >
-              <span
-                aria-hidden
-                className="size-1.5 animate-pulse rounded-full bg-brand motion-reduce:animate-none"
-              />
-              {sent
-                ? t("theyWork", { name })
-                : task.status.state === "INPUT_REQUIRED"
-                  ? t("waitsFor", { name })
-                  : t("cloneWorks")}
-            </p>
+              <h2
+                id="request-decide"
+                tabIndex={-1}
+                className="flex items-center gap-2 text-[13px] font-semibold outline-none"
+              >
+                <span
+                  aria-hidden
+                  className="size-1.5 rounded-full bg-waiting"
+                />
+                {t("yourTurn")}
+              </h2>
+              <TurnRows turns={cards} heading="request-decide" />
+              <p className="px-1 text-xs text-muted-foreground">
+                {t("decideNote", { name })}
+              </p>
+            </section>
           )}
 
-          {waiting.map((entry) => {
+          {others.map((entry) => {
             const key = turnKey(entry);
             const label =
               entry.ask.kind === "permission"
@@ -325,16 +423,15 @@ export function RequestScreen({ id }: { id: string }) {
             );
           })}
 
-          {!sent &&
-            !task.metadata.guest &&
-            (moving || Boolean(data.steps?.[task.id]?.notes.length)) && (
-              <StepIn
-                task={task.id}
-                name={name}
-                steps={data.steps?.[task.id]}
-                closed={!moving}
-              />
-            )}
+          {canStep && (moving || Boolean(steps?.notes.length)) && (
+            <StepIn
+              task={task.id}
+              name={name}
+              steps={steps}
+              closed={!moving}
+              mode={params.get("answer") === "own" ? "self" : "tell"}
+            />
+          )}
 
           {sent && moving && (
             <form
@@ -371,69 +468,160 @@ export function RequestScreen({ id }: { id: string }) {
 
       <aside
         aria-label={t("about")}
-        className="flex w-[300px] shrink-0 flex-col gap-6 overflow-y-auto border-l border-border/60 bg-muted/25 px-5 pt-6 pb-6 max-[1100px]:hidden"
+        className="flex w-[320px] shrink-0 flex-col gap-8 overflow-y-auto border-l border-border/60 px-6 pt-7 pb-6 max-[1100px]:hidden"
       >
-        <section className="flex flex-col gap-2.5">
+        <section className="flex flex-col gap-3">
           <h2 className="text-xs font-semibold text-muted-foreground">
             {sent ? t("to") : t("fromLabel")}
           </h2>
           <div className="flex items-center gap-3">
             {task.metadata.guest ? (
-              <span className="grid size-8 place-items-center rounded-full bg-muted">
+              <span className="grid size-10 place-items-center rounded-full bg-muted">
                 <Link2 className="size-4" />
               </span>
             ) : (
-              <Mark id={other} index={index} size={32} />
+              <Mark id={other} index={index} size={40} />
             )}
             <div className="flex min-w-0 flex-col">
-              <span className="truncate text-sm font-semibold">{name}</span>
+              <span className="truncate text-[15px] font-semibold">{name}</span>
               {member && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                  {member.card.description && (
+                    <span className="truncate">{member.card.description}</span>
+                  )}
+                  {member.card.description && <span aria-hidden>·</span>}
                   <StatusDot
                     status={statusCode(member.card.status) ?? "working"}
                   />
-                  {statusText(tOffice, member.card.status)}
+                  <span className="shrink-0">
+                    {statusText(tOffice, member.card.status)}
+                  </span>
                 </span>
               )}
             </div>
           </div>
-          {member?.card.description && (
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
-              {member.card.description}
-            </p>
-          )}
-          {(member?.card.skills ?? []).length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs text-muted-foreground">
-                {t("takes", { name })}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {member?.card.skills?.map((skill) => (
-                  <span
-                    key={skill.id}
-                    className="rounded-md bg-muted px-2 py-0.5 text-xs text-foreground/85"
-                  >
-                    {skill.name}
-                  </span>
-                ))}
-              </div>
+          {(member?.card.owns ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {member?.card.owns?.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex h-[22px] items-center rounded-full bg-muted px-2 text-xs font-medium text-foreground/80"
+                >
+                  {item}
+                </span>
+              ))}
             </div>
+          )}
+          {member && !sent && (
+            <Link
+              href={`/requests?ask=${encodeURIComponent(member.id)}`}
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "w-fit rounded-full",
+              )}
+            >
+              <Send />
+              {t("askThem", { name })}
+            </Link>
           )}
         </section>
 
-        <section className="flex flex-col gap-2">
+        {kind && (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-xs font-semibold text-muted-foreground">
+              {t("why")}
+            </h2>
+            <p className="text-[13.5px] leading-relaxed">
+              {t.rich("whyKind", {
+                kind: kind.name,
+                trust: tOffice(`menu.trust.${kind.trust}`),
+                b: (chunk) => <b className="font-semibold">{chunk}</b>,
+              })}
+            </p>
+            <Link
+              href="/clone?tab=menu"
+              className="flex w-fit items-center gap-1 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {t("menuLink")}
+              <ChevronRight className="size-3.5" />
+            </Link>
+          </section>
+        )}
+
+        <section className="flex flex-col gap-3">
           <h2 className="text-xs font-semibold text-muted-foreground">
             {t("state")}
           </h2>
-          {/* while it goes on, said as the chips say it, from the person's side; once over, how */}
-          <p className="text-sm">
-            {phase === "done"
-              ? tOffice(`state.${task.status.state}`)
-              : tPhase(phase)}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {t("updated", { at: time(task.status.timestamp) })}
-          </p>
+          <ol className="flex flex-col gap-2.5 text-[13px]">
+            {task.history.map((message, at) => {
+              const author =
+                message.role === "user" ? task.metadata.from : task.metadata.to;
+              const who =
+                author === me
+                  ? message.metadata?.by === "person"
+                    ? t("myself")
+                    : t("myClone")
+                  : message.metadata?.by === "person"
+                    ? t("themselves", {
+                        name: office.names.get(author) ?? name,
+                      })
+                    : t("theirClone", {
+                        name: office.names.get(author) ?? name,
+                      });
+              return (
+                <li key={at} className="flex items-center gap-2.5">
+                  <span
+                    aria-hidden
+                    className="size-1.5 shrink-0 rounded-full bg-muted-foreground/50"
+                  />
+                  <span className="min-w-0 flex-1 truncate">
+                    {t(
+                      at === 0
+                        ? "stepAsked"
+                        : message.role === "user"
+                          ? "stepAdded"
+                          : "stepAnswered",
+                    )}
+                    <span className="text-muted-foreground"> · {who}</span>
+                  </span>
+                  {message.metadata?.at && (
+                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                      {when(message.metadata.at)}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
+            {(cards.length > 0 || moving) && (
+              <li
+                id="request-state"
+                tabIndex={-1}
+                className="flex items-center gap-2.5 font-semibold outline-none"
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "size-1.5 shrink-0 rounded-full",
+                    cards.length
+                      ? "bg-waiting"
+                      : "animate-pulse bg-brand motion-reduce:animate-none",
+                  )}
+                />
+                <span className="min-w-0 flex-1">
+                  {cards.length
+                    ? t("stepYours")
+                    : sent
+                      ? t("theyWork", { name })
+                      : task.status.state === "INPUT_REQUIRED"
+                        ? t("waitsFor", { name })
+                        : t("cloneWorks")}
+                </span>
+                <span className="shrink-0 text-xs font-normal text-muted-foreground">
+                  {t("now")}
+                </span>
+              </li>
+            )}
+          </ol>
         </section>
 
         {files.length > 0 && (

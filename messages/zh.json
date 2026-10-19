@@ -1489,7 +1489,18 @@
       "myself": "你",
       "themselves": "{name}",
       "selfWaiting": "{name}又发来了消息。请你亲自回答：",
-      "waitsFor": "等待{name}回答。"
+      "waitsFor": "等待{name}回答。",
+      "more": "更多",
+      "decideNote": "你选好后，分身会按你的意思回复 {name} 的分身。几秒内可以撤销。",
+      "askThem": "请 {name} 的分身帮忙",
+      "why": "为什么交给你",
+      "whyKind": "这是 <b>{kind}</b>。这一类你设为 <b>{trust}</b>。",
+      "menuLink": "可接的请求",
+      "stepAsked": "提出请求",
+      "stepAdded": "补充",
+      "stepAnswered": "回答",
+      "stepYours": "轮到你决定",
+      "now": "现在"
     },
     "home": {
       "hello": {
@@ -1561,7 +1572,7 @@
     "stepIn": {
       "title": "介入",
       "placeholder": "你的分身该知道什么？它会在下一步之前读到。",
-      "tell": "告诉我的分身",
+      "tell": "告诉分身",
       "answer": "我自己回答",
       "waits": "等它下一步时读",
       "read": "已读",
@@ -1572,7 +1583,11 @@
       "sendOpen": "发送，保持进行",
       "handBack": "交还给我的分身",
       "takeOver": "我来接手",
-      "answerClose": "以我的回答回复{name}并结束"
+      "answerClose": "以我的回答回复{name}并结束",
+      "tellLabel": "要让分身知道的事",
+      "way": "怎么发送",
+      "keepOpen": "保持请求开启",
+      "sendSelf": "作为你自己的回答发给 {name}"
     },
     "file": {
       "where": "分身的工作文件夹 · {path}",
@@ -1658,7 +1673,9 @@
         "told": "告诉我",
         "asked": "先问我",
         "self": "你亲自回答"
-      }
+      },
+      "justNow": "刚刚",
+      "yesterday": "昨天"
     },
     "inNow": "{count} 人在岗"
   },
